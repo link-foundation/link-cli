@@ -62,11 +62,50 @@ void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
         {
             return linkId;
         }
+        else if (link.Values != null && link.Values.Count > 0)
+        {
+            // Try to get the Id from the first value
+            var firstValue = link.Values[0];
+            return GetLinkAddress(firstValue);
+        }
         else
         {
             Console.WriteLine("Link does not have a valid Id.");
             return links.Constants.Null;
         }
+    }
+
+    uint GetLinkAddressFromValue(LinoLink link)
+    {
+        if (link.Id != null && uint.TryParse(link.Id, out uint linkId))
+        {
+            return linkId;
+        }
+        else
+        {
+            Console.WriteLine("Value does not have a valid Id.");
+            return links.Constants.Null;
+        }
+    }
+
+    void PrintLinoLink(LinoLink link, int indent = 0)
+    {
+        var indentStr = new string(' ', indent * 2);
+        Console.WriteLine($"{indentStr}Link Id: {link.Id}");
+        if (link.Values != null)
+        {
+            Console.WriteLine($"{indentStr}Values:");
+            foreach (var value in link.Values)
+            {
+                PrintLinoLink(value, indent + 1);
+            }
+        }
+    }
+
+    Console.WriteLine("Detailed Parsed Links Structure:");
+    foreach (var link in parsedLinks)
+    {
+        PrintLinoLink(link);
     }
 
     if (parsedLinks.Count == 0)
@@ -93,19 +132,19 @@ void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
     uint restrictionSource = links.Constants.Any;
     uint restrictionTarget = links.Constants.Any;
 
-    if (restrictionLink.Values != null && restrictionLink.Values.Count == 2)
+    if (restrictionLink.Values != null && restrictionLink.Values.Count >= 2)
     {
-        restrictionSource = GetLinkAddress(restrictionLink.Values[0]);
-        restrictionTarget = GetLinkAddress(restrictionLink.Values[1]);
+        restrictionSource = GetLinkAddressFromValue(restrictionLink.Values[0]);
+        restrictionTarget = GetLinkAddressFromValue(restrictionLink.Values[1]);
     }
 
     uint substitutionSource = links.Constants.Any;
     uint substitutionTarget = links.Constants.Any;
 
-    if (substitutionLink.Values != null && substitutionLink.Values.Count == 2)
+    if (substitutionLink.Values != null && substitutionLink.Values.Count >= 2)
     {
-        substitutionSource = GetLinkAddress(substitutionLink.Values[0]);
-        substitutionTarget = GetLinkAddress(substitutionLink.Values[1]);
+        substitutionSource = GetLinkAddressFromValue(substitutionLink.Values[0]);
+        substitutionTarget = GetLinkAddressFromValue(substitutionLink.Values[1]);
     }
 
     var restriction = new List<uint> { linkId, restrictionSource, restrictionTarget };
