@@ -74,6 +74,7 @@ namespace LiNoCliTool
 
                 if (!string.IsNullOrEmpty(link.Id) && uint.TryParse(link.Id, out uint linkId))
                 {
+                    Console.WriteLine($"Found link Id: {linkId}");
                     return linkId;
                 }
                 else if (link.Values != null && link.Values.Count > 0)
@@ -87,6 +88,7 @@ namespace LiNoCliTool
                         }
                     }
                 }
+                Console.WriteLine("Link does not have a valid Id.");
                 return links.Constants.Null;
             }
 
@@ -140,10 +142,22 @@ namespace LiNoCliTool
                 var restrictionInnerLink = restrictionLink.Values[0];
                 linkId = GetLinkAddress(restrictionInnerLink);
 
+                if (linkId == links.Constants.Null)
+                {
+                    Console.WriteLine("Failed to retrieve linkId from restriction.");
+                    return;
+                }
+
                 if (restrictionInnerLink.Values != null && restrictionInnerLink.Values.Count >= 2)
                 {
                     restrictionSource = GetLinkAddress(restrictionInnerLink.Values[0]);
                     restrictionTarget = GetLinkAddress(restrictionInnerLink.Values[1]);
+
+                    if (restrictionSource == links.Constants.Null || restrictionTarget == links.Constants.Null)
+                    {
+                        Console.WriteLine("Failed to retrieve restriction source or target.");
+                        return;
+                    }
                 }
                 else
                 {
@@ -166,6 +180,12 @@ namespace LiNoCliTool
                 {
                     substitutionSource = GetLinkAddress(substitutionInnerLink.Values[0]);
                     substitutionTarget = GetLinkAddress(substitutionInnerLink.Values[1]);
+
+                    if (substitutionSource == links.Constants.Null || substitutionTarget == links.Constants.Null)
+                    {
+                        Console.WriteLine("Failed to retrieve substitution source or target.");
+                        return;
+                    }
                 }
                 else
                 {
@@ -179,6 +199,13 @@ namespace LiNoCliTool
                 return;
             }
 
+            // Print out the IDs before update
+            Console.WriteLine($"linkId: {linkId}");
+            Console.WriteLine($"restrictionSource: {restrictionSource}");
+            Console.WriteLine($"restrictionTarget: {restrictionTarget}");
+            Console.WriteLine($"substitutionSource: {substitutionSource}");
+            Console.WriteLine($"substitutionTarget: {substitutionTarget}");
+
             var restriction = new List<uint> { linkId, restrictionSource, restrictionTarget };
             var substitution = new List<uint> { linkId, substitutionSource, substitutionTarget };
 
@@ -188,7 +215,9 @@ namespace LiNoCliTool
             links.Update(restriction, substitution, null);
 
             Console.WriteLine("Final data store contents:");
-            links.Each(null, link =>
+            var any = links.Constants.Any;
+            var query = new DoubletLink(index: any, source: any, target: any);
+            links.Each(query, link =>
             {
                 Console.WriteLine(links.Format(link));
                 return links.Constants.Continue;
