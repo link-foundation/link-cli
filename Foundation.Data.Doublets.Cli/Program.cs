@@ -69,15 +69,24 @@ void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
         }
     }
 
-    if (parsedLinks.Count < 2)
+    if (parsedLinks.Count == 0)
+    {
+        Console.WriteLine("No links in the parsed query.");
+        return;
+    }
+
+    // Get the outer link
+    var outerLink = parsedLinks[0];
+
+    if (outerLink.Values == null || outerLink.Values.Count < 2)
     {
         Console.WriteLine("Not enough links in the query for an update operation.");
         return;
     }
 
-    // Assume first link is restriction, second is substitution
-    var restrictionLink = parsedLinks[0];
-    var substitutionLink = parsedLinks[1];
+    // Assume first value is restriction, second is substitution
+    var restrictionLink = outerLink.Values[0];
+    var substitutionLink = outerLink.Values[1];
 
     uint linkId = GetLinkAddress(restrictionLink);
 
