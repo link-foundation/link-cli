@@ -7,7 +7,6 @@ using Platform.Protocols.Lino;
 
 using LinoLink = Platform.Protocols.Lino.Link<string>;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
-using Platform.Data;
 
 namespace LiNoCliTool
 {
@@ -15,44 +14,38 @@ namespace LiNoCliTool
     {
         static async System.Threading.Tasks.Task Main(string[] args)
         {
-            Console.WriteLine("Welcome to LiNo CLI Tool!");
-
-            // Define options
             var dbOption = new Option<string>(
                 name: "--db",
-                description: "Path to the links database file"
+                description: "Path to the links database file",
+                getDefaultValue: () => "db.links"
             );
-            dbOption.SetDefaultValue("db.links");
 
             var queryOption = new Option<string>(
                 name: "--query",
                 description: "LiNo query for CRUD operation"
             );
 
-            var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
-            rootCommand.AddOption(dbOption);
-            rootCommand.AddOption(queryOption);
+            var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
+            {
+                dbOption,
+                queryOption
+            };
 
             rootCommand.SetHandler((string db, string query) =>
             {
                 using var links = new UnitedMemoryLinks<uint>(db);
 
                 // Create initial test data
-                var link1 = links.GetOrCreate(1u, 1u);
-                var link2 = links.GetOrCreate(2u, 2u);
-                Console.WriteLine($"Created link: {links.Format(link1)}");
-                Console.WriteLine($"Created link: {links.Format(link2)}");
+                links.GetOrCreate(1u, 1u);
+                links.GetOrCreate(2u, 2u);
 
                 if (string.IsNullOrWhiteSpace(query))
                 {
-                    Console.WriteLine("No query provided.");
                     return;
                 }
 
-                Console.WriteLine("Processing query...");
                 var parser = new Parser();
                 var parsedLinks = parser.Parse(query);
-                Console.WriteLine($"Parsed query: {parsedLinks.Format()}");
 
                 // Process parsed links based on CRUD operations
                 ProcessLinks(links, parsedLinks);
@@ -68,13 +61,11 @@ namespace LiNoCliTool
             {
                 if (link == null)
                 {
-                    Console.WriteLine("Link is null.");
                     return links.Constants.Null;
                 }
 
                 if (!string.IsNullOrEmpty(link.Id) && uint.TryParse(link.Id, out uint linkId))
                 {
-                    Console.WriteLine($"Found link Id: {linkId}");
                     return linkId;
                 }
                 else if (link.Values != null && link.Values.Count > 0)
@@ -88,34 +79,11 @@ namespace LiNoCliTool
                         }
                     }
                 }
-                Console.WriteLine("Link does not have a valid Id.");
                 return links.Constants.Null;
-            }
-
-            void PrintLinoLink(LinoLink link, int indent = 0)
-            {
-                var indentStr = new string(' ', indent * 2);
-                Console.WriteLine($"{indentStr}Link Id: {link.Id}");
-                if (link.Values != null && link.Values.Count > 0)
-                {
-                    Console.WriteLine($"{indentStr}Values:");
-                    foreach (var value in link.Values)
-                    {
-                        PrintLinoLink(value, indent + 1);
-                    }
-                }
-            }
-
-            // Print the parsed links
-            Console.WriteLine("Detailed Parsed Links Structure:");
-            foreach (var link in parsedLinks)
-            {
-                PrintLinoLink(link);
             }
 
             if (parsedLinks.Count == 0)
             {
-                Console.WriteLine("No links in the parsed query.");
                 return;
             }
 
@@ -123,7 +91,6 @@ namespace LiNoCliTool
 
             if (outerLink.Values == null || outerLink.Values.Count < 2)
             {
-                Console.WriteLine("Not enough links in the query for an update operation.");
                 return;
             }
 
@@ -144,7 +111,6 @@ namespace LiNoCliTool
 
                 if (linkId == links.Constants.Null)
                 {
-                    Console.WriteLine("Failed to retrieve linkId from restriction.");
                     return;
                 }
 
@@ -155,19 +121,16 @@ namespace LiNoCliTool
 
                     if (restrictionSource == links.Constants.Null || restrictionTarget == links.Constants.Null)
                     {
-                        Console.WriteLine("Failed to retrieve restriction source or target.");
                         return;
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Restriction inner link does not have enough values.");
                     return;
                 }
             }
             else
             {
-                Console.WriteLine("Restriction link does not have values.");
                 return;
             }
 
@@ -183,39 +146,25 @@ namespace LiNoCliTool
 
                     if (substitutionSource == links.Constants.Null || substitutionTarget == links.Constants.Null)
                     {
-                        Console.WriteLine("Failed to retrieve substitution source or target.");
                         return;
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Substitution inner link does not have enough values.");
                     return;
                 }
             }
             else
             {
-                Console.WriteLine("Substitution link does not have values.");
                 return;
             }
-
-            // Print out the IDs before update
-            Console.WriteLine($"linkId: {linkId}");
-            Console.WriteLine($"restrictionSource: {restrictionSource}");
-            Console.WriteLine($"restrictionTarget: {restrictionTarget}");
-            Console.WriteLine($"substitutionSource: {substitutionSource}");
-            Console.WriteLine($"substitutionTarget: {substitutionTarget}");
 
             var restriction = new List<uint> { linkId, restrictionSource, restrictionTarget };
             var substitution = new List<uint> { linkId, substitutionSource, substitutionTarget };
 
-            Console.WriteLine($"Updating link with restriction: {string.Join(", ", restriction)}");
-            Console.WriteLine($"Updating link with substitution: {string.Join(", ", substitution)}");
 
             links.Update(restriction, substitution, (before, after) =>
             {
-                Console.WriteLine($"Before: {links.Format(before)}");
-                Console.WriteLine($"After: {links.Format(after)}");
                 return links.Constants.Continue;
             });
 
