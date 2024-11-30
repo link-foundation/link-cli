@@ -34,8 +34,8 @@ rootCommand.SetHandler((string db, string query) =>
 
     var link1 = links.GetOrCreate(1u, 1u);
     var link2 = links.GetOrCreate(2u, 2u);
-    Console.WriteLine($"Created link with address: {links.Format(link1)}");
-    Console.WriteLine($"Created link with address: {links.Format(link2)}");
+    Console.WriteLine($"Created link: {links.Format(link1)}");
+    Console.WriteLine($"Created link: {links.Format(link2)}");
 
     if (string.IsNullOrWhiteSpace(query))
     {
