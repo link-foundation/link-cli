@@ -10,7 +10,7 @@ namespace LiNoCliTool
 {
     class Program
     {
-        static async System.Threading.Tasks.Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             var dbOption = new Option<string>(
                 name: "--db",
