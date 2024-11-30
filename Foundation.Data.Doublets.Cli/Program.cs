@@ -1,164 +1,198 @@
 ﻿using System;
 using System.CommandLine;
 using System.Collections.Generic;
-using Platform.Data.Doublets.Memory.United.Generic;
 using Platform.Data.Doublets;
+using Platform.Data.Doublets.Memory.United.Generic;
 using Platform.Protocols.Lino;
 
 using LinoLink = Platform.Protocols.Lino.Link<string>;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using Platform.Data;
 
-Console.WriteLine("Welcome to LiNo CLI Tool!");
-
-// Define options
-var dbOption = new Option<string>(
-    name: "--db",
-    description: "Path to the links database file"
-);
-dbOption.SetDefaultValue("db.links");
-
-var queryOption = new Option<string>(
-    name: "--query",
-    description: "LiNo query for CRUD operation"
-);
-
-var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
-rootCommand.AddOption(dbOption);
-rootCommand.AddOption(queryOption);
-
-rootCommand.SetHandler((string db, string query) =>
+namespace LiNoCliTool
 {
-    using var links = new UnitedMemoryLinks<uint>(db);
-
-    var link1 = links.GetOrCreate(1u, 1u);
-    var link2 = links.GetOrCreate(2u, 2u);
-    Console.WriteLine($"Created link: {links.Format(link1)}");
-    Console.WriteLine($"Created link: {links.Format(link2)}");
-
-    if (string.IsNullOrWhiteSpace(query))
+    class Program
     {
-        Console.WriteLine("No query provided.");
-        return;
-    }
-
-    Console.WriteLine("Processing query...");
-    var parser = new Parser();
-    var parsedLinks = parser.Parse(query);
-    Console.WriteLine($"Parsed query: {parsedLinks.Format()}");
-
-    // Process parsed links based on CRUD operations
-    ProcessLinks(links, parsedLinks);
-
-}, dbOption, queryOption);
-
-await rootCommand.InvokeAsync(args);
-
-void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
-{
-    uint GetLinkAddress(LinoLink link)
-    {
-        if (link.Id != null && uint.TryParse(link.Id, out uint linkId))
+        static async System.Threading.Tasks.Task Main(string[] args)
         {
-            return linkId;
-        }
-        else if (link.Values != null && link.Values.Count > 0)
-        {
-            // Try to get the Id from the first value
-            var firstValue = link.Values[0];
-            return GetLinkAddress(firstValue);
-        }
-        else
-        {
-            Console.WriteLine("Link does not have a valid Id.");
-            return links.Constants.Null;
-        }
-    }
+            Console.WriteLine("Welcome to LiNo CLI Tool!");
 
-    uint GetLinkAddressFromValue(LinoLink link)
-    {
-        if (link.Id != null && uint.TryParse(link.Id, out uint linkId))
-        {
-            return linkId;
-        }
-        else
-        {
-            Console.WriteLine("Value does not have a valid Id.");
-            return links.Constants.Null;
-        }
-    }
+            // Define options
+            var dbOption = new Option<string>(
+                name: "--db",
+                description: "Path to the links database file"
+            );
+            dbOption.SetDefaultValue("db.links");
 
-    void PrintLinoLink(LinoLink link, int indent = 0)
-    {
-        var indentStr = new string(' ', indent * 2);
-        Console.WriteLine($"{indentStr}Link Id: {link.Id}");
-        if (link.Values != null)
-        {
-            Console.WriteLine($"{indentStr}Values:");
-            foreach (var value in link.Values)
+            var queryOption = new Option<string>(
+                name: "--query",
+                description: "LiNo query for CRUD operation"
+            );
+
+            var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
+            rootCommand.AddOption(dbOption);
+            rootCommand.AddOption(queryOption);
+
+            rootCommand.SetHandler((string db, string query) =>
             {
-                PrintLinoLink(value, indent + 1);
+                using var links = new UnitedMemoryLinks<uint>(db);
+
+                // Create initial test data
+                var link1 = links.GetOrCreate(1u, 1u);
+                var link2 = links.GetOrCreate(2u, 2u);
+                Console.WriteLine($"Created link: {links.Format(link1)}");
+                Console.WriteLine($"Created link: {links.Format(link2)}");
+
+                if (string.IsNullOrWhiteSpace(query))
+                {
+                    Console.WriteLine("No query provided.");
+                    return;
+                }
+
+                Console.WriteLine("Processing query...");
+                var parser = new Parser();
+                var parsedLinks = parser.Parse(query);
+                Console.WriteLine($"Parsed query: {parsedLinks.Format()}");
+
+                // Process parsed links based on CRUD operations
+                ProcessLinks(links, parsedLinks);
+
+            }, dbOption, queryOption);
+
+            await rootCommand.InvokeAsync(args);
+        }
+
+        static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
+        {
+            uint GetLinkAddress(LinoLink link)
+            {
+                if (link == null)
+                {
+                    Console.WriteLine("Link is null.");
+                    return links.Constants.Null;
+                }
+
+                if (!string.IsNullOrEmpty(link.Id) && uint.TryParse(link.Id, out uint linkId))
+                {
+                    return linkId;
+                }
+                else if (link.Values != null && link.Values.Count > 0)
+                {
+                    foreach (var value in link.Values)
+                    {
+                        uint id = GetLinkAddress(value);
+                        if (id != links.Constants.Null)
+                        {
+                            return id;
+                        }
+                    }
+                }
+                return links.Constants.Null;
             }
+
+            void PrintLinoLink(LinoLink link, int indent = 0)
+            {
+                var indentStr = new string(' ', indent * 2);
+                Console.WriteLine($"{indentStr}Link Id: {link.Id}");
+                if (link.Values != null && link.Values.Count > 0)
+                {
+                    Console.WriteLine($"{indentStr}Values:");
+                    foreach (var value in link.Values)
+                    {
+                        PrintLinoLink(value, indent + 1);
+                    }
+                }
+            }
+
+            // Print the parsed links
+            Console.WriteLine("Detailed Parsed Links Structure:");
+            foreach (var link in parsedLinks)
+            {
+                PrintLinoLink(link);
+            }
+
+            if (parsedLinks.Count == 0)
+            {
+                Console.WriteLine("No links in the parsed query.");
+                return;
+            }
+
+            var outerLink = parsedLinks[0];
+
+            if (outerLink.Values == null || outerLink.Values.Count < 2)
+            {
+                Console.WriteLine("Not enough links in the query for an update operation.");
+                return;
+            }
+
+            var restrictionLink = outerLink.Values[0];
+            var substitutionLink = outerLink.Values[1];
+
+            uint linkId = links.Constants.Null;
+            uint restrictionSource = links.Constants.Null;
+            uint restrictionTarget = links.Constants.Null;
+            uint substitutionSource = links.Constants.Null;
+            uint substitutionTarget = links.Constants.Null;
+
+            // Process restrictionLink
+            if (restrictionLink.Values != null && restrictionLink.Values.Count > 0)
+            {
+                var restrictionInnerLink = restrictionLink.Values[0];
+                linkId = GetLinkAddress(restrictionInnerLink);
+
+                if (restrictionInnerLink.Values != null && restrictionInnerLink.Values.Count >= 2)
+                {
+                    restrictionSource = GetLinkAddress(restrictionInnerLink.Values[0]);
+                    restrictionTarget = GetLinkAddress(restrictionInnerLink.Values[1]);
+                }
+                else
+                {
+                    Console.WriteLine("Restriction inner link does not have enough values.");
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Restriction link does not have values.");
+                return;
+            }
+
+            // Process substitutionLink
+            if (substitutionLink.Values != null && substitutionLink.Values.Count > 0)
+            {
+                var substitutionInnerLink = substitutionLink.Values[0];
+
+                if (substitutionInnerLink.Values != null && substitutionInnerLink.Values.Count >= 2)
+                {
+                    substitutionSource = GetLinkAddress(substitutionInnerLink.Values[0]);
+                    substitutionTarget = GetLinkAddress(substitutionInnerLink.Values[1]);
+                }
+                else
+                {
+                    Console.WriteLine("Substitution inner link does not have enough values.");
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Substitution link does not have values.");
+                return;
+            }
+
+            var restriction = new List<uint> { linkId, restrictionSource, restrictionTarget };
+            var substitution = new List<uint> { linkId, substitutionSource, substitutionTarget };
+
+            Console.WriteLine($"Updating link with restriction: {string.Join(", ", restriction)}");
+            Console.WriteLine($"Updating link with substitution: {string.Join(", ", substitution)}");
+
+            links.Update(restriction, substitution, null);
+
+            Console.WriteLine("Final data store contents:");
+            links.Each(null, link =>
+            {
+                Console.WriteLine(links.Format(link));
+                return links.Constants.Continue;
+            });
         }
     }
-
-    Console.WriteLine("Detailed Parsed Links Structure:");
-    foreach (var link in parsedLinks)
-    {
-        PrintLinoLink(link);
-    }
-
-    if (parsedLinks.Count == 0)
-    {
-        Console.WriteLine("No links in the parsed query.");
-        return;
-    }
-
-    // Get the outer link
-    var outerLink = parsedLinks[0];
-
-    if (outerLink.Values == null || outerLink.Values.Count < 2)
-    {
-        Console.WriteLine("Not enough links in the query for an update operation.");
-        return;
-    }
-
-    // Assume first value is restriction, second is substitution
-    var restrictionLink = outerLink.Values[0];
-    var substitutionLink = outerLink.Values[1];
-
-    uint linkId = GetLinkAddress(restrictionLink);
-
-    uint restrictionSource = links.Constants.Any;
-    uint restrictionTarget = links.Constants.Any;
-
-    if (restrictionLink.Values != null && restrictionLink.Values.Count >= 2)
-    {
-        restrictionSource = GetLinkAddressFromValue(restrictionLink.Values[0]);
-        restrictionTarget = GetLinkAddressFromValue(restrictionLink.Values[1]);
-    }
-
-    uint substitutionSource = links.Constants.Any;
-    uint substitutionTarget = links.Constants.Any;
-
-    if (substitutionLink.Values != null && substitutionLink.Values.Count >= 2)
-    {
-        substitutionSource = GetLinkAddressFromValue(substitutionLink.Values[0]);
-        substitutionTarget = GetLinkAddressFromValue(substitutionLink.Values[1]);
-    }
-
-    var restriction = new List<uint> { linkId, restrictionSource, restrictionTarget };
-    var substitution = new List<uint> { linkId, substitutionSource, substitutionTarget };
-
-    Console.WriteLine($"Updating link with restriction: {string.Join(", ", restriction)}");
-    Console.WriteLine($"Updating link with substitution: {string.Join(", ", substitution)}");
-
-    links.Update(restriction, substitution, null);
-
-    Console.WriteLine("Final data store contents:");
-    links.Each(null, link =>
-    {
-        Console.WriteLine(links.Format(link));
-        return links.Constants.Continue;
-    });
 }
