@@ -1,4 +1,4 @@
-# links-cli
+# link-cli
 A CLI tool to manipulate links.
 
 ## Run
