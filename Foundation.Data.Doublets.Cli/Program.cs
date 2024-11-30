@@ -55,20 +55,22 @@ namespace LiNoCliTool
 
         static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
         {
-            uint GetLinkAddress(LinoLink link)
+            uint GetLinkAddress(LinoLink? link)
             {
                 if (link == null)
                 {
                     return links.Constants.Null;
                 }
 
-                if (!string.IsNullOrEmpty(link.Id) && uint.TryParse(link.Id, out uint linkId))
+                LinoLink nonNullLink = (LinoLink)link;
+
+                if (!string.IsNullOrEmpty(nonNullLink.Id) && uint.TryParse(nonNullLink.Id, out uint linkId))
                 {
                     return linkId;
                 }
-                else if (link.Values != null && link.Values.Count > 0)
+                else if (nonNullLink.Values != null && nonNullLink.Values.Count > 0)
                 {
-                    foreach (var value in link.Values)
+                    foreach (var value in nonNullLink.Values)
                     {
                         uint id = GetLinkAddress(value);
                         if (id != links.Constants.Null)
