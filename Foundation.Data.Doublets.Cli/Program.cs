@@ -212,7 +212,12 @@ namespace LiNoCliTool
             Console.WriteLine($"Updating link with restriction: {string.Join(", ", restriction)}");
             Console.WriteLine($"Updating link with substitution: {string.Join(", ", substitution)}");
 
-            links.Update(restriction, substitution, null);
+            links.Update(restriction, substitution, (before, after) =>
+            {
+                Console.WriteLine($"Before: {links.Format(before)}");
+                Console.WriteLine($"After: {links.Format(after)}");
+                return links.Constants.Continue;
+            });
 
             Console.WriteLine("Final data store contents:");
             var any = links.Constants.Any;
