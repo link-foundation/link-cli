@@ -42,87 +42,70 @@ rootCommand.SetHandler((string db, string query) =>
         return;
     }
 
-    try
-    {
-        Console.WriteLine("Processing query...");
-        var parser = new Parser();
-        var parsedLinks = parser.Parse(query);
-        Console.WriteLine($"Parsed query: {parsedLinks.Format()}");
+    Console.WriteLine("Processing query...");
+    var parser = new Parser();
+    var parsedLinks = parser.Parse(query);
+    Console.WriteLine($"Parsed query: {parsedLinks.Format()}");
 
-        ProcessLinks(links, parsedLinks);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
+    // Process parsed links based on CRUD operations
+    ProcessLinks(links, parsedLinks);
+
 }, dbOption, queryOption);
 
 await rootCommand.InvokeAsync(args);
 
 void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
 {
-    uint GetOrCreateAddress(string? id)
+    uint GetLinkAddress(LinoLink link)
     {
-        if (id == null)
+        if (link.Id != null && uint.TryParse(link.Id, out uint linkId))
         {
-            Console.WriteLine("ID is null, returning default address.");
+            return linkId;
+        }
+        else
+        {
+            Console.WriteLine("Link does not have a valid Id.");
             return links.Constants.Null;
         }
-
-        if (uint.TryParse(id, out uint address))
-        {
-            return address;
-        }
-
-        Console.WriteLine($"Invalid ID '{id}', returning default address.");
-        return links.Constants.Null;
     }
 
-    foreach (var link in parsedLinks)
+    if (parsedLinks.Count < 2)
     {
-        try
-        {
-            if (link.Values == null || link.Values.Count < 2)
-            {
-                Console.WriteLine($"Link {link} does not have enough values.");
-                continue;
-            }
-
-            var sourceId = link.Values[0].Id;
-            var targetId = link.Values[1].Id;
-
-            if (sourceId == null || targetId == null)
-            {
-                Console.WriteLine($"Link {link} has null Ids.");
-                continue;
-            }
-
-            uint source = GetOrCreateAddress(sourceId);
-            uint target = GetOrCreateAddress(targetId);
-
-            if (link.Id == null)
-            {
-                Console.WriteLine($"Link {link} has null Id.");
-                continue;
-            }
-
-            if (!uint.TryParse(link.Id, out uint linkId))
-            {
-                Console.WriteLine($"Invalid link Id '{link.Id}'.");
-                continue;
-            }
-
-            var restriction = new List<uint> { linkId, links.Constants.Any, links.Constants.Any };
-            var substitution = new List<uint> { linkId, source, target };
-
-            Console.WriteLine($"Updating link: {string.Join(", ", substitution)}");
-            links.Update(restriction, substitution, null);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error processing link {link}: {ex.Message}");
-        }
+        Console.WriteLine("Not enough links in the query for an update operation.");
+        return;
     }
+
+    // Assume first link is restriction, second is substitution
+    var restrictionLink = parsedLinks[0];
+    var substitutionLink = parsedLinks[1];
+
+    uint linkId = GetLinkAddress(restrictionLink);
+
+    uint restrictionSource = links.Constants.Any;
+    uint restrictionTarget = links.Constants.Any;
+
+    if (restrictionLink.Values != null && restrictionLink.Values.Count == 2)
+    {
+        restrictionSource = GetLinkAddress(restrictionLink.Values[0]);
+        restrictionTarget = GetLinkAddress(restrictionLink.Values[1]);
+    }
+
+    uint substitutionSource = links.Constants.Any;
+    uint substitutionTarget = links.Constants.Any;
+
+    if (substitutionLink.Values != null && substitutionLink.Values.Count == 2)
+    {
+        substitutionSource = GetLinkAddress(substitutionLink.Values[0]);
+        substitutionTarget = GetLinkAddress(substitutionLink.Values[1]);
+    }
+
+    var restriction = new List<uint> { linkId, restrictionSource, restrictionTarget };
+    var substitution = new List<uint> { linkId, substitutionSource, substitutionTarget };
+
+    Console.WriteLine($"Updating link with restriction: {string.Join(", ", restriction)}");
+    Console.WriteLine($"Updating link with substitution: {string.Join(", ", substitution)}");
+
+    links.Update(restriction, substitution, null);
 
     Console.WriteLine("Final data store contents:");
     links.Each(null, link =>
