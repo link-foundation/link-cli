@@ -26,21 +26,11 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 rootCommand.SetHandler((string db, string query) =>
 {
   using var links = new UnitedMemoryLinks<uint>(db);
-
-  if (string.IsNullOrWhiteSpace(query))
+  if (!string.IsNullOrWhiteSpace(query))
   {
-    PrintAllLinks(links);
-    return;
+    ProcessQuery(links, query);
   }
-
-  var parser = new Parser();
-  var parsedLinks = parser.Parse(query);
-
-  // Process parsed links based on CRUD operations
-  ProcessLinks(links, parsedLinks);
-
   PrintAllLinks(links);
-
 }, dbOption, queryOption);
 
 await rootCommand.InvokeAsync(args);
@@ -82,8 +72,11 @@ static DoubletLink ToDoubletLink(ILinks<uint> links, LinoLink linoLink, uint def
   return new DoubletLink(index, source, target);
 }
 
-static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
+static void ProcessQuery(ILinks<uint> links, string query)
 {
+  var parser = new Parser();
+  var parsedLinks = parser.Parse(query);
+
   if (parsedLinks.Count == 0)
   {
     return;
@@ -117,8 +110,8 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
            (substitutionLink.Values?.Count > 0))
   {
     // Update operation (only single link is supported at the moment)
-    var restrictionDoublet = ToDoubletLink(links, restrictionLink.Values[0], links.Constants.Any);
-    var substitutionDoublet = ToDoubletLink(links, substitutionLink.Values[0], links.Constants.Null);
+    var restrictionDoublet = ToDoubletLink(links, restrictionLink.Values[0], any);
+    var substitutionDoublet = ToDoubletLink(links, substitutionLink.Values[0], @null);
 
     links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
     {
@@ -126,13 +119,13 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
     });
 
     return;
-  } 
+  }
   else if (substitutionLink.Values?.Count == 0) // If substitution is empty, perform delete operation
   {
     foreach (var linkToDelete in restrictionLink.Values ?? [])
     {
-      var query = ToDoubletLink(links, linkToDelete, links.Constants.Any);
-      links.DeleteByQuery(query);
+      var queryLink = ToDoubletLink(links, linkToDelete, any);
+      links.DeleteByQuery(queryLink);
     }
     return;
   }
@@ -140,7 +133,7 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
   {
     foreach (var linkToCreate in substitutionLink.Values ?? [])
     {
-      var doubletLink = ToDoubletLink(links, linkToCreate, links.Constants.Null);
+      var doubletLink = ToDoubletLink(links, linkToCreate, @null);
       links.GetOrCreate(doubletLink.Source, doubletLink.Target);
     }
     return;
