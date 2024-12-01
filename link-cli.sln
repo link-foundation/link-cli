@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Foundation.Data.Doublets.Cli", "Foundation.Data.Doublets.Cli\Foundation.Data.Doublets.Cli.csproj", "{D32100AE-A8F8-421D-B5EE-8D49B779B674}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Foundation.Data.Doublets.Cli.Tests", "Foundation.Data.Doublets.Cli.Tests\Foundation.Data.Doublets.Cli.Tests.csproj", "{9C930C8B-0BAE-4DE2-9111-2BA649317648}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D32100AE-A8F8-421D-B5EE-8D49B779B674}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D32100AE-A8F8-421D-B5EE-8D49B779B674}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D32100AE-A8F8-421D-B5EE-8D49B779B674}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C930C8B-0BAE-4DE2-9111-2BA649317648}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C930C8B-0BAE-4DE2-9111-2BA649317648}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C930C8B-0BAE-4DE2-9111-2BA649317648}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C930C8B-0BAE-4DE2-9111-2BA649317648}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
