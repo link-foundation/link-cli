@@ -73,7 +73,7 @@ static DoubletLink BuildQueryFromLinoLink(ILinks<uint> links, LinoLink linoLink)
 
   var restrictionLink = linoLink.Values[0];
 
-  if (restrictionLink.Values != null && restrictionLink.Values.Count >= 2)
+  if (restrictionLink.Values?.Count >= 2)
   {
     source = GetLinkAddress(links, restrictionLink.Values[0]);
     target = GetLinkAddress(links, restrictionLink.Values[1]);
@@ -96,7 +96,7 @@ static uint GetLinkAddress(ILinks<uint> links, LinoLink? link)
     return linkId;
   }
 
-  if (nonNullLink.Values != null && nonNullLink.Values.Count >= 2)
+  if (nonNullLink.Values?.Count >= 2)
   {
     uint source = GetLinkAddress(links, nonNullLink.Values[0]);
     uint target = GetLinkAddress(links, nonNullLink.Values[1]);
@@ -106,7 +106,7 @@ static uint GetLinkAddress(ILinks<uint> links, LinoLink? link)
       return links.GetOrCreate(source, target);
     }
   }
-  else if (nonNullLink.Values != null && nonNullLink.Values.Count == 1)
+  else if (nonNullLink.Values?.Count == 1)
   {
     // Console.WriteLine($"Link Value: {nonNullLink.Values[0]}");
     return GetLinkAddress(links, nonNullLink.Values[0]);
@@ -123,22 +123,31 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
 
   var outerLink = parsedLinks[0];
 
-  if (outerLink.Values == null || outerLink.Values.Count < 2)
+  var outerLinkValues = outerLink.Values;
+
+  if (outerLinkValues?.Count < 2)
   {
     return;
   }
 
-  var restrictionLink = outerLink.Values[0];
-  var substitutionLink = outerLink.Values[1];
+  var @null = links.Constants.Null;
 
-  if ((restrictionLink.Values == null || restrictionLink.Values.Count == 0) &&
-      (substitutionLink.Values == null || substitutionLink.Values.Count == 0))
+  if (outerLinkValues == null) // To avoid warning
+  {
+    return;
+  }
+
+  var restrictionLink = outerLinkValues[0];
+  var substitutionLink = outerLinkValues[1];
+
+  if ((restrictionLink.Values?.Count == 0) &&
+      (substitutionLink.Values?.Count == 0))
   {
     return;
   }
 
   // If substitution is empty, perform delete operation
-  if (substitutionLink.Values == null || substitutionLink.Values.Count == 0)
+  if (substitutionLink.Values?.Count == 0)
   {
     // Build query from restrictionLink
     var query = BuildQueryFromLinoLink(links, restrictionLink);
@@ -150,15 +159,15 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
   }
 
   // If restriction is empty, perform create operation
-  if (restrictionLink.Values == null || restrictionLink.Values.Count == 0)
+  if (restrictionLink.Values?.Count == 0)
   {
     // Process substitutionLink
-    if (substitutionLink.Values != null && substitutionLink.Values.Count > 0)
+    if (substitutionLink.Values?.Count > 0)
     {
       foreach (var linkToCreate in substitutionLink.Values)
       {
         uint linkAddress = GetLinkAddress(links, linkToCreate);
-        if (linkAddress == links.Constants.Null)
+        if (linkAddress == @null)
         {
           Console.WriteLine("Failed to create link.");
         }
@@ -168,29 +177,29 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
   }
 
   // Existing code for updates remains unchanged
-  uint linkId = links.Constants.Null;
-  uint restrictionSource = links.Constants.Null;
-  uint restrictionTarget = links.Constants.Null;
-  uint substitutionSource = links.Constants.Null;
-  uint substitutionTarget = links.Constants.Null;
+  uint linkId = @null;
+  uint restrictionSource = @null;
+  uint restrictionTarget = @null;
+  uint substitutionSource = @null;
+  uint substitutionTarget = @null;
 
   // Process restrictionLink
-  if (restrictionLink.Values != null && restrictionLink.Values.Count > 0)
+  if (restrictionLink.Values?.Count > 0)
   {
     var restrictionInnerLink = restrictionLink.Values[0];
     linkId = GetLinkAddress(links, restrictionInnerLink);
 
-    if (linkId == links.Constants.Null)
+    if (linkId == @null)
     {
       return;
     }
 
-    if (restrictionInnerLink.Values != null && restrictionInnerLink.Values.Count >= 2)
+    if (restrictionInnerLink.Values?.Count >= 2)
     {
       restrictionSource = GetLinkAddress(links, restrictionInnerLink.Values[0]);
       restrictionTarget = GetLinkAddress(links, restrictionInnerLink.Values[1]);
 
-      if (restrictionSource == links.Constants.Null || restrictionTarget == links.Constants.Null)
+      if (restrictionSource == @null || restrictionTarget == @null)
       {
         return;
       }
@@ -206,16 +215,16 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
   }
 
   // Process substitutionLink
-  if (substitutionLink.Values != null && substitutionLink.Values.Count > 0)
+  if (substitutionLink.Values?.Count > 0)
   {
     var substitutionInnerLink = substitutionLink.Values[0];
 
-    if (substitutionInnerLink.Values != null && substitutionInnerLink.Values.Count >= 2)
+    if (substitutionInnerLink.Values?.Count >= 2)
     {
       substitutionSource = GetLinkAddress(links, substitutionInnerLink.Values[0]);
       substitutionTarget = GetLinkAddress(links, substitutionInnerLink.Values[1]);
 
-      if (substitutionSource == links.Constants.Null || substitutionTarget == links.Constants.Null)
+      if (substitutionSource == @null || substitutionTarget == @null)
       {
         return;
       }
