@@ -39,7 +39,7 @@ dotnet run -- --query "(((1: 1 1)) ((1: 1 2)))"
 
 ## Delete link
 
-Delete link with source 1 and target 2.
+Delete link with source 1 and target 2:
 
 ```bash
 dotnet run -- --query "(((1 2)) ())"
@@ -48,6 +48,8 @@ dotnet run -- --query "(((1 2)) ())"
 ```
 (2: 2 2)
 ```
+
+Delete link with source 2 and target 2:
 
 ```bash
 dotnet run -- --query "(((2 2)) ())"
