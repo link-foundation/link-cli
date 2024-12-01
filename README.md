@@ -67,6 +67,19 @@ dotnet run -- --query "(((1: 1 1)) ((1: 1 2)))"
 (2: 2 2)
 ```
 
+## Update multiple links
+
+Update link with index 1 and source 1 and target 1, changing target to 2.
+
+```bash
+dotnet run -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
+```
+→
+```
+(1: 1 2)
+(2: 2 1)
+```
+
 ## Delete single link
 
 Delete link with source 1 and target 2:
