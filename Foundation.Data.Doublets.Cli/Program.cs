@@ -58,36 +58,64 @@ static void PrintAllLinks(ILinks<uint> links)
   });
 }
 
-static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
+static DoubletLink BuildQueryFromLinoLink(ILinks<uint> links, LinoLink linoLink)
 {
-  static uint GetLinkAddress(ILinks<uint> links, LinoLink? link)
+  uint index = links.Constants.Any;
+  uint source = links.Constants.Any;
+  uint target = links.Constants.Any;
+
+  // Console.WriteLine($"Building query from LinoLink: {linoLink}");
+
+  if (!string.IsNullOrEmpty(linoLink.Id) && uint.TryParse(linoLink.Id, out uint linkId))
   {
-    if (link == null)
-    {
-      return links.Constants.Null;
-    }
+    index = linkId;
+  }
 
-    LinoLink nonNullLink = (LinoLink)link;
-    if (!string.IsNullOrEmpty(nonNullLink.Id) && uint.TryParse(nonNullLink.Id, out uint linkId))
-    {
-      return linkId;
-    }
+  var restrictionLink = linoLink.Values[0];
 
-    if (nonNullLink.Values != null && nonNullLink.Values.Count >= 2)
-    {
-      uint source = GetLinkAddress(links, nonNullLink.Values[0]);
-      uint target = GetLinkAddress(links, nonNullLink.Values[1]);
-      if (source != links.Constants.Null && target != links.Constants.Null)
-      {
-        return links.GetOrCreate(source, target);
-      }
-    }
-    else if (nonNullLink.Values != null && nonNullLink.Values.Count == 1)
-    {
-      return GetLinkAddress(links, nonNullLink.Values[0]);
-    }
+  if (restrictionLink.Values != null && restrictionLink.Values.Count >= 2)
+  {
+    source = GetLinkAddress(links, restrictionLink.Values[0]);
+    target = GetLinkAddress(links, restrictionLink.Values[1]);
+  }
+
+  return new DoubletLink(index, source, target);
+}
+
+static uint GetLinkAddress(ILinks<uint> links, LinoLink? link)
+{
+  if (link == null)
+  {
     return links.Constants.Null;
   }
+
+  LinoLink nonNullLink = (LinoLink)link;
+  if (!string.IsNullOrEmpty(nonNullLink.Id) && uint.TryParse(nonNullLink.Id, out uint linkId))
+  {
+    // Console.WriteLine($"Link ID: {linkId}");
+    return linkId;
+  }
+
+  if (nonNullLink.Values != null && nonNullLink.Values.Count >= 2)
+  {
+    uint source = GetLinkAddress(links, nonNullLink.Values[0]);
+    uint target = GetLinkAddress(links, nonNullLink.Values[1]);
+    // Console.WriteLine($"Source: {source}, Target: {target}");
+    if (source != links.Constants.Null && target != links.Constants.Null)
+    {
+      return links.GetOrCreate(source, target);
+    }
+  }
+  else if (nonNullLink.Values != null && nonNullLink.Values.Count == 1)
+  {
+    // Console.WriteLine($"Link Value: {nonNullLink.Values[0]}");
+    return GetLinkAddress(links, nonNullLink.Values[0]);
+  }
+  return links.Constants.Null;
+}
+
+static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
+{
   if (parsedLinks.Count == 0)
   {
     return;
@@ -106,6 +134,18 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
   if ((restrictionLink.Values == null || restrictionLink.Values.Count == 0) &&
       (substitutionLink.Values == null || substitutionLink.Values.Count == 0))
   {
+    return;
+  }
+
+  // If substitution is empty, perform delete operation
+  if (substitutionLink.Values == null || substitutionLink.Values.Count == 0)
+  {
+    // Build query from restrictionLink
+    var query = BuildQueryFromLinoLink(links, restrictionLink);
+
+    // Console.WriteLine($"Deleting links with query: {query}");
+
+    links.DeleteByQuery(query);
     return;
   }
 
