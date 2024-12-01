@@ -29,6 +29,7 @@ rootCommand.SetHandler((string db, string query) =>
 
   if (string.IsNullOrWhiteSpace(query))
   {
+    PrintAllLinks(links);
     return;
   }
 
@@ -38,10 +39,24 @@ rootCommand.SetHandler((string db, string query) =>
   // Process parsed links based on CRUD operations
   ProcessLinks(links, parsedLinks);
 
+  PrintAllLinks(links);
+
 }, dbOption, queryOption);
 
 await rootCommand.InvokeAsync(args);
 
+
+static void PrintAllLinks(ILinks<uint> links)
+{
+  var any = links.Constants.Any;
+  var query = new DoubletLink(index: any, source: any, target: any);
+
+  links.Each(query, link =>
+  {
+    Console.WriteLine(links.Format(link));
+    return links.Constants.Continue;
+  });
+}
 
 static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
 {
@@ -109,15 +124,6 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
         }
       }
     }
-
-    // Print the final data store contents
-    var any = links.Constants.Any;
-    var query = new DoubletLink(index: any, source: any, target: any);
-    links.Each(query, link =>
-    {
-      Console.WriteLine(links.Format(link));
-      return links.Constants.Continue;
-    });
     return;
   }
 
@@ -189,14 +195,6 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
 
   links.Update(restriction, substitution, (before, after) =>
   {
-    return links.Constants.Continue;
-  });
-
-  var anyValue = links.Constants.Any;
-  var queryLink = new DoubletLink(index: anyValue, source: anyValue, target: anyValue);
-  links.Each(queryLink, link =>
-  {
-    Console.WriteLine(links.Format(link));
     return links.Constants.Continue;
   });
 }
