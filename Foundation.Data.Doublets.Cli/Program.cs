@@ -116,11 +116,9 @@ static void ProcessLinks(ILinks<uint> links, IList<LinoLink> parsedLinks)
   else if ((restrictionLink.Values?.Count > 0) &&
            (substitutionLink.Values?.Count > 0))
   {
-    // Update operation
+    // Update operation (only single link is supported at the moment)
     var restrictionDoublet = ToDoubletLink(links, restrictionLink.Values[0], links.Constants.Any);
     var substitutionDoublet = ToDoubletLink(links, substitutionLink.Values[0], links.Constants.Null);
-
-    Console.WriteLine($"Updating links with restriction: {restrictionDoublet} and substitution: {substitutionDoublet}");
 
     links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
     {
