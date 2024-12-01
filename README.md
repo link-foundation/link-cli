@@ -1,6 +1,23 @@
 # link-cli
 A CLI tool to manipulate links.
 
+## Execute from root
+
+```bash
+dotnet run --project Foundation.Data.Doublets.Cli -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
+```
+
+## Execute from folder
+
+```bash
+cd Foundation.Data.Doublets.Cli
+dotnet run -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
+```
+
+## Execute from NuGet
+
+Not implemented yet
+
 ## Create single link
 
 Create link with 1 as source and 1 as target.
