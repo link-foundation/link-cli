@@ -3,11 +3,11 @@ using Platform.Data.Doublets.Memory.United.Generic;
 
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
-using static Foundation.Data.Doublets.Cli.QueryProcessor;
+using static Foundation.Data.Doublets.Cli.BasicQueryProcessor;
 
 namespace Foundation.Data.Doublets.Cli.Tests.Tests
 {
-    public class LinkCliTests
+    public class BasicQueryProcessor
     {
         [Fact]
         public void CreateSingleLinkTest()

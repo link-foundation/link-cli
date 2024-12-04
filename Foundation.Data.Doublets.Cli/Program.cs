@@ -4,7 +4,7 @@ using Platform.Data.Doublets.Memory.United.Generic;
 using Platform.Protocols.Lino;
 
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
-using QueryProcessor = Foundation.Data.Doublets.Cli.QueryProcessor;
+using MixedQueryProcessor = Foundation.Data.Doublets.Cli.MixedQueryProcessor;
 
 var dbOption = new Option<string>(
   name: "--db",
@@ -29,7 +29,7 @@ rootCommand.SetHandler((string db, string query) =>
   if (!string.IsNullOrWhiteSpace(query))
   {
     // ProcessQuery(links, query);
-    QueryProcessor.ProcessQuery(links, query);
+    MixedQueryProcessor.ProcessQuery(links, query);
   }
   PrintAllLinks(links);
 }, dbOption, queryOption);

@@ -7,7 +7,7 @@ using DoubletLink = Platform.Data.Doublets.Link<uint>;
 namespace Foundation.Data.Doublets.Cli
 {
   // Query Processor class with single static method to process queries
-  public static class QueryProcessor
+  public static class BasicQueryProcessor
   {
     // ProcessQuery method to process queries
     public static void ProcessQuery(ILinks<uint> links, string query)
