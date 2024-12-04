@@ -25,7 +25,7 @@ dotnet tool install --global clink
 Create link with 1 as source and 1 as target.
 
 ```bash
-dotnet run -- --query "(() ((1 1)))"
+clink --query "(() ((1 1)))"
 ```
 →
 ```
@@ -35,7 +35,7 @@ dotnet run -- --query "(() ((1 1)))"
 Create link with 2 as source and 2 as target.
 
 ```bash
-dotnet run -- --query "(() ((2 2)))"
+clink --query "(() ((2 2)))"
 ```
 →
 ```
@@ -48,7 +48,7 @@ dotnet run -- --query "(() ((2 2)))"
 Create two links at the same time: (1 1) and (2 2).
 
 ```bash
-dotnet run -- --query "(() ((1 1) (2 2)))"
+clink --query "(() ((1 1) (2 2)))"
 ```
 →
 ```
@@ -61,7 +61,7 @@ dotnet run -- --query "(() ((1 1) (2 2)))"
 Update link with index 1 and source 1 and target 1, changing target to 2.
 
 ```bash
-dotnet run -- --query "(((1: 1 1)) ((1: 1 2)))"
+clink --query "(((1: 1 1)) ((1: 1 2)))"
 ```
 →
 ```
@@ -74,7 +74,7 @@ dotnet run -- --query "(((1: 1 1)) ((1: 1 2)))"
 Update link with index 1 and source 1 and target 1, changing target to 2.
 
 ```bash
-dotnet run -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
+clink --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
 ```
 →
 ```
@@ -87,7 +87,7 @@ dotnet run -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
 Delete link with source 1 and target 2:
 
 ```bash
-dotnet run -- --query "(((1 2)) ())"
+clink --query "(((1 2)) ())"
 ```
 →
 ```
@@ -97,7 +97,7 @@ dotnet run -- --query "(((1 2)) ())"
 Delete link with source 2 and target 2:
 
 ```bash
-dotnet run -- --query "(((2 2)) ())"
+clink --query "(((2 2)) ())"
 ```
 →
 ```
@@ -106,7 +106,7 @@ dotnet run -- --query "(((2 2)) ())"
 ## Delete multiple links
 
 ```bash
-dotnet run -- --query "(((1 2) (2 2)) ())"
+clink --query "(((1 2) (2 2)) ())"
 ```
 →
 ```
