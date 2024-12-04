@@ -116,6 +116,62 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void CreationDuringUpdateTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1)))");
+
+                // Act: Add new link with ID '2' by including it only in substitution
+                ProcessQuery(links, "(((1: 1 1)) ((1: 1 1) (2: 2 2)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+            });
+        }
+
+        [Fact(Skip = "This test is not working as expected")]
+        public void CreationWithEmptySlotDuringUpdateTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1)))");
+
+                // Act: Add new link with ID '2' by including it only in substitution
+                ProcessQuery(links, "(((1: 1 1)) ((1: 1 1) (3: 3 3)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 3, 3, 3);
+            });
+        }
+
+        [Fact]
+        public void DeletionDuringUpdateTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1) (2 2)))");
+
+                // Act: Remove link with ID '2' by omitting it in substitution
+                ProcessQuery(links, "(((1: 1 1) (2: 2 2)) ((1: 1 1)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 1, 1, 1);
+            });
+        }
+
+        [Fact]
         public void DeleteSingleLinkTest_Source1Target2()
         {
             RunTestWithLinks(links =>

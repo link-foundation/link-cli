@@ -39,48 +39,60 @@ namespace Foundation.Data.Doublets.Cli
       var restrictionLink = outerLinkValues[0];
       var substitutionLink = outerLinkValues[1];
 
-      if ((restrictionLink.Values?.Count == 0) &&
-          (substitutionLink.Values?.Count == 0))
+      if ((restrictionLink.Values?.Count == 0) && (substitutionLink.Values?.Count == 0))
       {
         return;
       }
-      else if ((restrictionLink.Values?.Count > 0) &&
-               (substitutionLink.Values?.Count > 0))
+      else if ((restrictionLink.Values?.Count > 0) && (substitutionLink.Values?.Count > 0))
       {
         // Build dictionaries mapping IDs to links
-        var restrictionLinksById = restrictionLink.Values
+        var restrictionLinksById = restrictionLink.Values?
             .Where(linoLink => !string.IsNullOrEmpty(linoLink.Id))
             .ToDictionary(linoLink => linoLink.Id);
 
-        var substitutionLinksById = substitutionLink.Values
+        var substitutionLinksById = substitutionLink.Values?
             .Where(linoLink => !string.IsNullOrEmpty(linoLink.Id))
             .ToDictionary(linoLink => linoLink.Id);
 
-        // Iterate over each restriction link
-        foreach (var restrictionId in restrictionLinksById.Keys)
+        // Handle null dictionaries
+        restrictionLinksById ??= new Dictionary<string, LinoLink>();
+        substitutionLinksById ??= new Dictionary<string, LinoLink>();
+
+        var allIds = restrictionLinksById.Keys.Union(substitutionLinksById.Keys);
+
+        foreach (var id in allIds)
         {
-          var restrictionLinoLink = restrictionLinksById[restrictionId];
+          bool hasRestriction = restrictionLinksById.TryGetValue(id, out var restrictionLinoLink);
+          bool hasSubstitution = substitutionLinksById.TryGetValue(id, out var substitutionLinoLink);
 
-          if (!substitutionLinksById.TryGetValue(restrictionId, out var substitutionLinoLink))
+          if (hasRestriction && hasSubstitution)
           {
-            Console.WriteLine($"No substitution link found for restriction link with ID {restrictionId}.");
-            continue;
+            // Update operation
+            var restrictionDoublet = ToDoubletLink(links, restrictionLinoLink, any);
+            var substitutionDoublet = ToDoubletLink(links, substitutionLinoLink, @null);
+
+            links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
+            {
+              return links.Constants.Continue;
+            });
           }
-
-          var restrictionDoublet = ToDoubletLink(links, restrictionLinoLink, any);
-          var substitutionDoublet = ToDoubletLink(links, substitutionLinoLink, @null);
-
-          links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
+          else if (hasRestriction && !hasSubstitution)
           {
-            return links.Constants.Continue;
-          });
+            var queryLink = ToDoubletLink(links, restrictionLinoLink, any);
+            links.DeleteByQuery(queryLink);
+          }
+          else if (!hasRestriction && hasSubstitution)
+          {
+            var doubletLink = ToDoubletLink(links, substitutionLinoLink, @null);
+            Set(links, doubletLink);
+          }
         }
 
         return;
       }
       else if (substitutionLink.Values?.Count == 0) // If substitution is empty, perform delete operation
       {
-        foreach (var linkToDelete in restrictionLink.Values ?? new List<LinoLink>())
+        foreach (var linkToDelete in restrictionLink.Values ?? [])
         {
           var queryLink = ToDoubletLink(links, linkToDelete, any);
           links.DeleteByQuery(queryLink);
@@ -89,12 +101,31 @@ namespace Foundation.Data.Doublets.Cli
       }
       else if (restrictionLink.Values?.Count == 0) // If restriction is empty, perform create operation
       {
-        foreach (var linkToCreate in substitutionLink.Values ?? new List<LinoLink>())
+        foreach (var linkToCreate in substitutionLink.Values ?? [])
         {
           var doubletLink = ToDoubletLink(links, linkToCreate, @null);
-          links.GetOrCreate(doubletLink.Source, doubletLink.Target);
+          Set(links, doubletLink);
         }
         return;
+      }
+    }
+
+    static void Set(this ILinks<uint> links, DoubletLink doubletLink)
+    {
+      var @null = links.Constants.Null;
+      var any = links.Constants.Any;
+      if (doubletLink.Index != @null)
+      {
+        links.EnsureCreated(doubletLink.Index);
+        var restrictionDoublet = new DoubletLink(doubletLink.Index, any, any);
+        links.Update(restrictionDoublet, doubletLink, (before, after) =>
+        {
+          return links.Constants.Continue;
+        });
+      }
+      else
+      {
+        links.GetOrCreate(doubletLink.Source, doubletLink.Target);
       }
     }
 
