@@ -16,7 +16,9 @@ dotnet run -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
 
 ## Execute from NuGet
 
-Not implemented yet
+```bash
+dotnet tool install --global clink
+```
 
 ## Create single link
 
