@@ -1,5 +1,5 @@
 # link-cli
-A CLI tool to manipulate links. [Associative theory description (in russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/).
+A CLI tool to manipulate links. [Associative theory description (in Russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/). [Short description in English](https://github.com/linksplatform?view_as=public).
 
 ## Execute from root
 
