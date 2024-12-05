@@ -26,12 +26,15 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 rootCommand.SetHandler((string db, string query) =>
 {
   using var links = new UnitedMemoryLinks<uint>(db);
+
+  var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+
   if (!string.IsNullOrWhiteSpace(query))
   {
     // ProcessQuery(links, query);
-    MixedQueryProcessor.ProcessQuery(links, query);
+    MixedQueryProcessor.ProcessQuery(decoratedLinks, query);
   }
-  PrintAllLinks(links);
+  PrintAllLinks(decoratedLinks);
 }, dbOption, queryOption);
 
 await rootCommand.InvokeAsync(args);

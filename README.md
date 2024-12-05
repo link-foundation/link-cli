@@ -111,3 +111,26 @@ clink --query "((1 2) (2 2)) ()"
 →
 ```
 ```
+
+## Complete example:
+
+```bash
+dotnet tool install --global clink
+
+clink --query "() ((1 1) (2 2))"
+
+clink --query "((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))"
+
+clink --query "((1 2) (2 1)) ()"
+```
+
+
+## Complete example for debug:
+
+```bash
+dotnet run --project Foundation.Data.Doublets.Cli -- --query "() ((1 1) (2 2))"
+
+dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))"
+
+dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1 2) (2 1)) ()"
+```
