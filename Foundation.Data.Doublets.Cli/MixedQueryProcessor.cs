@@ -117,6 +117,14 @@ namespace Foundation.Data.Doublets.Cli
     {
       var @null = links.Constants.Null;
       var any = links.Constants.Any;
+      if (doubletLink.Source == any)
+      {
+        throw new ArgumentException($"The source of the link {doubletLink} cannot be any.");
+      }
+      if (doubletLink.Target == any)
+      {
+        throw new ArgumentException($"The target of the link {doubletLink} cannot be any.");
+      }
       if (doubletLink.Index != @null)
       {
         // links.EnsureCreated(doubletLink.Index);
@@ -138,24 +146,31 @@ namespace Foundation.Data.Doublets.Cli
       uint index = defaultValue;
       uint source = defaultValue;
       uint target = defaultValue;
-      if (!string.IsNullOrEmpty(linoLink.Id) && uint.TryParse(linoLink.Id, out uint linkId))
-      {
-        index = linkId;
-      }
+      TryParseLinkId(linoLink.Id, links.Constants, ref index);
       if (linoLink.Values?.Count == 2)
       {
         var sourceLink = linoLink.Values[0];
+        TryParseLinkId(sourceLink.Id, links.Constants, ref source);
         var targetLink = linoLink.Values[1];
-        if (!string.IsNullOrEmpty(sourceLink.Id) && uint.TryParse(sourceLink.Id, out uint sourceId))
-        {
-          source = sourceId;
-        }
-        if (!string.IsNullOrEmpty(targetLink.Id) && uint.TryParse(targetLink.Id, out uint targetId))
-        {
-          target = targetId;
-        }
+        TryParseLinkId(targetLink.Id, links.Constants, ref target);
       }
       return new DoubletLink(index, source, target);
+    }
+
+    static void TryParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
+    {
+      if (string.IsNullOrEmpty(id))
+      {
+        return;
+      }
+      if (id == "*")
+      {
+        parsedValue = constants.Any;
+      }
+      else if (uint.TryParse(id, out uint linkId))
+      {
+        parsedValue = linkId;
+      }
     }
   }
 

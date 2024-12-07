@@ -14,9 +14,7 @@
     <Authors>link-foundation</Authors>
     <Description>A CLI tool for links manipulation.</Description>
     <PackageId>clink</PackageId>
-    <Version>1.1.0</Version>
-    <ReleaseNotes>Added README.md to the NuGet package.
-Added support for creation of links with speficied index.</ReleaseNotes>
+    <Version>1.2.0</Version>
     <LicenseExpression>Unlicense</LicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
   </PropertyGroup>
@@ -29,6 +27,6 @@ Added support for creation of links with speficied index.</ReleaseNotes>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>
