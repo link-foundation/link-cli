@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8'
+          dotnet-version: '8.0.x'  # Updated to match your project
 
       # Step 3: Restore dependencies
       - name: Restore dependencies
@@ -31,7 +31,7 @@ jobs:
 
       # Step 5: Run tests (optional)
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test ./Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj --no-build --verbosity normal
 
       # Step 6: Pack the NuGet package
       - name: Pack
