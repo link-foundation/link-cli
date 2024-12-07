@@ -31,7 +31,7 @@ jobs:
 
       # Step 5: Run tests (optional)
       - name: Test
-        run: dotnet test ./Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj --no-build --verbosity normal
+        run: dotnet test --verbosity normal
 
       # Step 6: Pack the NuGet package
       - name: Pack
