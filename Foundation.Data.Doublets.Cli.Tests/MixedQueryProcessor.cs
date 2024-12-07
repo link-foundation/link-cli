@@ -25,6 +25,51 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void CreateSingleLinkWithIndexTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Act
+                ProcessQuery(links, "(() ((1: 1 1)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 1, 1, 1);
+            });
+        }
+
+        [Fact]
+        public void CreateSingleLinkWithIndexAfterGapTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Act
+                ProcessQuery(links, "(() ((2: 2 2)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 2, 2, 2);
+            });
+        }
+
+        [Fact]
+        public void CreateSingleLinkWithIndexAfterDoubleGapTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Act
+                ProcessQuery(links, "(() ((3: 3 3)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 3, 3, 3);
+            });
+        }
+
+        [Fact]
         public void CreateLinkWithSource2Target2Test()
         {
             RunTestWithLinks(links =>

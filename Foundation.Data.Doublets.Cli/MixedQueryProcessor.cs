@@ -3,6 +3,9 @@ using Platform.Protocols.Lino;
 
 using LinoLink = Platform.Protocols.Lino.Link<string>;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
+using Platform.Converters;
+using System.Numerics;
+using Platform.Data;
 
 namespace Foundation.Data.Doublets.Cli
 {
@@ -116,7 +119,8 @@ namespace Foundation.Data.Doublets.Cli
       var any = links.Constants.Any;
       if (doubletLink.Index != @null)
       {
-        links.EnsureCreated(doubletLink.Index);
+        // links.EnsureCreated(doubletLink.Index);
+        MixedLinksExtensions.EnsureCreated(links, doubletLink.Index); // contain fix
         var restrictionDoublet = new DoubletLink(doubletLink.Index, any, any);
         links.Update(restrictionDoublet, doubletLink, (before, after) =>
         {
@@ -154,5 +158,43 @@ namespace Foundation.Data.Doublets.Cli
       return new DoubletLink(index, source, target);
     }
   }
+
+  public static class MixedLinksExtensions
+  {
+
+    public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress> { links.EnsureCreated(links.Create, addresses); }
+
+
+    public static void EnsurePointsCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress> { links.EnsureCreated(links.CreatePoint, addresses); }
+
+
+    public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
+    {
+      var addressToUInt64Converter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
+      var uInt64ToAddressConverter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
+      var nonExistentAddresses = new HashSet<TLinkAddress>(addresses.Where(x => !links.Exists(x)));
+      if (nonExistentAddresses.Count > 0)
+      {
+        var max = nonExistentAddresses.Max();
+        max = uInt64ToAddressConverter.Convert(TLinkAddress.CreateTruncating(System.Math.Min(ulong.CreateTruncating(max), ulong.CreateTruncating(links.Constants.InternalReferencesRange.Maximum))));
+        var createdLinks = new List<TLinkAddress>();
+        TLinkAddress createdLink;
+        do
+        {
+          createdLink = creator();
+          createdLinks.Add(createdLink);
+        }
+        while (createdLink != max);
+        for (var i = 0; i < createdLinks.Count; i++)
+        {
+          if (!nonExistentAddresses.Contains(createdLinks[i]))
+          {
+            links.Delete(createdLinks[i]);
+          }
+        }
+      }
+    }
+  }
 }
+
 
