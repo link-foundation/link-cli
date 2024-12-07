@@ -179,7 +179,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             });
         }
 
-        [Fact(Skip = "This test is not working as expected")]
+        [Fact]
         public void CreationWithEmptySlotDuringUpdateTest()
         {
             RunTestWithLinks(links =>
