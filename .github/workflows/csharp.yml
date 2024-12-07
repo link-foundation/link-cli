@@ -1,0 +1,48 @@
+name: C#
+
+# Trigger the workflow when a new tag is pushed
+on:
+  push:
+    tags:
+      - 'v*'  # This example triggers on tags like v1.0.0
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Setup .NET SDK
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8'
+
+      # Step 3: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Step 4: Build the project
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # Step 5: Run tests (optional)
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      # Step 6: Pack the NuGet package
+      - name: Pack
+        run: dotnet pack --configuration Release --no-build --output ./output
+
+      # Step 7: Publish the NuGet package
+      - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./output/*.nupkg \
+            --api-key $NUGET_API_KEY \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

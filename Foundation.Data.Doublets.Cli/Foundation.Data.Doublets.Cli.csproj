@@ -14,8 +14,8 @@
     <Authors>link-foundation</Authors>
     <Description>A CLI tool for links manipulation.</Description>
     <PackageId>clink</PackageId>
-    <Version>1.2.0</Version>
-    <LicenseExpression>Unlicense</LicenseExpression>
+    <Version>1.2.1</Version>
+    <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
   </PropertyGroup>
 
