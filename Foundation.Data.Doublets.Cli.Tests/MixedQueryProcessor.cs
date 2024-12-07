@@ -270,6 +270,42 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void DeleteLinksByAnyTargetTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+                // Act
+                ProcessQuery(links, "(((1 *)) ())");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 2, 2, 2);
+            });
+        }
+
+        [Fact]
+        public void DeleteLinksByAnySourceTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1) (1 2)))");
+
+                // Act
+                ProcessQuery(links, "(((* 2)) ())");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 1, 1, 1);
+            });
+        }
+
+        [Fact]
         public void DeleteAllLinksBySourceAndTargetTest()
         {
             RunTestWithLinks(links =>
