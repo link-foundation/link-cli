@@ -7,13 +7,16 @@
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>clink</ToolCommandName>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>link-foundation</Authors>
     <Description>A CLI tool for links manipulation.</Description>
     <PackageId>clink</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
+    <ReleaseNotes>Added README.md to the NuGet package.
+Added support for creation of links with speficied index.</ReleaseNotes>
     <LicenseExpression>Unlicense</LicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
   </PropertyGroup>
@@ -25,4 +28,7 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>
