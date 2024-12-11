@@ -32,7 +32,19 @@ rootCommand.SetHandler((string db, string query) =>
   if (!string.IsNullOrWhiteSpace(query))
   {
     // ProcessQuery(links, query);
-    MixedQueryProcessor.ProcessQuery(decoratedLinks, query);
+
+    MixedQueryProcessor.Options options = query;
+
+    options.ChangesHandler = (before, after) =>
+    {
+      var beforeLink = new DoubletLink(before);
+      var afterLink = new DoubletLink(after);
+      Console.WriteLine($"{links.Format(beforeLink)} ↦ {links.Format(afterLink)}");
+      // Console.WriteLine(links.Format(link));
+      return links.Constants.Continue;
+    };
+
+    MixedQueryProcessor.ProcessQuery(decoratedLinks, options);
   }
   PrintAllLinks(decoratedLinks);
 }, dbOption, queryOption);

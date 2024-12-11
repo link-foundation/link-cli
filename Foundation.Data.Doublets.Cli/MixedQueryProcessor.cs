@@ -6,15 +6,37 @@ using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using Platform.Converters;
 using System.Numerics;
 using Platform.Data;
+using Platform.Delegates;
 
 namespace Foundation.Data.Doublets.Cli
 {
   // Query Processor class with single static method to process queries
   public static class MixedQueryProcessor
   {
-    // ProcessQuery method to process queries
-    public static void ProcessQuery(ILinks<uint> links, string query)
+    public class Options
     {
+      public string? Query { get; set; }
+
+      public WriteHandler<uint>? ChangesHandler { get; set; }
+
+      // implicit conversion from string to Options
+
+      public static implicit operator Options(string query) => new Options { Query = query };
+    }
+
+    // ProcessQuery method to process queries
+    public static void ProcessQuery(ILinks<uint> links, Options options)
+    {
+      var query = options.Query;
+
+      var @null = links.Constants.Null;
+      var any = links.Constants.Any;
+
+      if (string.IsNullOrEmpty(query))
+      {
+        return;
+      }
+
       var parser = new Parser();
       var parsedLinks = parser.Parse(query);
 
@@ -30,9 +52,6 @@ namespace Foundation.Data.Doublets.Cli
       {
         return;
       }
-
-      var @null = links.Constants.Null;
-      var any = links.Constants.Any;
 
       if (outerLinkValues == null)
       {
@@ -74,20 +93,29 @@ namespace Foundation.Data.Doublets.Cli
             var restrictionDoublet = ToDoubletLink(links, restrictionLinoLink, any);
             var substitutionDoublet = ToDoubletLink(links, substitutionLinoLink, @null);
 
-            links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
+            if (restrictionDoublet.Index == @any && substitutionDoublet.Index == @any
+              && restrictionDoublet.Source == @any && substitutionDoublet.Source == @any
+              && restrictionDoublet.Target == @any && substitutionDoublet.Target == @any)
             {
-              return links.Constants.Continue;
-            });
+              ReadAll(links, restrictionDoublet, options);
+            }
+            else
+            {
+              links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
+              {
+                return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
+              });
+            }
           }
           else if (hasRestriction && !hasSubstitution)
           {
             var queryLink = ToDoubletLink(links, restrictionLinoLink, any);
-            links.DeleteByQuery(queryLink);
+            Unset(links, queryLink, options);
           }
           else if (!hasRestriction && hasSubstitution)
           {
             var doubletLink = ToDoubletLink(links, substitutionLinoLink, @null);
-            Set(links, doubletLink);
+            Set(links, doubletLink, options);
           }
         }
 
@@ -98,7 +126,7 @@ namespace Foundation.Data.Doublets.Cli
         foreach (var linkToDelete in restrictionLink.Values ?? [])
         {
           var queryLink = ToDoubletLink(links, linkToDelete, any);
-          links.DeleteByQuery(queryLink);
+          Unset(links, queryLink, options);
         }
         return;
       }
@@ -107,37 +135,75 @@ namespace Foundation.Data.Doublets.Cli
         foreach (var linkToCreate in substitutionLink.Values ?? [])
         {
           var doubletLink = ToDoubletLink(links, linkToCreate, @null);
-          Set(links, doubletLink);
+          Set(links, doubletLink, options);
         }
         return;
       }
     }
 
-    static void Set(this ILinks<uint> links, DoubletLink doubletLink)
+    static void Set(this ILinks<uint> links, DoubletLink substitutionLink, Options options)
     {
       var @null = links.Constants.Null;
       var any = links.Constants.Any;
-      if (doubletLink.Source == any)
+      if (substitutionLink.Source == any)
       {
-        throw new ArgumentException($"The source of the link {doubletLink} cannot be any.");
+        throw new ArgumentException($"The source of the link {substitutionLink} cannot be any.");
       }
-      if (doubletLink.Target == any)
+      if (substitutionLink.Target == any)
       {
-        throw new ArgumentException($"The target of the link {doubletLink} cannot be any.");
+        throw new ArgumentException($"The target of the link {substitutionLink} cannot be any.");
       }
-      if (doubletLink.Index != @null)
+      if (substitutionLink.Index != @null)
       {
         // links.EnsureCreated(doubletLink.Index);
-        MixedLinksExtensions.EnsureCreated(links, doubletLink.Index); // contain fix
-        var restrictionDoublet = new DoubletLink(doubletLink.Index, any, any);
-        links.Update(restrictionDoublet, doubletLink, (before, after) =>
+        MixedLinksExtensions.EnsureCreated(links, substitutionLink.Index); // contain fix
+        var restrictionDoublet = new DoubletLink(substitutionLink.Index, any, any);
+        options.ChangesHandler?.Invoke(null, restrictionDoublet);
+        links.Update(restrictionDoublet, substitutionLink, (before, after) =>
         {
-          return links.Constants.Continue;
+          return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
         });
       }
       else
       {
-        links.GetOrCreate(doubletLink.Source, doubletLink.Target);
+        // Get or create
+        var linkIndex = links.SearchOrDefault(substitutionLink.Source, substitutionLink.Target);
+
+        if (linkIndex == default)
+        {
+          linkIndex = links.CreateAndUpdate(substitutionLink.Source, substitutionLink.Target, (before, after) =>
+          {
+            return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
+          });
+
+          // var newLink = new DoubletLink(linkIndex, doubletLink.Source, doubletLink.Target);
+          // options.ChangesHandler?.Invoke(null, newLink);
+        }
+        else
+        {
+          var existingLink = new DoubletLink(linkIndex, substitutionLink.Source, substitutionLink.Target);
+          options.ChangesHandler?.Invoke(existingLink, existingLink);
+        }
+      }
+    }
+
+    static void ReadAll(this ILinks<uint> links, DoubletLink restrictionLink, Options options)
+    {
+      links.Each(restrictionLink, link =>
+      {
+        return options.ChangesHandler?.Invoke(link, link) ?? links.Constants.Continue;
+      });
+    }
+
+    static void Unset(this ILinks<uint> links, DoubletLink restrictionLink, Options options)
+    {
+      var linksToDelete = links.All(restrictionLink);
+      foreach (var link in linksToDelete)
+      {
+        links.Delete(link, (before, after) =>
+        {
+          return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
+        });
       }
     }
 
