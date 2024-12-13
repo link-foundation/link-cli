@@ -10,27 +10,21 @@ using Platform.Delegates;
 
 namespace Foundation.Data.Doublets.Cli
 {
-  // Query Processor class with single static method to process queries
   public static class MixedQueryProcessor
   {
     public class Options
     {
       public string? Query { get; set; }
-
       public WriteHandler<uint>? ChangesHandler { get; set; }
 
-      // implicit conversion from string to Options
       public static implicit operator Options(string query) => new Options { Query = query };
     }
 
-    // ProcessQuery method to process queries
     public static void ProcessQuery(ILinks<uint> links, Options options)
     {
       var query = options.Query;
-
       var @null = links.Constants.Null;
       var any = links.Constants.Any;
-
       if (string.IsNullOrEmpty(query))
       {
         return;
@@ -46,19 +40,13 @@ namespace Foundation.Data.Doublets.Cli
 
       var outerLink = parsedLinks[0];
       var outerLinkValues = outerLink.Values;
-
       if (outerLinkValues?.Count < 2)
       {
         return;
       }
 
-      if (outerLinkValues == null)
-      {
-        return;
-      }
-
-      var restrictionLink = outerLinkValues[0];
-      var substitutionLink = outerLinkValues[1];
+      var restrictionLink = outerLinkValues![0];
+      var substitutionLink = outerLinkValues![1];
 
       if ((restrictionLink.Values?.Count == 0) && (substitutionLink.Values?.Count == 0))
       {
@@ -66,18 +54,78 @@ namespace Foundation.Data.Doublets.Cli
       }
       else if ((restrictionLink.Values?.Count > 0) && (substitutionLink.Values?.Count > 0))
       {
-        // Build dictionaries mapping IDs to links
-        var restrictionLinksById = restrictionLink.Values?
-            .Where(linoLink => !string.IsNullOrEmpty(linoLink.Id))
-            .ToDictionary(linoLink => linoLink.Id ?? "") ?? new Dictionary<string, LinoLink>();
+        // Build dictionaries
+        var restrictionLinksById = (restrictionLink.Values ?? new List<LinoLink>())
+            .Where(l => !string.IsNullOrEmpty(l.Id))
+            .ToDictionary(l => l.Id!);
+        if (!string.IsNullOrEmpty(restrictionLink.Id))
+        {
+          restrictionLinksById[restrictionLink.Id!] = restrictionLink;
+        }
 
-        var substitutionLinksById = substitutionLink.Values?
-            .Where(linoLink => !string.IsNullOrEmpty(linoLink.Id))
-            .ToDictionary(linoLink => linoLink.Id ?? "") ?? new Dictionary<string, LinoLink>();
+        var substitutionLinksById = (substitutionLink.Values ?? new List<LinoLink>())
+            .Where(l => !string.IsNullOrEmpty(l.Id))
+            .ToDictionary(l => l.Id!);
+        if (!string.IsNullOrEmpty(substitutionLink.Id))
+        {
+          substitutionLinksById[substitutionLink.Id!] = substitutionLink;
+        }
 
-        var allIds = restrictionLinksById.Keys.Union(substitutionLinksById.Keys);
+        var allIds = restrictionLinksById.Keys.Union(substitutionLinksById.Keys).ToList();
 
-        // Basic variable support: If both sides have the same variable ID and structure, treat as no-op.
+        // Collect variable assignments from restriction links
+        var variableAssignments = new Dictionary<string, uint>();
+        foreach (var kv in restrictionLinksById)
+        {
+          var lino = kv.Value;
+          if (lino.Values?.Count == 2 && lino.Id != null)
+          {
+            // This means we have something like (2: $var1 $var2) or (2: 1 $var)
+            // Get the actual DB link to resolve variables
+            var dbl = ToDoubletLink(links, lino, any);
+            if (dbl.Index != any && dbl.Index != @null)
+            {
+              var actual = new DoubletLink(links.GetLink(dbl.Index));
+              // actual.Source and actual.Target contain the real numbers
+              // lino.Values[0].Id and lino.Values[1].Id may contain variables
+              AssignVariableFromLink(lino.Values[0].Id, actual.Source, variableAssignments, any, @null);
+              AssignVariableFromLink(lino.Values[1].Id, actual.Target, variableAssignments, any, @null);
+            }
+          }
+          else if (lino.Values?.Count == 2 && lino.Id?.StartsWith("$") != true)
+          {
+            // Similar logic for a link without explicit index but with variables
+            var dbl = ToDoubletLink(links, lino, any);
+            // If dbl.Index is unknown, we can't directly read from DB by index, but we can still assign known numeric parts
+            // If source or target is numeric or '*', no assignment needed unless it's variable
+            AssignVariableFromLink(lino.Values[0].Id, dbl.Source, variableAssignments, any, @null);
+            AssignVariableFromLink(lino.Values[1].Id, dbl.Target, variableAssignments, any, @null);
+          }
+        }
+        
+        // Before comparing variables for no-op, let's apply variable substitution to substitution links
+        // Replace variables in substitutionLinksById with their assigned values if any
+        foreach (var kv in substitutionLinksById.ToList())
+        {
+          var lino = kv.Value;
+          if (lino.Values?.Count == 2)
+          {
+            var newSourceId = ReplaceVariable(lino.Values[0].Id, variableAssignments);
+            var newTargetId = ReplaceVariable(lino.Values[1].Id, variableAssignments);
+
+            if (newSourceId != lino.Values[0].Id || newTargetId != lino.Values[1].Id)
+            {
+              if (lino.Id != null){
+                lino = new LinoLink(lino.Id, new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
+              } else {
+                lino = new LinoLink(new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
+              }
+              substitutionLinksById[kv.Key] = lino;
+            }
+          }
+        }
+
+        // Basic variable no-op check
         var variableIds = allIds.Where(id => id.StartsWith("$")).ToArray();
         foreach (var varId in variableIds)
         {
@@ -86,8 +134,7 @@ namespace Foundation.Data.Doublets.Cli
           {
             if (AreLinksEquivalent(varRestrictionLink, varSubstitutionLink))
             {
-              // Remove variable from processing as it results in no changes.
-              allIds = allIds.Except(new[] { varId });
+              allIds = allIds.Except([varId]).ToList();
             }
           }
         }
@@ -142,17 +189,34 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
+    static string ReplaceVariable(string? id, Dictionary<string, uint> variableAssignments)
+    {
+      if (string.IsNullOrEmpty(id)) return id ?? "";
+      if (variableAssignments.TryGetValue(id, out var val))
+      {
+        return val.ToString();
+      }
+      return id;
+    }
+
+    static void AssignVariableFromLink(string? varId, uint val, Dictionary<string, uint> variableAssignments, uint any, uint @null)
+    {
+      if (!string.IsNullOrEmpty(varId) && varId.StartsWith("$") && val != any && val != @null)
+      {
+        variableAssignments[varId] = val;
+      }
+    }
+
     static bool AreLinksEquivalent(LinoLink a, LinoLink b)
     {
       if (a.Id != b.Id) return false;
       if (a.Values?.Count != b.Values?.Count) return false;
       if (a.Values == null || b.Values == null) return a.Values == b.Values;
-
       for (int i = 0; i < a.Values.Count; i++)
       {
         var av = a.Values[i];
         var bv = b.Values[i];
-        if (av.Id != bv.Id) return false; // Simple check for identical structure
+        if (av.Id != bv.Id) return false;
       }
       return true;
     }
@@ -191,9 +255,6 @@ namespace Foundation.Data.Doublets.Cli
           {
             return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
           });
-
-          // var newLink = new DoubletLink(linkIndex, doubletLink.Source, doubletLink.Target);
-          // options.ChangesHandler?.Invoke(null, newLink);
         }
         else
         {
