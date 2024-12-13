@@ -5,7 +5,7 @@ It is based on [associative theory (in Russian)](https://habr.com/ru/companies/d
 
 [Short description in English in what links are](https://github.com/linksplatform?view_as=public).
 
-![telegram-cloud-photo-size-2-5373353582126032871-y](https://github.com/user-attachments/assets/6d3d60fa-a7fa-4768-a73b-4c5265ee6e28)
+<img width="777" alt="Screenshot 2024-12-05 at 15 22 12" src="https://github.com/user-attachments/assets/01d35e39-4bfd-4639-a457-fa86840e2bb8" />
 
 ## Execute from root
 
