@@ -1,5 +1,5 @@
 # link-cli
-A CLI tool to manipulate links. 
+`clink` (`CLInk` `cLINK`), a CLI tool to manipulate links.
 
 It is based on [associative theory (in Russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/) and [Links Notation](https://github.com/linksplatform/Protocols.Lino)
 
