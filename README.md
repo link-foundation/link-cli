@@ -1,7 +1,7 @@
 # link-cli
 `clink` (`CLInk` `cLINK`), a CLI tool to manipulate links.
 
-It is based on [associative theory (in Russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/) and [Links Notation](https://github.com/linksplatform/Protocols.Lino)
+It is based on [associative theory (in Russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) ([ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
 [Short description in English in what links are](https://github.com/linksplatform?view_as=public). And [in Russian](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md).
 
