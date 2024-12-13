@@ -20,7 +20,6 @@ namespace Foundation.Data.Doublets.Cli
       public WriteHandler<uint>? ChangesHandler { get; set; }
 
       // implicit conversion from string to Options
-
       public static implicit operator Options(string query) => new Options { Query = query };
     }
 
@@ -78,6 +77,21 @@ namespace Foundation.Data.Doublets.Cli
 
         var allIds = restrictionLinksById.Keys.Union(substitutionLinksById.Keys);
 
+        // Basic variable support: If both sides have the same variable ID and structure, treat as no-op.
+        var variableIds = allIds.Where(id => id.StartsWith("$")).ToArray();
+        foreach (var varId in variableIds)
+        {
+          if (restrictionLinksById.TryGetValue(varId, out var varRestrictionLink)
+              && substitutionLinksById.TryGetValue(varId, out var varSubstitutionLink))
+          {
+            if (AreLinksEquivalent(varRestrictionLink, varSubstitutionLink))
+            {
+              // Remove variable from processing as it results in no changes.
+              allIds = allIds.Except(new[] { varId });
+            }
+          }
+        }
+
         foreach (var id in allIds)
         {
           bool hasRestriction = restrictionLinksById.TryGetValue(id, out var restrictionLinoLink);
@@ -126,6 +140,21 @@ namespace Foundation.Data.Doublets.Cli
         }
         return;
       }
+    }
+
+    static bool AreLinksEquivalent(LinoLink a, LinoLink b)
+    {
+      if (a.Id != b.Id) return false;
+      if (a.Values?.Count != b.Values?.Count) return false;
+      if (a.Values == null || b.Values == null) return a.Values == b.Values;
+
+      for (int i = 0; i < a.Values.Count; i++)
+      {
+        var av = a.Values[i];
+        var bv = b.Values[i];
+        if (av.Id != bv.Id) return false; // Simple check for identical structure
+      }
+      return true;
     }
 
     static void Set(this ILinks<uint> links, DoubletLink substitutionLink, Options options)
@@ -229,12 +258,7 @@ namespace Foundation.Data.Doublets.Cli
 
   public static class MixedLinksExtensions
   {
-
     public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress> { links.EnsureCreated(links.Create, addresses); }
-
-
-    public static void EnsurePointsCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress> { links.EnsureCreated(links.CreatePoint, addresses); }
-
 
     public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
     {
@@ -264,5 +288,3 @@ namespace Foundation.Data.Doublets.Cli
     }
   }
 }
-
-

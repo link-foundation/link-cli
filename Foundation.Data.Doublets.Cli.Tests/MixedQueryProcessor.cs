@@ -123,6 +123,26 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void NoUpdateUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1)))");
+                ProcessQuery(links, "(() ((2 2)))");
+
+                // Act
+                ProcessQuery(links, "((($index: $source $target)) (($index: $source $target)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+            });
+        }
+
+        [Fact]
         public void MultipleUpdatesTest()
         {
             RunTestWithLinks(links =>
