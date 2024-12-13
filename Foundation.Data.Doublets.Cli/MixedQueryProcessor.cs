@@ -70,15 +70,11 @@ namespace Foundation.Data.Doublets.Cli
         // Build dictionaries mapping IDs to links
         var restrictionLinksById = restrictionLink.Values?
             .Where(linoLink => !string.IsNullOrEmpty(linoLink.Id))
-            .ToDictionary(linoLink => linoLink.Id);
+            .ToDictionary(linoLink => linoLink.Id ?? "") ?? new Dictionary<string, LinoLink>();
 
         var substitutionLinksById = substitutionLink.Values?
             .Where(linoLink => !string.IsNullOrEmpty(linoLink.Id))
-            .ToDictionary(linoLink => linoLink.Id);
-
-        // Handle null dictionaries
-        restrictionLinksById ??= new Dictionary<string, LinoLink>();
-        substitutionLinksById ??= new Dictionary<string, LinoLink>();
+            .ToDictionary(linoLink => linoLink.Id ?? "") ?? new Dictionary<string, LinoLink>();
 
         var allIds = restrictionLinksById.Keys.Union(substitutionLinksById.Keys);
 
@@ -254,10 +250,10 @@ namespace Foundation.Data.Doublets.Cli
       var addressToUInt64Converter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
       var uInt64ToAddressConverter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
       var nonExistentAddresses = new HashSet<TLinkAddress>(addresses.Where(x => !links.Exists(x)));
-      if (nonExistentAddresses.Count > 0)
+      if (nonExistentAddresses?.Count > 0)
       {
-        var max = nonExistentAddresses.Max();
-        max = uInt64ToAddressConverter.Convert(TLinkAddress.CreateTruncating(System.Math.Min(ulong.CreateTruncating(max), ulong.CreateTruncating(links.Constants.InternalReferencesRange.Maximum))));
+        var max = nonExistentAddresses.Max()!;
+        max = uInt64ToAddressConverter.Convert(TLinkAddress.CreateTruncating(Math.Min(ulong.CreateTruncating(max), ulong.CreateTruncating(links.Constants.InternalReferencesRange.Maximum))));
         var createdLinks = new List<TLinkAddress>();
         TLinkAddress createdLink;
         do
