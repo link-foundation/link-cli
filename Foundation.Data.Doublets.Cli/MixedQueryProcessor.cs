@@ -89,19 +89,10 @@ namespace Foundation.Data.Doublets.Cli
             var restrictionDoublet = ToDoubletLink(links, restrictionLinoLink, any);
             var substitutionDoublet = ToDoubletLink(links, substitutionLinoLink, @null);
 
-            if (restrictionDoublet.Index == @any && substitutionDoublet.Index == @any
-              && restrictionDoublet.Source == @any && substitutionDoublet.Source == @any
-              && restrictionDoublet.Target == @any && substitutionDoublet.Target == @any)
+            links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
             {
-              ReadAll(links, restrictionDoublet, options);
-            }
-            else
-            {
-              links.Update(restrictionDoublet, substitutionDoublet, (before, after) =>
-              {
-                return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
-              });
-            }
+              return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
+            });
           }
           else if (hasRestriction && !hasSubstitution)
           {
