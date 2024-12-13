@@ -143,6 +143,26 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void ReverseSourceWithTargetUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1)))");
+                ProcessQuery(links, "(() ((1 2)))");
+
+                // Act
+                ProcessQuery(links, "(((2: $source $target)) ((2: $target $source)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 1);
+            });
+        }
+
+        [Fact]
         public void MultipleUpdatesTest()
         {
             RunTestWithLinks(links =>
