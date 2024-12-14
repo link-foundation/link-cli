@@ -81,6 +81,11 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 PrintAllLinks("Final State after create", links);
                 Console.WriteLine("=== END QUERY PROCESSING ===");
+
+                // Constants
+                Console.WriteLine("--- Constants ---");
+                Console.WriteLine("Any: " + any);
+                Console.WriteLine("Null: " + @null);
                 return;
             }
 
@@ -96,6 +101,11 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 PrintAllLinks("Final State after delete", links);
                 Console.WriteLine("=== END QUERY PROCESSING ===");
+
+                // Constants
+                Console.WriteLine("--- Constants ---");
+                Console.WriteLine("Any: " + any);
+                Console.WriteLine("Null: " + @null);
                 return;
             }
 
@@ -134,6 +144,11 @@ namespace Foundation.Data.Doublets.Cli
             {
                 Console.WriteLine("  No solutions found.");
                 Console.WriteLine("=== END QUERY PROCESSING ===");
+
+                // Constants
+                Console.WriteLine("--- Constants ---");
+                Console.WriteLine("Any: " + any);
+                Console.WriteLine("Null: " + @null);
                 return;
             }
             else
@@ -217,6 +232,11 @@ namespace Foundation.Data.Doublets.Cli
 
             PrintAllLinks("Final State after query", links);
             Console.WriteLine("=== END QUERY PROCESSING ===");
+
+            // Constants
+            Console.WriteLine("--- Constants ---");
+            Console.WriteLine("Any: " + any);
+            Console.WriteLine("Null: " + @null);
         }
 
         #region Utilities for Debugging
@@ -301,39 +321,55 @@ namespace Foundation.Data.Doublets.Cli
             return operations;
         }
 
+        // In ApplyAllOperations method:
         private static void ApplyAllOperations(ILinks<uint> links, List<(DoubletLink before, DoubletLink after)> operations, Options options)
         {
             Console.WriteLine("Applying All Operations:");
-            // Apply creates, updates, deletes in a stable manner
             foreach (var (before, after) in operations)
             {
                 Console.WriteLine($"Operation: Before = {FormatLink(before)}, After = {FormatLink(after)}");
+
+                // DELETE
                 if (before.Index != 0 && after.Index == 0)
                 {
                     // Delete
                     Unset(links, before, options);
                 }
+                // CREATE
                 else if (before.Index == 0 && after.Index != 0)
                 {
-                    // Create new link with given index/source/target
+                    // Create new link
                     CreateOrUpdateLink(links, after, options);
                 }
+                // UPDATE
                 else if (before.Index != 0 && after.Index != 0)
                 {
-                    // Update or read
                     if (before.Source != after.Source || before.Target != after.Target)
                     {
-                        // Ensure link is created if needed
-                        if (!links.Exists(after.Index))
+                        // If indexes are the same, perform a direct update:
+                        if (before.Index == after.Index)
                         {
-                            EnsureCreated(links, after.Index);
+                            Console.WriteLine("Performing direct update for the same index:");
+                            // Ensure the link exists
+                            if (!links.Exists(after.Index))
+                            {
+                                Console.WriteLine($"Link with index {after.Index} does not exist, ensuring creation...");
+                                EnsureCreated(links, after.Index);
+                            }
+
+                            links.Update(before, after, (b, a) =>
+                            {
+                                Console.WriteLine($"Update callback: Before={FormatLink(new DoubletLink(b))}, After={FormatLink(new DoubletLink(a))}");
+                                return options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue;
+                            });
                         }
-                        // Perform a single update
-                        links.Update(before, after, (b, a) =>
+                        else
                         {
-                            Console.WriteLine($"Update callback: Before={FormatLink(new DoubletLink(b))}, After={FormatLink(new DoubletLink(a))}");
-                            return options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue;
-                        });
+                            // Different indexes: delete old and create new
+                            Console.WriteLine("Performing update by delete+create (different indexes):");
+                            Unset(links, before, options);
+                            CreateOrUpdateLink(links, after, options);
+                        }
                     }
                     else
                     {
@@ -343,7 +379,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 else
                 {
-                    // If both are default or no meaningful operation
+                    // No operation needed
                 }
             }
         }
@@ -530,21 +566,36 @@ namespace Foundation.Data.Doublets.Cli
 
             if (link.Index != @null)
             {
-                // Ensure the link with this index is created
+                // Ensure the link with this index is created if needed
                 if (!links.Exists(link.Index))
                 {
                     Console.WriteLine($"Link with index {link.Index} does not exist, ensuring creation...");
                     EnsureCreated(links, link.Index);
                 }
 
-                // Now update it directly
-                var currentLink = new DoubletLink(link.Index, any, any);
-                options.ChangesHandler?.Invoke(null, currentLink);
-                links.Update(currentLink, link, (before, after) =>
+                // Delete any link currently at this index if it's different (except if source/target are any)
+                // Actually, we can just do a direct update if needed:
+                var oldLink = links.GetLink(link.Index);
+                var oldDoublet = new DoubletLink(oldLink);
+                if (oldDoublet.Source != link.Source || oldDoublet.Target != link.Target)
                 {
-                    Console.WriteLine($"Update in CreateOrUpdate: Before={FormatLink(new DoubletLink(before))}, After={FormatLink(new DoubletLink(after))}");
-                    return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
-                });
+                    // Delete old link and create a new one
+                    Unset(links, new DoubletLink(link.Index, any, any), options);
+
+                    // Create a new link at this index by ensuring it exists and then updating source/target
+                    EnsureCreated(links, link.Index);
+                    options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, any, any));
+                    links.Update(new DoubletLink(link.Index, any, any), link, (before, after) =>
+                    {
+                        Console.WriteLine($"Update in CreateOrUpdate: Before={FormatLink(new DoubletLink(before))}, After={FormatLink(new DoubletLink(after))}");
+                        return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
+                    });
+                }
+                else
+                {
+                    // No changes needed, just read
+                    options.ChangesHandler?.Invoke(oldDoublet, oldDoublet);
+                }
             }
             else
             {
