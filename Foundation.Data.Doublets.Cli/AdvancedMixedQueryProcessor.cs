@@ -11,7 +11,7 @@ using Platform.Converters;
 
 namespace Foundation.Data.Doublets.Cli
 {
-  public static class MixedQueryProcessor
+  public static class AdvancedMixedQueryProcessor
   {
     public class Options
     {
