@@ -102,7 +102,7 @@ namespace Foundation.Data.Doublets.Cli
             AssignVariableFromLink(lino.Values[1].Id, dbl.Target, variableAssignments, any, @null);
           }
         }
-        
+
         // Before comparing variables for no-op, let's apply variable substitution to substitution links
         // Replace variables in substitutionLinksById with their assigned values if any
         foreach (var kv in substitutionLinksById.ToList())
@@ -115,9 +115,12 @@ namespace Foundation.Data.Doublets.Cli
 
             if (newSourceId != lino.Values[0].Id || newTargetId != lino.Values[1].Id)
             {
-              if (lino.Id != null){
+              if (lino.Id != null)
+              {
                 lino = new LinoLink(lino.Id, new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
-              } else {
+              }
+              else
+              {
                 lino = new LinoLink(new List<LinoLink> { new LinoLink(newSourceId), new LinoLink(newTargetId) });
               }
               substitutionLinksById[kv.Key] = lino;
@@ -134,11 +137,26 @@ namespace Foundation.Data.Doublets.Cli
           {
             if (AreLinksEquivalent(varRestrictionLink, varSubstitutionLink))
             {
+              // Remove this variable from difference tracking
               allIds = allIds.Except([varId]).ToList();
             }
           }
         }
 
+        // After handling variables, if allIds is empty, it means no changes.
+        // If we have variables, let's treat this scenario as a read operation.
+        if (!allIds.Any() && variableIds.Any())
+        {
+          // Perform read operation for each restriction pattern link
+          foreach (var kv in restrictionLinksById)
+          {
+            var restrictionPattern = ToDoubletLink(links, kv.Value, links.Constants.Any);
+            ReadAll(links, restrictionPattern, options);
+          }
+          return;
+        }
+
+        // If we still have differences, proceed with sets/unsets/updates
         foreach (var id in allIds)
         {
           bool hasRestriction = restrictionLinksById.TryGetValue(id, out var restrictionLinoLink);
