@@ -131,14 +131,27 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 ProcessQuery(links, "(() ((1 1)))");
                 ProcessQuery(links, "(() ((2 2)))");
 
+                Options options = new Options();
+
+                var changes = new List<(DoubletLink, DoubletLink)>();
+                options.Query = "((($index: $source $target)) (($index: $source $target)))";
+                options.ChangesHandler = (before, after) =>
+                {
+                    changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                    return links.Constants.Continue;
+                };
+
                 // Act
-                ProcessQuery(links, "((($index: $source $target)) (($index: $source $target)))");
+                ProcessQuery(links, options);
 
                 // Assert
                 var allLinks = GetAllLinks(links);
                 Assert.Equal(2, allLinks.Count);
                 AssertLinkExists(allLinks, 1, 1, 1);
                 AssertLinkExists(allLinks, 2, 2, 2);
+                Assert.Equal(2, changes.Count);
+                AssertChangeExists(changes, new DoubletLink(1, 1, 1), new DoubletLink(1, 1, 1));
+                AssertChangeExists(changes, new DoubletLink(2, 2, 2), new DoubletLink(2, 2, 2));
             });
         }
 
@@ -405,6 +418,11 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         private static void AssertLinkExists(List<DoubletLink> allLinks, uint index, uint source, uint target)
         {
             Assert.Contains(allLinks, link => link.Index == index && link.Source == source && link.Target == target);
+        }
+
+        private static void AssertChangeExists(List<(DoubletLink, DoubletLink)> changes, DoubletLink linkBefore, DoubletLink linkAfter)
+        {
+            Assert.Contains(changes, change => change.Item1 == linkBefore && change.Item2 == linkAfter);
         }
     }
 }
