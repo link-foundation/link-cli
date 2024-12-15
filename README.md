@@ -7,7 +7,7 @@ It is based on [associative theory (in Russian)](https://habr.com/ru/companies/d
 
 <img width="777" alt="Screenshot 2024-12-05 at 15 22 12" src="https://github.com/user-attachments/assets/01d35e39-4bfd-4639-a457-fa86840e2bb8" />
 
-## Install from NuGet
+## Install or update from NuGet
 
 If you have [.NET](https://dotnet.microsoft.com/en-us/download) installed you can install `clink` as a global CLI tool. 
 
@@ -24,6 +24,7 @@ clink '() ((1 1))'
 ```
 →
 ```
+(0: 0 0) ↦ (1: 1 1)
 (1: 1 1)
 ```
 
@@ -34,6 +35,7 @@ clink '() ((2 2))'
 ```
 →
 ```
+(0: 0 0) ↦ (2: 2 2)
 (1: 1 1)
 (2: 2 2)
 ```
@@ -47,6 +49,8 @@ clink '() ((1 1) (2 2))'
 ```
 →
 ```
+(0: 0 0) ↦ (2: 2 2)
+(0: 0 0) ↦ (1: 1 1)
 (1: 1 1)
 (2: 2 2)
 ```
@@ -60,6 +64,7 @@ clink '((1: 1 1)) ((1: 1 2))'
 ```
 →
 ```
+(1: 1 1) ↦ (1: 1 2)
 (1: 1 2)
 (2: 2 2)
 ```
@@ -73,6 +78,8 @@ clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 ```
 →
 ```
+(1: 1 1) ↦ (1: 1 2)
+(2: 2 2) ↦ (2: 2 1)
 (1: 1 2)
 (2: 2 1)
 ```
@@ -86,6 +93,7 @@ clink '((1 2)) ()'
 ```
 →
 ```
+(1: 1 2) ↦ (0: 0 0)
 (2: 2 2)
 ```
 
@@ -96,6 +104,7 @@ clink '((2 2)) ()'
 ```
 →
 ```
+(2: 2 2) ↦ (0: 0 0)
 ```
 
 ## Delete multiple links
@@ -105,6 +114,8 @@ clink '((1 2) (2 2)) ()'
 ```
 →
 ```
+(1: 1 2) ↦ (0: 0 0)
+(2: 2 2) ↦ (0: 0 0)
 ```
 
 ## Delete all links
@@ -114,18 +125,26 @@ clink '((* *)) ()'
 ```
 →
 ```
+(1: 1 2) ↦ (0: 0 0)
+(2: 2 2) ↦ (0: 0 0)
 ```
 
-## Complete example:
+## Complete examples:
 
 ```bash
-dotnet tool install --global clink
-
 clink '() ((1 1) (2 2))'
 
 clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 
 clink '((1 2) (2 1)) ()'
+```
+
+```bash
+clink '() ((1 2) (2 1))'
+
+clink '((($index: $source $target)) (($index: $target $source)))'
+
+clink '((1: 2 1) (2: 1 2)) ()'
 ```
 
 ## For developers and debugging
@@ -142,7 +161,6 @@ dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 
 cd Foundation.Data.Doublets.Cli
 dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
 ```
-
 
 ### Complete examples:
 
