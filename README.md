@@ -7,7 +7,7 @@ It is based on [associative theory (in Russian)](https://habr.com/ru/companies/d
 
 <img width="727" alt="Screenshot 2024-12-15 at 23 30 17" src="https://github.com/user-attachments/assets/b7167eba-2bb8-4199-bfb4-f114af209907" />
 
-This tool provides all CRUD operations using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
+This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 
 Each operations split into two parts:
 
