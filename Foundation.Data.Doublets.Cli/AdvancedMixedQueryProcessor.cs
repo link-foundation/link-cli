@@ -431,7 +431,7 @@ namespace Foundation.Data.Doublets.Cli
         if (existingDoublet.Source != link.Source || existingDoublet.Target != link.Target)
         {
           LinksExtensions.EnsureCreated(links, link.Index);
-          options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, anyConstant, anyConstant));
+          options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, nullConstant, nullConstant));
           links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (before, after) =>
               options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
         }
