@@ -103,6 +103,46 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
     }
 
+    [Fact]
+    public void SimplifyChanges_NoChange_StillKeepsFirstAndLastState()
+    {
+      // Arrange
+      // These changes represent a "read" operation: the link is read but not changed.
+      // (1: 2 1) -> (1: 2 1)
+      // (2: 1 2) -> (2: 1 2)
+      var changes = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        (new Link<uint>(index: 1, source: 2, target: 1), new Link<uint>(index: 1, source: 2, target: 1)),
+        (new Link<uint>(index: 2, source: 1, target: 2), new Link<uint>(index: 2, source: 1, target: 2))
+      };
+
+      // Expected simplified changes:
+      // They are the same because no actual changes occurred, but we still keep them.
+      var expectedSimplifiedChanges = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        (new Link<uint>(index: 1, source: 2, target: 1), new Link<uint>(index: 1, source: 2, target: 1)),
+        (new Link<uint>(index: 2, source: 1, target: 2), new Link<uint>(index: 2, source: 1, target: 2))
+      };
+
+      // Act
+      var simplifiedChanges = SimplifyChanges(changes).ToList();
+
+      // Assert
+      Assert.Equal(expectedSimplifiedChanges.Count, simplifiedChanges.Count);
+      foreach (var expected in expectedSimplifiedChanges)
+      {
+        Assert.Contains(simplifiedChanges, actual =>
+            actual.Before.Index == expected.Before.Index &&
+            actual.Before.Source == expected.Before.Source &&
+            actual.Before.Target == expected.Before.Target &&
+            actual.After.Index == expected.After.Index &&
+            actual.After.Source == expected.After.Source &&
+            actual.After.Target == expected.After.Target
+        );
+      }
+    }
+
+
     // [Fact]
     // public void SimplifyChanges_NoChanges_ReturnsEmpty()
     // {
