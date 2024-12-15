@@ -368,7 +368,7 @@ namespace Foundation.Data.Doublets.Cli
                             if (!links.Exists(after.Index))
                             {
                                 Console.WriteLine($"Link with index {after.Index} does not exist, ensuring creation...");
-                                EnsureCreated(links, after.Index);
+                                LinksExtensions.EnsureCreated(links, after.Index);
                             }
 
                             links.Update(before, after, (b, a) =>
@@ -584,7 +584,7 @@ namespace Foundation.Data.Doublets.Cli
                 if (!links.Exists(link.Index))
                 {
                     Console.WriteLine($"Link with index {link.Index} does not exist, ensuring creation...");
-                    EnsureCreated(links, link.Index);
+                    LinksExtensions.EnsureCreated(links, link.Index);
                 }
 
                 // Check current state
@@ -592,7 +592,7 @@ namespace Foundation.Data.Doublets.Cli
                 var oldDoublet = new DoubletLink(oldLink);
                 if (oldDoublet.Source != link.Source || oldDoublet.Target != link.Target)
                 {
-                    EnsureCreated(links, link.Index);
+                    LinksExtensions.EnsureCreated(links, link.Index);
 
                     options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, any, any));
                     links.Update(new DoubletLink(link.Index, any, any), link, (before, after) =>
@@ -674,41 +674,6 @@ namespace Foundation.Data.Doublets.Cli
             else if (uint.TryParse(id, out uint linkId))
             {
                 parsedValue = linkId;
-            }
-        }
-
-        #endregion
-
-        #region EnsureCreated Helper
-
-        public static void EnsureCreated<TLinkAddress>(ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
-        {
-            EnsureCreated(links, links.Create, addresses);
-        }
-
-        public static void EnsureCreated<TLinkAddress>(ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
-        {
-            var uInt64ToAddressConverter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
-            var nonExistentAddresses = new HashSet<TLinkAddress>(addresses.Where(x => !links.Exists(x)));
-            if (nonExistentAddresses?.Count > 0)
-            {
-                var max = nonExistentAddresses.Max()!;
-                max = uInt64ToAddressConverter.Convert(TLinkAddress.CreateTruncating(Math.Min(ulong.CreateTruncating(max), ulong.CreateTruncating(links.Constants.InternalReferencesRange.Maximum))));
-                var createdLinks = new List<TLinkAddress>();
-                TLinkAddress createdLink;
-                do
-                {
-                    createdLink = creator();
-                    createdLinks.Add(createdLink);
-                }
-                while (!createdLink.Equals(max));
-                for (var i = 0; i < createdLinks.Count; i++)
-                {
-                    if (!nonExistentAddresses.Contains(createdLinks[i]))
-                    {
-                        links.Delete(createdLinks[i]);
-                    }
-                }
             }
         }
 
