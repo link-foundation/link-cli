@@ -18,12 +18,15 @@ var dbOption = new Option<string>(
   description: "Path to the links database file",
   getDefaultValue: () => "db.links"
 );
+dbOption.AddAlias("--data-source");
 dbOption.AddAlias("-d");
 
 var queryOption = new Option<string>(
   name: "--query",
   description: "LiNo query for CRUD operation"
 );
+queryOption.AddAlias("--apply");
+queryOption.AddAlias("-a");
 queryOption.AddAlias("-q");
 
 var queryArgument = new Argument<string>(
