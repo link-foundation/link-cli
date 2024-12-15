@@ -11,43 +11,53 @@ var dbOption = new Option<string>(
   description: "Path to the links database file",
   getDefaultValue: () => "db.links"
 );
+dbOption.AddAlias("-d");
 
 var queryOption = new Option<string>(
   name: "--query",
   description: "LiNo query for CRUD operation"
 );
+queryOption.AddAlias("-q");
+
+var queryArgument = new Argument<string>(
+  name: "query",
+  description: "LiNo query for CRUD operation"
+);
+queryArgument.Arity = ArgumentArity.ZeroOrOne;
 
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
-  queryOption
+  queryOption,
+  queryArgument
 };
 
-rootCommand.SetHandler((string db, string query) =>
+rootCommand.SetHandler((string db, string queryOptionValue, string queryArgumentValue) =>
 {
   using var links = new UnitedMemoryLinks<uint>(db);
 
   var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
 
-  if (!string.IsNullOrWhiteSpace(query))
+  var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+
+  if (!string.IsNullOrWhiteSpace(effectiveQuery))
   {
-    // ProcessQuery(links, query);
-
-    QueryProcessor.Options options = query;
-
-    options.ChangesHandler = (before, after) =>
+    var options = new QueryProcessor.Options
     {
-      var beforeLink = new DoubletLink(before);
-      var afterLink = new DoubletLink(after);
-      Console.WriteLine($"{links.Format(beforeLink)} ↦ {links.Format(afterLink)}");
-      // Console.WriteLine(links.Format(link));
-      return links.Constants.Continue;
+      Query = effectiveQuery,
+      ChangesHandler = (before, after) =>
+      {
+        var beforeLink = new DoubletLink(before);
+        var afterLink = new DoubletLink(after);
+        Console.WriteLine($"{links.Format(beforeLink)} ↦ {links.Format(afterLink)}");
+        return links.Constants.Continue;
+      }
     };
 
     QueryProcessor.ProcessQuery(decoratedLinks, options);
   }
   PrintAllLinks(decoratedLinks);
-}, dbOption, queryOption);
+}, dbOption, queryOption, queryArgument);
 
 await rootCommand.InvokeAsync(args);
 
