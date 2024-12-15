@@ -233,14 +233,14 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
-        public void MakeAllLinksUniqueSelfReferencingUsingVariablesTest()
+        public void MakeAllLinksSelfReferencingUsingVariablesTest()
         {
             RunTestWithLinks(links =>
             {
                 // Arrange
                 ProcessQuery(links, "(() ((1 2) (2 1)))");
 
-                // Act: make all links unique self-referencing
+                // Act: make all links  self-referencing
                 ProcessQuery(links, "((($index: $source $target)) (($index: $index $index)))");
 
                 // Assert
