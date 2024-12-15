@@ -252,6 +252,27 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void MatchSelfReferencingAndMakeThemGoOutFromFirstLinkUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 1) (2 2) (3 1) (4 4)))");
+
+                // Act: match self-referencing links and make them go out from the first link
+                ProcessQuery(links, "((($index: $index $index)) (($index: 1 $index)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(4, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 1, 2);
+                AssertLinkExists(allLinks, 3, 3, 1);
+                AssertLinkExists(allLinks, 4, 1, 4);
+            });
+        }
+
+        [Fact]
         public void MultipleUpdatesTest()
         {
             RunTestWithLinks(links =>
