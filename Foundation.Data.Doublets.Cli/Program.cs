@@ -41,60 +41,60 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 
 rootCommand.SetHandler((string db, string queryOptionValue, string queryArgumentValue) =>
 {
-    using var links = new UnitedMemoryLinks<uint>(db);
+  using var links = new UnitedMemoryLinks<uint>(db);
 
-    var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+  var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
 
-    var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+  var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
 
-    var changes = new List<(DoubletLink Before, DoubletLink After)>();
+  var changes = new List<(DoubletLink Before, DoubletLink After)>();
 
-    if (!string.IsNullOrWhiteSpace(effectiveQuery))
+  if (!string.IsNullOrWhiteSpace(effectiveQuery))
+  {
+    var options = new QueryProcessor.Options
     {
-        var options = new QueryProcessor.Options
-        {
-            Query = effectiveQuery,
-            ChangesHandler = (before, after) =>
-            {
-                // Collect changes instead of printing immediately
-                changes.Add((new DoubletLink(before), new DoubletLink(after)));
-                return links.Constants.Continue;
-            }
-        };
+      Query = effectiveQuery,
+      ChangesHandler = (before, after) =>
+      {
+        // Collect changes instead of printing immediately
+        changes.Add((new DoubletLink(before), new DoubletLink(after)));
+        return links.Constants.Continue;
+      }
+    };
 
-        QueryProcessor.ProcessQuery(decoratedLinks, options);
+    QueryProcessor.ProcessQuery(decoratedLinks, options);
+  }
+
+  if (changes.Any())
+  {
+    // Simplify the collected changes
+    var simplifiedChanges = SimplifyChanges(changes);
+
+    // Print the simplified changes
+    foreach (var (before, after) in simplifiedChanges)
+    {
+        Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
     }
 
-    if (changes.Any())
-    {
-        // Simplify the collected changes
-        var simplifiedChanges = SimplifyChanges(changes);
+    // foreach (var (before, after) in changes)
+    // {
+    //   Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
+    // }
+  }
 
-        // Print the simplified changes
-        foreach (var (before, after) in simplifiedChanges)
-        {
-            Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
-        }
-
-        // foreach (var (before, after) in changes)
-        // {
-        //     Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
-        // }
-    }
-
-    PrintAllLinks(decoratedLinks);
+  PrintAllLinks(decoratedLinks);
 }, dbOption, queryOption, queryArgument);
 
 await rootCommand.InvokeAsync(args);
 
 static void PrintAllLinks(ILinks<uint> links)
 {
-    var any = links.Constants.Any;
-    var query = new DoubletLink(index: any, source: any, target: any);
+  var any = links.Constants.Any;
+  var query = new DoubletLink(index: any, source: any, target: any);
 
-    links.Each(query, link =>
-    {
-        Console.WriteLine(links.Format(link));
-        return links.Constants.Continue;
-    });
+  links.Each(query, link =>
+  {
+    Console.WriteLine(links.Format(link));
+    return links.Constants.Continue;
+  });
 }
