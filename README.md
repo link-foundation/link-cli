@@ -1,5 +1,5 @@
 # link-cli
-`clink` (`CLInk` `cLINK`), a CLI tool to manipulate links.
+`clink` (`CLInk` `cLINK`), a CLI tool to manipulate links using single substitution operation.
 
 It is based on [associative theory (in Russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) ([ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
