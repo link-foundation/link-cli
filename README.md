@@ -7,20 +7,9 @@ It is based on [associative theory (in Russian)](https://habr.com/ru/companies/d
 
 <img width="777" alt="Screenshot 2024-12-05 at 15 22 12" src="https://github.com/user-attachments/assets/01d35e39-4bfd-4639-a457-fa86840e2bb8" />
 
-## Execute from root
+## Install from NuGet
 
-```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
-```
-
-## Execute from folder
-
-```bash
-cd Foundation.Data.Doublets.Cli
-dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
-```
-
-## Execute from NuGet
+If you have [.NET](https://dotnet.microsoft.com/en-us/download) installed you can install `clink` as a global CLI tool. 
 
 ```bash
 dotnet tool install --global clink
@@ -130,8 +119,23 @@ clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 clink '((1 2) (2 1)) ()'
 ```
 
+## For developers and debugging
 
-## Complete example for debug:
+### Execute from root
+
+```bash
+dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
+```
+
+### Execute from folder
+
+```bash
+cd Foundation.Data.Doublets.Cli
+dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
+```
+
+
+### Complete examples:
 
 ```bash
 dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))'
