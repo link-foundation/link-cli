@@ -233,6 +233,25 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void MakeAllLinksUniqueSelfReferencingUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 2) (2 1)))");
+
+                // Act: make all links unique self-referencing
+                ProcessQuery(links, "((($index: $source $target)) (($index: $index $index)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+            });
+        }
+
+        [Fact]
         public void MultipleUpdatesTest()
         {
             RunTestWithLinks(links =>
