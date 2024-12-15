@@ -75,7 +75,7 @@ namespace Foundation.Data.Doublets.Cli
           }
 
           bool hasNext = adjacency.TryGetValue(current, out var nextLinks);
-          bool isFinalOrDeadEnd = finalStates.Contains(current) || !hasNext || nextLinks.Count == 0;
+          bool isFinalOrDeadEnd = finalStates.Contains(current) || !hasNext || nextLinks!.Count == 0;
 
           if (isFinalOrDeadEnd)
           {
@@ -85,7 +85,7 @@ namespace Foundation.Data.Doublets.Cli
 
           if (hasNext)
           {
-            foreach (var next in nextLinks)
+            foreach (var next in nextLinks!)
             {
               stack.Push(next);
             }
