@@ -195,6 +195,44 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void MakeAllLinksToGoOutOfFirstLinkUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((2 2) (2 1)))");
+
+                // Act: make all links to go out of the first link
+                ProcessQuery(links, "((($index: $source $target)) (($index: 1 $target)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 2);
+                AssertLinkExists(allLinks, 2, 1, 1);
+            });
+        }
+
+        [Fact]
+        public void MakeAllLinksToGoIntoFirstLinkUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((2 2) (1 2)))");
+
+                // Act: make all links to go into the first link
+                ProcessQuery(links, "((($index: $source $target)) (($index: $source 1)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 2, 1);
+                AssertLinkExists(allLinks, 2, 1, 1);
+            });
+        }
+
+        [Fact]
         public void MultipleUpdatesTest()
         {
             RunTestWithLinks(links =>
@@ -436,7 +474,8 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
 
         private static void AssertLinkExists(List<DoubletLink> allLinks, uint index, uint source, uint target)
         {
-            Assert.Contains(allLinks, link => link.Index == index && link.Source == source && link.Target == target);
+            var link = new DoubletLink(index, source, target);
+            Assert.True(allLinks.Contains(link), $"Link {link} not found in the list of all links ({string.Join(" ", allLinks)})");
         }
 
         private static void AssertChangeExists(List<(DoubletLink, DoubletLink)> changes, DoubletLink linkBefore, DoubletLink linkAfter)
