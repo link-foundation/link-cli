@@ -267,14 +267,16 @@ namespace Foundation.Data.Doublets.Cli
         private static void RestoreUnexpectedDeletions(ILinks<uint> links, List<DoubletLink> unexpectedDeletions, Dictionary<uint, DoubletLink> finalIntendedStates, Options options)
         {
             Console.WriteLine("--- Attempting to restore unexpected deletions ---");
-            foreach (var del in unexpectedDeletions)
+
+            // Make a copy so we do not modify the collection while enumerating
+            var deletionsToProcess = new List<DoubletLink>(unexpectedDeletions);
+
+            foreach (var del in deletionsToProcess)
             {
                 if (finalIntendedStates.TryGetValue(del.Index, out var intended))
                 {
-                    // If intended is default(DoubletLink), we do not need to restore it.
                     if (intended.Index == 0) continue;
 
-                    // Check if link exists now
                     if (!links.Exists(intended.Index))
                     {
                         Console.WriteLine($"Restoring link: {FormatLink(intended)}");
@@ -590,8 +592,6 @@ namespace Foundation.Data.Doublets.Cli
                 var oldDoublet = new DoubletLink(oldLink);
                 if (oldDoublet.Source != link.Source || oldDoublet.Target != link.Target)
                 {
-                    // Delete old link and create a new one
-                    Unset(links, new DoubletLink(link.Index, any, any), options);
                     EnsureCreated(links, link.Index);
 
                     options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, any, any));

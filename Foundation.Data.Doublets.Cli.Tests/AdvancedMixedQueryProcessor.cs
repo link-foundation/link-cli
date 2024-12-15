@@ -156,7 +156,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
-        public void ReverseSourceWithTargetUsingVariablesTest()
+        public void SwapSourceAndTargetForSingleLinkUsingVariablesTest()
         {
             RunTestWithLinks(links =>
             {
@@ -172,6 +172,25 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 Assert.Equal(2, allLinks.Count);
                 AssertLinkExists(allLinks, 1, 1, 1);
                 AssertLinkExists(allLinks, 2, 2, 1);
+            });
+        }
+
+        [Fact]
+        public void SwapSourceAndTargetForAllLinksUsingVariablesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange: create initial links (1: 1 2) and (2: 2 1)
+                ProcessQuery(links, "(() ((1 2) (2 1)))");
+
+                // Act: swap source and target for all links
+                ProcessQuery(links, "((($index: $source $target)) (($index: $target $source)))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 2, 1);
+                AssertLinkExists(allLinks, 2, 1, 2);
             });
         }
 
