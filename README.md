@@ -3,6 +3,54 @@
 
 It is based on [associative theory (in Russian)](https://habr.com/ru/companies/deepfoundation/articles/804617/) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) ([ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
+This tool provides all CRUD operations using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
+
+Each operations split into two parts:
+
+```
+(matching / restriction pattern)
+(substitution pattern)
+```
+
+When match pattern and substitution pattern are essensially the same we get no changes (no operation), it may seem like it does not any write, but it actually does read.
+
+For example this operation:
+
+```
+((1: 1 1)) ((1: 1 1))
+```
+
+will output:
+
+```
+(1: 1 1) ↦ (1: 1 1)
+```
+
+That is change of 1-st link with start (source) at itself and end (target) at itself to itself. Meaning no change, but as match pattern applies only to the link with 1 as index, 1 as source and 1 as target, this "no change" can be used as read query.
+
+Creation is just a replacement of nothing to something:
+
+```
+() ((1 1))
+```
+
+Where first `()` is just empty sequence of links, that symbolizes nothing. And `((1 1))` is a sequence of link with 1 as a start and 1 as end, the index is undefined so it for database to decide actual available id (index).
+
+Deletion is just a replacement of something to nothing:
+
+```
+((1 1)) () 
+```
+Where `((1 1))` is a sequence of match patterns, with a single pattern for a link with 1 as a start and 1 as end, the index is undefined, meaning it can be any index. It will match only existing link, if no such link found there will be no match. Last `()` is just empty sequence of links, that symbolizes nothing. We don't have matched link on the right side, meaning it will be effectively deleted.
+
+And the update is substitution itself, obviously.
+
+```
+((1: 1 1)) ((1: 1 2))
+```
+
+In that case we have a link with 1-st id on both sides, meaning it is not deleted and not created, it is changed. In this particular example with change the target of the link (its ending) to 2. 2 is ofcourse id of another link. In here we have only links, nothing else.
+
 [Short description in English in what links are](https://github.com/linksplatform?view_as=public). And [in Russian](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md).
 
 <img width="777" alt="Screenshot 2024-12-05 at 15 22 12" src="https://github.com/user-attachments/assets/01d35e39-4bfd-4639-a457-fa86840e2bb8" />
@@ -54,6 +102,21 @@ clink '() ((1 1) (2 2))'
 (1: 1 1)
 (2: 2 2)
 ```
+
+## Read all links
+
+```bash
+clink '((($i: $s $t)) (($i: $s $t)))'
+```
+→
+```
+(1: 1 1) ↦ (1: 1 1)
+(2: 2 2) ↦ (2: 2 2)
+(1: 1 1)
+(2: 2 2)
+```
+
+Where `$i` stands for variable named `i`, that stands for `index`. `$s` is for `source` and `$t` is for `target`.
 
 ## Update single link
 
