@@ -145,4 +145,6 @@ dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1 2) (2 1)) ()"
 dotnet run --project Foundation.Data.Doublets.Cli -- --query "() ((1 2) (2 1))"
 
 dotnet run --project Foundation.Data.Doublets.Cli -- --query '((($index: $source $target)) (($index: $target $source)))'
+
+dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1: 2 1) (2: 1 2)) ()"
 ```
