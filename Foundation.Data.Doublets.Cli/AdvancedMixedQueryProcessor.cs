@@ -58,18 +58,16 @@ namespace Foundation.Data.Doublets.Cli
             var restrictionLink = outerLinkValues![0];
             var substitutionLink = outerLinkValues![1];
 
-            // Print parsed outer link
             Console.WriteLine("Parsed Restriction Link: " + LinoToString(restrictionLink));
             Console.WriteLine("Parsed Substitution Link: " + LinoToString(substitutionLink));
 
-            // If both sides are empty, no operation
             if ((restrictionLink.Values?.Count == 0) && (substitutionLink.Values?.Count == 0))
             {
                 Console.WriteLine("Both sides empty, no operation.");
                 return;
             }
 
-            // Handle simple create scenario
+            // Simple create scenario
             if (restrictionLink.Values?.Count == 0 && (substitutionLink.Values?.Count ?? 0) > 0)
             {
                 Console.WriteLine("Simple Create Scenario");
@@ -81,15 +79,11 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 PrintAllLinks("Final State after create", links);
                 Console.WriteLine("=== END QUERY PROCESSING ===");
-
-                // Constants
-                Console.WriteLine("--- Constants ---");
-                Console.WriteLine("Any: " + any);
-                Console.WriteLine("Null: " + @null);
+                PrintConstants(links);
                 return;
             }
 
-            // Handle simple delete scenario
+            // Simple delete scenario
             if (substitutionLink.Values?.Count == 0 && (restrictionLink.Values?.Count ?? 0) > 0)
             {
                 Console.WriteLine("Simple Delete Scenario");
@@ -101,15 +95,11 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 PrintAllLinks("Final State after delete", links);
                 Console.WriteLine("=== END QUERY PROCESSING ===");
-
-                // Constants
-                Console.WriteLine("--- Constants ---");
-                Console.WriteLine("Any: " + any);
-                Console.WriteLine("Null: " + @null);
+                PrintConstants(links);
                 return;
             }
 
-            // More complex scenario: both have values, possibly with variables.
+            // More complex scenario
             var restrictionPatterns = restrictionLink.Values ?? new List<LinoLink>();
             var substitutionPatterns = substitutionLink.Values ?? new List<LinoLink>();
 
@@ -144,11 +134,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 Console.WriteLine("  No solutions found.");
                 Console.WriteLine("=== END QUERY PROCESSING ===");
-
-                // Constants
-                Console.WriteLine("--- Constants ---");
-                Console.WriteLine("Any: " + any);
-                Console.WriteLine("Null: " + @null);
+                PrintConstants(links);
                 return;
             }
             else
@@ -175,9 +161,7 @@ namespace Foundation.Data.Doublets.Cli
             }
             Console.WriteLine("No-Op check: " + (allNoOp ? "All solutions produce no changes" : "At least one solution changes something"));
 
-            // Two-phase approach
             var allOperations = new List<(DoubletLink before, DoubletLink after)>();
-
             if (allNoOp)
             {
                 // Just read all matches from all solutions
@@ -187,14 +171,13 @@ namespace Foundation.Data.Doublets.Cli
                     var matchedLinks = ExtractMatchedLinksFromSolution(links, solution, restrictionPatternsInternal);
                     foreach (var link in matchedLinks)
                     {
-                        // No changes, just read
                         allOperations.Add((link, link));
                     }
                 }
             }
             else
             {
-                // Collect sets/updates/unsets from all solutions
+                // Changes scenario
                 Console.WriteLine("Changes scenario, collecting operations from each solution");
                 foreach (var solution in solutions)
                 {
@@ -216,7 +199,6 @@ namespace Foundation.Data.Doublets.Cli
                 Console.WriteLine($"  Before: {FormatLink(before)}  After: {FormatLink(after)}");
             }
 
-            // Apply all operations after collecting them
             if (allNoOp)
             {
                 // Just read all
@@ -227,49 +209,80 @@ namespace Foundation.Data.Doublets.Cli
             }
             else
             {
+                // Track final intended states for each index
+                var finalIntendedStates = new Dictionary<uint, DoubletLink>();
+                foreach (var (before, after) in allOperations)
+                {
+                    if (after.Index != 0)
+                    {
+                        // Means we intend this link to exist after all operations
+                        finalIntendedStates[after.Index] = after;
+                    }
+                    else if (before.Index != 0 && after.Index == 0)
+                    {
+                        // We intend this link to not exist at the end
+                        finalIntendedStates[before.Index] = default(DoubletLink);
+                    }
+                }
+
+                // A list to keep track of unexpected deletions
+                var unexpectedDeletions = new List<DoubletLink>();
+
+                // Wrap ChangesHandler to detect unexpected deletions
+                var originalHandler = options.ChangesHandler;
+                options.ChangesHandler = (b, a) =>
+                {
+                    var before = new DoubletLink(b);
+                    var after = new DoubletLink(a);
+                    
+                    // If after is default and before isn't, it's a deletion.
+                    // Check if it's expected:
+                    if (before.Index != 0 && after.Index == 0)
+                    {
+                        bool expected = allOperations.Any(op => op.before.Index == before.Index && op.after.Index == 0);
+                        if (!expected)
+                        {
+                            // Unexpected deletion
+                            Console.WriteLine($"[TrackAndRestore] Unexpected deletion detected: {FormatLink(new DoubletLink(before))}");
+                            unexpectedDeletions.Add(new DoubletLink(before));
+                        }
+                    }
+
+                    return originalHandler?.Invoke(before, after) ?? links.Constants.Continue;
+                };
+
+                // Apply all operations now
                 ApplyAllOperations(links, allOperations, options);
+
+                // After applying all operations, try to restore unexpectedly deleted links if their final intended state
+                // says they should exist.
+                RestoreUnexpectedDeletions(links, unexpectedDeletions, finalIntendedStates, options);
             }
 
             PrintAllLinks("Final State after query", links);
             Console.WriteLine("=== END QUERY PROCESSING ===");
-
-            // Constants
-            Console.WriteLine("--- Constants ---");
-            Console.WriteLine("Any: " + any);
-            Console.WriteLine("Null: " + @null);
+            PrintConstants(links);
         }
 
-        #region Utilities for Debugging
-
-        private static void PrintAllLinks(string title, ILinks<uint> links)
+        private static void RestoreUnexpectedDeletions(ILinks<uint> links, List<DoubletLink> unexpectedDeletions, Dictionary<uint, DoubletLink> finalIntendedStates, Options options)
         {
-            Console.WriteLine($"--- {title} ---");
-            var any = links.Constants.Any;
-            var all = links.All(new DoubletLink(any, any, any));
-            foreach (var l in all)
+            Console.WriteLine("--- Attempting to restore unexpected deletions ---");
+            foreach (var del in unexpectedDeletions)
             {
-                var dl = new DoubletLink(l);
-                Console.WriteLine(FormatLink(dl));
+                if (finalIntendedStates.TryGetValue(del.Index, out var intended))
+                {
+                    // If intended is default(DoubletLink), we do not need to restore it.
+                    if (intended.Index == 0) continue;
+
+                    // Check if link exists now
+                    if (!links.Exists(intended.Index))
+                    {
+                        Console.WriteLine($"Restoring link: {FormatLink(intended)}");
+                        CreateOrUpdateLink(links, intended, options);
+                    }
+                }
             }
         }
-
-        private static string FormatLink(DoubletLink link)
-        {
-            if (link.Index == 0 && link.Source == 0 && link.Target == 0)
-            {
-                return "(no link)";
-            }
-            return $"({link.Index}: {link.Source} {link.Target})";
-        }
-
-        private static string LinoToString(LinoLink lino)
-        {
-            var id = lino.Id ?? "";
-            var vals = lino.Values?.Select(v => v.Id ?? "").ToList() ?? new List<string>();
-            return $"({id}: {string.Join(" ", vals)})";
-        }
-
-        #endregion
 
         #region Two-Phase Operation Helpers
 
@@ -302,7 +315,7 @@ namespace Foundation.Data.Doublets.Cli
                     }
                     else
                     {
-                        // No actual change, treat as read
+                        // No actual change, just read
                         operations.Add((rlink, rlink));
                     }
                 }
@@ -321,7 +334,6 @@ namespace Foundation.Data.Doublets.Cli
             return operations;
         }
 
-        // In ApplyAllOperations method:
         private static void ApplyAllOperations(ILinks<uint> links, List<(DoubletLink before, DoubletLink after)> operations, Options options)
         {
             Console.WriteLine("Applying All Operations:");
@@ -573,17 +585,15 @@ namespace Foundation.Data.Doublets.Cli
                     EnsureCreated(links, link.Index);
                 }
 
-                // Delete any link currently at this index if it's different (except if source/target are any)
-                // Actually, we can just do a direct update if needed:
+                // Check current state
                 var oldLink = links.GetLink(link.Index);
                 var oldDoublet = new DoubletLink(oldLink);
                 if (oldDoublet.Source != link.Source || oldDoublet.Target != link.Target)
                 {
                     // Delete old link and create a new one
                     Unset(links, new DoubletLink(link.Index, any, any), options);
-
-                    // Create a new link at this index by ensuring it exists and then updating source/target
                     EnsureCreated(links, link.Index);
+
                     options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, any, any));
                     links.Update(new DoubletLink(link.Index, any, any), link, (before, after) =>
                     {
@@ -618,12 +628,6 @@ namespace Foundation.Data.Doublets.Cli
                     options.ChangesHandler?.Invoke(existingLink, existingLink);
                 }
             }
-        }
-
-        static void Set(ILinks<uint> links, DoubletLink substitutionLink, Options options)
-        {
-            Console.WriteLine("Set operation: " + FormatLink(substitutionLink));
-            CreateOrUpdateLink(links, substitutionLink, options);
         }
 
         static void Unset(ILinks<uint> links, DoubletLink restrictionLink, Options options)
@@ -736,6 +740,45 @@ namespace Foundation.Data.Doublets.Cli
                 target = lino.Values[1].Id ?? "";
             }
             return new Pattern(index, source, target);
+        }
+
+        #endregion
+
+        #region Utility
+
+        private static void PrintAllLinks(string title, ILinks<uint> links)
+        {
+            Console.WriteLine($"--- {title} ---");
+            var any = links.Constants.Any;
+            var all = links.All(new DoubletLink(any, any, any));
+            foreach (var l in all)
+            {
+                var dl = new DoubletLink(l);
+                Console.WriteLine(FormatLink(dl));
+            }
+        }
+
+        private static string FormatLink(DoubletLink link)
+        {
+            if (link.Index == 0 && link.Source == 0 && link.Target == 0)
+            {
+                return "(no link)";
+            }
+            return $"({link.Index}: {link.Source} {link.Target})";
+        }
+
+        private static string LinoToString(LinoLink lino)
+        {
+            var id = lino.Id ?? "";
+            var vals = lino.Values?.Select(v => v.Id ?? "").ToList() ?? new List<string>();
+            return $"({id}: {string.Join(" ", vals)})";
+        }
+
+        private static void PrintConstants(ILinks<uint> links)
+        {
+            Console.WriteLine("--- Constants ---");
+            Console.WriteLine("Any: " + links.Constants.Any);
+            Console.WriteLine("Null: " + links.Constants.Null);
         }
 
         #endregion
