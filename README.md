@@ -10,14 +10,14 @@ It is based on [associative theory (in Russian)](https://habr.com/ru/companies/d
 ## Execute from root
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
+dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
 ```
 
 ## Execute from folder
 
 ```bash
 cd Foundation.Data.Doublets.Cli
-dotnet run -- --query "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))"
+dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
 ```
 
 ## Execute from NuGet
@@ -31,7 +31,7 @@ dotnet tool install --global clink
 Create link with 1 as source and 1 as target.
 
 ```bash
-clink --query "() ((1 1))"
+clink '() ((1 1))'
 ```
 →
 ```
@@ -41,7 +41,7 @@ clink --query "() ((1 1))"
 Create link with 2 as source and 2 as target.
 
 ```bash
-clink --query "() ((2 2))"
+clink '() ((2 2))'
 ```
 →
 ```
@@ -54,7 +54,7 @@ clink --query "() ((2 2))"
 Create two links at the same time: (1 1) and (2 2).
 
 ```bash
-clink --query "() ((1 1) (2 2))"
+clink '() ((1 1) (2 2))'
 ```
 →
 ```
@@ -67,7 +67,7 @@ clink --query "() ((1 1) (2 2))"
 Update link with index 1 and source 1 and target 1, changing target to 2.
 
 ```bash
-clink --query "((1: 1 1)) ((1: 1 2))"
+clink '((1: 1 1)) ((1: 1 2))'
 ```
 →
 ```
@@ -80,7 +80,7 @@ clink --query "((1: 1 1)) ((1: 1 2))"
 Update link with index 1 and source 1 and target 1, changing target to 2.
 
 ```bash
-clink --query "((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))"
+clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 ```
 →
 ```
@@ -93,7 +93,7 @@ clink --query "((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))"
 Delete link with source 1 and target 2:
 
 ```bash
-clink --query "((1 2)) ()"
+clink '((1 2)) ()'
 ```
 →
 ```
@@ -103,7 +103,7 @@ clink --query "((1 2)) ()"
 Delete link with source 2 and target 2:
 
 ```bash
-clink --query "((2 2)) ()"
+clink '((2 2)) ()'
 ```
 →
 ```
@@ -112,7 +112,7 @@ clink --query "((2 2)) ()"
 ## Delete multiple links
 
 ```bash
-clink --query "((1 2) (2 2)) ()"
+clink '((1 2) (2 2)) ()'
 ```
 →
 ```
@@ -123,28 +123,28 @@ clink --query "((1 2) (2 2)) ()"
 ```bash
 dotnet tool install --global clink
 
-clink --query "() ((1 1) (2 2))"
+clink '() ((1 1) (2 2))'
 
-clink --query "((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))"
+clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 
-clink --query "((1 2) (2 1)) ()"
+clink '((1 2) (2 1)) ()'
 ```
 
 
 ## Complete example for debug:
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- --query "() ((1 1) (2 2))"
+dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))'
 
-dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))"
+dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 
-dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1 2) (2 1)) ()"
+dotnet run --project Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()'
 ```
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- --query "() ((1 2) (2 1))"
+dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))'
 
-dotnet run --project Foundation.Data.Doublets.Cli -- --query '((($index: $source $target)) (($index: $target $source)))'
+dotnet run --project Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))'
 
-dotnet run --project Foundation.Data.Doublets.Cli -- --query "((1: 2 1) (2: 1 2)) ()"
+dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()'
 ```
