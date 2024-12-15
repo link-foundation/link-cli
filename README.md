@@ -107,6 +107,15 @@ clink '((1 2) (2 2)) ()'
 ```
 ```
 
+## Delete all links
+
+```bash
+clink '((* *)) ()'
+```
+→
+```
+```
+
 ## Complete example:
 
 ```bash

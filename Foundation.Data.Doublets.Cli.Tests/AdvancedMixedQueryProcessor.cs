@@ -456,12 +456,29 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
-        public void DeleteAllLinksBySourceAndTargetTest()
+        public void DeleteAllLinksBySourceAndTargetTest1()
         {
             RunTestWithLinks(links =>
             {
                 // Arrange
                 ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+                // Act
+                ProcessQuery(links, "(((* *)) ())");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Empty(allLinks);
+            });
+        }
+
+        [Fact]
+        public void DeleteAllLinksBySourceAndTargetTest2()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() ((1 2) (2 1)))");
 
                 // Act
                 ProcessQuery(links, "(((* *)) ())");

@@ -58,7 +58,7 @@ namespace Foundation.Data.Doublets.Cli
         foreach (var linkToDelete in restrictionLink.Values ?? new List<LinoLink>())
         {
           var queryLink = ConvertToDoubletLink(links, linkToDelete, anyConstant);
-          RemoveLink(links, queryLink, options);
+          RemoveLinks(links, queryLink, options);
         }
         return;
       }
@@ -157,7 +157,6 @@ namespace Foundation.Data.Doublets.Cli
         Options options)
     {
       var deletionsToProcess = new List<DoubletLink>(unexpectedDeletions);
-
       foreach (var deletedLink in deletionsToProcess)
       {
         if (finalIntendedStates.TryGetValue(deletedLink.Index, out var intendedLink))
@@ -216,7 +215,7 @@ namespace Foundation.Data.Doublets.Cli
       {
         if (before.Index != 0 && after.Index == 0)
         {
-          RemoveLink(links, before, options);
+          RemoveLinks(links, before, options);
         }
         else if (before.Index == 0 && after.Index != 0)
         {
@@ -233,11 +232,11 @@ namespace Foundation.Data.Doublets.Cli
                 LinksExtensions.EnsureCreated(links, after.Index);
               }
               links.Update(before, after, (b, a) =>
-                  options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
+                options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
             }
             else
             {
-              RemoveLink(links, before, options);
+              RemoveLinks(links, before, options);
               CreateOrUpdateLink(links, after, options);
             }
           }
@@ -299,9 +298,9 @@ namespace Foundation.Data.Doublets.Cli
         Pattern pattern,
         Dictionary<string, uint> currentSolution)
     {
-      uint indexValue = ResolveIdentifier(links, pattern.Index, currentSolution);
-      uint sourceValue = ResolveIdentifier(links, pattern.Source, currentSolution);
-      uint targetValue = ResolveIdentifier(links, pattern.Target, currentSolution);
+      uint indexValue = ResolveId(links, pattern.Index, currentSolution);
+      uint sourceValue = ResolveId(links, pattern.Source, currentSolution);
+      uint targetValue = ResolveId(links, pattern.Target, currentSolution);
       var candidates = links.All(new DoubletLink(indexValue, sourceValue, targetValue));
       foreach (var link in candidates)
       {
@@ -336,24 +335,23 @@ namespace Foundation.Data.Doublets.Cli
       return !string.IsNullOrEmpty(identifier) && identifier.StartsWith("$");
     }
 
-    private static uint ResolveIdentifier(ILinks<uint> links, string identifier, Dictionary<string, uint> currentSolution)
+    private static uint ResolveId(ILinks<uint> links, string identifier, Dictionary<string, uint> currentSolution)
     {
-      if (string.IsNullOrEmpty(identifier)) return links.Constants.Any;
-
+      var resolved = links.Constants.Any;
+      if (string.IsNullOrEmpty(identifier)) return resolved;
       if (currentSolution.TryGetValue(identifier, out var value))
       {
         return value;
       }
-      if (identifier == "*") return links.Constants.Any;
-      if (uint.TryParse(identifier, out var parsedValue))
-      {
-        return parsedValue;
-      }
       if (IsVariable(identifier))
       {
-        return links.Constants.Any;
+        return resolved;
       }
-      return links.Constants.Any;
+      if (TryParseLinkId(identifier, links.Constants, ref resolved))
+      {
+        return resolved;
+      }
+      return resolved;
     }
 
     private static bool DetermineIfSolutionIsNoOperation(
@@ -400,18 +398,9 @@ namespace Foundation.Data.Doublets.Cli
         Dictionary<string, uint> solution,
         Pattern pattern)
     {
-      uint anyValue = links?.Constants.Any ?? 0;
-      uint Resolve(string id)
-      {
-        if (string.IsNullOrEmpty(id)) return anyValue;
-        if (solution.TryGetValue(id, out var value)) return value;
-        if (id == "*") return anyValue;
-        if (uint.TryParse(id, out var parsed)) return parsed;
-        return anyValue;
-      }
-      uint index = Resolve(pattern.Index);
-      uint source = Resolve(pattern.Source);
-      uint target = Resolve(pattern.Target);
+      uint index = ResolveId(links, pattern.Index, solution);
+      uint source = ResolveId(links, pattern.Source, solution);
+      uint target = ResolveId(links, pattern.Target, solution);
       return new DoubletLink(index, source, target);
     }
 
@@ -433,7 +422,7 @@ namespace Foundation.Data.Doublets.Cli
           LinksExtensions.EnsureCreated(links, link.Index);
           options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, nullConstant, nullConstant));
           links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (before, after) =>
-              options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+            options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
         }
         else
         {
@@ -446,7 +435,7 @@ namespace Foundation.Data.Doublets.Cli
         if (existingIndex == default)
         {
           var createdIndex = links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
-              options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+            options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
         }
         else
         {
@@ -456,13 +445,16 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
-    private static void RemoveLink(ILinks<uint> links, DoubletLink restrictionLink, Options options)
+    private static void RemoveLinks(ILinks<uint> links, DoubletLink restriction, Options options)
     {
-      var linksToRemove = links.All(restrictionLink);
+      var linksToRemove = links.All(restriction);
       foreach (var link in linksToRemove)
       {
-        links.Delete(link, (before, after) =>
+        if (links.Exists(link![0]))
+        {
+          links.Delete(link, (before, after) =>
             options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+        }
       }
     }
 
@@ -471,31 +463,34 @@ namespace Foundation.Data.Doublets.Cli
       uint index = defaultValue;
       uint source = defaultValue;
       uint target = defaultValue;
-      ParseLinkId(linoLink.Id, links.Constants, ref index);
+      TryParseLinkId(linoLink.Id, links.Constants, ref index);
       if (linoLink.Values?.Count == 2)
       {
         var sourceLink = linoLink.Values[0];
-        ParseLinkId(sourceLink.Id, links.Constants, ref source);
+        TryParseLinkId(sourceLink.Id, links.Constants, ref source);
         var targetLink = linoLink.Values[1];
-        ParseLinkId(targetLink.Id, links.Constants, ref target);
+        TryParseLinkId(targetLink.Id, links.Constants, ref target);
       }
       return new DoubletLink(index, source, target);
     }
 
-    private static void ParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
+    private static bool TryParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
     {
       if (string.IsNullOrEmpty(id))
       {
-        return;
+        return false;
       }
       if (id == "*")
       {
         parsedValue = constants.Any;
+        return true;
       }
       else if (uint.TryParse(id, out uint linkId))
       {
         parsedValue = linkId;
+        return true;
       }
+      return false;
     }
 
     public class Pattern
