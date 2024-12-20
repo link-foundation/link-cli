@@ -311,6 +311,23 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void ExactMatchAndDelete2LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "(() (((1 1) (2 2))))");
+                
+                // Act
+                ProcessQuery(links, "(((3: (1: 1 1) (2: 2 2))) ())");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Empty(allLinks);
+            });
+        }
+
+        [Fact]
         public void NoUpdateUsingVariablesTest()
         {
             RunTestWithLinks(links =>
