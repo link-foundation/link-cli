@@ -103,7 +103,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
-        public void CreateNestedLinksTest()
+        public void Create2LevelNestedLinksTest()
         {
             RunTestWithLinks(links =>
             {
@@ -116,6 +116,25 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 AssertLinkExists(allLinks, 1, 1, 1);
                 AssertLinkExists(allLinks, 2, 2, 2);
                 AssertLinkExists(allLinks, 3, 1, 2);
+            });
+        }
+
+        [Fact]
+        public void Create3LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Act
+                ProcessQuery(links, "(() (((1 1) ((2 2) (3 3)))))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(5, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+                AssertLinkExists(allLinks, 3, 3, 3);
+                AssertLinkExists(allLinks, 4, 2, 3);
+                AssertLinkExists(allLinks, 5, 1, 4);
             });
         }
 
