@@ -139,6 +139,158 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void Create4LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Act
+                ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) (4 4))))))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(7, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+                AssertLinkExists(allLinks, 3, 3, 3);
+                AssertLinkExists(allLinks, 4, 4, 4);
+                AssertLinkExists(allLinks, 5, 3, 4);
+                AssertLinkExists(allLinks, 6, 2, 5);
+                AssertLinkExists(allLinks, 7, 1, 6);
+            });
+        }
+
+        [Fact]
+        public void Create5LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Structure visualization:
+                // Leaves: (1 1), (2 2), (3 3), (4 4), (5 5)
+                // ((4 4) (5 5)) => #6: 4->5
+                // ((3 3) ((4 4) (5 5))) => #7: 3->6
+                // ((2 2) ((3 3) ((4 4) (5 5)))) => #8: 2->7
+                // ((1 1) ((2 2) ((3 3) ((4 4) (5 5))))) => #9: 1->8
+                //
+                // Query: "(() (((1 1) ((2 2) ((3 3) ((4 4) (5 5)))))))"
+                ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) ((4 4) (5 5)))))))");
+
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(9, allLinks.Count);
+
+                // Leaf links
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+                AssertLinkExists(allLinks, 3, 3, 3);
+                AssertLinkExists(allLinks, 4, 4, 4);
+                AssertLinkExists(allLinks, 5, 5, 5);
+
+                // ((4 4) (5 5)) => #6:4->5
+                AssertLinkExists(allLinks, 6, 4, 5);
+
+                // ((3 3) ((4 4) (5 5))) => #7:3->6
+                AssertLinkExists(allLinks, 7, 3, 6);
+
+                // ((2 2) ((3 3) ((4 4) (5 5)))) => #8:2->7
+                AssertLinkExists(allLinks, 8, 2, 7);
+
+                // ((1 1) ((2 2) ((3 3) ((4 4) (5 5))))) => #9:1->8
+                AssertLinkExists(allLinks, 9, 1, 8);
+            });
+        }
+
+        [Fact]
+        public void Create6LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Structure:
+                // Leaves: (1 1), (2 2), (3 3), (4 4), (5 5), (6 6)
+                // ((5 5) (6 6)) => #7:5->6
+                // ((4 4) ((5 5) (6 6))) => #8:4->7
+                // ((3 3) ((4 4) ((5 5) (6 6)))) => #9:3->8
+                // ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))) => #10:2->9
+                // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6)))))) => #11:1->10
+                //
+                // Query: "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))))))"
+                ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))))))");
+
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(11, allLinks.Count);
+
+                // Leaf links
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+                AssertLinkExists(allLinks, 3, 3, 3);
+                AssertLinkExists(allLinks, 4, 4, 4);
+                AssertLinkExists(allLinks, 5, 5, 5);
+                AssertLinkExists(allLinks, 6, 6, 6);
+
+                // ((5 5) (6 6)) => #7:5->6
+                AssertLinkExists(allLinks, 7, 5, 6);
+
+                // ((4 4) ((5 5) (6 6))) => #8:4->7
+                AssertLinkExists(allLinks, 8, 4, 7);
+
+                // ((3 3) ((4 4) ((5 5) (6 6)))) => #9:3->8
+                AssertLinkExists(allLinks, 9, 3, 8);
+
+                // ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))) => #10:2->9
+                AssertLinkExists(allLinks, 10, 2, 9);
+
+                // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6)))))) => #11:1->10
+                AssertLinkExists(allLinks, 11, 1, 10);
+            });
+        }
+
+        [Fact]
+        public void Create7LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Leaves: (1 1), (2 2), (3 3), (4 4), (5 5), (6 6), (7 7)
+                // ((6 6) (7 7)) => #8:6->7
+                // ((5 5) ((6 6) (7 7))) => #9:5->8
+                // ((4 4) ((5 5) ((6 6) (7 7)))) => #10:4->9
+                // ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))) => #11:3->10
+                // ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))) => #12:2->11
+                // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))))) => #13:1->12
+                //
+                // Query: "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))))))"
+                ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))))))");
+
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(13, allLinks.Count);
+
+                // Leaf links
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+                AssertLinkExists(allLinks, 3, 3, 3);
+                AssertLinkExists(allLinks, 4, 4, 4);
+                AssertLinkExists(allLinks, 5, 5, 5);
+                AssertLinkExists(allLinks, 6, 6, 6);
+                AssertLinkExists(allLinks, 7, 7, 7);
+
+                // ((6 6) (7 7)) => #8:6->7
+                AssertLinkExists(allLinks, 8, 6, 7);
+
+                // ((5 5) ((6 6) (7 7))) => #9:5->8
+                AssertLinkExists(allLinks, 9, 5, 8);
+
+                // ((4 4) ((5 5) ((6 6) (7 7)))) => #10:4->9
+                AssertLinkExists(allLinks, 10, 4, 9);
+
+                // ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))) => #11:3->10
+                AssertLinkExists(allLinks, 11, 3, 10);
+
+                // ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))) => #12:2->11
+                AssertLinkExists(allLinks, 12, 2, 11);
+
+                // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))))) => #13:1->12
+                AssertLinkExists(allLinks, 13, 1, 12);
+            });
+        }
+
+        [Fact]
         public void UpdateSingleLinkTest()
         {
             RunTestWithLinks(links =>
