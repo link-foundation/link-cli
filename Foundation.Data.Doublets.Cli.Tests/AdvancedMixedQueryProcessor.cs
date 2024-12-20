@@ -103,6 +103,23 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void CreateNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Act
+                ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Equal(3, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
+                AssertLinkExists(allLinks, 3, 1, 2);
+            });
+        }
+
+        [Fact]
         public void UpdateSingleLinkTest()
         {
             RunTestWithLinks(links =>
