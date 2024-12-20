@@ -166,79 +166,102 @@ namespace Foundation.Data.Doublets.Cli
 
     private static uint EnsureLinkAndSubLinksExist(ILinks<uint> links, LinoLink lino, Options options)
     {
-      var nullConstant = links.Constants.Null;
-      var any = links.Constants.Any;
+      var constants = links.Constants;
+      var nullConstant = constants.Null;
 
-      // If no values and the Id can be parsed:
-      if ((lino.Values == null || lino.Values.Count == 0) && TryParseLinkId(lino.Id, links.Constants, ref any))
-      {
-        // This means it's a single ID or ANY. If it's ANY or nullConstant, just return that.
-        return any;
-      }
-
-      // Otherwise, treat this as a link structure:
-      // Parse the index if present:
-      uint index = any;
+      // Parse index
+      uint index = constants.Any;
       if (!string.IsNullOrEmpty(lino.Id))
       {
-        TryParseLinkId(lino.Id, links.Constants, ref index);
+        TryParseLinkId(lino.Id, constants, ref index);
       }
 
-      uint source = any;
-      uint target = any;
-      if (lino.Values != null && lino.Values.Count >= 1)
+      // Handle sublinks
+      uint source = constants.Any;
+      uint target = constants.Any;
+      if (lino.Values != null)
       {
-        source = EnsureLinkAndSubLinksExist(links, lino.Values[0], options);
-      }
-      if (lino.Values != null && lino.Values.Count >= 2)
-      {
-        target = EnsureLinkAndSubLinksExist(links, lino.Values[1], options);
-      }
+        if (lino.Values.Count == 1)
+        {
+          // Single value means self-link pattern: (index: value->value)
+          var singleVal = lino.Values[0];
+          uint singleValId = EnsureLinkAndSubLinksExist(links, singleVal, options);
+          // If index was ANY, use singleValId for both index and reference:
+          // But we must differentiate between a top-level link and a scalar. If the top-level says (1 1),
+          // it means index=1, and singleVal=1. So (1:1->1).
+          // If index is ANY, that means we had no assigned index, so we just create a link with source=singleValId and target=singleValId
+          // and let CreateOrUpdateLink assign or find an ID.
 
-      // Now we have index/source/target (possibly ANY). Create or update the link.
-      // If index is ANY, we either find an existing link or create a new one.
-      // If index is a specific number, ensure that link exists/updated.
-      var doublet = new DoubletLink(index, source, target);
-
-      if (doublet.Index == any)
-      {
-        // Check if such a link already exists:
-        var existingIndex = links.SearchOrDefault(source, target);
-        if (existingIndex == 0)
-        {
-          // Create a new link
-          var createdIndex = links.CreateAndUpdate(source, target, (before, after) =>
-              options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
-          return createdIndex;
-        }
-        else
-        {
-          // Link already exists
-          return existingIndex;
-        }
-      }
-      else
-      {
-        // We have a desired index
-        if (!links.Exists(doublet.Index))
-        {
-          // Ensure it's created and set properly
-          LinksExtensions.EnsureCreated(links, doublet.Index);
-          links.Update(new DoubletLink(doublet.Index, links.Constants.Any, links.Constants.Any), doublet, (before, after) =>
-              options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
-        }
-        else
-        {
-          // Update if needed
-          var existing = new DoubletLink(links.GetLink(doublet.Index));
-          if (existing.Source != doublet.Source || existing.Target != doublet.Target)
+          if (index == constants.Any && singleValId == constants.Any)
           {
-            links.Update(existing, doublet, (before, after) =>
-                options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+            // Both are ANY - we must create a new link with some stable ID. Without a numeric ID, we must create a new link.
+            // A self-reference link: (?: singleValId->singleValId). If singleValId is ANY still, it means no stable link.
+            // In that case, create a minimal link. Since singleValId is ANY, create a new singleVal link.
+            singleValId = CreateOrUpdateLinkAndGetId(links, new DoubletLink(0, constants.Null, constants.Null), options);
+            // Now we have a stable singleValId, make a self-link out of it:
+            return CreateOrUpdateLinkAndGetId(links, new DoubletLink(0, singleValId, singleValId), options);
+          }
+
+          if (index == constants.Any)
+          {
+            // index not given, but singleValId is stable
+            source = singleValId;
+            target = singleValId;
+            return CreateOrUpdateLinkAndGetId(links, new DoubletLink(0, source, target), options);
+          }
+          else
+          {
+            // index given
+            source = singleValId;
+            target = singleValId;
+            return CreateOrUpdateLinkAndGetId(links, new DoubletLink(index, source, target), options);
           }
         }
-        return doublet.Index;
+        else if (lino.Values.Count == 2)
+        {
+          // Two-value link: (index: source->target)
+          var sourceLink = lino.Values[0];
+          var targetLink = lino.Values[1];
+          source = EnsureLinkAndSubLinksExist(links, sourceLink, options);
+          target = EnsureLinkAndSubLinksExist(links, targetLink, options);
+
+          return CreateOrUpdateLinkAndGetId(links, new DoubletLink(index, source, target), options);
+        }
+        else if (lino.Values.Count == 0)
+        {
+          // No values means this is just an index reference, or ANY.
+          // If index is a number and not ANY, create a self-link if it doesn't exist:
+          if (index == constants.Any)
+          {
+            // Just ANY - create a minimal link (like (0:0->0)) and return its ID
+            return CreateOrUpdateLinkAndGetId(links, new DoubletLink(0, nullConstant, nullConstant), options);
+          }
+          else
+          {
+            // Index given but no children:
+            // Interpret it as a self-link (index:index->index).
+            return CreateOrUpdateLinkAndGetId(links, new DoubletLink(index, index, index), options);
+          }
+        }
       }
+
+      // If we reached here, means lino had no Values (null)
+      // If index is ANY, create a minimal link
+      // If index is given, create a self link with (index:index->index)
+      if (lino.Values == null)
+      {
+        if (index == constants.Any)
+        {
+          return CreateOrUpdateLinkAndGetId(links, new DoubletLink(0, nullConstant, nullConstant), options);
+        }
+        else
+        {
+          return CreateOrUpdateLinkAndGetId(links, new DoubletLink(index, index, index), options);
+        }
+      }
+
+      // Should never reach here, but just in case:
+      return constants.Any;
     }
 
     private static void RestoreUnexpectedLinkDeletions(
@@ -495,49 +518,60 @@ namespace Foundation.Data.Doublets.Cli
       return new DoubletLink(index, source, target);
     }
 
-    private static void CreateOrUpdateLink(ILinks<uint> links, DoubletLink link, Options options)
+    private static uint CreateOrUpdateLinkAndGetId(ILinks<uint> links, DoubletLink link, Options options)
+    {
+      var id = CreateOrUpdateLink(links, link, options);
+      return id;
+    }
+
+    private static uint CreateOrUpdateLink(ILinks<uint> links, DoubletLink link, Options options)
     {
       var nullConstant = links.Constants.Null;
-      // We never use 'anyConstant' when setting actual link fields
-      // because ANY is a special query constant, not a stored value.
+      var anyConstant = links.Constants.Any;
 
-      if (link.Index != nullConstant && link.Index != 0 && link.Index != links.Constants.Any)
+      uint finalId;
+      if (link.Index != nullConstant && link.Index != 0 && link.Index != anyConstant)
       {
-        if (!links.Exists(link.Index))
+        finalId = link.Index;
+        if (!links.Exists(finalId))
         {
-          // Create the link with a temporary (index, index, index) or (index, 0, 0) structure
-          LinksExtensions.EnsureCreated(links, link.Index);
-          // Invoke a handler to signal creation if needed
-          options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, nullConstant, nullConstant));
-        }
-        var existingLinkRaw = links.GetLink(link.Index);
-        var existingLink = new DoubletLink(existingLinkRaw);
-        if (existingLink.Source != link.Source || existingLink.Target != link.Target)
-        {
-          // Use the actual existing link as 'before'
-          links.Update(existingLink, link, (before, after) =>
+          LinksExtensions.EnsureCreated(links, finalId);
+          // Just created a placeholder link, now update to correct source & target
+          links.Update(new DoubletLink(finalId, nullConstant, nullConstant), link, (before, after) =>
               options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
         }
         else
         {
-          options.ChangesHandler?.Invoke(existingLink, existingLink);
+          var existingLink = new DoubletLink(links.GetLink(finalId));
+          if (existingLink.Source != link.Source || existingLink.Target != link.Target)
+          {
+            links.Update(existingLink, link, (before, after) =>
+                options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+          }
+          else
+          {
+            // No changes, just invoke handler
+            options.ChangesHandler?.Invoke(existingLink, existingLink);
+          }
         }
       }
       else
       {
-        // No index specified, search or create:
+        // No fixed index, search or create
         var existingIndex = links.SearchOrDefault(link.Source, link.Target);
         if (existingIndex == default)
         {
-          var createdIndex = links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
+          finalId = links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
               options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
         }
         else
         {
+          finalId = existingIndex;
           var existingLink = new DoubletLink(existingIndex, link.Source, link.Target);
           options.ChangesHandler?.Invoke(existingLink, existingLink);
         }
       }
+      return finalId;
     }
 
     private static void RemoveLinks(ILinks<uint> links, DoubletLink restriction, Options options)
