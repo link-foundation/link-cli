@@ -323,7 +323,9 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
 
                 // Assert
                 var allLinks = GetAllLinks(links);
-                Assert.Empty(allLinks);
+                Assert.Equal(2, allLinks.Count);
+                AssertLinkExists(allLinks, 1, 1, 1);
+                AssertLinkExists(allLinks, 2, 2, 2);
             });
         }
 
