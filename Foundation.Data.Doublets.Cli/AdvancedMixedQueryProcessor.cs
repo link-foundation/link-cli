@@ -2,9 +2,6 @@ using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Protocols.Lino;
-using System.Linq;
-using System.Collections.Generic;
-using System;
 using LinoLink = Platform.Protocols.Lino.Link<string>;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
@@ -46,6 +43,7 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
+            // We expect something like (( restriction ) ( substitution ))
             var outerLink = parsedLinks[0];
             var outerLinkValues = outerLink.Values;
             if (outerLinkValues == null || outerLinkValues.Count < 2)
@@ -54,9 +52,9 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            // Outer link is always "(( restriction ) ( substitution ))"
             var restrictionLink = outerLinkValues[0];
             var substitutionLink = outerLinkValues[1];
+
             TraceIfEnabled(options, $"[ProcessQuery] Restriction link => Id=\"{restrictionLink.Id}\" Values.Count={restrictionLink.Values?.Count ?? 0}");
             TraceIfEnabled(options, $"[ProcessQuery] Substitution link => Id=\"{substitutionLink.Id}\" Values.Count={substitutionLink.Values?.Count ?? 0}");
 
@@ -79,19 +77,55 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            // Next, we interpret the "restriction" and "substitution" links as pattern sets.
-            // Each link can contain multiple LinoLinks as sub-values => each becomes a pattern.
-
+            // Build pattern lists from the sub-links
             var restrictionPatterns = restrictionLink.Values ?? new List<LinoLink>();
             var substitutionPatterns = substitutionLink.Values ?? new List<LinoLink>();
 
             TraceIfEnabled(options, $"[ProcessQuery] Restriction patterns to parse: {restrictionPatterns.Count}");
             TraceIfEnabled(options, $"[ProcessQuery] Substitution patterns to parse: {substitutionPatterns.Count}");
 
-            var restrictionInternalPatterns = restrictionPatterns.Select(l => CreatePatternFromLino(l)).ToList();
-            var substitutionInternalPatterns = substitutionPatterns.Select(l => CreatePatternFromLino(l)).ToList();
+            var restrictionInternalPatterns = restrictionPatterns
+                .Select(l => CreatePatternFromLino(l))
+                .ToList();
 
-            // If restrictionLink.Id is not empty, treat it as an extra pattern
+            var substitutionInternalPatterns = substitutionPatterns
+                .Select(l => CreatePatternFromLino(l))
+                .ToList();
+
+            // ----------------------------------------------------------------
+            // FIX: If we see restrictionLink with exactly 1 sub-link => that sub-link has 2 sub-values => no IDs => interpret as a single composite pattern
+            if (
+                string.IsNullOrEmpty(restrictionLink.Id) &&
+                restrictionLink.Values?.Count == 1
+            )
+            {
+                var single = restrictionLink.Values[0];
+                if (
+                    string.IsNullOrEmpty(single.Id) &&
+                    single.Values?.Count == 2
+                )
+                {
+                    // Create a single composite pattern from ((1 *) (* 2))
+                    var topLevelPattern = CreatePatternFromLino(single);
+
+                    // If it doesn't have an explicit index or if it's "*", force a variable ID, so we don't unify with #1/#2
+                    if (string.IsNullOrEmpty(topLevelPattern.Index) || topLevelPattern.Index == "*")
+                    {
+                        topLevelPattern.Index = "$top_" + Guid.NewGuid().ToString("N");
+                        TraceIfEnabled(options, $"[ProcessQuery] Assigned a variable index => {topLevelPattern.Index}");
+                    }
+
+                    // Clear out the multiple sub-pattern expansions and replace with our single composite pattern
+                    restrictionInternalPatterns.Clear();
+                    restrictionInternalPatterns.Add(topLevelPattern);
+
+                    TraceIfEnabled(options,
+                        "[ProcessQuery] Detected single sub-link (no ID) with 2 sub-values => replaced with one composite restriction pattern.");
+                }
+            }
+            // ----------------------------------------------------------------
+
+            // If restrictionLink.Id is not empty => treat it as an extra pattern
             if (!string.IsNullOrEmpty(restrictionLink.Id))
             {
                 TraceIfEnabled(options, "[ProcessQuery] Restriction link has non-empty Id => adding extra pattern for it.");
@@ -99,7 +133,7 @@ namespace Foundation.Data.Doublets.Cli
                 restrictionInternalPatterns.Insert(0, extraRestrictionPattern);
             }
 
-            // If substitutionLink.Id is not empty, treat it as an extra pattern
+            // If substitutionLink.Id is not empty => treat it as an extra pattern
             if (!string.IsNullOrEmpty(substitutionLink.Id))
             {
                 TraceIfEnabled(options, "[ProcessQuery] Substitution link has non-empty Id => adding extra pattern for it.");
@@ -110,19 +144,17 @@ namespace Foundation.Data.Doublets.Cli
             TraceIfEnabled(options, "[ProcessQuery] Converting restriction patterns => done.");
             TraceIfEnabled(options, "[ProcessQuery] Converting substitution patterns => done.");
 
-            // Now find all solutions (assignments) that match those patterns.
             TraceIfEnabled(options, "[ProcessQuery] Finding solutions for restriction patterns...");
             var solutions = FindAllSolutions(links, restrictionInternalPatterns);
 
             TraceIfEnabled(options, $"[ProcessQuery] Found {solutions.Count} total solution(s) matching restriction patterns.");
-
             if (solutions.Count == 0)
             {
                 TraceIfEnabled(options, "[ProcessQuery] No solutions found => returning.");
                 return;
             }
 
-            // Decide if all solutions would lead to a no-op.
+            // Decide if all solutions would lead to a no-op
             bool allSolutionsNoOperation = solutions.All(solution =>
                 DetermineIfSolutionIsNoOperation(solution, restrictionInternalPatterns, substitutionInternalPatterns, links));
 
@@ -147,14 +179,12 @@ namespace Foundation.Data.Doublets.Cli
                 TraceIfEnabled(options, "[ProcessQuery] Some solutions lead to actual changes => building operations.");
                 foreach (var solution in solutions)
                 {
-                    // For each solution, we apply it to the substitution patterns => get desired final state links
                     var substitutionLinks = substitutionInternalPatterns
                         .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
                         .Where(link => link != null)
                         .Select(link => new DoubletLink(link!))
                         .ToList();
 
-                    // Same with restriction patterns => those represent the "before" links
                     var restrictionLinks = restrictionInternalPatterns
                         .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
                         .Where(link => link != null)
@@ -165,7 +195,6 @@ namespace Foundation.Data.Doublets.Cli
                         "[ProcessQuery] For a solution => " +
                         $"substitution links count={substitutionLinks.Count}, restriction links count={restrictionLinks.Count}.");
 
-                    // The DetermineOperationsFromPatterns method figures out creation/update/deletion steps
                     var operations = DetermineOperationsFromPatterns(restrictionLinks, substitutionLinks, links);
                     TraceIfEnabled(options, $"[ProcessQuery] => {operations.Count} operation(s) derived from these patterns.");
                     allPlannedOperations.AddRange(operations);
@@ -184,23 +213,19 @@ namespace Foundation.Data.Doublets.Cli
             }
             else
             {
-                // We track "intended final states" for each link ID
                 var intendedFinalStates = new Dictionary<uint, DoubletLink>();
                 foreach (var (before, after) in allPlannedOperations)
                 {
                     if (after.Index != 0)
                     {
-                        // Means an update or creation => final state is "after"
                         intendedFinalStates[after.Index] = after;
                     }
                     else if (before.Index != 0 && after.Index == 0)
                     {
-                        // Means a deletion => final state is "deleted"
                         intendedFinalStates[before.Index] = default(DoubletLink);
                     }
                 }
 
-                // If some link is being unexpectedly deleted during an update, we’ll restore it afterward
                 var unexpectedDeletions = new List<DoubletLink>();
                 var originalHandler = options.ChangesHandler;
                 options.ChangesHandler = (before, after) =>
@@ -219,11 +244,9 @@ namespace Foundation.Data.Doublets.Cli
                     return originalHandler?.Invoke(before, after) ?? links.Constants.Continue;
                 };
 
-                // Actually apply the operations (create, update, delete, etc.)
                 TraceIfEnabled(options, "[ProcessQuery] Applying all planned operations...");
                 ApplyAllPlannedOperations(links, allPlannedOperations, options);
 
-                // Then restore anything that got unexpectedly deleted
                 TraceIfEnabled(options, "[ProcessQuery] Restoring unexpected deletions if any...");
                 RestoreUnexpectedLinkDeletions(links, unexpectedDeletions, intendedFinalStates, options);
             }
@@ -232,8 +255,8 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         /// <summary>
-        /// Recursively ensures that a LinoLink (potentially nested at any depth) is created as a doublet link.
-        /// Returns the ID of the created/ensured link if it's a composite link, or the numeric value if it's a leaf.
+        /// Recursively ensures that a LinoLink (potentially nested) is created. 
+        /// Returns the numeric ID or ANY if leaf/unparseable.
         /// </summary>
         private static uint EnsureNestedLinkCreatedRecursively(ILinks<uint> links, LinoLink lino, Options options)
         {
@@ -261,7 +284,7 @@ namespace Foundation.Data.Doublets.Cli
                 return anyConstant;
             }
 
-            // If we have exactly 2 Values => we interpret as a composite link
+            // If 2 Values => interpret as a composite link
             if (lino.Values.Count == 2)
             {
                 var sourceId = EnsureNestedLinkCreatedRecursively(links, lino.Values[0], options);
@@ -283,11 +306,11 @@ namespace Foundation.Data.Doublets.Cli
                 var linkToCreate = new DoubletLink(index, sourceId, targetId);
                 var createdId = EnsureLinkCreated(links, linkToCreate, options);
                 TraceIfEnabled(options,
-                    $"[EnsureNestedLinkCreatedRecursively] Created/ensured composite link => (index={index}, src={sourceId}, trg={targetId}) => actual ID={createdId}");
+                    $"[EnsureNestedLinkCreatedRecursively] Created/ensured composite => (index={index}, src={sourceId}, trg={targetId}) => actual ID={createdId}");
                 return createdId;
             }
 
-            // If more than 2 sub-values, we do nothing special => or treat them as ANY
+            // If more than 2 => do nothing special => ANY
             TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] More than 2 sub-values => returning ANY.");
             return anyConstant;
         }
@@ -300,19 +323,19 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (unexpectedDeletions.Count > 0)
             {
-                TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] We have {unexpectedDeletions.Count} unexpected deletion(s) to handle.");
+                TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] We have {unexpectedDeletions.Count} unexpected deletion(s).");
                 foreach (var deletedLink in unexpectedDeletions)
                 {
                     if (finalIntendedStates.TryGetValue(deletedLink.Index, out var intendedLink))
                     {
                         if (intendedLink.Index == 0)
                         {
-                            TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Link #{deletedLink.Index} was intended to be deleted, skipping.");
+                            TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Link #{deletedLink.Index} was intended-deletion => skip restore.");
                             continue;
                         }
                         if (!links.Exists(intendedLink.Index))
                         {
-                            TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Link #{deletedLink.Index} is missing but intended => recreating.");
+                            TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Recreating link #{deletedLink.Index} => was unexpected deletion.");
                             CreateOrUpdateLink(links, intendedLink, options);
                         }
                     }
@@ -324,32 +347,26 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        /// <summary>
-        /// Updated method to avoid dictionary collisions with ANY/0 indexes.
-        /// </summary>
         private static List<(DoubletLink before, DoubletLink after)> DetermineOperationsFromPatterns(
             List<DoubletLink> restrictions,
             List<DoubletLink> substitutions,
             ILinks<uint> links)
         {
-            // We'll treat "0" or "Any" as "wildcard index" that can't be dictionary-keyed.
             var anyOrZero = new HashSet<uint> { 0, links.Constants.Any };
 
-            // Separate normal vs. wildcard
             var normalRestrictions = restrictions.Where(r => !anyOrZero.Contains(r.Index)).ToList();
             var wildcardRestrictions = restrictions.Where(r => anyOrZero.Contains(r.Index)).ToList();
 
             var normalSubstitutions = substitutions.Where(s => !anyOrZero.Contains(s.Index)).ToList();
             var wildcardSubstitutions = substitutions.Where(s => anyOrZero.Contains(s.Index)).ToList();
 
-            // Build dictionaries for normal (unique) indexes
             var restrictionByIndex = normalRestrictions.ToDictionary(r => r.Index, r => r);
             var substitutionByIndex = normalSubstitutions.ToDictionary(s => s.Index, s => s);
 
             var operations = new List<(DoubletLink before, DoubletLink after)>();
-
-            // Step 1) Handle normal index => dictionary approach
             var allIndices = restrictionByIndex.Keys.Union(substitutionByIndex.Keys).ToList();
+
+            // Step 1) For each distinct index in normal restrictions & substitutions
             foreach (var idx in allIndices)
             {
                 bool hasRestriction = restrictionByIndex.TryGetValue(idx, out var rLink);
@@ -357,7 +374,6 @@ namespace Foundation.Data.Doublets.Cli
 
                 if (hasRestriction && hasSubstitution)
                 {
-                    // If the source/target differ => update, else => no-op
                     if (rLink.Source != sLink.Source || rLink.Target != sLink.Target)
                     {
                         operations.Add((rLink, sLink));
@@ -379,13 +395,13 @@ namespace Foundation.Data.Doublets.Cli
                 }
             }
 
-            // Step 2) Wildcard restrictions => each is a separate "delete" operation
+            // Step 2) Wildcard restrictions => each is a separate "delete"
             foreach (var rLink in wildcardRestrictions)
             {
                 operations.Add((rLink, default(DoubletLink)));
             }
 
-            // Step 3) Wildcard substitutions => each is a separate "create" operation
+            // Step 3) Wildcard substitutions => each is a separate "create"
             foreach (var sLink in wildcardSubstitutions)
             {
                 operations.Add((default(DoubletLink), sLink));
@@ -403,22 +419,18 @@ namespace Foundation.Data.Doublets.Cli
             {
                 if (before.Index != 0 && after.Index == 0)
                 {
-                    // Deletion
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Deleting link => ID={before.Index}, S={before.Source}, T={before.Target}");
                     RemoveLinks(links, before, options);
                 }
                 else if (before.Index == 0 && after.Index != 0)
                 {
-                    // Creation
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Creating link => ID={after.Index}, S={after.Source}, T={after.Target}");
                     CreateOrUpdateLink(links, after, options);
                 }
                 else if (before.Index != 0 && after.Index != 0)
                 {
-                    // Possible update
                     if (before.Source != after.Source || before.Target != after.Target)
                     {
-                        // If it's the same Index, we do an Update; else remove + create
                         if (before.Index == after.Index)
                         {
                             TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Updating link in-place => ID={before.Index}");
@@ -438,8 +450,7 @@ namespace Foundation.Data.Doublets.Cli
                     }
                     else
                     {
-                        // Source & target unchanged => no-op but we still trace
-                        TraceIfEnabled(options, $"[ApplyAllPlannedOperations] No changes for link => ID={before.Index}, same source/target => no-op.");
+                        TraceIfEnabled(options, $"[ApplyAllPlannedOperations] No changes for link => ID={before.Index} => no-op.");
                         options.ChangesHandler?.Invoke(before, before);
                     }
                 }
@@ -450,7 +461,6 @@ namespace Foundation.Data.Doublets.Cli
         {
             var partialSolutions = new List<Dictionary<string, uint>> { new Dictionary<string, uint>() };
 
-            // For each pattern, we try to match it, expand solutions...
             for (int i = 0; i < patterns.Count; i++)
             {
                 var pattern = patterns[i];
@@ -472,18 +482,16 @@ namespace Foundation.Data.Doublets.Cli
                     }
                 }
                 partialSolutions = newSolutions;
-                if (partialSolutions.Count == 0)
-                {
-                    break;
-                }
+                if (partialSolutions.Count == 0) break;
             }
 
             return partialSolutions;
         }
 
-        private static bool AreSolutionsCompatible(Dictionary<string, uint> existingSolution, Dictionary<string, uint> newAssignments)
+        private static bool AreSolutionsCompatible(
+            Dictionary<string, uint> existingSolution, 
+            Dictionary<string, uint> newAssignments)
         {
-            // If the same variable has different assigned values => conflict => false
             foreach (var assignment in newAssignments)
             {
                 if (existingSolution.TryGetValue(assignment.Key, out var existingValue))
@@ -502,14 +510,11 @@ namespace Foundation.Data.Doublets.Cli
             Pattern pattern,
             Dictionary<string, uint> currentSolution)
         {
-            // If pattern is a leaf => match index only
             if (pattern.IsLeaf)
             {
-                uint indexValue = ResolveId(links, pattern.Index, currentSolution);
-                uint sourceValue = links.Constants.Any;
-                uint targetValue = links.Constants.Any;
-
-                var candidates = links.All(new DoubletLink(indexValue, sourceValue, targetValue));
+                uint idx = ResolveId(links, pattern.Index, currentSolution);
+                uint any = links.Constants.Any;
+                var candidates = links.All(new DoubletLink(idx, any, any));
                 foreach (var link in candidates)
                 {
                     var candidateLink = new DoubletLink(link);
@@ -520,50 +525,46 @@ namespace Foundation.Data.Doublets.Cli
                 yield break;
             }
 
-            // Non-leaf => we also need to match the source & target
-            var any = links.Constants.Any;
-            bool indexIsVariable = IsVariable(pattern.Index);
-            bool indexIsAny = pattern.Index == "*";
-            uint indexResolved = ResolveId(links, pattern.Index, currentSolution);
+            var anyVal = links.Constants.Any;
+            bool idxIsVar = IsVariable(pattern.Index);
+            bool idxIsAny = pattern.Index == "*";
+            uint idxResolved = ResolveId(links, pattern.Index, currentSolution);
 
-            // If indexResolved is a known link => we can skip enumerating all links
-            if (!indexIsVariable && !indexIsAny && indexResolved != any && indexResolved != 0 && links.Exists(indexResolved))
+            // If idxResolved is a known link => skip enumerating everything
+            if (!idxIsVar && !idxIsAny && idxResolved != anyVal && idxResolved != 0 && links.Exists(idxResolved))
             {
-                var link = new DoubletLink(links.GetLink(indexResolved));
-                // We check if link's Source & Target match the sub-patterns:
+                var link = new DoubletLink(links.GetLink(idxResolved));
                 var sourceMatches = RecursiveMatchSubPattern(links, pattern.Source, link.Source, currentSolution);
-                foreach (var sourceSolution in sourceMatches)
+                foreach (var sourceSol in sourceMatches)
                 {
-                    var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSolution);
-                    foreach (var targetSolution in targetMatches)
+                    var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSol);
+                    foreach (var targetSol in targetMatches)
                     {
-                        var combinedSolution = new Dictionary<string, uint>(targetSolution);
-                        AssignVariableIfNeeded(pattern.Index, indexResolved, combinedSolution);
-                        yield return combinedSolution;
+                        var combined = new Dictionary<string, uint>(targetSol);
+                        AssignVariableIfNeeded(pattern.Index, idxResolved, combined);
+                        yield return combined;
                     }
                 }
             }
             else
             {
                 // Otherwise we iterate over all links
-                var allLinks = links.All(new DoubletLink(any, any, any));
+                var allLinks = links.All(new DoubletLink(anyVal, anyVal, anyVal));
                 foreach (var raw in allLinks)
                 {
                     var candidateLink = new DoubletLink(raw);
-                    if (!CheckIdMatch(links, pattern.Index, candidateLink.Index, currentSolution))
-                    {
+                    if (!CheckIdMatch(links, pattern.Index, candidateLink.Index, currentSolution)) 
                         continue;
-                    }
-                    // Then see if candidateLink.Source matches pattern.Source, candidateLink.Target matches pattern.Target
+
                     var sourceMatches = RecursiveMatchSubPattern(links, pattern.Source, candidateLink.Source, currentSolution);
-                    foreach (var sourceSolution in sourceMatches)
+                    foreach (var sourceSol in sourceMatches)
                     {
-                        var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, candidateLink.Target, sourceSolution);
-                        foreach (var targetSolution in targetMatches)
+                        var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, candidateLink.Target, sourceSol);
+                        foreach (var targetSol in targetMatches)
                         {
-                            var combinedSolution = new Dictionary<string, uint>(targetSolution);
-                            AssignVariableIfNeeded(pattern.Index, candidateLink.Index, combinedSolution);
-                            yield return combinedSolution;
+                            var combined = new Dictionary<string, uint>(targetSol);
+                            AssignVariableIfNeeded(pattern.Index, candidateLink.Index, combined);
+                            yield return combined;
                         }
                     }
                 }
@@ -578,7 +579,6 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (pattern == null)
             {
-                // Null pattern => automatically a match
                 yield return currentSolution;
                 yield break;
             }
@@ -587,18 +587,14 @@ namespace Foundation.Data.Doublets.Cli
             {
                 if (CheckIdMatch(links, pattern.Index, linkId, currentSolution))
                 {
-                    var newSolution = new Dictionary<string, uint>(currentSolution);
-                    AssignVariableIfNeeded(pattern.Index, linkId, newSolution);
-                    yield return newSolution;
+                    var newSol = new Dictionary<string, uint>(currentSolution);
+                    AssignVariableIfNeeded(pattern.Index, linkId, newSol);
+                    yield return newSol;
                 }
                 yield break;
             }
 
-            // If pattern is not leaf, we retrieve linkId, see if it matches the pattern's own index, etc.
-            if (!links.Exists(linkId))
-            {
-                yield break;
-            }
+            if (!links.Exists(linkId)) yield break;
 
             var link = new DoubletLink(links.GetLink(linkId));
             if (!CheckIdMatch(links, pattern.Index, link.Index, currentSolution))
@@ -606,28 +602,30 @@ namespace Foundation.Data.Doublets.Cli
                 yield break;
             }
 
-            // Recurse on the source & target
             var sourceMatches = RecursiveMatchSubPattern(links, pattern.Source, link.Source, currentSolution);
-            foreach (var sourceSolution in sourceMatches)
+            foreach (var sourceSol in sourceMatches)
             {
-                var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSolution);
-                foreach (var targetSolution in targetMatches)
+                var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSol);
+                foreach (var targetSol in targetMatches)
                 {
-                    var combinedSolution = new Dictionary<string, uint>(targetSolution);
-                    AssignVariableIfNeeded(pattern.Index, link.Index, combinedSolution);
-                    yield return combinedSolution;
+                    var combined = new Dictionary<string, uint>(targetSol);
+                    AssignVariableIfNeeded(pattern.Index, link.Index, combined);
+                    yield return combined;
                 }
             }
         }
 
-        private static bool CheckIdMatch(ILinks<uint> links, string patternId, uint candidateId, Dictionary<string, uint> currentSolution)
+        private static bool CheckIdMatch(
+            ILinks<uint> links, 
+            string patternId, 
+            uint candidateId, 
+            Dictionary<string, uint> currentSolution)
         {
-            if (string.IsNullOrEmpty(patternId)) return true;        // no restriction => always match
-            if (patternId == "*") return true;                      // wildcard => always match
+            if (string.IsNullOrEmpty(patternId)) return true;
+            if (patternId == "*") return true;
 
             if (IsVariable(patternId))
             {
-                // If we already have an assignment for that variable => must unify
                 if (currentSolution.TryGetValue(patternId, out var existingVal))
                 {
                     return existingVal == candidateId;
@@ -635,14 +633,12 @@ namespace Foundation.Data.Doublets.Cli
                 return true;
             }
 
-            // Otherwise patternId might be a numeric or "Any"
             uint parsed = links.Constants.Any;
             if (TryParseLinkId(patternId, links.Constants, ref parsed))
             {
                 if (parsed == links.Constants.Any) return true;
                 return parsed == candidateId;
             }
-
             return true;
         }
 
@@ -659,23 +655,26 @@ namespace Foundation.Data.Doublets.Cli
             return !string.IsNullOrEmpty(identifier) && identifier.StartsWith("$");
         }
 
-        private static uint ResolveId(ILinks<uint> links, string identifier, Dictionary<string, uint> currentSolution)
+        private static uint ResolveId(
+            ILinks<uint> links,
+            string identifier,
+            Dictionary<string, uint> currentSolution)
         {
-            var resolved = links.Constants.Any;
-            if (string.IsNullOrEmpty(identifier)) return resolved;
+            var anyVal = links.Constants.Any;
+            if (string.IsNullOrEmpty(identifier)) return anyVal;
             if (currentSolution.TryGetValue(identifier, out var value))
             {
                 return value;
             }
             if (IsVariable(identifier))
             {
-                return resolved;
+                return anyVal;
             }
-            if (TryParseLinkId(identifier, links.Constants, ref resolved))
+            if (TryParseLinkId(identifier, links.Constants, ref anyVal))
             {
-                return resolved;
+                return anyVal;
             }
-            return resolved;
+            return anyVal;
         }
 
         private static bool DetermineIfSolutionIsNoOperation(
@@ -684,15 +683,18 @@ namespace Foundation.Data.Doublets.Cli
             List<Pattern> substitutions,
             ILinks<uint> links)
         {
-            // We'll apply the solution to restriction & substitution => see if they match exactly
             var substitutedRestrictions = restrictions
                 .Select(r => ApplySolutionToPattern(links, solution, r))
-                .Where(link => link != null).Select(link => new DoubletLink(link!)).ToList();
+                .Where(link => link != null)
+                .Select(link => new DoubletLink(link!))
+                .ToList();
+
             var substitutedSubstitutions = substitutions
                 .Select(s => ApplySolutionToPattern(links, solution, s))
-                .Where(link => link != null).Select(link => new DoubletLink(link!)).ToList();
+                .Where(link => link != null)
+                .Select(link => new DoubletLink(link!))
+                .ToList();
 
-            // Sort by index for a straightforward 1-1 check
             substitutedRestrictions.Sort((a, b) => a.Index.CompareTo(b.Index));
             substitutedSubstitutions.Sort((a, b) => a.Index.CompareTo(b.Index));
 
@@ -712,14 +714,13 @@ namespace Foundation.Data.Doublets.Cli
             Dictionary<string, uint> solution,
             List<Pattern> patterns)
         {
-            // For each pattern, apply the solution => get the "link form" => then see which actual links match it in the store
             var matchedLinks = new List<DoubletLink>();
             foreach (var pattern in patterns)
             {
-                var appliedPattern = ApplySolutionToPattern(links, solution, pattern);
-                if (appliedPattern != null)
+                var applied = ApplySolutionToPattern(links, solution, pattern);
+                if (applied != null)
                 {
-                    var matches = links.All(appliedPattern);
+                    var matches = links.All(applied);
                     foreach (var match in matches)
                     {
                         matchedLinks.Add(new DoubletLink(match));
@@ -734,30 +735,28 @@ namespace Foundation.Data.Doublets.Cli
             Dictionary<string, uint> solution,
             Pattern? pattern)
         {
-            if (pattern == null)
-            {
-                return null;
-            }
+            if (pattern == null) return null;
+
             if (pattern.IsLeaf)
             {
                 uint index = ResolveId(links, pattern.Index, solution);
-                uint any = links.Constants.Any;
-                return new DoubletLink(index, any, any);
+                var anyVal = links.Constants.Any;
+                return new DoubletLink(index, anyVal, anyVal);
             }
             else
             {
-                uint index = ResolveId(links, pattern.Index, solution);
+                uint idx = ResolveId(links, pattern.Index, solution);
                 var sourceLink = ApplySolutionToPattern(links, solution, pattern.Source);
                 var targetLink = ApplySolutionToPattern(links, solution, pattern.Target);
 
-                var any = links.Constants.Any;
-                uint finalSource = sourceLink?.Index ?? any;
-                uint finalTarget = targetLink?.Index ?? any;
+                uint anyVal = links.Constants.Any;
+                uint finalSource = sourceLink?.Index ?? anyVal;
+                uint finalTarget = targetLink?.Index ?? anyVal;
 
-                if (finalSource == 0) finalSource = any;
-                if (finalTarget == 0) finalTarget = any;
+                if (finalSource == 0) finalSource = anyVal;
+                if (finalTarget == 0) finalTarget = anyVal;
 
-                return new DoubletLink(index, finalSource, finalTarget);
+                return new DoubletLink(idx, finalSource, finalTarget);
             }
         }
 
@@ -768,10 +767,9 @@ namespace Foundation.Data.Doublets.Cli
 
             if (link.Index != nullConstant)
             {
-                // We have a desired index => if doesn't exist, ensure it's created, else update
                 if (!links.Exists(link.Index))
                 {
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} does not exist => ensuring creation.");
+                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} doesn't exist => ensuring creation.");
                     LinksExtensions.EnsureCreated(links, link.Index);
                 }
                 var existingLink = links.GetLink(link.Index);
@@ -779,19 +777,22 @@ namespace Foundation.Data.Doublets.Cli
 
                 if (existingDoublet.Source != link.Source || existingDoublet.Target != link.Target)
                 {
-                    // We do an update
                     TraceIfEnabled(options,
-                        $"[CreateOrUpdateLink] Updating link #{link.Index} => Source: {existingDoublet.Source}->{link.Source}, Target: {existingDoublet.Target}->{link.Target}");
+                        $"[CreateOrUpdateLink] Updating link #{link.Index}: {existingDoublet.Source}->{link.Source}, {existingDoublet.Target}->{link.Target}.");
                     LinksExtensions.EnsureCreated(links, link.Index);
-                    options.ChangesHandler?.Invoke(new DoubletLink(link.Index, nullConstant, nullConstant),
-                                                   new DoubletLink(link.Index, nullConstant, nullConstant));
-                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (b, a) =>
-                        options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
+                    options.ChangesHandler?.Invoke(
+                        new DoubletLink(link.Index, nullConstant, nullConstant),
+                        new DoubletLink(link.Index, nullConstant, nullConstant)
+                    );
+                    links.Update(
+                        new DoubletLink(link.Index, anyConstant, anyConstant),
+                        link,
+                        (b, a) => options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue
+                    );
                 }
                 else
                 {
-                    // No change
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} already has S={link.Source}, T={link.Target} => no-op.");
+                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} is already S={link.Source}, T={link.Target} => no change.");
                     options.ChangesHandler?.Invoke(existingDoublet, existingDoublet);
                 }
             }
@@ -802,14 +803,15 @@ namespace Foundation.Data.Doublets.Cli
                 if (found == default)
                 {
                     uint newCreatedId = 0;
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] No link found for (S={link.Source}, T={link.Target}), creating new link...");
+                    TraceIfEnabled(options,
+                        $"[CreateOrUpdateLink] Creating new link => (S={link.Source},T={link.Target}).");
                     links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
                     {
                         var afterLink = new DoubletLink(after);
                         if (newCreatedId == 0 && afterLink.Index != 0 && afterLink.Index != anyConstant)
                         {
                             newCreatedId = afterLink.Index;
-                            TraceIfEnabled(options, $"[CreateOrUpdateLink] Created new link => ID={newCreatedId}");
+                            TraceIfEnabled(options, $"[CreateOrUpdateLink] => assigned new ID={newCreatedId}");
                         }
                         return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
                     });
@@ -820,9 +822,9 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 else
                 {
-                    // Already exists => no-op
+                    // Already exists
+                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link already found => ID={found}, no changes.");
                     var existingLink = new DoubletLink(found, link.Source, link.Target);
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link already exists => ID={found}, no changes needed.");
                     options.ChangesHandler?.Invoke(existingLink, existingLink);
                 }
             }
@@ -830,8 +832,14 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void RemoveLinks(ILinks<uint> links, DoubletLink restriction, Options options)
         {
-            var linksToRemove = links.All(restriction).Where(l => l != null).Select(l => new DoubletLink(l)).ToList();
-            TraceIfEnabled(options, $"[RemoveLinks] Found {linksToRemove.Count} link(s) matching (ID={restriction.Index}, S={restriction.Source}, T={restriction.Target}).");
+            var linksToRemove = links.All(restriction)
+                                     .Where(l => l != null)
+                                     .Select(l => new DoubletLink(l))
+                                     .ToList();
+
+            TraceIfEnabled(options,
+                $"[RemoveLinks] Found {linksToRemove.Count} link(s) matching (ID={restriction.Index}, S={restriction.Source}, T={restriction.Target}).");
+
             foreach (var link in linksToRemove)
             {
                 if (links.Exists(link.Index))
@@ -861,10 +869,7 @@ namespace Foundation.Data.Doublets.Cli
 
         private static bool TryParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(id)) return false;
             if (id == "*")
             {
                 parsedValue = constants.Any;
@@ -879,9 +884,9 @@ namespace Foundation.Data.Doublets.Cli
                     return true;
                 }
             }
-            else if (uint.TryParse(id, out uint linkId))
+            else if (uint.TryParse(id, out uint linkVal))
             {
-                parsedValue = linkId;
+                parsedValue = linkVal;
                 return true;
             }
             return false;
@@ -905,21 +910,19 @@ namespace Foundation.Data.Doublets.Cli
 
         private static Pattern CreatePatternFromLino(LinoLink lino)
         {
-            // If there's no sub-values => leaf pattern
             if (lino.Values == null || lino.Values.Count == 0)
             {
                 return new Pattern(lino.Id ?? "");
             }
 
-            // If exactly 2 => treat as "index, source, target" triple
             if (lino.Values.Count == 2)
             {
-                var sourcePattern = CreatePatternFromLino(lino.Values[0]);
-                var targetPattern = CreatePatternFromLino(lino.Values[1]);
-                return new Pattern(lino.Id ?? "", sourcePattern, targetPattern);
+                var sPat = CreatePatternFromLino(lino.Values[0]);
+                var tPat = CreatePatternFromLino(lino.Values[1]);
+                return new Pattern(lino.Id ?? "", sPat, tPat);
             }
 
-            // If more than 2 => treat similarly to a leaf with an ID
+            // If more than 2 => treat similarly to leaf with ID
             return new Pattern(lino.Id ?? "");
         }
 
@@ -935,14 +938,14 @@ namespace Foundation.Data.Doublets.Cli
                 if (existingIndex == default)
                 {
                     uint createdIndex = 0;
-                    TraceIfEnabled(options, $"[EnsureLinkCreated] Creating new link for (S={link.Source}, T={link.Target}).");
+                    TraceIfEnabled(options, $"[EnsureLinkCreated] Creating link for (S={link.Source}, T={link.Target}).");
                     links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
                     {
                         var afterLink = new DoubletLink(after);
                         if (createdIndex == 0 && afterLink.Index != 0 && afterLink.Index != anyConstant)
                         {
                             createdIndex = afterLink.Index;
-                            TraceIfEnabled(options, $"[EnsureLinkCreated] Assigned new ID => {createdIndex}");
+                            TraceIfEnabled(options, $"[EnsureLinkCreated] => assigned new ID={createdIndex}");
                         }
                         return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
                     });
@@ -955,45 +958,40 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 else
                 {
-                    // Already exists => no-op
-                    var existingLink = new DoubletLink(existingIndex, link.Source, link.Target);
-                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link for (S={link.Source}, T={link.Target}) already found => ID={existingIndex}.");
-                    options.ChangesHandler?.Invoke(existingLink, existingLink);
+                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link already found => ID={existingIndex} => no-op.");
+                    var existing = new DoubletLink(existingIndex, link.Source, link.Target);
+                    options.ChangesHandler?.Invoke(existing, existing);
                     return existingIndex;
                 }
             }
             else
             {
-                // We have an index => ensure it is created, or update if needed
+                // We have an index => ensure created or updated
                 if (!links.Exists(link.Index))
                 {
-                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link ID={link.Index} doesn't exist => ensuring creation.");
+                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link #{link.Index} doesn't exist => ensuring creation.");
                     LinksExtensions.EnsureCreated(links, link.Index);
                 }
-                var existingLink = links.GetLink(link.Index);
-                var existingDoublet = new DoubletLink(existingLink);
-                if (existingDoublet.Source != link.Source || existingDoublet.Target != link.Target)
+                var stored = links.GetLink(link.Index);
+                var storedD = new DoubletLink(stored);
+                if (storedD.Source != link.Source || storedD.Target != link.Target)
                 {
                     TraceIfEnabled(options,
-                        $"[EnsureLinkCreated] Updating link #{link.Index} => Source={existingDoublet.Source}->{link.Source}, Target={existingDoublet.Target}->{link.Target}.");
+                        $"[EnsureLinkCreated] Updating link #{link.Index} => {storedD.Source}->{link.Source}, {storedD.Target}->{link.Target}.");
                     uint finalIndex = link.Index;
-                    links.Update(new DoubletLink(link.Index, links.Constants.Any, links.Constants.Any), link, (b, a) =>
+                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (b, a) =>
                         options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
                     return finalIndex;
                 }
                 else
                 {
-                    // No change
-                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link #{link.Index} already correct => no-op.");
-                    options.ChangesHandler?.Invoke(existingDoublet, existingDoublet);
+                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link #{link.Index} is already correct => no-op.");
+                    options.ChangesHandler?.Invoke(storedD, storedD);
                     return link.Index;
                 }
             }
         }
 
-        /// <summary>
-        /// Helper to conditionally write to console if tracing is enabled.
-        /// </summary>
         private static void TraceIfEnabled(Options options, string message)
         {
             if (options.Trace)
