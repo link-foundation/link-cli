@@ -242,3 +242,9 @@ dotnet run --project Foundation.Data.Doublets.Cli -- '((($index: $source $target
 
 dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()'
 ```
+
+### Publish next version:
+
+```bash
+VERSION=$(awk -F'[<>]' '/<Version>/ {print $3}' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj) && git tag "v$VERSION" && git push origin "v$VERSION"
+```
