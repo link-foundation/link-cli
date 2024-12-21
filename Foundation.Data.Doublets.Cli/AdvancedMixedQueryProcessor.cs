@@ -23,19 +23,15 @@ namespace Foundation.Data.Doublets.Cli
         public static void ProcessQuery(ILinks<uint> links, Options options)
         {
             var query = options.Query;
-            Console.WriteLine($"[ProcessQuery] Query: {query}");
             if (string.IsNullOrEmpty(query))
             {
-                Console.WriteLine("[ProcessQuery] Query is empty, returning...");
                 return;
             }
 
             var parser = new Parser();
             var parsedLinks = parser.Parse(query);
-            Console.WriteLine($"[ProcessQuery] Parsed {parsedLinks.Count} links.");
             if (parsedLinks.Count == 0)
             {
-                Console.WriteLine("[ProcessQuery] No parsed links found, returning...");
                 return;
             }
 
@@ -43,30 +39,23 @@ namespace Foundation.Data.Doublets.Cli
             var outerLinkValues = outerLink.Values;
             if (outerLinkValues?.Count < 2)
             {
-                Console.WriteLine("[ProcessQuery] Outer link values < 2, returning...");
                 return;
             }
 
             var restrictionLink = outerLinkValues![0];
             var substitutionLink = outerLinkValues![1];
 
-            Console.WriteLine($"[ProcessQuery] RestrictionLink: {restrictionLink.Id}, SubstitutionLink: {substitutionLink.Id}");
-            Console.WriteLine($"[ProcessQuery] Restriction values count: {restrictionLink.Values?.Count}, Substitution values count: {substitutionLink.Values?.Count}");
-
             // If both restriction and substitution are empty, do nothing
             if ((restrictionLink.Values?.Count == 0) && (substitutionLink.Values?.Count == 0))
             {
-                Console.WriteLine("[ProcessQuery] Both restriction and substitution empty, returning...");
                 return;
             }
 
             // Creation scenario: no restriction, only substitution
             if (restrictionLink.Values?.Count == 0 && (substitutionLink.Values?.Count ?? 0) > 0)
             {
-                Console.WriteLine("[ProcessQuery] Creation scenario detected.");
                 foreach (var linkToCreate in substitutionLink.Values ?? new List<LinoLink>())
                 {
-                    Console.WriteLine($"[ProcessQuery] Ensuring creation of link: {linkToCreate.Id}");
                     EnsureNestedLinkCreatedRecursively(links, linkToCreate, options);
                 }
                 return;
@@ -75,11 +64,9 @@ namespace Foundation.Data.Doublets.Cli
             // Deletion scenario: no substitution, only restriction
             if (substitutionLink.Values?.Count == 0 && (restrictionLink.Values?.Count ?? 0) > 0)
             {
-                Console.WriteLine("[ProcessQuery] Deletion scenario detected.");
                 var anyConstant = links.Constants.Any;
                 foreach (var linkToDelete in restrictionLink.Values ?? new List<LinoLink>())
                 {
-                    Console.WriteLine($"[ProcessQuery] Deleting link: {linkToDelete.Id}");
                     var queryLink = ConvertToDoubletLink(links, linkToDelete, anyConstant);
                     RemoveLinks(links, queryLink, options);
                 }
@@ -87,15 +74,12 @@ namespace Foundation.Data.Doublets.Cli
             }
 
             // Complex scenario (both restriction and substitution)
-            Console.WriteLine("[ProcessQuery] Complex scenario detected.");
             var restrictionPatterns = restrictionLink.Values ?? new List<LinoLink>();
             var substitutionPatterns = substitutionLink.Values ?? new List<LinoLink>();
 
-            Console.WriteLine("[ProcessQuery] Creating restriction patterns:");
             var restrictionInternalPatterns = restrictionPatterns.Select(l => CreatePatternFromLino(l)).ToList();
             foreach (var p in restrictionInternalPatterns) PrintPattern("RestrictionPattern", p);
 
-            Console.WriteLine("[ProcessQuery] Creating substitution patterns:");
             var substitutionInternalPatterns = substitutionPatterns.Select(l => CreatePatternFromLino(l)).ToList();
             foreach (var p in substitutionInternalPatterns) PrintPattern("SubstitutionPattern", p);
 
@@ -112,44 +96,28 @@ namespace Foundation.Data.Doublets.Cli
                 substitutionInternalPatterns.Insert(0, extraSubstitutionPattern);
             }
 
-            Console.WriteLine("[ProcessQuery] Final restriction patterns:");
             foreach (var p in restrictionInternalPatterns) PrintPattern("FinalRestrictionPattern", p);
 
-            Console.WriteLine("[ProcessQuery] Final substitution patterns:");
             foreach (var p in substitutionInternalPatterns) PrintPattern("FinalSubstitutionPattern", p);
 
             var solutions = FindAllSolutions(links, restrictionInternalPatterns);
-            Console.WriteLine($"[ProcessQuery] Solutions found: {solutions.Count}");
-            for (int i = 0; i < solutions.Count; i++)
-            {
-                Console.WriteLine($"[ProcessQuery] Solution #{i}:");
-                foreach (var kvp in solutions[i])
-                {
-                    Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                }
-            }
 
             if (solutions.Count == 0)
             {
-                Console.WriteLine("[ProcessQuery] No solutions found, returning...");
                 return;
             }
 
             bool allSolutionsNoOperation = solutions.All(solution =>
                 DetermineIfSolutionIsNoOperation(solution, restrictionInternalPatterns, substitutionInternalPatterns, links));
-            Console.WriteLine($"[ProcessQuery] AllSolutionsNoOperation: {allSolutionsNoOperation}");
 
             var allPlannedOperations = new List<(DoubletLink before, DoubletLink after)>();
             if (allSolutionsNoOperation)
             {
-                Console.WriteLine("[ProcessQuery] All solutions result in no-operation, just confirming links.");
                 foreach (var solution in solutions)
                 {
                     var matchedLinks = ExtractMatchedLinks(links, solution, restrictionInternalPatterns);
-                    Console.WriteLine($"[ProcessQuery] Matched links for no-op solution: {matchedLinks.Count}");
                     foreach (var link in matchedLinks)
                     {
-                        Console.WriteLine($"  No-op Link: {link}");
                         allPlannedOperations.Add((link, link));
                     }
                 }
@@ -165,27 +133,15 @@ namespace Foundation.Data.Doublets.Cli
                         .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
                         .ToList();
 
-                    Console.WriteLine("[ProcessQuery] Determining operations from patterns...");
                     var operations = DetermineOperationsFromPatterns(restrictionLinks, substitutionLinks);
-                    foreach (var op in operations)
-                    {
-                        Console.WriteLine($"  Operation: Before={op.before} After={op.after}");
-                    }
                     allPlannedOperations.AddRange(operations);
                 }
-            }
-
-            Console.WriteLine("[ProcessQuery] All planned operations:");
-            foreach (var op in allPlannedOperations)
-            {
-                Console.WriteLine($"  Before={op.before}, After={op.after}");
             }
 
             if (allSolutionsNoOperation)
             {
                 foreach (var (before, after) in allPlannedOperations)
                 {
-                    Console.WriteLine($"[ProcessQuery] No-op change callback: Before={before}, After={after}");
                     options.ChangesHandler?.Invoke(before, after);
                 }
             }
@@ -214,29 +170,19 @@ namespace Foundation.Data.Doublets.Cli
                         bool isExpected = allPlannedOperations.Any(op => op.before.Index == beforeLink.Index && op.after.Index == 0);
                         if (!isExpected)
                         {
-                            Console.WriteLine($"[ProcessQuery] Unexpected deletion detected: {beforeLink}");
                             unexpectedDeletions.Add(new DoubletLink(beforeLink));
                         }
                     }
                     return originalHandler?.Invoke(before, after) ?? links.Constants.Continue;
                 };
-                Console.WriteLine("[ProcessQuery] Applying all planned operations...");
                 ApplyAllPlannedOperations(links, allPlannedOperations, options);
-
-                Console.WriteLine("[ProcessQuery] Restoring unexpected deletions if any...");
                 RestoreUnexpectedLinkDeletions(links, unexpectedDeletions, intendedFinalStates, options);
             }
         }
 
         private static void PrintPattern(string label, Pattern pattern, int depth = 0)
         {
-            string indent = new string(' ', depth * 2);
-            Console.WriteLine($"{indent}{label}: Index={pattern.Index}, IsLeaf={pattern.IsLeaf}");
-            if (!pattern.IsLeaf)
-            {
-                if (pattern.Source != null) PrintPattern(label + ".Source", pattern.Source, depth + 1);
-                if (pattern.Target != null) PrintPattern(label + ".Target", pattern.Target, depth + 1);
-            }
+            // Debug output removed
         }
 
         /// <summary>
@@ -298,17 +244,15 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (unexpectedDeletions.Count > 0)
             {
-                Console.WriteLine("[RestoreUnexpectedLinkDeletions] Attempting to restore unexpected deletions...");
+                // Restore logic without debug output
             }
 
             var deletionsToProcess = new List<DoubletLink>(unexpectedDeletions);
             foreach (var deletedLink in deletionsToProcess)
             {
-                Console.WriteLine($"[RestoreUnexpectedLinkDeletions] Checking {deletedLink}");
                 if (finalIntendedStates.TryGetValue(deletedLink.Index, out var intendedLink))
                 {
                     if (intendedLink.Index == 0) continue;
-                    Console.WriteLine($"[RestoreUnexpectedLinkDeletions] Restoring {intendedLink}");
                     if (!links.Exists(intendedLink.Index))
                     {
                         CreateOrUpdateLink(links, intendedLink, options);
@@ -358,10 +302,8 @@ namespace Foundation.Data.Doublets.Cli
             List<(DoubletLink before, DoubletLink after)> operations,
             Options options)
         {
-            Console.WriteLine("[ApplyAllPlannedOperations] Applying operations...");
             foreach (var (before, after) in operations)
             {
-                Console.WriteLine($"[ApplyAllPlannedOperations] Operation: Before={before}, After={after}");
                 if (before.Index != 0 && after.Index == 0)
                 {
                     RemoveLinks(links, before, options);
@@ -400,23 +342,13 @@ namespace Foundation.Data.Doublets.Cli
         private static List<Dictionary<string, uint>> FindAllSolutions(ILinks<uint> links, List<Pattern> patterns)
         {
             var partialSolutions = new List<Dictionary<string, uint>> { new Dictionary<string, uint>() };
-            Console.WriteLine("[FindAllSolutions] Starting...");
             foreach (var pattern in patterns)
             {
-                PrintPattern("FindAllSolutions.Pattern", pattern);
                 var newSolutions = new List<Dictionary<string, uint>>();
                 foreach (var solution in partialSolutions)
                 {
-                    Console.WriteLine("[FindAllSolutions] Current partial solution:");
-                    foreach (var kvp in solution) Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-
                     foreach (var match in MatchPattern(links, pattern, solution))
                     {
-                        Console.WriteLine("[FindAllSolutions] Found match:");
-                        foreach (var kvp in match)
-                        {
-                            Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                        }
                         if (AreSolutionsCompatible(solution, match))
                         {
                             var combinedSolution = new Dictionary<string, uint>(solution);
@@ -424,24 +356,13 @@ namespace Foundation.Data.Doublets.Cli
                             {
                                 combinedSolution[assignment.Key] = assignment.Value;
                             }
-                            Console.WriteLine("[FindAllSolutions] Combined compatible solution:");
-                            foreach (var kvp in combinedSolution)
-                            {
-                                Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                            }
                             newSolutions.Add(combinedSolution);
-                        }
-                        else
-                        {
-                            Console.WriteLine("[FindAllSolutions] Incompatible solution, skipping");
                         }
                     }
                 }
                 partialSolutions = newSolutions;
-                Console.WriteLine($"[FindAllSolutions] After pattern, solutions count: {partialSolutions.Count}");
                 if (partialSolutions.Count == 0)
                 {
-                    Console.WriteLine("[FindAllSolutions] No solutions left, stopping");
                     break;
                 }
             }
@@ -456,7 +377,6 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     if (existingValue != assignment.Value)
                     {
-                        Console.WriteLine($"[AreSolutionsCompatible] Not compatible: {assignment.Key} existing={existingValue} new={assignment.Value}");
                         return false;
                     }
                 }
@@ -476,17 +396,11 @@ namespace Foundation.Data.Doublets.Cli
                 uint targetValue = links.Constants.Any;
 
                 var candidates = links.All(new DoubletLink(indexValue, sourceValue, targetValue));
-                Console.WriteLine($"[MatchPattern:Leaf] Pattern={pattern.Index}, Candidates={candidates.Count()}");
                 foreach (var link in candidates)
                 {
                     var candidateLink = new DoubletLink(link);
-                    Console.WriteLine($"[MatchPattern:Leaf] Candidate={candidateLink}");
                     var assignments = new Dictionary<string, uint>();
                     AssignVariableIfNeeded(pattern.Index, candidateLink.Index, assignments);
-                    foreach (var kvp in assignments)
-                    {
-                        Console.WriteLine($"[MatchPattern:Leaf] Assign {kvp.Key}={kvp.Value}");
-                    }
                     yield return assignments;
                 }
                 yield break;
@@ -496,23 +410,16 @@ namespace Foundation.Data.Doublets.Cli
             bool indexIsVariable = IsVariable(pattern.Index);
             bool indexIsAny = pattern.Index == "*";
             uint indexResolved = ResolveId(links, pattern.Index, currentSolution);
-            Console.WriteLine($"[MatchPattern:Nested] Pattern Index={pattern.Index}, ResolvedIndex={indexResolved}");
 
             if (!indexIsVariable && !indexIsAny && indexResolved != any && indexResolved != 0 && links.Exists(indexResolved))
             {
                 var link = new DoubletLink(links.GetLink(indexResolved));
-                Console.WriteLine($"[MatchPattern:Nested] Exact link found: {link}");
                 foreach (var sourceSolution in RecursiveMatchSubPattern(links, pattern.Source, link.Source, currentSolution))
                 {
                     foreach (var targetSolution in RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSolution))
                     {
                         var combinedSolution = new Dictionary<string, uint>(targetSolution);
                         AssignVariableIfNeeded(pattern.Index, indexResolved, combinedSolution);
-                        Console.WriteLine("[MatchPattern:Nested] Matched exact index link with solutions:");
-                        foreach (var kvp in combinedSolution)
-                        {
-                            Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                        }
                         yield return combinedSolution;
                     }
                 }
@@ -520,7 +427,6 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 var allLinks = links.All(new DoubletLink(any, any, any));
-                Console.WriteLine($"[MatchPattern:Nested] Trying all links. Count={allLinks.Count()}");
                 foreach (var raw in allLinks)
                 {
                     var candidateLink = new DoubletLink(raw);
@@ -528,18 +434,12 @@ namespace Foundation.Data.Doublets.Cli
                     {
                         continue;
                     }
-                    Console.WriteLine($"[MatchPattern:Nested] Candidate link: {candidateLink}");
                     foreach (var sourceSolution in RecursiveMatchSubPattern(links, pattern.Source, candidateLink.Source, currentSolution))
                     {
                         foreach (var targetSolution in RecursiveMatchSubPattern(links, pattern.Target, candidateLink.Target, sourceSolution))
                         {
                             var combinedSolution = new Dictionary<string, uint>(targetSolution);
                             AssignVariableIfNeeded(pattern.Index, candidateLink.Index, combinedSolution);
-                            Console.WriteLine("[MatchPattern:Nested] Matched candidate link with solutions:");
-                            foreach (var kvp in combinedSolution)
-                            {
-                                Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                            }
                             yield return combinedSolution;
                         }
                     }
@@ -565,30 +465,19 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     var newSolution = new Dictionary<string, uint>(currentSolution);
                     AssignVariableIfNeeded(pattern.Index, linkId, newSolution);
-                    Console.WriteLine("[RecursiveMatchSubPattern:Leaf] Matched leaf pattern:");
-                    foreach (var kvp in newSolution)
-                    {
-                        Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                    }
                     yield return newSolution;
-                }
-                else
-                {
-                    Console.WriteLine("[RecursiveMatchSubPattern:Leaf] No match");
                 }
                 yield break;
             }
 
             if (!links.Exists(linkId))
             {
-                Console.WriteLine("[RecursiveMatchSubPattern:Nested] linkId does not exist");
                 yield break;
             }
 
             var link = new DoubletLink(links.GetLink(linkId));
             if (!CheckIdMatch(links, pattern.Index, link.Index, currentSolution))
             {
-                Console.WriteLine("[RecursiveMatchSubPattern:Nested] Index does not match");
                 yield break;
             }
 
@@ -598,11 +487,6 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     var combinedSolution = new Dictionary<string, uint>(targetSolution);
                     AssignVariableIfNeeded(pattern.Index, link.Index, combinedSolution);
-                    Console.WriteLine("[RecursiveMatchSubPattern:Nested] Matched nested pattern:");
-                    foreach (var kvp in combinedSolution)
-                    {
-                        Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
-                    }
                     yield return combinedSolution;
                 }
             }
@@ -734,8 +618,6 @@ namespace Foundation.Data.Doublets.Cli
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
-            Console.WriteLine($"[CreateOrUpdateLink] Before={link}");
-
             if (link.Index != nullConstant)
             {
                 if (!links.Exists(link.Index))
@@ -748,8 +630,8 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     LinksExtensions.EnsureCreated(links, link.Index);
                     options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, nullConstant, nullConstant));
-                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (before, after) =>
-                      options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (b, a) =>
+                      options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
                 }
                 else
                 {
@@ -786,20 +668,13 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void RemoveLinks(ILinks<uint> links, DoubletLink restriction, Options options)
         {
-            Console.WriteLine($"[RemoveLinks] Restriction={restriction}");
             var linksToRemove = links.All(restriction).ToList();
-            Console.WriteLine($"[RemoveLinks] Found {linksToRemove.Count} links to remove.");
             foreach (var link in linksToRemove)
             {
                 if (link != null && links.Exists(link[0]))
                 {
-                    Console.WriteLine($"[RemoveLinks] Removing link: {string.Join(",", link)}");
                     links.Delete(link, (before, after) =>
                       options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
-                }
-                else
-                {
-                    Console.WriteLine("[RemoveLinks] Link already not exists or null");
                 }
             }
         }
@@ -886,7 +761,6 @@ namespace Foundation.Data.Doublets.Cli
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
-            Console.WriteLine($"[EnsureLinkCreated] Link={link}");
             if (link.Index == nullConstant)
             {
                 var existingIndex = links.SearchOrDefault(link.Source, link.Target);
@@ -927,7 +801,7 @@ namespace Foundation.Data.Doublets.Cli
                 if (existingDoublet.Source != link.Source || existingDoublet.Target != link.Target)
                 {
                     uint finalIndex = link.Index;
-                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (before, after) =>
+                    links.Update(new DoubletLink(link.Index, links.Constants.Any, links.Constants.Any), link, (before, after) =>
                     {
                         var afterLink = new DoubletLink(after);
                         finalIndex = afterLink.Index;
