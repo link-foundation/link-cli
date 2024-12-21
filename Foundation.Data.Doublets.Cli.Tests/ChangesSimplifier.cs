@@ -142,6 +142,165 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
     }
 
+    [Fact]
+    public void SimplifyChanges_MultipleBranchesFromSameInitial_ProducesCorrectFinalStates()
+    {
+      // Arrange
+      // These transitions demonstrate several branches starting from (0: 0 0),
+      // each ultimately reaching (1: 1 1), (2: 2 2), (3: 3 3), or (4: 4 4).
+      // The intermediate states (1: 0 0), (2: 0 0), (3: 0 0), (4: 0 0) are
+      // transitions on the way to the final states.
+      //
+      // Original transitions (Before -> After):
+      // (0: 0 0) -> (1: 0 0)
+      // (1: 0 0) -> (1: 1 1)
+      // (0: 0 0) -> (2: 0 0)
+      // (2: 0 0) -> (2: 2 2)
+      // (0: 0 0) -> (3: 0 0)
+      // (3: 0 0) -> (3: 3 3)
+      // (0: 0 0) -> (4: 0 0)
+      // (4: 0 0) -> (4: 4 4)
+      var changes = new List<(Link<uint> Before, Link<uint> After)>
+    {
+        (new Link<uint>(0, 0, 0), new Link<uint>(1, 0, 0)),
+        (new Link<uint>(1, 0, 0), new Link<uint>(1, 1, 1)),
+        (new Link<uint>(0, 0, 0), new Link<uint>(2, 0, 0)),
+        (new Link<uint>(2, 0, 0), new Link<uint>(2, 2, 2)),
+        (new Link<uint>(0, 0, 0), new Link<uint>(3, 0, 0)),
+        (new Link<uint>(3, 0, 0), new Link<uint>(3, 3, 3)),
+        (new Link<uint>(0, 0, 0), new Link<uint>(4, 0, 0)),
+        (new Link<uint>(4, 0, 0), new Link<uint>(4, 4, 4))
+    };
+
+      // Expected final transitions (After simplification):
+      // (0: 0 0) -> (1: 1 1)
+      // (0: 0 0) -> (2: 2 2)
+      // (0: 0 0) -> (3: 3 3)
+      // (0: 0 0) -> (4: 4 4)
+      var expectedSimplifiedChanges = new List<(Link<uint> Before, Link<uint> After)>
+      {
+          (new Link<uint>(0, 0, 0), new Link<uint>(1, 1, 1)),
+          (new Link<uint>(0, 0, 0), new Link<uint>(2, 2, 2)),
+          (new Link<uint>(0, 0, 0), new Link<uint>(3, 3, 3)),
+          (new Link<uint>(0, 0, 0), new Link<uint>(4, 4, 4))
+      };
+
+      // Act
+      var simplifiedChanges = SimplifyChanges(changes).ToList();
+
+      // Assert
+      // We expect exactly four final states from (0: 0 0), each linking directly
+      // to one of the final links (1: 1 1), (2: 2 2), (3: 3 3), or (4: 4 4).
+      Assert.Equal(expectedSimplifiedChanges.Count, simplifiedChanges.Count);
+
+      // Check that each expected (Before, After) pair is present in the result.
+      foreach (var expected in expectedSimplifiedChanges)
+      {
+        Assert.Contains(simplifiedChanges, actual =>
+            actual.Before.Index == expected.Before.Index &&
+            actual.Before.Source == expected.Before.Source &&
+            actual.Before.Target == expected.Before.Target &&
+            actual.After.Index == expected.After.Index &&
+            actual.After.Source == expected.After.Source &&
+            actual.After.Target == expected.After.Target
+        );
+      }
+    }
+
+    [Fact]
+    public void SimplifyChanges_MultipleBranchesFromSameInitial_ProducesCorrectFinalStates_InCorrectOrder()
+    {
+      // Arrange
+      // Original transitions (Before -> After):
+      // (0: 0 0) -> (1: 0 0)
+      // (1: 0 0) -> (1: 1 1)
+      // (0: 0 0) -> (2: 0 0)
+      // (2: 0 0) -> (2: 2 2)
+      // (0: 0 0) -> (3: 0 0)
+      // (3: 0 0) -> (3: 3 3)
+      // (0: 0 0) -> (4: 0 0)
+      // (4: 0 0) -> (4: 4 4)
+      var changes = new List<(Link<uint> Before, Link<uint> After)>
+    {
+        (new Link<uint>(0, 0, 0), new Link<uint>(1, 0, 0)),
+        (new Link<uint>(1, 0, 0), new Link<uint>(1, 1, 1)),
+        (new Link<uint>(0, 0, 0), new Link<uint>(2, 0, 0)),
+        (new Link<uint>(2, 0, 0), new Link<uint>(2, 2, 2)),
+        (new Link<uint>(0, 0, 0), new Link<uint>(3, 0, 0)),
+        (new Link<uint>(3, 0, 0), new Link<uint>(3, 3, 3)),
+        (new Link<uint>(0, 0, 0), new Link<uint>(4, 0, 0)),
+        (new Link<uint>(4, 0, 0), new Link<uint>(4, 4, 4))
+    };
+
+      // Expected final transitions (After simplification):
+      // (0: 0 0) -> (1: 1 1)
+      // (0: 0 0) -> (2: 2 2)
+      // (0: 0 0) -> (3: 3 3)
+      // (0: 0 0) -> (4: 4 4)
+
+      // Act
+      var simplifiedChanges = SimplifyChanges(changes).ToList();
+
+      // Assert
+      // 1) Ensure we got exactly 4 transitions after simplification.
+      Assert.Equal(4, simplifiedChanges.Count);
+
+      // 2) Check that each final pair is present (as before),
+      //    AND that they appear in ascending order:
+      //    first => After.Index == 1,
+      //    second => After.Index == 2,
+      //    third => After.Index == 3,
+      //    fourth => After.Index == 4.
+
+      Assert.Collection(
+          simplifiedChanges,
+          // 1st final link: (0:0 0) -> (1:1 1)
+          first =>
+          {
+            Assert.Equal(0u, first.Before.Index);
+            Assert.Equal(0u, first.Before.Source);
+            Assert.Equal(0u, first.Before.Target);
+
+            Assert.Equal(1u, first.After.Index);
+            Assert.Equal(1u, first.After.Source);
+            Assert.Equal(1u, first.After.Target);
+          },
+          // 2nd final link: (0:0 0) -> (2:2 2)
+          second =>
+          {
+            Assert.Equal(0u, second.Before.Index);
+            Assert.Equal(0u, second.Before.Source);
+            Assert.Equal(0u, second.Before.Target);
+
+            Assert.Equal(2u, second.After.Index);
+            Assert.Equal(2u, second.After.Source);
+            Assert.Equal(2u, second.After.Target);
+          },
+          // 3rd final link: (0:0 0) -> (3:3 3)
+          third =>
+          {
+            Assert.Equal(0u, third.Before.Index);
+            Assert.Equal(0u, third.Before.Source);
+            Assert.Equal(0u, third.Before.Target);
+
+            Assert.Equal(3u, third.After.Index);
+            Assert.Equal(3u, third.After.Source);
+            Assert.Equal(3u, third.After.Target);
+          },
+          // 4th final link: (0:0 0) -> (4:4 4)
+          fourth =>
+          {
+            Assert.Equal(0u, fourth.Before.Index);
+            Assert.Equal(0u, fourth.Before.Source);
+            Assert.Equal(0u, fourth.Before.Target);
+
+            Assert.Equal(4u, fourth.After.Index);
+            Assert.Equal(4u, fourth.After.Source);
+            Assert.Equal(4u, fourth.After.Target);
+          }
+      );
+    }
+
 
     // [Fact]
     // public void SimplifyChanges_NoChanges_ReturnsEmpty()

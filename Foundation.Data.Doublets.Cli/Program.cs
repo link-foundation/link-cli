@@ -73,16 +73,18 @@ rootCommand.SetHandler((string db, string queryOptionValue, string queryArgument
     // Simplify the collected changes
     var simplifiedChanges = SimplifyChanges(changes);
 
+    foreach (var (before, after) in changes)
+    {
+      Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
+    }
+
+    Console.WriteLine("---");
+
     // Print the simplified changes
     foreach (var (before, after) in simplifiedChanges)
     {
-        Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
+      Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
     }
-
-    // foreach (var (before, after) in changes)
-    // {
-    //   Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
-    // }
   }
 
   PrintAllLinks(decoratedLinks);
