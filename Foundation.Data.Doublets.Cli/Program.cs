@@ -2,11 +2,6 @@
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
 using Platform.Protocols.Lino;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-// Ensure the ChangeSimplifier class is accessible
-// using YourNamespace; // Replace with the actual namespace if different
 
 using static Foundation.Data.Doublets.Cli.ChangesSimplifier;
 
@@ -35,17 +30,25 @@ var queryArgument = new Argument<string>(
 );
 queryArgument.Arity = ArgumentArity.ZeroOrOne;
 
+// New option for enabling trace
+var traceOption = new Option<bool>(
+  name: "--trace",
+  description: "Enable trace (verbose output)",
+  getDefaultValue: () => false
+);
+traceOption.AddAlias("-t");
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
   queryOption,
-  queryArgument
+  queryArgument,
+  traceOption
 };
 
-rootCommand.SetHandler((string db, string queryOptionValue, string queryArgumentValue) =>
+rootCommand.SetHandler((string db, string queryOptionValue, string queryArgumentValue, bool trace) =>
 {
   using var links = new UnitedMemoryLinks<uint>(db);
-
   var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
 
   var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
@@ -57,6 +60,7 @@ rootCommand.SetHandler((string db, string queryOptionValue, string queryArgument
     var options = new QueryProcessor.Options
     {
       Query = effectiveQuery,
+      Trace = trace, // Pass the trace flag here
       ChangesHandler = (before, after) =>
       {
         // Collect changes instead of printing immediately
@@ -73,13 +77,6 @@ rootCommand.SetHandler((string db, string queryOptionValue, string queryArgument
     // Simplify the collected changes
     var simplifiedChanges = SimplifyChanges(changes);
 
-    // foreach (var (before, after) in changes)
-    // {
-    //   Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
-    // }
-
-    // Console.WriteLine("---");
-
     // Print the simplified changes
     foreach (var (before, after) in simplifiedChanges)
     {
@@ -88,7 +85,7 @@ rootCommand.SetHandler((string db, string queryOptionValue, string queryArgument
   }
 
   PrintAllLinks(decoratedLinks);
-}, dbOption, queryOption, queryArgument);
+}, dbOption, queryOption, queryArgument, traceOption);
 
 await rootCommand.InvokeAsync(args);
 
