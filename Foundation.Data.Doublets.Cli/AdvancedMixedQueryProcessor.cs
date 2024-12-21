@@ -85,8 +85,8 @@ namespace Foundation.Data.Doublets.Cli
             }
 
             /*
-             * Normally, you had a direct "Deletion scenario" block here. It's REMOVED so that
-             * complex or nested restrictions also go through pattern-based logic.
+             * We REMOVED the old "Deletion scenario" block that directly removed links
+             * so that ANY restriction (including nested) is handled by pattern matching.
              */
 
             Console.WriteLine("Complex scenario: using pattern matching (covers restriction-only or both).");
@@ -102,7 +102,7 @@ namespace Foundation.Data.Doublets.Cli
             Console.WriteLine("Substitution patterns (from substitutionLink.Values):");
             foreach (var p in substitutionInternalPatterns) PrintPattern("SubstitutionPattern", p);
 
-            // If restrictionLink.Id is not empty, we treat it as an extra pattern
+            // If restrictionLink.Id is not empty, treat it as an extra pattern
             if (!string.IsNullOrEmpty(restrictionLink.Id))
             {
                 var extraRestrictionPattern = CreatePatternFromLino(restrictionLink);
@@ -111,7 +111,7 @@ namespace Foundation.Data.Doublets.Cli
                 restrictionInternalPatterns.Insert(0, extraRestrictionPattern);
             }
 
-            // If substitutionLink.Id is not empty, we treat it as an extra pattern
+            // If substitutionLink.Id is not empty, treat it as an extra pattern
             if (!string.IsNullOrEmpty(substitutionLink.Id))
             {
                 var extraSubstitutionPattern = CreatePatternFromLino(substitutionLink);
@@ -181,7 +181,8 @@ namespace Foundation.Data.Doublets.Cli
                         Console.WriteLine($"    SL: index={sl.Index}, src={sl.Source}, trg={sl.Target}");
                     }
 
-                    var operations = DetermineOperationsFromPatterns(restrictionLinks, substitutionLinks);
+                    // Updated DetermineOperationsFromPatterns method
+                    var operations = DetermineOperationsFromPatterns(restrictionLinks, substitutionLinks, links);
                     Console.WriteLine("[DEBUG] determined operations from patterns:");
                     foreach (var (b, a) in operations)
                     {
@@ -249,14 +250,18 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void PrintPattern(string label, Pattern pattern, int depth = 0)
         {
-            // For easier reading, indent by 'depth' if you want to see nested:
-            // var indent = new string(' ', depth * 2);
-            // But let's just do a simple line:
+            // Simple line output
             Console.WriteLine($"{label}: Index='{pattern.Index}' (IsLeaf={pattern.IsLeaf})");
             if (!pattern.IsLeaf)
             {
-                if (pattern.Source != null) Console.WriteLine($"  {label}.Source => {pattern.Source.Index}, IsLeaf={pattern.Source.IsLeaf}");
-                if (pattern.Target != null) Console.WriteLine($"  {label}.Target => {pattern.Target.Index}, IsLeaf={pattern.Target.IsLeaf}");
+                if (pattern.Source != null)
+                {
+                    Console.WriteLine($"  {label}.Source => {pattern.Source.Index}, IsLeaf={pattern.Source.IsLeaf}");
+                }
+                if (pattern.Target != null)
+                {
+                    Console.WriteLine($"  {label}.Target => {pattern.Target.Index}, IsLeaf={pattern.Target.IsLeaf}");
+                }
             }
         }
 
@@ -344,13 +349,19 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
+        /// <summary>
+        /// Updated method to avoid dictionary collisions with ANY/0 indexes.
+        /// </summary>
         private static List<(DoubletLink before, DoubletLink after)> DetermineOperationsFromPatterns(
             List<DoubletLink> restrictions,
-            List<DoubletLink> substitutions)
+            List<DoubletLink> substitutions,
+            ILinks<uint> links)
         {
-            Console.WriteLine("[DEBUG] DetermineOperationsFromPatterns => building dictionaries by Index.");
-            // Here is where a key collision might happen if multiple links share the same .Index
-            // We'll log out the items so we can see them clearly.
+            Console.WriteLine("[DEBUG] DetermineOperationsFromPatterns => building dictionaries by Index, but skipping ANY collisions.");
+
+            // We'll treat "0" or "Any" as "wildcard index" that can't be dictionary-keyed.
+            var anyOrZero = new HashSet<uint> { 0, links.Constants.Any };
+
             Console.WriteLine("[DEBUG] Restriction links =>");
             foreach (var r in restrictions)
             {
@@ -362,45 +373,67 @@ namespace Foundation.Data.Doublets.Cli
                 Console.WriteLine($"    S: idx={s.Index}, src={s.Source}, trg={s.Target}");
             }
 
-            var restrictionByIndex = restrictions
-                .Where(r => r.Index != 0)
-                .ToDictionary(d => d.Index, d => d); // Potential Key collision here
-            var substitutionByIndex = substitutions
-                .Where(s => s.Index != 0)
-                .ToDictionary(d => d.Index, d => d); // Potential Key collision here
+            // Separate normal vs. wildcard
+            var normalRestrictions = restrictions.Where(r => !anyOrZero.Contains(r.Index)).ToList();
+            var wildcardRestrictions = restrictions.Where(r => anyOrZero.Contains(r.Index)).ToList();
 
-            var allIndices = restrictionByIndex.Keys.Union(substitutionByIndex.Keys).ToList();
-            Console.WriteLine("[DEBUG] allIndices => " + string.Join(", ", allIndices));
+            var normalSubstitutions = substitutions.Where(s => !anyOrZero.Contains(s.Index)).ToList();
+            var wildcardSubstitutions = substitutions.Where(s => anyOrZero.Contains(s.Index)).ToList();
+
+            // Build dictionaries for normal (unique) indexes
+            var restrictionByIndex = normalRestrictions.ToDictionary(r => r.Index, r => r);
+            var substitutionByIndex = normalSubstitutions.ToDictionary(s => s.Index, s => s);
+
             var operations = new List<(DoubletLink before, DoubletLink after)>();
 
-            foreach (var index in allIndices)
+            // Step 1) Handle normal index => dictionary approach
+            var allIndices = restrictionByIndex.Keys.Union(substitutionByIndex.Keys).ToList();
+            Console.WriteLine("[DEBUG] allIndices => " + string.Join(", ", allIndices));
+            foreach (var idx in allIndices)
             {
-                bool hasRestriction = restrictionByIndex.TryGetValue(index, out var restrictionLink);
-                bool hasSubstitution = substitutionByIndex.TryGetValue(index, out var substitutionLink);
+                bool hasRestriction = restrictionByIndex.TryGetValue(idx, out var rLink);
+                bool hasSubstitution = substitutionByIndex.TryGetValue(idx, out var sLink);
 
                 if (hasRestriction && hasSubstitution)
                 {
-                    // If the source/target differ, it's an update
-                    if (restrictionLink.Source != substitutionLink.Source || restrictionLink.Target != substitutionLink.Target)
+                    // If the source/target differ => update, else => no-op
+                    if (rLink.Source != sLink.Source || rLink.Target != sLink.Target)
                     {
-                        operations.Add((restrictionLink, substitutionLink));
+                        operations.Add((rLink, sLink));
                     }
                     else
                     {
-                        // same
-                        operations.Add((restrictionLink, restrictionLink));
+                        operations.Add((rLink, rLink));
                     }
                 }
                 else if (hasRestriction && !hasSubstitution)
                 {
                     // Deletion
-                    operations.Add((restrictionLink, default(DoubletLink)));
+                    operations.Add((rLink, default(DoubletLink)));
                 }
                 else if (!hasRestriction && hasSubstitution)
                 {
                     // Creation
-                    operations.Add((default(DoubletLink), substitutionLink));
+                    operations.Add((default(DoubletLink), sLink));
                 }
+            }
+
+            // Step 2) Wildcard restrictions => each is a separate "delete" operation
+            foreach (var rLink in wildcardRestrictions)
+            {
+                operations.Add((rLink, default(DoubletLink)));
+            }
+
+            // Step 3) Wildcard substitutions => each is a separate "create" operation
+            foreach (var sLink in wildcardSubstitutions)
+            {
+                operations.Add((default(DoubletLink), sLink));
+            }
+
+            Console.WriteLine("[DEBUG] determined operations from patterns (with wildcard logic):");
+            foreach (var (b,a) in operations)
+            {
+                Console.WriteLine($"    BEFORE: [idx={b.Index}, src={b.Source}, trg={b.Target}]  AFTER: [idx={a.Index}, src={a.Source}, trg={a.Target}]");
             }
 
             return operations;
@@ -513,7 +546,6 @@ namespace Foundation.Data.Doublets.Cli
             Pattern pattern,
             Dictionary<string, uint> currentSolution)
         {
-            // We'll add debug if needed, but let's keep it short
             if (pattern.IsLeaf)
             {
                 uint indexValue = ResolveId(links, pattern.Index, currentSolution);
