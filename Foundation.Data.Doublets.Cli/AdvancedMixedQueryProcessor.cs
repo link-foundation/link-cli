@@ -128,9 +128,13 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     var substitutionLinks = substitutionInternalPatterns
                         .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
+                        .Where(link => link != null)
+                        .Select(link => new DoubletLink(link!))
                         .ToList();
                     var restrictionLinks = restrictionInternalPatterns
                         .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
+                        .Where(link => link != null)
+                        .Select(link => new DoubletLink(link!))
                         .ToList();
 
                     var operations = DetermineOperationsFromPatterns(restrictionLinks, substitutionLinks);
@@ -449,7 +453,7 @@ namespace Foundation.Data.Doublets.Cli
 
         private static IEnumerable<Dictionary<string, uint>> RecursiveMatchSubPattern(
             ILinks<uint> links,
-            Pattern pattern,
+            Pattern? pattern,
             uint linkId,
             Dictionary<string, uint> currentSolution)
         {
@@ -553,8 +557,8 @@ namespace Foundation.Data.Doublets.Cli
             List<Pattern> substitutions,
             ILinks<uint> links)
         {
-            var substitutedRestrictions = restrictions.Select(r => ApplySolutionToPattern(links, solution, r)).ToList();
-            var substitutedSubstitutions = substitutions.Select(s => ApplySolutionToPattern(links, solution, s)).ToList();
+            var substitutedRestrictions = restrictions.Select(r => ApplySolutionToPattern(links, solution, r)).Where(link => link != null).Select(link => new DoubletLink(link!)).ToList();
+            var substitutedSubstitutions = substitutions.Select(s => ApplySolutionToPattern(links, solution, s)).Where(link => link != null).Select(link => new DoubletLink(link!)).ToList();
             substitutedRestrictions.Sort((a, b) => a.Index.CompareTo(b.Index));
             substitutedSubstitutions.Sort((a, b) => a.Index.CompareTo(b.Index));
             if (substitutedRestrictions.Count != substitutedSubstitutions.Count) return false;
@@ -577,20 +581,27 @@ namespace Foundation.Data.Doublets.Cli
             foreach (var pattern in patterns)
             {
                 var appliedPattern = ApplySolutionToPattern(links, solution, pattern);
-                var matches = links.All(appliedPattern);
-                foreach (var match in matches)
+                if (appliedPattern != null)
                 {
-                    matchedLinks.Add(new DoubletLink(match));
+                    var matches = links.All(appliedPattern);
+                    foreach (var match in matches)
+                    {
+                        matchedLinks.Add(new DoubletLink(match));
+                    }
                 }
             }
             return matchedLinks.Distinct().ToList();
         }
 
-        private static DoubletLink ApplySolutionToPattern(
+        private static DoubletLink? ApplySolutionToPattern(
             ILinks<uint> links,
             Dictionary<string, uint> solution,
-            Pattern pattern)
+            Pattern? pattern)
         {
+            if (pattern == null) 
+            {
+                return null;
+            }
             if (pattern.IsLeaf)
             {
                 uint index = ResolveId(links, pattern.Index, solution);
@@ -604,8 +615,9 @@ namespace Foundation.Data.Doublets.Cli
                 var targetLink = ApplySolutionToPattern(links, solution, pattern.Target);
 
                 var any = links.Constants.Any;
-                uint finalSource = sourceLink.Index == 0 ? any : sourceLink.Index;
-                uint finalTarget = targetLink.Index == 0 ? any : targetLink.Index;
+                uint finalSource = sourceLink?.Index ?? any;
+                uint finalTarget = targetLink?.Index ?? any;
+
                 if (finalSource == 0) finalSource = any;
                 if (finalTarget == 0) finalTarget = any;
 
@@ -629,7 +641,7 @@ namespace Foundation.Data.Doublets.Cli
                 if (existingDoublet.Source != link.Source || existingDoublet.Target != link.Target)
                 {
                     LinksExtensions.EnsureCreated(links, link.Index);
-                    options.ChangesHandler?.Invoke(null, new DoubletLink(link.Index, nullConstant, nullConstant));
+                    options.ChangesHandler?.Invoke(new DoubletLink(link.Index, nullConstant, nullConstant), new DoubletLink(link.Index, nullConstant, nullConstant));
                     links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (b, a) =>
                       options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
                 }
@@ -668,10 +680,10 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void RemoveLinks(ILinks<uint> links, DoubletLink restriction, Options options)
         {
-            var linksToRemove = links.All(restriction).ToList();
+            var linksToRemove = links.All(restriction).Where(l => l != null).Select(l => new DoubletLink(l)).ToList();
             foreach (var link in linksToRemove)
             {
-                if (link != null && links.Exists(link[0]))
+                if (links.Exists(link.Index))
                 {
                     links.Delete(link, (before, after) =>
                       options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
@@ -743,17 +755,17 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (lino.Values == null || lino.Values.Count == 0)
             {
-                return new Pattern(lino.Id);
+                return new Pattern(lino.Id ?? "");
             }
 
             if (lino.Values.Count == 2)
             {
                 var sourcePattern = CreatePatternFromLino(lino.Values[0]);
                 var targetPattern = CreatePatternFromLino(lino.Values[1]);
-                return new Pattern(lino.Id, sourcePattern, targetPattern);
+                return new Pattern(lino.Id ?? "", sourcePattern, targetPattern);
             }
 
-            return new Pattern(lino.Id);
+            return new Pattern(lino.Id ?? "");
         }
 
         private static uint EnsureLinkCreated(ILinks<uint> links, DoubletLink link, Options options)
