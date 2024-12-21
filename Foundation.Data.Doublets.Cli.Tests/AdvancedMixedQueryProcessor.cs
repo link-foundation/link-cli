@@ -317,7 +317,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             {
                 // Arrange
                 ProcessQuery(links, "(() (((1 1) (2 2))))");
-                
+
                 // Act
                 ProcessQuery(links, "(((3: (1: 1 1) (2: 2 2))) ())");
 
@@ -326,6 +326,24 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 Assert.Equal(2, allLinks.Count);
                 AssertLinkExists(allLinks, 1, 1, 1);
                 AssertLinkExists(allLinks, 2, 2, 2);
+            });
+        }
+
+        [Fact]
+        public void NoExactMatch2LevelNestedLinksTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                ProcessQuery(links, "() ((1: 1 1))");
+
+                // Act
+                ProcessQuery(links, "((1: (1: 1 1) (1: 2 1))) ()");
+
+                // Assert
+                var allLinks = GetAllLinks(links);
+                Assert.Single(allLinks);
+                AssertLinkExists(allLinks, 1, 1, 1);
             });
         }
 
