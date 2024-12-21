@@ -330,6 +330,44 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     }
 
     [Fact]
+    public void MatchWithExactIndexAndDelete2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+        // Act
+        ProcessQuery(links, "(( (3: (1 *) (* 2)) ) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void MatchAndDelete2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+        // Act
+        ProcessQuery(links, "(( ((1 *) (* 2)) ) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
     public void NoExactMatch2LevelNestedLinksTest()
     {
       RunTestWithLinks(links =>
@@ -362,9 +400,9 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         options.Query = "((($index: $source $target)) (($index: $source $target)))";
         options.ChangesHandler = (before, after) =>
               {
-            changes.Add((new DoubletLink(before), new DoubletLink(after)));
-            return links.Constants.Continue;
-          };
+                changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                return links.Constants.Continue;
+              };
 
         // Act
         ProcessQuery(links, options);
@@ -690,6 +728,23 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
 
         // Act
         ProcessQuery(links, "(((* *)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+        [Fact]
+    public void NestedDeleteAllLinksBySourceAndTargetTest1()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "((((* *) (* *))) ())");
 
         // Assert
         var allLinks = GetAllLinks(links);
