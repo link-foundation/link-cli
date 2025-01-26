@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
@@ -21,8 +21,9 @@
 
   <ItemGroup>
     <PackageReference Include="Platform.Data" Version="0.16.1" />
-    <PackageReference Include="Platform.Data.Doublets" Version="0.17.2" />
-    <PackageReference Include="Platform.Protocols.Lino" Version="0.4.3" />
+    <PackageReference Include="Platform.Data.Doublets" Version="0.18.1" />
+    <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.6.5" />
+    <PackageReference Include="Platform.Protocols.Lino" Version="0.4.5" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
