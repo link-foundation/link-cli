@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
 using Platform.Data.Doublets;
 
 using static Foundation.Data.Doublets.Cli.ChangesSimplifier;

@@ -6,9 +6,9 @@ using Platform.Data.Doublets;
 using Platform.Data.Doublets.CriterionMatchers;
 using Platform.Data.Doublets.Sequences.Converters;
 using Platform.Data.Doublets.Sequences.Walkers;
-// using Platform.Data.Doublets.Unicode;
+using Platform.Data.Doublets.Sequences.Unicode;
 
-namespace YourNamespace
+namespace Foundation.Data.Doublets.Cli
 {
     public class UnicodeStringStorage<TLinkAddress>
         where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>, IComparisonOperators<TLinkAddress, TLinkAddress, bool>
@@ -46,42 +46,42 @@ namespace YourNamespace
             var unicodeSymbolCriterionMatcher = new TargetMatcher<TLinkAddress>(links, UnicodeSymbolType);
             var unicodeSequenceCriterionMatcher = new TargetMatcher<TLinkAddress>(links, UnicodeSequenceType);
 
-            // var charToUnicodeSymbolConverter =
-                // new CharToUnicodeSymbolConverter<TLinkAddress>(links, AddressToNumberConverter, UnicodeSymbolType);
+            var charToUnicodeSymbolConverter =
+                new CharToUnicodeSymbolConverter<TLinkAddress>(links, AddressToNumberConverter, UnicodeSymbolType);
 
-            // var unicodeSymbolToCharConverter =
-                // new UnicodeSymbolToCharConverter<TLinkAddress>(links, NumberToAddressConverter, unicodeSymbolCriterionMatcher);
+            var unicodeSymbolToCharConverter =
+                new UnicodeSymbolToCharConverter<TLinkAddress>(links, NumberToAddressConverter, unicodeSymbolCriterionMatcher);
 
-            // StringToUnicodeSequenceConverter = new CachingConverterDecorator<string, TLinkAddress>(
-            //     new StringToUnicodeSequenceConverter<TLinkAddress>(
-            //         links,
-            //         charToUnicodeSymbolConverter,
-            //         BalancedVariantConverter,
-            //         UnicodeSequenceType
-            //     )
-            // );
+            StringToUnicodeSequenceConverter = new CachingConverterDecorator<string, TLinkAddress>(
+                new StringToUnicodeSequenceConverter<TLinkAddress>(
+                    links,
+                    charToUnicodeSymbolConverter,
+                    BalancedVariantConverter,
+                    UnicodeSequenceType
+                )
+            );
 
-            // var sequenceWalker = new RightSequenceWalker<TLinkAddress>(
-            //     links,
-            //     new DefaultStack<TLinkAddress>(),
-            //     unicodeSymbolCriterionMatcher.IsMatched
-            // );
+            var sequenceWalker = new RightSequenceWalker<TLinkAddress>(
+                links,
+                new DefaultStack<TLinkAddress>(),
+                unicodeSymbolCriterionMatcher.IsMatched
+            );
 
-            // UnicodeSequenceToStringConverter = new CachingConverterDecorator<TLinkAddress, string>(
-            //     new UnicodeSequenceToStringConverter<TLinkAddress>(
-            //         links,
-            //         unicodeSequenceCriterionMatcher,
-            //         sequenceWalker,
-            //         unicodeSymbolToCharConverter,
-            //         UnicodeSequenceType
-            //     )
-            // );
+            UnicodeSequenceToStringConverter = new CachingConverterDecorator<TLinkAddress, string>(
+                new UnicodeSequenceToStringConverter<TLinkAddress>(
+                    links,
+                    unicodeSequenceCriterionMatcher,
+                    sequenceWalker,
+                    unicodeSymbolToCharConverter,
+                    UnicodeSequenceType
+                )
+            );
         }
 
         public TLinkAddress CreateString(string content)
         {
-            var strSequence = GetStringSequence(content);
-            return Links.GetOrCreate(StringType, strSequence);
+            var stringSequence = GetStringSequence(content);
+            return Links.GetOrCreate(StringType, stringSequence);
         }
 
         private TLinkAddress GetStringSequence(string content)
