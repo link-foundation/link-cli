@@ -79,6 +79,61 @@ namespace Foundation.Data.Doublets.Cli.Tests
             });
         }
 
+        [Fact]
+        public void RetrieveTypeByNameTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+
+                // Act
+                var retrievedType = storage.GetTypeByName("Type");
+
+                // Assert
+                Assert.Equal(1u, retrievedType);
+            });
+        }
+
+        [Theory]
+        [InlineData("Type")]
+        [InlineData("UnicodeSymbol")]
+        [InlineData("UnicodeSequence")]
+        [InlineData("String")]
+        [InlineData("EmptyString")]
+        [InlineData("Name")]
+        public void CreateAndRetrieveMultipleStringTypesTest(string typeName)
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+
+                // Act
+                var retrievedType = storage.GetTypeByName(typeName);
+
+                // Assert
+                Assert.Equal(typeName, storage.GetTypeName(retrievedType));
+            });
+        }
+
+        [Fact]
+        public void CreateAndRetriveUserDefinedTypeTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+
+                // Act
+                var userType = storage.GetOrCreateType("UserType");
+                var retrievedType = storage.GetTypeByName("UserType");
+
+                // Assert
+                Assert.Equal(userType, retrievedType);
+            });
+        }
+
         // Helper method to create a test environment with a temporary file
         private static void RunTestWithLinks(Action<ILinks<uint>> testAction)
         {
