@@ -5,7 +5,7 @@ It is based on [associative theory (in Russian)](https://habr.com/ru/companies/d
 
 [Short description in English in what links are](https://github.com/linksplatform?view_as=public). And [in Russian](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md).
 
-<img width="727" alt="Screenshot 2024-12-15 at 23 30 17" src="https://github.com/user-attachments/assets/b7167eba-2bb8-4199-bfb4-f114af209907" />
+<img width="812" alt="Screenshot 2025-04-06 at 10 20 33 PM" src="https://github.com/user-attachments/assets/1f05c2c2-4c2d-407f-b66f-6e28ec66f1a8" />
 
 This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 
