@@ -12,13 +12,13 @@ This tool provides all CRUD operations for links using single [substitution oper
 Each operations split into two parts:
 
 ```
-(matching / restriction pattern)
+(matching pattern)
 (substitution pattern)
 ```
 
-When match pattern and substitution pattern are essensially the same we get no changes (no operation), it may seem like it does not any write, but it actually does read.
+When match pattern and substitution pattern are essensially the same we get no changes (no operation), it may seem like it does not any write, but it actually does the read operation.
 
-For example this operation:
+For example when `--changes` option is enabled this operation:
 
 ```
 ((1: 1 1)) ((1: 1 1))
@@ -27,7 +27,7 @@ For example this operation:
 will output:
 
 ```
-(1: 1 1) ↦ (1: 1 1)
+((1: 1 1)) ((1: 1 1))
 ```
 
 That is change of 1-st link with start (source) at itself and end (target) at itself to itself. Meaning no change, but as match pattern applies only to the link with 1 as index, 1 as source and 1 as target, this "no change" can be used as read query.
@@ -45,6 +45,7 @@ Deletion is just a replacement of something to nothing:
 ```
 ((1 1)) () 
 ```
+
 Where `((1 1))` is a sequence of match patterns, with a single pattern for a link with 1 as a start and 1 as end, the index is undefined, meaning it can be any index. It will match only existing link, if no such link found there will be no match. Last `()` is just empty sequence of links, that symbolizes nothing. We don't have matched link on the right side, meaning it will be effectively deleted.
 
 And the update is substitution itself, obviously.
@@ -68,22 +69,22 @@ dotnet tool install --global clink
 Create link with 1 as source and 1 as target.
 
 ```bash
-clink '() ((1 1))'
+clink '() ((1 1))' --changes --after
 ```
 →
 ```
-(0: 0 0) ↦ (1: 1 1)
+() ((1: 1 1))
 (1: 1 1)
 ```
 
 Create link with 2 as source and 2 as target.
 
 ```bash
-clink '() ((2 2))'
+clink '() ((2 2))' --changes --after
 ```
 →
 ```
-(0: 0 0) ↦ (2: 2 2)
+() ((2: 2 2))
 (1: 1 1)
 (2: 2 2)
 ```
@@ -93,12 +94,12 @@ clink '() ((2 2))'
 Create two links at the same time: (1 1) and (2 2).
 
 ```bash
-clink '() ((1 1) (2 2))'
+clink '() ((1 1) (2 2))' --changes --after
 ```
 →
 ```
-(0: 0 0) ↦ (2: 2 2)
-(0: 0 0) ↦ (1: 1 1)
+() ((2: 2 2))
+() ((1: 1 1))
 (1: 1 1)
 (2: 2 2)
 ```
@@ -106,12 +107,12 @@ clink '() ((1 1) (2 2))'
 ## Read all links
 
 ```bash
-clink '((($i: $s $t)) (($i: $s $t)))'
+clink '((($i: $s $t)) (($i: $s $t)))' --changes --after
 ```
 →
 ```
-(1: 1 1) ↦ (1: 1 1)
-(2: 2 2) ↦ (2: 2 2)
+((1: 1 1)) ((1: 1 1))
+((2: 2 2)) ((2: 2 2))
 (1: 1 1)
 (2: 2 2)
 ```
@@ -123,11 +124,11 @@ Where `$i` stands for variable named `i`, that stands for `index`. `$s` is for `
 Update link with index 1 and source 1 and target 1, changing target to 2.
 
 ```bash
-clink '((1: 1 1)) ((1: 1 2))'
+clink '((1: 1 1)) ((1: 1 2))' --changes --after
 ```
 →
 ```
-(1: 1 1) ↦ (1: 1 2)
+((1: 1 1)) ((1: 1 2))
 (1: 1 2)
 (2: 2 2)
 ```
@@ -137,12 +138,12 @@ clink '((1: 1 1)) ((1: 1 2))'
 Update link with index 1 and source 1 and target 1, changing target to 2.
 
 ```bash
-clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
+clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
 ```
 →
 ```
-(1: 1 1) ↦ (1: 1 2)
-(2: 2 2) ↦ (2: 2 1)
+((1: 1 1)) ((1: 1 2))
+((2: 2 2)) ((2: 2 1))
 (1: 1 2)
 (2: 2 1)
 ```
@@ -152,44 +153,44 @@ clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
 Delete link with source 1 and target 2:
 
 ```bash
-clink '((1 2)) ()'
+clink '((1 2)) ()' --changes --after
 ```
 →
 ```
-(1: 1 2) ↦ (0: 0 0)
+((1: 1 2)) ()
 (2: 2 2)
 ```
 
 Delete link with source 2 and target 2:
 
 ```bash
-clink '((2 2)) ()'
+clink '((2 2)) ()' --changes --after
 ```
 →
 ```
-(2: 2 2) ↦ (0: 0 0)
+((2: 2 2)) ()
 ```
 
 ## Delete multiple links
 
 ```bash
-clink '((1 2) (2 2)) ()'
+clink '((1 2) (2 2)) ()' --changes --after
 ```
 →
 ```
-(1: 1 2) ↦ (0: 0 0)
-(2: 2 2) ↦ (0: 0 0)
+((1: 1 2)) ()
+((2: 2 2)) ()
 ```
 
 ## Delete all links
 
 ```bash
-clink '((* *)) ()'
+clink '((* *)) ()' --changes --after
 ```
 →
 ```
-(1: 1 2) ↦ (0: 0 0)
-(2: 2 2) ↦ (0: 0 0)
+((1: 1 2)) ()
+((2: 2 2)) ()
 ```
 
 ## Complete examples:
@@ -209,6 +210,19 @@ clink '((($index: $source $target)) (($index: $target $source)))'
 
 clink '((1: 2 1) (2: 1 2)) ()'
 ```
+
+## All options and arguments
+
+| Parameter               | Type    | Default Value  | Aliases                             | Description                                                      |
+|-------------------------|---------|----------------|-------------------------------------|------------------------------------------------------------------|
+| `--db`                  | string  | `db.links`     | `--data-source`, `--data`, `-d`       | Path to the links database file                                  |
+| `--query`               | string  | _None_         | `--apply`, `--do`, `-a`, `-q`         | LiNo query for CRUD operation                                    |
+| `query` (positional)    | string  | _None_         | _N/A_                               | LiNo query for CRUD operation (provided as a positional argument)  |
+| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                    |
+| `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                           |
+| `--before`              | bool    | `false`        | _None_                              | Print the state of the database before applying changes          |
+| `--changes`             | bool    | `false`        | _None_                              | Print the changes applied by the query                           |
+| `--after`               | bool    | `false`        | _None_                              | Print the state of the database after applying changes           |
 
 ## For developers and debugging
 
