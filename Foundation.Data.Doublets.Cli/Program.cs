@@ -23,6 +23,7 @@ var queryOption = new Option<string>(
   description: "LiNo query for CRUD operation"
 );
 queryOption.AddAlias("--apply");
+queryOption.AddAlias("--do");
 queryOption.AddAlias("-a");
 queryOption.AddAlias("-q");
 
