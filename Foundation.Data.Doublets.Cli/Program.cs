@@ -51,18 +51,22 @@ var beforeOption = new Option<bool>(
   description: "Print the state of the database before applying changes",
   getDefaultValue: () => false
 );
+beforeOption.AddAlias("-b");
 
 var changesOption = new Option<bool>(
   name: "--changes",
   description: "Print the changes applied by the query",
   getDefaultValue: () => false
 );
+changesOption.AddAlias("-c");
 
 var afterOption = new Option<bool>(
   name: "--after",
   description: "Print the state of the database after applying changes",
   getDefaultValue: () => false
 );
+afterOption.AddAlias("--links");
+afterOption.AddAlias("-a");
 
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
