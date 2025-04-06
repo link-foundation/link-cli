@@ -15,6 +15,7 @@ var dbOption = new Option<string>(
   getDefaultValue: () => "db.links"
 );
 dbOption.AddAlias("--data-source");
+dbOption.AddAlias("--data");
 dbOption.AddAlias("-d");
 
 var queryOption = new Option<string>(
@@ -31,7 +32,6 @@ var queryArgument = new Argument<string>(
 );
 queryArgument.Arity = ArgumentArity.ZeroOrOne;
 
-// New option for enabling trace
 var traceOption = new Option<bool>(
   name: "--trace",
   description: "Enable trace (verbose output)",
@@ -39,12 +39,29 @@ var traceOption = new Option<bool>(
 );
 traceOption.AddAlias("-t");
 
-// New option for structure
 var structureOption = new Option<uint?>(
   name: "--structure",
   description: "ID of the link to format its structure"
 );
 structureOption.AddAlias("-s");
+
+var beforeOption = new Option<bool>(
+  name: "--before",
+  description: "Print the state of the database before applying changes",
+  getDefaultValue: () => false
+);
+
+var changesOption = new Option<bool>(
+  name: "--changes",
+  description: "Print the changes applied by the query",
+  getDefaultValue: () => false
+);
+
+var afterOption = new Option<bool>(
+  name: "--after",
+  description: "Print the state of the database after applying changes",
+  getDefaultValue: () => false
+);
 
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
@@ -52,12 +69,14 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   queryOption,
   queryArgument,
   traceOption,
-  structureOption // Add the new structure option to the root command
+  structureOption,
+  beforeOption,
+  changesOption,
+  afterOption
 };
 
-// Specify the generic type arguments explicitly
 rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure) =>
+  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
   {
     using var links = new UnitedMemoryLinks<uint>(db);
     var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
@@ -79,20 +98,24 @@ rootCommand.SetHandler(
       return; // Exit after handling --structure
     }
 
+    if (before)
+    {
+      PrintAllLinks(decoratedLinks);
+    }
+
     var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
 
-    var changes = new List<(DoubletLink Before, DoubletLink After)>();
+    var changesList = new List<(DoubletLink Before, DoubletLink After)>();
 
     if (!string.IsNullOrWhiteSpace(effectiveQuery))
     {
       var options = new QueryProcessor.Options
       {
         Query = effectiveQuery,
-        Trace = trace, // Pass the trace flag here
-        ChangesHandler = (before, after) =>
+        Trace = trace,
+        ChangesHandler = (beforeLink, afterLink) =>
         {
-          // Collect changes instead of printing immediately
-          changes.Add((new DoubletLink(before), new DoubletLink(after)));
+          changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
           return links.Constants.Continue;
         }
       };
@@ -100,22 +123,25 @@ rootCommand.SetHandler(
       QueryProcessor.ProcessQuery(decoratedLinks, options);
     }
 
-    if (changes.Any())
+    if (changes && changesList.Any())
     {
       // Simplify the collected changes
-      var simplifiedChanges = SimplifyChanges(changes);
+      var simplifiedChanges = SimplifyChanges(changesList);
 
       // Print the simplified changes
-      foreach (var (before, after) in simplifiedChanges)
+      foreach (var (linkBefore, linkAfter) in simplifiedChanges)
       {
-        Console.WriteLine($"{links.Format(before)} ↦ {links.Format(after)}");
+        PrintChange(links, linkBefore, linkAfter);
       }
     }
 
-    PrintAllLinks(decoratedLinks);
+    if (after)
+    {
+      PrintAllLinks(decoratedLinks);
+    }
   },
   // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption
+  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
 );
 
 await rootCommand.InvokeAsync(args);
@@ -130,4 +156,11 @@ static void PrintAllLinks(ILinks<uint> links)
     Console.WriteLine(links.Format(link));
     return links.Constants.Continue;
   });
+}
+
+static void PrintChange(UnitedMemoryLinks<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
+{
+  var beforeText = linkBefore.IsNull() ? "" : links.Format(linkBefore);
+  var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
+  Console.WriteLine($"({beforeText}) ({afterText})");
 }
