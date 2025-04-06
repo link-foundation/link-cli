@@ -218,16 +218,16 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 
 ## All options and arguments
 
-| Parameter               | Type    | Default Value  | Aliases                             | Description                                                      |
-|-------------------------|---------|----------------|-------------------------------------|------------------------------------------------------------------|
-| `--db`                  | string  | `db.links`     | `--data-source`, `--data`, `-d`       | Path to the links database file                                  |
-| `--query`               | string  | _None_         | `--apply`, `--do`, `-a`, `-q`         | LiNo query for CRUD operation                                    |
+| Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
+|-------------------------|---------|----------------|-------------------------------------|----------------------------------------------------------------------------|
+| `--db`                  | string  | `db.links`     | `--data-source`, `--data`, `-d`     | Path to the links database file                                            |
+| `--query`               | string  | _None_         | `--apply`, `--do`, `-a`, `-q`       | LiNo query for CRUD operation                                              |
 | `query` (positional)    | string  | _None_         | _N/A_                               | LiNo query for CRUD operation (provided as the first positional argument)  |
-| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                    |
-| `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                           |
-| `--before`              | bool    | `false`        | _None_                              | Print the state of the database before applying changes          |
-| `--changes`             | bool    | `false`        | _None_                              | Print the changes applied by the query                           |
-| `--after`               | bool    | `false`        | _None_                              | Print the state of the database after applying changes           |
+| `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                              |
+| `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                                     |
+| `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
+| `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
+| `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
 
 ## For developers and debugging
 
