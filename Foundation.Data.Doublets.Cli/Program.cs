@@ -24,7 +24,6 @@ var queryOption = new Option<string>(
 );
 queryOption.AddAlias("--apply");
 queryOption.AddAlias("--do");
-queryOption.AddAlias("-a");
 queryOption.AddAlias("-q");
 
 var queryArgument = new Argument<string>(
