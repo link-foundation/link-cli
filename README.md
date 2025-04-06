@@ -196,19 +196,19 @@ clink '((* *)) ()' --changes --after
 ## Complete examples:
 
 ```bash
-clink '() ((1 1) (2 2))'
+clink '() ((1 1) (2 2))' --changes --after
 
-clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
+clink '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
 
-clink '((1 2) (2 1)) ()'
+clink '((1 2) (2 1)) ()' --changes --after
 ```
 
 ```bash
-clink '() ((1 2) (2 1))'
+clink '() ((1 2) (2 1))' --changes --after
 
-clink '((($index: $source $target)) (($index: $target $source)))'
+clink '((($index: $source $target)) (($index: $target $source)))' --changes --after
 
-clink '((1: 2 1) (2: 1 2)) ()'
+clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
 ## All options and arguments
@@ -229,32 +229,32 @@ clink '((1: 2 1) (2: 1 2)) ()'
 ### Execute from root
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
+dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
 ```
 
 ### Execute from folder
 
 ```bash
 cd Foundation.Data.Doublets.Cli
-dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))'
+dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
 ```
 
 ### Complete examples:
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))'
+dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))'
+dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()'
+dotnet run --project Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()' --changes --after
 ```
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))'
+dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))'
+dotnet run --project Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()'
+dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
 ### Publish next version:
