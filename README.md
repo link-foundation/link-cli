@@ -119,6 +119,11 @@ clink '((($i: $s $t)) (($i: $s $t)))' --changes --after
 
 Where `$i` stands for variable named `i`, that stands for `index`. `$s` is for `source` and `$t` is for `target`.
 
+A short version of read operation will also work:
+```
+clink '((($i:)) (($i:)))' --changes
+```
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.
