@@ -222,5 +222,37 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 File.Delete(tempDbFile);
             }
         }
+
+        [Fact]
+        public void Should_Destructure_PinnedTypes()
+        {
+            // Arrange
+            var tempDbFile = Path.GetTempFileName();
+            try
+            {
+                using var links = new UnitedMemoryLinks<ulong>(tempDbFile);
+                var initialSource = 1UL;
+                var numberOfTypes = 3;
+
+                // Pre-create links
+                links.GetOrCreate(initialSource, 1UL);
+                links.GetOrCreate(initialSource, 2UL);
+                links.GetOrCreate(initialSource, 3UL);
+
+                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+
+                // Act
+                var (type1, type2, type3) = pinnedTypes;
+
+                // Assert
+                Assert.Equal(1UL, type1);
+                Assert.Equal(2UL, type2);
+                Assert.Equal(3UL, type3);
+            }
+            finally
+            {
+                File.Delete(tempDbFile);
+            }
+        }
     }
 }
