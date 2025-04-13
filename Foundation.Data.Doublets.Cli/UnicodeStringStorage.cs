@@ -34,14 +34,14 @@ namespace Foundation.Data.Doublets.Cli
         {
             Links = links;
 
-            var typeAddress = TLinkAddress.One;
-
-            Type = links.GetOrCreate(typeAddress, typeAddress++);
-            UnicodeSymbolType = links.GetOrCreate(Type, typeAddress++);
-            UnicodeSequenceType = links.GetOrCreate(Type, typeAddress++);
-            StringType = links.GetOrCreate(Type, typeAddress++);
-            EmptyStringType = links.GetOrCreate(Type, typeAddress++);
-            NameType = links.GetOrCreate(Type, typeAddress++);
+            (
+                Type,
+                UnicodeSymbolType,
+                UnicodeSequenceType,
+                StringType,
+                EmptyStringType,
+                NameType
+            ) = new PinnedTypes<TLinkAddress>(links);
 
             BalancedVariantConverter = new BalancedVariantConverter<TLinkAddress>(links);
 
