@@ -10,19 +10,15 @@ namespace Foundation.Data.Doublets.Cli
         where TLinkAddress : struct, System.Numerics.IUnsignedNumber<TLinkAddress>
     {
         private readonly ILinks<TLinkAddress> _links;
-        private readonly TLinkAddress _initialSource;
-        private readonly int _numberOfTypes;
 
-        public PinnedTypes(ILinks<TLinkAddress> links, TLinkAddress initialSource, int numberOfTypes)
+        public PinnedTypes(ILinks<TLinkAddress> links)
         {
             _links = links;
-            _initialSource = initialSource;
-            _numberOfTypes = numberOfTypes;
         }
 
         public IEnumerator<TLinkAddress> GetEnumerator()
         {
-            return new PinnedTypesEnumerator(_links, _initialSource, _numberOfTypes);
+            return new PinnedTypesEnumerator(_links);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -35,15 +31,13 @@ namespace Foundation.Data.Doublets.Cli
         {
             private readonly ILinks<TLinkAddress> _links;
             private readonly TLinkAddress _initialSource;
-            private readonly int _numberOfTypes;
             private int _currentIndex;
             private TLinkAddress _currentAddress;
 
-            public PinnedTypesEnumerator(ILinks<TLinkAddress> links, TLinkAddress initialSource, int numberOfTypes)
+            public PinnedTypesEnumerator(ILinks<TLinkAddress> links)
             {
                 _links = links;
-                _initialSource = initialSource;
-                _numberOfTypes = numberOfTypes;
+                _initialSource = TLinkAddress.One;
                 _currentIndex = -1; // Start before the first element
                 _currentAddress = TLinkAddress.One; // Start with the first address
             }
@@ -55,10 +49,6 @@ namespace Foundation.Data.Doublets.Cli
             public bool MoveNext()
             {
                 _currentIndex++;
-                if (_currentIndex >= _numberOfTypes)
-                {
-                    return false; // No more types to iterate
-                }
                 
                 var expectedLink = new Link<TLinkAddress>(_currentAddress, _initialSource, _currentAddress);
 

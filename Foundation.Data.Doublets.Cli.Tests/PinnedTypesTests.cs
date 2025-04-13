@@ -20,16 +20,15 @@ namespace Foundation.Data.Doublets.Cli.Tests
             try
             {
                 using var links = new UnitedMemoryLinks<ulong>(tempDbFile);
-                var initialSource = 1UL;
                 var numberOfTypes = 3;
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
 
                 // Act
                 var result = new List<ulong>();
-                foreach (var type in pinnedTypes)
+                foreach (var type in pinnedTypes.Take(numberOfTypes))
                 {
                     result.Add(type);
                 }
@@ -60,13 +59,13 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 links.GetOrCreate(initialSource, 2UL);
                 links.GetOrCreate(initialSource, 3UL);
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
                 
                 // Act
                 var result = new List<ulong>();
-                foreach (var type in pinnedTypes)
+                foreach (var type in pinnedTypes.Take(numberOfTypes))
                 {
                     result.Add(type);
                 }
@@ -99,7 +98,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 // Create an invalid link
                 links.GetOrCreate(initialSource, 0UL); // Invalid link with unexpected address
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
                 
@@ -129,10 +128,8 @@ namespace Foundation.Data.Doublets.Cli.Tests
             try
             {
                 using var links = new UnitedMemoryLinks<ulong>(tempDbFile);
-                var initialSource = 1UL;
-                var numberOfTypes = 2;
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
                 var enumerator = pinnedTypes.GetEnumerator();
 
                 var allLinks = links.All();
@@ -170,13 +167,13 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 links.GetOrCreate(initialSource, 2UL);
                 links.GetOrCreate(initialSource, 3UL);
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
                 
                 // Act
                 var result = new List<ulong>();
-                foreach (var type in pinnedTypes)
+                foreach (var type in pinnedTypes.Take(numberOfTypes))
                 {
                     result.Add(type);
                 }
@@ -199,16 +196,15 @@ namespace Foundation.Data.Doublets.Cli.Tests
             try
             {
                 using var links = new UnitedMemoryLinks<ulong>(tempDbFile);
-                var initialSource = 1UL;
                 var numberOfTypes = 3;
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
                 
                 // Act
                 var result = new List<ulong>();
-                foreach (var type in pinnedTypes)
+                foreach (var type in pinnedTypes.Take(numberOfTypes))
                 {
                     result.Add(type);
                 }
@@ -232,17 +228,14 @@ namespace Foundation.Data.Doublets.Cli.Tests
             {
                 using var links = new UnitedMemoryLinks<ulong>(tempDbFile);
                 var initialSource = 1UL;
-                var numberOfTypes = 3;
 
                 // Pre-create links
                 links.GetOrCreate(initialSource, 1UL);
                 links.GetOrCreate(initialSource, 2UL);
                 links.GetOrCreate(initialSource, 3UL);
 
-                var pinnedTypes = new PinnedTypes<ulong>(links, initialSource, numberOfTypes);
-
                 // Act
-                var (type1, type2, type3) = pinnedTypes;
+                var (type1, type2, type3) = new PinnedTypes<ulong>(links);
 
                 // Assert
                 Assert.Equal(1UL, type1);
