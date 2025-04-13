@@ -31,14 +31,12 @@ namespace Foundation.Data.Doublets.Cli
         {
             private readonly ILinks<TLinkAddress> _links;
             private readonly TLinkAddress _initialSource;
-            private int _currentIndex;
             private TLinkAddress _currentAddress;
 
             public PinnedTypesEnumerator(ILinks<TLinkAddress> links)
             {
                 _links = links;
                 _initialSource = TLinkAddress.One;
-                _currentIndex = -1; // Start before the first element
                 _currentAddress = TLinkAddress.One; // Start with the first address
             }
 
@@ -47,9 +45,7 @@ namespace Foundation.Data.Doublets.Cli
             object IEnumerator.Current => Current;
 
             public bool MoveNext()
-            {
-                _currentIndex++;
-                
+            {        
                 var expectedLink = new Link<TLinkAddress>(_currentAddress, _initialSource, _currentAddress);
 
                 // Check if the link already exists
@@ -97,7 +93,6 @@ namespace Foundation.Data.Doublets.Cli
 
             public void Reset()
             {
-                _currentIndex = -1;
                 _currentAddress = TLinkAddress.One;
             }
 
