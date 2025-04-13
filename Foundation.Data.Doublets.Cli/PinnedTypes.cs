@@ -45,37 +45,19 @@ namespace Foundation.Data.Doublets.Cli
             object IEnumerator.Current => Current;
 
             public bool MoveNext()
-            {        
-                var expectedLink = new Link<TLinkAddress>(_currentAddress, _initialSource, _currentAddress);
-
-                // Check if the link already exists
-                var searchResult = _links.SearchOrDefault(expectedLink.Source, expectedLink.Target);
-
-                if (!EqualityComparer<TLinkAddress>.Default.Equals(searchResult, default))
+            {
+                if (_links.Exists(_currentAddress))
                 {
                     var link = new Link<TLinkAddress>(_links.GetLink(_currentAddress));
-                    if (searchResult == _currentAddress)
+                    var expectedLink = new Link<TLinkAddress>(_currentAddress, _initialSource, _currentAddress);
+                    if (link == expectedLink)
                     {
-                        // Link already exists, no need to create a new one
-                        Current = searchResult;
+                        // Link already exists and matches the expected structure
+                        Current = _currentAddress;
                     }
                     else
                     {
-                        // Link exists but is not the expected one
-                        throw new InvalidOperationException($"Unexpected link found at address {_currentAddress}. Expected: {expectedLink}, Found: {link}.");
-                    }
-                }
-                if (EqualityComparer<TLinkAddress>.Default.Equals(searchResult, default) && _links.Exists(_currentAddress))
-                {
-                    var link = new Link<TLinkAddress>(_links.GetLink(_currentAddress));
-                    if (link.Source == _initialSource && link.Target == _currentAddress)
-                    {
-                        // Link already exists, no need to create a new one
-                        Current = searchResult;
-                    }
-                    else
-                    {
-                        // Link exists but is not the expected one
+                        // Link exists but does not match the expected structure
                         throw new InvalidOperationException($"Unexpected link found at address {_currentAddress}. Expected: {expectedLink}, Found: {link}.");
                     }
                 }
@@ -86,7 +68,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
 
                 // Increment the current address for the next type
-                _currentAddress = IncrementAddress(_currentAddress);
+                _currentAddress++;
 
                 return true;
             }
@@ -99,13 +81,6 @@ namespace Foundation.Data.Doublets.Cli
             public void Dispose()
             {
                 // No resources to dispose
-            }
-
-            // Helper method to increment the address
-            private TLinkAddress IncrementAddress(TLinkAddress address)
-            {
-                dynamic addr = address;
-                return (TLinkAddress)(addr + 1);
             }
         }
     }
