@@ -27,9 +27,25 @@ namespace Foundation.Data.Doublets.Cli
         return Enumerable.Empty<(Link<uint>, Link<uint>)>();
       }
 
-      // Gather all 'Before' links and all 'After' links
-      var beforeLinks = new HashSet<Link<uint>>(changesList.Select(c => c.Before), LinkEqualityComparer.Instance);
-      var afterLinks = new HashSet<Link<uint>>(changesList.Select(c => c.After), LinkEqualityComparer.Instance);
+      // First, handle unchanged states directly
+      var unchangedStates = new List<(Link<uint> Before, Link<uint> After)>();
+      var changedStates = new List<(Link<uint> Before, Link<uint> After)>();
+
+      foreach (var change in changesList)
+      {
+        if (LinkEqualityComparer.Instance.Equals(change.Before, change.After))
+        {
+          unchangedStates.Add(change);
+        }
+        else
+        {
+          changedStates.Add(change);
+        }
+      }
+
+      // Gather all 'Before' links and all 'After' links from changed states
+      var beforeLinks = new HashSet<Link<uint>>(changedStates.Select(c => c.Before), LinkEqualityComparer.Instance);
+      var afterLinks = new HashSet<Link<uint>>(changedStates.Select(c => c.After), LinkEqualityComparer.Instance);
 
       // Identify initial states: appear as Before but never as After
       var initialStates = beforeLinks.Where(b => !afterLinks.Contains(b)).ToList();
@@ -40,7 +56,7 @@ namespace Foundation.Data.Doublets.Cli
 
       // Build adjacency (Before -> possible list of After links)
       var adjacency = new Dictionary<Link<uint>, List<Link<uint>>>(LinkEqualityComparer.Instance);
-      foreach (var (before, after) in changesList)
+      foreach (var (before, after) in changedStates)
       {
         if (!adjacency.TryGetValue(before, out var list))
         {
@@ -58,6 +74,9 @@ namespace Foundation.Data.Doublets.Cli
       }
 
       var results = new List<(Link<uint> Before, Link<uint> After)>();
+
+      // Add unchanged states first
+      results.AddRange(unchangedStates);
 
       // Traverse each initial state with DFS
       foreach (var initial in initialStates.Distinct(LinkEqualityComparer.Instance))

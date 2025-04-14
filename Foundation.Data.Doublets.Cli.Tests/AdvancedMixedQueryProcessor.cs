@@ -458,6 +458,39 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     }
 
     [Fact]
+    public void SwapEqualSourceAndTargetUsingVariablesHasAllChangesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "() ((1 1) (2 2))");
+        ProcessQuery(links, "((1: 1 1)) ((1: 1 2))");
+
+        Options options = new Options();
+
+        var changes = new List<(DoubletLink, DoubletLink)>();
+        options.Query = "((($index: $source $target)) (($index: $target $source)))";
+        options.ChangesHandler = (before, after) =>
+              {
+                changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                return links.Constants.Continue;
+              };
+
+        // Act
+        ProcessQuery(links, options);
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 2, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        Assert.Equal(2, changes.Count);
+        AssertChangeExists(changes, new DoubletLink(1, 1, 2), new DoubletLink(1, 2, 1));
+        AssertChangeExists(changes, new DoubletLink(2, 2, 2), new DoubletLink(2, 2, 2));
+      });
+    }
+
+    [Fact]
     public void MakeAllLinksToGoOutOfFirstLinkUsingVariablesTest()
     {
       RunTestWithLinks(links =>
