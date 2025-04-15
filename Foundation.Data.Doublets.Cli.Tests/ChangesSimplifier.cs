@@ -298,6 +298,55 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       );
     }
 
+    [Fact]
+    public void SimplifyChanges_SpecificExample_KeepsUnchangedStates()
+    {
+      // Arrange
+      var changes = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        // (1: 1 2) ↦ (1: 2 1)
+        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),
+
+        // (2: 2 2) ↦ (2: 2 2)
+        (new Link<uint>(index: 2, source: 2, target: 2), new Link<uint>(index: 2, source: 2, target: 2))
+      };
+
+      // Expected simplified changes still have (2: 2 2):
+      // (1: 1 2) ↦ (1: 2 1)
+      // (2: 2 2) ↦ (2: 2 2)
+      var expectedSimplifiedChanges = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),
+        (new Link<uint>(index: 2, source: 2, target: 2), new Link<uint>(index: 2, source: 2, target: 2))
+      };
+
+      // Act
+      var simplifiedChanges = SimplifyChanges(changes).ToList();
+
+      // Assert
+      AssertChangeSetEqual(expectedSimplifiedChanges, simplifiedChanges);
+    }
+
+    private static void AssertChangeSetEqual(
+      List<(Link<uint> Before, Link<uint> After)> expectedSimplifiedChanges,
+      List<(Link<uint> Before, Link<uint> After)> simplifiedChanges
+    )
+    {
+      Assert.Equal(expectedSimplifiedChanges.Count, simplifiedChanges.Count);
+      foreach (var expected in expectedSimplifiedChanges)
+      {
+        Assert.Contains(
+          simplifiedChanges,
+          actual =>
+            actual.Before.Index == expected.Before.Index
+            && actual.Before.Source == expected.Before.Source
+            && actual.Before.Target == expected.Before.Target
+            && actual.After.Index == expected.After.Index
+            && actual.After.Source == expected.After.Source
+            && actual.After.Target == expected.After.Target
+        );
+      }
+    }
 
     // [Fact]
     // public void SimplifyChanges_NoChanges_ReturnsEmpty()
