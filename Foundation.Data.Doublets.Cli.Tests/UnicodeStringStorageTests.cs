@@ -88,7 +88,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var storage = new UnicodeStringStorage<uint>(links);
 
                 // Act
-                var retrievedType = storage.GetTypeByName("Type");
+                var retrievedType = storage.NamedLinks.GetByName("Type");
 
                 // Assert
                 Assert.Equal(1u, retrievedType);
@@ -110,10 +110,10 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var storage = new UnicodeStringStorage<uint>(links);
 
                 // Act
-                var retrievedType = storage.GetTypeByName(typeName);
+                var retrievedType = storage.NamedLinks.GetByName(typeName);
 
                 // Assert
-                Assert.Equal(typeName, storage.GetTypeName(retrievedType));
+                Assert.Equal(typeName, storage.NamedLinks.GetName(retrievedType));
             });
         }
 
@@ -127,7 +127,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
 
                 // Act
                 var userType = storage.GetOrCreateType("UserType");
-                var retrievedType = storage.GetTypeByName("UserType");
+                var retrievedType = storage.NamedLinks.GetByName("UserType");
 
                 // Assert
                 Assert.Equal(userType, retrievedType);
