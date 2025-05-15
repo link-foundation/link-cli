@@ -152,8 +152,10 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var retrievedIndex = storage.NamedLinks.GetByName("MyExternalReference");
 
                 // Assert
-                Assert.Equal(4294967295, (ulong)hybrid);
+                Assert.Equal(4294967295ul, (ulong)hybrid);
                 Assert.Equal(4294967295, retrievedIndex);
+                Assert.Equal(1ul, (ulong)hybrid.AbsoluteValue);
+                Assert.True(hybrid.IsExternal);
                 Assert.Equal("MyExternalReference", retrievedName);
             });
         }
