@@ -1,5 +1,7 @@
+using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
+using Platform.Memory;
 
 namespace Foundation.Data.Doublets.Cli.Tests
 {
@@ -134,13 +136,37 @@ namespace Foundation.Data.Doublets.Cli.Tests
             });
         }
 
+        [Fact]
+        public void NameExternalReferenceTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+
+                Hybrid<uint> hybrid = new Hybrid<uint>(1, isExternal: true);
+
+                // Act
+                storage.NamedLinks.SetName(hybrid, "MyExternalReference");
+                var retrievedName = storage.NamedLinks.GetName(hybrid);
+                var retrievedIndex = storage.NamedLinks.GetByName("MyExternalReference");
+
+                // Assert
+                Assert.Equal(4294967295, (ulong)hybrid);
+                Assert.Equal(4294967295, retrievedIndex);
+                Assert.Equal("MyExternalReference", retrievedName);
+            });
+        }
+
         // Helper method to create a test environment with a temporary file
         private static void RunTestWithLinks(Action<ILinks<uint>> testAction)
         {
             var tempDbFile = Path.GetTempFileName();
             try
             {
-                using var links = new UnitedMemoryLinks<uint>(tempDbFile);
+                var constants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
+                var memory = new FileMappedResizableDirectMemory(tempDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
+                using var links = new UnitedMemoryLinks<uint>(memory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, constants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
                 var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
                 testAction(decoratedLinks);
             }
