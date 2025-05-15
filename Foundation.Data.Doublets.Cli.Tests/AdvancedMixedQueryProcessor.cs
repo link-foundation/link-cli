@@ -1,3 +1,4 @@
+using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
 
@@ -817,6 +818,54 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         var allLinks = GetAllLinks(links);
         Assert.Empty(allLinks);
       });
+    }
+
+    [Fact]
+    public void CreateNamedFamilyLinksTest()
+    {
+        RunTestWithLinks(links =>
+        {
+            // Setup UnicodeStringStorage and NamedLinks with external references support
+            var tempNamesDbFile = Path.GetTempFileName();
+            try
+            {
+                var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
+                var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
+                using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
+                var storage = new UnicodeStringStorage<uint>(namesLinks); // external references DB for names
+                var namedLinks = storage.NamedLinks;
+
+                // Prepare query: create (child: father mother)
+                var query = "(() (((child father mother))))";
+                var options = new Options
+                {
+                    Query = query,
+                    NamedLinks = namedLinks
+                };
+                ProcessQuery(links, options);
+
+                // Assert: links for 'father', 'mother', and 'child' exist and are named
+                var fatherId = namedLinks.GetByName("father");
+                var motherId = namedLinks.GetByName("mother");
+                var childId = namedLinks.GetByName("child");
+                Assert.NotEqual(links.Constants.Null, fatherId);
+                Assert.NotEqual(links.Constants.Null, motherId);
+                Assert.NotEqual(links.Constants.Null, childId);
+                Assert.Equal("father", namedLinks.GetName(fatherId));
+                Assert.Equal("mother", namedLinks.GetName(motherId));
+                Assert.Equal("child", namedLinks.GetName(childId));
+
+                // The child link should have father as source and mother as target
+                var allLinks = GetAllLinks(links);
+                var childLink = allLinks.First(l => l.Index == childId);
+                Assert.Equal(fatherId, childLink.Source);
+                Assert.Equal(motherId, childLink.Target);
+            }
+            finally
+            {
+                File.Delete(tempNamesDbFile);
+            }
+        });
     }
 
     // Helper methods

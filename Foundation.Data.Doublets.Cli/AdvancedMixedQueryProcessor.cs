@@ -19,6 +19,8 @@ namespace Foundation.Data.Doublets.Cli
             /// </summary>
             public bool Trace { get; set; } = false;
 
+            public NamedLinks<uint>? NamedLinks { get; set; }
+
             public static implicit operator Options(string query) => new Options { Query = query };
         }
 
@@ -262,6 +264,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
+            var namedLinks = options.NamedLinks;
 
             if (lino.Values == null || lino.Values.Count == 0)
             {
@@ -278,9 +281,60 @@ namespace Foundation.Data.Doublets.Cli
                 if (uint.TryParse(lino.Id, out uint parsedNumber))
                 {
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
+                    // Set name if NamedLinks is present and lino.Id is not numeric and not '*'
+                    if (namedLinks != null && !IsNumericOrStar(lino.Id))
+                    {
+                        namedLinks.SetName(parsedNumber, lino.Id);
+                    }
                     return parsedNumber;
                 }
-                TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with unparseable => returning ANY.");
+                // If not numeric and not '*', treat as a named entity: create a new link and set its name
+                if (namedLinks != null)
+                {
+                    var existingId = namedLinks.GetByName(lino.Id);
+                    if (existingId != links.Constants.Null)
+                    {
+                        TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{lino.Id}' => ID={existingId}");
+                        return existingId;
+                    }
+                    // Try to use UnicodeStringStorage's GetOrCreateType if available
+                    if (options is { NamedLinks: NamedLinks<uint> named } && named.GetType().Name == "NamedLinks`1")
+                    {
+                        // Try to find a UnicodeStringStorage in the test context
+                        // This is a hack: in real code, pass a delegate or factory
+                        var unicodeStringStorageType = typeof(Foundation.Data.Doublets.Cli.UnicodeStringStorage<uint>);
+                        var storageField = options.GetType().GetField("UnicodeStringStorage", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                        if (storageField != null)
+                        {
+                            var storage = storageField.GetValue(options) as dynamic;
+                            if (storage != null)
+                            {
+                                uint newId = storage.GetOrCreateType(lino.Id);
+                                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new named leaf '{lino.Id}' via UnicodeStringStorage => ID={newId}");
+                                return newId;
+                            }
+                        }
+                    }
+                    // fallback: try to create a new link and set name
+                    uint fallbackId = 0;
+                    links.CreateAndUpdate(links.Constants.Null, links.Constants.Null, (before, after) =>
+                    {
+                        var afterLink = new DoubletLink(after);
+                        if (fallbackId == 0 && afterLink.Index != 0 && afterLink.Index != links.Constants.Any)
+                        {
+                            fallbackId = afterLink.Index;
+                        }
+                        return links.Constants.Continue;
+                    });
+                    if (fallbackId == 0 || fallbackId == links.Constants.Any)
+                    {
+                        fallbackId = links.SearchOrDefault(links.Constants.Null, links.Constants.Null);
+                    }
+                    namedLinks.SetName(fallbackId, lino.Id);
+                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new named leaf '{lino.Id}' => ID={fallbackId}");
+                    return fallbackId;
+                }
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf with unparseable and no NamedLinks => returning ANY.");
                 return anyConstant;
             }
 
@@ -307,6 +361,11 @@ namespace Foundation.Data.Doublets.Cli
                 var createdId = EnsureLinkCreated(links, linkToCreate, options);
                 TraceIfEnabled(options,
                     $"[EnsureNestedLinkCreatedRecursively] Created/ensured composite => (index={index}, src={sourceId}, trg={targetId}) => actual ID={createdId}");
+                // Set name if NamedLinks is present and lino.Id is not numeric and not '*'
+                if (namedLinks != null && !string.IsNullOrEmpty(lino.Id) && !IsNumericOrStar(lino.Id))
+                {
+                    namedLinks.SetName(createdId, lino.Id);
+                }
                 return createdId;
             }
 
@@ -990,6 +1049,15 @@ namespace Foundation.Data.Doublets.Cli
                     return link.Index;
                 }
             }
+        }
+
+        // Helper for link naming logic
+        private static bool IsNumericOrStar(string? id)
+        {
+            if (string.IsNullOrEmpty(id)) return false;
+            if (id == "*") return true;
+            uint dummy;
+            return uint.TryParse(id, out dummy);
         }
 
         private static void TraceIfEnabled(Options options, string message)
