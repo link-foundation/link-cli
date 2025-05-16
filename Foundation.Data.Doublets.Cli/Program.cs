@@ -93,8 +93,10 @@ var makeNamesDatabaseFilename = new Func<string, string>((databaseFilename) =>
 rootCommand.SetHandler(
   (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
   {
-    using var links = new UnitedMemoryLinks<uint>(db);
-    var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+    // using var links = new UnitedMemoryLinks<uint>(db);
+    // var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+
+    var links = new NamedLinksDecorator<uint>(db);
 
     var namesDatabaseFilename = makeNamesDatabaseFilename(db);
     var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
@@ -109,7 +111,7 @@ rootCommand.SetHandler(
       var linkId = structure.Value;
       try
       {
-        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
+        var structureFormatted = links.FormatStructure(linkId, link => links.IsFullPoint(linkId), true, true);
         Console.WriteLine(Namify(namedLinks, structureFormatted));
       }
       catch (Exception ex)
@@ -122,7 +124,7 @@ rootCommand.SetHandler(
 
     if (before)
     {
-      PrintAllLinks(decoratedLinks, namedLinks);
+      PrintAllLinks(links, namedLinks);
     }
 
     var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
@@ -143,7 +145,7 @@ rootCommand.SetHandler(
         }
       };
 
-      QueryProcessor.ProcessQuery(decoratedLinks, options);
+      QueryProcessor.ProcessQuery(links, options);
     }
 
     if (changes && changesList.Any())
@@ -160,7 +162,7 @@ rootCommand.SetHandler(
 
     if (after)
     {
-      PrintAllLinks(decoratedLinks, namedLinks);
+      PrintAllLinks(links, namedLinks);
     }
   },
   // Explicitly specify the type parameters
@@ -200,7 +202,7 @@ static void PrintAllLinks(ILinks<uint> links, NamedLinks<uint> namedLinks)
   });
 }
 
-static void PrintChange(UnitedMemoryLinks<uint> links, NamedLinks<uint> namedLinks, DoubletLink linkBefore, DoubletLink linkAfter)
+static void PrintChange(ILinks<uint> links, NamedLinks<uint> namedLinks, DoubletLink linkBefore, DoubletLink linkAfter)
 {
   var beforeText = linkBefore.IsNull() ? "" : links.Format(linkBefore);
   var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
