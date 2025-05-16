@@ -399,3 +399,4 @@ FodyWeavers.xsd
 
 # Links Storage
 db.links
+db.names.links
