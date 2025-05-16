@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Platform.Data;
 using Platform.Data.Doublets;
 
 namespace Foundation.Data.Doublets.Cli
@@ -26,10 +27,22 @@ namespace Foundation.Data.Doublets.Cli
             _getString = getString;
         }
 
+        public TLinkAddress SetNameForExternalReference(TLinkAddress link, string name)
+        {
+            var reference = new Hybrid<TLinkAddress>(link, isExternal: true);
+            return SetName(reference, name);
+        }
+
         public TLinkAddress SetName(TLinkAddress link, string name)
         {
             var nameSequence = _createString(name);
             return _links.GetOrCreate(link, _links.GetOrCreate(_nameType, nameSequence));
+        }
+
+        public string? GetNameByExternalReference(TLinkAddress link)
+        {
+            var reference = new Hybrid<TLinkAddress>(link, isExternal: true);
+            return GetName(reference);
         }
 
         public string? GetName(TLinkAddress link)
@@ -65,6 +78,19 @@ namespace Foundation.Data.Doublets.Cli
                 return _links.Constants.Null;
             }
             return _links.GetSource(link);
+        }
+
+        public TLinkAddress GetExternalReferenceByName(string name)
+        {
+            var reference = (Hybrid<TLinkAddress>)GetByName(name);
+            if (reference.IsExternal)
+            {
+                return TLinkAddress.CreateTruncating(reference.AbsoluteValue);
+            }
+            else
+            {
+                return _links.Constants.Null;
+            }
         }
     }
 }

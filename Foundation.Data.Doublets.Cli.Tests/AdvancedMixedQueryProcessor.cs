@@ -836,7 +836,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 var namedLinks = storage.NamedLinks;
 
                 // Prepare query: create (child: father mother)
-                var query = "(() (((child father mother))))";
+                var query = "(() ((child: father mother)))";
                 var options = new Options
                 {
                     Query = query,
@@ -845,15 +845,15 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 ProcessQuery(links, options);
 
                 // Assert: links for 'father', 'mother', and 'child' exist and are named
-                var fatherId = namedLinks.GetByName("father");
-                var motherId = namedLinks.GetByName("mother");
-                var childId = namedLinks.GetByName("child");
+                var fatherId = namedLinks.GetExternalReferenceByName("father");
+                var motherId = namedLinks.GetExternalReferenceByName("mother");
+                var childId = namedLinks.GetExternalReferenceByName("child");
                 Assert.NotEqual(links.Constants.Null, fatherId);
                 Assert.NotEqual(links.Constants.Null, motherId);
                 Assert.NotEqual(links.Constants.Null, childId);
-                Assert.Equal("father", namedLinks.GetName(fatherId));
-                Assert.Equal("mother", namedLinks.GetName(motherId));
-                Assert.Equal("child", namedLinks.GetName(childId));
+                Assert.Equal("father", namedLinks.GetNameByExternalReference(fatherId));
+                Assert.Equal("mother", namedLinks.GetNameByExternalReference(motherId));
+                Assert.Equal("child", namedLinks.GetNameByExternalReference(childId));
 
                 // The child link should have father as source and mother as target
                 var allLinks = GetAllLinks(links);

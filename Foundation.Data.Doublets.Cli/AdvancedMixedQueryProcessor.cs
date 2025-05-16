@@ -284,7 +284,7 @@ namespace Foundation.Data.Doublets.Cli
                     // Set name if NamedLinks is present and lino.Id is not numeric and not '*'
                     if (namedLinks != null && !IsNumericOrStar(lino.Id))
                     {
-                        namedLinks.SetName(parsedNumber, lino.Id);
+                        namedLinks.SetNameForExternalReference(parsedNumber, lino.Id);
                     }
                     return parsedNumber;
                 }
@@ -330,7 +330,7 @@ namespace Foundation.Data.Doublets.Cli
                     {
                         fallbackId = links.SearchOrDefault(links.Constants.Null, links.Constants.Null);
                     }
-                    namedLinks.SetName(fallbackId, lino.Id);
+                    namedLinks.SetNameForExternalReference(fallbackId, lino.Id);
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new named leaf '{lino.Id}' => ID={fallbackId}");
                     return fallbackId;
                 }
@@ -364,7 +364,7 @@ namespace Foundation.Data.Doublets.Cli
                 // Set name if NamedLinks is present and lino.Id is not numeric and not '*'
                 if (namedLinks != null && !string.IsNullOrEmpty(lino.Id) && !IsNumericOrStar(lino.Id))
                 {
-                    namedLinks.SetName(createdId, lino.Id);
+                    namedLinks.SetNameForExternalReference(createdId, lino.Id);
                 }
                 return createdId;
             }
