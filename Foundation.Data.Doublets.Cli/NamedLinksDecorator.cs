@@ -1,4 +1,5 @@
 using System.Numerics;
+using Platform.Delegates;
 using Platform.Memory;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -43,6 +44,67 @@ namespace Foundation.Data.Doublets.Cli
 
         public NamedLinksDecorator(string databaseFilename): this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename))
         {
+        }
+
+        public string? GetName(TLinkAddress link)
+        {
+            return NamedLinks.GetNameByExternalReference(link);
+        }
+
+        public TLinkAddress SetName(TLinkAddress link, string name)
+        {   
+            return NamedLinks.SetNameForExternalReference(link, name);
+        }
+
+        public void RemoveName(TLinkAddress link)
+        {
+            return NamedLinks.RemoveNameByExternalReference(link);
+        }
+
+        public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
+        {
+            var linkIndex = _links.GetIndex(link: restriction);
+            var constants = _links.Constants;
+            var handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+            {
+                if (before != null && after == null)
+                {
+                    var deletedLinkIndex = _links.GetIndex(link: before);
+                    if (deletedLinkIndex == linkIndex)
+                    {
+                        RemoveName(deletedLinkIndex);
+                    }
+                }
+                if (handler == null)
+                {
+                    return constants.Continue;
+                }
+                return handler(before, after);
+            };
+            return _links.Delete(restriction, handlerWrapper);
+        }
+
+        public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
+        {
+            var linkIndex = _links.GetIndex(link: restriction);
+            var constants = _links.Constants;
+            var handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+            {
+                if (before != null && after == null)
+                {
+                    var deletedLinkIndex = _links.GetIndex(link: before);
+                    if (deletedLinkIndex == linkIndex)
+                    {
+                        RemoveName(deletedLinkIndex);
+                    }
+                }
+                if (handler == null)
+                {
+                    return constants.Continue;
+                }
+                return handler(before, after);
+            };
+            return _links.Delete(restriction, handlerWrapper);
         }
     }
 }
