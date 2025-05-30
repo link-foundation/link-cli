@@ -58,14 +58,14 @@ namespace Foundation.Data.Doublets.Cli
 
         public void RemoveName(TLinkAddress link)
         {
-            return NamedLinks.RemoveNameByExternalReference(link);
+            NamedLinks.RemoveNameByExternalReference(link);
         }
 
         public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
         {
             var linkIndex = _links.GetIndex(link: restriction);
             var constants = _links.Constants;
-            var handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+            WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
                 if (before != null && after == null)
                 {
@@ -88,7 +88,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             var linkIndex = _links.GetIndex(link: restriction);
             var constants = _links.Constants;
-            var handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+            WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
                 if (before != null && after == null)
                 {
