@@ -100,7 +100,7 @@ rootCommand.SetHandler(
     var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
     var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
     using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
-    var storage = new UnicodeStringStorage<uint>(namesLinks); // external references DB for names
+    var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution()); // external references DB for names
     var namedLinks = storage.NamedLinks;
 
     // If --structure is provided, handle it separately

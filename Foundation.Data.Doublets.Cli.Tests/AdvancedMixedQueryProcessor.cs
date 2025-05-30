@@ -832,7 +832,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
                 var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
                 using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
-                var storage = new UnicodeStringStorage<uint>(namesLinks); // external references DB for names
+                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution()); // external references DB for names
                 var namedLinks = storage.NamedLinks;
 
                 // Prepare query: create (child: father mother)
@@ -860,6 +860,47 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 var childLink = allLinks.First(l => l.Index == childId);
                 Assert.Equal(fatherId, childLink.Source);
                 Assert.Equal(motherId, childLink.Target);
+            }
+            finally
+            {
+                File.Delete(tempNamesDbFile);
+            }
+        });
+    }
+
+    [Fact]
+    public void DeleteNamedFamilyLinksRemovesNamesTest()
+    {
+        RunTestWithLinks(links =>
+        {
+            // Setup UnicodeStringStorage and NamedLinks with external references support
+            var tempNamesDbFile = Path.GetTempFileName();
+            try
+            {
+                var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
+                var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
+                using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default).DecorateWithAutomaticUniquenessAndUsagesResolution();
+                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution()); // external references DB for names
+                var namedLinks = storage.NamedLinks;
+
+                // Prepare query: create (child: father mother)
+                var query = "(() ((child: father mother)))";
+                var options = new Options
+                {
+                    Query = query,
+                    NamedLinks = namedLinks
+                };
+                ProcessQuery(links, options);
+
+                // Delete the 'child' link
+                var childId = namedLinks.GetExternalReferenceByName("child");
+                namesLinks.Delete(childId);
+                namedLinks.RemoveNameByExternalReference(childId);
+
+                // Assert: 'child' name is removed, 'father' and 'mother' remain
+                Assert.Equal(links.Constants.Null, namedLinks.GetExternalReferenceByName("child"));
+                Assert.NotEqual(links.Constants.Null, namedLinks.GetExternalReferenceByName("father"));
+                Assert.NotEqual(links.Constants.Null, namedLinks.GetExternalReferenceByName("mother"));
             }
             finally
             {

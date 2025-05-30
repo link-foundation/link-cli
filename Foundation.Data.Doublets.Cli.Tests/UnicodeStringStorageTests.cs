@@ -160,6 +160,70 @@ namespace Foundation.Data.Doublets.Cli.Tests
             });
         }
 
+        [Fact]
+        public void NameIsRemovedWhenLinkIsDeletedTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+                var link = links.Create(new uint[] { 0, 0 });
+                storage.NamedLinks.SetName(link, "TestName");
+                Assert.Equal("TestName", storage.NamedLinks.GetName(link));
+                Assert.Equal(link, storage.NamedLinks.GetByName("TestName"));
+
+                // Act: delete the link and its name
+                links.Delete(link);
+                storage.NamedLinks.RemoveName(link);
+
+                // Assert: name is removed
+                Assert.Equal(links.Constants.Null, storage.NamedLinks.GetByName("TestName"));
+                Assert.Null(storage.NamedLinks.GetName(link));
+            });
+        }
+
+        [Fact]
+        public void DeletingNonNamedLinkDoesNotAffectOtherNamesTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+                var namedLink = links.Create(new uint[] { 0, 0 });
+                storage.NamedLinks.SetName(namedLink, "Named");
+                var unnamedLink = links.Create(new uint[] { 0, 0 });
+                Assert.Equal("Named", storage.NamedLinks.GetName(namedLink));
+
+                // Act: delete the unnamed link
+                links.Delete(unnamedLink);
+
+                // Assert: named link and its name remain
+                Assert.Equal(namedLink, storage.NamedLinks.GetByName("Named"));
+                Assert.Equal("Named", storage.NamedLinks.GetName(namedLink));
+            });
+        }
+
+        [Fact]
+        public void NameIsRemovedWhenExternalReferenceIsDeletedTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                // Arrange
+                var storage = new UnicodeStringStorage<uint>(links);
+                var externalRef = 123u;
+                storage.NamedLinks.SetNameForExternalReference(externalRef, "ExternalName");
+                Assert.Equal("ExternalName", storage.NamedLinks.GetNameByExternalReference(externalRef));
+                Assert.Equal(externalRef, storage.NamedLinks.GetExternalReferenceByName("ExternalName"));
+
+                // Act: remove the name for the external reference (do not call links.Delete for external references)
+                storage.NamedLinks.RemoveNameByExternalReference(externalRef);
+
+                // Assert: name is removed
+                Assert.Equal(links.Constants.Null, storage.NamedLinks.GetExternalReferenceByName("ExternalName"));
+                Assert.Null(storage.NamedLinks.GetNameByExternalReference(externalRef));
+            });
+        }
+
         // Helper method to create a test environment with a temporary file
         private static void RunTestWithLinks(Action<ILinks<uint>> testAction)
         {
