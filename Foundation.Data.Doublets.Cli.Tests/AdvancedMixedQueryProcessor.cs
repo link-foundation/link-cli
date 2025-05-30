@@ -832,7 +832,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
                 var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
                 using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
-                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution()); // external references DB for names
+                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution());
                 var namedLinks = storage.NamedLinks;
 
                 // Prepare query: create (child: father mother)
@@ -879,8 +879,8 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             {
                 var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
                 var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
-                using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default).DecorateWithAutomaticUniquenessAndUsagesResolution();
-                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution()); // external references DB for names
+                using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
+                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution());
                 var namedLinks = storage.NamedLinks;
 
                 // Prepare query: create (child: father mother)
@@ -894,7 +894,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
 
                 // Delete the 'child' link
                 var childId = namedLinks.GetExternalReferenceByName("child");
-                namesLinks.Delete(childId);
+                links.Delete(childId);
                 namedLinks.RemoveNameByExternalReference(childId);
 
                 // Assert: 'child' name is removed, 'father' and 'mother' remain
