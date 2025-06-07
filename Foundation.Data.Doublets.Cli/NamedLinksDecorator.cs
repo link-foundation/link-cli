@@ -116,10 +116,14 @@ namespace Foundation.Data.Doublets.Cli
                 var req = restriction == null ? "null" : string.Join(",", restriction);
                 Console.WriteLine($"[Trace] Delete called with restriction: [{req}]");
             }
+            Console.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
             var linkIndex = _links.GetIndex(link: restriction);
+            Console.WriteLine($"[Trace] Debug: Computed linkIndex: {linkIndex}");
             var constants = _links.Constants;
+            Console.WriteLine($"[Trace] Debug: Retrieved constants type: {constants.GetType()}");
             WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
+                Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before==null?"null":string.Join(",", before))}, after={(after==null?"null":string.Join(",", after))}");
                 if (before != null && after == null)
                 {
                     var deletedLinkIndex = _links.GetIndex(link: before);
@@ -134,7 +138,20 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 return handler(before, after);
             };
-            return _links.Delete(restriction, handlerWrapper);
+            Console.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
+            TLinkAddress result;
+            try
+            {
+                // result = _links.Delete(restriction, handlerWrapper);
+                result = _links.Delete(restriction: restriction, handler: handlerWrapper);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Trace] Debug: Exception in underlying delete: {ex}");
+                throw;
+            }
+            Console.WriteLine($"[Trace] Debug: Delete result: {result}");
+            return result;
         }
     }
 }
