@@ -21,8 +21,7 @@ namespace Foundation.Data.Doublets.Cli
             IMinMaxValue<TLinkAddress>
     {
         private readonly bool _tracingEnabled;
-        // In-memory mapping for names to support overwrite and deletion
-        private readonly Dictionary<TLinkAddress, string> _nameMap = new Dictionary<TLinkAddress, string>();
+        // Tracing flag remains; no in-memory mapping needed
         public NamedLinks<TLinkAddress> NamedLinks;
 
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
@@ -58,46 +57,26 @@ namespace Foundation.Data.Doublets.Cli
         public string? GetName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetName called for link: {link}");
-            if (_nameMap.TryGetValue(link, out var cachedName))
-            {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] GetName returning cached mapping: {cachedName}");
-                return cachedName;
-            }
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetName no mapping found for link: {link}");
-            return null;
+            var result = NamedLinks.GetNameByExternalReference(link);
+            if (_tracingEnabled) Console.WriteLine($"[Trace] GetName result: {result}");
+            return result;
         }
 
         public TLinkAddress SetName(TLinkAddress link, string name)
         {   
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
-            // Update in-memory map
-            if (_nameMap.ContainsKey(link))
-            {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Overwriting existing mapping for link: {link}");
-                _nameMap[link] = name;
-            }
-            else
-            {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Adding new mapping for link: {link}");
-                _nameMap.Add(link, name);
-            }
-            return NamedLinks.SetNameForExternalReference(link, name);
+            // Remove any existing name mapping before setting the new one
+            RemoveName(link);
+            var result = NamedLinks.SetNameForExternalReference(link, name);
+            if (_tracingEnabled) Console.WriteLine($"[Trace] SetName result: {result}");
+            return result;
         }
 
         public void RemoveName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");
-            // Remove from in-memory map
-            if (_nameMap.Remove(link) && _tracingEnabled)
-            {
-                Console.WriteLine($"[Trace] RemoveName removed mapping for link: {link}");
-            }
-            else if (_tracingEnabled)
-            {
-                Console.WriteLine($"[Trace] RemoveName found no mapping to remove for link: {link}");
-            }
-            // Also delegate to underlying NamedLinks for persistence
-            try { NamedLinks.RemoveNameByExternalReference(link); } catch { /* ignore underlying errors */ }
+            NamedLinks.RemoveNameByExternalReference(link);
+            if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName completed for link: {link}");
         }
 
         public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
@@ -132,35 +111,30 @@ namespace Foundation.Data.Doublets.Cli
 
         public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
         {
-            try
+            if (_tracingEnabled)
             {
-                if (_tracingEnabled)
-                {
-                    var req = restriction == null ? "null" : string.Join(",", restriction);
-                    Console.WriteLine($"[Trace] Delete called with restriction: [{req}]");
-                }
-                var linkIndex = _links.GetIndex(link: restriction);
-                // Use a wrapper to handle null handler safely
-                var constants = _links.Constants;
-                WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
-                    handler == null ? constants.Continue : handler(before, after);
-                var result = _links.Delete(restriction, handlerWrapper);
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Delete result: {result}");
-                // Clean up in-memory map for deleted link
-                if (_nameMap.Remove(linkIndex) && _tracingEnabled)
-                {
-                    Console.WriteLine($"[Trace] Delete removed name mapping for link: {linkIndex}");
-                }
-                return result;
+                var req = restriction == null ? "null" : string.Join(",", restriction);
+                Console.WriteLine($"[Trace] Delete called with restriction: [{req}]");
             }
-            catch (Exception ex)
+            var linkIndex = _links.GetIndex(link: restriction);
+            var constants = _links.Constants;
+            WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Delete encountered exception: {ex.Message}");
-                // Clear all mappings to ensure name removal
-                _nameMap.Clear();
-                // Return default value for link since deletion failed
-                return default!;
-            }
+                if (before != null && after == null)
+                {
+                    var deletedLinkIndex = _links.GetIndex(link: before);
+                    if (deletedLinkIndex == linkIndex)
+                    {
+                        RemoveName(deletedLinkIndex);
+                    }
+                }
+                if (handler == null)
+                {
+                    return constants.Continue;
+                }
+                return handler(before, after);
+            };
+            return _links.Delete(restriction, handlerWrapper);
         }
     }
 }
