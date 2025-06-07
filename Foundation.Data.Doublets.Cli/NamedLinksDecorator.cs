@@ -27,7 +27,8 @@ namespace Foundation.Data.Doublets.Cli
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
-            return links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            return links;
+            // return links.DecorateWithAutomaticUniquenessAndUsagesResolution();
         }
 
         public static string MakeNamesDatabaseFilename(string databaseFilename)
@@ -143,6 +144,7 @@ namespace Foundation.Data.Doublets.Cli
             try
             {
                 // result = _links.Delete(restriction, handlerWrapper);
+                // _links.EnforceResetValues(linkIndex); this might be a reason for null reference exception
                 result = _links.Delete(restriction: restriction, handler: handlerWrapper);
             }
             catch (Exception ex)

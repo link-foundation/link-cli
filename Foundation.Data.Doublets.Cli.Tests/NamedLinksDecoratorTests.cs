@@ -163,8 +163,9 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 string name = "toDelete";
                 decorator.SetName(link, name);
                 Assert.Equal(name, decorator.GetName(link));
-                var restriction = new List<uint> { source, target };
-                decorator.Delete(restriction, null);
+                // var any = decorator.Constants.Any;
+                // var restriction = new List<uint> { link, any, any };
+                decorator.Delete(link, null);
                 Assert.Null(decorator.GetName(link));
             }
             finally
