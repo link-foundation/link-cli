@@ -22,13 +22,13 @@ namespace Foundation.Data.Doublets.Cli
     {
         private readonly bool _tracingEnabled;
         // Tracing flag remains; no in-memory mapping needed
-        public NamedLinks<TLinkAddress> NamedLinks;
+        public readonly NamedLinks<TLinkAddress> NamedLinks;
+        public readonly string NamedLinksDatabaseFileName;
 
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
-            return links;
-            // return links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            return links.DecorateWithAutomaticUniquenessAndUsagesResolution();
         }
 
         public static string MakeNamesDatabaseFilename(string databaseFilename)
@@ -48,6 +48,7 @@ namespace Foundation.Data.Doublets.Cli
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
             var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution();
             NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
+            NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
 
         public NamedLinksDecorator(string databaseFilename, bool tracingEnabled = false)
@@ -80,35 +81,35 @@ namespace Foundation.Data.Doublets.Cli
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName completed for link: {link}");
         }
 
-        public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
-        {
-            if (_tracingEnabled)
-            {
-                var req = restriction == null ? "null" : string.Join(",", restriction);
-                Console.WriteLine($"[Trace] Update called with restriction: [{req}]");
-            }
-            var linkIndex = _links.GetIndex(link: restriction);
-            var constants = _links.Constants;
-            WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
-            {
-                if (before != null && after == null)
-                {
-                    var deletedLinkIndex = _links.GetIndex(link: before);
-                    if (deletedLinkIndex == linkIndex)
-                    {
-                        RemoveName(deletedLinkIndex);
-                    }
-                }
-                if (handler == null)
-                {
-                    return constants.Continue;
-                }
-                return handler(before, after);
-            };
-            var result = _links.Delete(restriction, handlerWrapper);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Update result: {result}");
-            return result;
-        }
+        // public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
+        // {
+        //     if (_tracingEnabled)
+        //     {
+        //         var req = restriction == null ? "null" : string.Join(",", restriction);
+        //         Console.WriteLine($"[Trace] Update called with restriction: [{req}]");
+        //     }
+        //     var linkIndex = _links.GetIndex(link: restriction);
+        //     var constants = _links.Constants;
+        //     WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+        //     {
+        //         if (before != null && after == null)
+        //         {
+        //             var deletedLinkIndex = _links.GetIndex(link: before);
+        //             if (deletedLinkIndex == linkIndex)
+        //             {
+        //                 RemoveName(deletedLinkIndex);
+        //             }
+        //         }
+        //         if (handler == null)
+        //         {
+        //             return constants.Continue;
+        //         }
+        //         return handler(before, after);
+        //     };
+        //     var result = _links.Delete(restriction, handlerWrapper);
+        //     if (_tracingEnabled) Console.WriteLine($"[Trace] Update result: {result}");
+        //     return result;
+        // }
 
         public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
         {
@@ -143,8 +144,6 @@ namespace Foundation.Data.Doublets.Cli
             TLinkAddress result;
             try
             {
-                // result = _links.Delete(restriction, handlerWrapper);
-                // _links.EnforceResetValues(linkIndex); this might be a reason for null reference exception
                 result = _links.Delete(restriction: restriction, handler: handlerWrapper);
             }
             catch (Exception ex)

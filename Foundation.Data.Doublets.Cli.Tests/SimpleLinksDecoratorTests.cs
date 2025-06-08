@@ -48,5 +48,43 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
             }
         }
+
+        [Fact]
+        public void DeleteAfterGetOrCreate_DoesNotThrow()
+        {
+            var tempDbFile = Path.GetTempFileName();
+            try
+            {
+                var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
+                var source = 1u;
+                var target = 1u;
+                var link = decorator.GetOrCreate(source, target);
+                var restriction = new Link<uint>(link, source, target);
+                decorator.Delete(restriction, null);
+            }
+            finally
+            {
+                if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+            }
+        }
+
+        [Fact]
+        public void DeleteAfterGetOrCreate_DoesNotThrow_WithTracing()
+        {
+            var tempDbFile = Path.GetTempFileName();
+            var decorator = new SimpleLinksDecorator<uint>(tempDbFile, true);
+            try {
+                var source = 1u;
+                var target = 1u;
+                var link = decorator.GetOrCreate(source, target);
+                var restriction = new Link<uint>(link, source, target);
+                decorator.Delete(restriction, null);
+            }
+            finally
+            {
+                if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+                if (File.Exists(decorator.NamedLinksDatabaseFileName)) File.Delete(decorator.NamedLinksDatabaseFileName);
+            }
+        }
     }
 } 

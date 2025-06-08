@@ -153,25 +153,23 @@ namespace Foundation.Data.Doublets.Cli.Tests
         public void DeleteLink_RemovesNameAutomatically()
         {
             var tempDbFile = Path.GetTempFileName();
-            var expectedNamesDb = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
+            var decorator = new NamedLinksDecorator<uint>(tempDbFile, true);
             try
             {
-                var decorator = new NamedLinksDecorator<uint>(tempDbFile, true);
-                var source = 30u;
-                var target = 40u;
+                var source = 1u;
+                var target = 1u;
                 var link = decorator.GetOrCreate(source, target);
                 string name = "toDelete";
                 decorator.SetName(link, name);
                 Assert.Equal(name, decorator.GetName(link));
-                // var any = decorator.Constants.Any;
-                // var restriction = new List<uint> { link, any, any };
+                var restriction = new Link<uint>(link, source, target);
                 decorator.Delete(link, null);
                 Assert.Null(decorator.GetName(link));
             }
             finally
             {
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
-                if (File.Exists(expectedNamesDb)) File.Delete(expectedNamesDb);
+                if (File.Exists(decorator.NamedLinksDatabaseFileName)) File.Delete(decorator.NamedLinksDatabaseFileName);
             }
         }
     }
