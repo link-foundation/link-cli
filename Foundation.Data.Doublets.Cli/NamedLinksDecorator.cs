@@ -65,7 +65,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         public TLinkAddress SetName(TLinkAddress link, string name)
-        {   
+        {
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
             // Remove any existing name mapping before setting the new one
             RemoveName(link);
@@ -81,77 +81,49 @@ namespace Foundation.Data.Doublets.Cli
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName completed for link: {link}");
         }
 
-        // public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
-        // {
-        //     if (_tracingEnabled)
-        //     {
-        //         var req = restriction == null ? "null" : string.Join(",", restriction);
-        //         Console.WriteLine($"[Trace] Update called with restriction: [{req}]");
-        //     }
-        //     var linkIndex = _links.GetIndex(link: restriction);
-        //     var constants = _links.Constants;
-        //     WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
-        //     {
-        //         if (before != null && after == null)
-        //         {
-        //             var deletedLinkIndex = _links.GetIndex(link: before);
-        //             if (deletedLinkIndex == linkIndex)
-        //             {
-        //                 RemoveName(deletedLinkIndex);
-        //             }
-        //         }
-        //         if (handler == null)
-        //         {
-        //             return constants.Continue;
-        //         }
-        //         return handler(before, after);
-        //     };
-        //     var result = _links.Delete(restriction, handlerWrapper);
-        //     if (_tracingEnabled) Console.WriteLine($"[Trace] Update result: {result}");
-        //     return result;
-        // }
+        public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
+        {
+            if (_tracingEnabled)
+            {
+                var req = restriction == null ? "null" : string.Join(",", restriction);
+                Console.WriteLine($"[Trace] Update called with restriction: [{req}]");
+            }
+            var @continue = _links.Constants.Continue;
+            var result = _links.Update(restriction, substitution, (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+            {
+                if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
+                if (before != null && after == null)
+                {
+                    var deletedLinkIndex = _links.GetIndex(link: before);
+                    RemoveName(deletedLinkIndex);
+                }
+                return handler == null ? @continue : handler(before, after);
+            });
+            if (_tracingEnabled) Console.WriteLine($"[Trace] Update result: {result}");
+            return result;
+        }
 
         public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
         {
             if (_tracingEnabled)
             {
-                var req = restriction == null ? "null" : string.Join(",", restriction);
-                Console.WriteLine($"[Trace] Delete called with restriction: [{req}]");
+                var formattedRestriction = restriction == null ? "null" : string.Join(",", restriction);
+                Console.WriteLine($"[Trace] Delete called with restriction: [{formattedRestriction}]");
             }
-            Console.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
-            var linkIndex = _links.GetIndex(link: restriction);
-            Console.WriteLine($"[Trace] Debug: Computed linkIndex: {linkIndex}");
-            var constants = _links.Constants;
-            Console.WriteLine($"[Trace] Debug: Retrieved constants type: {constants.GetType()}");
-            WriteHandler<TLinkAddress> handlerWrapper = (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
+            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
+            var @continue = _links.Constants.Continue;
+            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
+            TLinkAddress result = _links.Delete(restriction, (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
-                Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before==null?"null":string.Join(",", before))}, after={(after==null?"null":string.Join(",", after))}");
+                if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
                 if (before != null && after == null)
                 {
                     var deletedLinkIndex = _links.GetIndex(link: before);
-                    if (deletedLinkIndex == linkIndex)
-                    {
-                        RemoveName(deletedLinkIndex);
-                    }
+                    RemoveName(deletedLinkIndex);
                 }
-                if (handler == null)
-                {
-                    return constants.Continue;
-                }
-                return handler(before, after);
-            };
-            Console.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
-            TLinkAddress result;
-            try
-            {
-                result = _links.Delete(restriction: restriction, handler: handlerWrapper);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Trace] Debug: Exception in underlying delete: {ex}");
-                throw;
-            }
-            Console.WriteLine($"[Trace] Debug: Delete result: {result}");
+                return handler == null ? @continue : handler(before, after);
+            });
+            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: Delete result: {result}");
             return result;
         }
     }
