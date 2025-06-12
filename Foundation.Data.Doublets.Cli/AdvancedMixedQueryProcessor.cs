@@ -271,50 +271,7 @@ namespace Foundation.Data.Doublets.Cli
 
             if (lino.Values == null || lino.Values.Count == 0)
             {
-                if (string.IsNullOrEmpty(lino.Id))
-                {
-                    TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with empty ID => returning ANY.");
-                    return anyConstant;
-                }
-                if (lino.Id == "*")
-                {
-                    TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with '*' => returning ANY.");
-                    return anyConstant;
-                }
-                if (uint.TryParse(lino.Id, out uint parsedNumber))
-                {
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
-                    return parsedNumber;
-                }
-                // If not numeric and not '*', treat as a named entity: create a new link and set its name
-                var existingId = links.GetByName(lino.Id);
-                if (existingId != links.Constants.Null)
-                {
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{lino.Id}' => ID={existingId}");
-                    return existingId;
-                }
-                // Create a new link for the named entity with null source and target
-                var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new link with ID={newId}");
-                
-                // Set the name for the new link
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newId}, '{lino.Id}')");
-                links.SetName(newId, lino.Id);
-
-                // Update the link to be self-referential using the correct update pattern
-                // First create a restriction that matches exactly the link we want to update
-                var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
-                // Then create a substitution that specifies the new source and target
-                var substitution = new DoubletLink(newId, newId, newId);
-                
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newId} to be self-referential");
-                links.Update(restriction, substitution, (before, after) => {
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}");
-                    return links.Constants.Continue;
-                });
-
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{lino.Id}' => ID={newId}");
-                return newId;
+                return ResolveLeaf(lino, links, options);
             }
 
             // If 2 Values => interpret as a composite link
@@ -1192,6 +1149,47 @@ namespace Foundation.Data.Doublets.Cli
                 default:
                     throw new InvalidOperationException($"Unhandled composite case {caseType}");
             }
+        }
+
+        private static uint ResolveLeaf(LinoLink lino, NamedLinksDecorator<uint> links, Options options)
+        {
+            var nullConstant = links.Constants.Null;
+            var anyConstant = links.Constants.Any;
+
+            if (string.IsNullOrEmpty(lino.Id))
+            {
+                TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with empty ID => returning ANY.");
+                return anyConstant;
+            }
+            if (lino.Id == "*")
+            {
+                TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with '*' => returning ANY.");
+                return anyConstant;
+            }
+            if (uint.TryParse(lino.Id, out uint parsedNumber))
+            {
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
+                return parsedNumber;
+            }
+            var existingId = links.GetByName(lino.Id);
+            if (existingId != links.Constants.Null)
+            {
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{lino.Id}' => ID={existingId}");
+                return existingId;
+            }
+            var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new link with ID={newId}");
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newId}, '{lino.Id}')");
+            links.SetName(newId, lino.Id);
+            var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
+            var substitution = new DoubletLink(newId, newId, newId);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newId} to be self-referential");
+            links.Update(restriction, substitution, (before, after) => {
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}");
+                return links.Constants.Continue;
+            });
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{lino.Id}' => ID={newId}");
+            return newId;
         }
     }
 }
