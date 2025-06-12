@@ -268,35 +268,6 @@ namespace Foundation.Data.Doublets.Cli
             {
                 var left = lino.Values[0];
                 var right = lino.Values[1];
-
-                // Mirrored mixed composite: (name: other name)
-                if (left.Id != lino.Id && right.Id == lino.Id)
-                {
-                    var existing = links.GetByName(lino.Id);
-                    if (existing != links.Constants.Null) return existing;
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Creating mirrored composite '{lino.Id}'");
-                    var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-                    links.SetName(newId, lino.Id);
-                    var sourceId = EnsureNestedLinkCreatedRecursively(links, left, options);
-                    var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
-                    var substitution = new DoubletLink(newId, sourceId, newId);
-                    links.Update(restriction, substitution, (b, a) => { TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Mirrored update: before={b}, after={a}"); return links.Constants.Continue; });
-                    return newId;
-                }
-                // Mixed composite: (name: name other)
-                if (left.Id == lino.Id && right.Id != lino.Id)
-                {
-                    var existing = links.GetByName(lino.Id);
-                    if (existing != links.Constants.Null) return existing;
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Creating mixed composite '{lino.Id}'");
-                    var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-                    links.SetName(newId, lino.Id);
-                    var targetId = EnsureNestedLinkCreatedRecursively(links, right, options);
-                    var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
-                    var substitution = new DoubletLink(newId, newId, targetId);
-                    links.Update(restriction, substitution, (b, a) => { TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Mixed update: before={b}, after={a}"); return links.Constants.Continue; });
-                    return newId;
-                }
                 // Self-referential: (name: name name)
                 if (left.Id == lino.Id && right.Id == lino.Id)
                 {
@@ -316,6 +287,23 @@ namespace Foundation.Data.Doublets.Cli
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Setting name for link '{lino.Id}' => ID={newId}");
                     links.SetName(newId, lino.Id);
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{lino.Id}' => ID={newId}");
+                    return newId;
+                }
+                // Mixed composite: one child equals root (handles both left and mirrored cases)
+                else if (left.Id == lino.Id || right.Id == lino.Id)
+                {
+                    var existing = links.GetByName(lino.Id);
+                    if (existing != links.Constants.Null) return existing;
+                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Creating mixed composite '{lino.Id}'");
+                    var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
+                    links.SetName(newId, lino.Id);
+                    var other = left.Id == lino.Id ? right : left;
+                    var otherId = EnsureNestedLinkCreatedRecursively(links, other, options);
+                    var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
+                    var substitution = left.Id == lino.Id
+                        ? new DoubletLink(newId, newId, otherId)
+                        : new DoubletLink(newId, otherId, newId);
+                    links.Update(restriction, substitution, (b, a) => { TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Mixed update: before={b}, after={a}"); return links.Constants.Continue; });
                     return newId;
                 }
             }
