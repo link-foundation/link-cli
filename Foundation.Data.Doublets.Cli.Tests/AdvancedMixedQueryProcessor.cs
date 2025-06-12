@@ -1149,36 +1149,109 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     [Fact]
     public void CreateNamedLinkWithStringId_ShouldCreateSingleLink()
     {
-        RunTestWithLinks(links =>
-        {
-            var options = new Options { Query = "(() ((link: link link)))", Trace = true };
-            ProcessQuery(links, options);
-            var allLinks = GetAllLinks(links);
-            // This should only create a single named link with string id 'link'
-            Assert.Single(allLinks);
-            var linkId = links.GetByName("link");
-            Assert.NotEqual(links.Constants.Null, linkId);
-            var link = allLinks.First();
-            Assert.Equal(linkId, link.Index);
-            Assert.Equal(linkId, link.Source);
-            Assert.Equal(linkId, link.Target);
-            Assert.Equal("link", links.GetName(linkId));
-        }, enableTracing: true);
+      RunTestWithLinks(links =>
+      {
+        var options = new Options { Query = "(() ((link: link link)))", Trace = true };
+        ProcessQuery(links, options);
+        var allLinks = GetAllLinks(links);
+        // This should only create a single named link with string id 'link'
+        Assert.Single(allLinks);
+        var linkId = links.GetByName("link");
+        Assert.NotEqual(links.Constants.Null, linkId);
+        var link = allLinks.First();
+        Assert.Equal(linkId, link.Index);
+        Assert.Equal(linkId, link.Source);
+        Assert.Equal(linkId, link.Target);
+        Assert.Equal("link", links.GetName(linkId));
+      }, enableTracing: true);
     }
 
     [Fact]
     public void CreateLinkWithIntegerId_ShouldCreateSingleLink()
     {
-        RunTestWithLinks(links =>
-        {
-            ProcessQuery(links, "(() ((1: 1 1)))");
-            var allLinks = GetAllLinks(links);
-            Assert.Single(allLinks);
-            var link = allLinks.First();
-            Assert.Equal(1u, link.Index);
-            Assert.Equal(1u, link.Source);
-            Assert.Equal(1u, link.Target);
-        });
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((1: 1 1)))");
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        var link = allLinks.First();
+        Assert.Equal(1u, link.Index);
+        Assert.Equal(1u, link.Source);
+        Assert.Equal(1u, link.Target);
+      });
+    }
+
+    [Fact]
+    public void CreateLeftCompositeIntegerChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQuery(links, "(() ((2: 2 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+        [Fact]
+    public void CreateRightCompositeIntegerChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQuery(links, "(() ((2: 1 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 1, 2);
+      });
+    }
+
+    [Fact]
+    public void CreateLeftCompositeStringChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((type: type type)))");
+        ProcessQuery(links, "(() ((link: link type)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        // Expect only two links, but extra self-referential named link for 'link' is created indicating a bug.
+        Assert.Equal(2, allLinks.Count);
+        var typeId = links.GetByName("type");
+        var linkId = links.GetByName("link");
+        AssertLinkExists(allLinks, typeId, typeId, typeId);
+        AssertLinkExists(allLinks, linkId, linkId, typeId);
+      });
+    }
+
+    [Fact]
+    public void CreateRightCompositeStringChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((type: type type)))");
+        ProcessQuery(links, "(() ((link: type link)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        var typeId = links.GetByName("type");
+        var linkId = links.GetByName("link");
+        AssertLinkExists(allLinks, typeId, typeId, typeId);
+        AssertLinkExists(allLinks, linkId, typeId, linkId);
+      });
     }
 
     // Helper methods
