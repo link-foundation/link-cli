@@ -452,6 +452,17 @@ namespace Foundation.Data.Doublets.Cli
         {
             foreach (var (before, after) in operations)
             {
+                TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Operation: before=({before.Index}:{before.Source}->{before.Target}), after=({after.Index}:{after.Source}->{after.Target})");
+                if (before.Index != 0)
+                {
+                    var beforeName = links.GetName(before.Index);
+                    TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Name for before.Index {before.Index} = '{beforeName}'");
+                }
+                if (after.Index != 0)
+                {
+                    var afterNamePre = links.GetName(after.Index);
+                    TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Name for after.Index {after.Index} = '{afterNamePre}' (pre-op)");
+                }
                 if (before.Index != 0 && after.Index == 0)
                 {
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Deleting link => ID={before.Index}, S={before.Source}, T={before.Target}");
@@ -488,6 +499,11 @@ namespace Foundation.Data.Doublets.Cli
                         TraceIfEnabled(options, $"[ApplyAllPlannedOperations] No changes for link => ID={before.Index} => no-op.");
                         options.ChangesHandler?.Invoke(before, before);
                     }
+                }
+                if (after.Index != 0)
+                {
+                    var afterNamePost = links.GetName(after.Index);
+                    TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Name for after.Index {after.Index} = '{afterNamePost}' (post-op)");
                 }
             }
         }
