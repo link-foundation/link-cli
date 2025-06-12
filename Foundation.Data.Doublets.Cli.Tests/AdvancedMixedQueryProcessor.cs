@@ -876,6 +876,38 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void DeleteNamedLinkTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        ProcessQuery(links, "(((*:)) ())");
+
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        Assert.Equal(links.Constants.Null, links.GetByName("father"));
+        Assert.Equal(links.Constants.Null, links.GetByName("mother"));
+      });
+    }
+
+    [Fact]
+    public void DeleteByNamesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Create link by name
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        // Delete link by name
+        ProcessQuery(links, "(((child: father mother)) ())");
+
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("father"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("mother"));
+      });
+    }
+
     // Helper methods
     private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction)
     {

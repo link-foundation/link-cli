@@ -709,6 +709,15 @@ namespace Foundation.Data.Doublets.Cli
             {
                 return anyVal;
             }
+            // Add name resolution for deletion patterns
+            if (links is NamedLinksDecorator<uint> namedLinks)
+            {
+                var namedId = namedLinks.GetByName(identifier);
+                if (namedId != links.Constants.Null)
+                {
+                    return namedId;
+                }
+            }
             return anyVal;
         }
 
@@ -865,7 +874,10 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static void RemoveLinks(ILinks<uint> links, DoubletLink restriction, Options options)
+        private static void RemoveLinks(
+            ILinks<uint> links,
+            DoubletLink restriction,
+            Options options)
         {
             var linksToRemove = links.All(restriction)
                                      .Where(l => l != null)
@@ -879,6 +891,11 @@ namespace Foundation.Data.Doublets.Cli
             {
                 if (links.Exists(link.Index))
                 {
+                    // If we have named links, remove the name before deleting
+                    if (links is NamedLinksDecorator<uint> namedLinks)
+                    {
+                        namedLinks.RemoveName(link.Index);
+                    }
                     TraceIfEnabled(options, $"[RemoveLinks] Deleting link => ID={link.Index}, S={link.Source}, T={link.Target}");
                     links.Delete(link, (before, after) =>
                         options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
