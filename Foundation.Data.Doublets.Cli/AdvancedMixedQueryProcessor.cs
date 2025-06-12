@@ -263,29 +263,10 @@ namespace Foundation.Data.Doublets.Cli
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
-            // Special case: composites with string IDs
-            if (!string.IsNullOrEmpty(lino.Id) && lino.Values != null && lino.Values.Count == 2 && !IsNumericOrStar(lino.Id))
+            // Handle string-based two-child composites
+            if (TryGetTwoChildCompositePattern(lino, out var name, out var left, out var right) && !IsNumericOrStar(name))
             {
-                var left = lino.Values[0];
-                var right = lino.Values[1];
-                // Self-referential: (name: name name)
-                if (left.Id == lino.Id && right.Id == lino.Id)
-                {
-                    var id = EnsureNamedLeafLink(links, lino.Id, options);
-                    ApplyCompositeUpdate(links, id, id, id, options);
-                    return id;
-                }
-                // Mixed composite (handles both mirrored and standard cases)
-                if (left.Id == lino.Id || right.Id == lino.Id)
-                {
-                    var id = EnsureNamedLeafLink(links, lino.Id, options);
-                    var other = left.Id == lino.Id ? right : left;
-                    var otherId = EnsureNestedLinkCreatedRecursively(links, other, options);
-                    var source = left.Id == lino.Id ? id : otherId;
-                    var target = left.Id == lino.Id ? otherId : id;
-                    ApplyCompositeUpdate(links, id, source, target, options);
-                    return id;
-                }
+                return HandleStringComposite(name, left, right, links, options);
             }
 
             if (lino.Values == null || lino.Values.Count == 0)
@@ -1162,6 +1143,61 @@ namespace Foundation.Data.Doublets.Cli
                 TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}");
                 return links.Constants.Continue;
             });
+        }
+
+        // Helper to detect two-child composites and extract sub-values
+        private static bool TryGetTwoChildCompositePattern(LinoLink lino, out string name, out LinoLink left, out LinoLink right)
+        {
+            name = lino.Id ?? "";
+            left = default!;
+            right = default!;
+            if (!string.IsNullOrEmpty(name) && lino.Values != null && lino.Values.Count == 2)
+            {
+                left = lino.Values[0];
+                right = lino.Values[1];
+                // Only handle cases where one or both children match the composite name
+                if (left.Id == name || right.Id == name)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private enum CompositeCase { Self, LeftMix, RightMix }
+
+        private static CompositeCase ClassifyCompositeCase(string name, LinoLink left, LinoLink right)
+        {
+            if (left.Id == name && right.Id == name) return CompositeCase.Self;
+            if (left.Id == name && right.Id != name) return CompositeCase.LeftMix;
+            if (left.Id != name && right.Id == name) return CompositeCase.RightMix;
+            throw new InvalidOperationException($"Invalid composite pattern for name '{name}'");
+        }
+
+        private static uint HandleStringComposite(string name, LinoLink left, LinoLink right, NamedLinksDecorator<uint> links, Options options)
+        {
+            var id = EnsureNamedLeafLink(links, name, options);
+            var caseType = ClassifyCompositeCase(name, left, right);
+            switch (caseType)
+            {
+                case CompositeCase.Self:
+                    ApplyCompositeUpdate(links, id, id, id, options);
+                    return id;
+                case CompositeCase.LeftMix:
+                    {
+                        var otherId = EnsureNestedLinkCreatedRecursively(links, right, options);
+                        ApplyCompositeUpdate(links, id, id, otherId, options);
+                        return id;
+                    }
+                case CompositeCase.RightMix:
+                    {
+                        var otherId = EnsureNestedLinkCreatedRecursively(links, left, options);
+                        ApplyCompositeUpdate(links, id, otherId, id, options);
+                        return id;
+                    }
+                default:
+                    throw new InvalidOperationException($"Unhandled composite case {caseType}");
+            }
         }
     }
 }
