@@ -1146,6 +1146,40 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void CreateNamedLinkWithStringId_ShouldCreateSingleLink()
+    {
+        RunTestWithLinks(links =>
+        {
+            ProcessQuery(links, "(() ((link: link link)))");
+            var allLinks = GetAllLinks(links);
+            // This should only create a single named link with string id 'link'
+            Assert.Single(allLinks);
+            var linkId = links.GetByName("link");
+            Assert.NotEqual(links.Constants.Null, linkId);
+            var link = allLinks.First();
+            Assert.Equal(linkId, link.Index);
+            Assert.Equal(linkId, link.Source);
+            Assert.Equal(linkId, link.Target);
+            Assert.Equal("link", links.GetName(linkId));
+        });
+    }
+
+    [Fact]
+    public void CreateLinkWithIntegerId_ShouldCreateSingleLink()
+    {
+        RunTestWithLinks(links =>
+        {
+            ProcessQuery(links, "(() ((1: 1 1)))");
+            var allLinks = GetAllLinks(links);
+            Assert.Single(allLinks);
+            var link = allLinks.First();
+            Assert.Equal(1u, link.Index);
+            Assert.Equal(1u, link.Source);
+            Assert.Equal(1u, link.Target);
+        });
+    }
+
     // Helper methods
     private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction, bool enableTracing = false)
     {
