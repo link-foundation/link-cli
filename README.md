@@ -268,3 +268,18 @@ dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()' --
 ```bash
 VERSION=$(awk -F'[<>]' '/<Version>/ {print $3}' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj) && git tag "v$VERSION" && git push origin "v$VERSION"
 ```
+
+## Running a Specific Test with Detailed Output
+
+To run a specific test (e.g., `DeleteAllLinksByIndexTest`) with detailed output, use:
+
+```
+dotnet test --filter "FullyQualifiedName=Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteAllLinksByIndexTest" --logger "console;verbosity=detailed"
+```
+
+This will execute only the specified test and show detailed logs in the console.
+
+**Short version:**
+```
+dotnet test --filter DeleteAllLinksByIndexTest -v n
+```
