@@ -284,12 +284,6 @@ namespace Foundation.Data.Doublets.Cli
                 if (uint.TryParse(lino.Id, out uint parsedNumber))
                 {
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
-                    // Set name if NamedLinks is present and lino.Id is not numeric and not '*'
-                    if (!string.IsNullOrEmpty(lino.Id) && !IsNumericOrStar(lino.Id))
-                    {
-                        TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({parsedNumber}, '{lino.Id}') [numeric parse branch]");
-                        links.SetName(parsedNumber, lino.Id);
-                    }
                     return parsedNumber;
                 }
                 // If not numeric and not '*', treat as a named entity: create a new link and set its name
