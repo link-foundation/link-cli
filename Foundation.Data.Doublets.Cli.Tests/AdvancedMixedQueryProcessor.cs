@@ -1151,7 +1151,8 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     {
         RunTestWithLinks(links =>
         {
-            ProcessQuery(links, "(() ((link: link link)))");
+            var options = new Options { Query = "(() ((link: link link)))", Trace = true };
+            ProcessQuery(links, options);
             var allLinks = GetAllLinks(links);
             // This should only create a single named link with string id 'link'
             Assert.Single(allLinks);
@@ -1162,7 +1163,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             Assert.Equal(linkId, link.Source);
             Assert.Equal(linkId, link.Target);
             Assert.Equal("link", links.GetName(linkId));
-        });
+        }, enableTracing: true);
     }
 
     [Fact]
@@ -1219,7 +1220,9 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     {
       var any = links.Constants.Any;
       var query = new DoubletLink(index: any, source: any, target: any);
-      return links.All(query).Select(doublet => new DoubletLink(doublet)).ToList();
+      var allLinks = links.All(query).Select(doublet => new DoubletLink(doublet)).ToList();
+      Console.WriteLine($"[Test] All links: {string.Join(" ", allLinks)}");
+      return allLinks;
     }
 
     private static void AssertLinkExists(List<DoubletLink> allLinks, uint index, uint source, uint target)
