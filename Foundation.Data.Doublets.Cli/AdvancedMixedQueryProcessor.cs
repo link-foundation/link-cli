@@ -285,36 +285,33 @@ namespace Foundation.Data.Doublets.Cli
                     }
                     return parsedNumber;
                 }
+                
                 // If not numeric and not '*', treat as a named entity: create a new link and set its name
+                var existingId = links.GetByName(lino.Id);
+                if (existingId != links.Constants.Null)
                 {
-                    var existingId = links.GetByName(lino.Id);
-                    if (existingId != links.Constants.Null)
-                    {
-                        TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{lino.Id}' => ID={existingId}");
-                        return existingId;
-                    }
-                    
-                    // fallback: try to create a new link and set name
-                    uint fallbackId = 0;
-                    links.CreateAndUpdate(links.Constants.Null, links.Constants.Null, (before, after) =>
-                    {
-                        var afterLink = new DoubletLink(after);
-                        if (fallbackId == 0 && afterLink.Index != 0 && afterLink.Index != links.Constants.Any)
-                        {
-                            fallbackId = afterLink.Index;
-                        }
-                        return links.Constants.Continue;
-                    });
-                    if (fallbackId == 0 || fallbackId == links.Constants.Any)
-                    {
-                        fallbackId = links.SearchOrDefault(links.Constants.Null, links.Constants.Null);
-                    }
-                    links.SetName(fallbackId, lino.Id);
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new named leaf '{lino.Id}' => ID={fallbackId}");
-                    return fallbackId;
+                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{lino.Id}' => ID={existingId}");
+                    return existingId;
                 }
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf with unparseable and no NamedLinks => returning ANY.");
-                return anyConstant;
+
+                // fallback: try to create a new link and set name
+                uint fallbackId = 0;
+                links.CreateAndUpdate(links.Constants.Null, links.Constants.Null, (before, after) =>
+                {
+                    var afterLink = new DoubletLink(after);
+                    if (fallbackId == 0 && afterLink.Index != 0 && afterLink.Index != links.Constants.Any)
+                    {
+                        fallbackId = afterLink.Index;
+                    }
+                    return links.Constants.Continue;
+                });
+                if (fallbackId == 0 || fallbackId == links.Constants.Any)
+                {
+                    fallbackId = links.SearchOrDefault(links.Constants.Null, links.Constants.Null);
+                }
+                links.SetName(fallbackId, lino.Id);
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new named leaf '{lino.Id}' => ID={fallbackId}");
+                return fallbackId;
             }
 
             // If 2 Values => interpret as a composite link
@@ -527,7 +524,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static bool AreSolutionsCompatible(
-            Dictionary<string, uint> existingSolution, 
+            Dictionary<string, uint> existingSolution,
             Dictionary<string, uint> newAssignments)
         {
             foreach (var assignment in newAssignments)
@@ -591,7 +588,7 @@ namespace Foundation.Data.Doublets.Cli
                 foreach (var raw in allLinks)
                 {
                     var candidateLink = new DoubletLink(raw);
-                    if (!CheckIdMatch(links, pattern.Index, candidateLink.Index, currentSolution)) 
+                    if (!CheckIdMatch(links, pattern.Index, candidateLink.Index, currentSolution))
                         continue;
 
                     var sourceMatches = RecursiveMatchSubPattern(links, pattern.Source, candidateLink.Source, currentSolution);
@@ -654,9 +651,9 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static bool CheckIdMatch(
-            ILinks<uint> links, 
-            string patternId, 
-            uint candidateId, 
+            ILinks<uint> links,
+            string patternId,
+            uint candidateId,
             Dictionary<string, uint> currentSolution)
         {
             if (string.IsNullOrEmpty(patternId)) return true;
