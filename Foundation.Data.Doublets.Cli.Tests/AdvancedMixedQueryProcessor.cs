@@ -853,6 +853,77 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     }
 
     [Fact]
+    public void CreateTwoNamedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        Console.WriteLine("[Test] Starting UpdateNamedLinkNameTest");
+        
+        // Create initial link: (child: father mother)
+        Console.WriteLine("[Test] Step 1: Creating initial link");
+        var createOptions = new Options { Query = "(() ((child: father mother)))", Trace = true };
+        ProcessQuery(links, createOptions);
+        Console.WriteLine("[Test] Initial link creation completed");
+
+        // Verify initial state
+        Console.WriteLine("[Test] Step 2: Verifying initial state");
+        var initialChildId = links.GetByName("child");
+        Console.WriteLine($"[Test] Initial child ID: {initialChildId}");
+        var initialFatherId = links.GetByName("father");
+        Console.WriteLine($"[Test] Initial father ID: {initialFatherId}");
+        var initialMotherId = links.GetByName("mother");
+        Console.WriteLine($"[Test] Initial mother ID: {initialMotherId}");
+        
+        Assert.NotEqual(links.Constants.Null, initialChildId);
+        Assert.NotEqual(links.Constants.Null, initialFatherId);
+        Assert.NotEqual(links.Constants.Null, initialMotherId);
+
+        var initialLinks = GetAllLinks(links);
+        Console.WriteLine($"[Test] Initial links count: {initialLinks.Count}");
+        var initialChildLink = initialLinks.First(l => l.Index == initialChildId);
+        Assert.Equal(initialFatherId, initialChildLink.Source);
+        Assert.Equal(initialMotherId, initialChildLink.Target);
+        Console.WriteLine("[Test] Initial state verification completed");
+
+        // Update child link to be named "son" instead
+        Console.WriteLine("[Test] Step 3: Updating link name");
+        // First, let's try to remove the old name
+        Console.WriteLine("[Test] Removing old name 'child'");
+        links.RemoveName(initialChildId);
+        Console.WriteLine("[Test] Old name removed");
+        
+        // Then create the new link with the new name
+        Console.WriteLine("[Test] Creating new link with name 'son'");
+        var updateOptions = new Options { Query = "(() ((son: father mother)))", Trace = true };
+        ProcessQuery(links, updateOptions);
+        Console.WriteLine("[Test] New link creation completed");
+
+        // Verify final state
+        Console.WriteLine("[Test] Step 4: Verifying final state");
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        var finalSonId = links.GetByName("son");
+        Console.WriteLine($"[Test] Final son ID: {finalSonId}");
+        var finalFatherId = links.GetByName("father");
+        Console.WriteLine($"[Test] Final father ID: {finalFatherId}");
+        var finalMotherId = links.GetByName("mother");
+        Console.WriteLine($"[Test] Final mother ID: {finalMotherId}");
+        
+        Assert.NotEqual(links.Constants.Null, finalSonId);
+        Assert.NotEqual(links.Constants.Null, finalFatherId);
+        Assert.NotEqual(links.Constants.Null, finalMotherId);
+
+        var finalLinks = GetAllLinks(links);
+        Console.WriteLine($"[Test] Final links count: {finalLinks.Count}");
+        Assert.Single(finalLinks.Where(l => l.Index == finalSonId));
+        var finalSonLink = finalLinks.First(l => l.Index == finalSonId);
+        Assert.Equal(finalFatherId, finalSonLink.Source);
+        Assert.Equal(finalMotherId, finalSonLink.Target);
+        Console.WriteLine("[Test] Final state verification completed");
+        Console.WriteLine("[Test] UpdateNamedLinkNameTest completed successfully");
+      }, enableTracing: true);
+    }
+
+    [Fact]
     public void DeleteNamedFamilyLinksRemovesNamesTest()
     {
       RunTestWithLinks(links =>
@@ -909,10 +980,10 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     }
 
     // Helper methods
-    private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction)
+    private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction, bool enableTracing = false)
     {
       var tempDbFile = Path.GetTempFileName();
-      var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+      var decorator = new NamedLinksDecorator<uint>(tempDbFile, enableTracing);
       try
       {
         testAction(decorator);
