@@ -926,64 +926,85 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     [Fact(Timeout = 3000)] // 3 second timeout
     public void UpdateNamedLinkNameTest()
     {
+      Console.WriteLine("\n[Test] ===== Starting UpdateNamedLinkNameTest =====");
       RunTestWithLinks(links =>
       {
-        Console.WriteLine("[Test] Starting UpdateNamedLinkNameTest");
-        
-        // Create initial link: (child: father mother)
-        Console.WriteLine("[Test] Step 1: Creating initial link");
-        var createOptions = new Options { Query = "(() ((child: father mother)))", Trace = true };
-        ProcessQuery(links, createOptions);
-        Console.WriteLine("[Test] Initial link creation completed");
+        try 
+        {
+          // Create initial link: (child: father mother)
+          Console.WriteLine("\n[Test] Step 1: Creating initial link");
+          Console.WriteLine("[Test] Query: (() ((child: father mother)))");
+          var createOptions = new Options { Query = "(() ((child: father mother)))", Trace = true };
+          ProcessQuery(links, createOptions);
+          Console.WriteLine("[Test] Initial link creation completed");
 
-        // Verify initial state
-        Console.WriteLine("[Test] Step 2: Verifying initial state");
-        var initialChildId = links.GetByName("child");
-        Console.WriteLine($"[Test] Initial child ID: {initialChildId}");
-        var initialFatherId = links.GetByName("father");
-        Console.WriteLine($"[Test] Initial father ID: {initialFatherId}");
-        var initialMotherId = links.GetByName("mother");
-        Console.WriteLine($"[Test] Initial mother ID: {initialMotherId}");
-        
-        Assert.NotEqual(links.Constants.Null, initialChildId);
-        Assert.NotEqual(links.Constants.Null, initialFatherId);
-        Assert.NotEqual(links.Constants.Null, initialMotherId);
+          // Verify initial state
+          Console.WriteLine("\n[Test] Step 2: Verifying initial state");
+          var initialChildId = links.GetByName("child");
+          Console.WriteLine($"[Test] Initial child ID: {initialChildId}");
+          var initialFatherId = links.GetByName("father");
+          Console.WriteLine($"[Test] Initial father ID: {initialFatherId}");
+          var initialMotherId = links.GetByName("mother");
+          Console.WriteLine($"[Test] Initial mother ID: {initialMotherId}");
+          
+          Assert.NotEqual(links.Constants.Null, initialChildId);
+          Assert.NotEqual(links.Constants.Null, initialFatherId);
+          Assert.NotEqual(links.Constants.Null, initialMotherId);
 
-        var initialLinks = GetAllLinks(links);
-        Console.WriteLine($"[Test] Initial links count: {initialLinks.Count}");
-        var initialChildLink = initialLinks.First(l => l.Index == initialChildId);
-        Assert.Equal(initialFatherId, initialChildLink.Source);
-        Assert.Equal(initialMotherId, initialChildLink.Target);
-        Console.WriteLine("[Test] Initial state verification completed");
+          var initialLinks = GetAllLinks(links);
+          Console.WriteLine($"[Test] Initial links count: {initialLinks.Count}");
+          foreach (var link in initialLinks)
+          {
+            Console.WriteLine($"[Test] Initial link: Index={link.Index}, Source={link.Source}, Target={link.Target}");
+          }
+          var initialChildLink = initialLinks.First(l => l.Index == initialChildId);
+          Assert.Equal(initialFatherId, initialChildLink.Source);
+          Assert.Equal(initialMotherId, initialChildLink.Target);
+          Console.WriteLine("[Test] Initial state verification completed");
 
-        // Update child link to be named "son" instead
-        Console.WriteLine("[Test] Step 3: Updating link name from 'child' to 'son'");
-        var updateOptions = new Options { Query = "(((child: father mother)) ((son: father mother)))", Trace = true };
-        ProcessQuery(links, updateOptions);
-        Console.WriteLine("[Test] Link update completed");
+          // Update child link to be named "son" instead
+          Console.WriteLine("\n[Test] Step 3: Updating link name from 'child' to 'son'");
+          Console.WriteLine("[Test] Query: (((child: father mother)) ((son: father mother)))");
+          var updateOptions = new Options { Query = "(((child: father mother)) ((son: father mother)))", Trace = true };
+          ProcessQuery(links, updateOptions);
+          Console.WriteLine("[Test] Link update completed");
 
-        // Verify final state
-        Console.WriteLine("[Test] Step 4: Verifying final state");
-        Assert.Equal(links.Constants.Null, links.GetByName("child"));
-        var finalSonId = links.GetByName("son");
-        Console.WriteLine($"[Test] Final son ID: {finalSonId}");
-        var finalFatherId = links.GetByName("father");
-        Console.WriteLine($"[Test] Final father ID: {finalFatherId}");
-        var finalMotherId = links.GetByName("mother");
-        Console.WriteLine($"[Test] Final mother ID: {finalMotherId}");
-        
-        Assert.NotEqual(links.Constants.Null, finalSonId);
-        Assert.NotEqual(links.Constants.Null, finalFatherId);
-        Assert.NotEqual(links.Constants.Null, finalMotherId);
+          // Verify final state
+          Console.WriteLine("\n[Test] Step 4: Verifying final state");
+          var childNameAfter = links.GetByName("child");
+          Console.WriteLine($"[Test] Child name lookup after update: {childNameAfter}");
+          Assert.Equal(links.Constants.Null, childNameAfter);
+          
+          var finalSonId = links.GetByName("son");
+          Console.WriteLine($"[Test] Final son ID: {finalSonId}");
+          var finalFatherId = links.GetByName("father");
+          Console.WriteLine($"[Test] Final father ID: {finalFatherId}");
+          var finalMotherId = links.GetByName("mother");
+          Console.WriteLine($"[Test] Final mother ID: {finalMotherId}");
+          
+          Assert.NotEqual(links.Constants.Null, finalSonId);
+          Assert.NotEqual(links.Constants.Null, finalFatherId);
+          Assert.NotEqual(links.Constants.Null, finalMotherId);
 
-        var finalLinks = GetAllLinks(links);
-        Console.WriteLine($"[Test] Final links count: {finalLinks.Count}");
-        Assert.Single(finalLinks.Where(l => l.Index == finalSonId));
-        var finalSonLink = finalLinks.First(l => l.Index == finalSonId);
-        Assert.Equal(finalFatherId, finalSonLink.Source);
-        Assert.Equal(finalMotherId, finalSonLink.Target);
-        Console.WriteLine("[Test] Final state verification completed");
-        Console.WriteLine("[Test] UpdateNamedLinkNameTest completed successfully");
+          var finalLinks = GetAllLinks(links);
+          Console.WriteLine($"[Test] Final links count: {finalLinks.Count}");
+          foreach (var link in finalLinks)
+          {
+            Console.WriteLine($"[Test] Final link: Index={link.Index}, Source={link.Source}, Target={link.Target}");
+          }
+          Assert.Single(finalLinks.Where(l => l.Index == finalSonId));
+          var finalSonLink = finalLinks.First(l => l.Index == finalSonId);
+          Assert.Equal(finalFatherId, finalSonLink.Source);
+          Assert.Equal(finalMotherId, finalSonLink.Target);
+          Console.WriteLine("[Test] Final state verification completed");
+          Console.WriteLine("[Test] ===== UpdateNamedLinkNameTest completed successfully =====\n");
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine($"\n[Test] ERROR in UpdateNamedLinkNameTest: {ex}");
+          Console.WriteLine($"[Test] Stack trace: {ex.StackTrace}");
+          throw;
+        }
       }, enableTracing: true);
     }
 
