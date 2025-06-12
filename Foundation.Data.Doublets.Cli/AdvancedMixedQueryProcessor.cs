@@ -822,8 +822,32 @@ namespace Foundation.Data.Doublets.Cli
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
+            // Wildcard substitution rename: delegate to nested creation with proper naming
+            if (link.Index == anyConstant)
+            {
+                TraceIfEnabled(options, "[CreateOrUpdateLink] Detected wildcard substitution => nested create & name.");
+                var parsed = new Parser().Parse(options.Query ?? string.Empty);
+                if (parsed.Count > 0)
+                {
+                    var outer = parsed[0];
+                    if (outer.Values != null && outer.Values.Count > 1)
+                    {
+                        var substitutionLinoLink = outer.Values[1];
+                        if (substitutionLinoLink.Values != null)
+                        {
+                            foreach (var composite in substitutionLinoLink.Values)
+                            {
+                                EnsureNestedLinkCreatedRecursively(links, composite, options);
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+
             if (link.Index != nullConstant)
             {
+                // update existing link
                 if (!links.Exists(link.Index))
                 {
                     TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} doesn't exist => ensuring creation.");
@@ -855,7 +879,7 @@ namespace Foundation.Data.Doublets.Cli
             }
             else
             {
-                // index=0 => create or retrieve
+                // create new link
                 var found = links.SearchOrDefault(link.Source, link.Target);
                 if (found == default)
                 {
@@ -880,7 +904,6 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 else
                 {
-                    // Already exists
                     TraceIfEnabled(options, $"[CreateOrUpdateLink] Link already found => ID={found}, no changes.");
                     var existingLink = new DoubletLink(found, link.Source, link.Target);
                     options.ChangesHandler?.Invoke(existingLink, existingLink);
