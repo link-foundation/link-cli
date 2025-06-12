@@ -271,40 +271,20 @@ namespace Foundation.Data.Doublets.Cli
                 // Self-referential: (name: name name)
                 if (left.Id == lino.Id && right.Id == lino.Id)
                 {
-                    var existingId = links.GetByName(lino.Id);
-                    if (existingId != links.Constants.Null)
-                    {
-                        TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing self-referential named link '{lino.Id}' => ID={existingId}");
-                        return existingId;
-                    }
-                    var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Base link created => ID={newId}");
-                    var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
-                    var substitution = new DoubletLink(newId, newId, newId);
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newId} to be self-referential");
-                    links.Update(restriction, substitution, (before, after) => { TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}"); return links.Constants.Continue; });
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updated link to be self-referential => ID={newId}");
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Setting name for link '{lino.Id}' => ID={newId}");
-                    links.SetName(newId, lino.Id);
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{lino.Id}' => ID={newId}");
-                    return newId;
+                    var id = EnsureNamedLeafLink(links, lino.Id, options);
+                    ApplyCompositeUpdate(links, id, id, id, options);
+                    return id;
                 }
-                // Mixed composite: one child equals root (handles both left and mirrored cases)
-                else if (left.Id == lino.Id || right.Id == lino.Id)
+                // Mixed composite (handles both mirrored and standard cases)
+                if (left.Id == lino.Id || right.Id == lino.Id)
                 {
-                    var existing = links.GetByName(lino.Id);
-                    if (existing != links.Constants.Null) return existing;
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Creating mixed composite '{lino.Id}'");
-                    var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-                    links.SetName(newId, lino.Id);
+                    var id = EnsureNamedLeafLink(links, lino.Id, options);
                     var other = left.Id == lino.Id ? right : left;
                     var otherId = EnsureNestedLinkCreatedRecursively(links, other, options);
-                    var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
-                    var substitution = left.Id == lino.Id
-                        ? new DoubletLink(newId, newId, otherId)
-                        : new DoubletLink(newId, otherId, newId);
-                    links.Update(restriction, substitution, (b, a) => { TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Mixed update: before={b}, after={a}"); return links.Constants.Continue; });
-                    return newId;
+                    var source = left.Id == lino.Id ? id : otherId;
+                    var target = left.Id == lino.Id ? otherId : id;
+                    ApplyCompositeUpdate(links, id, source, target, options);
+                    return id;
                 }
             }
 
@@ -1158,6 +1138,30 @@ namespace Foundation.Data.Doublets.Cli
             {
                 Console.WriteLine(message);
             }
+        }
+
+        // Consolidates getting or creating a named link (leaf) without setting its relationships
+        private static uint EnsureNamedLeafLink(NamedLinksDecorator<uint> links, string name, Options options)
+        {
+            var existing = links.GetByName(name);
+            if (existing != links.Constants.Null) return existing;
+            var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created named leaf '{name}' => ID={newId}");
+            links.SetName(newId, name);
+            return newId;
+        }
+
+        // Applies a single structural update to an existing link: sets its source and target
+        private static void ApplyCompositeUpdate(NamedLinksDecorator<uint> links, uint id, uint source, uint target, Options options)
+        {
+            var restriction = new DoubletLink(id, links.Constants.Null, links.Constants.Null);
+            var substitution = new DoubletLink(id, source, target);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link ID={id} => Source={source}, Target={target}");
+            links.Update(restriction, substitution, (before, after) =>
+            {
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}");
+                return links.Constants.Continue;
+            });
         }
     }
 }
