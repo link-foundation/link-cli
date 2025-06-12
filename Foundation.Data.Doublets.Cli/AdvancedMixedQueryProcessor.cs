@@ -258,30 +258,30 @@ namespace Foundation.Data.Doublets.Cli
         /// Recursively ensures that a LinoLink (potentially nested) is created. 
         /// Returns the numeric ID or ANY if leaf/unparseable.
         /// </summary>
-        private static uint EnsureNestedLinkCreatedRecursively(NamedLinksDecorator<uint> links, LinoLink lino, Options options)
+        private static uint EnsureNestedLinkCreatedRecursively(NamedLinksDecorator<uint> links, LinoLink linkPattern, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
             // Handle string-based two-child composites
-            if (TryGetTwoChildCompositePattern(lino, out var name, out var left, out var right) && !IsNumericOrStar(name))
+            if (TryGetTwoChildCompositePattern(linkPattern, out var name, out var left, out var right) && !IsNumericOrStar(name))
             {
                 return HandleStringComposite(name, left, right, links, options);
             }
 
-            if (lino.Values == null || lino.Values.Count == 0)
+            if (linkPattern.Values == null || linkPattern.Values.Count == 0)
             {
-                return ResolveLeaf(lino, links, options);
+                return ResolveLeaf(linkPattern, links, options);
             }
 
             // If 2 Values => interpret as a composite link
-            if (lino.Values.Count == 2)
+            if (linkPattern.Values.Count == 2)
             {
-                var sourceId = EnsureNestedLinkCreatedRecursively(links, lino.Values[0], options);
-                var targetId = EnsureNestedLinkCreatedRecursively(links, lino.Values[1], options);
+                var sourceId = EnsureNestedLinkCreatedRecursively(links, linkPattern.Values[0], options);
+                var targetId = EnsureNestedLinkCreatedRecursively(links, linkPattern.Values[1], options);
 
                 // Generic composite creation for numeric or non-matching patterns
-                return CreateCompositeLink(lino.Id, sourceId, targetId, links, options);
+                return CreateCompositeLink(linkPattern.Id, sourceId, targetId, links, options);
             }
 
             // If more than 2 => do nothing special => ANY
@@ -756,13 +756,13 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static void CreateOrUpdateLink(NamedLinksDecorator<uint> links, DoubletLink link, Options options)
+        private static void CreateOrUpdateLink(NamedLinksDecorator<uint> links, DoubletLink linkDefinition, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
             // Wildcard substitution rename: delegate to nested creation with proper naming
-            if (link.Index == anyConstant)
+            if (linkDefinition.Index == anyConstant)
             {
                 TraceIfEnabled(options, "[CreateOrUpdateLink] Detected wildcard substitution => nested create & name.");
                 var parsed = new Parser().Parse(options.Query ?? string.Empty);
@@ -784,67 +784,68 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            if (link.Index != nullConstant)
+            if (linkDefinition.Index != nullConstant)
             {
                 // update existing link
-                if (!links.Exists(link.Index))
+                if (!links.Exists(linkDefinition.Index))
                 {
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} doesn't exist => ensuring creation.");
-                    LinksExtensions.EnsureCreated(links, link.Index);
+                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{linkDefinition.Index} doesn't exist => ensuring creation.");
+                    LinksExtensions.EnsureCreated(links, linkDefinition.Index);
                 }
-                var existingLink = links.GetLink(link.Index);
-                var existingDoublet = new DoubletLink(existingLink);
+                var existingLinkRecord = links.GetLink(linkDefinition.Index);
+                var existingDoublet = new DoubletLink(existingLinkRecord);
 
-                if (existingDoublet.Source != link.Source || existingDoublet.Target != link.Target)
+                if (existingDoublet.Source != linkDefinition.Source || existingDoublet.Target != linkDefinition.Target)
                 {
                     TraceIfEnabled(options,
-                        $"[CreateOrUpdateLink] Updating link #{link.Index}: {existingDoublet.Source}->{link.Source}, {existingDoublet.Target}->{link.Target}.");
-                    LinksExtensions.EnsureCreated(links, link.Index);
+                        $"[CreateOrUpdateLink] Updating link #{linkDefinition.Index}: {existingDoublet.Source}->{linkDefinition.Source}, {existingDoublet.Target}->{linkDefinition.Target}.");
+                    LinksExtensions.EnsureCreated(links, linkDefinition.Index);
                     options.ChangesHandler?.Invoke(
-                        new DoubletLink(link.Index, nullConstant, nullConstant),
-                        new DoubletLink(link.Index, nullConstant, nullConstant)
+                        new DoubletLink(linkDefinition.Index, nullConstant, nullConstant),
+                        new DoubletLink(linkDefinition.Index, nullConstant, nullConstant)
                     );
                     links.Update(
-                        new DoubletLink(link.Index, anyConstant, anyConstant),
-                        link,
-                        (b, a) => options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue
+                        new DoubletLink(linkDefinition.Index, anyConstant, anyConstant),
+                        linkDefinition,
+                        (beforeState, afterState) =>
+                            options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
                     );
                 }
                 else
                 {
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{link.Index} is already S={link.Source}, T={link.Target} => no change.");
+                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{linkDefinition.Index} is already S={linkDefinition.Source}, T={linkDefinition.Target} => no change.");
                     options.ChangesHandler?.Invoke(existingDoublet, existingDoublet);
                 }
             }
             else
             {
                 // create new link
-                var found = links.SearchOrDefault(link.Source, link.Target);
-                if (found == default)
+                var existingLinkIndex = links.SearchOrDefault(linkDefinition.Source, linkDefinition.Target);
+                if (existingLinkIndex == default)
                 {
-                    uint newCreatedId = 0;
+                    uint newLinkIndex = 0;
                     TraceIfEnabled(options,
-                        $"[CreateOrUpdateLink] Creating new link => (S={link.Source},T={link.Target}).");
-                    links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
+                        $"[CreateOrUpdateLink] Creating new link => (S={linkDefinition.Source},T={linkDefinition.Target}).");
+                    links.CreateAndUpdate(linkDefinition.Source, linkDefinition.Target, (beforeState, afterState) =>
                     {
-                        var afterLink = new DoubletLink(after);
-                        if (newCreatedId == 0 && afterLink.Index != 0 && afterLink.Index != anyConstant)
+                        var afterLinkRecord = new DoubletLink(afterState);
+                        if (newLinkIndex == 0 && afterLinkRecord.Index != 0 && afterLinkRecord.Index != anyConstant)
                         {
-                            newCreatedId = afterLink.Index;
-                            TraceIfEnabled(options, $"[CreateOrUpdateLink] => assigned new ID={newCreatedId}");
+                            newLinkIndex = afterLinkRecord.Index;
+                            TraceIfEnabled(options, $"[CreateOrUpdateLink] => assigned new ID={newLinkIndex}");
                         }
-                        return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
+                        return options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue;
                     });
 
-                    if (newCreatedId == 0 || newCreatedId == anyConstant)
+                    if (newLinkIndex == 0 || newLinkIndex == anyConstant)
                     {
-                        newCreatedId = links.SearchOrDefault(link.Source, link.Target);
+                        newLinkIndex = links.SearchOrDefault(linkDefinition.Source, linkDefinition.Target);
                     }
                 }
                 else
                 {
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link already found => ID={found}, no changes.");
-                    var existingLink = new DoubletLink(found, link.Source, link.Target);
+                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link already found => ID={existingLinkIndex}, no changes.");
+                    var existingLink = new DoubletLink(existingLinkIndex, linkDefinition.Source, linkDefinition.Target);
                     options.ChangesHandler?.Invoke(existingLink, existingLink);
                 }
             }
@@ -1058,18 +1059,26 @@ namespace Foundation.Data.Doublets.Cli
             });
         }
 
-        // Helper to detect two-child composites and extract sub-values
-        private static bool TryGetTwoChildCompositePattern(LinoLink lino, out string name, out LinoLink left, out LinoLink right)
+        /// <summary>
+        /// Detects a two-child composite pattern where at least one child matches the composite identifier.
+        /// </summary>
+        private static bool TryGetTwoChildCompositePattern(
+            LinoLink linkPattern,
+            out string compositeIdentifier,
+            out LinoLink leftPattern,
+            out LinoLink rightPattern)
         {
-            name = lino.Id ?? "";
-            left = default!;
-            right = default!;
-            if (!string.IsNullOrEmpty(name) && lino.Values != null && lino.Values.Count == 2)
+            compositeIdentifier = linkPattern.Id ?? string.Empty;
+            leftPattern = default!;
+            rightPattern = default!;
+            if (!string.IsNullOrEmpty(compositeIdentifier)
+                && linkPattern.Values != null
+                && linkPattern.Values.Count == 2)
             {
-                left = lino.Values[0];
-                right = lino.Values[1];
-                // Only handle cases where one or both children match the composite name
-                if (left.Id == name || right.Id == name)
+                leftPattern = linkPattern.Values[0];
+                rightPattern = linkPattern.Values[1];
+                // Only detect composites when one or both children share the identifier
+                if (leftPattern.Id == compositeIdentifier || rightPattern.Id == compositeIdentifier)
                 {
                     return true;
                 }
@@ -1113,74 +1122,88 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static uint ResolveLeaf(LinoLink lino, NamedLinksDecorator<uint> links, Options options)
+        /// <summary>
+        /// Resolves a single leaf pattern into its numeric or named link ID.
+        /// </summary>
+        private static uint ResolveLeaf(LinoLink linkPattern, NamedLinksDecorator<uint> links, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
-            if (string.IsNullOrEmpty(lino.Id))
+            if (string.IsNullOrEmpty(linkPattern.Id))
             {
                 TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with empty ID => returning ANY.");
                 return anyConstant;
             }
-            if (lino.Id == "*")
+            if (linkPattern.Id == "*")
             {
                 TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with '*' => returning ANY.");
                 return anyConstant;
             }
-            if (uint.TryParse(lino.Id, out uint parsedNumber))
+            if (uint.TryParse(linkPattern.Id, out uint parsedNumber))
             {
                 TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
                 return parsedNumber;
             }
-            var existingId = links.GetByName(lino.Id);
+            var existingId = links.GetByName(linkPattern.Id);
             if (existingId != links.Constants.Null)
             {
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{lino.Id}' => ID={existingId}");
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{linkPattern.Id}' => ID={existingId}");
                 return existingId;
             }
-            var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new link with ID={newId}");
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newId}, '{lino.Id}')");
-            links.SetName(newId, lino.Id);
-            var restriction = new DoubletLink(newId, links.Constants.Null, links.Constants.Null);
-            var substitution = new DoubletLink(newId, newId, newId);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newId} to be self-referential");
-            links.Update(restriction, substitution, (before, after) => {
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}");
+            var newLeafId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newLeafId}, '{linkPattern.Id}')");
+            links.SetName(newLeafId, linkPattern.Id);
+            var restriction = new DoubletLink(newLeafId, links.Constants.Null, links.Constants.Null);
+            var substitution = new DoubletLink(newLeafId, newLeafId, newLeafId);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newLeafId} to be self-referential");
+            links.Update(restriction, substitution, (beforeState, afterState) =>
+            {
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={beforeState}, after={afterState}");
                 return links.Constants.Continue;
             });
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{lino.Id}' => ID={newId}");
-            return newId;
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{linkPattern.Id}' => ID={newLeafId}");
+            return newLeafId;
         }
 
-        private static uint CreateCompositeLink(string? id, uint sourceId, uint targetId, NamedLinksDecorator<uint> links, Options options)
+        /// <summary>
+        /// Ensures a composite link exists with the given index or named identifier and child IDs.
+        /// </summary>
+        private static uint CreateCompositeLink(
+            string? literalIdentifier,
+            uint sourceLinkId,
+            uint targetLinkId,
+            NamedLinksDecorator<uint> links,
+            Options options)
         {
-            var anyConstant = links.Constants.Any;
-            uint index = 0;
-            if (!string.IsNullOrEmpty(id))
+            // Determine the numeric index for the composite: default 0, wildcard, or parsed from identifier
+            uint compositeIndex = 0;
+            var wildcardIndex = links.Constants.Any;
+            if (!string.IsNullOrEmpty(literalIdentifier))
             {
-                if (id == "*")
+                if (literalIdentifier == "*")
                 {
-                    index = anyConstant;
+                    compositeIndex = wildcardIndex;
                 }
                 else
                 {
-                    var cleaned = id.Replace(":", "");
-                    if (uint.TryParse(cleaned, out var parsed))
+                    var identifierClean = literalIdentifier.Replace(":", string.Empty);
+                    if (uint.TryParse(identifierClean, out var parsedIndex))
                     {
-                        index = parsed;
+                        compositeIndex = parsedIndex;
                     }
                 }
             }
-            var linkToCreate = new DoubletLink(index, sourceId, targetId);
-            var createdId = EnsureLinkCreated(links, linkToCreate, options);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created/ensured composite => (index={index}, src={sourceId}, trg={targetId}) => actual ID={createdId}");
-            if (!string.IsNullOrEmpty(id) && !IsNumericOrStar(id))
+            // Build the composite link structure and ensure it exists
+            var compositeLinkDefinition = new DoubletLink(compositeIndex, sourceLinkId, targetLinkId);
+            var compositeLinkId = EnsureLinkCreated(links, compositeLinkDefinition, options);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index={compositeIndex}, Source={sourceLinkId}, Target={targetLinkId} => Actual ID={compositeLinkId}");
+            // Assign the name for non-numeric identifiers
+            if (!string.IsNullOrEmpty(literalIdentifier) && !IsNumericOrStar(literalIdentifier))
             {
-                links.SetName(createdId, id);
+                links.SetName(compositeLinkId, literalIdentifier);
             }
-            return createdId;
+            return compositeLinkId;
         }
     }
 }
