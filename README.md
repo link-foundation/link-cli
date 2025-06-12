@@ -3,7 +3,13 @@
 
 It is based on [associative theory](https://habr.com/ru/articles/895896) (also in [ru](https://habr.com/ru/articles/804617)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
-[Short description in English in what links are](https://github.com/linksplatform?view_as=public). And [in Russian](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md).
+It uses C# implementation of [a links data store](https://github.com/linksplatform?view_as=public) (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
+
+This CLI tool can be installed globally as `clink` using single command (that will work if you have [.NET](https://dotnet.microsoft.com/en-us/download) installed):
+
+```bash
+dotnet tool install --global clink
+```
 
 <img width="811" alt="Screenshot 2025-05-16 at 5 48 06 AM" src="https://github.com/user-attachments/assets/615df4ce-658e-4bab-a483-96fae200f106" />
 
@@ -56,14 +62,6 @@ And the update is substitution itself, obviously.
 ```
 
 In that case we have a link with 1-st id on both sides, meaning it is not deleted and not created, it is changed. In this particular example with change the target of the link (its ending) to 2. 2 is ofcourse id of another link. In here we have only links, nothing else.
-
-## Install or update from NuGet
-
-If you have [.NET](https://dotnet.microsoft.com/en-us/download) installed you can install `clink` as a global CLI tool. 
-
-```bash
-dotnet tool install --global clink
-```
 
 ## Create single link
 
