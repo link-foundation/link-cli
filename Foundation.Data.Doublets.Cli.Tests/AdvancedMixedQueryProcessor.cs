@@ -1046,16 +1046,35 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     // Helper methods
     private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction, bool enableTracing = false)
     {
-      var tempDbFile = Path.GetTempFileName();
-      var decorator = new NamedLinksDecorator<uint>(tempDbFile, enableTracing);
+      string tempDbFile = Path.GetTempFileName();
+      NamedLinksDecorator<uint>? decoratedLinks = null;
       try
       {
-        testAction(decorator);
+        decoratedLinks = new NamedLinksDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        var task = Task.Run(() => 
+        {
+          testAction(decoratedLinks);
+        }, cts.Token);
+
+        try 
+        {
+          task.Wait(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+          Console.WriteLine("[Test] Test was cancelled after 3 seconds timeout");
+          throw new TimeoutException("Test exceeded 3 seconds timeout");
+        }
       }
       finally
       {
-        if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
-        if (File.Exists(decorator.NamedLinksDatabaseFileName)) File.Delete(decorator.NamedLinksDatabaseFileName);
+        if (decoratedLinks != null && File.Exists(decoratedLinks.NamedLinksDatabaseFileName))
+        {
+          File.Delete(decoratedLinks.NamedLinksDatabaseFileName);
+        }
+        File.Delete(tempDbFile);
       }
     }
 
