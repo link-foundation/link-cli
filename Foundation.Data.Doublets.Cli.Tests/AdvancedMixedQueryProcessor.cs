@@ -924,7 +924,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
     }
 
-    private static List<DoubletLink> GetAllLinks(ILinks<uint> links)
+    private static List<DoubletLink> GetAllLinks(NamedLinksDecorator<uint> links)
     {
       var any = links.Constants.Any;
       var query = new DoubletLink(index: any, source: any, target: any);

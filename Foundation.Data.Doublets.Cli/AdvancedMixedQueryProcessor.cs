@@ -351,7 +351,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static void RestoreUnexpectedLinkDeletions(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             List<DoubletLink> unexpectedDeletions,
             Dictionary<uint, DoubletLink> finalIntendedStates,
             Options options)
@@ -385,7 +385,7 @@ namespace Foundation.Data.Doublets.Cli
         private static List<(DoubletLink before, DoubletLink after)> DetermineOperationsFromPatterns(
             List<DoubletLink> restrictions,
             List<DoubletLink> substitutions,
-            ILinks<uint> links)
+            NamedLinksDecorator<uint> links)
         {
             var anyOrZero = new HashSet<uint> { 0, links.Constants.Any };
 
@@ -446,7 +446,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static void ApplyAllPlannedOperations(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             List<(DoubletLink before, DoubletLink after)> operations,
             Options options)
         {
@@ -492,7 +492,7 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static List<Dictionary<string, uint>> FindAllSolutions(ILinks<uint> links, List<Pattern> patterns)
+        private static List<Dictionary<string, uint>> FindAllSolutions(NamedLinksDecorator<uint> links, List<Pattern> patterns)
         {
             var partialSolutions = new List<Dictionary<string, uint>> { new Dictionary<string, uint>() };
 
@@ -541,7 +541,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static IEnumerable<Dictionary<string, uint>> MatchPattern(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             Pattern pattern,
             Dictionary<string, uint> currentSolution)
         {
@@ -607,7 +607,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static IEnumerable<Dictionary<string, uint>> RecursiveMatchSubPattern(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             Pattern? pattern,
             uint linkId,
             Dictionary<string, uint> currentSolution)
@@ -651,7 +651,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static bool CheckIdMatch(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             string patternId,
             uint candidateId,
             Dictionary<string, uint> currentSolution)
@@ -691,7 +691,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static uint ResolveId(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             string identifier,
             Dictionary<string, uint> currentSolution)
         {
@@ -710,13 +710,10 @@ namespace Foundation.Data.Doublets.Cli
                 return anyVal;
             }
             // Add name resolution for deletion patterns
-            if (links is NamedLinksDecorator<uint> namedLinks)
+            var namedId = links.GetByName(identifier);
+            if (namedId != links.Constants.Null)
             {
-                var namedId = namedLinks.GetByName(identifier);
-                if (namedId != links.Constants.Null)
-                {
-                    return namedId;
-                }
+                return namedId;
             }
             return anyVal;
         }
@@ -725,7 +722,7 @@ namespace Foundation.Data.Doublets.Cli
             Dictionary<string, uint> solution,
             List<Pattern> restrictions,
             List<Pattern> substitutions,
-            ILinks<uint> links)
+            NamedLinksDecorator<uint> links)
         {
             var substitutedRestrictions = restrictions
                 .Select(r => ApplySolutionToPattern(links, solution, r))
@@ -754,7 +751,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static List<DoubletLink> ExtractMatchedLinks(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             Dictionary<string, uint> solution,
             List<Pattern> patterns)
         {
@@ -775,7 +772,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static DoubletLink? ApplySolutionToPattern(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             Dictionary<string, uint> solution,
             Pattern? pattern)
         {
@@ -804,7 +801,7 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static void CreateOrUpdateLink(ILinks<uint> links, DoubletLink link, Options options)
+        private static void CreateOrUpdateLink(NamedLinksDecorator<uint> links, DoubletLink link, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
@@ -859,6 +856,7 @@ namespace Foundation.Data.Doublets.Cli
                         }
                         return options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
                     });
+
                     if (newCreatedId == 0 || newCreatedId == anyConstant)
                     {
                         newCreatedId = links.SearchOrDefault(link.Source, link.Target);
@@ -875,7 +873,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static void RemoveLinks(
-            ILinks<uint> links,
+            NamedLinksDecorator<uint> links,
             DoubletLink restriction,
             Options options)
         {
@@ -891,11 +889,8 @@ namespace Foundation.Data.Doublets.Cli
             {
                 if (links.Exists(link.Index))
                 {
-                    // If we have named links, remove the name before deleting
-                    if (links is NamedLinksDecorator<uint> namedLinks)
-                    {
-                        namedLinks.RemoveName(link.Index);
-                    }
+                    // Remove the name before deleting
+                    links.RemoveName(link.Index);
                     TraceIfEnabled(options, $"[RemoveLinks] Deleting link => ID={link.Index}, S={link.Source}, T={link.Target}");
                     links.Delete(link, (before, after) =>
                         options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
@@ -903,7 +898,7 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static DoubletLink ConvertToDoubletLink(ILinks<uint> links, LinoLink linoLink, uint defaultValue)
+        private static DoubletLink ConvertToDoubletLink(NamedLinksDecorator<uint> links, LinoLink linoLink, uint defaultValue)
         {
             uint index = defaultValue;
             uint source = defaultValue;
@@ -978,7 +973,7 @@ namespace Foundation.Data.Doublets.Cli
             return new Pattern(lino.Id ?? "");
         }
 
-        private static uint EnsureLinkCreated(ILinks<uint> links, DoubletLink link, Options options)
+        private static uint EnsureLinkCreated(NamedLinksDecorator<uint> links, DoubletLink link, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
