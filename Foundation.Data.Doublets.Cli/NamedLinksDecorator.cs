@@ -74,6 +74,14 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
+        public TLinkAddress GetByName(string name)
+        {
+            if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName called for name: '{name}'");
+            var result = NamedLinks.GetExternalReferenceByName(name);
+            if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName result: {result}");
+            return result;
+        }
+
         public void RemoveName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");

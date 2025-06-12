@@ -82,26 +82,10 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   afterOption
 };
 
-var makeNamesDatabaseFilename = new Func<string, string>((databaseFilename) =>
-{
-  var filenameWithoutExtension = Path.GetFileNameWithoutExtension(databaseFilename);
-  var directory = Path.GetDirectoryName(databaseFilename);
-  var namesDatabaseFilename = Path.Combine(directory ?? defaultDatabaseFilename, $"{filenameWithoutExtension}.names.links");
-  return namesDatabaseFilename;
-});
-
 rootCommand.SetHandler(
   (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
   {
-    using var links = new UnitedMemoryLinks<uint>(db);
-    var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
-
-    var namesDatabaseFilename = makeNamesDatabaseFilename(db);
-    var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
-    var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
-    using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
-    var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution()); // external references DB for names
-    var namedLinks = storage.NamedLinks;
+    var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
 
     // If --structure is provided, handle it separately
     if (structure.HasValue)
@@ -110,7 +94,7 @@ rootCommand.SetHandler(
       try
       {
         var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
-        Console.WriteLine(Namify(namedLinks, structureFormatted));
+        Console.WriteLine(Namify(decoratedLinks, structureFormatted));
       }
       catch (Exception ex)
       {
@@ -122,7 +106,7 @@ rootCommand.SetHandler(
 
     if (before)
     {
-      PrintAllLinks(decoratedLinks, namedLinks);
+      PrintAllLinks(decoratedLinks);
     }
 
     var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
@@ -135,11 +119,10 @@ rootCommand.SetHandler(
       {
         Query = effectiveQuery,
         Trace = trace,
-        NamedLinks = namedLinks,
         ChangesHandler = (beforeLink, afterLink) =>
         {
           changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
-          return links.Constants.Continue;
+          return decoratedLinks.Constants.Continue;
         }
       };
 
@@ -154,13 +137,13 @@ rootCommand.SetHandler(
       // Print the simplified changes
       foreach (var (linkBefore, linkAfter) in simplifiedChanges)
       {
-        PrintChange(links, namedLinks, linkBefore, linkAfter);
+        PrintChange(decoratedLinks, linkBefore, linkAfter);
       }
     }
 
     if (after)
     {
-      PrintAllLinks(decoratedLinks, namedLinks);
+      PrintAllLinks(decoratedLinks);
     }
   },
   // Explicitly specify the type parameters
@@ -169,7 +152,7 @@ rootCommand.SetHandler(
 
 await rootCommand.InvokeAsync(args);
 
-static string Namify(NamedLinks<uint> namedLinks, string linksNotation)
+static string Namify(NamedLinksDecorator<uint> namedLinks, string linksNotation)
 {
   var numberGlobalRegex = new Regex(@"\d+");
   var matches = numberGlobalRegex.Matches(linksNotation);
@@ -178,7 +161,7 @@ static string Namify(NamedLinks<uint> namedLinks, string linksNotation)
   {
     var number = match.Value;
     var numberLink = uint.Parse(number);
-    var name = namedLinks.GetNameByExternalReference(numberLink);
+    var name = namedLinks.GetName(numberLink);
     if (name != null)
     {
       newLinksNotation = newLinksNotation.Replace(number, name);
@@ -187,7 +170,7 @@ static string Namify(NamedLinks<uint> namedLinks, string linksNotation)
   return newLinksNotation;
 }
 
-static void PrintAllLinks(ILinks<uint> links, NamedLinks<uint> namedLinks)
+static void PrintAllLinks(NamedLinksDecorator<uint> links)
 {
   var any = links.Constants.Any;
   var query = new DoubletLink(index: any, source: any, target: any);
@@ -195,15 +178,15 @@ static void PrintAllLinks(ILinks<uint> links, NamedLinks<uint> namedLinks)
   links.Each(query, link =>
   {
     var formattedLink = links.Format(link);
-    Console.WriteLine(Namify(namedLinks, formattedLink));
+    Console.WriteLine(Namify(links, formattedLink));
     return links.Constants.Continue;
   });
 }
 
-static void PrintChange(UnitedMemoryLinks<uint> links, NamedLinks<uint> namedLinks, DoubletLink linkBefore, DoubletLink linkAfter)
+static void PrintChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
 {
   var beforeText = linkBefore.IsNull() ? "" : links.Format(linkBefore);
   var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
   var formattedChange = $"({beforeText}) ({afterText})";
-  Console.WriteLine(Namify(namedLinks, formattedChange));
+  Console.WriteLine(Namify(links, formattedChange));
 }

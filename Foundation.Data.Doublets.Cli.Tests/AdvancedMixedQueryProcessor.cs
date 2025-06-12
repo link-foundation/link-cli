@@ -769,7 +769,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
-        [Fact]
+    [Fact]
     public void NestedDeleteAllLinksBySourceAndTargetTest1()
     {
       RunTestWithLinks(links =>
@@ -823,105 +823,72 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     [Fact]
     public void CreateNamedFamilyLinksTest()
     {
-        RunTestWithLinks(links =>
+      RunTestWithLinks(links =>
+      {
+        // Prepare query: create (child: father mother)
+        var query = "(() ((child: father mother)))";
+        var options = new Options
         {
-            // Setup UnicodeStringStorage and NamedLinks with external references support
-            var tempNamesDbFile = Path.GetTempFileName();
-            try
-            {
-                var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
-                var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
-                using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
-                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution());
-                var namedLinks = storage.NamedLinks;
+          Query = query,
+        };
+        ProcessQuery(links, options);
 
-                // Prepare query: create (child: father mother)
-                var query = "(() ((child: father mother)))";
-                var options = new Options
-                {
-                    Query = query,
-                    NamedLinks = namedLinks
-                };
-                ProcessQuery(links, options);
+        // Assert: links for 'father', 'mother', and 'child' exist and are named
+        var fatherId = links.GetByName("father");
+        var motherId = links.GetByName("mother");
+        var childId = links.GetByName("child");
+        Assert.NotEqual(links.Constants.Null, fatherId);
+        Assert.NotEqual(links.Constants.Null, motherId);
+        Assert.NotEqual(links.Constants.Null, childId);
+        Assert.Equal("father", links.GetName(fatherId));
+        Assert.Equal("mother", links.GetName(motherId));
+        Assert.Equal("child", links.GetName(childId));
 
-                // Assert: links for 'father', 'mother', and 'child' exist and are named
-                var fatherId = namedLinks.GetExternalReferenceByName("father");
-                var motherId = namedLinks.GetExternalReferenceByName("mother");
-                var childId = namedLinks.GetExternalReferenceByName("child");
-                Assert.NotEqual(links.Constants.Null, fatherId);
-                Assert.NotEqual(links.Constants.Null, motherId);
-                Assert.NotEqual(links.Constants.Null, childId);
-                Assert.Equal("father", namedLinks.GetNameByExternalReference(fatherId));
-                Assert.Equal("mother", namedLinks.GetNameByExternalReference(motherId));
-                Assert.Equal("child", namedLinks.GetNameByExternalReference(childId));
-
-                // The child link should have father as source and mother as target
-                var allLinks = GetAllLinks(links);
-                var childLink = allLinks.First(l => l.Index == childId);
-                Assert.Equal(fatherId, childLink.Source);
-                Assert.Equal(motherId, childLink.Target);
-            }
-            finally
-            {
-                File.Delete(tempNamesDbFile);
-            }
-        });
+        // The child link should have father as source and mother as target
+        var allLinks = GetAllLinks(links);
+        var childLink = allLinks.First(l => l.Index == childId);
+        Assert.Equal(fatherId, childLink.Source);
+        Assert.Equal(motherId, childLink.Target);
+      });
     }
 
     [Fact]
     public void DeleteNamedFamilyLinksRemovesNamesTest()
     {
-        RunTestWithLinks(links =>
+      RunTestWithLinks(links =>
+      {
+        // Prepare query: create (child: father mother)
+        var query = "(() ((child: father mother)))";
+        var options = new Options
         {
-            // Setup UnicodeStringStorage and NamedLinks with external references support
-            var tempNamesDbFile = Path.GetTempFileName();
-            try
-            {
-                var namesConstants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
-                var namesMemory = new Platform.Memory.FileMappedResizableDirectMemory(tempNamesDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
-                using var namesLinks = new UnitedMemoryLinks<uint>(namesMemory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, namesConstants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
-                var storage = new UnicodeStringStorage<uint>(namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution());
-                var namedLinks = storage.NamedLinks;
+          Query = query,
+        };
+        ProcessQuery(links, options);
 
-                // Prepare query: create (child: father mother)
-                var query = "(() ((child: father mother)))";
-                var options = new Options
-                {
-                    Query = query,
-                    NamedLinks = namedLinks
-                };
-                ProcessQuery(links, options);
+        // Delete the 'child' link
+        var childId = links.GetByName("child");
+        links.Delete(childId);
 
-                // Delete the 'child' link
-                var childId = namedLinks.GetExternalReferenceByName("child");
-                links.Delete(childId);
-                namedLinks.RemoveNameByExternalReference(childId);
-
-                // Assert: 'child' name is removed, 'father' and 'mother' remain
-                Assert.Equal(links.Constants.Null, namedLinks.GetExternalReferenceByName("child"));
-                Assert.NotEqual(links.Constants.Null, namedLinks.GetExternalReferenceByName("father"));
-                Assert.NotEqual(links.Constants.Null, namedLinks.GetExternalReferenceByName("mother"));
-            }
-            finally
-            {
-                File.Delete(tempNamesDbFile);
-            }
-        });
+        // Assert: 'child' name is removed, 'father' and 'mother' remain
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("father"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("mother"));
+      });
     }
 
     // Helper methods
-    private static void RunTestWithLinks(Action<ILinks<uint>> testAction)
+    private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction)
     {
-      string tempDbFile = Path.GetTempFileName();
+      var tempDbFile = Path.GetTempFileName();
+      var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
       try
       {
-        using var links = new UnitedMemoryLinks<uint>(tempDbFile);
-        var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
-        testAction(decoratedLinks);
+        testAction(decorator);
       }
       finally
       {
-        File.Delete(tempDbFile);
+        if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+        if (File.Exists(decorator.NamedLinksDatabaseFileName)) File.Delete(decorator.NamedLinksDatabaseFileName);
       }
     }
 
