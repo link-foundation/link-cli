@@ -858,7 +858,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         Console.WriteLine("[Test] Starting UpdateNamedLinkNameTest");
-        
+
         // Create initial link: (child: father mother)
         Console.WriteLine("[Test] Step 1: Creating initial link");
         var createOptions = new Options { Query = "(() ((child: father mother)))", Trace = true };
@@ -873,7 +873,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         Console.WriteLine($"[Test] Initial father ID: {initialFatherId}");
         var initialMotherId = links.GetByName("mother");
         Console.WriteLine($"[Test] Initial mother ID: {initialMotherId}");
-        
+
         Assert.NotEqual(links.Constants.Null, initialChildId);
         Assert.NotEqual(links.Constants.Null, initialFatherId);
         Assert.NotEqual(links.Constants.Null, initialMotherId);
@@ -891,7 +891,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         Console.WriteLine("[Test] Removing old name 'child'");
         links.RemoveName(initialChildId);
         Console.WriteLine("[Test] Old name removed");
-        
+
         // Then create the new link with the new name
         Console.WriteLine("[Test] Creating new link with name 'son'");
         var updateOptions = new Options { Query = "(() ((son: father mother)))", Trace = true };
@@ -907,7 +907,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         Console.WriteLine($"[Test] Final father ID: {finalFatherId}");
         var finalMotherId = links.GetByName("mother");
         Console.WriteLine($"[Test] Final mother ID: {finalMotherId}");
-        
+
         Assert.NotEqual(links.Constants.Null, finalSonId);
         Assert.NotEqual(links.Constants.Null, finalFatherId);
         Assert.NotEqual(links.Constants.Null, finalMotherId);
@@ -936,11 +936,11 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
           Console.WriteLine("[Test] Step 1: Creating initial link");
           var createQuery = "(() ((child: father mother)))";
           Console.WriteLine($"[Test] Query: {createQuery}");
-          
-          var createOptions = new Options 
-          { 
+
+          var createOptions = new Options
+          {
             Query = createQuery,
-            Trace = true 
+            Trace = true
           };
           ProcessQuery(links, createOptions);
           Console.WriteLine("[Test] Initial link creation completed");
@@ -986,8 +986,8 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
           }
 
           // Add detailed tracing for the update operation
-          var updateOptions = new Options 
-          { 
+          var updateOptions = new Options
+          {
             Query = updateQuery,
             Trace = true,
             ChangesHandler = (before, after) =>
@@ -995,13 +995,13 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
               Console.WriteLine($"[Test] Update ChangesHandler called:");
               Console.WriteLine($"[Test] - Before state: {before}");
               Console.WriteLine($"[Test] - After state: {after}");
-              
+
               // Log name states during change
               Console.WriteLine($"[Test] - child name during change: {links.GetByName("child")}");
               Console.WriteLine($"[Test] - son name during change: {links.GetByName("son")}");
               Console.WriteLine($"[Test] - father name during change: {links.GetByName("father")}");
               Console.WriteLine($"[Test] - mother name during change: {links.GetByName("mother")}");
-              
+
               // Log all links during change
               Console.WriteLine("[Test] - All links during change:");
               foreach (var link in links.All())
@@ -1021,7 +1021,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 Console.WriteLine($"[Test] Checking if link exists: {links.Exists<uint, LinksConstants<uint>>(afterLink.Index)}");
                 Console.WriteLine($"[Test] Checking if source exists: {links.Exists<uint, LinksConstants<uint>>(source)}");
                 Console.WriteLine($"[Test] Checking if target exists: {links.Exists<uint, LinksConstants<uint>>(target)}");
-                
+
                 // Log all names before creation
                 Console.WriteLine("[Test] Names before creation:");
                 foreach (var name in new[] { "child", "son", "father", "mother" })
@@ -1131,6 +1131,21 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void NameLookupConsistencyTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((x: 1 2)))");
+        ProcessQuery(links, "(((x: 1 2)) ((y: 1 2)))");
+        ProcessQuery(links, "(((y: 1 2)) ((z: 1 2)))");
+        links.Delete(links.GetByName("z"));
+        Assert.Equal(links.Constants.Null, links.GetByName("x"));
+        Assert.Equal(links.Constants.Null, links.GetByName("y"));
+        Assert.Equal(links.Constants.Null, links.GetByName("z"));
+      });
+    }
+
     // Helper methods
     private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction, bool enableTracing = false)
     {
@@ -1141,12 +1156,12 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         decoratedLinks = new NamedLinksDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        var task = Task.Run(() => 
+        var task = Task.Run(() =>
         {
           testAction(decoratedLinks);
         }, cts.Token);
 
-        try 
+        try
         {
           task.Wait(cts.Token);
         }
