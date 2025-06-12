@@ -280,46 +280,26 @@ namespace Foundation.Data.Doublets.Cli
                 var sourceId = EnsureNestedLinkCreatedRecursively(links, lino.Values[0], options);
                 var targetId = EnsureNestedLinkCreatedRecursively(links, lino.Values[1], options);
 
-                // If both source and target are the same named entity, reuse that ID
+                // If both source and target are the same named entity, reuse that ID as a self-ref
                 if (sourceId == targetId && !string.IsNullOrEmpty(lino.Values[0].Id) && !IsNumericOrStar(lino.Values[0].Id))
                 {
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Source and target are the same named entity '{lino.Values[0].Id}' => reusing ID={sourceId}");
-                    // If the link is not already self-referential, delete and recreate it as self-referential
+                    // If not yet self-referential, recreate as self-ref
                     var link = new DoubletLink(links.GetLink(sourceId));
-                    if (link.Source != sourceId || link.Target != sourceId) {
+                    if (link.Source != sourceId || link.Target != sourceId)
+                    {
                         if (sourceId != 0 && sourceId != links.Constants.Any && sourceId != links.Constants.Null && links.Exists(sourceId))
                         {
-                            links.Delete(new[] { sourceId, links.Constants.Any, links.Constants.Any }, (before, after) => links.Constants.Continue);
+                            links.Delete(new[] { sourceId, links.Constants.Any, links.Constants.Any }, (b, a) => links.Constants.Continue);
                         }
-                        sourceId = links.CreateAndUpdate(sourceId, sourceId, (before, after) => links.Constants.Continue);
+                        sourceId = links.CreateAndUpdate(sourceId, sourceId, (b, a) => links.Constants.Continue);
                     }
                     TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Ensured link is self-referential => ID={sourceId}, Source={sourceId}, Target={sourceId}");
                     return sourceId;
                 }
 
-                uint index = 0;
-                if (!string.IsNullOrEmpty(lino.Id))
-                {
-                    if (lino.Id == "*")
-                    {
-                        index = anyConstant;
-                    }
-                    else if (uint.TryParse(lino.Id.Replace(":", ""), out uint parsedIndex))
-                    {
-                        index = parsedIndex;
-                    }
-                }
-
-                var linkToCreate = new DoubletLink(index, sourceId, targetId);
-                var createdId = EnsureLinkCreated(links, linkToCreate, options);
-                TraceIfEnabled(options,
-                    $"[EnsureNestedLinkCreatedRecursively] Created/ensured composite => (index={index}, src={sourceId}, trg={targetId}) => actual ID={createdId}");
-                // Set name if NamedLinks is present and lino.Id is not numeric and not '*'
-                if (!string.IsNullOrEmpty(lino.Id) && !IsNumericOrStar(lino.Id))
-                {
-                    links.SetName(createdId, lino.Id);
-                }
-                return createdId;
+                // Generic composite creation for numeric or non-matching patterns
+                return CreateCompositeLink(lino.Id, sourceId, targetId, links, options);
             }
 
             // If more than 2 => do nothing special => ANY
@@ -1190,6 +1170,35 @@ namespace Foundation.Data.Doublets.Cli
             });
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{lino.Id}' => ID={newId}");
             return newId;
+        }
+
+        private static uint CreateCompositeLink(string? id, uint sourceId, uint targetId, NamedLinksDecorator<uint> links, Options options)
+        {
+            var anyConstant = links.Constants.Any;
+            uint index = 0;
+            if (!string.IsNullOrEmpty(id))
+            {
+                if (id == "*")
+                {
+                    index = anyConstant;
+                }
+                else
+                {
+                    var cleaned = id.Replace(":", "");
+                    if (uint.TryParse(cleaned, out var parsed))
+                    {
+                        index = parsed;
+                    }
+                }
+            }
+            var linkToCreate = new DoubletLink(index, sourceId, targetId);
+            var createdId = EnsureLinkCreated(links, linkToCreate, options);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created/ensured composite => (index={index}, src={sourceId}, trg={targetId}) => actual ID={createdId}");
+            if (!string.IsNullOrEmpty(id) && !IsNumericOrStar(id))
+            {
+                links.SetName(createdId, id);
+            }
+            return createdId;
         }
     }
 }
