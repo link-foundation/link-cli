@@ -280,24 +280,6 @@ namespace Foundation.Data.Doublets.Cli
                 var sourceId = EnsureNestedLinkCreatedRecursively(links, lino.Values[0], options);
                 var targetId = EnsureNestedLinkCreatedRecursively(links, lino.Values[1], options);
 
-                // If both source and target are the same named entity, reuse that ID as a self-ref
-                if (sourceId == targetId && !string.IsNullOrEmpty(lino.Values[0].Id) && !IsNumericOrStar(lino.Values[0].Id))
-                {
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Source and target are the same named entity '{lino.Values[0].Id}' => reusing ID={sourceId}");
-                    // If not yet self-referential, recreate as self-ref
-                    var link = new DoubletLink(links.GetLink(sourceId));
-                    if (link.Source != sourceId || link.Target != sourceId)
-                    {
-                        if (sourceId != 0 && sourceId != links.Constants.Any && sourceId != links.Constants.Null && links.Exists(sourceId))
-                        {
-                            links.Delete(new[] { sourceId, links.Constants.Any, links.Constants.Any }, (b, a) => links.Constants.Continue);
-                        }
-                        sourceId = links.CreateAndUpdate(sourceId, sourceId, (b, a) => links.Constants.Continue);
-                    }
-                    TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Ensured link is self-referential => ID={sourceId}, Source={sourceId}, Target={sourceId}");
-                    return sourceId;
-                }
-
                 // Generic composite creation for numeric or non-matching patterns
                 return CreateCompositeLink(lino.Id, sourceId, targetId, links, options);
             }
