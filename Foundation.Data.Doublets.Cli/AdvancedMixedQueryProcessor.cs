@@ -258,30 +258,30 @@ namespace Foundation.Data.Doublets.Cli
         /// Recursively ensures that a LinoLink (potentially nested) is created. 
         /// Returns the numeric ID or ANY if leaf/unparseable.
         /// </summary>
-        private static uint EnsureNestedLinkCreatedRecursively(NamedLinksDecorator<uint> links, LinoLink linkPattern, Options options)
+        private static uint EnsureNestedLinkCreatedRecursively(NamedLinksDecorator<uint> links, LinoLink pattern, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
             // Handle string-based two-child composites
-            if (TryGetTwoChildCompositePattern(linkPattern, out var name, out var left, out var right) && !IsNumericOrStar(name))
+            if (TryGetTwoChildCompositePattern(pattern, out var name, out var left, out var right) && !IsNumericOrStar(name))
             {
                 return HandleStringComposite(name, left, right, links, options);
             }
 
-            if (linkPattern.Values == null || linkPattern.Values.Count == 0)
+            if (pattern.Values == null || pattern.Values.Count == 0)
             {
-                return ResolveLeaf(linkPattern, links, options);
+                return ResolveLeaf(pattern, links, options);
             }
 
             // If 2 Values => interpret as a composite link
-            if (linkPattern.Values.Count == 2)
+            if (pattern.Values.Count == 2)
             {
-                var sourceId = EnsureNestedLinkCreatedRecursively(links, linkPattern.Values[0], options);
-                var targetId = EnsureNestedLinkCreatedRecursively(links, linkPattern.Values[1], options);
+                var sourceId = EnsureNestedLinkCreatedRecursively(links, pattern.Values[0], options);
+                var targetId = EnsureNestedLinkCreatedRecursively(links, pattern.Values[1], options);
 
                 // Generic composite creation for numeric or non-matching patterns
-                return CreateCompositeLink(linkPattern.Id, sourceId, targetId, links, options);
+                return CreateCompositeLink(pattern.Id, sourceId, targetId, links, options);
             }
 
             // If more than 2 => do nothing special => ANY
@@ -423,8 +423,8 @@ namespace Foundation.Data.Doublets.Cli
                             {
                                 LinksExtensions.EnsureCreated(links, after.Index);
                             }
-                            links.Update(before, after, (b, a) =>
-                                options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
+                            links.Update(before, after, (beforeState, afterState) =>
+                                options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
                         }
                         else
                         {
@@ -500,11 +500,11 @@ namespace Foundation.Data.Doublets.Cli
             Pattern pattern,
             Dictionary<string, uint> currentSolution)
         {
+            var anyConstant = links.Constants.Any;
             if (pattern.IsLeaf)
             {
                 uint idx = ResolveId(links, pattern.Index, currentSolution);
-                uint any = links.Constants.Any;
-                var candidates = links.All(new DoubletLink(idx, any, any));
+                var candidates = links.All(new DoubletLink(idx, anyConstant, anyConstant));
                 foreach (var link in candidates)
                 {
                     var candidateLink = new DoubletLink(link);
@@ -515,15 +515,14 @@ namespace Foundation.Data.Doublets.Cli
                 yield break;
             }
 
-            var anyVal = links.Constants.Any;
-            bool idxIsVar = IsVariable(pattern.Index);
-            bool idxIsAny = pattern.Index == "*";
-            uint idxResolved = ResolveId(links, pattern.Index, currentSolution);
+            bool indexIsVariable = IsVariable(pattern.Index);
+            bool indexIsAny = pattern.Index == "*";
+            uint resolvedIndex = ResolveId(links, pattern.Index, currentSolution);
 
             // If idxResolved is a known link => skip enumerating everything
-            if (!idxIsVar && !idxIsAny && idxResolved != anyVal && idxResolved != 0 && links.Exists(idxResolved))
+            if (!indexIsVariable && !indexIsAny && resolvedIndex != anyConstant && resolvedIndex != 0 && links.Exists(resolvedIndex))
             {
-                var link = new DoubletLink(links.GetLink(idxResolved));
+                var link = new DoubletLink(links.GetLink(resolvedIndex));
                 var sourceMatches = RecursiveMatchSubPattern(links, pattern.Source, link.Source, currentSolution);
                 foreach (var sourceSol in sourceMatches)
                 {
@@ -531,7 +530,7 @@ namespace Foundation.Data.Doublets.Cli
                     foreach (var targetSol in targetMatches)
                     {
                         var combined = new Dictionary<string, uint>(targetSol);
-                        AssignVariableIfNeeded(pattern.Index, idxResolved, combined);
+                        AssignVariableIfNeeded(pattern.Index, resolvedIndex, combined);
                         yield return combined;
                     }
                 }
@@ -539,7 +538,7 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 // Otherwise we iterate over all links
-                var allLinks = links.All(new DoubletLink(anyVal, anyVal, anyVal));
+                var allLinks = links.All(new DoubletLink(anyConstant, anyConstant, anyConstant));
                 foreach (var raw in allLinks)
                 {
                     var candidateLink = new DoubletLink(raw);
@@ -650,19 +649,19 @@ namespace Foundation.Data.Doublets.Cli
             string identifier,
             Dictionary<string, uint> currentSolution)
         {
-            var anyVal = links.Constants.Any;
-            if (string.IsNullOrEmpty(identifier)) return anyVal;
+            var anyConstant = links.Constants.Any;
+            if (string.IsNullOrEmpty(identifier)) return anyConstant;
             if (currentSolution.TryGetValue(identifier, out var value))
             {
                 return value;
             }
             if (IsVariable(identifier))
             {
-                return anyVal;
+                return anyConstant;
             }
-            if (TryParseLinkId(identifier, links.Constants, ref anyVal))
+            if (TryParseLinkId(identifier, links.Constants, ref anyConstant))
             {
-                return anyVal;
+                return anyConstant;
             }
             // Add name resolution for deletion patterns
             var namedId = links.GetByName(identifier);
@@ -670,7 +669,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 return namedId;
             }
-            return anyVal;
+            return anyConstant;
         }
 
         private static bool DetermineIfSolutionIsNoOperation(
@@ -733,26 +732,27 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (pattern == null) return null;
 
+            // Retrieve the ANY constant once for both leaf and composite cases
+            var anyConstant = links.Constants.Any;
+
             if (pattern.IsLeaf)
             {
-                uint index = ResolveId(links, pattern.Index, solution);
-                var anyVal = links.Constants.Any;
-                return new DoubletLink(index, anyVal, anyVal);
+                uint resolvedIndex = ResolveId(links, pattern.Index, solution);
+                return new DoubletLink(resolvedIndex, anyConstant, anyConstant);
             }
             else
             {
-                uint idx = ResolveId(links, pattern.Index, solution);
+                uint resolvedIndex = ResolveId(links, pattern.Index, solution);
                 var sourceLink = ApplySolutionToPattern(links, solution, pattern.Source);
                 var targetLink = ApplySolutionToPattern(links, solution, pattern.Target);
 
-                uint anyVal = links.Constants.Any;
-                uint finalSource = sourceLink?.Index ?? anyVal;
-                uint finalTarget = targetLink?.Index ?? anyVal;
+                uint resolvedSource = sourceLink?.Index ?? anyConstant;
+                uint resolvedTarget = targetLink?.Index ?? anyConstant;
 
-                if (finalSource == 0) finalSource = anyVal;
-                if (finalTarget == 0) finalTarget = anyVal;
+                if (resolvedSource == 0) resolvedSource = anyConstant;
+                if (resolvedTarget == 0) resolvedTarget = anyConstant;
 
-                return new DoubletLink(idx, finalSource, finalTarget);
+                return new DoubletLink(resolvedIndex, resolvedSource, resolvedTarget);
             }
         }
 
@@ -1005,8 +1005,8 @@ namespace Foundation.Data.Doublets.Cli
                     TraceIfEnabled(options,
                         $"[EnsureLinkCreated] Updating link #{link.Index} => {storedD.Source}->{link.Source}, {storedD.Target}->{link.Target}.");
                     uint finalIndex = link.Index;
-                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (b, a) =>
-                        options.ChangesHandler?.Invoke(b, a) ?? links.Constants.Continue);
+                    links.Update(new DoubletLink(link.Index, anyConstant, anyConstant), link, (beforeState, afterState) =>
+                        options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
                     return finalIndex;
                 }
                 else
@@ -1063,20 +1063,20 @@ namespace Foundation.Data.Doublets.Cli
         /// Detects a two-child composite pattern where at least one child matches the composite identifier.
         /// </summary>
         private static bool TryGetTwoChildCompositePattern(
-            LinoLink linkPattern,
+            LinoLink pattern,
             out string compositeIdentifier,
             out LinoLink leftPattern,
             out LinoLink rightPattern)
         {
-            compositeIdentifier = linkPattern.Id ?? string.Empty;
+            compositeIdentifier = pattern.Id ?? string.Empty;
             leftPattern = default!;
             rightPattern = default!;
             if (!string.IsNullOrEmpty(compositeIdentifier)
-                && linkPattern.Values != null
-                && linkPattern.Values.Count == 2)
+                && pattern.Values != null
+                && pattern.Values.Count == 2)
             {
-                leftPattern = linkPattern.Values[0];
-                rightPattern = linkPattern.Values[1];
+                leftPattern = pattern.Values[0];
+                rightPattern = pattern.Values[1];
                 // Only detect composites when one or both children share the identifier
                 if (leftPattern.Id == compositeIdentifier || rightPattern.Id == compositeIdentifier)
                 {
@@ -1125,35 +1125,35 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>
         /// Resolves a single leaf pattern into its numeric or named link ID.
         /// </summary>
-        private static uint ResolveLeaf(LinoLink linkPattern, NamedLinksDecorator<uint> links, Options options)
+        private static uint ResolveLeaf(LinoLink pattern, NamedLinksDecorator<uint> links, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
 
-            if (string.IsNullOrEmpty(linkPattern.Id))
+            if (string.IsNullOrEmpty(pattern.Id))
             {
                 TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with empty ID => returning ANY.");
                 return anyConstant;
             }
-            if (linkPattern.Id == "*")
+            if (pattern.Id == "*")
             {
                 TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with '*' => returning ANY.");
                 return anyConstant;
             }
-            if (uint.TryParse(linkPattern.Id, out uint parsedNumber))
+            if (uint.TryParse(pattern.Id, out uint parsedNumber))
             {
                 TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
                 return parsedNumber;
             }
-            var existingId = links.GetByName(linkPattern.Id);
+            var existingId = links.GetByName(pattern.Id);
             if (existingId != links.Constants.Null)
             {
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{linkPattern.Id}' => ID={existingId}");
+                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{pattern.Id}' => ID={existingId}");
                 return existingId;
             }
             var newLeafId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newLeafId}, '{linkPattern.Id}')");
-            links.SetName(newLeafId, linkPattern.Id);
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newLeafId}, '{pattern.Id}')");
+            links.SetName(newLeafId, pattern.Id);
             var restriction = new DoubletLink(newLeafId, links.Constants.Null, links.Constants.Null);
             var substitution = new DoubletLink(newLeafId, newLeafId, newLeafId);
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newLeafId} to be self-referential");
@@ -1162,7 +1162,7 @@ namespace Foundation.Data.Doublets.Cli
                 TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={beforeState}, after={afterState}");
                 return links.Constants.Continue;
             });
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{linkPattern.Id}' => ID={newLeafId}");
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{pattern.Id}' => ID={newLeafId}");
             return newLeafId;
         }
 
