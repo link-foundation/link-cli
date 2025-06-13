@@ -341,44 +341,44 @@ namespace Foundation.Data.Doublets.Cli
             var allIndices = restrictionByIndex.Keys.Union(substitutionByIndex.Keys).ToList();
 
             // Step 1) For each distinct index in normal restrictions & substitutions
-            foreach (var idx in allIndices)
+            foreach (var linkIndex in allIndices)
             {
-                bool hasRestriction = restrictionByIndex.TryGetValue(idx, out var rLink);
-                bool hasSubstitution = substitutionByIndex.TryGetValue(idx, out var sLink);
+                bool hasRestriction = restrictionByIndex.TryGetValue(linkIndex, out var restrictionLink);
+                bool hasSubstitution = substitutionByIndex.TryGetValue(linkIndex, out var substitutionLink);
 
                 if (hasRestriction && hasSubstitution)
                 {
-                    if (rLink.Source != sLink.Source || rLink.Target != sLink.Target)
+                    if (restrictionLink.Source != substitutionLink.Source || restrictionLink.Target != substitutionLink.Target)
                     {
-                        operations.Add((rLink, sLink));
+                        operations.Add((restrictionLink, substitutionLink));
                     }
                     else
                     {
-                        operations.Add((rLink, rLink));
+                        operations.Add((restrictionLink, restrictionLink));
                     }
                 }
                 else if (hasRestriction && !hasSubstitution)
                 {
                     // Deletion
-                    operations.Add((rLink, default(DoubletLink)));
+                    operations.Add((restrictionLink, default(DoubletLink)));
                 }
                 else if (!hasRestriction && hasSubstitution)
                 {
                     // Creation
-                    operations.Add((default(DoubletLink), sLink));
+                    operations.Add((default(DoubletLink), substitutionLink));
                 }
             }
 
             // Step 2) Wildcard restrictions => each is a separate "delete"
-            foreach (var rLink in wildcardRestrictions)
+            foreach (var restrictionLink in wildcardRestrictions)
             {
-                operations.Add((rLink, default(DoubletLink)));
+                operations.Add((restrictionLink, default(DoubletLink)));
             }
 
             // Step 3) Wildcard substitutions => each is a separate "create"
-            foreach (var sLink in wildcardSubstitutions)
+            foreach (var substitutionLink in wildcardSubstitutions)
             {
-                operations.Add((default(DoubletLink), sLink));
+                operations.Add((default(DoubletLink), substitutionLink));
             }
 
             return operations;
@@ -503,8 +503,8 @@ namespace Foundation.Data.Doublets.Cli
             var anyConstant = links.Constants.Any;
             if (pattern.IsLeaf)
             {
-                uint idx = ResolveId(links, pattern.Index, currentSolution);
-                var candidates = links.All(new DoubletLink(idx, anyConstant, anyConstant));
+                uint leafIndex = ResolveId(links, pattern.Index, currentSolution);
+                var candidates = links.All(new DoubletLink(leafIndex, anyConstant, anyConstant));
                 foreach (var link in candidates)
                 {
                     var candidateLink = new DoubletLink(link);
@@ -934,22 +934,22 @@ namespace Foundation.Data.Doublets.Cli
             public bool IsLeaf => Source == null && Target == null;
         }
 
-        private static Pattern CreatePatternFromLino(LinoLink lino)
+        private static Pattern CreatePatternFromLino(LinoLink linkNode)
         {
-            if (lino.Values == null || lino.Values.Count == 0)
+            if (linkNode.Values == null || linkNode.Values.Count == 0)
             {
-                return new Pattern(lino.Id ?? "");
+                return new Pattern(linkNode.Id ?? "");
             }
 
-            if (lino.Values.Count == 2)
+            if (linkNode.Values.Count == 2)
             {
-                var sPat = CreatePatternFromLino(lino.Values[0]);
-                var tPat = CreatePatternFromLino(lino.Values[1]);
-                return new Pattern(lino.Id ?? "", sPat, tPat);
+                var sourcePattern = CreatePatternFromLino(linkNode.Values[0]);
+                var targetPattern = CreatePatternFromLino(linkNode.Values[1]);
+                return new Pattern(linkNode.Id ?? "", sourcePattern, targetPattern);
             }
 
             // If more than 2 => treat similarly to leaf with ID
-            return new Pattern(lino.Id ?? "");
+            return new Pattern(linkNode.Id ?? "");
         }
 
         private static uint EnsureLinkCreated(NamedLinksDecorator<uint> links, DoubletLink link, Options options)
