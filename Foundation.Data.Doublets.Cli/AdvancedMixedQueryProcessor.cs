@@ -1,3 +1,4 @@
+using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -69,6 +70,19 @@ namespace Foundation.Data.Doublets.Cli
       if (restrictionLink.Values?.Count == 0 && (substitutionLink.Values?.Count ?? 0) > 0)
       {
         TraceIfEnabled(options, "[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.");
+        
+        // VALIDATION: Validate that all references in creation scenario are valid
+        try
+        {
+          var emptyRestrictionPatterns = new List<LinoLink>();
+          ValidateLinksExistOrWillBeCreated(links, emptyRestrictionPatterns, substitutionLink.Values ?? new List<LinoLink>(), options);
+        }
+        catch (Exception ex)
+        {
+          TraceIfEnabled(options, $"[ProcessQuery] Creation validation failed: {ex.Message}");
+          throw;
+        }
+        
         foreach (var linkToCreate in substitutionLink.Values ?? new List<LinoLink>())
         {
           var createdId = EnsureNestedLinkCreatedRecursively(links, linkToCreate, options);
@@ -83,6 +97,17 @@ namespace Foundation.Data.Doublets.Cli
 
       TraceIfEnabled(options, $"[ProcessQuery] Restriction patterns to parse: {restrictionPatterns.Count}");
       TraceIfEnabled(options, $"[ProcessQuery] Substitution patterns to parse: {substitutionPatterns.Count}");
+
+      // VALIDATION: Check that all referenced links exist or will be created
+      try
+      {
+        ValidateLinksExistOrWillBeCreated(links, restrictionPatterns, substitutionPatterns, options);
+      }
+      catch (Exception ex)
+      {
+        TraceIfEnabled(options, $"[ProcessQuery] Validation failed: {ex.Message}");
+        throw;
+      }
 
       var restrictionInternalPatterns = restrictionPatterns
           .Select(l => CreatePatternFromLino(l))
@@ -1204,6 +1229,133 @@ namespace Foundation.Data.Doublets.Cli
         links.SetName(compositeLinkId, literalIdentifier);
       }
       return compositeLinkId;
+    }
+
+    /// <summary>
+    /// Validates that all link references in the patterns either exist in the database
+    /// or will be created as part of the current operation.
+    /// </summary>
+    private static void ValidateLinksExistOrWillBeCreated(
+        NamedLinksDecorator<uint> links, 
+        IList<LinoLink> restrictionPatterns, 
+        IList<LinoLink> substitutionPatterns, 
+        Options options)
+    {
+      TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Starting validation");
+
+      // Collect all link IDs that will be created in this operation
+      var linkIdsToBeCreated = new HashSet<uint>();
+      CollectLinkIdsFromPatterns(substitutionPatterns, linkIdsToBeCreated, links);
+      
+      TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Links to be created: {string.Join(", ", linkIdsToBeCreated)}");
+
+      // Validate all references in restriction patterns
+      ValidateReferencesInPatterns(restrictionPatterns, links, linkIdsToBeCreated, "restriction", options);
+      
+      // Validate all references in substitution patterns
+      ValidateReferencesInPatterns(substitutionPatterns, links, linkIdsToBeCreated, "substitution", options);
+
+      TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
+    }
+
+    /// <summary>
+    /// Collects all specific link IDs that will be created from substitution patterns.
+    /// </summary>
+    private static void CollectLinkIdsFromPatterns(IList<LinoLink> patterns, HashSet<uint> linkIds, NamedLinksDecorator<uint> links)
+    {
+      foreach (var pattern in patterns)
+      {
+        CollectLinkIdsFromPattern(pattern, linkIds, links);
+      }
+    }
+
+    /// <summary>
+    /// Recursively collects link IDs from a single pattern.
+    /// Only collects IDs that define links (end with ':')
+    /// </summary>
+    private static void CollectLinkIdsFromPattern(LinoLink pattern, HashSet<uint> linkIds, NamedLinksDecorator<uint> links, int depth = 0)
+    {
+      // Prevent infinite recursion
+      if (depth > 10) return;
+
+      // Check if this pattern defines a specific link ID (ends with ':')
+      if (!string.IsNullOrEmpty(pattern.Id) && pattern.Id.EndsWith(":") && !pattern.Id.StartsWith("$") && pattern.Id != "*:")
+      {
+        var cleanId = pattern.Id.Replace(":", "");
+        if (uint.TryParse(cleanId, out var linkId))
+        {
+          linkIds.Add(linkId);
+        }
+      }
+
+      // Recursively check sub-patterns
+      if (pattern.Values != null)
+      {
+        foreach (var subPattern in pattern.Values)
+        {
+          CollectLinkIdsFromPattern(subPattern, linkIds, links, depth + 1);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Validates that all references in the given patterns are valid.
+    /// </summary>
+    private static void ValidateReferencesInPatterns(
+        IList<LinoLink> patterns, 
+        NamedLinksDecorator<uint> links, 
+        HashSet<uint> linkIdsToBeCreated, 
+        string patternType, 
+        Options options)
+    {
+      foreach (var pattern in patterns)
+      {
+        ValidateReferencesInPattern(pattern, links, linkIdsToBeCreated, patternType, options);
+      }
+    }
+
+    /// <summary>
+    /// Recursively validates references in a single pattern.
+    /// Only validates references (numeric IDs without ':' that are not variables or wildcards).
+    /// </summary>
+    private static void ValidateReferencesInPattern(
+        LinoLink pattern, 
+        NamedLinksDecorator<uint> links, 
+        HashSet<uint> linkIdsToBeCreated, 
+        string patternType, 
+        Options options,
+        int depth = 0)
+    {
+      // Prevent infinite recursion
+      if (depth > 10) return;
+
+      // Validate the pattern's own ID if it's a reference (not a definition, variable, or wildcard)
+      if (!string.IsNullOrEmpty(pattern.Id) && 
+          !pattern.Id.StartsWith("$") && 
+          pattern.Id != "*" &&
+          !pattern.Id.EndsWith(":"))
+      {
+        if (uint.TryParse(pattern.Id, out var linkId))
+        {
+          if (!links.Exists(linkId) && !linkIdsToBeCreated.Contains(linkId))
+          {
+            throw new InvalidOperationException(
+              $"Invalid reference to non-existent link {linkId} in {patternType} pattern. " +
+              $"Link {linkId} does not exist and will not be created by this operation."
+            );
+          }
+          TraceIfEnabled(options, $"[ValidateReferencesInPattern] Link {linkId} reference validated in {patternType} pattern");
+        }
+      }
+
+      // Recursively validate sub-patterns
+      if (pattern.Values != null)
+      {
+        foreach (var subPattern in pattern.Values)
+        {
+          ValidateReferencesInPattern(subPattern, links, linkIdsToBeCreated, patternType, options, depth + 1);
+        }
+      }
     }
   }
 }
