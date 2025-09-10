@@ -6,7 +6,13 @@ using Platform.Data.Doublets;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class PinnedTypes<TLinkAddress> : IEnumerable<TLinkAddress>
+    public interface IPinnedTypes<TLinkAddress> : IEnumerable<TLinkAddress>
+        where TLinkAddress : struct, System.Numerics.IUnsignedNumber<TLinkAddress>
+    {
+        void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3);
+    }
+
+    public class PinnedTypes<TLinkAddress> : IPinnedTypes<TLinkAddress>
         where TLinkAddress : struct, System.Numerics.IUnsignedNumber<TLinkAddress>
     {
         private readonly ILinks<TLinkAddress> _links;
@@ -82,6 +88,20 @@ namespace Foundation.Data.Doublets.Cli
             {
                 // No resources to dispose
             }
+        }
+
+        public void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3)
+        {
+            using var enumerator = GetEnumerator();
+            
+            enumerator.MoveNext();
+            type1 = enumerator.Current;
+            
+            enumerator.MoveNext();
+            type2 = enumerator.Current;
+            
+            enumerator.MoveNext();
+            type3 = enumerator.Current;
         }
     }
 }
