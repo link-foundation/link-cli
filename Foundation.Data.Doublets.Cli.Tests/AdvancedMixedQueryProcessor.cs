@@ -1254,6 +1254,41 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void SelfReferencingLinkSubstitution_ShouldNotCauseInfiniteLoop()
+    {
+      RunTestWithLinks(links =>
+      {
+        // This test case reproduces the issue from GitHub issue #20
+        // The query '((($i: 1 21)) (($i: $s $t) ($i 20)))' was causing OutOfMemoryException
+        // due to infinite recursion in link creation
+        
+        // Act & Assert - this should not throw OutOfMemoryException
+        var exception = Record.Exception(() => 
+        {
+          ProcessQuery(links, "((($i: 1 21)) (($i: $s $t) ($i 20)))");
+        });
+
+        // The fix should either:
+        // 1. Complete successfully without infinite loop, or
+        // 2. Throw a controlled InvalidOperationException instead of OutOfMemoryException
+        if (exception != null)
+        {
+          Assert.IsType<InvalidOperationException>(exception);
+          Assert.Contains("infinite", exception.Message.ToLower());
+        }
+
+        // If no exception was thrown, verify the links were created properly
+        if (exception == null)
+        {
+          var allLinks = GetAllLinks(links);
+          // We expect some links to be created, but not an infinite number
+          Assert.True(allLinks.Count > 0 && allLinks.Count < 1000, 
+            $"Expected reasonable number of links (1-999), but got {allLinks.Count}");
+        }
+      });
+    }
+
     // Helper methods
     private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction, bool enableTracing = false)
     {
