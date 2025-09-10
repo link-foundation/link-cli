@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Clink WebAssembly Demo</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .input-section, .output-section {
+            flex: 1;
+        }
+        
+        h1 {
+            color: #569cd6;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #4ec9b0;
+            border-bottom: 1px solid #3c3c3c;
+            padding-bottom: 5px;
+        }
+        
+        textarea, input {
+            width: 100%;
+            background-color: #252526;
+            border: 1px solid #3c3c3c;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+            font-family: inherit;
+        }
+        
+        button:hover {
+            background-color: #005a9e;
+        }
+        
+        .output {
+            background-color: #252526;
+            border: 1px solid #3c3c3c;
+            padding: 15px;
+            min-height: 200px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .error {
+            color: #f14c4c;
+        }
+        
+        .success {
+            color: #4ec9b0;
+        }
+        
+        .options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .examples {
+            margin-top: 20px;
+        }
+        
+        .example {
+            background-color: #2d2d30;
+            border: 1px solid #3c3c3c;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .example:hover {
+            background-color: #3e3e42;
+        }
+        
+        .example-title {
+            color: #569cd6;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .example-query {
+            color: #ce9178;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 Clink WebAssembly Demo</h1>
+    <p style="text-align: center; color: #858585;">
+        A CLI tool for links manipulation running in your browser via WebAssembly
+    </p>
+    
+    <div class="container">
+        <div class="input-section">
+            <h2>Query Input</h2>
+            <textarea id="queryInput" placeholder="Enter your LiNo query here...
+Example: () ((1 1))"></textarea>
+            
+            <div class="options">
+                <div class="option">
+                    <input type="checkbox" id="trace">
+                    <label for="trace">Trace</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="before">
+                    <label for="before">Before</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="changes">
+                    <label for="changes">Changes</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="after">
+                    <label for="after">After</label>
+                </div>
+            </div>
+            
+            <button onclick="executeQuery()">Execute Query</button>
+            <button onclick="clearOutput()">Clear Output</button>
+            <button onclick="testWasm()">Test WASM</button>
+            
+            <div class="examples">
+                <h2>Examples</h2>
+                
+                <div class="example" onclick="loadExample('() ((1 1))', {changes: true, after: true})">
+                    <div class="example-title">Create Single Link</div>
+                    <div class="example-query">() ((1 1))</div>
+                </div>
+                
+                <div class="example" onclick="loadExample('() ((1 1) (2 2))', {changes: true, after: true})">
+                    <div class="example-title">Create Multiple Links</div>
+                    <div class="example-query">() ((1 1) (2 2))</div>
+                </div>
+                
+                <div class="example" onclick="loadExample('((1: 1 1)) ((1: 1 2))', {changes: true, after: true})">
+                    <div class="example-title">Update Link</div>
+                    <div class="example-query">((1: 1 1)) ((1: 1 2))</div>
+                </div>
+                
+                <div class="example" onclick="loadExample('((1 2)) ()', {changes: true, after: true})">
+                    <div class="example-title">Delete Link</div>
+                    <div class="example-query">((1 2)) ()</div>
+                </div>
+                
+                <div class="example" onclick="loadExample('((($i: $s $t)) (($i: $s $t)))', {changes: true})">
+                    <div class="example-title">Read All Links</div>
+                    <div class="example-query">((($i: $s $t)) (($i: $s $t)))</div>
+                </div>
+                
+                <div class="example" onclick="loadExample('((* *)) ()', {changes: true, after: true})">
+                    <div class="example-title">Delete All Links</div>
+                    <div class="example-query">((* *)) ()</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="output-section">
+            <h2>Output</h2>
+            <div id="output" class="output">
+                Ready to execute queries...
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { Clink } from '../pkg/clink_wasm.js';
+        
+        let clink = null;
+
+        async function initWasm() {
+            try {
+                await init();
+                clink = new Clink();
+                document.getElementById('output').innerHTML = `<span class="success">✓ WebAssembly initialized successfully!\nClink version: ${Clink.version()}</span>`;
+            } catch (error) {
+                document.getElementById('output').innerHTML = `<span class="error">✗ Failed to initialize WebAssembly: ${error}</span>`;
+                console.error('WASM initialization failed:', error);
+            }
+        }
+
+        window.executeQuery = function() {
+            if (!clink) {
+                document.getElementById('output').innerHTML = '<span class="error">✗ WebAssembly not initialized</span>';
+                return;
+            }
+
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                document.getElementById('output').innerHTML = '<span class="error">✗ Please enter a query</span>';
+                return;
+            }
+
+            const options = {
+                db: "memory",
+                trace: document.getElementById('trace').checked,
+                structure: null,
+                before: document.getElementById('before').checked,
+                changes: document.getElementById('changes').checked,
+                after: document.getElementById('after').checked
+            };
+
+            try {
+                const result = clink.execute(query, JSON.stringify(options));
+                const parsed = JSON.parse(result);
+                
+                if (parsed.success) {
+                    document.getElementById('output').innerHTML = 
+                        `<span class="success">✓ Query executed successfully:</span>\n${parsed.output || '(no output)'}`;
+                } else {
+                    document.getElementById('output').innerHTML = 
+                        `<span class="error">✗ Query failed: ${parsed.error}</span>`;
+                }
+            } catch (error) {
+                document.getElementById('output').innerHTML = 
+                    `<span class="error">✗ Execution error: ${error}</span>`;
+                console.error('Query execution failed:', error);
+            }
+        };
+
+        window.clearOutput = function() {
+            document.getElementById('output').innerHTML = 'Output cleared...';
+        };
+
+        window.testWasm = function() {
+            if (clink) {
+                const testResult = Clink.test();
+                document.getElementById('output').innerHTML = 
+                    `<span class="success">✓ WASM test passed: ${testResult}</span>`;
+            } else {
+                document.getElementById('output').innerHTML = 
+                    '<span class="error">✗ WebAssembly not initialized</span>';
+            }
+        };
+
+        window.loadExample = function(query, options = {}) {
+            document.getElementById('queryInput').value = query;
+            
+            // Set options
+            document.getElementById('trace').checked = options.trace || false;
+            document.getElementById('before').checked = options.before || false;
+            document.getElementById('changes').checked = options.changes || false;
+            document.getElementById('after').checked = options.after || false;
+        };
+
+        // Initialize WASM when page loads
+        initWasm();
+    </script>
+</body>
+</html>

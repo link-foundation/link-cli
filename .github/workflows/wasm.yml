@@ -1,0 +1,102 @@
+name: WebAssembly CI
+
+on:
+  push:
+    branches: [ main, issue-* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+
+    - name: Install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run Rust tests
+      run: cargo test --lib
+
+    - name: Build WebAssembly (web target)
+      run: wasm-pack build --target web --out-dir pkg
+
+    - name: Build WebAssembly (nodejs target)
+      run: wasm-pack build --target nodejs --out-dir pkg-node
+
+    - name: Build WebAssembly (bundler target)  
+      run: wasm-pack build --target bundler --out-dir pkg-bundler
+
+    - name: Install npm dependencies
+      run: npm install
+
+    - name: Run WebAssembly tests
+      run: wasm-pack test --headless --chrome
+
+    - name: Test Node.js integration
+      run: |
+        node -e "
+        const { Clink } = require('./pkg-node/clink_wasm.js');
+        const clink = new Clink();
+        const options = JSON.stringify({ changes: true, after: true });
+        const result = clink.execute('() ((1 1))', options);
+        const parsed = JSON.parse(result);
+        console.log('Node.js test result:', parsed.success ? 'PASSED' : 'FAILED');
+        process.exit(parsed.success ? 0 : 1);
+        "
+
+    - name: Upload WebAssembly artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: wasm-packages
+        path: |
+          pkg/
+          pkg-node/
+          pkg-bundler/
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+
+    - name: Install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+    - name: Build for web
+      run: wasm-pack build --target web --out-dir pkg
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        destination_dir: demo
+        exclude_assets: '.github,target,src,tests'
