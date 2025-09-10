@@ -623,7 +623,7 @@ namespace Foundation.Data.Doublets.Cli
       }
 
       uint parsed = links.Constants.Any;
-      if (TryParseLinkId(patternId, links.Constants, ref parsed))
+      if (TryParseLinkId(patternId, links, ref parsed))
       {
         if (parsed == links.Constants.Any) return true;
         return parsed == candidateId;
@@ -659,15 +659,9 @@ namespace Foundation.Data.Doublets.Cli
       {
         return anyConstant;
       }
-      if (TryParseLinkId(identifier, links.Constants, ref anyConstant))
+      if (TryParseLinkId(identifier, links, ref anyConstant))
       {
         return anyConstant;
-      }
-      // Add name resolution for deletion patterns
-      var namedId = links.GetByName(identifier);
-      if (namedId != links.Constants.Null)
-      {
-        return namedId;
       }
       return anyConstant;
     }
@@ -882,13 +876,13 @@ namespace Foundation.Data.Doublets.Cli
       uint index = defaultValue;
       uint source = defaultValue;
       uint target = defaultValue;
-      TryParseLinkId(linoLink.Id, links.Constants, ref index);
+      TryParseLinkId(linoLink.Id, links, ref index);
       if (linoLink.Values?.Count == 2)
       {
         var sourceLink = linoLink.Values[0];
-        TryParseLinkId(sourceLink.Id, links.Constants, ref source);
+        TryParseLinkId(sourceLink.Id, links, ref source);
         var targetLink = linoLink.Values[1];
-        TryParseLinkId(targetLink.Id, links.Constants, ref target);
+        TryParseLinkId(targetLink.Id, links, ref target);
       }
       return new DoubletLink(index, source, target);
     }
@@ -914,6 +908,48 @@ namespace Foundation.Data.Doublets.Cli
       {
         parsedValue = linkVal;
         return true;
+      }
+      return false;
+    }
+
+    private static bool TryParseLinkId(string? id, NamedLinksDecorator<uint> links, ref uint parsedValue)
+    {
+      if (string.IsNullOrEmpty(id)) return false;
+      if (id == "*")
+      {
+        parsedValue = links.Constants.Any;
+        return true;
+      }
+      else if (id.EndsWith(":"))
+      {
+        var trimmed = id.TrimEnd(':');
+        if (uint.TryParse(trimmed, out uint linkId))
+        {
+          parsedValue = linkId;
+          return true;
+        }
+        // Try to resolve as string alias
+        var aliasId = links.GetByName(trimmed);
+        if (aliasId != links.Constants.Null)
+        {
+          parsedValue = aliasId;
+          return true;
+        }
+      }
+      else if (uint.TryParse(id, out uint linkVal))
+      {
+        parsedValue = linkVal;
+        return true;
+      }
+      else
+      {
+        // Try to resolve as string alias
+        var aliasId = links.GetByName(id);
+        if (aliasId != links.Constants.Null)
+        {
+          parsedValue = aliasId;
+          return true;
+        }
       }
       return false;
     }
