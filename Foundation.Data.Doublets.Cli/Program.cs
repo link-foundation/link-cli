@@ -131,8 +131,26 @@ rootCommand.SetHandler(
 
     if (changes && changesList.Any())
     {
+      // Debug: Print raw changes before simplification (if trace is enabled)
+      if (trace)
+      {
+        Console.WriteLine("[DEBUG] Raw changes before simplification:");
+        for (int i = 0; i < changesList.Count; i++)
+        {
+          var (beforeLink, afterLink) = changesList[i];
+          Console.WriteLine($"[DEBUG] {i + 1}. ({beforeLink.Index}: {beforeLink.Source} {beforeLink.Target}) -> ({afterLink.Index}: {afterLink.Source} {afterLink.Target})");
+        }
+        Console.WriteLine($"[DEBUG] Total raw changes: {changesList.Count}");
+      }
+
       // Simplify the collected changes
       var simplifiedChanges = SimplifyChanges(changesList);
+
+      // Debug: Print simplified changes count (if trace is enabled)
+      if (trace)
+      {
+        Console.WriteLine($"[DEBUG] Simplified changes count: {simplifiedChanges.Count()}");
+      }
 
       // Print the simplified changes
       foreach (var (linkBefore, linkAfter) in simplifiedChanges)

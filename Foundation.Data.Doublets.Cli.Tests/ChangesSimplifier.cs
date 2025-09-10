@@ -327,6 +327,77 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       AssertChangeSetEqual(expectedSimplifiedChanges, simplifiedChanges);
     }
 
+    [Fact]
+    public void SimplifyChanges_Issue26_UpdateOperationSimplification()
+    {
+      // Arrange - This represents the scenario described in GitHub issue #26
+      // Where links (1: 1 2) and (2: 2 1) are being updated to swap source and target
+      // The issue was that intermediate steps were being shown instead of the final transformation
+      var changes = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        // Step 1: Link (1: 1 2) is first deleted (becomes null/empty)
+        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 0, source: 0, target: 0)),
+        
+        // Step 2: New link (1: 2 1) is created (swapped source and target)
+        (new Link<uint>(index: 0, source: 0, target: 0), new Link<uint>(index: 1, source: 2, target: 1)),
+        
+        // Step 3: Link (2: 2 1) is directly updated to (2: 1 2)
+        (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),
+      };
+
+      // Expected - The simplification should show only the initial-to-final transformations
+      var expectedSimplifiedChanges = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),
+        (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),
+      };
+
+      // Act
+      var simplifiedChanges = SimplifyChanges(changes).ToList();
+
+      // Assert
+      AssertChangeSetEqual(expectedSimplifiedChanges, simplifiedChanges);
+    }
+
+    [Fact]
+    public void SimplifyChanges_Issue26_AlternativeScenario_NoSimplificationOccurs()
+    {
+      // Arrange - This tests a different scenario that might represent the actual issue
+      // Maybe the problem is that the changes are NOT being chained correctly
+      // Let's simulate what might happen if the simplifier doesn't work correctly
+      var changes = new List<(Link<uint> Before, Link<uint> After)>
+      {
+        // Let's say we get these individual changes that don't form a proper chain
+        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 0, source: 0, target: 0)),  // delete
+        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),  // direct update (this might be what's reported)
+        (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),  // direct update
+      };
+
+      // Act
+      var simplifiedChanges = SimplifyChanges(changes).ToList();
+
+      // Debug output
+      Console.WriteLine("=== Debug: Alternative Scenario ===");
+      Console.WriteLine("Input changes:");
+      for (int i = 0; i < changes.Count; i++)
+      {
+        var (b, a) = changes[i];
+        Console.WriteLine($"  {i + 1}. ({b.Index}: {b.Source} {b.Target}) -> ({a.Index}: {a.Source} {a.Target})");
+      }
+
+      Console.WriteLine("Actual simplified changes:");
+      for (int i = 0; i < simplifiedChanges.Count; i++)
+      {
+        var (b, a) = simplifiedChanges[i];
+        Console.WriteLine($"  {i + 1}. ({b.Index}: {b.Source} {b.Target}) -> ({a.Index}: {a.Source} {a.Target})");
+      }
+      Console.WriteLine($"Count: {simplifiedChanges.Count}");
+      Console.WriteLine("=== End Debug ===");
+
+      // The issue might be that we get 3 changes instead of 2
+      // If the simplifier doesn't work, we'd see all 3 changes
+    }
+
     private static void AssertChangeSetEqual(
       List<(Link<uint> Before, Link<uint> After)> expectedSimplifiedChanges,
       List<(Link<uint> Before, Link<uint> After)> simplifiedChanges

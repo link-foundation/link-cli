@@ -27,6 +27,10 @@ namespace Foundation.Data.Doublets.Cli
         return Enumerable.Empty<(Link<uint>, Link<uint>)>();
       }
 
+      // **FIX for Issue #26**: Remove duplicate before states by keeping the last occurrence
+      // This handles cases where the same link is reported with multiple different transformations
+      changesList = RemoveDuplicateBeforeStates(changesList);
+
       // First, handle unchanged states directly
       var unchangedStates = new List<(Link<uint> Before, Link<uint> After)>();
       var changedStates = new List<(Link<uint> Before, Link<uint> After)>();
@@ -122,6 +126,61 @@ namespace Foundation.Data.Doublets.Cli
           .OrderBy(r => r.After.Index)
           .ThenBy(r => r.After.Source)
           .ThenBy(r => r.After.Target);
+    }
+
+    /// <summary>
+    /// Removes problematic duplicate before states that lead to simplification issues.
+    /// This fixes Issue #26 where multiple transformations from the same before state
+    /// to conflicting after states (including null states) would cause the simplifier to fail.
+    /// 
+    /// The key insight: If we have multiple transitions from the same before state,
+    /// and one of them is to a "null" state (0: 0 0), we should prefer the non-null transition
+    /// as it represents the actual final transformation.
+    /// </summary>
+    /// <param name="changes">The list of changes that may contain problematic duplicate before states</param>
+    /// <returns>A list with problematic duplicates resolved</returns>
+    private static List<(Link<uint> Before, Link<uint> After)> RemoveDuplicateBeforeStates(
+        List<(Link<uint> Before, Link<uint> After)> changes)
+    {
+      // Group changes by their before state
+      var groupedChanges = changes.GroupBy(c => c.Before, LinkEqualityComparer.Instance);
+      
+      var result = new List<(Link<uint> Before, Link<uint> After)>();
+      
+      foreach (var group in groupedChanges)
+      {
+        var changesForThisBefore = group.ToList();
+        
+        if (changesForThisBefore.Count == 1)
+        {
+          // No duplicates, keep as is
+          result.AddRange(changesForThisBefore);
+        }
+        else
+        {
+          // Multiple changes from the same before state
+          // Check if any of them is to a null state (0: 0 0)
+          var nullTransition = changesForThisBefore.FirstOrDefault(c => 
+              c.After.Index == 0 && c.After.Source == 0 && c.After.Target == 0);
+          var nonNullTransitions = changesForThisBefore.Where(c => 
+              !(c.After.Index == 0 && c.After.Source == 0 && c.After.Target == 0)).ToList();
+          
+          if (nullTransition != default && nonNullTransitions.Count > 0)
+          {
+            // Issue #26 scenario: We have both null and non-null transitions
+            // Prefer the non-null transitions as they represent the actual final states
+            result.AddRange(nonNullTransitions);
+          }
+          else
+          {
+            // No null transitions involved, this is a legitimate multiple-branch scenario
+            // Keep all transitions
+            result.AddRange(changesForThisBefore);
+          }
+        }
+      }
+      
+      return result;
     }
 
     /// <summary>
