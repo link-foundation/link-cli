@@ -70,7 +70,24 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
-var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
+// Server command options
+var portOption = new Option<int>(
+  name: "--port",
+  description: "Port number for the GraphQL server",
+  getDefaultValue: () => 5000
+);
+portOption.AddAlias("-p");
+
+// Create server command
+var serverCommand = new Command("serve", "Start LINO GraphQL API server")
+{
+  dbOption,
+  portOption,
+  traceOption
+};
+
+// Create query command (existing functionality)
+var queryCommand = new Command("query", "Execute LINO query")
 {
   dbOption,
   queryOption,
@@ -82,73 +99,125 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   afterOption
 };
 
+var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
+{
+  serverCommand,
+  queryCommand,
+  // Keep backward compatibility - add options directly to root too
+  dbOption,
+  queryOption,
+  queryArgument,
+  traceOption,
+  structureOption,
+  beforeOption,
+  changesOption,
+  afterOption
+};
+
+// Server command handler
+serverCommand.SetHandler(
+  async (string db, int port, bool trace) =>
+  {
+    var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
+    var server = new LinoGraphQLServer(decoratedLinks, port, trace);
+    
+    Console.WriteLine($"Starting LINO GraphQL API server on port {port}...");
+    Console.WriteLine("Press Ctrl+C to stop the server");
+    
+    try
+    {
+      await server.StartAsync();
+    }
+    catch (Exception ex)
+    {
+      Console.Error.WriteLine($"Server error: {ex.Message}");
+      Environment.Exit(1);
+    }
+  },
+  dbOption, portOption, traceOption
+);
+
+// Query command handler
+queryCommand.SetHandler(
+  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+  {
+    ExecuteQueryCommand(db, queryOptionValue, queryArgumentValue, trace, structure, before, changes, after);
+  },
+  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
+);
+
+// Root command handler (backward compatibility)
 rootCommand.SetHandler(
   (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
   {
-    var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
-
-    // If --structure is provided, handle it separately
-    if (structure.HasValue)
-    {
-      var linkId = structure.Value;
-      try
-      {
-        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
-        Console.WriteLine(Namify(decoratedLinks, structureFormatted));
-      }
-      catch (Exception ex)
-      {
-        Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
-        Environment.Exit(1);
-      }
-      return; // Exit after handling --structure
-    }
-
-    if (before)
-    {
-      PrintAllLinks(decoratedLinks);
-    }
-
-    var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
-
-    var changesList = new List<(DoubletLink Before, DoubletLink After)>();
-
-    if (!string.IsNullOrWhiteSpace(effectiveQuery))
-    {
-      var options = new QueryProcessor.Options
-      {
-        Query = effectiveQuery,
-        Trace = trace,
-        ChangesHandler = (beforeLink, afterLink) =>
-        {
-          changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
-          return decoratedLinks.Constants.Continue;
-        }
-      };
-
-      QueryProcessor.ProcessQuery(decoratedLinks, options);
-    }
-
-    if (changes && changesList.Any())
-    {
-      // Simplify the collected changes
-      var simplifiedChanges = SimplifyChanges(changesList);
-
-      // Print the simplified changes
-      foreach (var (linkBefore, linkAfter) in simplifiedChanges)
-      {
-        PrintChange(decoratedLinks, linkBefore, linkAfter);
-      }
-    }
-
-    if (after)
-    {
-      PrintAllLinks(decoratedLinks);
-    }
+    ExecuteQueryCommand(db, queryOptionValue, queryArgumentValue, trace, structure, before, changes, after);
   },
-  // Explicitly specify the type parameters
   dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
 );
+
+static void ExecuteQueryCommand(string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after)
+{
+  var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
+
+  // If --structure is provided, handle it separately
+  if (structure.HasValue)
+  {
+    var linkId = structure.Value;
+    try
+    {
+      var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
+      Console.WriteLine(Namify(decoratedLinks, structureFormatted));
+    }
+    catch (Exception ex)
+    {
+      Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
+      Environment.Exit(1);
+    }
+    return; // Exit after handling --structure
+  }
+
+  if (before)
+  {
+    PrintAllLinks(decoratedLinks);
+  }
+
+  var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+
+  var changesList = new List<(DoubletLink Before, DoubletLink After)>();
+
+  if (!string.IsNullOrWhiteSpace(effectiveQuery))
+  {
+    var options = new QueryProcessor.Options
+    {
+      Query = effectiveQuery,
+      Trace = trace,
+      ChangesHandler = (beforeLink, afterLink) =>
+      {
+        changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
+        return decoratedLinks.Constants.Continue;
+      }
+    };
+
+    QueryProcessor.ProcessQuery(decoratedLinks, options);
+  }
+
+  if (changes && changesList.Any())
+  {
+    // Simplify the collected changes
+    var simplifiedChanges = SimplifyChanges(changesList);
+
+    // Print the simplified changes
+    foreach (var (linkBefore, linkAfter) in simplifiedChanges)
+    {
+      PrintChange(decoratedLinks, linkBefore, linkAfter);
+    }
+  }
+
+  if (after)
+  {
+    PrintAllLinks(decoratedLinks);
+  }
+}
 
 await rootCommand.InvokeAsync(args);
 
