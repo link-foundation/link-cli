@@ -93,7 +93,7 @@ rootCommand.SetHandler(
       var linkId = structure.Value;
       try
       {
-        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
+        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), false, false);
         Console.WriteLine(Namify(decoratedLinks, structureFormatted));
       }
       catch (Exception ex)
