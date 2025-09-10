@@ -4,7 +4,7 @@ name: C#
 on:
   push:
     tags:
-      - 'v*'  # This example triggers on tags like v1.0.0
+      - "v*"  # This example triggers on tags like v1.0.0
 
 jobs:
   build-and-publish:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'  # Updated to match your project
+          dotnet-version: "8.0.x"  # Updated to match your project
 
       # Step 3: Restore dependencies
       - name: Restore dependencies
