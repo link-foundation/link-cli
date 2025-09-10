@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
@@ -70,6 +71,12 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var exportOption = new Option<string?>(
+  name: "--export",
+  description: "Export the database to a LiNo file"
+);
+exportOption.AddAlias("-e");
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,13 +86,39 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  exportOption
 };
 
-rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+rootCommand.SetHandler((InvocationContext context) =>
   {
-    var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
+    var db = context.ParseResult.GetValueForOption(dbOption);
+    var queryOptionValue = context.ParseResult.GetValueForOption(queryOption);
+    var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument);
+    var trace = context.ParseResult.GetValueForOption(traceOption);
+    var structure = context.ParseResult.GetValueForOption(structureOption);
+    var before = context.ParseResult.GetValueForOption(beforeOption);
+    var changes = context.ParseResult.GetValueForOption(changesOption);
+    var after = context.ParseResult.GetValueForOption(afterOption);
+    var export = context.ParseResult.GetValueForOption(exportOption);
+    
+    var decoratedLinks = new NamedLinksDecorator<uint>(db!, trace);
+
+    // If --export is provided, handle it separately
+    if (!string.IsNullOrWhiteSpace(export))
+    {
+      try
+      {
+        ExportToLino(decoratedLinks, export);
+        Console.WriteLine($"Database exported to {export}");
+      }
+      catch (Exception ex)
+      {
+        Console.Error.WriteLine($"Error exporting database to {export}: {ex.Message}");
+        Environment.Exit(1);
+      }
+      return; // Exit after handling --export
+    }
 
     // If --structure is provided, handle it separately
     if (structure.HasValue)
@@ -145,10 +178,8 @@ rootCommand.SetHandler(
     {
       PrintAllLinks(decoratedLinks);
     }
-  },
-  // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
-);
+  });
+
 
 await rootCommand.InvokeAsync(args);
 
@@ -189,4 +220,21 @@ static void PrintChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore,
   var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
   var formattedChange = $"({beforeText}) ({afterText})";
   Console.WriteLine(Namify(links, formattedChange));
+}
+
+static void ExportToLino(NamedLinksDecorator<uint> links, string filePath)
+{
+  var any = links.Constants.Any;
+  var query = new DoubletLink(index: any, source: any, target: any);
+  var linksNotation = new List<string>();
+
+  links.Each(query, link =>
+  {
+    var formattedLink = links.Format(link);
+    var namedLink = Namify(links, formattedLink);
+    linksNotation.Add(namedLink);
+    return links.Constants.Continue;
+  });
+
+  File.WriteAllLines(filePath, linksNotation);
 }
