@@ -215,6 +215,63 @@ clink '((($index: $source $target)) (($index: $target $source)))' --changes --af
 clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
+## Storable Transformation Patterns
+
+You can store transformation patterns to be automatically executed whenever data changes occur. This enables dynamic programmable behavior for the links network.
+
+### Store a transformation pattern
+
+Store a transformation pattern that changes any link with source 1 and target 1 to have target 2:
+
+```bash
+clink '((1 1)) ((1 2))' --always --changes
+```
+→
+```
+((1: 1 1)) ((1: 1 2))
+Transformation pattern stored: ((1 1)) ((1 2))
+```
+
+The pattern is saved in `patterns.json` file and will be automatically applied whenever any data change occurs.
+
+### Trigger stored patterns
+
+When you make any change to the data store, stored patterns are automatically executed:
+
+```bash
+clink '() ((1 1))' --changes --after
+```
+→
+```
+() ((1: 1 1))
+Applied stored pattern: ((1 1)) ((1 2)) - Success
+(1: 1 2)
+```
+
+Notice how the link was created as `(1 1)` but the stored pattern transformed it to `(1 2)`.
+
+### Remove a transformation pattern
+
+Remove a stored transformation pattern:
+
+```bash
+clink '((1 1)) ((1 2))' --never
+```
+→
+```
+Transformation pattern removed: ((1 1)) ((1 2))
+```
+
+### Use custom patterns file
+
+Store patterns in a separate file to avoid making the links network dynamically programmable:
+
+```bash
+clink '((2 2)) ((2 3))' --always --patterns-file my_patterns.json
+```
+
+This creates a separate `my_patterns.json` file for storing transformation patterns.
+
 ## All options and arguments
 
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
@@ -227,6 +284,9 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+| `--always`              | bool    | `false`        | _None_                              | Store the query as a transformation pattern to be executed on every data store change |
+| `--never`               | bool    | `false`        | _None_                              | Remove the stored transformation pattern                                   |
+| `--patterns-file`       | string  | `patterns.json` | _None_                             | Path to the transformation patterns file                                   |
 
 ## For developers and debugging
 

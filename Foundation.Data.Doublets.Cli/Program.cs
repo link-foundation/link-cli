@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
@@ -70,6 +71,24 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var alwaysOption = new Option<bool>(
+  name: "--always",
+  description: "Store the query as a transformation pattern to be executed on every data store change",
+  getDefaultValue: () => false
+);
+
+var neverOption = new Option<bool>(
+  name: "--never",
+  description: "Remove the stored transformation pattern",
+  getDefaultValue: () => false
+);
+
+var patternsFileOption = new Option<string>(
+  name: "--patterns-file",
+  description: "Path to the transformation patterns file",
+  getDefaultValue: () => "patterns.json"
+);
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,12 +98,26 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  alwaysOption,
+  neverOption,
+  patternsFileOption
 };
 
 rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+  (InvocationContext context) =>
   {
+    var db = context.ParseResult.GetValueForOption(dbOption)!;
+    var queryOptionValue = context.ParseResult.GetValueForOption(queryOption) ?? "";
+    var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument) ?? "";
+    var trace = context.ParseResult.GetValueForOption(traceOption);
+    var structure = context.ParseResult.GetValueForOption(structureOption);
+    var before = context.ParseResult.GetValueForOption(beforeOption);
+    var changes = context.ParseResult.GetValueForOption(changesOption);
+    var after = context.ParseResult.GetValueForOption(afterOption);
+    var always = context.ParseResult.GetValueForOption(alwaysOption);
+    var never = context.ParseResult.GetValueForOption(neverOption);
+    var patternsFile = context.ParseResult.GetValueForOption(patternsFileOption)!;
     var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
 
     // If --structure is provided, handle it separately
@@ -141,13 +174,45 @@ rootCommand.SetHandler(
       }
     }
 
+    // Handle storable transformation patterns
+    var patternManager = new StorablePatternManager(patternsFile);
+    
+    if (always && !string.IsNullOrWhiteSpace(effectiveQuery))
+    {
+      patternManager.AddPattern(effectiveQuery);
+      Console.WriteLine($"Transformation pattern stored: {effectiveQuery}");
+    }
+    
+    if (never && !string.IsNullOrWhiteSpace(effectiveQuery))
+    {
+      bool removed = patternManager.RemovePattern(effectiveQuery);
+      if (removed)
+      {
+        Console.WriteLine($"Transformation pattern removed: {effectiveQuery}");
+      }
+      else
+      {
+        Console.WriteLine($"Transformation pattern not found: {effectiveQuery}");
+      }
+    }
+    
+    // Apply stored patterns on any data change
+    if (changesList.Any())
+    {
+      patternManager.ApplyStoredPatternsOnChange(decoratedLinks, (status, pattern) =>
+      {
+        if (trace)
+        {
+          Console.WriteLine($"Applied stored pattern: {pattern.Query} - {status}");
+        }
+      });
+    }
+
     if (after)
     {
       PrintAllLinks(decoratedLinks);
     }
-  },
-  // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
+  }
 );
 
 await rootCommand.InvokeAsync(args);
