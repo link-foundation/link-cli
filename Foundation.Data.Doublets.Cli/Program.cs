@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
@@ -70,6 +71,11 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var linoOutputOption = new Option<string?>(
+  name: "--lino-output",
+  description: "Path to write LiNo output to file instead of console"
+);
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,75 +85,116 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  linoOutputOption
 };
 
 rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+  (InvocationContext context) =>
   {
+    var db = context.ParseResult.GetValueForOption(dbOption)!;
+    var queryOptionValue = context.ParseResult.GetValueForOption(queryOption) ?? "";
+    var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument) ?? "";
+    var trace = context.ParseResult.GetValueForOption(traceOption);
+    var structure = context.ParseResult.GetValueForOption(structureOption);
+    var before = context.ParseResult.GetValueForOption(beforeOption);
+    var changes = context.ParseResult.GetValueForOption(changesOption);
+    var after = context.ParseResult.GetValueForOption(afterOption);
+    var linoOutput = context.ParseResult.GetValueForOption(linoOutputOption);
+
     var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
 
-    // If --structure is provided, handle it separately
-    if (structure.HasValue)
+    // Set up file writer if --lino-output is provided
+    StreamWriter? fileWriter = null;
+    if (!string.IsNullOrEmpty(linoOutput))
     {
-      var linkId = structure.Value;
       try
       {
-        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
-        Console.WriteLine(Namify(decoratedLinks, structureFormatted));
+        fileWriter = new StreamWriter(linoOutput);
       }
       catch (Exception ex)
       {
-        Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
+        Console.Error.WriteLine($"Error opening output file '{linoOutput}': {ex.Message}");
         Environment.Exit(1);
       }
-      return; // Exit after handling --structure
     }
 
-    if (before)
+    try
     {
-      PrintAllLinks(decoratedLinks);
-    }
-
-    var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
-
-    var changesList = new List<(DoubletLink Before, DoubletLink After)>();
-
-    if (!string.IsNullOrWhiteSpace(effectiveQuery))
-    {
-      var options = new QueryProcessor.Options
+      // If --structure is provided, handle it separately
+      if (structure.HasValue)
       {
-        Query = effectiveQuery,
-        Trace = trace,
-        ChangesHandler = (beforeLink, afterLink) =>
+        var linkId = structure.Value;
+        try
         {
-          changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
-          return decoratedLinks.Constants.Continue;
+          var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
+          var output = Namify(decoratedLinks, structureFormatted);
+          
+          if (fileWriter != null)
+          {
+            fileWriter.WriteLine(output);
+          }
+          else
+          {
+            Console.WriteLine(output);
+          }
         }
-      };
+        catch (Exception ex)
+        {
+          Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
+          Environment.Exit(1);
+        }
+        return; // Exit after handling --structure
+      }
 
-      QueryProcessor.ProcessQuery(decoratedLinks, options);
-    }
-
-    if (changes && changesList.Any())
-    {
-      // Simplify the collected changes
-      var simplifiedChanges = SimplifyChanges(changesList);
-
-      // Print the simplified changes
-      foreach (var (linkBefore, linkAfter) in simplifiedChanges)
+      if (before)
       {
-        PrintChange(decoratedLinks, linkBefore, linkAfter);
+        PrintAllLinksToFile(decoratedLinks, fileWriter);
+      }
+
+      var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+
+      var changesList = new List<(DoubletLink Before, DoubletLink After)>();
+
+      if (!string.IsNullOrWhiteSpace(effectiveQuery))
+      {
+        var options = new QueryProcessor.Options
+        {
+          Query = effectiveQuery,
+          Trace = trace,
+          ChangesHandler = (beforeLink, afterLink) =>
+          {
+            changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
+            return decoratedLinks.Constants.Continue;
+          }
+        };
+
+        QueryProcessor.ProcessQuery(decoratedLinks, options);
+      }
+
+      if (changes && changesList.Any())
+      {
+        // Simplify the collected changes
+        var simplifiedChanges = SimplifyChanges(changesList);
+
+        // Print the simplified changes
+        foreach (var (linkBefore, linkAfter) in simplifiedChanges)
+        {
+          PrintChangeToFile(decoratedLinks, linkBefore, linkAfter, fileWriter);
+        }
+      }
+
+      if (after)
+      {
+        PrintAllLinksToFile(decoratedLinks, fileWriter);
       }
     }
-
-    if (after)
+    finally
     {
-      PrintAllLinks(decoratedLinks);
+      fileWriter?.Close();
+      fileWriter?.Dispose();
     }
-  },
-  // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
+  }
 );
 
 await rootCommand.InvokeAsync(args);
@@ -183,10 +230,49 @@ static void PrintAllLinks(NamedLinksDecorator<uint> links)
   });
 }
 
+static void PrintAllLinksToFile(NamedLinksDecorator<uint> links, StreamWriter? fileWriter)
+{
+  var any = links.Constants.Any;
+  var query = new DoubletLink(index: any, source: any, target: any);
+
+  links.Each(query, link =>
+  {
+    var formattedLink = links.Format(link);
+    var output = Namify(links, formattedLink);
+    
+    if (fileWriter != null)
+    {
+      fileWriter.WriteLine(output);
+    }
+    else
+    {
+      Console.WriteLine(output);
+    }
+    return links.Constants.Continue;
+  });
+}
+
 static void PrintChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
 {
   var beforeText = linkBefore.IsNull() ? "" : links.Format(linkBefore);
   var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
   var formattedChange = $"({beforeText}) ({afterText})";
   Console.WriteLine(Namify(links, formattedChange));
+}
+
+static void PrintChangeToFile(NamedLinksDecorator<uint> links, DoubletLink linkBefore, DoubletLink linkAfter, StreamWriter? fileWriter)
+{
+  var beforeText = linkBefore.IsNull() ? "" : links.Format(linkBefore);
+  var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
+  var formattedChange = $"({beforeText}) ({afterText})";
+  var output = Namify(links, formattedChange);
+  
+  if (fileWriter != null)
+  {
+    fileWriter.WriteLine(output);
+  }
+  else
+  {
+    Console.WriteLine(output);
+  }
 }
