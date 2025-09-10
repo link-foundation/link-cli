@@ -227,6 +227,81 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+| `--server`              | bool    | `false`        | _None_                              | Start server listening on a port                                           |
+| `--port`                | int     | `8080`         | `-p`                                | Port to listen on when in server mode                                      |
+
+## Server mode (LiNo API)
+
+The CLI can be run in server mode, providing a WebSocket API for remote LiNo query execution:
+
+```bash
+clink --server --port 8080
+```
+
+This starts a WebSocket server that listens for LiNo queries and returns structured JSON responses. The server endpoint is available at `ws://localhost:PORT/ws`.
+
+### WebSocket API
+
+**Send:** LiNo query as plain text
+```
+() ((1 1))
+```
+
+**Receive:** JSON response with query results
+```json
+{
+  "query": "() ((1 1))",
+  "changes": [
+    {
+      "before": "",
+      "after": "(1: 1 1)"
+    }
+  ],
+  "links": [
+    "(1: 1 1)"
+  ]
+}
+```
+
+The response includes:
+- `query`: The original query that was processed
+- `changes`: Array of before/after pairs showing what changed
+- `links`: Current state of all links in the database
+
+### Server examples
+
+Start server on default port (8080):
+```bash
+clink --server
+```
+
+Start server on custom port:
+```bash
+clink --server --port 3000
+```
+
+Start server with custom database:
+```bash
+clink --server --db mydata.links --port 8080
+```
+
+### Client example (JavaScript)
+
+```javascript
+const ws = new WebSocket('ws://localhost:8080/ws');
+
+ws.onopen = function() {
+    // Send a LiNo query to create a link
+    ws.send('() ((1 1))');
+};
+
+ws.onmessage = function(event) {
+    const response = JSON.parse(event.data);
+    console.log('Query:', response.query);
+    console.log('Changes:', response.changes);
+    console.log('All links:', response.links);
+};
+```
 
 ## For developers and debugging
 
@@ -241,6 +316,19 @@ dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 
 ```bash
 cd Foundation.Data.Doublets.Cli
 dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
+```
+
+### Run server mode from root
+
+```bash
+dotnet run --project Foundation.Data.Doublets.Cli -- --server --port 8080
+```
+
+### Run server mode from folder
+
+```bash
+cd Foundation.Data.Doublets.Cli
+dotnet run -- --server --port 8080
 ```
 
 ### Complete examples:
