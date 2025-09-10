@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8</TargetFramework>
+    <TargetFrameworks>net7;net8</TargetFrameworks>
+    <LangVersion>12.0</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
@@ -15,15 +16,15 @@
     <Authors>link-foundation</Authors>
     <Description>A CLI tool for links manipulation.</Description>
     <PackageId>clink</PackageId>
-    <Version>2.2.2</Version>
+    <Version>2.3.0</Version>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Platform.Data" Version="0.16.1" />
-    <PackageReference Include="Platform.Data.Doublets" Version="0.18.1" />
-    <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.6.5" />
+    <PackageReference Include="Platform.Data.Doublets" Version="0.17.2" />
+    <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.5.2" />
     <PackageReference Include="Platform.Protocols.Lino" Version="0.4.5" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
