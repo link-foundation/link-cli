@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option csharp_namespace = "Foundation.Data.Doublets.Cli.Benchmarks.Protocols.Grpc";
+
+package links;
+
+service LinksService {
+  rpc CreateLink (CreateLinkRequest) returns (CreateLinkResponse);
+  rpc GetLink (GetLinkRequest) returns (GetLinkResponse);
+  rpc QueryLinks (QueryLinksRequest) returns (QueryLinksResponse);
+  rpc UpdateLink (UpdateLinkRequest) returns (UpdateLinkResponse);
+  rpc DeleteLink (DeleteLinkRequest) returns (DeleteLinkResponse);
+}
+
+message CreateLinkRequest {
+  string lino_data = 1;
+}
+
+message CreateLinkResponse {
+  string lino_data = 1;
+}
+
+message GetLinkRequest {
+  uint32 id = 1;
+}
+
+message GetLinkResponse {
+  string lino_data = 1;
+}
+
+message QueryLinksRequest {
+  string lino_query = 1;
+}
+
+message QueryLinksResponse {
+  string lino_data = 1;
+}
+
+message UpdateLinkRequest {
+  string lino_data = 1;
+}
+
+message UpdateLinkResponse {
+  string lino_data = 1;
+}
+
+message DeleteLinkRequest {
+  string lino_data = 1;
+}
+
+message DeleteLinkResponse {
+  bool success = 1;
+}
