@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['7.0.x', '8.0.x']
 
     steps:
       # Step 1: Checkout the repository
@@ -19,7 +22,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'  # Updated to match your project
+          dotnet-version: ${{ matrix.dotnet-version }}
 
       # Step 3: Restore dependencies
       - name: Restore dependencies
