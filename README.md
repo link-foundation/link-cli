@@ -5,6 +5,15 @@ It is based on [associative theory](https://habr.com/ru/articles/895896) (also i
 
 It uses C# implementation of [a links data store](https://github.com/linksplatform?view_as=public) (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
 
+## 🌐 WebAssembly Version Available!
+
+**NEW**: You can now run `clink` directly in your browser! Check out the WebAssembly version:
+- 🚀 **[Live Demo](https://link-foundation.github.io/link-cli/demo/www/)** - Try it in your browser
+- 📦 **NPM Package**: `npm install clink-wasm`
+- 📖 **Documentation**: [README-WASM.md](README-WASM.md)
+
+## Installation
+
 This CLI tool can be installed globally as `clink` using single command (that will work if you have [.NET](https://dotnet.microsoft.com/en-us/download) installed):
 
 ```bash

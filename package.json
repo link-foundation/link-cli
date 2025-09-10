@@ -1,0 +1,42 @@
+{
+  "name": "clink-wasm",
+  "version": "2.3.0",
+  "description": "A CLI tool for links manipulation - WebAssembly version",
+  "main": "pkg/clink_wasm.js",
+  "types": "pkg/clink_wasm.d.ts",
+  "files": [
+    "pkg"
+  ],
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir pkg",
+    "build:nodejs": "wasm-pack build --target nodejs --out-dir pkg-node",
+    "build:bundler": "wasm-pack build --target bundler --out-dir pkg-bundler",
+    "build:all": "npm run build && npm run build:nodejs && npm run build:bundler",
+    "serve": "python3 -m http.server 8000",
+    "test": "wasm-pack test --chrome --headless",
+    "test:firefox": "wasm-pack test --firefox --headless",
+    "clean": "rm -rf pkg pkg-node pkg-bundler target"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/link-foundation/link-cli.git"
+  },
+  "keywords": [
+    "webassembly",
+    "wasm",
+    "rust",
+    "cli",
+    "links",
+    "doublets",
+    "lino"
+  ],
+  "author": "link-foundation",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/link-foundation/link-cli/issues"
+  },
+  "homepage": "https://github.com/link-foundation/link-cli#readme",
+  "devDependencies": {
+    "wasm-pack": "^0.12.1"
+  }
+}
