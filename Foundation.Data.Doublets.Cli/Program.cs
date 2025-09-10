@@ -3,6 +3,10 @@ using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
 using Platform.Protocols.Lino;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
 
 using static Foundation.Data.Doublets.Cli.ChangesSimplifier;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
@@ -70,6 +74,30 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+// Server command options
+var portOption = new Option<int>(
+  name: "--port",
+  description: "Port for the REST API server",
+  getDefaultValue: () => 5000
+);
+portOption.AddAlias("-p");
+
+var hostOption = new Option<string>(
+  name: "--host",
+  description: "Host address for the REST API server",
+  getDefaultValue: () => "localhost"
+);
+hostOption.AddAlias("-h");
+
+// Create server command
+var serverCommand = new Command("serve", "Start REST API server")
+{
+  dbOption,
+  portOption,
+  hostOption,
+  traceOption
+};
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -81,6 +109,47 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   changesOption,
   afterOption
 };
+
+rootCommand.AddCommand(serverCommand);
+
+// Server command handler
+serverCommand.SetHandler(
+  async (string db, int port, string host, bool trace) =>
+  {
+    Console.WriteLine($"Starting LINO REST API server on {host}:{port}");
+    Console.WriteLine($"Database: {db}");
+    Console.WriteLine($"Trace mode: {trace}");
+    
+    var builder = WebApplication.CreateBuilder();
+    
+    // Configure services
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+    
+    // Configure database path
+    builder.Configuration["Database:Path"] = db;
+    
+    // Configure web server
+    builder.WebHost.UseUrls($"http://{host}:{port}");
+    
+    var app = builder.Build();
+    
+    // Configure pipeline
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+    
+    app.MapControllers();
+    
+    Console.WriteLine($"Server started! Visit http://{host}:{port}/swagger for API documentation");
+    
+    await app.RunAsync();
+  },
+  dbOption, portOption, hostOption, traceOption
+);
 
 rootCommand.SetHandler(
   (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>

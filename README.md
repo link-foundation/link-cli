@@ -215,6 +215,61 @@ clink '((($index: $source $target)) (($index: $target $source)))' --changes --af
 clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
+## REST API Server
+
+The CLI tool can also run as a REST API server that accepts LINO queries instead of JSON.
+
+### Start the server
+
+```bash
+clink serve --port 5000 --host localhost
+```
+
+Or with custom database:
+```bash
+clink serve --db custom.links --port 8080 --trace
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/links` | Get all links |
+| POST | `/api/links` | Create links |
+| PUT | `/api/links` | Update links |
+| DELETE | `/api/links` | Delete links |
+| POST | `/api/links/query` | Execute arbitrary LINO query |
+
+### Examples
+
+**Get all links:**
+```bash
+curl -X GET http://localhost:5000/api/links
+```
+
+**Create links:**
+```bash
+curl -X POST http://localhost:5000/api/links \
+  -H "Content-Type: application/json" \
+  -d '{"query": "() ((1 1) (2 2))"}'
+```
+
+**Update links:**
+```bash
+curl -X PUT http://localhost:5000/api/links \
+  -H "Content-Type: application/json" \
+  -d '{"query": "((1: 1 1)) ((1: 1 2))"}'
+```
+
+**Execute custom query:**
+```bash
+curl -X POST http://localhost:5000/api/links/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "((($i: $s $t)) (($i: $s $t)))", "trace": true}'
+```
+
+Visit `http://localhost:5000/swagger` for interactive API documentation.
+
 ## All options and arguments
 
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
@@ -227,6 +282,13 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+
+### Server command options
+
+| Parameter | Type | Default Value | Aliases | Description |
+|-----------|------|---------------|---------|-------------|
+| `--port` | int | `5000` | `-p` | Port for the REST API server |
+| `--host` | string | `localhost` | `-h` | Host address for the REST API server |
 
 ## For developers and debugging
 

@@ -13,12 +13,16 @@
 
   <PropertyGroup>
     <Authors>link-foundation</Authors>
-    <Description>A CLI tool for links manipulation.</Description>
+    <Description>A CLI tool for links manipulation with REST API support.</Description>
     <PackageId>clink</PackageId>
-    <Version>2.2.2</Version>
+    <Version>2.3.0</Version>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Platform.Data" Version="0.16.1" />
@@ -26,6 +30,7 @@
     <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.6.5" />
     <PackageReference Include="Platform.Protocols.Lino" Version="0.4.5" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
