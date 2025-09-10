@@ -70,6 +70,77 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+// Create benchmark subcommand
+var benchmarkCommand = new Command("benchmark", "Run benchmark comparing CLI access vs LiNo protocol server access");
+
+var iterationsOption = new Option<int>(
+  name: "--iterations",
+  description: "Number of iterations per query",
+  getDefaultValue: () => 10
+);
+iterationsOption.AddAlias("-i");
+
+var warmupOption = new Option<int>(
+  name: "--warmup",
+  description: "Number of warmup iterations",
+  getDefaultValue: () => 3
+);
+warmupOption.AddAlias("-w");
+
+var serverPortOption = new Option<int>(
+  name: "--server-port",
+  description: "Port for the benchmark server",
+  getDefaultValue: () => 8080
+);
+serverPortOption.AddAlias("-p");
+
+var testQueriesOption = new Option<string[]>(
+  name: "--queries",
+  description: "Test queries to benchmark (if not specified, uses default set)"
+);
+testQueriesOption.AddAlias("-q");
+
+benchmarkCommand.AddOption(dbOption);
+benchmarkCommand.AddOption(traceOption);
+benchmarkCommand.AddOption(iterationsOption);
+benchmarkCommand.AddOption(warmupOption);
+benchmarkCommand.AddOption(serverPortOption);
+benchmarkCommand.AddOption(testQueriesOption);
+
+benchmarkCommand.SetHandler(async (string db, bool trace, int iterations, int warmup, int serverPort, string[] testQueries) =>
+{
+  var defaultQueries = new[]
+  {
+    "() ((1 1))",                                                    // Create single link
+    "() ((1 1) (2 2))",                                             // Create multiple links
+    "((($i: $s $t)) (($i: $s $t)))",                               // Read all links
+    "((1: 1 1)) ((1: 1 2))",                                       // Update single link
+    "((1 2)) ()"                                                   // Delete link (will only work if link exists)
+  };
+
+  var queries = testQueries?.Any() == true ? testQueries.ToList() : defaultQueries.ToList();
+
+  var benchmarkRunner = new BenchmarkRunner(db, trace);
+  var options = new BenchmarkOptions
+  {
+    TestQueries = queries,
+    IterationsPerQuery = iterations,
+    WarmupIterations = warmup,
+    ServerPort = serverPort
+  };
+
+  try
+  {
+    var results = await benchmarkRunner.RunBenchmarkAsync(options);
+    results.PrintReport();
+  }
+  catch (Exception ex)
+  {
+    Console.Error.WriteLine($"Benchmark failed: {ex.Message}");
+    Environment.Exit(1);
+  }
+}, dbOption, traceOption, iterationsOption, warmupOption, serverPortOption, testQueriesOption);
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,7 +150,8 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  benchmarkCommand
 };
 
 rootCommand.SetHandler(
