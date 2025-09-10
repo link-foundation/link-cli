@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.IO;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
@@ -70,6 +71,12 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var exportOption = new Option<string>(
+  name: "--export",
+  description: "Export the links database to a LiNo file"
+);
+exportOption.AddAlias("-e");
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,11 +86,12 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  exportOption
 };
 
 rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after, string exportFile) =>
   {
     var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
 
@@ -145,9 +153,14 @@ rootCommand.SetHandler(
     {
       PrintAllLinks(decoratedLinks);
     }
+
+    if (!string.IsNullOrWhiteSpace(exportFile))
+    {
+      ExportToLinoFile(decoratedLinks, exportFile);
+    }
   },
   // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
+  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption, exportOption
 );
 
 await rootCommand.InvokeAsync(args);
@@ -189,4 +202,45 @@ static void PrintChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore,
   var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
   var formattedChange = $"({beforeText}) ({afterText})";
   Console.WriteLine(Namify(links, formattedChange));
+}
+
+static void ExportToLinoFile(NamedLinksDecorator<uint> links, string fileName)
+{
+  var exportLinks = new List<Platform.Protocols.Lino.Link<string>>();
+  var any = links.Constants.Any;
+  var query = new DoubletLink(index: any, source: any, target: any);
+
+  links.Each(query, link =>
+  {
+    // Get named representation if available, otherwise use ID
+    var sourceName = links.GetName(link.Source) ?? link.Source.ToString();
+    var targetName = links.GetName(link.Target) ?? link.Target.ToString();
+    
+    // Create LiNo Link with ID and source/target values
+    var linoLink = new Platform.Protocols.Lino.Link<string>(
+      link.Index.ToString(), 
+      new List<Platform.Protocols.Lino.Link<string>> 
+      {
+        new Platform.Protocols.Lino.Link<string>(sourceName),
+        new Platform.Protocols.Lino.Link<string>(targetName)
+      }
+    );
+    
+    exportLinks.Add(linoLink);
+    return links.Constants.Continue;
+  });
+
+  // Export to LiNo format with clean formatting
+  string linoContent = Platform.Protocols.Lino.IListExtensions.Format(exportLinks, lessParentheses: true);
+  
+  try
+  {
+    File.WriteAllText(fileName, linoContent);
+    Console.WriteLine($"Exported {exportLinks.Count} links to {fileName}");
+  }
+  catch (Exception ex)
+  {
+    Console.Error.WriteLine($"Error writing to file {fileName}: {ex.Message}");
+    Environment.Exit(1);
+  }
 }
