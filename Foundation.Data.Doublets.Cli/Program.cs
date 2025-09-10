@@ -9,6 +9,7 @@ using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using QueryProcessor = Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor;
 using Foundation.Data.Doublets.Cli;
 using System.Text.RegularExpressions;
+using System.CommandLine.Invocation;
 
 const string defaultDatabaseFilename = "db.links";
 
@@ -70,6 +71,22 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var grpcServerOption = new Option<bool>(
+  name: "--grpc-server",
+  description: "Start GRPC server mode instead of CLI mode",
+  getDefaultValue: () => false
+);
+grpcServerOption.AddAlias("--server");
+grpcServerOption.AddAlias("-g");
+
+var grpcPortOption = new Option<int>(
+  name: "--grpc-port",
+  description: "Port for GRPC server (default: 5001)",
+  getDefaultValue: () => 5001
+);
+grpcPortOption.AddAlias("--port");
+grpcPortOption.AddAlias("-p");
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,12 +96,31 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  grpcServerOption,
+  grpcPortOption
 };
 
 rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+  async (InvocationContext context) =>
   {
+    var db = context.ParseResult.GetValueForOption(dbOption)!;
+    var queryOptionValue = context.ParseResult.GetValueForOption(queryOption);
+    var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument);
+    var trace = context.ParseResult.GetValueForOption(traceOption);
+    var structure = context.ParseResult.GetValueForOption(structureOption);
+    var before = context.ParseResult.GetValueForOption(beforeOption);
+    var changes = context.ParseResult.GetValueForOption(changesOption);
+    var after = context.ParseResult.GetValueForOption(afterOption);
+    var grpcServer = context.ParseResult.GetValueForOption(grpcServerOption);
+    var grpcPort = context.ParseResult.GetValueForOption(grpcPortOption);
+
+    // If GRPC server mode is enabled, start the server instead of CLI
+    if (grpcServer)
+    {
+      await StartGrpcServer(grpcPort);
+      return;
+    }
     var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
 
     // If --structure is provided, handle it separately
@@ -145,12 +181,20 @@ rootCommand.SetHandler(
     {
       PrintAllLinks(decoratedLinks);
     }
-  },
-  // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
+  }
 );
 
 await rootCommand.InvokeAsync(args);
+
+static async Task StartGrpcServer(int port)
+{
+    Console.WriteLine($"GRPC Server mode requested on port {port}.");
+    Console.WriteLine("GRPC server implementation is still in progress...");
+    Console.WriteLine("For now, run the CLI without --grpc-server flag.");
+    
+    // TODO: Implement full GRPC server with ASP.NET Core
+    await Task.Delay(1000);
+}
 
 static string Namify(NamedLinksDecorator<uint> namedLinks, string linksNotation)
 {

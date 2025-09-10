@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+package lino.api;
+
+option csharp_namespace = "Foundation.Data.Doublets.Cli.Grpc";
+
+// Service definition for LINO operations
+service LinoService {
+  // Execute a single LINO query
+  rpc ExecuteQuery(LinoQueryRequest) returns (LinoQueryResponse);
+  
+  // Execute multiple LINO queries in a batch
+  rpc ExecuteBatch(LinoBatchRequest) returns (LinoBatchResponse);
+  
+  // Stream LINO queries and get real-time responses
+  rpc StreamQueries(stream LinoStreamRequest) returns (stream LinoStreamResponse);
+  
+  // Get all links in the database
+  rpc GetAllLinks(GetAllLinksRequest) returns (GetAllLinksResponse);
+  
+  // Get structure of a specific link
+  rpc GetStructure(GetStructureRequest) returns (GetStructureResponse);
+}
+
+// Request message containing LINO query string
+message LinoQueryRequest {
+  // The LINO query string (e.g., "() ((1 1))" or "((1: 1 1)) ((1: 1 2))")
+  string query = 1;
+  
+  // Database file path (optional, defaults to "db.links")
+  string database_path = 2;
+  
+  // Enable trace/verbose output
+  bool trace = 3;
+  
+  // Include changes in response
+  bool include_changes = 4;
+  
+  // Include database state before operation
+  bool include_before_state = 5;
+  
+  // Include database state after operation  
+  bool include_after_state = 6;
+}
+
+// Response message containing operation results
+message LinoQueryResponse {
+  // Success status
+  bool success = 1;
+  
+  // Error message if operation failed
+  string error_message = 2;
+  
+  // Changes applied (in LINO format)
+  repeated string changes = 3;
+  
+  // Database state before operation (in LINO format)
+  repeated string before_state = 4;
+  
+  // Database state after operation (in LINO format)
+  repeated string after_state = 5;
+  
+  // Execution metadata
+  ExecutionMetadata metadata = 6;
+}
+
+// Batch request for multiple queries
+message LinoBatchRequest {
+  repeated LinoQueryRequest queries = 1;
+  
+  // Stop on first error
+  bool stop_on_error = 2;
+}
+
+// Batch response
+message LinoBatchResponse {
+  repeated LinoQueryResponse responses = 1;
+  
+  // Overall success status
+  bool success = 2;
+  
+  // Number of successful operations
+  int32 successful_operations = 3;
+  
+  // Number of failed operations
+  int32 failed_operations = 4;
+}
+
+// Stream request message
+message LinoStreamRequest {
+  oneof request_type {
+    LinoQueryRequest query = 1;
+    StreamControlMessage control = 2;
+  }
+}
+
+// Stream response message
+message LinoStreamResponse {
+  oneof response_type {
+    LinoQueryResponse query_response = 1;
+    StreamStatusMessage status = 2;
+  }
+}
+
+// Stream control message
+message StreamControlMessage {
+  enum ControlType {
+    PAUSE = 0;
+    RESUME = 1;
+    CANCEL = 2;
+    PING = 3;
+  }
+  
+  ControlType type = 1;
+}
+
+// Stream status message
+message StreamStatusMessage {
+  enum Status {
+    READY = 0;
+    PROCESSING = 1;
+    PAUSED = 2;
+    ERROR = 3;
+    CLOSED = 4;
+  }
+  
+  Status status = 1;
+  string message = 2;
+}
+
+// Get all links request
+message GetAllLinksRequest {
+  string database_path = 1;
+  bool include_names = 2;
+}
+
+// Get all links response
+message GetAllLinksResponse {
+  repeated string links = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+// Get structure request
+message GetStructureRequest {
+  uint32 link_id = 1;
+  string database_path = 2;
+  bool include_names = 3;
+}
+
+// Get structure response
+message GetStructureResponse {
+  string structure = 1;
+  bool success = 2;
+  string error_message = 3;
+}
+
+// Execution metadata
+message ExecutionMetadata {
+  int64 execution_time_ms = 1;
+  int32 links_processed = 2;
+  int32 operations_count = 3;
+  string timestamp = 4;
+}
