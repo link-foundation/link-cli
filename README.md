@@ -215,6 +215,62 @@ clink '((($index: $source $target)) (($index: $target $source)))' --changes --af
 clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
+## MCP (Model Context Protocol) Server for Neural Networks
+
+The CLI now supports MCP (Model Context Protocol) server mode, which allows neural networks and AI assistants to use the links database as persistent memory storage. This enables GPTs to "remember anything they need" by storing and retrieving information as associative links.
+
+### Starting the MCP Server
+
+```bash
+clink --mcp-server
+# or
+clink --mcp
+```
+
+The server communicates via JSON-RPC 2.0 over stdio, making it compatible with any MCP client.
+
+### MCP Capabilities
+
+The server exposes three types of capabilities:
+
+#### 1. Resources (Reading Memory)
+- `memory://links/all` - Access to all stored memory links
+- `memory://links/search` - Search interface for finding specific memories
+
+#### 2. Tools (Memory Operations)
+- `store_memory` - Store new information in neural network memory
+- `search_memory` - Search for stored memories by content or name
+- `update_memory` - Update existing memory links
+- `delete_memory` - Remove memories from storage
+
+#### 3. Prompts (Common Neural Network Operations)
+- `remember_context` - Template for storing conversational context
+- `recall_similar` - Template for finding similar memories
+
+### Example Usage with MCP Clients
+
+```bash
+# Start the MCP server
+clink --mcp-server
+
+# The server will listen for JSON-RPC requests on stdio
+# Neural networks can then use tools like:
+# - store_memory: {"content": "User prefers coffee over tea", "name": "user_preference"}
+# - search_memory: {"query": "coffee"}
+# - update_memory: {"id": "1", "name": "updated_preference"}
+# - delete_memory: {"name": "old_memory"}
+```
+
+### Benefits for Neural Networks
+
+1. **Persistent Memory**: Information survives across conversations
+2. **Associative Storage**: Links naturally represent relationships between concepts
+3. **Efficient Retrieval**: Fast search and filtering capabilities
+4. **Structured Data**: All memories stored as triplets (source, target, index)
+5. **Named References**: Memories can be labeled for easy access
+
+This makes the links database an ideal backend for neural network memory systems, allowing AI assistants to build and maintain long-term knowledge bases.
+
 ## All options and arguments
 
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
@@ -227,6 +283,7 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+| `--mcp-server`          | bool    | `false`        | `--mcp`                             | Start MCP (Model Context Protocol) server for neural network memory access |
 
 ## For developers and debugging
 

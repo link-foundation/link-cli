@@ -9,6 +9,7 @@ using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using QueryProcessor = Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor;
 using Foundation.Data.Doublets.Cli;
 using System.Text.RegularExpressions;
+using StreamJsonRpc;
 
 const string defaultDatabaseFilename = "db.links";
 
@@ -70,6 +71,13 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var mcpServerOption = new Option<bool>(
+  name: "--mcp-server",
+  description: "Start MCP (Model Context Protocol) server for neural network memory access",
+  getDefaultValue: () => false
+);
+mcpServerOption.AddAlias("--mcp");
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,78 +87,112 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  mcpServerOption
 };
 
-rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+rootCommand.SetHandler(context =>
+{
+  var db = context.ParseResult.GetValueForOption(dbOption)!;
+  var queryOptionValue = context.ParseResult.GetValueForOption(queryOption) ?? "";
+  var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument) ?? "";
+  var trace = context.ParseResult.GetValueForOption(traceOption);
+  var structure = context.ParseResult.GetValueForOption(structureOption);
+  var before = context.ParseResult.GetValueForOption(beforeOption);
+  var changes = context.ParseResult.GetValueForOption(changesOption);
+  var after = context.ParseResult.GetValueForOption(afterOption);
+  var mcpServer = context.ParseResult.GetValueForOption(mcpServerOption);
+
+  var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
+
+  // If --mcp-server is provided, start MCP server
+  if (mcpServer)
   {
-    var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
+    StartMcpServer(decoratedLinks, trace);
+    return;
+  }
 
-    // If --structure is provided, handle it separately
-    if (structure.HasValue)
+  // If --structure is provided, handle it separately
+  if (structure.HasValue)
+  {
+    var linkId = structure.Value;
+    try
     {
-      var linkId = structure.Value;
-      try
+      var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
+      Console.WriteLine(Namify(decoratedLinks, structureFormatted));
+    }
+    catch (Exception ex)
+    {
+      Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
+      Environment.Exit(1);
+    }
+    return; // Exit after handling --structure
+  }
+
+  if (before)
+  {
+    PrintAllLinks(decoratedLinks);
+  }
+
+  var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+
+  var changesList = new List<(DoubletLink Before, DoubletLink After)>();
+
+  if (!string.IsNullOrWhiteSpace(effectiveQuery))
+  {
+    var options = new QueryProcessor.Options
+    {
+      Query = effectiveQuery,
+      Trace = trace,
+      ChangesHandler = (beforeLink, afterLink) =>
       {
-        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
-        Console.WriteLine(Namify(decoratedLinks, structureFormatted));
+        changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
+        return decoratedLinks.Constants.Continue;
       }
-      catch (Exception ex)
-      {
-        Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
-        Environment.Exit(1);
-      }
-      return; // Exit after handling --structure
-    }
+    };
 
-    if (before)
+    QueryProcessor.ProcessQuery(decoratedLinks, options);
+  }
+
+  if (changes && changesList.Any())
+  {
+    // Simplify the collected changes
+    var simplifiedChanges = SimplifyChanges(changesList);
+
+    // Print the simplified changes
+    foreach (var (linkBefore, linkAfter) in simplifiedChanges)
     {
-      PrintAllLinks(decoratedLinks);
+      PrintChange(decoratedLinks, linkBefore, linkAfter);
     }
+  }
 
-    var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
-
-    var changesList = new List<(DoubletLink Before, DoubletLink After)>();
-
-    if (!string.IsNullOrWhiteSpace(effectiveQuery))
-    {
-      var options = new QueryProcessor.Options
-      {
-        Query = effectiveQuery,
-        Trace = trace,
-        ChangesHandler = (beforeLink, afterLink) =>
-        {
-          changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
-          return decoratedLinks.Constants.Continue;
-        }
-      };
-
-      QueryProcessor.ProcessQuery(decoratedLinks, options);
-    }
-
-    if (changes && changesList.Any())
-    {
-      // Simplify the collected changes
-      var simplifiedChanges = SimplifyChanges(changesList);
-
-      // Print the simplified changes
-      foreach (var (linkBefore, linkAfter) in simplifiedChanges)
-      {
-        PrintChange(decoratedLinks, linkBefore, linkAfter);
-      }
-    }
-
-    if (after)
-    {
-      PrintAllLinks(decoratedLinks);
-    }
-  },
-  // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
-);
+  if (after)
+  {
+    PrintAllLinks(decoratedLinks);
+  }
+});
 
 await rootCommand.InvokeAsync(args);
+
+static void StartMcpServer(NamedLinksDecorator<uint> links, bool trace)
+{
+  if (trace)
+    Console.WriteLine("[MCP] Starting MCP server on stdio");
+
+  var mcpServer = new McpServer(links, trace);
+  
+  // Create JsonRpc using stdio streams
+  using var jsonRpc = JsonRpc.Attach(Console.OpenStandardInput(), Console.OpenStandardOutput(), mcpServer);
+  
+  if (trace)
+    Console.WriteLine("[MCP] MCP server started successfully. Waiting for requests...");
+    
+  // Wait for the connection to be terminated
+  jsonRpc.Completion.Wait();
+  
+  if (trace)
+    Console.WriteLine("[MCP] MCP server shut down");
+}
 
 static string Namify(NamedLinksDecorator<uint> namedLinks, string linksNotation)
 {
