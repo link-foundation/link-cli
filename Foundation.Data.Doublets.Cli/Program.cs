@@ -2,7 +2,7 @@
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
-using Platform.Protocols.Lino;
+using Link.Foundation.Links.Notation;
 
 using static Foundation.Data.Doublets.Cli.ChangesSimplifier;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;

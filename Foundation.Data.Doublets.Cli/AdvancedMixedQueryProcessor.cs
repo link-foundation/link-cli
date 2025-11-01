@@ -1,8 +1,8 @@
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Platform.Protocols.Lino;
-using LinoLink = Platform.Protocols.Lino.Link<string>;
+using Link.Foundation.Links.Notation;
+using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
 namespace Foundation.Data.Doublets.Cli
