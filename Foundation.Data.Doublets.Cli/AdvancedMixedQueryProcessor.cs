@@ -24,6 +24,9 @@ namespace Foundation.Data.Doublets.Cli
 
     public static void ProcessQuery(NamedLinksDecorator<uint> links, Options options)
     {
+      ArgumentNullException.ThrowIfNull(links);
+      ArgumentNullException.ThrowIfNull(options);
+
       var query = options.Query;
       TraceIfEnabled(options, $"[ProcessQuery] Query: \"{query}\"");
 
@@ -93,16 +96,18 @@ namespace Foundation.Data.Doublets.Cli
           .ToList();
 
       // ----------------------------------------------------------------
-      // FIX: If we see restrictionLink with exactly 1 sub-link => that sub-link has 2 sub-values => no IDs => interpret as a single composite pattern
+      // FIX: If we see restrictionLink with exactly 1 sub-link => that sub-link has 2 sub-values => interpret as a single composite pattern
+      // This handles patterns like ((() (1 2))) where the outer restriction has a single composite child
       if (
           string.IsNullOrEmpty(restrictionLink.Id) &&
           restrictionLink.Values?.Count == 1
       )
       {
         var single = restrictionLink.Values[0];
+        // Check if this is a composite (has 2 sub-values) and doesn't have a numeric/wildcard ID
         if (
-            string.IsNullOrEmpty(single.Id) &&
-            single.Values?.Count == 2 && !IsNumericOrStar(single.Id)
+            single.Values?.Count == 2 &&
+            (string.IsNullOrEmpty(single.Id) || !IsNumericOrStar(single.Id))
         )
         {
           // Create a single composite pattern from ((1 *) (* 2))
@@ -120,7 +125,7 @@ namespace Foundation.Data.Doublets.Cli
           restrictionInternalPatterns.Add(topLevelPattern);
 
           TraceIfEnabled(options,
-              "[ProcessQuery] Detected single sub-link (no ID) with 2 sub-values => replaced with one composite restriction pattern.");
+              "[ProcessQuery] Detected single sub-link with 2 sub-values => replaced with one composite restriction pattern.");
         }
       }
       // ----------------------------------------------------------------
@@ -659,9 +664,10 @@ namespace Foundation.Data.Doublets.Cli
       {
         return anyConstant;
       }
-      if (TryParseLinkId(identifier, links.Constants, ref anyConstant))
+      uint parsedValue = anyConstant;
+      if (TryParseLinkId(identifier, links.Constants, ref parsedValue))
       {
-        return anyConstant;
+        return parsedValue;
       }
       // Add name resolution for deletion patterns
       var namedId = links.GetByName(identifier);
@@ -800,10 +806,6 @@ namespace Foundation.Data.Doublets.Cli
           TraceIfEnabled(options,
               $"[CreateOrUpdateLink] Updating link #{linkDefinition.Index}: {existingDoublet.Source}->{linkDefinition.Source}, {existingDoublet.Target}->{linkDefinition.Target}.");
           LinksExtensions.EnsureCreated(links, linkDefinition.Index);
-          options.ChangesHandler?.Invoke(
-              new DoubletLink(linkDefinition.Index, nullConstant, nullConstant),
-              new DoubletLink(linkDefinition.Index, nullConstant, nullConstant)
-          );
           links.Update(
               new DoubletLink(linkDefinition.Index, anyConstant, anyConstant),
               linkDefinition,

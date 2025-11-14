@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 
-public static class EnumerableExtensions
+namespace Foundation.Data.Doublets.Cli
 {
+    public static class EnumerableExtensions
+    {
     public static void Deconstruct<T>(this IEnumerable<T> source, out T first)
     {
         using var enumerator = source.GetEnumerator();
@@ -77,5 +79,6 @@ public static class EnumerableExtensions
         sixth = enumerator.MoveNext() ? enumerator.Current : default!;
         seventh = enumerator.MoveNext() ? enumerator.Current : default!;
         eighth = enumerator.MoveNext() ? enumerator.Current : default!;
+    }
     }
 }

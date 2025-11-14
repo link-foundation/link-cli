@@ -29,15 +29,18 @@ namespace Foundation.Data.Doublets.Cli
         // Private custom enumerator
         private class PinnedTypesEnumerator : IEnumerator<TLinkAddress>
         {
+            private const int MaxPinnedTypes = 6; // Type, UnicodeSymbolType, UnicodeSequenceType, StringType, EmptyStringType, NameType
             private readonly ILinks<TLinkAddress> _links;
             private readonly TLinkAddress _initialSource;
             private TLinkAddress _currentAddress;
+            private int _count;
 
             public PinnedTypesEnumerator(ILinks<TLinkAddress> links)
             {
                 _links = links;
                 _initialSource = TLinkAddress.One;
                 _currentAddress = TLinkAddress.One; // Start with the first address
+                _count = 0;
             }
 
             public TLinkAddress Current { get; private set; }
@@ -46,6 +49,12 @@ namespace Foundation.Data.Doublets.Cli
 
             public bool MoveNext()
             {
+                // Stop after creating/verifying MaxPinnedTypes
+                if (_count >= MaxPinnedTypes)
+                {
+                    return false;
+                }
+
                 if (_links.Exists(_currentAddress))
                 {
                     var link = new Link<TLinkAddress>(_links.GetLink(_currentAddress));
@@ -58,7 +67,7 @@ namespace Foundation.Data.Doublets.Cli
                     else
                     {
                         // Link exists but does not match the expected structure
-                        throw new InvalidOperationException($"Unexpected link found at address {_currentAddress}. Expected: {expectedLink}, Found: {link}.");
+                        throw new UnexpectedLinkStructureException($"Unexpected link found at address {_currentAddress}. Expected: {expectedLink}, Found: {link}.");
                     }
                 }
                 else
@@ -69,6 +78,7 @@ namespace Foundation.Data.Doublets.Cli
 
                 // Increment the current address for the next type
                 _currentAddress++;
+                _count++;
 
                 return true;
             }
@@ -76,6 +86,7 @@ namespace Foundation.Data.Doublets.Cli
             public void Reset()
             {
                 _currentAddress = TLinkAddress.One;
+                _count = 0;
             }
 
             public void Dispose()
