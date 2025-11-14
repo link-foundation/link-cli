@@ -103,15 +103,18 @@ namespace Foundation.Data.Doublets.Cli
                 var nameCandidate = _links.GetTarget(nameCandidatePair);
                 if (_links.GetSource(nameCandidate).Equals(_nameType))
                 {
-                    // Remove the name link
-                    _links.Delete(nameCandidatePair);
-                    // Remove the nameType->nameSequence link if not used elsewhere
                     var nameSequence = _links.GetTarget(nameCandidate);
                     var nameTypeToNameSequenceLink = nameCandidate;
-                    // Check if this nameType->nameSequence is used elsewhere
-                    var queryNameType = new Link<TLinkAddress>(any, _nameType, nameSequence);
-                    var linksToNameSequence = _links.All(queryNameType).ToList();
-                    if (linksToNameSequence.Count == 1) // only this one exists
+
+                    // Check if this nameType->nameSequence is used elsewhere BEFORE deleting
+                    var queryNameType = new Link<TLinkAddress>(any, any, nameTypeToNameSequenceLink);
+                    var usagesOfNameCandidate = _links.All(queryNameType).ToList();
+
+                    // Remove the name link (link->nameCandidate)
+                    _links.Delete(nameCandidatePair);
+
+                    // Remove the nameType->nameSequence link if this was the only usage
+                    if (usagesOfNameCandidate.Count == 1)
                     {
                         _links.Delete(nameTypeToNameSequenceLink);
                     }
@@ -122,20 +125,7 @@ namespace Foundation.Data.Doublets.Cli
         public void RemoveNameByExternalReference(TLinkAddress externalReference)
         {
             var reference = new Hybrid<TLinkAddress>(externalReference, isExternal: true);
-            // Get the name for this external reference
-            var name = GetName(reference);
-            if (name != null)
-            {
-                // Remove the mapping from name to external reference
-                var nameSequence = _createString(name);
-                var nameTypeToNameSequenceLink = _links.SearchOrDefault(_nameType, nameSequence);
-                if (!nameTypeToNameSequenceLink.Equals(_links.Constants.Null))
-                {
-                    // Remove the nameType->nameSequence link if it exists
-                    _links.Delete(nameTypeToNameSequenceLink);
-                }
-            }
-            // Remove the name link (externalRef->nameType->nameSequence)
+            // RemoveName will handle all deletion logic including the nameType->nameSequence link
             RemoveName(reference);
         }
     }

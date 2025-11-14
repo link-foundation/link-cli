@@ -11,13 +11,15 @@ namespace Foundation.Data.Doublets.Cli
 
     public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
     {
-      var addressToUInt64Converter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
-      var uInt64ToAddressConverter = CheckedConverter<TLinkAddress, TLinkAddress>.Default;
       var nonExistentAddresses = new HashSet<TLinkAddress>(addresses.Where(x => !links.Exists(x)));
       if (nonExistentAddresses?.Count > 0)
       {
         var max = nonExistentAddresses.Max()!;
-        max = uInt64ToAddressConverter.Convert(TLinkAddress.CreateTruncating(Math.Min(ulong.CreateTruncating(max), ulong.CreateTruncating(links.Constants.InternalReferencesRange.Maximum))));
+        // Ensure max doesn't exceed the maximum internal reference
+        var maxUlong = ulong.CreateTruncating(max);
+        var internalMaxUlong = ulong.CreateTruncating(links.Constants.InternalReferencesRange.Maximum);
+        max = TLinkAddress.CreateTruncating(Math.Min(maxUlong, internalMaxUlong));
+
         var createdLinks = new List<TLinkAddress>();
         TLinkAddress createdLink;
         do
