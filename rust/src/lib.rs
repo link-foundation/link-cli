@@ -110,7 +110,11 @@ impl LinkStorage {
         }
 
         if self.trace {
-            eprintln!("[TRACE] Loaded {} links from {}", self.links.len(), self.db_path);
+            eprintln!(
+                "[TRACE] Loaded {} links from {}",
+                self.links.len(),
+                self.db_path
+            );
         }
 
         Ok(())
@@ -150,7 +154,11 @@ impl LinkStorage {
         writer.flush()?;
 
         if self.trace {
-            eprintln!("[TRACE] Saved {} links to {}", self.links.len(), self.db_path);
+            eprintln!(
+                "[TRACE] Saved {} links to {}",
+                self.links.len(),
+                self.db_path
+            );
         }
 
         Ok(())
@@ -197,7 +205,10 @@ impl LinkStorage {
     pub fn delete(&mut self, id: u32) -> Result<Link> {
         if let Some(link) = self.links.remove(&id) {
             if self.trace {
-                eprintln!("[TRACE] Deleted link: ({} {} {})", link.index, link.source, link.target);
+                eprintln!(
+                    "[TRACE] Deleted link: ({} {} {})",
+                    link.index, link.source, link.target
+                );
             }
             Ok(link)
         } else {
@@ -333,7 +344,11 @@ impl QueryProcessor {
                     }
                 }
                 _ => {
-                    return Err(LinkError::InvalidFormat(format!("Invalid query format: {}", query)).into());
+                    return Err(LinkError::InvalidFormat(format!(
+                        "Invalid query format: {}",
+                        query
+                    ))
+                    .into());
                 }
             }
         }

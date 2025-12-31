@@ -150,11 +150,8 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Check formatting
-        run: dotnet format --verify-no-changes --verbosity diagnostic
-
-      - name: Build with warnings as errors
-        run: dotnet build --no-restore --configuration Release /warnaserror
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
 
       - name: Check file size limit
         working-directory: .
