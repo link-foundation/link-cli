@@ -1,0 +1,26 @@
+[package]
+name = "link-cli"
+version = "0.1.0"
+edition = "2021"
+description = "A CLI tool for links manipulation"
+license = "Unlicense"
+repository = "https://github.com/link-foundation/link-cli"
+authors = ["link-foundation"]
+keywords = ["links", "doublets", "cli", "database"]
+categories = ["command-line-utilities", "database"]
+
+[lib]
+name = "link_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "clink"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+thiserror = "2.0"
+anyhow = "1.0"
+
+[dev-dependencies]
+tempfile = "3.14"
