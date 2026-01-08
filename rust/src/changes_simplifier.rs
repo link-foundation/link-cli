@@ -16,6 +16,10 @@ pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
         return vec![];
     }
 
+    // **FIX for Issue #26**: Remove duplicate before states by keeping the non-null transitions
+    // This handles cases where the same link is reported with multiple different transformations
+    let changes = remove_duplicate_before_states(changes);
+
     // First, handle unchanged states directly
     let mut unchanged_states = Vec::new();
     let mut changed_states = Vec::new();
@@ -104,4 +108,52 @@ pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
     });
 
     results
+}
+
+/// Removes problematic duplicate before states that lead to simplification issues.
+/// This fixes Issue #26 where multiple transformations from the same before state
+/// to conflicting after states (including null states) would cause the simplifier to fail.
+///
+/// The key insight: If we have multiple transitions from the same before state,
+/// and one of them is to a "null" state (0: 0 0), we should prefer the non-null transition
+/// as it represents the actual final transformation.
+fn remove_duplicate_before_states(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
+    // Group changes by their before state
+    let mut grouped: HashMap<Link, Vec<(Link, Link)>> = HashMap::new();
+    for change in changes {
+        grouped.entry(change.0).or_default().push(change);
+    }
+
+    let mut result = Vec::new();
+
+    for (_before, changes_for_this_before) in grouped {
+        if changes_for_this_before.len() == 1 {
+            // No duplicates, keep as is
+            result.extend(changes_for_this_before);
+        } else {
+            // Multiple changes from the same before state
+            // Check if any of them is to a null state (0: 0 0)
+            let null_link = Link::new(0, 0, 0);
+            let has_null_transition = changes_for_this_before
+                .iter()
+                .any(|(_, after)| *after == null_link);
+            let non_null_transitions: Vec<_> = changes_for_this_before
+                .iter()
+                .filter(|(_, after)| *after != null_link)
+                .cloned()
+                .collect();
+
+            if has_null_transition && !non_null_transitions.is_empty() {
+                // Issue #26 scenario: We have both null and non-null transitions
+                // Prefer the non-null transitions as they represent the actual final states
+                result.extend(non_null_transitions);
+            } else {
+                // No null transitions involved, this is a legitimate multiple-branch scenario
+                // Keep all transitions
+                result.extend(changes_for_this_before);
+            }
+        }
+    }
+
+    result
 }
