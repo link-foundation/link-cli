@@ -524,9 +524,14 @@ mod tests {
         let ma_id = storage.search(m_id, a_id).expect("(m a) link should exist");
 
         // Find the outer link ((m a) (m a)) - should have same source and target
-        let outer_id = storage.search(ma_id, ma_id).expect("((m a) (m a)) link should exist");
+        let outer_id = storage
+            .search(ma_id, ma_id)
+            .expect("((m a) (m a)) link should exist");
         let outer_link = storage.get(outer_id).unwrap();
-        assert_eq!(outer_link.source, outer_link.target, "Outer link should reference the same deduplicated sub-link");
+        assert_eq!(
+            outer_link.source, outer_link.target,
+            "Outer link should reference the same deduplicated sub-link"
+        );
 
         Ok(())
     }
@@ -595,10 +600,14 @@ mod tests {
         let ab_id = storage.search(a_id, b_id).expect("(a b) link should exist");
 
         // Find ((a b) (a b)) - should reference (a b) twice
-        let inner_id = storage.search(ab_id, ab_id).expect("((a b) (a b)) link should exist");
+        let inner_id = storage
+            .search(ab_id, ab_id)
+            .expect("((a b) (a b)) link should exist");
 
         // Find outer link ((a b) ((a b) (a b)))
-        let outer_id = storage.search(ab_id, inner_id).expect("outer link should exist");
+        let outer_id = storage
+            .search(ab_id, inner_id)
+            .expect("outer link should exist");
         assert!(outer_id > 0);
 
         Ok(())
@@ -639,7 +648,9 @@ mod tests {
         let ba_id = storage.search(b_id, a_id).expect("(b a) link should exist");
 
         // Find outer link ((a b) (b a)) - should have different source and target
-        let outer_id = storage.search(ab_id, ba_id).expect("outer link should exist");
+        let outer_id = storage
+            .search(ab_id, ba_id)
+            .expect("outer link should exist");
         let outer_link = storage.get(outer_id).unwrap();
         assert_ne!(outer_link.source, outer_link.target);
 
@@ -678,10 +689,14 @@ mod tests {
         let xy_id = storage.search(x_id, y_id).expect("(x y) link should exist");
 
         // Find ((x y) (x y)) - references (x y) twice (deduplicated)
-        let level1_id = storage.search(xy_id, xy_id).expect("((x y) (x y)) link should exist");
+        let level1_id = storage
+            .search(xy_id, xy_id)
+            .expect("((x y) (x y)) link should exist");
 
         // Find (((x y) (x y)) ((x y) (x y))) - references level1 twice (deduplicated)
-        let level2_id = storage.search(level1_id, level1_id).expect("outer link should exist");
+        let level2_id = storage
+            .search(level1_id, level1_id)
+            .expect("outer link should exist");
         assert!(level2_id > 0);
 
         Ok(())
@@ -723,7 +738,9 @@ mod tests {
         let pa_id = storage.search(p_id, a_id).expect("(p a) link should exist");
 
         // Find ((p a) (p a)) link - should reference pa_id twice
-        let outer_id = storage.search(pa_id, pa_id).expect("((p a) (p a)) link should exist");
+        let outer_id = storage
+            .search(pa_id, pa_id)
+            .expect("((p a) (p a)) link should exist");
         let outer_link = storage.get(outer_id).unwrap();
         assert_eq!(outer_link.source, pa_id);
         assert_eq!(outer_link.target, pa_id);
