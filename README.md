@@ -197,6 +197,61 @@ clink '((* *)) ()' --changes --after
 ((2: 2 2)) ()
 ```
 
+## Link deduplication
+
+When creating nested links, identical sub-links are automatically deduplicated. This means if the same link pattern appears multiple times, it will only be created once and reused.
+
+### Example 1: Duplicate pair deduplication
+
+Create a nested structure where `(m a)` appears twice:
+
+```bash
+clink '() (((m a) (m a)))' --after
+```
+→
+```
+(m: m m)
+(a: a a)
+(3: m a)
+(4: 3 3)
+```
+
+In this example:
+- `m` and `a` are named self-referencing links
+- `(m a)` is created once with index 3
+- The outer link `((m a) (m a))` has index 4, pointing to link 3 twice (source=3, target=3)
+
+### Example 2: Multiple expressions with shared sub-links
+
+```bash
+clink '(((m a) (m a))) (((p a) (p a)))' --after
+```
+→
+```
+(p: p p)
+(a: a a)
+(3: p a)
+(4: 3 3)
+```
+
+The update operation replaces the structure, but note that `a` is reused between expressions.
+
+### Example 3: Different sub-links are not deduplicated
+
+```bash
+clink '() (((m a) (a m)))' --after
+```
+→
+```
+(m: m m)
+(a: a a)
+(3: m a)
+(4: a m)
+(5: 3 4)
+```
+
+Since `(m a)` and `(a m)` are different links, they are both created. The outer link references both of them.
+
 ## Complete examples:
 
 ```bash
