@@ -5,7 +5,7 @@
 
 use anyhow::Result;
 use link_cli::cli::{Cli, CliCommand};
-use link_cli::{LinkStorage, QueryProcessor};
+use link_cli::{NamedTypeLinks, NamedTypesDecorator, QueryProcessor};
 
 fn main() -> Result<()> {
     let cli = match Cli::parse()? {
@@ -20,8 +20,8 @@ fn main() -> Result<()> {
         }
     };
 
-    // Create link storage
-    let mut storage = LinkStorage::new(&cli.db, cli.trace)?;
+    // Create link storage with separate named-type aliases.
+    let mut storage = NamedTypesDecorator::new(&cli.db, cli.trace)?;
 
     // If --structure is provided, handle it separately
     if let Some(link_id) = cli.structure {
@@ -35,7 +35,7 @@ fn main() -> Result<()> {
 
     // Print before state if requested
     if cli.before {
-        storage.print_all_links();
+        storage.print_all_lino()?;
     }
 
     // Get effective query (option takes precedence over positional argument)
@@ -56,13 +56,13 @@ fn main() -> Result<()> {
     // Print changes if requested
     if cli.changes && !changes_list.is_empty() {
         for (before_link, after_link) in &changes_list {
-            storage.print_change(before_link, after_link);
+            storage.print_change_lino(before_link, after_link)?;
         }
     }
 
     // Print after state if requested
     if cli.after {
-        storage.print_all_links();
+        storage.print_all_lino()?;
     }
 
     if let Some(output_path) = &cli.lino_output {

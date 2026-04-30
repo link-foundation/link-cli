@@ -10,8 +10,8 @@ use crate::changes_simplifier::simplify_changes;
 use crate::error::LinkError;
 use crate::link::Link;
 use crate::link_reference_validator::LinkReferenceValidator;
-use crate::link_storage::LinkStorage;
 use crate::lino_link::LinoLink;
+use crate::named_type_links::NamedTypeLinks;
 use crate::parser::Parser;
 
 /// QueryProcessor handles LiNo query parsing and execution
@@ -85,7 +85,7 @@ impl QueryProcessor {
     /// Processes a LiNo query and returns the list of changes
     pub fn process_query(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         query: &str,
     ) -> Result<Vec<(Option<Link>, Option<Link>)>> {
         self.trace_msg(&format!("[ProcessQuery] Query: \"{}\"", query));
@@ -159,8 +159,8 @@ impl QueryProcessor {
                         "[ProcessQuery] Created link ID #{} from substitution pattern.",
                         created_id
                     ));
-                    if let Some(link) = storage.get(created_id) {
-                        changes_list.push((None, Some(*link)));
+                    if let Some(link) = storage.get_link(created_id) {
+                        changes_list.push((None, Some(link)));
                     }
                 }
             }
@@ -183,7 +183,7 @@ impl QueryProcessor {
             let restriction_patterns = self.patterns_from_lino(restriction_link);
             let mut links_to_delete = Vec::new();
             for pattern in &restriction_patterns {
-                links_to_delete.extend(self.matched_links(storage, pattern, &HashMap::new()));
+                links_to_delete.extend(self.matched_links(storage, pattern, &HashMap::new())?);
             }
             links_to_delete.sort_by_key(|link| link.index);
             links_to_delete.dedup_by_key(|link| link.index);
@@ -217,7 +217,7 @@ impl QueryProcessor {
             .into_iter()
             .map(|link| (None, Some(link))),
         );
-        let solutions = self.find_all_solutions(storage, &restriction_patterns);
+        let solutions = self.find_all_solutions(storage, &restriction_patterns)?;
 
         if solutions.is_empty() {
             self.trace_msg("[ProcessQuery] No solutions found => returning.");
@@ -227,19 +227,23 @@ impl QueryProcessor {
             return Ok(changes_list);
         }
 
-        let all_solutions_no_operation = solutions.iter().all(|solution| {
-            self.solution_is_no_operation(
+        let mut all_solutions_no_operation = true;
+        for solution in &solutions {
+            if !self.solution_is_no_operation(
                 storage,
                 solution,
                 &restriction_patterns,
                 &substitution_patterns,
-            )
-        });
+            )? {
+                all_solutions_no_operation = false;
+                break;
+            }
+        }
 
         if all_solutions_no_operation {
             for solution in &solutions {
                 for pattern in &restriction_patterns {
-                    for link in self.matched_links(storage, pattern, solution) {
+                    for link in self.matched_links(storage, pattern, solution)? {
                         if !changes_list.contains(&(Some(link), Some(link))) {
                             changes_list.push((Some(link), Some(link)));
                         }
@@ -270,7 +274,7 @@ impl QueryProcessor {
 
     fn validate_links_exist_or_will_be_created(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
     ) -> Result<Vec<Link>> {
@@ -315,15 +319,15 @@ impl QueryProcessor {
 
     fn find_all_solutions(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         patterns: &[Pattern],
-    ) -> Vec<HashMap<String, u32>> {
+    ) -> Result<Vec<HashMap<String, u32>>> {
         let mut partial_solutions = vec![HashMap::new()];
 
         for pattern in patterns {
             let mut new_solutions = Vec::new();
             for solution in &partial_solutions {
-                for match_solution in self.match_pattern(storage, pattern, solution) {
+                for match_solution in self.match_pattern(storage, pattern, solution)? {
                     if Self::solutions_are_compatible(solution, &match_solution) {
                         let mut combined = solution.clone();
                         combined.extend(match_solution);
@@ -337,7 +341,7 @@ impl QueryProcessor {
             }
         }
 
-        partial_solutions
+        Ok(partial_solutions)
     }
 
     fn solutions_are_compatible(
@@ -351,14 +355,15 @@ impl QueryProcessor {
 
     fn match_pattern(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
         current_solution: &HashMap<String, u32>,
-    ) -> Vec<HashMap<String, u32>> {
+    ) -> Result<Vec<HashMap<String, u32>>> {
         if pattern.is_leaf() {
-            let resolved_index = self.resolve_match_id(storage, &pattern.index, current_solution);
-            return storage
-                .all()
+            let resolved_index =
+                self.resolve_match_id(storage, &pattern.index, current_solution)?;
+            return Ok(storage
+                .all_links()
                 .into_iter()
                 .filter(|link| Self::is_any(resolved_index) || link.index == resolved_index)
                 .map(|link| {
@@ -366,39 +371,41 @@ impl QueryProcessor {
                     Self::assign_variable(&pattern.index, link.index, &mut assignments);
                     assignments
                 })
-                .collect();
+                .collect());
         }
 
-        let resolved_index = self.resolve_match_id(storage, &pattern.index, current_solution);
+        let resolved_index = self.resolve_match_id(storage, &pattern.index, current_solution)?;
 
         if !Self::is_variable(&pattern.index)
             && !Self::is_any(resolved_index)
             && resolved_index != 0
             && storage.exists(resolved_index)
         {
-            let link = *storage.get(resolved_index).unwrap();
+            let link = storage.get_link(resolved_index).unwrap();
             return self.match_link_against_pattern(storage, pattern, link, current_solution);
         }
 
-        storage
-            .all()
-            .into_iter()
-            .copied()
-            .flat_map(|link| {
-                self.match_link_against_pattern(storage, pattern, link, current_solution)
-            })
-            .collect()
+        let mut results = Vec::new();
+        for link in storage.all_links() {
+            results.extend(self.match_link_against_pattern(
+                storage,
+                pattern,
+                link,
+                current_solution,
+            )?);
+        }
+        Ok(results)
     }
 
     fn match_link_against_pattern(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
         link: Link,
         current_solution: &HashMap<String, u32>,
-    ) -> Vec<HashMap<String, u32>> {
-        if !self.check_id_match(storage, &pattern.index, link.index, current_solution) {
-            return Vec::new();
+    ) -> Result<Vec<HashMap<String, u32>>> {
+        if !self.check_id_match(storage, &pattern.index, link.index, current_solution)? {
+            return Ok(Vec::new());
         }
 
         let mut results = Vec::new();
@@ -407,7 +414,7 @@ impl QueryProcessor {
             pattern.source.as_deref(),
             link.source,
             current_solution,
-        );
+        )?;
 
         for source_solution in source_matches {
             let target_matches = self.recursive_match_subpattern(
@@ -415,38 +422,38 @@ impl QueryProcessor {
                 pattern.target.as_deref(),
                 link.target,
                 &source_solution,
-            );
+            )?;
             for mut target_solution in target_matches {
                 Self::assign_variable(&pattern.index, link.index, &mut target_solution);
                 results.push(target_solution);
             }
         }
 
-        results
+        Ok(results)
     }
 
     fn recursive_match_subpattern(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: Option<&Pattern>,
         link_id: u32,
         current_solution: &HashMap<String, u32>,
-    ) -> Vec<HashMap<String, u32>> {
+    ) -> Result<Vec<HashMap<String, u32>>> {
         let Some(pattern) = pattern else {
-            return vec![current_solution.clone()];
+            return Ok(vec![current_solution.clone()]);
         };
 
         if pattern.is_leaf() {
-            if self.check_id_match(storage, &pattern.index, link_id, current_solution) {
+            if self.check_id_match(storage, &pattern.index, link_id, current_solution)? {
                 let mut solution = current_solution.clone();
                 Self::assign_variable(&pattern.index, link_id, &mut solution);
-                return vec![solution];
+                return Ok(vec![solution]);
             }
-            return Vec::new();
+            return Ok(Vec::new());
         }
 
-        let Some(link) = storage.get(link_id).copied() else {
-            return Vec::new();
+        let Some(link) = storage.get_link(link_id) else {
+            return Ok(Vec::new());
         };
 
         self.match_link_against_pattern(storage, pattern, link, current_solution)
@@ -454,90 +461,91 @@ impl QueryProcessor {
 
     fn check_id_match(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern_id: &str,
         candidate_id: u32,
         current_solution: &HashMap<String, u32>,
-    ) -> bool {
+    ) -> Result<bool> {
         if pattern_id.is_empty() || pattern_id == "*" {
-            return true;
+            return Ok(true);
         }
 
         if Self::is_variable(pattern_id) {
-            return current_solution
+            return Ok(current_solution
                 .get(pattern_id)
-                .is_none_or(|existing| *existing == candidate_id);
+                .is_none_or(|existing| *existing == candidate_id));
         }
 
         if let Ok(parsed) = pattern_id.parse::<u32>() {
-            return parsed == candidate_id;
+            return Ok(parsed == candidate_id);
         }
 
-        storage
-            .get_by_name(pattern_id)
-            .is_some_and(|named_id| named_id == candidate_id)
+        Ok(storage
+            .get_by_name(pattern_id)?
+            .is_some_and(|named_id| named_id == candidate_id))
     }
 
     fn resolve_match_id(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         identifier: &str,
         current_solution: &HashMap<String, u32>,
-    ) -> u32 {
+    ) -> Result<u32> {
         if identifier.is_empty() || identifier == "*" {
-            return u32::MAX;
+            return Ok(u32::MAX);
         }
         if let Some(value) = current_solution.get(identifier) {
-            return *value;
+            return Ok(*value);
         }
         if Self::is_variable(identifier) {
-            return u32::MAX;
+            return Ok(u32::MAX);
         }
         if let Ok(parsed) = identifier.parse::<u32>() {
-            return parsed;
+            return Ok(parsed);
         }
-        storage.get_by_name(identifier).unwrap_or(0)
+        Ok(storage.get_by_name(identifier)?.unwrap_or(0))
     }
 
     fn matched_links(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
         solution: &HashMap<String, u32>,
-    ) -> Vec<Link> {
+    ) -> Result<Vec<Link>> {
         if pattern.is_leaf() {
-            let resolved_index = self.resolve_match_id(storage, &pattern.index, solution);
-            return storage
-                .all()
+            let resolved_index = self.resolve_match_id(storage, &pattern.index, solution)?;
+            return Ok(storage
+                .all_links()
                 .into_iter()
                 .filter(|link| Self::is_any(resolved_index) || link.index == resolved_index)
-                .copied()
-                .collect();
+                .collect());
         }
 
-        self.match_pattern(storage, pattern, solution)
-            .into_iter()
-            .filter_map(|matched_solution| {
-                self.resolve_pattern_readonly(storage, pattern, &matched_solution, false)
-            })
-            .flat_map(|definition| self.links_matching_definition(storage, &definition))
-            .collect()
+        let mut links = Vec::new();
+        for matched_solution in self.match_pattern(storage, pattern, solution)? {
+            if let Some(definition) =
+                self.resolve_pattern_readonly(storage, pattern, &matched_solution, false)?
+            {
+                links.extend(self.links_matching_definition(storage, &definition)?);
+            }
+        }
+        Ok(links)
     }
 
     fn solution_is_no_operation(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         solution: &HashMap<String, u32>,
         restrictions: &[Pattern],
         substitutions: &[Pattern],
-    ) -> bool {
+    ) -> Result<bool> {
         let mut restriction_links = self
-            .resolve_patterns_readonly(storage, restrictions, solution, false)
+            .resolve_patterns_readonly(storage, restrictions, solution, false)?
             .into_iter()
             .map(|definition| definition.to_link())
             .collect::<Vec<_>>();
         let mut substitution_links = self
-            .resolve_patterns_readonly(storage, substitutions, solution, true)
+            .resolve_patterns_readonly(storage, substitutions, solution, true)?
             .into_iter()
             .map(|definition| definition.to_link())
             .collect::<Vec<_>>();
@@ -545,92 +553,96 @@ impl QueryProcessor {
         restriction_links.sort_by_key(|link| link.index);
         substitution_links.sort_by_key(|link| link.index);
 
-        restriction_links == substitution_links
+        Ok(restriction_links == substitution_links)
     }
 
     fn resolve_patterns_readonly(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         patterns: &[Pattern],
         solution: &HashMap<String, u32>,
         is_substitution: bool,
-    ) -> Vec<ResolvedLink> {
-        patterns
-            .iter()
-            .filter_map(|pattern| {
-                self.resolve_pattern_readonly(storage, pattern, solution, is_substitution)
-            })
-            .collect()
+    ) -> Result<Vec<ResolvedLink>> {
+        let mut resolved = Vec::new();
+        for pattern in patterns {
+            if let Some(link) =
+                self.resolve_pattern_readonly(storage, pattern, solution, is_substitution)?
+            {
+                resolved.push(link);
+            }
+        }
+        Ok(resolved)
     }
 
     fn resolve_pattern_readonly(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
         solution: &HashMap<String, u32>,
         is_substitution: bool,
-    ) -> Option<ResolvedLink> {
+    ) -> Result<Option<ResolvedLink>> {
         if pattern.is_leaf() {
             let index = self.resolve_identifier_readonly(
                 storage,
                 &pattern.index,
                 solution,
                 if is_substitution { 0 } else { u32::MAX },
-            );
-            return Some(ResolvedLink::new(index, u32::MAX, u32::MAX, None));
+            )?;
+            return Ok(Some(ResolvedLink::new(index, u32::MAX, u32::MAX, None)));
         }
 
+        let source_pattern = pattern
+            .source
+            .as_deref()
+            .ok_or_else(|| LinkError::InvalidFormat("Invalid source pattern".to_string()))?;
+        let target_pattern = pattern
+            .target
+            .as_deref()
+            .ok_or_else(|| LinkError::InvalidFormat("Invalid target pattern".to_string()))?;
+
         let source = self
-            .resolve_pattern_readonly(
-                storage,
-                pattern.source.as_deref()?,
-                solution,
-                is_substitution,
-            )?
+            .resolve_pattern_readonly(storage, source_pattern, solution, is_substitution)?
+            .ok_or_else(|| LinkError::InvalidFormat("Invalid source pattern".to_string()))?
             .index;
         let target = self
-            .resolve_pattern_readonly(
-                storage,
-                pattern.target.as_deref()?,
-                solution,
-                is_substitution,
-            )?
+            .resolve_pattern_readonly(storage, target_pattern, solution, is_substitution)?
+            .ok_or_else(|| LinkError::InvalidFormat("Invalid target pattern".to_string()))?
             .index;
         let default_index = if is_substitution { 0 } else { u32::MAX };
         let index =
-            self.resolve_identifier_readonly(storage, &pattern.index, solution, default_index);
+            self.resolve_identifier_readonly(storage, &pattern.index, solution, default_index)?;
 
-        Some(ResolvedLink::new(index, source, target, None))
+        Ok(Some(ResolvedLink::new(index, source, target, None)))
     }
 
     fn resolve_identifier_readonly(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         identifier: &str,
         solution: &HashMap<String, u32>,
         default_value: u32,
-    ) -> u32 {
+    ) -> Result<u32> {
         if identifier.is_empty() {
-            return default_value;
+            return Ok(default_value);
         }
         if identifier == "*" {
-            return u32::MAX;
+            return Ok(u32::MAX);
         }
         if let Some(value) = solution.get(identifier) {
-            return *value;
+            return Ok(*value);
         }
         if Self::is_variable(identifier) {
-            return default_value;
+            return Ok(default_value);
         }
         if let Ok(parsed) = identifier.parse::<u32>() {
-            return parsed;
+            return Ok(parsed);
         }
-        storage.get_by_name(identifier).unwrap_or(default_value)
+        Ok(storage.get_by_name(identifier)?.unwrap_or(default_value))
     }
 
     fn resolve_patterns(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         patterns: &[Pattern],
         solution: &HashMap<String, u32>,
         is_substitution: bool,
@@ -643,7 +655,7 @@ impl QueryProcessor {
 
     fn resolve_pattern(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
         solution: &HashMap<String, u32>,
         is_substitution: bool,
@@ -697,7 +709,7 @@ impl QueryProcessor {
 
     fn resolve_identifier(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         identifier: &str,
         solution: &HashMap<String, u32>,
         default_value: u32,
@@ -718,11 +730,11 @@ impl QueryProcessor {
         if let Ok(parsed) = identifier.parse::<u32>() {
             return Ok(parsed);
         }
-        if let Some(named_id) = storage.get_by_name(identifier) {
+        if let Some(named_id) = storage.get_by_name(identifier)? {
             return Ok(named_id);
         }
         if create_named_leaf {
-            return Ok(storage.get_or_create_named(identifier));
+            return storage.get_or_create_named(identifier);
         }
         Ok(default_value)
     }
@@ -792,14 +804,14 @@ impl QueryProcessor {
 
     fn apply_operation(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         before: Option<ResolvedLink>,
         after: Option<ResolvedLink>,
         changes: &mut Vec<(Option<Link>, Option<Link>)>,
     ) -> Result<()> {
         match (before, after) {
             (Some(before), None) => {
-                let mut links = self.links_matching_definition(storage, &before);
+                let mut links = self.links_matching_definition(storage, &before)?;
                 links.sort_by_key(|link| link.index);
                 links.dedup_by_key(|link| link.index);
                 for link in links {
@@ -815,14 +827,14 @@ impl QueryProcessor {
             }
             (Some(before), Some(after)) => {
                 if before.index == after.index && storage.exists(before.index) {
-                    let before_link = *storage.get(before.index).unwrap();
+                    let before_link = storage.get_link(before.index).unwrap();
                     if before_link.source != after.source || before_link.target != after.target {
                         storage.update(before.index, after.source, after.target)?;
                     }
                     if let Some(name) = &after.name {
-                        storage.set_name(before.index, name);
+                        storage.set_name(before.index, name)?;
                     }
-                    let after_link = *storage.get(before.index).unwrap();
+                    let after_link = storage.get_link(before.index).unwrap();
                     changes.push((Some(before_link), Some(after_link)));
                 } else {
                     self.apply_operation(storage, Some(before), None, changes)?;
@@ -837,7 +849,7 @@ impl QueryProcessor {
 
     fn create_or_update_resolved_link(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         definition: &ResolvedLink,
     ) -> Result<Link> {
         let id = if Self::is_normal_index(definition.index) {
@@ -851,19 +863,19 @@ impl QueryProcessor {
         };
 
         if let Some(name) = &definition.name {
-            storage.set_name(id, name);
+            storage.set_name(id, name)?;
         }
 
-        Ok(*storage.get(id).unwrap())
+        Ok(storage.get_link(id).unwrap())
     }
 
     fn links_matching_definition(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         definition: &ResolvedLink,
-    ) -> Vec<Link> {
-        storage
-            .all()
+    ) -> Result<Vec<Link>> {
+        Ok(storage
+            .all_links()
             .into_iter()
             .filter(|link| {
                 (definition.index == 0
@@ -872,8 +884,7 @@ impl QueryProcessor {
                     && (Self::is_any(definition.source) || link.source == definition.source)
                     && (Self::is_any(definition.target) || link.target == definition.target)
             })
-            .copied()
-            .collect()
+            .collect())
     }
 
     fn assign_variable(id: &str, value: u32, assignments: &mut HashMap<String, u32>) {
@@ -899,7 +910,11 @@ impl QueryProcessor {
     }
 
     /// Ensures a link is created from a LinoLink pattern
-    fn ensure_link_created(&self, storage: &mut LinkStorage, lino_link: &LinoLink) -> Result<u32> {
+    fn ensure_link_created(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        lino_link: &LinoLink,
+    ) -> Result<u32> {
         // Handle leaf nodes (names or numbers)
         if !lino_link.has_values() {
             if let Some(ref id) = lino_link.id {
@@ -913,7 +928,7 @@ impl QueryProcessor {
                 }
 
                 // It's a name - get or create
-                return Ok(storage.get_or_create_named(id));
+                return storage.get_or_create_named(id);
             }
             return Ok(0);
         }
@@ -937,13 +952,13 @@ impl QueryProcessor {
                     storage.get_or_create(source_id, target_id)
                 } else {
                     // Named link
-                    let existing = storage.get_by_name(id);
+                    let existing = storage.get_by_name(id)?;
                     if let Some(id_num) = existing {
                         storage.update(id_num, source_id, target_id)?;
                         id_num
                     } else {
                         let new_id = storage.create(source_id, target_id);
-                        storage.set_name(new_id, id);
+                        storage.set_name(new_id, id)?;
                         new_id
                     }
                 }
