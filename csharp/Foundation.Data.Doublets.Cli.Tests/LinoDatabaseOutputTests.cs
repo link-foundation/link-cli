@@ -113,14 +113,14 @@ public class LinoDatabaseOutputTests
         });
     }
 
-    private static void WithNamedLinks(Action<NamedLinksDecorator<uint>> test)
+    private static void WithNamedLinks(Action<NamedTypesDecorator<uint>> test)
     {
         var dbPath = Path.GetTempFileName();
-        var namesDbPath = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(dbPath);
+        var namesDbPath = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dbPath);
 
         try
         {
-            var links = new NamedLinksDecorator<uint>(dbPath, false);
+            var links = new NamedTypesDecorator<uint>(dbPath, false);
             test(links);
         }
         finally

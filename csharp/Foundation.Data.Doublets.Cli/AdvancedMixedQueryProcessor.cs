@@ -28,7 +28,7 @@ namespace Foundation.Data.Doublets.Cli
       public static implicit operator Options(string query) => new Options { Query = query };
     }
 
-    public static void ProcessQuery(NamedLinksDecorator<uint> links, Options options)
+    public static void ProcessQuery(INamedTypesLinks<uint> links, Options options)
     {
       var query = options.Query;
       TraceIfEnabled(options, $"[ProcessQuery] Query: \"{query}\"");
@@ -288,7 +288,7 @@ namespace Foundation.Data.Doublets.Cli
     /// Recursively ensures that a LinoLink (potentially nested) is created. 
     /// Returns the numeric ID or ANY if leaf/unparseable.
     /// </summary>
-    private static uint EnsureNestedLinkCreatedRecursively(NamedLinksDecorator<uint> links, LinoLink pattern, Options options)
+    private static uint EnsureNestedLinkCreatedRecursively(INamedTypesLinks<uint> links, LinoLink pattern, Options options)
     {
       var nullConstant = links.Constants.Null;
       var anyConstant = links.Constants.Any;
@@ -320,7 +320,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static void RestoreUnexpectedLinkDeletions(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         List<DoubletLink> unexpectedDeletions,
         Dictionary<uint, DoubletLink> finalIntendedStates,
         Options options)
@@ -354,7 +354,7 @@ namespace Foundation.Data.Doublets.Cli
     private static List<(DoubletLink before, DoubletLink after)> DetermineOperationsFromPatterns(
         List<DoubletLink> restrictions,
         List<DoubletLink> substitutions,
-        NamedLinksDecorator<uint> links)
+        INamedTypesLinks<uint> links)
     {
       var anyOrZero = new HashSet<uint> { 0, links.Constants.Any };
 
@@ -415,7 +415,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static void ApplyAllPlannedOperations(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         List<(DoubletLink before, DoubletLink after)> operations,
         Options options)
     {
@@ -477,7 +477,7 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
-    private static List<Dictionary<string, uint>> FindAllSolutions(NamedLinksDecorator<uint> links, List<Pattern> patterns)
+    private static List<Dictionary<string, uint>> FindAllSolutions(INamedTypesLinks<uint> links, List<Pattern> patterns)
     {
       var partialSolutions = new List<Dictionary<string, uint>> { new Dictionary<string, uint>() };
 
@@ -526,7 +526,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static IEnumerable<Dictionary<string, uint>> MatchPattern(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         Pattern pattern,
         Dictionary<string, uint> currentSolution)
     {
@@ -591,7 +591,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static IEnumerable<Dictionary<string, uint>> RecursiveMatchSubPattern(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         Pattern? pattern,
         uint linkId,
         Dictionary<string, uint> currentSolution)
@@ -635,7 +635,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static bool CheckIdMatch(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         string patternId,
         uint candidateId,
         Dictionary<string, uint> currentSolution)
@@ -653,7 +653,7 @@ namespace Foundation.Data.Doublets.Cli
       }
 
       uint parsed = links.Constants.Any;
-      if (TryParseLinkId(patternId, links.Constants, ref parsed))
+      if (TryParseLinkId(patternId, links, ref parsed))
       {
         if (parsed == links.Constants.Any) return true;
         return parsed == candidateId;
@@ -675,7 +675,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static uint ResolveId(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         string identifier,
         Dictionary<string, uint> currentSolution)
     {
@@ -689,15 +689,9 @@ namespace Foundation.Data.Doublets.Cli
       {
         return anyConstant;
       }
-      if (TryParseLinkId(identifier, links.Constants, ref anyConstant))
+      if (TryParseLinkId(identifier, links, ref anyConstant))
       {
         return anyConstant;
-      }
-      // Add name resolution for deletion patterns
-      var namedId = links.GetByName(identifier);
-      if (namedId != links.Constants.Null)
-      {
-        return namedId;
       }
       return anyConstant;
     }
@@ -706,7 +700,7 @@ namespace Foundation.Data.Doublets.Cli
         Dictionary<string, uint> solution,
         List<Pattern> restrictions,
         List<Pattern> substitutions,
-        NamedLinksDecorator<uint> links)
+        INamedTypesLinks<uint> links)
     {
       var substitutedRestrictions = restrictions
           .Select(r => ApplySolutionToPattern(links, solution, r))
@@ -735,7 +729,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static List<DoubletLink> ExtractMatchedLinks(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         Dictionary<string, uint> solution,
         List<Pattern> patterns)
     {
@@ -756,7 +750,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static DoubletLink? ApplySolutionToPattern(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         Dictionary<string, uint> solution,
         Pattern? pattern)
     {
@@ -786,7 +780,7 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
-    private static void CreateOrUpdateLink(NamedLinksDecorator<uint> links, DoubletLink linkDefinition, Options options)
+    private static void CreateOrUpdateLink(INamedTypesLinks<uint> links, DoubletLink linkDefinition, Options options)
     {
       var nullConstant = links.Constants.Null;
       var anyConstant = links.Constants.Any;
@@ -882,7 +876,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static void RemoveLinks(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         DoubletLink restriction,
         Options options)
     {
@@ -907,28 +901,28 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
-    private static DoubletLink ConvertToDoubletLink(NamedLinksDecorator<uint> links, LinoLink linoLink, uint defaultValue)
+    private static DoubletLink ConvertToDoubletLink(INamedTypesLinks<uint> links, LinoLink linoLink, uint defaultValue)
     {
       uint index = defaultValue;
       uint source = defaultValue;
       uint target = defaultValue;
-      TryParseLinkId(linoLink.Id, links.Constants, ref index);
+      TryParseLinkId(linoLink.Id, links, ref index);
       if (linoLink.Values?.Count == 2)
       {
         var sourceLink = linoLink.Values[0];
-        TryParseLinkId(sourceLink.Id, links.Constants, ref source);
+        TryParseLinkId(sourceLink.Id, links, ref source);
         var targetLink = linoLink.Values[1];
-        TryParseLinkId(targetLink.Id, links.Constants, ref target);
+        TryParseLinkId(targetLink.Id, links, ref target);
       }
       return new DoubletLink(index, source, target);
     }
 
-    private static bool TryParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
+    private static bool TryParseLinkId(string? id, INamedTypesLinks<uint> links, ref uint parsedValue)
     {
       if (string.IsNullOrEmpty(id)) return false;
       if (id == "*")
       {
-        parsedValue = constants.Any;
+        parsedValue = links.Constants.Any;
         return true;
       }
       else if (id.EndsWith(":"))
@@ -939,11 +933,28 @@ namespace Foundation.Data.Doublets.Cli
           parsedValue = linkId;
           return true;
         }
+        // Try to resolve as string alias
+        var aliasId = links.GetByName(trimmed);
+        if (aliasId != links.Constants.Null)
+        {
+          parsedValue = aliasId;
+          return true;
+        }
       }
       else if (uint.TryParse(id, out uint linkVal))
       {
         parsedValue = linkVal;
         return true;
+      }
+      else
+      {
+        // Try to resolve as string alias
+        var aliasId = links.GetByName(id);
+        if (aliasId != links.Constants.Null)
+        {
+          parsedValue = aliasId;
+          return true;
+        }
       }
       return false;
     }
@@ -982,7 +993,7 @@ namespace Foundation.Data.Doublets.Cli
       return new Pattern(linkNode.Id ?? "");
     }
 
-    private static uint EnsureLinkCreated(NamedLinksDecorator<uint> links, DoubletLink link, Options options)
+    private static uint EnsureLinkCreated(INamedTypesLinks<uint> links, DoubletLink link, Options options)
     {
       var nullConstant = links.Constants.Null;
       var anyConstant = links.Constants.Any;
@@ -1066,7 +1077,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     // Consolidates getting or creating a named link (leaf) without setting its relationships
-    private static uint EnsureNamedLeafLink(NamedLinksDecorator<uint> links, string name, Options options)
+    private static uint EnsureNamedLeafLink(INamedTypesLinks<uint> links, string name, Options options)
     {
       var existing = links.GetByName(name);
       if (existing != links.Constants.Null) return existing;
@@ -1077,7 +1088,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     // Applies a single structural update to an existing link: sets its source and target
-    private static void ApplyCompositeUpdate(NamedLinksDecorator<uint> links, uint id, uint source, uint target, Options options)
+    private static void ApplyCompositeUpdate(INamedTypesLinks<uint> links, uint id, uint source, uint target, Options options)
     {
       var restriction = new DoubletLink(id, links.Constants.Null, links.Constants.Null);
       var substitution = new DoubletLink(id, source, target);
@@ -1126,7 +1137,7 @@ namespace Foundation.Data.Doublets.Cli
       throw new InvalidOperationException($"Invalid composite pattern for name '{name}'");
     }
 
-    private static uint HandleStringComposite(string name, LinoLink left, LinoLink right, NamedLinksDecorator<uint> links, Options options)
+    private static uint HandleStringComposite(string name, LinoLink left, LinoLink right, INamedTypesLinks<uint> links, Options options)
     {
       var id = EnsureNamedLeafLink(links, name, options);
       var caseType = ClassifyCompositeCase(name, left, right);
@@ -1155,7 +1166,7 @@ namespace Foundation.Data.Doublets.Cli
     /// <summary>
     /// Resolves a single leaf pattern into its numeric or named link ID.
     /// </summary>
-    private static uint ResolveLeaf(LinoLink pattern, NamedLinksDecorator<uint> links, Options options)
+    private static uint ResolveLeaf(LinoLink pattern, INamedTypesLinks<uint> links, Options options)
     {
       var nullConstant = links.Constants.Null;
       var anyConstant = links.Constants.Any;
@@ -1208,7 +1219,7 @@ namespace Foundation.Data.Doublets.Cli
         string? literalIdentifier,
         uint sourceLinkId,
         uint targetLinkId,
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         Options options)
     {
       // Determine the numeric index for the composite: default 0, wildcard, or parsed from identifier
@@ -1242,7 +1253,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static void ValidateLinksExistOrWillBeCreated(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         IList<LinoLink> restrictionPatterns,
         IList<LinoLink> substitutionPatterns,
         Options options)
@@ -1299,7 +1310,7 @@ namespace Foundation.Data.Doublets.Cli
       public string Key => NumericId.HasValue ? $"id:{NumericId.Value}" : $"name:{Identifier}";
     }
 
-    private static LinkReferencePlan BuildLinkReferencePlan(NamedLinksDecorator<uint> links, IList<LinoLink> substitutionPatterns)
+    private static LinkReferencePlan BuildLinkReferencePlan(INamedTypesLinks<uint> links, IList<LinoLink> substitutionPatterns)
     {
       var plan = new LinkReferencePlan();
       var reservedNumericIds = new HashSet<uint>();
@@ -1343,7 +1354,7 @@ namespace Foundation.Data.Doublets.Cli
 
     private static void CollectImplicitDefinitions(
         LinoLink pattern,
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         LinkReferencePlan plan,
         HashSet<uint> reservedNumericIds)
     {
@@ -1363,7 +1374,7 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
-    private static uint GetNextAvailableLinkId(NamedLinksDecorator<uint> links, HashSet<uint> reservedNumericIds)
+    private static uint GetNextAvailableLinkId(INamedTypesLinks<uint> links, HashSet<uint> reservedNumericIds)
     {
       uint nextId = 1;
       while (links.Exists(nextId) || reservedNumericIds.Contains(nextId))
@@ -1375,7 +1386,7 @@ namespace Foundation.Data.Doublets.Cli
 
     private static void CollectMissingReferences(
         IList<LinoLink> patterns,
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         LinkReferencePlan plan,
         bool isSubstitution,
         string patternType,
@@ -1389,7 +1400,7 @@ namespace Foundation.Data.Doublets.Cli
 
     private static void CollectMissingReferences(
         LinoLink pattern,
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         LinkReferencePlan plan,
         bool isSubstitution,
         string patternType,
@@ -1413,7 +1424,7 @@ namespace Foundation.Data.Doublets.Cli
 
     private static void ValidateReferenceIdentifier(
         string identifier,
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         LinkReferencePlan plan,
         string patternType,
         Options options)
@@ -1449,7 +1460,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     private static void AutoCreateMissingReferences(
-        NamedLinksDecorator<uint> links,
+        INamedTypesLinks<uint> links,
         IList<MissingLinkReference> missingReferences,
         Options options)
     {
@@ -1483,7 +1494,7 @@ namespace Foundation.Data.Doublets.Cli
       }
     }
 
-    private static void EnsureNamedPointLink(NamedLinksDecorator<uint> links, string name, Options options)
+    private static void EnsureNamedPointLink(INamedTypesLinks<uint> links, string name, Options options)
     {
       if (links.GetByName(name) != links.Constants.Null)
       {

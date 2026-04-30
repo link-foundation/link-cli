@@ -3,8 +3,8 @@ use std::collections::HashSet;
 
 use crate::error::LinkError;
 use crate::link::Link;
-use crate::link_storage::LinkStorage;
 use crate::lino_link::LinoLink;
+use crate::named_type_links::NamedTypeLinks;
 
 pub(crate) struct LinkReferenceValidator {
     trace: bool,
@@ -53,7 +53,7 @@ impl LinkReferenceValidator {
 
     pub(crate) fn validate_links_exist_or_will_be_created(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
     ) -> Result<Vec<Link>> {
@@ -75,14 +75,14 @@ impl LinkReferenceValidator {
             restriction_patterns,
             false,
             "restriction",
-        );
+        )?;
         self.collect_missing_references(
             storage,
             &mut plan,
             substitution_patterns,
             true,
             "substitution",
-        );
+        )?;
 
         if plan.missing_references.is_empty() {
             self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
@@ -105,7 +105,7 @@ impl LinkReferenceValidator {
 
     fn build_link_reference_plan(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         substitution_patterns: &[LinoLink],
     ) -> LinkReferencePlan {
         let mut plan = LinkReferencePlan::default();
@@ -153,7 +153,7 @@ impl LinkReferenceValidator {
 
     fn collect_implicit_definitions(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         pattern: &LinoLink,
         plan: &mut LinkReferencePlan,
         reserved_numeric_ids: &mut HashSet<u32>,
@@ -173,7 +173,10 @@ impl LinkReferenceValidator {
         }
     }
 
-    fn next_available_link_id(storage: &LinkStorage, reserved_numeric_ids: &HashSet<u32>) -> u32 {
+    fn next_available_link_id(
+        storage: &mut impl NamedTypeLinks,
+        reserved_numeric_ids: &HashSet<u32>,
+    ) -> u32 {
         let mut next_id = 1;
         while storage.exists(next_id) || reserved_numeric_ids.contains(&next_id) {
             next_id += 1;
@@ -183,12 +186,12 @@ impl LinkReferenceValidator {
 
     fn collect_missing_references(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         plan: &mut LinkReferencePlan,
         patterns: &[LinoLink],
         is_substitution: bool,
         pattern_type: &'static str,
-    ) {
+    ) -> Result<()> {
         for pattern in patterns {
             self.collect_missing_references_in_pattern(
                 storage,
@@ -196,25 +199,26 @@ impl LinkReferenceValidator {
                 pattern,
                 is_substitution,
                 pattern_type,
-            );
+            )?;
         }
+        Ok(())
     }
 
     fn collect_missing_references_in_pattern(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         plan: &mut LinkReferencePlan,
         pattern: &LinoLink,
         is_substitution: bool,
         pattern_type: &'static str,
-    ) {
+    ) -> Result<()> {
         let pattern_id_is_definition = is_substitution
             && Self::is_composite_lino(pattern)
             && Self::concrete_identifier(pattern.id.as_deref()).is_some();
 
         if !pattern_id_is_definition {
             if let Some(identifier) = Self::concrete_identifier(pattern.id.as_deref()) {
-                self.validate_reference_identifier(storage, plan, &identifier, pattern_type);
+                self.validate_reference_identifier(storage, plan, &identifier, pattern_type)?;
             }
         }
 
@@ -226,18 +230,19 @@ impl LinkReferenceValidator {
                     sub_pattern,
                     is_substitution,
                     pattern_type,
-                );
+                )?;
             }
         }
+        Ok(())
     }
 
     fn validate_reference_identifier(
         &self,
-        storage: &LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         plan: &mut LinkReferencePlan,
         identifier: &str,
         pattern_type: &'static str,
-    ) {
+    ) -> Result<()> {
         if let Ok(link_id) = identifier.parse::<u32>() {
             if !storage.exists(link_id) && !plan.numeric_ids_to_be_created.contains(&link_id) {
                 plan.add_missing_reference(MissingLinkReference {
@@ -245,15 +250,15 @@ impl LinkReferenceValidator {
                     pattern_type,
                     numeric_id: Some(link_id),
                 });
-                return;
+                return Ok(());
             }
             self.trace_msg(&format!(
                 "[ValidateReferencesInPattern] Link {link_id} reference validated in {pattern_type} pattern"
             ));
-            return;
+            return Ok(());
         }
 
-        if storage.get_by_name(identifier).is_none()
+        if storage.get_by_name(identifier)?.is_none()
             && !plan.names_to_be_created.contains(identifier)
         {
             plan.add_missing_reference(MissingLinkReference {
@@ -261,17 +266,18 @@ impl LinkReferenceValidator {
                 pattern_type,
                 numeric_id: None,
             });
-            return;
+            return Ok(());
         }
 
         self.trace_msg(&format!(
             "[ValidateReferencesInPattern] Named link '{identifier}' reference validated in {pattern_type} pattern"
         ));
+        Ok(())
     }
 
     fn auto_create_missing_references(
         &self,
-        storage: &mut LinkStorage,
+        storage: &mut impl NamedTypeLinks,
         missing_references: &[MissingLinkReference],
     ) -> Result<Vec<Link>> {
         let mut created = Vec::new();
@@ -292,8 +298,8 @@ impl LinkReferenceValidator {
             ));
             storage.ensure_created(link_id);
             storage.update(link_id, link_id, link_id)?;
-            if let Some(link) = storage.get(link_id) {
-                created.push(*link);
+            if let Some(link) = storage.get_link(link_id) {
+                created.push(link);
             }
         }
 
@@ -306,16 +312,16 @@ impl LinkReferenceValidator {
         named_references.dedup();
 
         for name in named_references {
-            if storage.get_by_name(&name).is_some() {
+            if storage.get_by_name(&name)?.is_some() {
                 continue;
             }
 
             self.trace_msg(&format!(
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{name}' as point link."
             ));
-            let link_id = storage.get_or_create_named(&name);
-            if let Some(link) = storage.get(link_id) {
-                created.push(*link);
+            let link_id = storage.get_or_create_named(&name)?;
+            if let Some(link) = storage.get_link(link_id) {
+                created.push(link);
             }
         }
 

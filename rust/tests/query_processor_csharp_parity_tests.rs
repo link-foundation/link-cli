@@ -1,28 +1,38 @@
 //! C# AdvancedMixedQueryProcessor parity tests.
 
 use anyhow::Result;
-use link_cli::{Link, LinkStorage, QueryProcessor};
+use link_cli::{Link, NamedTypes, NamedTypesDecorator, QueryProcessor};
 use tempfile::NamedTempFile;
 
-fn with_storage(test: impl FnOnce(&mut LinkStorage, &QueryProcessor) -> Result<()>) -> Result<()> {
+fn with_storage(
+    test: impl FnOnce(&mut NamedTypesDecorator, &QueryProcessor) -> Result<()>,
+) -> Result<()> {
     let temp_file = NamedTempFile::new()?;
+    let names_file = NamedTempFile::new()?;
     let db_path = temp_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let names_path = names_file.path().to_str().unwrap();
+    let mut storage = NamedTypesDecorator::with_names_database_path(db_path, names_path, false)?;
     let processor = QueryProcessor::new(false).with_auto_create_missing_references(true);
     test(&mut storage, &processor)
 }
 
-fn sorted_links(storage: &LinkStorage) -> Vec<Link> {
+fn sorted_links(storage: &NamedTypesDecorator) -> Vec<Link> {
     let mut links: Vec<Link> = storage.all().into_iter().copied().collect();
     links.sort_by_key(|link| link.index);
     links
 }
 
-fn assert_link_exists(storage: &LinkStorage, index: u32, source: u32, target: u32) {
+fn assert_link_exists(storage: &NamedTypesDecorator, index: u32, source: u32, target: u32) {
     let link = storage
         .get(index)
         .unwrap_or_else(|| panic!("missing link {index}: {source} {target}"));
     assert_eq!(*link, Link::new(index, source, target));
+}
+
+fn name_id(storage: &mut NamedTypesDecorator, name: &str) -> Result<u32> {
+    Ok(storage
+        .get_by_name(name)?
+        .unwrap_or_else(|| panic!("{name} should exist")))
 }
 
 #[test]
@@ -151,10 +161,10 @@ fn test_named_link_rename_matches_csharp() -> Result<()> {
 
         processor.process_query(storage, "(((child: father mother)) ((son: father mother)))")?;
 
-        assert_eq!(storage.get_by_name("child"), None);
-        let son_id = storage.get_by_name("son").expect("son should exist");
-        let father_id = storage.get_by_name("father").expect("father should exist");
-        let mother_id = storage.get_by_name("mother").expect("mother should exist");
+        assert_eq!(storage.get_by_name("child")?, None);
+        let son_id = name_id(storage, "son")?;
+        let father_id = name_id(storage, "father")?;
+        let mother_id = name_id(storage, "mother")?;
         assert_link_exists(storage, son_id, father_id, mother_id);
         assert_eq!(storage.all().len(), 3);
         Ok(())
@@ -168,9 +178,9 @@ fn test_delete_by_names_keeps_leaf_names_matches_csharp() -> Result<()> {
 
         processor.process_query(storage, "(((child: father mother)) ())")?;
 
-        assert_eq!(storage.get_by_name("child"), None);
-        assert!(storage.get_by_name("father").is_some());
-        assert!(storage.get_by_name("mother").is_some());
+        assert_eq!(storage.get_by_name("child")?, None);
+        assert!(storage.get_by_name("father")?.is_some());
+        assert!(storage.get_by_name("mother")?.is_some());
         assert_eq!(storage.all().len(), 2);
         Ok(())
     })
@@ -190,8 +200,8 @@ fn test_unknown_named_restriction_fails_without_auto_create() -> Result<()> {
         assert!(error
             .to_string()
             .contains("--auto-create-missing-references"));
-        assert!(storage.get_by_name("known").is_some());
-        assert!(storage.get_by_name("unknown").is_none());
+        assert!(storage.get_by_name("known")?.is_some());
+        assert!(storage.get_by_name("unknown")?.is_none());
         Ok(())
     })
 }
@@ -202,11 +212,33 @@ fn test_string_composite_left_child_does_not_create_extra_leaf() -> Result<()> {
         processor.process_query(storage, "(() ((type: type type)))")?;
         processor.process_query(storage, "(() ((link: link type)))")?;
 
-        let type_id = storage.get_by_name("type").expect("type should exist");
-        let link_id = storage.get_by_name("link").expect("link should exist");
+        let type_id = name_id(storage, "type")?;
+        let link_id = name_id(storage, "link")?;
         assert_eq!(storage.all().len(), 2);
         assert_link_exists(storage, type_id, type_id, type_id);
         assert_link_exists(storage, link_id, link_id, type_id);
+        Ok(())
+    })
+}
+
+#[test]
+fn test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp(
+) -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((father: father father)))")?;
+        processor.process_query(storage, "(() ((mother: mother mother)))")?;
+        processor.process_query(storage, "(() ((child: father mother)))")?;
+
+        let father_id = name_id(storage, "father")?;
+        let mother_id = name_id(storage, "mother")?;
+        let child_id = name_id(storage, "child")?;
+
+        processor.process_query(storage, "((($id: father mother)) (($id: mother father)))")?;
+
+        assert_eq!(storage.all().len(), 3);
+        assert_link_exists(storage, father_id, father_id, father_id);
+        assert_link_exists(storage, mother_id, mother_id, mother_id);
+        assert_link_exists(storage, child_id, mother_id, father_id);
         Ok(())
     })
 }
