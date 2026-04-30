@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Numerics;
 using Platform.Delegates;
 using Platform.Memory;
@@ -6,13 +9,10 @@ using Platform.Data.Doublets;
 using Platform.Data.Doublets.Decorators;
 using Platform.Data.Doublets.Memory;
 using Platform.Data.Doublets.Memory.United.Generic;
-using System;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypes<TLinkAddress>
+    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypes<TLinkAddress>, IPinnedTypes<TLinkAddress>
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -21,6 +21,7 @@ namespace Foundation.Data.Doublets.Cli
             IMinMaxValue<TLinkAddress>
     {
         private readonly bool _tracingEnabled;
+        public readonly PinnedTypesDecorator<TLinkAddress> PinnedTypesDecorator;
         public readonly NamedLinks<TLinkAddress> NamedLinks;
         public readonly string NamedLinksDatabaseFileName;
 
@@ -38,9 +39,15 @@ namespace Foundation.Data.Doublets.Cli
             return namesDatabaseFilename;
         }
 
-        public NamedTypesDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false) : base(links)
+        public NamedTypesDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false)
+            : this(new PinnedTypesDecorator<TLinkAddress>(links), namesDatabaseFilename, tracingEnabled)
+        {
+        }
+
+        public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false) : base(pinnedTypesDecorator)
         {
             _tracingEnabled = tracingEnabled;
+            PinnedTypesDecorator = pinnedTypesDecorator;
             if (_tracingEnabled) Console.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
             var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
             var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
@@ -53,6 +60,21 @@ namespace Foundation.Data.Doublets.Cli
         public NamedTypesDecorator(string databaseFilename, bool tracingEnabled = false)
             : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
+        }
+
+        public IEnumerator<TLinkAddress> GetEnumerator()
+        {
+            return PinnedTypesDecorator.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3)
+        {
+            PinnedTypesDecorator.Deconstruct(out type1, out type2, out type3);
         }
 
         public string? GetName(TLinkAddress link)

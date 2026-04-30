@@ -41,7 +41,7 @@ pub use lino_link::LinoLink;
 pub use named_links::NamedLinks;
 pub use named_types::{NamedTypes, NamedTypesDecorator};
 pub use parser::Parser;
-pub use pinned_types::PinnedTypes;
+pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
 pub use unicode_string_storage::UnicodeStringStorage;

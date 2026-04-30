@@ -1,5 +1,7 @@
 use anyhow::Result;
-use link_cli::{LinkStorage, NamedTypes, NamedTypesDecorator};
+use link_cli::{
+    LinkStorage, NamedTypes, NamedTypesDecorator, PinnedTypesAccess, PinnedTypesDecorator,
+};
 use tempfile::NamedTempFile;
 
 #[test]
@@ -18,6 +20,32 @@ fn decorator_exposes_link_storage_operations_and_named_types() -> Result<()> {
     assert!(decorator.names_links().exists(name_link));
     assert_eq!(Some("TestLink".to_string()), decorator.get_name(link)?);
     assert_eq!(Some(link), decorator.get_by_name("TestLink")?);
+
+    Ok(())
+}
+
+#[test]
+fn decorator_includes_pinned_types_decorator() -> Result<()> {
+    let db_file = NamedTempFile::new()?;
+    let names_file = NamedTempFile::new()?;
+    let db_path = db_file.path().to_str().unwrap();
+    let names_path = names_file.path().to_str().unwrap();
+
+    let links = LinkStorage::new(db_path, false)?;
+    let names_links = LinkStorage::new(names_path, false)?;
+    let pinned_types_decorator = PinnedTypesDecorator::from_link_storage(links);
+    let mut decorator =
+        NamedTypesDecorator::from_pinned_types_decorator(pinned_types_decorator, names_links);
+
+    assert_eq!(vec![1, 2, 3], decorator.pinned_types(3)?);
+    assert!(decorator.pinned_types_decorator().exists(1));
+    assert!(decorator.pinned_types_decorator().exists(2));
+    assert!(decorator.pinned_types_decorator().exists(3));
+
+    let link = decorator.get_or_create(10, 20);
+    decorator.set_name(link, "PinnedNamedLink")?;
+
+    assert_eq!(Some(link), decorator.get_by_name("PinnedNamedLink")?);
 
     Ok(())
 }

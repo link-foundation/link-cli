@@ -1,8 +1,8 @@
 //! Named type decorator for Rust link storage.
 //!
-//! This mirrors the C# `NamedTypesDecorator<uint>` role: link operations are
-//! delegated to the wrapped `LinkStorage`, while names are stored as external
-//! references in a separate links database.
+//! This mirrors the C# `NamedTypesDecorator<uint>` role: link operations and
+//! pinned type access are delegated through `PinnedTypesDecorator`, while names
+//! are stored as external references in a separate links database.
 
 use std::path::{Path, PathBuf};
 
@@ -11,6 +11,7 @@ use anyhow::Result;
 use crate::link::Link;
 use crate::link_storage::LinkStorage;
 use crate::named_links::NamedLinks;
+use crate::pinned_types::{PinnedTypesAccess, PinnedTypesDecorator};
 
 pub trait NamedTypes {
     fn get_name(&mut self, link: u32) -> Result<Option<String>>;
@@ -20,7 +21,7 @@ pub trait NamedTypes {
 }
 
 pub struct NamedTypesDecorator {
-    links: LinkStorage,
+    pinned_types_decorator: PinnedTypesDecorator,
     names_links: LinkStorage,
     trace: bool,
 }
@@ -59,6 +60,13 @@ impl NamedTypesDecorator {
         Self::from_link_storages_with_trace(links, names_links, false)
     }
 
+    pub fn from_pinned_types_decorator(
+        pinned_types_decorator: PinnedTypesDecorator,
+        names_links: LinkStorage,
+    ) -> Self {
+        Self::from_decorators_with_trace(pinned_types_decorator, names_links, false)
+    }
+
     pub fn make_names_database_filename<P>(database_filename: P) -> PathBuf
     where
         P: AsRef<Path>,
@@ -77,11 +85,19 @@ impl NamedTypesDecorator {
     }
 
     pub fn links(&self) -> &LinkStorage {
-        &self.links
+        self.pinned_types_decorator.links()
     }
 
     pub fn links_mut(&mut self) -> &mut LinkStorage {
-        &mut self.links
+        self.pinned_types_decorator.links_mut()
+    }
+
+    pub fn pinned_types_decorator(&self) -> &PinnedTypesDecorator {
+        &self.pinned_types_decorator
+    }
+
+    pub fn pinned_types_decorator_mut(&mut self) -> &mut PinnedTypesDecorator {
+        &mut self.pinned_types_decorator
     }
 
     pub fn names_links(&self) -> &LinkStorage {
@@ -93,43 +109,46 @@ impl NamedTypesDecorator {
     }
 
     pub fn into_link_storages(self) -> (LinkStorage, LinkStorage) {
-        (self.links, self.names_links)
+        (
+            self.pinned_types_decorator.into_link_storage(),
+            self.names_links,
+        )
     }
 
     pub fn save(&self) -> Result<()> {
-        self.links.save()?;
+        self.pinned_types_decorator.save()?;
         self.names_links.save()?;
         Ok(())
     }
 
     pub fn create(&mut self, source: u32, target: u32) -> u32 {
-        self.links.create(source, target)
+        self.pinned_types_decorator.create(source, target)
     }
 
     pub fn ensure_created(&mut self, id: u32) -> u32 {
-        self.links.ensure_created(id)
+        self.pinned_types_decorator.ensure_created(id)
     }
 
     pub fn get(&self, id: u32) -> Option<&Link> {
-        self.links.get(id)
+        self.pinned_types_decorator.get(id)
     }
 
     pub fn exists(&self, id: u32) -> bool {
-        self.links.exists(id)
+        self.pinned_types_decorator.exists(id)
     }
 
     pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        self.links.update(id, source, target)
+        self.pinned_types_decorator.update(id, source, target)
     }
 
     pub fn delete(&mut self, id: u32) -> Result<Link> {
-        let deleted = self.links.delete(id)?;
+        let deleted = self.pinned_types_decorator.delete(id)?;
         self.remove_name(id)?;
         Ok(deleted)
     }
 
     pub fn all(&self) -> Vec<&Link> {
-        self.links.all()
+        self.pinned_types_decorator.all()
     }
 
     pub fn query(
@@ -138,15 +157,15 @@ impl NamedTypesDecorator {
         source: Option<u32>,
         target: Option<u32>,
     ) -> Vec<&Link> {
-        self.links.query(index, source, target)
+        self.pinned_types_decorator.query(index, source, target)
     }
 
     pub fn search(&self, source: u32, target: u32) -> Option<u32> {
-        self.links.search(source, target)
+        self.pinned_types_decorator.search(source, target)
     }
 
     pub fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
-        self.links.get_or_create(source, target)
+        self.pinned_types_decorator.get_or_create(source, target)
     }
 
     fn from_link_storages_with_trace(
@@ -154,8 +173,20 @@ impl NamedTypesDecorator {
         names_links: LinkStorage,
         trace: bool,
     ) -> Self {
+        Self::from_decorators_with_trace(
+            PinnedTypesDecorator::from_link_storage(links),
+            names_links,
+            trace,
+        )
+    }
+
+    fn from_decorators_with_trace(
+        pinned_types_decorator: PinnedTypesDecorator,
+        names_links: LinkStorage,
+        trace: bool,
+    ) -> Self {
         Self {
-            links,
+            pinned_types_decorator,
             names_links,
             trace,
         }
@@ -203,6 +234,12 @@ impl NamedTypes for NamedTypesDecorator {
             eprintln!("[TRACE] NamedTypesDecorator remove_name for link {link}");
         }
         self.with_named_links(|named_links| named_links.remove_name_by_external_reference(link))
+    }
+}
+
+impl PinnedTypesAccess for NamedTypesDecorator {
+    fn pinned_types(&mut self, count: usize) -> Result<Vec<u32>> {
+        self.pinned_types_decorator.pinned_types(count)
     }
 }
 
