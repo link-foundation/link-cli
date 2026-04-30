@@ -15,6 +15,7 @@
 //! - `query_processor` - LiNo query processing
 
 mod changes_simplifier;
+pub mod cli;
 mod error;
 mod hybrid_reference;
 mod link;
