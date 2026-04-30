@@ -66,6 +66,11 @@ namespace Foundation.Data.Doublets.Cli
         public TLinkAddress SetName(TLinkAddress link, string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
+            var existingLinkWithName = NamedLinks.GetExternalReferenceByName(name);
+            if (!existingLinkWithName.Equals(_links.Constants.Null) && !existingLinkWithName.Equals(link))
+            {
+                RemoveName(existingLinkWithName);
+            }
             RemoveName(link);
             var result = NamedLinks.SetNameForExternalReference(link, name);
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName result: {result}");

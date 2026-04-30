@@ -156,6 +156,25 @@ namespace Foundation.Data.Doublets.Cli.Tests
         }
 
         [Fact]
+        public void NamedTypesDecorator_ReassigningExistingNameMovesNameToNewLink()
+        {
+            RunTestWithLinks(links =>
+            {
+                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+
+                var firstLink = decorator.GetOrCreate(10u, 11u);
+                var secondLink = decorator.GetOrCreate(20u, 21u);
+
+                decorator.SetName(firstLink, "SharedName");
+                decorator.SetName(secondLink, "SharedName");
+
+                Assert.Null(decorator.GetName(firstLink));
+                Assert.Equal("SharedName", decorator.GetName(secondLink));
+                Assert.Equal(secondLink, decorator.GetByName("SharedName"));
+            });
+        }
+
+        [Fact]
         public void NamedTypesDecorator_DeleteRemovesAssociatedNames()
         {
             RunTestWithLinks(links =>
@@ -173,6 +192,29 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var linkByName = decorator.GetByName("LinkToDelete");
                 Assert.Equal(links.Constants.Null, linkByName);
             });
+        }
+
+        [Fact]
+        public void NamedTypesDecorator_CanConstructFromDatabaseFilename()
+        {
+            var tempDbFile = Path.GetTempFileName();
+            var expectedNamesDb = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
+
+            try
+            {
+                var decorator = new NamedTypesDecorator<uint>(tempDbFile);
+                var link = decorator.GetOrCreate(1u, 2u);
+
+                decorator.SetName(link, "FromFile");
+
+                Assert.Equal(expectedNamesDb, decorator.NamedLinksDatabaseFileName);
+                Assert.Equal(link, decorator.GetByName("FromFile"));
+            }
+            finally
+            {
+                if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+                if (File.Exists(expectedNamesDb)) File.Delete(expectedNamesDb);
+            }
         }
 
         [Fact]
