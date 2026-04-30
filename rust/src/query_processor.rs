@@ -13,56 +13,13 @@ use crate::link_reference_validator::LinkReferenceValidator;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
 use crate::parser::Parser;
+use crate::query_types::{Pattern, ResolvedLink};
 
 /// QueryProcessor handles LiNo query parsing and execution
 /// Corresponds to AdvancedMixedQueryProcessor in C#
 pub struct QueryProcessor {
     trace: bool,
     auto_create_missing_references: bool,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct Pattern {
-    index: String,
-    source: Option<Box<Pattern>>,
-    target: Option<Box<Pattern>>,
-}
-
-impl Pattern {
-    fn new(index: String, source: Option<Pattern>, target: Option<Pattern>) -> Self {
-        Self {
-            index,
-            source: source.map(Box::new),
-            target: target.map(Box::new),
-        }
-    }
-
-    fn is_leaf(&self) -> bool {
-        self.source.is_none() && self.target.is_none()
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct ResolvedLink {
-    index: u32,
-    source: u32,
-    target: u32,
-    name: Option<String>,
-}
-
-impl ResolvedLink {
-    fn new(index: u32, source: u32, target: u32, name: Option<String>) -> Self {
-        Self {
-            index,
-            source,
-            target,
-            name,
-        }
-    }
-
-    fn to_link(&self) -> Link {
-        Link::new(self.index, self.source, self.target)
-    }
 }
 
 impl QueryProcessor {

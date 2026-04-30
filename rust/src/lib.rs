@@ -29,6 +29,7 @@ mod parser;
 mod pinned_types;
 mod query_options;
 mod query_processor;
+mod query_types;
 pub mod sequences;
 mod unicode_string_storage;
 
