@@ -374,15 +374,16 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Arrange
-        ProcessQuery(links, "() ((1: 1 1))");
+        ProcessQueryStrict(links, "() ((1: 1 1) (2: 2 2))");
 
         // Act
-        ProcessQuery(links, "((1: (1: 1 1) (1: 2 1))) ()");
+        ProcessQueryStrict(links, "((1: (1: 1 1) (1: 2 1))) ()");
 
         // Assert
         var allLinks = GetAllLinks(links);
-        Assert.Single(allLinks);
+        Assert.Equal(2, allLinks.Count);
         AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
       });
     }
 
@@ -1544,6 +1545,28 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       return allLinks;
     }
 
+    private static void ProcessQuery(NamedLinksDecorator<uint> links, string query)
+    {
+      ProcessQuery(links, new Options { Query = query });
+    }
+
+    private static void ProcessQuery(NamedLinksDecorator<uint> links, Options options)
+    {
+      options.AutoCreateMissingReferences = true;
+      Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(links, options);
+    }
+
+    private static void ProcessQueryStrict(NamedLinksDecorator<uint> links, string query)
+    {
+      ProcessQueryStrict(links, new Options { Query = query });
+    }
+
+    private static void ProcessQueryStrict(NamedLinksDecorator<uint> links, Options options)
+    {
+      options.AutoCreateMissingReferences = false;
+      Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(links, options);
+    }
+
     private static void AssertLinkExists(List<DoubletLink> allLinks, uint index, uint source, uint target)
     {
       var link = new DoubletLink(index, source, target);
@@ -1565,10 +1588,11 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         // Act & Assert - should throw exception for referencing non-existent link 10
         var exception = Assert.Throws<InvalidOperationException>(() =>
         {
-          ProcessQuery(links, "(() ((1: 10 20)))");
+          ProcessQueryStrict(links, "(() ((1: 10 20)))");
         });
         
-        Assert.Contains("Invalid reference to non-existent link 10", exception.Message);
+        Assert.Contains("Invalid reference to non-existent link '10'", exception.Message);
+        Assert.Contains("--auto-create-missing-references", exception.Message);
       });
     }
 
@@ -1578,7 +1602,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Act - should succeed because link 1 references itself
-        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQueryStrict(links, "(() ((1: 1 1)))");
 
         // Assert
         var allLinks = GetAllLinks(links);
@@ -1593,7 +1617,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Act - should succeed because both links are created in the same operation
-        ProcessQuery(links, "(() ((1: 1 2) (2: 2 1)))");
+        ProcessQueryStrict(links, "(() ((1: 1 2) (2: 2 1)))");
 
         // Assert
         var allLinks = GetAllLinks(links);
@@ -1609,10 +1633,10 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Arrange - create first link
-        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQueryStrict(links, "(() ((1: 1 1)))");
 
         // Act - should succeed because link 1 exists
-        ProcessQuery(links, "(() ((2: 2 1)))");
+        ProcessQueryStrict(links, "(() ((2: 2 1)))");
 
         // Assert
         var allLinks = GetAllLinks(links);
@@ -1628,15 +1652,63 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Arrange - create initial link
-        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQueryStrict(links, "(() ((1: 1 1)))");
 
         // Act & Assert - should throw exception for referencing non-existent link 99
         var exception = Assert.Throws<InvalidOperationException>(() =>
         {
-          ProcessQuery(links, "(((1: 1 1)) ((1: 1 99)))");
+          ProcessQueryStrict(links, "(((1: 1 1)) ((1: 1 99)))");
         });
 
-        Assert.Contains("Invalid reference to non-existent link 99", exception.Message);
+        Assert.Contains("Invalid reference to non-existent link '99'", exception.Message);
+      });
+    }
+
+    [Fact]
+    public void CreateNamedLinkWithMissingNamedReferences_ShouldThrowException()
+    {
+      RunTestWithLinks(links =>
+      {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+          ProcessQueryStrict(links, "(() ((child: father mother)))");
+        });
+
+        Assert.Contains("Invalid reference to non-existent link 'father'", exception.Message);
+        Assert.Contains("--auto-create-missing-references", exception.Message);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkWithAutoCreateMissingNumericReferences_ShouldCreatePointLinks()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((20: 10 20)))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 10, 10, 10);
+        AssertLinkExists(allLinks, 20, 10, 20);
+      });
+    }
+
+    [Fact]
+    public void CreateNamedLinkWithAutoCreateMissingNamedReferences_ShouldCreatePointLinks()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        var fatherId = links.GetByName("father");
+        var motherId = links.GetByName("mother");
+        var childId = links.GetByName("child");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(3, allLinks.Count);
+        AssertLinkExists(allLinks, fatherId, fatherId, fatherId);
+        AssertLinkExists(allLinks, motherId, motherId, motherId);
+        AssertLinkExists(allLinks, childId, fatherId, motherId);
       });
     }
 
@@ -1646,7 +1718,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Act - should succeed because variables are not validated
-        ProcessQuery(links, "(() (($link: $source $target)))");
+        ProcessQueryStrict(links, "(() (($link: $source $target)))");
 
         // Assert - one link should be created with variables resolved
         var allLinks = GetAllLinks(links);
@@ -1660,7 +1732,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       RunTestWithLinks(links =>
       {
         // Act - should succeed because wildcards are not validated
-        ProcessQuery(links, "(() ((1: * *)))");
+        ProcessQueryStrict(links, "(() ((1: * *)))");
 
         // Assert
         var allLinks = GetAllLinks(links);

@@ -12,6 +12,7 @@ pub struct Cli {
     pub query: Option<String>,
     pub query_arg: Option<String>,
     pub trace: bool,
+    pub auto_create_missing_references: bool,
     pub structure: Option<u32>,
     pub before: bool,
     pub changes: bool,
@@ -26,6 +27,7 @@ impl Default for Cli {
             query: None,
             query_arg: None,
             trace: false,
+            auto_create_missing_references: false,
             structure: None,
             before: false,
             changes: false,
@@ -78,6 +80,11 @@ impl Cli {
                 cli.trace = parse_bool("--trace", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--auto-create-missing-references"]) {
+                cli.auto_create_missing_references =
+                    parse_bool("--auto-create-missing-references", value)?;
+                continue;
+            }
             if let Some(value) = inline_value(&arg, &["--before"]) {
                 cli.before = parse_bool("--before", value)?;
                 continue;
@@ -106,6 +113,9 @@ impl Cli {
                 }
                 "-t" | "--trace" => {
                     cli.trace = next_bool_value(&mut args, true)?;
+                }
+                "--auto-create-missing-references" => {
+                    cli.auto_create_missing_references = next_bool_value(&mut args, true)?;
                 }
                 "-s" | "--structure" => {
                     let value = next_value(&mut args, &arg)?;
@@ -158,6 +168,8 @@ impl Cli {
             "          LiNo query for CRUD operation\n",
             "  -t, --trace\n",
             "          Enable trace (verbose output)\n",
+            "      --auto-create-missing-references\n",
+            "          Create missing numeric and named references as self-referential point links\n",
             "  -s, --structure <STRUCTURE>\n",
             "          ID of the link to format its structure\n",
             "  -b, --before\n",

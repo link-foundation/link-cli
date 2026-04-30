@@ -301,6 +301,7 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--query`               | string  | _None_         | `--apply`, `--do`, `-q`             | LiNo query for CRUD operation                                              |
 | `query` (positional)    | string  | _None_         | _N/A_                               | LiNo query for CRUD operation (provided as the first positional argument)  |
 | `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                              |
+| `--auto-create-missing-references` | bool | `false` | _None_                              | Create missing numeric and named references as self-referential point links |
 | `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                                     |
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
