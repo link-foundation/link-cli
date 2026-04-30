@@ -163,6 +163,15 @@ impl LinkStorage {
             return id;
         }
 
+        if self.next_id > id {
+            let link = Link::new(id, 0, 0);
+            self.links.insert(id, link);
+            if self.trace {
+                eprintln!("[TRACE] Ensured link: ({} 0 0)", id);
+            }
+            return id;
+        }
+
         // Create placeholder links up to the requested ID
         while self.next_id <= id {
             let placeholder_id = self.next_id;

@@ -41,6 +41,12 @@ var traceOption = new Option<bool>(
 );
 traceOption.AddAlias("-t");
 
+var autoCreateMissingReferencesOption = new Option<bool>(
+  name: "--auto-create-missing-references",
+  description: "Create missing numeric and named references as self-referential point links",
+  getDefaultValue: () => false
+);
+
 var structureOption = new Option<uint?>(
   name: "--structure",
   description: "ID of the link to format its structure"
@@ -81,6 +87,7 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   queryOption,
   queryArgument,
   traceOption,
+  autoCreateMissingReferencesOption,
   structureOption,
   beforeOption,
   changesOption,
@@ -95,6 +102,7 @@ rootCommand.SetHandler(
     var queryOptionValue = context.ParseResult.GetValueForOption(queryOption) ?? "";
     var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument) ?? "";
     var trace = context.ParseResult.GetValueForOption(traceOption);
+    var autoCreateMissingReferences = context.ParseResult.GetValueForOption(autoCreateMissingReferencesOption);
     var structure = context.ParseResult.GetValueForOption(structureOption);
     var before = context.ParseResult.GetValueForOption(beforeOption);
     var changes = context.ParseResult.GetValueForOption(changesOption);
@@ -137,6 +145,7 @@ rootCommand.SetHandler(
       {
         Query = effectiveQuery,
         Trace = trace,
+        AutoCreateMissingReferences = autoCreateMissingReferences,
         ChangesHandler = (beforeLink, afterLink) =>
         {
           changesList.Add((new DoubletLink(beforeLink), new DoubletLink(afterLink)));
