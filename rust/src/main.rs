@@ -4,8 +4,8 @@
 //! similar functionality to the C# version.
 
 use anyhow::Result;
-use clap::Parser;
 use link_cli::{LinkStorage, QueryProcessor};
+use lino_arguments::Parser;
 
 /// Link CLI - A CLI tool for managing links data store
 #[derive(Parser, Debug)]

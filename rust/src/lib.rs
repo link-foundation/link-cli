@@ -25,7 +25,7 @@ mod query_processor;
 // Re-export main types for easy access
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
-pub use link::Link;
+pub use link::{DoubletsLink, Link};
 pub use link_storage::LinkStorage;
 pub use lino_link::LinoLink;
 pub use parser::Parser;

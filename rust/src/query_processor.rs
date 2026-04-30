@@ -136,7 +136,7 @@ impl QueryProcessor {
         let mut changes_list = Vec::new();
 
         // If both restriction and substitution are empty, do nothing
-        if restriction_link.values_count() == 0 && substitution_link.values_count() == 0 {
+        if restriction_link.is_empty() && substitution_link.is_empty() {
             self.trace_msg(
                 "[ProcessQuery] Restriction & substitution both empty => no operation, returning.",
             );
@@ -144,7 +144,7 @@ impl QueryProcessor {
         }
 
         // Creation scenario: no restriction, only substitution
-        if restriction_link.values_count() == 0 && substitution_link.values_count() > 0 {
+        if restriction_link.is_empty() && !substitution_link.is_empty() {
             self.trace_msg(
                 "[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.",
             );
@@ -165,7 +165,7 @@ impl QueryProcessor {
         }
 
         // Deletion scenario: restriction but no substitution
-        if restriction_link.values_count() > 0 && substitution_link.values_count() == 0 {
+        if !restriction_link.is_empty() && substitution_link.is_empty() {
             self.trace_msg(
                 "[ProcessQuery] Restriction non-empty, substitution empty => deletion scenario.",
             );
