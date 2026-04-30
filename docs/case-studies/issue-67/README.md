@@ -22,7 +22,7 @@ As of 2026-04-30:
 | Requirement | Current status | Solution plan |
 | --- | --- | --- |
 | Use the latest `doublets-rs`, `links-notation`, and `lino-arguments` as a Rust basis. | `rust/Cargo.toml` now declares `doublets = "0.3.0"`, `links-notation = "0.13.0"`, and `lino-arguments = "0.3.0"` with upstream source links. The Rust parser delegates to `links-notation`, CLI parsing uses `lino-arguments`, and the local link model has conversion coverage for `doublets::Link<u32>`. | Continue replacing local storage internals behind compatibility tests so public CLI behavior remains stable while binary storage parity is developed. |
-| Reimplement sequence support in pure Rust based on `Data.Doublets.Sequences`. | Rust now has `rust/src/unicode_string_storage.rs`, a doublet-backed port of the C# `UnicodeStringStorage<uint>` path: pinned type links, raw-number Unicode symbols, balanced Unicode sequence trees, right-sequence walking, string links, and name links. | Continue extending this module toward full package coverage for advanced sequence indexes, compaction, and binary fixture compatibility. |
+| Reimplement sequence support in pure Rust based on `Data.Doublets.Sequences`. | Rust now has one-file-per-abstraction ports for the C# sequence pipeline under `rust/src/sequences/`: `AddressToRawNumberConverter`, `RawNumberToAddressConverter`, `BalancedVariantConverter`, `TargetMatcher`, `CharToUnicodeSymbolConverter`, `UnicodeSymbolToCharConverter`, `CachingConverterDecorator`, `DefaultStack`, `RightSequenceWalker`, `StringToUnicodeSequenceConverter`, and `UnicodeSequenceToStringConverter`. `UnicodeStringStorage` composes those components. | Continue extending this module toward full package coverage for advanced sequence indexes, compaction, and binary fixture compatibility. |
 | Match C# Unicode support and binary file compatibility. | Rust now round-trips empty, ASCII, multilingual, and surrogate-pair text through UTF-16 code units, matching the C# `string`/`char` model used by `Data.Doublets.Sequences`. Cross-runtime binary fixtures are not yet complete. | Add C#-generated binary fixtures and Rust-generated binary fixtures, then verify both runtimes can read each file without data loss. Include non-ASCII names and multi-codepoint text cases. |
 | Support the same CLI options, features, and tests as C#. | The repository already has C# and Rust test suites. This PR closes concrete query semantics gaps found against the C# `AdvancedMixedQueryProcessor` behavior. | Continue converting C# tests into Rust parity tests by feature area: storage, parser, query processor, CLI commands, persistence, and sequences. |
 | Keep C# under `./csharp`, Rust under `./rust`, and provide separate workflows. | The repository already has `csharp/`, `rust/`, `.github/workflows/csharp.yml`, and `.github/workflows/rust.yml`. | Preserve this layout. Treat future parity work as package-local changes unless a shared workflow or script must change. |
@@ -45,10 +45,10 @@ This PR focuses on query processor parity gaps that were blocking Rust behavior 
 - Adds a Rust `UnicodeStringStorage` implementation based on the C# `Data.Doublets.Sequences` path:
   - `PinnedTypes` deterministic type allocation for `Type`, `UnicodeSymbol`, `UnicodeSequence`, `String`, `EmptyString`, and `Name`.
   - `Hybrid<uint>`-compatible external/raw number encoding for Unicode code units and external references.
-  - `BalancedVariantConverter`-style sequence tree creation and `RightSequenceWalker`-style traversal.
-  - `NamedLinks` behavior for internal links and external references, including removal.
+  - Direct Rust files for the C# constructor pipeline: raw-number converters, `BalancedVariantConverter`, `TargetMatcher`, char/symbol converters, `CachingConverterDecorator`, `DefaultStack`, `RightSequenceWalker`, and string/sequence converters.
+  - Separate `NamedLinks` facade behavior for internal links and external references, including removal.
 
-The Rust test suite now includes focused parity tests in `rust/tests/query_processor_csharp_parity_tests.rs` and `rust/tests/unicode_string_storage_tests.rs`.
+The Rust test suite now includes focused parity tests in `rust/tests/query_processor_csharp_parity_tests.rs`, `rust/tests/unicode_string_storage_tests.rs`, and `rust/tests/unicode_sequence_converter_tests.rs`.
 
 ## C# To Rust Tree Comparison
 
@@ -58,9 +58,9 @@ The Rust test suite now includes focused parity tests in `rust/tests/query_proce
 | `BasicQueryProcessor.cs` | `rust/src/query_processor.rs` | Covered by the shared Rust query processor for create, update, delete, and read scenarios. |
 | `MixedQueryProcessor.cs` | `rust/src/query_processor.rs` | Covered by the shared Rust query processor and parity tests for mixed restriction/substitution behavior. |
 | `ChangesSimplifier.cs` | `rust/src/changes_simplifier.rs`, `rust/tests/changes_simplifier_tests.rs` | Implemented and tested. |
-| `UnicodeStringStorage.cs` | `rust/src/unicode_string_storage.rs`, `rust/tests/unicode_string_storage_tests.rs` | Implemented in this pass for pinned types, UTF-16 Unicode sequences, string links, type names, user types, external-reference names, and removal. |
+| `UnicodeStringStorage.cs` | `rust/src/unicode_string_storage.rs`, `rust/src/sequences/*`, `rust/src/named_links.rs`, `rust/src/hybrid_reference.rs`, `rust/tests/unicode_string_storage_tests.rs`, `rust/tests/unicode_sequence_converter_tests.rs` | Implemented in this pass for pinned types, UTF-16 Unicode sequences, string links, type names, user types, external-reference names, and removal. The C# constructor pipeline now has separate Rust abstractions instead of a monolithic helper implementation. |
 | `PinnedTypes.cs` | `rust/src/pinned_types.rs`, `rust/tests/unicode_string_storage_tests.rs` | Implemented in this pass. |
-| `NamedLinks.cs` | `rust/src/unicode_string_storage.rs`, existing `LinkStorage` name APIs, `rust/tests/unicode_string_storage_tests.rs` | Implemented in this pass for the doublet-backed Unicode storage path; existing CLI-facing name APIs remain compatible with prior Rust query tests. |
+| `NamedLinks.cs` | `rust/src/named_links.rs`, `rust/src/unicode_string_storage.rs`, existing `LinkStorage` name APIs, `rust/tests/unicode_string_storage_tests.rs` | Implemented in this pass for the doublet-backed Unicode storage path; existing CLI-facing name APIs remain compatible with prior Rust query tests. |
 | `NamedLinksDecorator.cs` | `rust/src/link_storage.rs`, `rust/src/query_processor.rs` | Partially represented by `LinkStorage` plus query processor name handling. The new Unicode storage module provides the C# name database primitives needed for deeper integration. |
 | `SimpleLinksDecorator.cs` | `rust/src/link_storage.rs` | Represented by direct storage create/update/delete/query methods. |
 | `LinksExtensions.cs` | `rust/src/link_storage.rs` | Represented by `ensure_created` and explicit-index update paths. |
@@ -72,6 +72,6 @@ The Rust test suite now includes focused parity tests in `rust/tests/query_proce
 
 1. Replace the remaining local text-file storage internals with a `doublets`-backed adapter behind compatibility tests.
 2. Build cross-runtime fixture tests for binary file compatibility and Unicode names/text.
-3. Port sequence primitives from the C# sequence package into Rust with fixture-driven tests.
+3. Extend the sequence primitive ports beyond the `UnicodeStringStorage` constructor pipeline with fixture-driven tests.
 4. Expand Rust CLI tests until every C# CLI behavior has a corresponding Rust assertion.
 5. Run a workflow-template audit against the requested C#, Rust, and JS pipeline templates and apply only concrete drift fixes.

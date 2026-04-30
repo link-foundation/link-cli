@@ -16,23 +16,26 @@
 
 mod changes_simplifier;
 mod error;
+mod hybrid_reference;
 mod link;
 mod link_storage;
 mod lino_link;
+mod named_links;
 mod parser;
 mod pinned_types;
 mod query_processor;
+pub mod sequences;
 mod unicode_string_storage;
 
 // Re-export main types for easy access
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
+pub use hybrid_reference::{external_reference, external_reference_value, HybridReference};
 pub use link::{DoubletsLink, Link};
 pub use link_storage::LinkStorage;
 pub use lino_link::LinoLink;
+pub use named_links::NamedLinks;
 pub use parser::Parser;
 pub use pinned_types::PinnedTypes;
 pub use query_processor::{QueryOptions, QueryProcessor};
-pub use unicode_string_storage::{
-    external_reference, external_reference_value, NamedLinks, UnicodeStringStorage,
-};
+pub use unicode_string_storage::UnicodeStringStorage;
