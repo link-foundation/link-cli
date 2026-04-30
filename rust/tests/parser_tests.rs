@@ -58,3 +58,18 @@ fn test_parse_query_format() {
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].values_count(), 2);
 }
+
+#[test]
+fn test_parse_links_notation_backtick_unicode_identifier() {
+    let parser = Parser::new();
+    let result = parser
+        .parse("(`ссылка с пробелом`: `источник` `цель`)")
+        .unwrap();
+
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].id, Some("ссылка с пробелом".to_string()));
+
+    let values = result[0].values.as_ref().unwrap();
+    assert_eq!(values[0].id, Some("источник".to_string()));
+    assert_eq!(values[1].id, Some("цель".to_string()));
+}

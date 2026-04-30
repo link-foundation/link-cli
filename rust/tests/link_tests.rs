@@ -1,6 +1,6 @@
 //! Tests for the Link module
 
-use link_cli::Link;
+use link_cli::{DoubletsLink, Link};
 
 #[test]
 fn test_link_creation() {
@@ -32,4 +32,15 @@ fn test_link_is_full_point() {
 fn test_link_format() {
     let link = Link::new(1, 2, 3);
     assert_eq!(link.format(), "(1 2 3)");
+}
+
+#[test]
+fn test_link_round_trips_through_doublets_link() {
+    let platform_link = DoubletsLink::new(1, 2, 3);
+    let local_link = Link::from(platform_link);
+
+    assert_eq!(local_link, Link::new(1, 2, 3));
+
+    let platform_link = DoubletsLink::from(local_link);
+    assert_eq!(platform_link, DoubletsLink::new(1, 2, 3));
 }

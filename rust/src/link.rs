@@ -36,3 +36,18 @@ impl Link {
         format!("({} {} {})", self.index, self.source, self.target)
     }
 }
+
+/// Link type from the upstream `doublets` crate used as the Rust basis.
+pub type DoubletsLink = doublets::Link<u32>;
+
+impl From<DoubletsLink> for Link {
+    fn from(link: DoubletsLink) -> Self {
+        Self::new(link.index, link.source, link.target)
+    }
+}
+
+impl From<Link> for DoubletsLink {
+    fn from(link: Link) -> Self {
+        Self::new(link.index, link.source, link.target)
+    }
+}
