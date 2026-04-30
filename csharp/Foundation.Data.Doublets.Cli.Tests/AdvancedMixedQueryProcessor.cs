@@ -1501,14 +1501,37 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void StringAliasesInVariableRestriction_ShouldConstrainMatchesToNamedLinks()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((father: father father)))");
+        ProcessQuery(links, "(() ((mother: mother mother)))");
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        var fatherId = links.GetByName("father");
+        var motherId = links.GetByName("mother");
+        var childId = links.GetByName("child");
+
+        ProcessQuery(links, "((($id: father mother)) (($id: mother father)))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(3, allLinks.Count);
+        AssertLinkExists(allLinks, fatherId, fatherId, fatherId);
+        AssertLinkExists(allLinks, motherId, motherId, motherId);
+        AssertLinkExists(allLinks, childId, motherId, fatherId);
+      });
+    }
+
     // Helper methods
-    private static void RunTestWithLinks(Action<NamedLinksDecorator<uint>> testAction, bool enableTracing = false)
+    private static void RunTestWithLinks(Action<NamedTypesDecorator<uint>> testAction, bool enableTracing = false)
     {
       string tempDbFile = Path.GetTempFileName();
-      NamedLinksDecorator<uint>? decoratedLinks = null;
+      NamedTypesDecorator<uint>? decoratedLinks = null;
       try
       {
-        decoratedLinks = new NamedLinksDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
+        decoratedLinks = new NamedTypesDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
         var task = Task.Run(() =>
@@ -1536,7 +1559,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
     }
 
-    private static List<DoubletLink> GetAllLinks(NamedLinksDecorator<uint> links)
+    private static List<DoubletLink> GetAllLinks(NamedTypesDecorator<uint> links)
     {
       var any = links.Constants.Any;
       var query = new DoubletLink(index: any, source: any, target: any);
@@ -1545,23 +1568,23 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       return allLinks;
     }
 
-    private static void ProcessQuery(NamedLinksDecorator<uint> links, string query)
+    private static void ProcessQuery(NamedTypesDecorator<uint> links, string query)
     {
       ProcessQuery(links, new Options { Query = query });
     }
 
-    private static void ProcessQuery(NamedLinksDecorator<uint> links, Options options)
+    private static void ProcessQuery(NamedTypesDecorator<uint> links, Options options)
     {
       options.AutoCreateMissingReferences = true;
       Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(links, options);
     }
 
-    private static void ProcessQueryStrict(NamedLinksDecorator<uint> links, string query)
+    private static void ProcessQueryStrict(NamedTypesDecorator<uint> links, string query)
     {
       ProcessQueryStrict(links, new Options { Query = query });
     }
 
-    private static void ProcessQueryStrict(NamedLinksDecorator<uint> links, Options options)
+    private static void ProcessQueryStrict(NamedTypesDecorator<uint> links, Options options)
     {
       options.AutoCreateMissingReferences = false;
       Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(links, options);

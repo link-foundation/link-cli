@@ -10,7 +10,7 @@ public static class LinoDatabaseOutput
 {
     private static readonly Regex NumberTokenRegex = new(@"(?<![\w$])\d+(?![\w$])", RegexOptions.Compiled);
 
-    public static IReadOnlyList<string> FormatDatabase(NamedLinksDecorator<uint> links)
+    public static IReadOnlyList<string> FormatDatabase(INamedTypesLinks<uint> links)
     {
         var any = links.Constants.Any;
         var query = new DoubletLink(index: any, source: any, target: any);
@@ -23,7 +23,7 @@ public static class LinoDatabaseOutput
             .ToList();
     }
 
-    public static void WriteDatabase(NamedLinksDecorator<uint> links, TextWriter writer)
+    public static void WriteDatabase(INamedTypesLinks<uint> links, TextWriter writer)
     {
         foreach (var line in FormatDatabase(links))
         {
@@ -31,25 +31,25 @@ public static class LinoDatabaseOutput
         }
     }
 
-    public static void WriteToFile(NamedLinksDecorator<uint> links, string path)
+    public static void WriteToFile(INamedTypesLinks<uint> links, string path)
     {
         using var writer = new StreamWriter(path, append: false);
         WriteDatabase(links, writer);
     }
 
-    public static string FormatLink(NamedLinksDecorator<uint> links, DoubletLink link)
+    public static string FormatLink(INamedTypesLinks<uint> links, DoubletLink link)
     {
         return $"({FormatReference(links, link.Index)}: {FormatReference(links, link.Source)} {FormatReference(links, link.Target)})";
     }
 
-    public static string FormatChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
+    public static string FormatChange(INamedTypesLinks<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
     {
         var beforeText = linkBefore.IsNull() ? "" : FormatLink(links, linkBefore);
         var afterText = linkAfter.IsNull() ? "" : FormatLink(links, linkAfter);
         return $"({beforeText}) ({afterText})";
     }
 
-    public static string Namify(NamedLinksDecorator<uint> namedLinks, string linksNotation)
+    public static string Namify(INamedTypesLinks<uint> namedLinks, string linksNotation)
     {
         return NumberTokenRegex.Replace(linksNotation, match =>
         {
@@ -59,7 +59,7 @@ public static class LinoDatabaseOutput
         });
     }
 
-    private static string FormatReference(NamedLinksDecorator<uint> links, uint link)
+    private static string FormatReference(INamedTypesLinks<uint> links, uint link)
     {
         var name = links.GetName(link);
         return name is null ? link.ToString() : EscapeReference(name);

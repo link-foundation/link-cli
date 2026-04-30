@@ -109,7 +109,7 @@ rootCommand.SetHandler(
     var after = context.ParseResult.GetValueForOption(afterOption);
     var outputPath = context.ParseResult.GetValueForOption(outputOption);
 
-    var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
+    var decoratedLinks = new NamedTypesDecorator<uint>(db, trace);
 
     if (structure.HasValue)
     {
@@ -193,17 +193,17 @@ rootCommand.SetHandler(
 
 await rootCommand.InvokeAsync(args);
 
-static void PrintAllLinks(NamedLinksDecorator<uint> links)
+static void PrintAllLinks(INamedTypesLinks<uint> links)
 {
   LinoDatabaseOutput.WriteDatabase(links, Console.Out);
 }
 
-static void PrintChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
+static void PrintChange(INamedTypesLinks<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
 {
   Console.WriteLine(LinoDatabaseOutput.FormatChange(links, linkBefore, linkAfter));
 }
 
-static bool TryWriteLinoOutput(NamedLinksDecorator<uint> links, string? outputPath, InvocationContext context)
+static bool TryWriteLinoOutput(INamedTypesLinks<uint> links, string? outputPath, InvocationContext context)
 {
   if (string.IsNullOrWhiteSpace(outputPath))
   {

@@ -12,7 +12,7 @@ using System.Collections.Generic;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>
+    public class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
