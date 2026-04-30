@@ -400,3 +400,6 @@ FodyWeavers.xsd
 # Links Storage
 db.links
 db.names.links
+
+# Rust build artifacts
+rust/target/
