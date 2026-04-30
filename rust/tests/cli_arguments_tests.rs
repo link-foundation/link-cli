@@ -23,6 +23,7 @@ fn parses_csharp_option_aliases_without_direct_clap_dependency() {
         "-b",
         "-c",
         "-t",
+        "--auto-create-missing-references",
         "-s",
         "42",
     ]);
@@ -33,6 +34,7 @@ fn parses_csharp_option_aliases_without_direct_clap_dependency() {
     assert!(cli.before);
     assert!(cli.changes);
     assert!(cli.trace);
+    assert!(cli.auto_create_missing_references);
     assert_eq!(cli.structure, Some(42));
     assert_eq!(cli.lino_output.as_deref(), Some("dump.lino"));
 }
@@ -52,6 +54,7 @@ fn parses_inline_alias_values_and_boolean_values() {
         "--data=db.bin",
         "--do=(5 6)",
         "--trace=false",
+        "--auto-create-missing-references=true",
         "--before=true",
         "--changes=on",
         "--after=0",
@@ -61,6 +64,7 @@ fn parses_inline_alias_values_and_boolean_values() {
     assert_eq!(cli.db, "db.bin");
     assert_eq!(cli.query.as_deref(), Some("(5 6)"));
     assert!(!cli.trace);
+    assert!(cli.auto_create_missing_references);
     assert!(cli.before);
     assert!(cli.changes);
     assert!(!cli.after);

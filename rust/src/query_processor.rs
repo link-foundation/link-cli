@@ -9,29 +9,16 @@ use std::collections::HashMap;
 use crate::changes_simplifier::simplify_changes;
 use crate::error::LinkError;
 use crate::link::Link;
+use crate::link_reference_validator::LinkReferenceValidator;
 use crate::link_storage::LinkStorage;
 use crate::lino_link::LinoLink;
 use crate::parser::Parser;
-
-/// Options for query processing
-pub struct QueryOptions {
-    pub query: String,
-    pub trace: bool,
-}
-
-impl QueryOptions {
-    pub fn new(query: &str, trace: bool) -> Self {
-        Self {
-            query: query.to_string(),
-            trace,
-        }
-    }
-}
 
 /// QueryProcessor handles LiNo query parsing and execution
 /// Corresponds to AdvancedMixedQueryProcessor in C#
 pub struct QueryProcessor {
     trace: bool,
+    auto_create_missing_references: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -81,7 +68,18 @@ impl ResolvedLink {
 impl QueryProcessor {
     /// Creates a new QueryProcessor
     pub fn new(trace: bool) -> Self {
-        Self { trace }
+        Self {
+            trace,
+            auto_create_missing_references: false,
+        }
+    }
+
+    pub fn with_auto_create_missing_references(
+        mut self,
+        auto_create_missing_references: bool,
+    ) -> Self {
+        self.auto_create_missing_references = auto_create_missing_references;
+        self
     }
 
     /// Processes a LiNo query and returns the list of changes
@@ -149,6 +147,12 @@ impl QueryProcessor {
                 "[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.",
             );
             if let Some(values) = &substitution_link.values {
+                changes_list.extend(
+                    self.validate_links_exist_or_will_be_created(storage, &[], values)?
+                        .into_iter()
+                        .map(|link| (None, Some(link))),
+                );
+
                 for link_to_create in values {
                     let created_id = self.ensure_link_created(storage, link_to_create)?;
                     self.trace_msg(&format!(
@@ -169,6 +173,13 @@ impl QueryProcessor {
             self.trace_msg(
                 "[ProcessQuery] Restriction non-empty, substitution empty => deletion scenario.",
             );
+            let restriction_values = restriction_link.values.as_deref().unwrap_or(&[]);
+            changes_list.extend(
+                self.validate_links_exist_or_will_be_created(storage, restriction_values, &[])?
+                    .into_iter()
+                    .map(|link| (None, Some(link))),
+            );
+
             let restriction_patterns = self.patterns_from_lino(restriction_link);
             let mut links_to_delete = Vec::new();
             for pattern in &restriction_patterns {
@@ -195,11 +206,25 @@ impl QueryProcessor {
 
         let restriction_patterns = self.patterns_from_lino(restriction_link);
         let substitution_patterns = self.patterns_from_lino(substitution_link);
+        let restriction_values = restriction_link.values.as_deref().unwrap_or(&[]);
+        let substitution_values = substitution_link.values.as_deref().unwrap_or(&[]);
+        changes_list.extend(
+            self.validate_links_exist_or_will_be_created(
+                storage,
+                restriction_values,
+                substitution_values,
+            )?
+            .into_iter()
+            .map(|link| (None, Some(link))),
+        );
         let solutions = self.find_all_solutions(storage, &restriction_patterns);
 
         if solutions.is_empty() {
             self.trace_msg("[ProcessQuery] No solutions found => returning.");
-            return Ok(vec![]);
+            if !changes_list.is_empty() {
+                storage.save()?;
+            }
+            return Ok(changes_list);
         }
 
         let all_solutions_no_operation = solutions.iter().all(|solution| {
@@ -241,6 +266,20 @@ impl QueryProcessor {
         let simplified = self.simplify_changes_list(&changes_list);
 
         Ok(simplified)
+    }
+
+    fn validate_links_exist_or_will_be_created(
+        &self,
+        storage: &mut LinkStorage,
+        restriction_patterns: &[LinoLink],
+        substitution_patterns: &[LinoLink],
+    ) -> Result<Vec<Link>> {
+        LinkReferenceValidator::new(self.trace, self.auto_create_missing_references)
+            .validate_links_exist_or_will_be_created(
+                storage,
+                restriction_patterns,
+                substitution_patterns,
+            )
     }
 
     fn patterns_from_lino(&self, lino_link: &LinoLink) -> Vec<Pattern> {
@@ -864,6 +903,10 @@ impl QueryProcessor {
         // Handle leaf nodes (names or numbers)
         if !lino_link.has_values() {
             if let Some(ref id) = lino_link.id {
+                if id == "*" || Self::is_variable(id) {
+                    return Ok(u32::MAX);
+                }
+
                 // Check if it's a number
                 if let Ok(num) = id.parse::<u32>() {
                     return Ok(num);
@@ -890,6 +933,8 @@ impl QueryProcessor {
                     storage.ensure_created(num);
                     storage.update(num, source_id, target_id)?;
                     num
+                } else if id == "*" || Self::is_variable(id) {
+                    storage.get_or_create(source_id, target_id)
                 } else {
                     // Named link
                     let existing = storage.get_by_name(id);

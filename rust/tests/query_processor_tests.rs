@@ -4,13 +4,17 @@ use anyhow::Result;
 use link_cli::{LinkStorage, QueryProcessor};
 use tempfile::NamedTempFile;
 
+fn auto_processor() -> QueryProcessor {
+    QueryProcessor::new(false).with_auto_create_missing_references(true)
+}
+
 #[test]
 fn test_query_processor_create() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     // Create a simple link: (() ((1 2)))
     let changes = processor.process_query(&mut storage, "(()((1 2)))")?;
@@ -28,10 +32,140 @@ fn test_query_processor_empty() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     let changes = processor.process_query(&mut storage, "")?;
     assert!(changes.is_empty());
+
+    Ok(())
+}
+
+#[test]
+fn test_missing_numeric_reference_fails_without_auto_create() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let processor = QueryProcessor::new(false);
+
+    let error = processor
+        .process_query(&mut storage, "(() ((1: 10 20)))")
+        .expect_err("missing numeric references should fail validation");
+
+    assert!(error.to_string().contains("10"));
+    assert!(error
+        .to_string()
+        .contains("--auto-create-missing-references"));
+
+    Ok(())
+}
+
+#[test]
+fn test_future_numeric_references_succeed_without_auto_create() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let processor = QueryProcessor::new(false);
+
+    processor.process_query(&mut storage, "(() ((1: 1 2) (2: 2 1)))")?;
+
+    assert_eq!(storage.get(1).unwrap().source, 1);
+    assert_eq!(storage.get(1).unwrap().target, 2);
+    assert_eq!(storage.get(2).unwrap().source, 2);
+    assert_eq!(storage.get(2).unwrap().target, 1);
+
+    Ok(())
+}
+
+#[test]
+fn test_auto_create_missing_numeric_reference_creates_point_link() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let processor = auto_processor();
+
+    processor.process_query(&mut storage, "(() ((20: 10 20)))")?;
+
+    let point = storage
+        .get(10)
+        .expect("missing numeric reference should be created");
+    assert_eq!(point.source, 10);
+    assert_eq!(point.target, 10);
+    let link = storage.get(20).expect("defined link should be created");
+    assert_eq!(link.source, 10);
+    assert_eq!(link.target, 20);
+
+    Ok(())
+}
+
+#[test]
+fn test_auto_create_missing_numeric_reference_fills_existing_gap() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let processor = auto_processor();
+
+    processor.process_query(&mut storage, "(() ((3: 3 3)))")?;
+    processor.process_query(&mut storage, "(() ((4: 1 4)))")?;
+
+    let point = storage
+        .get(1)
+        .expect("missing lower numeric reference should be created");
+    assert_eq!(point.source, 1);
+    assert_eq!(point.target, 1);
+    let link = storage.get(4).expect("defined link should be created");
+    assert_eq!(link.source, 1);
+    assert_eq!(link.target, 4);
+
+    Ok(())
+}
+
+#[test]
+fn test_missing_named_reference_fails_without_auto_create() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let processor = QueryProcessor::new(false);
+
+    let error = processor
+        .process_query(&mut storage, "(() ((child: father mother)))")
+        .expect_err("missing named references should fail validation");
+
+    assert!(error.to_string().contains("father"));
+    assert!(error
+        .to_string()
+        .contains("--auto-create-missing-references"));
+
+    Ok(())
+}
+
+#[test]
+fn test_auto_create_missing_named_references_creates_point_links() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let processor = auto_processor();
+
+    processor.process_query(&mut storage, "(() ((child: father mother)))")?;
+
+    let father_id = storage.get_by_name("father").expect("father should exist");
+    let mother_id = storage.get_by_name("mother").expect("mother should exist");
+    let child_id = storage.get_by_name("child").expect("child should exist");
+
+    let father = storage.get(father_id).unwrap();
+    assert_eq!(father.source, father_id);
+    assert_eq!(father.target, father_id);
+    let mother = storage.get(mother_id).unwrap();
+    assert_eq!(mother.source, mother_id);
+    assert_eq!(mother.target, mother_id);
+    let child = storage.get(child_id).unwrap();
+    assert_eq!(child.source, father_id);
+    assert_eq!(child.target, mother_id);
 
     Ok(())
 }
@@ -49,7 +183,7 @@ fn test_deduplicate_duplicate_pair_with_named_links() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((m a) (m a))))")?;
 
@@ -96,7 +230,7 @@ fn test_deduplicate_duplicate_pair_with_numeric_links() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((1 2) (1 2))))")?;
 
@@ -126,7 +260,7 @@ fn test_deduplicate_triple_duplicate_pair() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((a b) ((a b) (a b)))))")?;
 
@@ -171,7 +305,7 @@ fn test_deduplicate_with_different_pairs() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((a b) (b a))))")?;
 
@@ -215,7 +349,7 @@ fn test_deduplicate_nested_duplicates() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() ((((x y) (x y)) ((x y) (x y)))))")?;
 
@@ -258,7 +392,7 @@ fn test_deduplicate_named_links_multiple_queries() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     // First create named links
     processor.process_query(&mut storage, "(() ((p: p p)))")?;
@@ -304,7 +438,7 @@ fn test_deduplicate_mixed_named_and_numeric() -> Result<()> {
     let db_path = temp_file.path().to_str().unwrap();
 
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = auto_processor();
 
     // First query creates (m a)
     processor.process_query(&mut storage, "(() ((m a)))")?;

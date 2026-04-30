@@ -8,7 +8,7 @@ fn with_storage(test: impl FnOnce(&mut LinkStorage, &QueryProcessor) -> Result<(
     let temp_file = NamedTempFile::new()?;
     let db_path = temp_file.path().to_str().unwrap();
     let mut storage = LinkStorage::new(db_path, false)?;
-    let processor = QueryProcessor::new(false);
+    let processor = QueryProcessor::new(false).with_auto_create_missing_references(true);
     test(&mut storage, &processor)
 }
 
@@ -69,12 +69,12 @@ fn test_create_deep_nested_numeric_links_matches_csharp() -> Result<()> {
 #[test]
 fn test_delete_by_source_target_pattern_matches_csharp() -> Result<()> {
     with_storage(|storage, processor| {
-        processor.process_query(storage, "(() ((1 2)))")?;
-        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1: 1 1) (2: 2 2) (3: 1 2)))")?;
 
         processor.process_query(storage, "(((1 2)) ())")?;
 
-        assert_eq!(storage.all().len(), 1);
+        assert_eq!(storage.all().len(), 2);
+        assert_link_exists(storage, 1, 1, 1);
         assert_link_exists(storage, 2, 2, 2);
         Ok(())
     })
@@ -177,14 +177,19 @@ fn test_delete_by_names_keeps_leaf_names_matches_csharp() -> Result<()> {
 }
 
 #[test]
-fn test_unknown_named_restriction_matches_nothing() -> Result<()> {
+fn test_unknown_named_restriction_fails_without_auto_create() -> Result<()> {
     with_storage(|storage, processor| {
         processor.process_query(storage, "(() ((known: left right)))")?;
 
-        let changes = processor.process_query(storage, "(((unknown: left right)) ())")?;
+        let strict_processor = QueryProcessor::new(false);
+        let error = strict_processor
+            .process_query(storage, "(((unknown: left right)) ())")
+            .expect_err("unknown named restriction should fail validation");
 
-        assert!(changes.is_empty());
-        assert_eq!(storage.all().len(), 3);
+        assert!(error.to_string().contains("unknown"));
+        assert!(error
+            .to_string()
+            .contains("--auto-create-missing-references"));
         assert!(storage.get_by_name("known").is_some());
         assert!(storage.get_by_name("unknown").is_none());
         Ok(())

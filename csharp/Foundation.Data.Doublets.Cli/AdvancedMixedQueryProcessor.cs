@@ -1,3 +1,4 @@
+using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -18,6 +19,11 @@ namespace Foundation.Data.Doublets.Cli
       /// Enables extra console tracing of internal steps if true.
       /// </summary>
       public bool Trace { get; set; } = false;
+
+      /// <summary>
+      /// Creates missing numeric and named references as self-referential point links instead of failing validation.
+      /// </summary>
+      public bool AutoCreateMissingReferences { get; set; } = false;
 
       public static implicit operator Options(string query) => new Options { Query = query };
     }
@@ -69,6 +75,19 @@ namespace Foundation.Data.Doublets.Cli
       if (restrictionLink.Values?.Count == 0 && (substitutionLink.Values?.Count ?? 0) > 0)
       {
         TraceIfEnabled(options, "[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.");
+        
+        // VALIDATION: Validate that all references in creation scenario are valid
+        try
+        {
+          var emptyRestrictionPatterns = new List<LinoLink>();
+          ValidateLinksExistOrWillBeCreated(links, emptyRestrictionPatterns, substitutionLink.Values ?? new List<LinoLink>(), options);
+        }
+        catch (Exception ex)
+        {
+          TraceIfEnabled(options, $"[ProcessQuery] Creation validation failed: {ex.Message}");
+          throw;
+        }
+        
         foreach (var linkToCreate in substitutionLink.Values ?? new List<LinoLink>())
         {
           var createdId = EnsureNestedLinkCreatedRecursively(links, linkToCreate, options);
@@ -83,6 +102,17 @@ namespace Foundation.Data.Doublets.Cli
 
       TraceIfEnabled(options, $"[ProcessQuery] Restriction patterns to parse: {restrictionPatterns.Count}");
       TraceIfEnabled(options, $"[ProcessQuery] Substitution patterns to parse: {substitutionPatterns.Count}");
+
+      // VALIDATION: Check that all referenced links exist or will be created
+      try
+      {
+        ValidateLinksExistOrWillBeCreated(links, restrictionPatterns, substitutionPatterns, options);
+      }
+      catch (Exception ex)
+      {
+        TraceIfEnabled(options, $"[ProcessQuery] Validation failed: {ex.Message}");
+        throw;
+      }
 
       var restrictionInternalPatterns = restrictionPatterns
           .Select(l => CreatePatternFromLino(l))
@@ -1140,6 +1170,11 @@ namespace Foundation.Data.Doublets.Cli
         TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Leaf with '*' => returning ANY.");
         return anyConstant;
       }
+      if (pattern.Id.StartsWith("$"))
+      {
+        TraceIfEnabled(options, "[EnsureNestedLinkCreatedRecursively] Variable leaf => returning ANY.");
+        return anyConstant;
+      }
       if (uint.TryParse(pattern.Id, out uint parsedNumber))
       {
         TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
@@ -1199,11 +1234,289 @@ namespace Foundation.Data.Doublets.Cli
       var compositeLinkId = EnsureLinkCreated(links, compositeLinkDefinition, options);
       TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index={compositeIndex}, Source={sourceLinkId}, Target={targetLinkId} => Actual ID={compositeLinkId}");
       // Assign the name for non-numeric identifiers
-      if (!string.IsNullOrEmpty(literalIdentifier) && !IsNumericOrStar(literalIdentifier))
+      if (!string.IsNullOrEmpty(literalIdentifier) && !IsNumericOrStar(literalIdentifier) && !literalIdentifier.StartsWith("$"))
       {
         links.SetName(compositeLinkId, literalIdentifier);
       }
       return compositeLinkId;
+    }
+
+    private static void ValidateLinksExistOrWillBeCreated(
+        NamedLinksDecorator<uint> links,
+        IList<LinoLink> restrictionPatterns,
+        IList<LinoLink> substitutionPatterns,
+        Options options)
+    {
+      TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Starting validation");
+
+      var plan = BuildLinkReferencePlan(links, substitutionPatterns);
+
+      TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {string.Join(", ", plan.NumericIdsToBeCreated.OrderBy(id => id))}");
+      TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Named links to be created: {string.Join(", ", plan.NamesToBeCreated.OrderBy(name => name, StringComparer.Ordinal))}");
+
+      CollectMissingReferences(restrictionPatterns, links, plan, false, "restriction", options);
+      CollectMissingReferences(substitutionPatterns, links, plan, true, "substitution", options);
+
+      if (plan.MissingReferences.Count > 0)
+      {
+        if (!options.AutoCreateMissingReferences)
+        {
+          var missing = plan.MissingReferences[0];
+          throw new InvalidOperationException(
+            $"Invalid reference to non-existent link '{missing.Identifier}' in {missing.PatternType} pattern. " +
+            $"Link '{missing.Identifier}' does not exist and will not be created by this operation. " +
+            "Use --auto-create-missing-references to create missing references as point links."
+          );
+        }
+
+        AutoCreateMissingReferences(links, plan.MissingReferences, options);
+      }
+
+      TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
+    }
+
+    private sealed class LinkReferencePlan
+    {
+      public HashSet<uint> NumericIdsToBeCreated { get; } = new();
+      public HashSet<string> NamesToBeCreated { get; } = new(StringComparer.Ordinal);
+      public List<MissingLinkReference> MissingReferences { get; } = new();
+      private readonly HashSet<string> _missingReferenceKeys = new(StringComparer.Ordinal);
+
+      public void AddMissingReference(MissingLinkReference reference)
+      {
+        if (_missingReferenceKeys.Add(reference.Key))
+        {
+          MissingReferences.Add(reference);
+        }
+      }
+    }
+
+    private sealed class MissingLinkReference
+    {
+      public required string Identifier { get; init; }
+      public required string PatternType { get; init; }
+      public required uint? NumericId { get; init; }
+      public string Key => NumericId.HasValue ? $"id:{NumericId.Value}" : $"name:{Identifier}";
+    }
+
+    private static LinkReferencePlan BuildLinkReferencePlan(NamedLinksDecorator<uint> links, IList<LinoLink> substitutionPatterns)
+    {
+      var plan = new LinkReferencePlan();
+      var reservedNumericIds = new HashSet<uint>();
+
+      foreach (var pattern in substitutionPatterns)
+      {
+        CollectExplicitDefinitions(pattern, plan, reservedNumericIds);
+      }
+
+      foreach (var pattern in substitutionPatterns)
+      {
+        CollectImplicitDefinitions(pattern, links, plan, reservedNumericIds);
+      }
+
+      return plan;
+    }
+
+    private static void CollectExplicitDefinitions(LinoLink pattern, LinkReferencePlan plan, HashSet<uint> reservedNumericIds)
+    {
+      if (IsComposite(pattern) && TryGetConcreteIdentifier(pattern.Id, out var identifier))
+      {
+        if (uint.TryParse(identifier, out var linkId))
+        {
+          plan.NumericIdsToBeCreated.Add(linkId);
+          reservedNumericIds.Add(linkId);
+        }
+        else
+        {
+          plan.NamesToBeCreated.Add(identifier);
+        }
+      }
+
+      if (pattern.Values != null)
+      {
+        foreach (var subPattern in pattern.Values)
+        {
+          CollectExplicitDefinitions(subPattern, plan, reservedNumericIds);
+        }
+      }
+    }
+
+    private static void CollectImplicitDefinitions(
+        LinoLink pattern,
+        NamedLinksDecorator<uint> links,
+        LinkReferencePlan plan,
+        HashSet<uint> reservedNumericIds)
+    {
+      if (pattern.Values != null)
+      {
+        foreach (var subPattern in pattern.Values)
+        {
+          CollectImplicitDefinitions(subPattern, links, plan, reservedNumericIds);
+        }
+      }
+
+      if (IsComposite(pattern) && !TryGetConcreteIdentifier(pattern.Id, out var _ignoredIdentifier))
+      {
+        var nextId = GetNextAvailableLinkId(links, reservedNumericIds);
+        reservedNumericIds.Add(nextId);
+        plan.NumericIdsToBeCreated.Add(nextId);
+      }
+    }
+
+    private static uint GetNextAvailableLinkId(NamedLinksDecorator<uint> links, HashSet<uint> reservedNumericIds)
+    {
+      uint nextId = 1;
+      while (links.Exists(nextId) || reservedNumericIds.Contains(nextId))
+      {
+        nextId++;
+      }
+      return nextId;
+    }
+
+    private static void CollectMissingReferences(
+        IList<LinoLink> patterns,
+        NamedLinksDecorator<uint> links,
+        LinkReferencePlan plan,
+        bool isSubstitution,
+        string patternType,
+        Options options)
+    {
+      foreach (var pattern in patterns)
+      {
+        CollectMissingReferences(pattern, links, plan, isSubstitution, patternType, options);
+      }
+    }
+
+    private static void CollectMissingReferences(
+        LinoLink pattern,
+        NamedLinksDecorator<uint> links,
+        LinkReferencePlan plan,
+        bool isSubstitution,
+        string patternType,
+        Options options)
+    {
+      var patternIdIsDefinition = isSubstitution && IsComposite(pattern) && TryGetConcreteIdentifier(pattern.Id, out var _ignoredIdentifier);
+
+      if (!patternIdIsDefinition && TryGetConcreteIdentifier(pattern.Id, out var identifier))
+      {
+        ValidateReferenceIdentifier(identifier, links, plan, patternType, options);
+      }
+
+      if (pattern.Values != null)
+      {
+        foreach (var subPattern in pattern.Values)
+        {
+          CollectMissingReferences(subPattern, links, plan, isSubstitution, patternType, options);
+        }
+      }
+    }
+
+    private static void ValidateReferenceIdentifier(
+        string identifier,
+        NamedLinksDecorator<uint> links,
+        LinkReferencePlan plan,
+        string patternType,
+        Options options)
+    {
+      if (uint.TryParse(identifier, out var linkId))
+      {
+        if (!links.Exists(linkId) && !plan.NumericIdsToBeCreated.Contains(linkId))
+        {
+          plan.AddMissingReference(new MissingLinkReference
+          {
+            Identifier = identifier,
+            PatternType = patternType,
+            NumericId = linkId
+          });
+          return;
+        }
+        TraceIfEnabled(options, $"[ValidateReferencesInPattern] Link {linkId} reference validated in {patternType} pattern");
+        return;
+      }
+
+      if (links.GetByName(identifier) == links.Constants.Null && !plan.NamesToBeCreated.Contains(identifier))
+      {
+        plan.AddMissingReference(new MissingLinkReference
+        {
+          Identifier = identifier,
+          PatternType = patternType,
+          NumericId = null
+        });
+        return;
+      }
+
+      TraceIfEnabled(options, $"[ValidateReferencesInPattern] Named link '{identifier}' reference validated in {patternType} pattern");
+    }
+
+    private static void AutoCreateMissingReferences(
+        NamedLinksDecorator<uint> links,
+        IList<MissingLinkReference> missingReferences,
+        Options options)
+    {
+      foreach (var missing in missingReferences.Where(reference => reference.NumericId.HasValue).OrderBy(reference => reference.NumericId!.Value))
+      {
+        var linkId = missing.NumericId!.Value;
+        if (links.Exists(linkId))
+        {
+          continue;
+        }
+
+        TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {linkId} as point link.");
+        LinksExtensions.EnsureCreated(links, linkId);
+        links.Update(
+          new DoubletLink(linkId, links.Constants.Null, links.Constants.Null),
+          new DoubletLink(linkId, linkId, linkId),
+          (beforeState, afterState) =>
+              options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
+        );
+      }
+
+      foreach (var missing in missingReferences.Where(reference => !reference.NumericId.HasValue).OrderBy(reference => reference.Identifier, StringComparer.Ordinal))
+      {
+        if (links.GetByName(missing.Identifier) != links.Constants.Null)
+        {
+          continue;
+        }
+
+        TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{missing.Identifier}' as point link.");
+        EnsureNamedPointLink(links, missing.Identifier, options);
+      }
+    }
+
+    private static void EnsureNamedPointLink(NamedLinksDecorator<uint> links, string name, Options options)
+    {
+      if (links.GetByName(name) != links.Constants.Null)
+      {
+        return;
+      }
+
+      var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
+      links.SetName(newId, name);
+      links.Update(
+        new DoubletLink(newId, links.Constants.Null, links.Constants.Null),
+        new DoubletLink(newId, newId, newId),
+        (beforeState, afterState) =>
+            options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
+      );
+    }
+
+    private static bool IsComposite(LinoLink pattern) => pattern.Values?.Count == 2;
+
+    private static bool TryGetConcreteIdentifier(string? id, out string identifier)
+    {
+      identifier = string.Empty;
+      if (string.IsNullOrWhiteSpace(id))
+      {
+        return false;
+      }
+
+      identifier = id.TrimEnd(':');
+      if (identifier.Length == 0 || identifier == "*" || identifier.StartsWith("$"))
+      {
+        return false;
+      }
+
+      return true;
     }
   }
 }

@@ -47,7 +47,8 @@ fn main() -> Result<()> {
     // Process query if provided
     if let Some(query) = effective_query {
         if !query.is_empty() {
-            let processor = QueryProcessor::new(cli.trace);
+            let processor = QueryProcessor::new(cli.trace)
+                .with_auto_create_missing_references(cli.auto_create_missing_references);
             changes_list = processor.process_query(&mut storage, query)?;
         }
     }
