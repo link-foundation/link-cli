@@ -1,14 +1,13 @@
-﻿using System.CommandLine;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using Foundation.Data.Doublets.Cli;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Platform.Data.Doublets.Memory.United.Generic;
 using Platform.Protocols.Lino;
 
 using static Foundation.Data.Doublets.Cli.ChangesSimplifier;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using QueryProcessor = Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor;
-using Foundation.Data.Doublets.Cli;
-using System.Text.RegularExpressions;
 
 const string defaultDatabaseFilename = "db.links";
 
@@ -70,6 +69,12 @@ var afterOption = new Option<bool>(
 afterOption.AddAlias("--links");
 afterOption.AddAlias("-a");
 
+var outputOption = new Option<string?>(
+  name: "--out",
+  description: "Path to write the complete database as a LiNo file"
+);
+outputOption.AddAlias("--lino-output");
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
 {
   dbOption,
@@ -79,29 +84,42 @@ var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store")
   structureOption,
   beforeOption,
   changesOption,
-  afterOption
+  afterOption,
+  outputOption
 };
 
 rootCommand.SetHandler(
-  (string db, string queryOptionValue, string queryArgumentValue, bool trace, uint? structure, bool before, bool changes, bool after) =>
+  (InvocationContext context) =>
   {
+    var db = context.ParseResult.GetValueForOption(dbOption)!;
+    var queryOptionValue = context.ParseResult.GetValueForOption(queryOption) ?? "";
+    var queryArgumentValue = context.ParseResult.GetValueForArgument(queryArgument) ?? "";
+    var trace = context.ParseResult.GetValueForOption(traceOption);
+    var structure = context.ParseResult.GetValueForOption(structureOption);
+    var before = context.ParseResult.GetValueForOption(beforeOption);
+    var changes = context.ParseResult.GetValueForOption(changesOption);
+    var after = context.ParseResult.GetValueForOption(afterOption);
+    var outputPath = context.ParseResult.GetValueForOption(outputOption);
+
     var decoratedLinks = new NamedLinksDecorator<uint>(db, trace);
 
-    // If --structure is provided, handle it separately
     if (structure.HasValue)
     {
       var linkId = structure.Value;
       try
       {
         var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
-        Console.WriteLine(Namify(decoratedLinks, structureFormatted));
+        Console.WriteLine(LinoDatabaseOutput.Namify(decoratedLinks, structureFormatted));
       }
       catch (Exception ex)
       {
         Console.Error.WriteLine($"Error formatting structure for link ID {linkId}: {ex.Message}");
-        Environment.Exit(1);
+        context.ExitCode = 1;
+        return;
       }
-      return; // Exit after handling --structure
+
+      TryWriteLinoOutput(decoratedLinks, outputPath, context);
+      return;
     }
 
     if (before)
@@ -131,7 +149,6 @@ rootCommand.SetHandler(
 
     if (changes && changesList.Any())
     {
-      // Debug: Print raw changes before simplification (if trace is enabled)
       if (trace)
       {
         Console.WriteLine("[DEBUG] Raw changes before simplification:");
@@ -143,16 +160,13 @@ rootCommand.SetHandler(
         Console.WriteLine($"[DEBUG] Total raw changes: {changesList.Count}");
       }
 
-      // Simplify the collected changes
       var simplifiedChanges = SimplifyChanges(changesList);
 
-      // Debug: Print simplified changes count (if trace is enabled)
       if (trace)
       {
         Console.WriteLine($"[DEBUG] Simplified changes count: {simplifiedChanges.Count()}");
       }
 
-      // Print the simplified changes
       foreach (var (linkBefore, linkAfter) in simplifiedChanges)
       {
         PrintChange(decoratedLinks, linkBefore, linkAfter);
@@ -163,48 +177,39 @@ rootCommand.SetHandler(
     {
       PrintAllLinks(decoratedLinks);
     }
-  },
-  // Explicitly specify the type parameters
-  dbOption, queryOption, queryArgument, traceOption, structureOption, beforeOption, changesOption, afterOption
+
+    TryWriteLinoOutput(decoratedLinks, outputPath, context);
+  }
 );
 
 await rootCommand.InvokeAsync(args);
 
-static string Namify(NamedLinksDecorator<uint> namedLinks, string linksNotation)
-{
-  var numberGlobalRegex = new Regex(@"\d+");
-  var matches = numberGlobalRegex.Matches(linksNotation);
-  var newLinksNotation = linksNotation;
-  foreach (Match match in matches)
-  {
-    var number = match.Value;
-    var numberLink = uint.Parse(number);
-    var name = namedLinks.GetName(numberLink);
-    if (name != null)
-    {
-      newLinksNotation = newLinksNotation.Replace(number, name);
-    }
-  }
-  return newLinksNotation;
-}
-
 static void PrintAllLinks(NamedLinksDecorator<uint> links)
 {
-  var any = links.Constants.Any;
-  var query = new DoubletLink(index: any, source: any, target: any);
-
-  links.Each(query, link =>
-  {
-    var formattedLink = links.Format(link);
-    Console.WriteLine(Namify(links, formattedLink));
-    return links.Constants.Continue;
-  });
+  LinoDatabaseOutput.WriteDatabase(links, Console.Out);
 }
 
 static void PrintChange(NamedLinksDecorator<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
 {
-  var beforeText = linkBefore.IsNull() ? "" : links.Format(linkBefore);
-  var afterText = linkAfter.IsNull() ? "" : links.Format(linkAfter);
-  var formattedChange = $"({beforeText}) ({afterText})";
-  Console.WriteLine(Namify(links, formattedChange));
+  Console.WriteLine(LinoDatabaseOutput.FormatChange(links, linkBefore, linkAfter));
+}
+
+static bool TryWriteLinoOutput(NamedLinksDecorator<uint> links, string? outputPath, InvocationContext context)
+{
+  if (string.IsNullOrWhiteSpace(outputPath))
+  {
+    return true;
+  }
+
+  try
+  {
+    LinoDatabaseOutput.WriteToFile(links, outputPath);
+    return true;
+  }
+  catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException)
+  {
+    Console.Error.WriteLine($"Error writing LiNo output file '{outputPath}': {ex.Message}");
+    context.ExitCode = 1;
+    return false;
+  }
 }

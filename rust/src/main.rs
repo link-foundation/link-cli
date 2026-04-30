@@ -27,6 +27,9 @@ fn main() -> Result<()> {
     if let Some(link_id) = cli.structure {
         let structure_formatted = storage.format_structure(link_id)?;
         println!("{}", structure_formatted);
+        if let Some(output_path) = &cli.lino_output {
+            storage.write_lino_output(output_path)?;
+        }
         return Ok(());
     }
 
@@ -36,7 +39,7 @@ fn main() -> Result<()> {
     }
 
     // Get effective query (option takes precedence over positional argument)
-    let effective_query = cli.query.or(cli.query_arg);
+    let effective_query = cli.query.as_deref().or(cli.query_arg.as_deref());
 
     // Collect changes
     let mut changes_list = Vec::new();
@@ -45,7 +48,7 @@ fn main() -> Result<()> {
     if let Some(query) = effective_query {
         if !query.is_empty() {
             let processor = QueryProcessor::new(cli.trace);
-            changes_list = processor.process_query(&mut storage, &query)?;
+            changes_list = processor.process_query(&mut storage, query)?;
         }
     }
 
@@ -59,6 +62,10 @@ fn main() -> Result<()> {
     // Print after state if requested
     if cli.after {
         storage.print_all_links();
+    }
+
+    if let Some(output_path) = &cli.lino_output {
+        storage.write_lino_output(output_path)?;
     }
 
     Ok(())

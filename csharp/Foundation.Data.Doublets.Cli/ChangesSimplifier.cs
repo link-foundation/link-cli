@@ -132,7 +132,7 @@ namespace Foundation.Data.Doublets.Cli
     /// Removes problematic duplicate before states that lead to simplification issues.
     /// This fixes Issue #26 where multiple transformations from the same before state
     /// to conflicting after states (including null states) would cause the simplifier to fail.
-    /// 
+    ///
     /// The key insight: If we have multiple transitions from the same before state,
     /// and one of them is to a "null" state (0: 0 0), we should prefer the non-null transition
     /// as it represents the actual final transformation.
@@ -144,13 +144,13 @@ namespace Foundation.Data.Doublets.Cli
     {
       // Group changes by their before state
       var groupedChanges = changes.GroupBy(c => c.Before, LinkEqualityComparer.Instance);
-      
+
       var result = new List<(Link<uint> Before, Link<uint> After)>();
-      
+
       foreach (var group in groupedChanges)
       {
         var changesForThisBefore = group.ToList();
-        
+
         if (changesForThisBefore.Count == 1)
         {
           // No duplicates, keep as is
@@ -160,11 +160,11 @@ namespace Foundation.Data.Doublets.Cli
         {
           // Multiple changes from the same before state
           // Check if any of them is to a null state (0: 0 0)
-          var nullTransition = changesForThisBefore.FirstOrDefault(c => 
+          var nullTransition = changesForThisBefore.FirstOrDefault(c =>
               c.After.Index == 0 && c.After.Source == 0 && c.After.Target == 0);
-          var nonNullTransitions = changesForThisBefore.Where(c => 
+          var nonNullTransitions = changesForThisBefore.Where(c =>
               !(c.After.Index == 0 && c.After.Source == 0 && c.After.Target == 0)).ToList();
-          
+
           if (nullTransition != default && nonNullTransitions.Count > 0)
           {
             // Issue #26 scenario: We have both null and non-null transitions
@@ -179,7 +179,7 @@ namespace Foundation.Data.Doublets.Cli
           }
         }
       }
-      
+
       return result;
     }
 

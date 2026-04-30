@@ -9,7 +9,7 @@ using static Foundation.Data.Doublets.Cli.ChangesSimplifier;
 Console.WriteLine("=== Testing Issue #26 Scenario ===");
 
 // This simulates what might be happening based on the issue output:
-// ((1: 1 2)) ()           - Link (1: 1 2) is deleted  
+// ((1: 1 2)) ()           - Link (1: 1 2) is deleted
 // ((1: 1 2)) ((1: 2 1))   - Link (1: 1 2) becomes (1: 2 1)
 // ((2: 2 1)) ((2: 1 2))   - Link (2: 2 1) becomes (2: 1 2)
 
@@ -17,10 +17,10 @@ var changes = new List<(Link<uint> Before, Link<uint> After)>
 {
     // First transformation: (1: 1 2) -> () (deletion)
     (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 0, source: 0, target: 0)),
-    
+
     // Second transformation: () -> (1: 2 1) (creation)
     (new Link<uint>(index: 0, source: 0, target: 0), new Link<uint>(index: 1, source: 2, target: 1)),
-    
+
     // Third transformation: (2: 2 1) -> (2: 1 2) (direct update)
     (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),
 };

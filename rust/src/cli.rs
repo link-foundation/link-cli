@@ -16,6 +16,7 @@ pub struct Cli {
     pub before: bool,
     pub changes: bool,
     pub after: bool,
+    pub lino_output: Option<String>,
 }
 
 impl Default for Cli {
@@ -29,6 +30,7 @@ impl Default for Cli {
             before: false,
             changes: false,
             after: false,
+            lino_output: None,
         }
     }
 }
@@ -88,6 +90,10 @@ impl Cli {
                 cli.after = parse_bool("--after", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--out", "--lino-output"]) {
+                cli.lino_output = Some(value.to_string());
+                continue;
+            }
 
             match arg.as_str() {
                 "-h" | "--help" => return Ok(CliCommand::Help),
@@ -113,6 +119,9 @@ impl Cli {
                 }
                 "-a" | "--after" | "--links" => {
                     cli.after = next_bool_value(&mut args, true)?;
+                }
+                "--out" | "--lino-output" => {
+                    cli.lino_output = Some(next_value(&mut args, &arg)?);
                 }
                 "--" => {
                     for value in args.by_ref() {
@@ -157,6 +166,8 @@ impl Cli {
             "          Print the changes applied by the query\n",
             "  -a, --after, --links\n",
             "          Print the state of the database after applying changes\n",
+            "      --out <OUT>, --lino-output <OUT>\n",
+            "          Write the complete database as a LiNo file\n",
             "  -h, --help\n",
             "          Print help\n",
             "  -V, --version\n",

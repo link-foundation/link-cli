@@ -18,6 +18,8 @@ fn parses_csharp_option_aliases_without_direct_clap_dependency() {
         "--apply",
         "(1 2)",
         "--links",
+        "--out",
+        "dump.lino",
         "-b",
         "-c",
         "-t",
@@ -32,6 +34,7 @@ fn parses_csharp_option_aliases_without_direct_clap_dependency() {
     assert!(cli.changes);
     assert!(cli.trace);
     assert_eq!(cli.structure, Some(42));
+    assert_eq!(cli.lino_output.as_deref(), Some("dump.lino"));
 }
 
 #[test]
@@ -52,6 +55,7 @@ fn parses_inline_alias_values_and_boolean_values() {
         "--before=true",
         "--changes=on",
         "--after=0",
+        "--lino-output=links.lino",
     ]);
 
     assert_eq!(cli.db, "db.bin");
@@ -60,6 +64,7 @@ fn parses_inline_alias_values_and_boolean_values() {
     assert!(cli.before);
     assert!(cli.changes);
     assert!(!cli.after);
+    assert_eq!(cli.lino_output.as_deref(), Some("links.lino"));
 }
 
 #[test]

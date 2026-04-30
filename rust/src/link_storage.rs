@@ -290,6 +290,44 @@ impl LinkStorage {
         format!("({} {} {})", index_str, source_str, target_str)
     }
 
+    /// Formats a link as LiNo suitable for database export.
+    pub fn format_lino(&self, link: &Link) -> String {
+        format!(
+            "({}: {} {})",
+            self.format_lino_reference(link.index),
+            self.format_lino_reference(link.source),
+            self.format_lino_reference(link.target)
+        )
+    }
+
+    /// Returns all database links as sorted LiNo lines.
+    pub fn lino_lines(&self) -> Vec<String> {
+        let mut links: Vec<_> = self.all();
+        links.sort_by_key(|l| l.index);
+        links
+            .into_iter()
+            .map(|link| self.format_lino(link))
+            .collect()
+    }
+
+    /// Writes the complete database as LiNo.
+    pub fn write_lino_output<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let path = path.as_ref();
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(path)
+            .with_context(|| format!("Failed to create LiNo output: {}", path.display()))?;
+
+        let mut writer = BufWriter::new(file);
+        for line in self.lino_lines() {
+            writeln!(writer, "{line}")?;
+        }
+        writer.flush()?;
+        Ok(())
+    }
+
     /// Formats the structure of a link
     pub fn format_structure(&self, id: u32) -> Result<String> {
         if let Some(link) = self.get(id) {
@@ -407,4 +445,47 @@ impl LinkStorage {
     pub fn is_trace_enabled(&self) -> bool {
         self.trace
     }
+
+    fn format_lino_reference(&self, id: u32) -> String {
+        self.names
+            .get(&id)
+            .map(|name| escape_lino_reference(name))
+            .unwrap_or_else(|| id.to_string())
+    }
+}
+
+fn escape_lino_reference(reference: &str) -> String {
+    if reference.is_empty() || reference.trim().is_empty() {
+        return String::new();
+    }
+
+    let has_single_quote = reference.contains('\'');
+    let has_double_quote = reference.contains('"');
+    let needs_quoting = reference.contains(':')
+        || reference.contains('(')
+        || reference.contains(')')
+        || reference.contains(' ')
+        || reference.contains('\t')
+        || reference.contains('\n')
+        || reference.contains('\r')
+        || has_single_quote
+        || has_double_quote;
+
+    if has_single_quote && has_double_quote {
+        return format!("'{}'", reference.replace('\'', "\\'"));
+    }
+
+    if has_double_quote {
+        return format!("'{reference}'");
+    }
+
+    if has_single_quote {
+        return format!("\"{reference}\"");
+    }
+
+    if needs_quoting {
+        return format!("'{reference}'");
+    }
+
+    reference.to_string()
 }

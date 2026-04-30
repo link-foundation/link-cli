@@ -14,13 +14,13 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       {
         // (1: 2 1) ↦ (1: 0 0)
         (new Link<uint>(index: 1, source: 2, target: 1), new Link<uint>(index: 1, source: 0, target: 0)),
-        
+
         // (2: 1 2) ↦ (2: 0 0)
         (new Link<uint>(index: 2, source: 1, target: 2), new Link<uint>(index: 2, source: 0, target: 0)),
-        
+
         // (2: 0 0) ↦ (0: 0 0)
         (new Link<uint>(index: 2, source: 0, target: 0), new Link<uint>(index: 0, source: 0, target: 0)),
-        
+
         // (1: 0 0) ↦ (0: 0 0)
         (new Link<uint>(index: 1, source: 0, target: 0), new Link<uint>(index: 0, source: 0, target: 0))
       };
@@ -61,13 +61,13 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       {
         // (0: 0 0) ↦ (1: 0 0)
         (new Link<uint>(index: 0, source: 0, target: 0), new Link<uint>(index: 1, source: 0, target: 0)),
-        
+
         // (1: 0 0) ↦ (1: 1 2)
         (new Link<uint>(index: 1, source: 0, target: 0), new Link<uint>(index: 1, source: 1, target: 2)),
-        
+
         // (0: 0 0) ↦ (2: 0 0)
         (new Link<uint>(index: 0, source: 0, target: 0), new Link<uint>(index: 2, source: 0, target: 0)),
-        
+
         // (2: 0 0) ↦ (2: 2 1)
         (new Link<uint>(index: 2, source: 0, target: 0), new Link<uint>(index: 2, source: 2, target: 1))
       };
@@ -337,10 +337,10 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       {
         // Step 1: Link (1: 1 2) is first deleted (becomes null/empty)
         (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 0, source: 0, target: 0)),
-        
+
         // Step 2: New link (1: 2 1) is created (swapped source and target)
         (new Link<uint>(index: 0, source: 0, target: 0), new Link<uint>(index: 1, source: 2, target: 1)),
-        
+
         // Step 3: Link (2: 2 1) is directly updated to (2: 1 2)
         (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),
       };

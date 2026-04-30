@@ -123,6 +123,29 @@ A short version of read operation will also work:
 clink '((($i:)) (($i:)))' --changes
 ```
 
+## Export database as LiNo
+
+Use `--out` to write the complete database to a `.lino` file after the query is processed. The older `--lino-output` option is also accepted.
+
+```bash
+clink '() ((child: father mother))' --out database.lino
+```
+
+`database.lino`:
+
+```lino
+(father: father father)
+(mother: mother mother)
+(child: father mother)
+```
+
+When links do not have names, exported references are plain link numbers:
+
+```lino
+(1: 1 1)
+(2: 1 2)
+```
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.
@@ -282,44 +305,45 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+| `--out`                 | string  | _None_         | `--lino-output`                     | Write the complete database as a LiNo file                                 |
 
 ## For developers and debugging
 
 ### Execute from root
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
 ```
 
 ### Execute from folder
 
 ```bash
-cd Foundation.Data.Doublets.Cli
+cd csharp/Foundation.Data.Doublets.Cli
 dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
 ```
 
 ### Complete examples:
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()' --changes --after
 ```
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
 ### Publish next version:
 
 ```bash
-VERSION=$(awk -F'[<>]' '/<Version>/ {print $3}' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj) && git tag "v$VERSION" && git push origin "v$VERSION"
+VERSION=$(awk -F'[<>]' '/<Version>/ {print $3}' csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj) && git tag "v$VERSION" && git push origin "v$VERSION"
 ```
 
 ## Running a Specific Test with Detailed Output
