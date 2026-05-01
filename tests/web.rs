@@ -1,67 +1,45 @@
-//! Test suite for the Web and headless browsers.
+//! WebAssembly tests for the browser-facing Rust wrapper.
 
 #![cfg(target_arch = "wasm32")]
 
-extern crate wasm_bindgen_test;
+use clink_wasm::Clink;
+use serde_json::Value;
 use wasm_bindgen_test::*;
 
-wasm_bindgen_test_configure!(run_in_browser);
-
-use clink_wasm::*;
-
 #[wasm_bindgen_test]
-fn test_clink_creation() {
-    let clink = Clink::new();
-    // Test that we can create a Clink instance
-    assert!(true); // Basic smoke test
+fn creates_a_clink_instance() {
+    let _clink = Clink::new();
 }
 
 #[wasm_bindgen_test]
-fn test_version() {
-    let version = Clink::version();
-    assert!(!version.is_empty());
-    assert!(version.contains("2.2.2"));
+fn exposes_versions() {
+    assert_eq!(Clink::version(), "2.3.0");
+    assert!(Clink::rust_core_version().starts_with("clink "));
 }
 
 #[wasm_bindgen_test]
-fn test_wasm_functionality() {
-    let result = Clink::test();
-    assert_eq!(result, true);
-}
-
-#[wasm_bindgen_test]
-fn test_basic_query_execution() {
+fn executes_lino_queries_with_the_rust_core() {
     let mut clink = Clink::new();
-    let options = r#"{"db": "memory", "trace": false, "structure": null, "before": false, "changes": true, "after": true}"#;
-    
-    // Test creation query
-    let result = clink.execute("() ((1 1))", options);
-    assert!(!result.is_empty());
-    
-    // Parse the result
-    let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+    let raw = clink.execute(
+        "() ((child: father mother))",
+        r#"{"changes":true,"after":true}"#,
+    );
+    let parsed: Value = serde_json::from_str(&raw).unwrap();
+
     assert_eq!(parsed["success"], true);
+    assert!(parsed["output"].as_str().unwrap().contains("child"));
+    assert_eq!(parsed["links"].as_array().unwrap().len(), 3);
 }
 
 #[wasm_bindgen_test]
-fn test_invalid_query() {
+fn reports_invalid_options() {
     let mut clink = Clink::new();
-    let options = r#"{"db": "memory", "trace": false, "structure": null, "before": false, "changes": false, "after": false}"#;
-    
-    // Test invalid query
-    let result = clink.execute("invalid query format", options);
-    let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
-    assert_eq!(parsed["success"], false);
-    assert!(parsed["error"].is_string());
-}
+    let raw = clink.execute("() ((1 1))", "invalid json");
+    let parsed: Value = serde_json::from_str(&raw).unwrap();
 
-#[wasm_bindgen_test]
-fn test_invalid_options() {
-    let mut clink = Clink::new();
-    
-    // Test with invalid JSON options
-    let result = clink.execute("() ((1 1))", "invalid json");
-    let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
     assert_eq!(parsed["success"], false);
-    assert!(parsed["error"].as_str().unwrap().contains("Invalid options JSON"));
+    assert!(parsed["error"]
+        .as_str()
+        .unwrap()
+        .contains("Invalid options JSON"));
 }

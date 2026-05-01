@@ -5,12 +5,16 @@ It is based on [associative theory](https://habr.com/ru/articles/895896) (also i
 
 It uses C# implementation of [a links data store](https://github.com/linksplatform?view_as=public) (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
 
-## 🌐 WebAssembly Version Available!
+## WebAssembly Browser Workbench
 
-**NEW**: You can now run `clink` directly in your browser! Check out the WebAssembly version:
-- 🚀 **[Live Demo](https://link-foundation.github.io/link-cli/demo/www/)** - Try it in your browser
-- 📦 **NPM Package**: `npm install clink-wasm`
-- 📖 **Documentation**: [README-WASM.md](README-WASM.md)
+`clink` can run in the browser through the Rust query processor compiled to
+WebAssembly. The React workbench mirrors the current link set into
+[`doublets-web`](https://www.npmjs.com/package/doublets-web), the WebAssembly
+package built from `doublets-rs`.
+
+- Live demo: <https://link-foundation.github.io/link-cli/>
+- Browser app documentation: [README-WASM.md](README-WASM.md)
+- Implementation notes: [WEBASSEMBLY_IMPLEMENTATION.md](WEBASSEMBLY_IMPLEMENTATION.md)
 
 ## Installation
 

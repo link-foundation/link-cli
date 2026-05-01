@@ -2,101 +2,136 @@ name: WebAssembly CI
 
 on:
   push:
-    branches: [ main, issue-* ]
+    branches:
+      - main
+      - issue-*
+    paths:
+      - '.github/workflows/wasm.yml'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'package-lock.json'
+      - 'package.json'
+      - 'rust/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'web/**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - '.github/workflows/wasm.yml'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'package-lock.json'
+      - 'package.json'
+      - 'rust/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'web/**'
+
+concurrency:
+  group: wasm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
-    - name: Install wasm-pack
-      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.14.0 --locked
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
 
-    - name: Cache Cargo dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            rust/target
+          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('Cargo.lock', 'rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-wasm-cargo-
 
-    - name: Run Rust tests
-      run: cargo test --lib
+      - name: Install npm dependencies
+        run: npm ci
 
-    - name: Build WebAssembly (web target)
-      run: wasm-pack build --target web --out-dir pkg
+      - name: Test Rust CLI core
+        run: cargo test --manifest-path rust/Cargo.toml --all-features
 
-    - name: Build WebAssembly (nodejs target)
-      run: wasm-pack build --target nodejs --out-dir pkg-node
+      - name: Test WebAssembly wrapper
+        run: npm run test:wasm
 
-    - name: Build WebAssembly (bundler target)  
-      run: wasm-pack build --target bundler --out-dir pkg-bundler
+      - name: Build React WebAssembly app
+        run: npm run build
 
-    - name: Install npm dependencies
-      run: npm install
-
-    - name: Run WebAssembly tests
-      run: wasm-pack test --headless --chrome
-
-    - name: Test Node.js integration
-      run: |
-        node -e "
-        const { Clink } = require('./pkg-node/clink_wasm.js');
-        const clink = new Clink();
-        const options = JSON.stringify({ changes: true, after: true });
-        const result = clink.execute('() ((1 1))', options);
-        const parsed = JSON.parse(result);
-        console.log('Node.js test result:', parsed.success ? 'PASSED' : 'FAILED');
-        process.exit(parsed.success ? 0 : 1);
-        "
-
-    - name: Upload WebAssembly artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: wasm-packages
-        path: |
-          pkg/
-          pkg-node/
-          pkg-bundler/
+      - name: Upload built app
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-cli-web
+          path: dist/
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    name: Deploy GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
-    - name: Install wasm-pack
-      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.14.0 --locked
 
-    - name: Build for web
-      run: wasm-pack build --target web --out-dir pkg
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
-        destination_dir: demo
-        exclude_assets: '.github,target,src,tests'
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build GitHub Pages app
+        run: npm run build:pages
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

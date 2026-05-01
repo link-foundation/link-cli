@@ -402,4 +402,19 @@ db.links
 db.names.links
 
 # Rust build artifacts
+target/
 rust/target/
+
+# JavaScript and WebAssembly build artifacts
+node_modules/
+dist/
+pkg/
+pkg-node/
+pkg-bundler/
+web/pkg/
+
+# Local AI investigation artifacts
+ci-logs/
+gh-data/
+experiments/
+.playwright-mcp/

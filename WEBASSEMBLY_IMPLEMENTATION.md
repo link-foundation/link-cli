@@ -1,171 +1,83 @@
-# WebAssembly Implementation for link-cli
+# WebAssembly Implementation
 
-## Overview
+Issue #12 asks for a browser-executable `link-cli` experience based on the Rust
+implementation of Doublets. The current implementation uses the Rust `link-cli`
+core from `rust/`, compiles a small wrapper crate with `wasm-pack`, and renders a
+React single-page app for GitHub Pages.
 
-This document describes the WebAssembly implementation of the `clink` CLI tool, enabling users to execute link manipulation operations directly in web browsers as requested in issue #12.
+## Architecture
 
-## Implementation Details
-
-### 🔧 Technology Stack
-
-- **Rust** - Core implementation language for WebAssembly
-- **wasm-bindgen** - Rust/WebAssembly and JavaScript interop
-- **wasm-pack** - Build tool for Rust-generated WebAssembly
-- **web-sys** - Web API bindings
-- **serde** - JSON serialization/deserialization
-
-### 📁 Project Structure
-
-```
-├── src/
-│   ├── lib.rs                 # Main WebAssembly interface
-│   ├── query_processor.rs     # LiNo query processing logic
-│   ├── links_operations.rs    # In-memory links storage
-│   ├── lino_parser.rs        # LiNo protocol parser
-│   └── utils.rs              # Utility functions
-├── tests/
-│   └── web.rs                # WebAssembly tests
-├── www/
-│   └── index.html            # Demo web application
-├── .github/workflows/
-│   └── wasm.yml              # CI/CD for WebAssembly builds
-├── Cargo.toml                # Rust dependencies
-├── package.json              # NPM package configuration
-└── README-WASM.md            # WebAssembly documentation
+```text
+rust/                  Native Rust link-cli library and clink binary
+src/lib.rs             wasm-bindgen wrapper around the Rust query processor
+web/src/               React workbench
+web/pkg/               Generated Rust WASM package, ignored by git
+dist/                  Generated GitHub Pages artifact, ignored by git
 ```
 
-### 🚀 Core Features
+The browser app initializes two WebAssembly-backed runtimes:
 
-1. **WebAssembly Interface**
-   - `Clink` class for browser/Node.js usage
-   - JSON-based query execution
-   - Version information and testing utilities
+- `clink-wasm`: exposes `Clink#execute`, `Clink#snapshot`, and `Clink#reset`.
+  It uses an in-memory implementation of the `NamedTypeLinks` trait, so the same
+  Rust `QueryProcessor` used by the native CLI can run in the browser without
+  filesystem access.
+- `doublets-web@0.1.2`: the latest npm release of the WebAssembly bindings for
+  `doublets-rs`. The React app mirrors the current `Clink` snapshot into a
+  `UnitedLinks` instance after each query.
 
-2. **LiNo Protocol Support**
-   - Create: `() ((1 1))` - Create new links
-   - Read: `((($i: $s $t)) (($i: $s $t)))` - Query existing links
-   - Update: `((1: 1 1)) ((1: 1 2))` - Modify links
-   - Delete: `((1 1)) ()` - Remove links
+## Why the Old Proof of Concept Changed
 
-3. **Multiple Build Targets**
-   - Web browsers (ES modules)
-   - Node.js (CommonJS)
-   - Bundlers (Webpack, Rollup, etc.)
+The previous branch had a root-level Rust parser and storage implementation
+that duplicated only a small subset of CLI behavior. After merging current
+`main`, the repository has a fuller Rust port under `rust/`, so the WASM wrapper
+now delegates query semantics to that shared Rust core.
 
-### 🌐 Browser Integration
+## CI and Pages
 
-The WebAssembly version runs entirely client-side with:
-- In-memory link storage
-- Real-time query processing
-- Interactive web demo at `/www/index.html`
+`.github/workflows/wasm.yml` now:
 
-### 📋 API Reference
+1. Installs stable Rust with the `wasm32-unknown-unknown` target.
+2. Installs npm dependencies with `npm ci`.
+3. Runs the Rust CLI core tests.
+4. Runs `wasm-pack test --node` for the wrapper.
+5. Builds the React app.
+6. Deploys `dist/` to GitHub Pages on pushes to `main`.
 
-```javascript
-import init, { Clink } from './pkg/clink_wasm.js';
+The workflow uses current Pages and artifact actions:
 
-// Initialize WebAssembly
-await init();
+- `actions/upload-artifact@v4`
+- `actions/configure-pages@v5`
+- `actions/upload-pages-artifact@v3`
+- `actions/deploy-pages@v4`
 
-// Create instance
-const clink = new Clink();
+## Local Commands
 
-// Execute queries
-const options = JSON.stringify({
-    db: "memory",
-    changes: true,
-    after: true
-});
-
-const result = clink.execute("() ((1 1))", options);
-const parsed = JSON.parse(result);
-
-console.log(parsed.output);
-```
-
-### 🧪 Testing Strategy
-
-1. **Rust Unit Tests** - Core functionality testing
-2. **WebAssembly Tests** - Browser integration testing
-3. **CI/CD Pipeline** - Automated builds and testing
-
-### 📦 Distribution
-
-The WebAssembly version is distributed as:
-- **NPM Package**: `clink-wasm` for Node.js usage
-- **Web Package**: Direct browser import via ES modules
-- **GitHub Pages**: Live demo deployment
-
-## Protocols.Lino Compatibility
-
-The implementation includes a comprehensive LiNo parser that supports:
-- Simple references (numbers)
-- Empty links `()`
-- Links with source/target `(1 2)`
-- Links with IDs `(3: 1 2)`
-- Variable patterns `$i`, `$s`, `$t`
-- Wildcard patterns `*`
-
-Tests ensure compatibility with the Rust implementation at:
-https://github.com/linksplatform/Protocols.Lino/blob/03be561ef9612fe7a86ed9f2ad964827cc6b4df5/rust/src/lib.rs
-
-## Version Update
-
-The project version has been updated to `2.3.0` to reflect the addition of WebAssembly support:
-- C# project: `Foundation.Data.Doublets.Cli.csproj`
-- Rust project: `Cargo.toml`
-- NPM package: `package.json`
-
-## Build Instructions
-
-### Prerequisites
 ```bash
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Install wasm-pack
-curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-# Add WebAssembly target
-rustup target add wasm32-unknown-unknown
-```
-
-### Building
-```bash
-# Build for web browsers
+cargo test --manifest-path rust/Cargo.toml --all-features
+cargo test --lib
+npm run test:wasm
 npm run build
-
-# Build for Node.js
-npm run build:nodejs
-
-# Build for bundlers
-npm run build:bundler
-
-# Build all targets
-npm run build:all
+npm run dev
 ```
 
-### Testing
-```bash
-# Run Rust tests
-cargo test
+## Browser Data Model
 
-# Run WebAssembly tests
-npm test
+The page session is intentionally in-memory. Query results include a structured
+`links` array:
 
-# Serve demo locally
-npm run serve
-# Open http://localhost:8000/www/
+```json
+[
+  { "id": 1, "source": 1, "target": 1, "name": "father" },
+  { "id": 2, "source": 2, "target": 2, "name": "mother" },
+  { "id": 3, "source": 1, "target": 2, "name": "child" }
+]
 ```
 
-## Future Enhancements
+That array drives both the rendered graph and the `doublets-web` `UnitedLinks`
+mirror.
 
-- [ ] Persistent storage using IndexedDB
-- [ ] Worker thread support for better performance
-- [ ] Full doublets library integration
-- [ ] Advanced query optimization
-- [ ] Streaming query execution
+## Follow-Up Scope
 
-## Conclusion
-
-This WebAssembly implementation successfully addresses issue #12 by providing a browser-compatible version of the `clink` CLI tool. Users can now execute link manipulation operations directly in web browsers without requiring server-side infrastructure or .NET runtime installation.
+The current implementation proves the browser runtime and static deployment.
+Durable browser storage can be added later with IndexedDB without changing the
+Rust query processor API.
