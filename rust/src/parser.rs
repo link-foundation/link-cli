@@ -8,7 +8,7 @@ use crate::lino_link::LinoLink;
 use links_notation::{parse_lino_to_links, LiNo};
 
 /// Parser for LiNo notation
-/// Corresponds to Platform.Protocols.Lino.Parser in C#
+/// Corresponds to Link.Foundation.Links.Notation.Parser in C#
 pub struct Parser;
 
 impl Parser {

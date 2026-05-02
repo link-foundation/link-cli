@@ -4,7 +4,7 @@
 //! a parsed link from LiNo notation.
 
 /// LinoLink represents a parsed link from LiNo notation
-/// Corresponds to Platform.Protocols.Lino.Link<string> in C#
+/// Corresponds to Link.Foundation.Links.Notation.Link<string> in C#
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct LinoLink {
     /// The ID/name of this link (can be a number, variable, or name)

@@ -2,8 +2,8 @@ using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Platform.Protocols.Lino;
-using LinoLink = Platform.Protocols.Lino.Link<string>;
+using Link.Foundation.Links.Notation;
+using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
 namespace Foundation.Data.Doublets.Cli
@@ -75,7 +75,7 @@ namespace Foundation.Data.Doublets.Cli
       if (restrictionLink.Values?.Count == 0 && (substitutionLink.Values?.Count ?? 0) > 0)
       {
         TraceIfEnabled(options, "[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.");
-        
+
         // VALIDATION: Validate that all references in creation scenario are valid
         try
         {
@@ -87,7 +87,7 @@ namespace Foundation.Data.Doublets.Cli
           TraceIfEnabled(options, $"[ProcessQuery] Creation validation failed: {ex.Message}");
           throw;
         }
-        
+
         foreach (var linkToCreate in substitutionLink.Values ?? new List<LinoLink>())
         {
           var createdId = EnsureNestedLinkCreatedRecursively(links, linkToCreate, options);

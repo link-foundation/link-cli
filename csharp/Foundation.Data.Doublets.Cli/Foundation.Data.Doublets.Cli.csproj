@@ -24,8 +24,8 @@
     <PackageReference Include="Platform.Data" Version="0.16.1" />
     <PackageReference Include="Platform.Data.Doublets" Version="0.18.1" />
     <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.6.5" />
-    <PackageReference Include="Platform.Protocols.Lino" Version="0.4.5" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageReference Include="Link.Foundation.Links.Notation" Version="0.13.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.7" />
   </ItemGroup>
 
   <ItemGroup>

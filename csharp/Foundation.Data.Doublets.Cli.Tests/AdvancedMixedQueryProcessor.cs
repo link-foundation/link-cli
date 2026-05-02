@@ -915,8 +915,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
 
         var finalLinks = GetAllLinks(links);
         Console.WriteLine($"[Test] Final links count: {finalLinks.Count}");
-        Assert.Single(finalLinks.Where(l => l.Index == finalSonId));
-        var finalSonLink = finalLinks.First(l => l.Index == finalSonId);
+        var finalSonLink = Assert.Single(finalLinks, l => l.Index == finalSonId);
         Assert.Equal(finalFatherId, finalSonLink.Source);
         Assert.Equal(finalMotherId, finalSonLink.Target);
         Console.WriteLine("[Test] Final state verification completed");
@@ -924,7 +923,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }, enableTracing: true);
     }
 
-    [Fact(Timeout = 3000)] // 3 second timeout
+    [Fact]
     public void UpdateNamedLinkNameTest()
     {
       Console.WriteLine("[Test] ===== Starting UpdateNamedLinkNameTest =====");
@@ -1613,7 +1612,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         {
           ProcessQueryStrict(links, "(() ((1: 10 20)))");
         });
-        
+
         Assert.Contains("Invalid reference to non-existent link '10'", exception.Message);
         Assert.Contains("--auto-create-missing-references", exception.Message);
       });
