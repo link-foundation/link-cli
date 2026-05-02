@@ -20,6 +20,8 @@ configured to build using GitHub Actions
 - Run metadata: `docs/case-studies/issue-69/evidence/run-25245349330.json`
 - Full log: `docs/case-studies/issue-69/evidence/run-25245349330.log`
 - Recent runs for `issue-69-43fc7f1a4ec3`: `docs/case-studies/issue-69/evidence/recent-runs-issue-branch.json`
+- Fixed push run metadata: `docs/case-studies/issue-69/evidence/run-25249954218.json`
+- Fixed pull request run metadata: `docs/case-studies/issue-69/evidence/run-25249954818.json`
 
 ## Timeline
 
@@ -78,3 +80,5 @@ enabled and configured.
 
 - `node experiments/validate-wasm-workflow.mjs`
 - `npm run build`
+- Push WebAssembly CI run `25249954218`: `Test` succeeded and `Deploy GitHub Pages` skipped.
+- Pull request WebAssembly CI run `25249954818`: `Test` succeeded and `Deploy GitHub Pages` skipped.
