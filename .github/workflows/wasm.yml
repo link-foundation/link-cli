@@ -28,6 +28,13 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'web/**'
+  workflow_dispatch:
+    inputs:
+      deploy_pages:
+        description: 'Deploy the built app to GitHub Pages'
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
   group: wasm-${{ github.workflow }}-${{ github.ref }}
@@ -90,7 +97,10 @@ jobs:
 
   deploy:
     name: Deploy GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.deploy_pages
     needs: test
     runs-on: ubuntu-latest
     permissions:
