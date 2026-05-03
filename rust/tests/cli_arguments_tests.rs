@@ -72,6 +72,20 @@ fn parses_inline_alias_values_and_boolean_values() {
 }
 
 #[test]
+fn parses_export_alias_as_lino_output_path() {
+    let cli = parse_run(&["clink", "--export", "database.lino"]);
+
+    assert_eq!(cli.lino_output.as_deref(), Some("database.lino"));
+}
+
+#[test]
+fn parses_inline_export_alias_as_lino_output_path() {
+    let cli = parse_run(&["clink", "--export=database.lino"]);
+
+    assert_eq!(cli.lino_output.as_deref(), Some("database.lino"));
+}
+
+#[test]
 fn returns_help_and_version_commands() {
     assert_eq!(
         Cli::parse_from(["clink", "--help"]).expect("help should parse"),

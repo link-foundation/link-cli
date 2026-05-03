@@ -61,7 +61,7 @@ var afterOption = new Option<bool>("--after", "--links", "-a")
   DefaultValueFactory = _ => false
 };
 
-var outputOption = new Option<string?>("--out", "--lino-output")
+var outputOption = new Option<string?>("--out", "--lino-output", "--export")
 {
   Description = "Path to write the complete database as a LiNo file"
 };

@@ -138,10 +138,10 @@ clink '((($i:)) (($i:)))' --changes
 
 ## Export database as LiNo
 
-Use `--out` to write the complete database to a `.lino` file after the query is processed. The older `--lino-output` option is also accepted.
+Use `--out` or `--export` to write the complete database to a `.lino` file after the query is processed. The older `--lino-output` option is also accepted.
 
 ```bash
-clink '() ((child: father mother))' --out database.lino
+clink '() ((child: father mother))' --export database.lino
 ```
 
 `database.lino`:
@@ -319,7 +319,7 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
-| `--out`                 | string  | _None_         | `--lino-output`                     | Write the complete database as a LiNo file                                 |
+| `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
 
 ## For developers and debugging
 

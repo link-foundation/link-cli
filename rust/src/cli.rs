@@ -97,7 +97,7 @@ impl Cli {
                 cli.after = parse_bool("--after", value)?;
                 continue;
             }
-            if let Some(value) = inline_value(&arg, &["--out", "--lino-output"]) {
+            if let Some(value) = inline_value(&arg, &["--out", "--lino-output", "--export"]) {
                 cli.lino_output = Some(value.to_string());
                 continue;
             }
@@ -130,7 +130,7 @@ impl Cli {
                 "-a" | "--after" | "--links" => {
                     cli.after = next_bool_value(&mut args, true)?;
                 }
-                "--out" | "--lino-output" => {
+                "--out" | "--lino-output" | "--export" => {
                     cli.lino_output = Some(next_value(&mut args, &arg)?);
                 }
                 "--" => {
@@ -178,7 +178,7 @@ impl Cli {
             "          Print the changes applied by the query\n",
             "  -a, --after, --links\n",
             "          Print the state of the database after applying changes\n",
-            "      --out <OUT>, --lino-output <OUT>\n",
+            "      --out <OUT>, --lino-output <OUT>, --export <OUT>\n",
             "          Write the complete database as a LiNo file\n",
             "  -h, --help\n",
             "          Print help\n",
