@@ -1,0 +1,29 @@
+{
+  "name": "link-cli-web",
+  "version": "2.3.0",
+  "description": "React and WebAssembly browser workbench for link-cli",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:wasm && npm run build:web",
+    "build:pages": "npm run build:wasm && DEPLOY_TARGET=github-pages npm run build:web",
+    "build:wasm": "wasm-pack build --target web --out-dir web/pkg",
+    "build:web": "vite build --config web/vite.config.js",
+    "dev": "npm run build:wasm && vite --config web/vite.config.js --host 0.0.0.0",
+    "preview": "vite preview --config web/vite.config.js --host 0.0.0.0",
+    "test": "npm run test:wasm && npm run build",
+    "test:wasm": "wasm-pack test --node",
+    "clean": "rm -rf dist web/pkg pkg pkg-node pkg-bundler target"
+  },
+  "dependencies": {
+    "doublets-web": "^0.1.2",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.10",
+    "vite-plugin-wasm": "^3.6.0"
+  }
+}
