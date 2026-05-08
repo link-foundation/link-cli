@@ -225,3 +225,38 @@ fn test_write_lino_output_writes_complete_database() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_format_structure_renders_left_branch_with_link_indexes() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let first = storage.create(0, 0);
+    let second = storage.create(first, first);
+    let third = storage.create(second, first);
+    let fourth = storage.create(third, second);
+
+    assert_eq!(
+        storage.format_structure(fourth)?,
+        "(4: (3: (2: (1: 0 0) 1) 1) 2)"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_format_structure_renders_repeated_source_and_target_as_reference_on_right() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let db_path = temp_file.path().to_str().unwrap();
+
+    let mut storage = LinkStorage::new(db_path, false)?;
+    let first = storage.create(0, 0);
+    let second = storage.create(first, first);
+    storage.create(second, first);
+    let fourth = storage.create(second, second);
+
+    assert_eq!(storage.format_structure(fourth)?, "(4: (2: (1: 0 0) 1) 2)");
+
+    Ok(())
+}

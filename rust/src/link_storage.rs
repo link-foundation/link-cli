@@ -3,7 +3,7 @@
 //! This module provides the LinkStorage struct for managing link persistence.
 
 use anyhow::{Context, Result};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
@@ -339,47 +339,27 @@ impl LinkStorage {
 
     /// Formats the structure of a link
     pub fn format_structure(&self, id: u32) -> Result<String> {
-        if let Some(link) = self.get(id) {
-            Ok(self.format_structure_recursive(link, true))
-        } else {
-            Err(LinkError::NotFound(id).into())
-        }
+        let mut visited = HashSet::new();
+        self.format_structure_recursive(id, &mut visited)
     }
 
     /// Recursively formats a link structure
-    fn format_structure_recursive(&self, link: &Link, is_root: bool) -> String {
-        if link.is_full_point() && !is_root {
-            // Self-referential point - just show the name/id
-            return self
-                .names
-                .get(&link.index)
-                .cloned()
-                .unwrap_or_else(|| link.index.to_string());
+    fn format_structure_recursive(&self, id: u32, visited: &mut HashSet<u32>) -> Result<String> {
+        let link = self.get(id).ok_or(LinkError::NotFound(id))?;
+        if !visited.insert(id) {
+            return Ok(self.format_lino_reference(id));
         }
 
-        let source_str = if link.source == link.index {
-            self.names
-                .get(&link.index)
-                .cloned()
-                .unwrap_or_else(|| link.index.to_string())
-        } else if let Some(source_link) = self.get(link.source) {
-            self.format_structure_recursive(source_link, false)
+        let source = if self.exists(link.source) && !visited.contains(&link.source) {
+            self.format_structure_recursive(link.source, visited)?
         } else {
-            link.source.to_string()
+            self.format_lino_reference(link.source)
         };
+        let target = self.format_lino_reference(link.target);
+        let index = self.format_lino_reference(link.index);
+        visited.remove(&id);
 
-        let target_str = if link.target == link.index {
-            self.names
-                .get(&link.index)
-                .cloned()
-                .unwrap_or_else(|| link.index.to_string())
-        } else if let Some(target_link) = self.get(link.target) {
-            self.format_structure_recursive(target_link, false)
-        } else {
-            link.target.to_string()
-        };
-
-        format!("({} {})", source_str, target_str)
+        Ok(format!("({index}: {source} {target})"))
     }
 
     /// Prints all links

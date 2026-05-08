@@ -54,6 +54,31 @@ public class CliExportIntegrationTests
         }
     }
 
+    [Fact]
+    public async Task StructureOption_RendersLeftBranchWithIndexes()
+    {
+        var tempDirectory = CreateTempDirectory();
+
+        try
+        {
+            var dbPath = Path.Combine(tempDirectory, "structure.links");
+
+            AssertClinkSucceeded(await RunClinkAsync("--db", dbPath, "() ((1: 1 1))"));
+            AssertClinkSucceeded(await RunClinkAsync("--db", dbPath, "() ((2: 1 2))"));
+            AssertClinkSucceeded(await RunClinkAsync("--db", dbPath, "() ((3: 2 1))"));
+            AssertClinkSucceeded(await RunClinkAsync("--db", dbPath, "() ((4: 3 2))"));
+
+            var result = await RunClinkAsync("--db", dbPath, "--structure", "4");
+
+            AssertClinkSucceeded(result);
+            Assert.Equal("(4: (3: (2: (1: 1 1) 2) 1) 2)\n", NormalizeNewlines(result.Stdout));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static async Task<CommandResult> RunClinkAsync(params string[] clinkArguments)
     {
         var csharpDirectory = FindCsharpDirectory();
@@ -102,6 +127,11 @@ public class CliExportIntegrationTests
         Assert.True(
             result.ExitCode == 0,
             $"clink exited with {result.ExitCode}\nstdout:\n{result.Stdout}\nstderr:\n{result.Stderr}");
+    }
+
+    private static string NormalizeNewlines(string text)
+    {
+        return text.Replace("\r\n", "\n");
     }
 
     private static string FindCsharpDirectory()
