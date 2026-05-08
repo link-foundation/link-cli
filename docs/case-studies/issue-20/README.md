@@ -28,6 +28,11 @@ Pull request: https://github.com/link-foundation/link-cli/pull/47
 - `evidence/repro-after-fix.log`: traced local reproduction after the fix.
 - `evidence/dotnet-*.log`, `evidence/cargo-*.log`, `evidence/npm-*.log`,
   and `evidence/diff-check.log`: final local verification logs.
+- `evidence/ci-rust-lint-75003226910.log`: CI log from the first post-push
+  attempt showing the Rust file-size gate failure after `query_processor.rs`
+  exceeded 1000 lines.
+- `evidence/rust-file-size-check.log`: final local Rust file-size check after
+  moving substitution-preservation helpers into a separate module.
 
 ## Timeline
 
@@ -67,6 +72,9 @@ Pull request: https://github.com/link-foundation/link-cli/pull/47
   without arbitrary iteration limits.
 - Rust parity now follows the same substitution-preservation rule and uses a
   checked creation path before explicit-ID creation.
+- Rust substitution-preservation helpers were moved out of
+  `query_processor.rs` after CI showed the repository's 1000-line file-size
+  gate was exceeded.
 - The C# preservation helper uses the upstream point helpers and a visited set
   so direct self-points and partial points are preserved without recursive
   expansion.
@@ -85,6 +93,8 @@ Pull request: https://github.com/link-foundation/link-cli/pull/47
   `cargo fmt --all -- --check`, `RUSTFLAGS=-Dwarnings cargo clippy --all-targets --all-features`,
   `cargo test --all-features --verbose`, and `cargo test --doc --verbose`
   from `rust/`.
+- Rust file-size check:
+  `node scripts/check-file-size.mjs --lang rust`.
 - WebAssembly checks after touching `rust/`:
   `npm ci`, `npm run test:wasm`, and `npm run build`.
 - Whitespace check:

@@ -1,59 +1,59 @@
        Fresh unicode-ident v1.0.24
        Fresh proc-macro2 v1.0.106
        Fresh autocfg v1.5.0
-       Fresh utf8parse v0.2.2
-       Fresh anstyle-parse v1.0.0
        Fresh quote v1.0.45
-       Fresh libc v0.2.186
+       Fresh utf8parse v0.2.2
        Fresh syn v2.0.117
+       Fresh libc v0.2.186
+       Fresh anstyle-parse v1.0.0
        Fresh num-traits v0.2.19
-       Fresh anstyle-query v1.1.5
-       Fresh cfg-if v1.0.4
-       Fresh bitflags v2.11.1
        Fresh thiserror-impl v2.0.18
-       Fresh is_terminal_polyfill v1.70.2
        Fresh colorchoice v1.0.5
+       Fresh anstyle-query v1.1.5
        Fresh anstyle v1.0.14
+       Fresh is_terminal_polyfill v1.70.2
        Fresh linux-raw-sys v0.12.1
-       Fresh anstream v1.0.0
-       Fresh rustix v1.1.4
-       Fresh thiserror v2.0.18
-       Fresh getrandom v0.4.2
+       Fresh bitflags v2.11.1
+       Fresh cfg-if v1.0.4
        Fresh platform-num v0.8.0
-       Fresh strsim v0.11.1
-       Fresh once_cell v1.21.4
-       Fresh dtor-proc-macro v0.0.5
+       Fresh rustix v1.1.4
+       Fresh anstream v1.0.0
+       Fresh getrandom v0.4.2
+       Fresh thiserror v2.0.18
        Fresh fastrand v2.4.1
+       Fresh strsim v0.11.1
        Fresh heck v0.5.0
+       Fresh once_cell v1.21.4
        Fresh clap_lex v1.1.0
-       Fresh clap_derive v4.6.1
+       Fresh dtor-proc-macro v0.0.5
        Fresh dtor v0.0.6
+       Fresh clap_derive v4.6.1
        Fresh tempfile v3.27.0
        Fresh clap_builder v4.6.0
        Fresh serde_core v1.0.228
-       Fresh thiserror-impl v1.0.69
        Fresh serde_derive v1.0.228
+       Fresh thiserror-impl v1.0.69
        Fresh memmap2 v0.9.10
+       Fresh allocator-api2 v0.4.0
        Fresh ctor-proc-macro v0.0.6
        Fresh memchr v2.8.0
-       Fresh allocator-api2 v0.4.0
        Fresh beef v0.5.2
        Fresh ctor v0.4.3
-       Fresh clap v4.6.1
        Fresh platform-mem v0.3.0
-       Fresh nom v8.0.0
-       Fresh platform-data v2.0.0
-       Fresh thiserror v1.0.69
        Fresh serde v1.0.228
+       Fresh platform-data v2.0.0
+       Fresh nom v8.0.0
+       Fresh thiserror v1.0.69
+       Fresh clap v4.6.1
        Fresh platform-trees v0.3.4
+       Fresh dotenvy v0.15.7
        Fresh lino-env v0.1.0
        Fresh tap v1.0.1
        Fresh leak_slice v0.2.0
-       Fresh dotenvy v0.15.7
        Fresh anyhow v1.0.102
+       Fresh links-notation v0.13.0
        Fresh lino-arguments v0.3.0
        Fresh doublets v0.3.0
-       Fresh links-notation v0.13.0
        Fresh link-cli v0.1.0 (/tmp/gh-issue-solver-1778236390702/rust)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
    Doc-tests link_cli
