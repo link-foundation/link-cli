@@ -1,0 +1,296 @@
+       Fresh unicode-ident v1.0.24
+       Fresh proc-macro2 v1.0.106
+       Fresh autocfg v1.5.0
+       Fresh utf8parse v0.2.2
+       Fresh quote v1.0.45
+       Fresh libc v0.2.186
+       Fresh anstyle-parse v1.0.0
+       Fresh syn v2.0.117
+       Fresh num-traits v0.2.19
+       Fresh colorchoice v1.0.5
+       Fresh bitflags v2.11.1
+       Fresh anstyle-query v1.1.5
+       Fresh thiserror-impl v2.0.18
+       Fresh anstyle v1.0.14
+       Fresh cfg-if v1.0.4
+       Fresh linux-raw-sys v0.12.1
+       Fresh is_terminal_polyfill v1.70.2
+       Fresh rustix v1.1.4
+       Fresh getrandom v0.4.2
+       Fresh anstream v1.0.0
+       Fresh thiserror v2.0.18
+       Fresh platform-num v0.8.0
+       Fresh clap_lex v1.1.0
+       Fresh dtor-proc-macro v0.0.5
+       Fresh strsim v0.11.1
+       Fresh once_cell v1.21.4
+       Fresh heck v0.5.0
+       Fresh fastrand v2.4.1
+       Fresh dtor v0.0.6
+       Fresh tempfile v3.27.0
+       Fresh clap_builder v4.6.0
+       Fresh clap_derive v4.6.1
+       Fresh serde_core v1.0.228
+       Fresh thiserror-impl v1.0.69
+       Fresh serde_derive v1.0.228
+       Fresh memmap2 v0.9.10
+       Fresh allocator-api2 v0.4.0
+       Fresh memchr v2.8.0
+       Fresh beef v0.5.2
+       Fresh ctor-proc-macro v0.0.6
+       Fresh thiserror v1.0.69
+       Fresh serde v1.0.228
+       Fresh nom v8.0.0
+       Fresh platform-data v2.0.0
+       Fresh ctor v0.4.3
+       Fresh platform-mem v0.3.0
+       Fresh clap v4.6.1
+       Fresh platform-trees v0.3.4
+       Fresh leak_slice v0.2.0
+       Fresh dotenvy v0.15.7
+       Fresh tap v1.0.1
+       Fresh lino-env v0.1.0
+       Fresh anyhow v1.0.102
+       Fresh doublets v0.3.0
+       Fresh lino-arguments v0.3.0
+       Fresh links-notation v0.13.0
+       Dirty link-cli v0.1.0 (/tmp/gh-issue-solver-1778236390702/rust): the file `src/query_processor.rs` has changed (1778238156.495993773s, 6m 53s after last build at 1778237743.366860736s)
+   Compiling link-cli v0.1.0 (/tmp/gh-issue-solver-1778236390702/rust)
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name link_cli --edition=2021 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=a51fa7e541988f38 -C extra-filename=-9323afb9d21fdd89 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name link_cli --edition=2021 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=ce6f30a32a4226f1 -C extra-filename=-a602234d4dd10bb7 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rmeta --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rmeta --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rmeta --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rmeta --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rmeta`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name changes_simplifier_tests --edition=2021 tests/changes_simplifier_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=e7d0088c1bfe181b -C extra-filename=-abbf9b5d23e87bd9 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name cli_named_types_tests --edition=2021 tests/cli_named_types_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=08457240acc528f3 -C extra-filename=-74c87c4fb351b6cc --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name query_processor_tests --edition=2021 tests/query_processor_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=77ccb4a9e3fb5dd8 -C extra-filename=-ff48d00e6ffbf85e --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name dependency_basis_tests --edition=2021 tests/dependency_basis_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=1a90b7b3b03cdda9 -C extra-filename=-8f93e990cc26397d --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name parser_tests --edition=2021 tests/parser_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=23355b9af0f51d37 -C extra-filename=-91df5872fa74d602 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name unicode_string_storage_tests --edition=2021 tests/unicode_string_storage_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=2a09a5f390a2b1ec -C extra-filename=-e82abeb94f422eaa --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name unicode_sequence_converter_tests --edition=2021 tests/unicode_sequence_converter_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=32cabd79b1df6193 -C extra-filename=-5f45c52f53189d44 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name link_storage_tests --edition=2021 tests/link_storage_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=d538cfa52f6036e6 -C extra-filename=-5aa4733c33d08624 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name link_tests --edition=2021 tests/link_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=a087e4eca4a81988 -C extra-filename=-19ff4900330e1bc1 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name named_types_decorator_tests --edition=2021 tests/named_types_decorator_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=96d1119dc21064af -C extra-filename=-90fd8dafba7d0daf --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name query_processor_csharp_parity_tests --edition=2021 tests/query_processor_csharp_parity_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=9b077ffab252c34d -C extra-filename=-9717159ae32fca6d --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name cli_export_tests --edition=2021 tests/cli_export_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=07679a52b25c0b11 -C extra-filename=-552e171031fecfbd --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name clink --edition=2021 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=669c58c7010d7586 -C extra-filename=-cf07fea0c11694c1 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name pinned_types_decorator_tests --edition=2021 tests/pinned_types_decorator_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=c79604d5588c4e8f -C extra-filename=-0a78bb3f82e88ce0 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name lino_link_tests --edition=2021 tests/lino_link_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=d3ee2fc1fc8c8115 -C extra-filename=-ec164e8ba1fee537 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name clink --edition=2021 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=7fe539f0f4ba907d -C extra-filename=-ec44f765f3651b40 --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc --crate-name cli_arguments_tests --edition=2021 tests/cli_arguments_tests.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=c0aca71aaf4c9ed7 -C extra-filename=-481b22c97862f8db --out-dir /tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C incremental=/tmp/gh-issue-solver-1778236390702/rust/target/debug/incremental -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.44s
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/link_cli-9323afb9d21fdd89`
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/clink-cf07fea0c11694c1`
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/changes_simplifier_tests-abbf9b5d23e87bd9`
+
+running 9 tests
+test test_simplify_empty ... ok
+test test_simplify_issue26_update_operation ... ok
+test test_simplify_issue26_alternative_scenario ... ok
+test test_simplify_keeps_unchanged_states ... ok
+test test_simplify_chain ... ok
+test test_simplify_no_op ... ok
+test test_simplify_specific_example_removes_intermediate_states ... ok
+test test_simplify_with_unchanged ... ok
+test test_simplify_multiple_branches_from_same_initial ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/cli_arguments_tests-481b22c97862f8db`
+
+running 7 tests
+test parses_csharp_option_aliases_without_direct_clap_dependency ... ok
+test parses_export_alias_as_lino_output_path ... ok
+test parses_inline_alias_values_and_boolean_values ... ok
+test parses_inline_export_alias_as_lino_output_path ... ok
+test query_option_takes_precedence_over_positional_query ... ok
+test rejects_extra_positional_queries ... ok
+test returns_help_and_version_commands ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/cli_export_tests-552e171031fecfbd`
+
+running 3 tests
+test export_alias_writes_numbered_references ... ok
+test export_alias_writes_named_references ... ok
+test structure_option_renders_left_branch_with_indexes ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/cli_named_types_tests-74c87c4fb351b6cc`
+
+running 1 test
+test cli_stores_string_aliases_in_separate_names_database ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/dependency_basis_tests-8f93e990cc26397d`
+
+running 2 tests
+test rust_manifest_declares_required_basis_crates ... ok
+test rust_manifest_uses_lino_arguments_without_direct_clap_dependency ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/link_storage_tests-5aa4733c33d08624`
+
+running 14 tests
+test test_format_structure_renders_left_branch_with_link_indexes ... ok
+test test_format_structure_renders_repeated_source_and_target_as_reference_on_right ... ok
+test test_lino_lines_escape_names_that_need_quoting ... ok
+test test_lino_lines_use_names_for_indexes_sources_and_targets ... ok
+test test_lino_lines_select_quote_style_for_names_containing_quotes ... ok
+test test_lino_lines_use_numbered_references_without_names ... ok
+test test_storage_create ... ok
+test test_storage_delete ... ok
+test test_storage_named_links ... ok
+test test_storage_get_or_create ... ok
+test test_storage_search ... ok
+test test_storage_persistence ... ok
+test test_storage_update ... ok
+test test_write_lino_output_writes_complete_database ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/link_tests-19ff4900330e1bc1`
+
+running 5 tests
+test test_link_creation ... ok
+test test_link_format ... ok
+test test_link_is_full_point ... ok
+test test_link_is_null ... ok
+test test_link_round_trips_through_doublets_link ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/lino_link_tests-ec164e8ba1fee537`
+
+running 5 tests
+test test_lino_link_is_numeric ... ok
+test test_lino_link_is_variable ... ok
+test test_lino_link_is_wildcard ... ok
+test test_lino_link_new ... ok
+test test_lino_link_with_values ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/named_types_decorator_tests-90fd8dafba7d0daf`
+
+running 7 tests
+test default_names_database_path_matches_csharp_convention ... ok
+test decorator_exposes_link_storage_operations_and_named_types ... ok
+test decorator_includes_pinned_types_decorator ... ok
+test delete_removes_associated_name_from_names_database ... ok
+test setting_second_name_replaces_first_name ... ok
+test decorator_can_be_built_from_existing_link_storages ... ok
+test reassigning_existing_name_moves_name_to_new_link ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/parser_tests-91df5872fa74d602`
+
+running 8 tests
+test test_parse_empty ... ok
+test test_parse_link_with_id ... ok
+test test_parse_nested_link ... ok
+test test_parse_links_notation_backtick_unicode_identifier ... ok
+test test_parse_query_format ... ok
+test test_parse_wildcard ... ok
+test test_parse_variable ... ok
+test test_parse_simple_link ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/pinned_types_decorator_tests-0a78bb3f82e88ce0`
+
+running 3 tests
+test decorator_exposes_link_storage_operations_and_pinned_types ... ok
+test decorator_rejects_unexpected_link_shape_at_reserved_address ... ok
+test decorator_supports_triplet_deconstruction_parity ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/query_processor_csharp_parity_tests-9717159ae32fca6d`
+
+running 15 tests
+test test_create_explicit_index_after_gap_matches_csharp ... ok
+test test_delete_by_wildcard_target_matches_csharp ... ok
+test test_delete_all_by_index_wildcard_matches_csharp ... ok
+test test_create_deep_nested_numeric_links_matches_csharp ... ok
+test test_delete_by_source_target_pattern_matches_csharp ... ok
+test test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp ... ok
+test test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp ... ok
+test test_no_op_variable_query_returns_matched_changes ... ok
+test test_string_composite_left_child_does_not_create_extra_leaf ... ok
+test test_delete_by_names_keeps_leaf_names_matches_csharp ... ok
+test test_swap_all_links_using_variables_matches_csharp ... ok
+test test_unwrapped_create_query_matches_csharp ... ok
+test test_named_link_rename_matches_csharp ... ok
+test test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp ... ok
+test test_unknown_named_restriction_fails_without_auto_create ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/query_processor_tests-ff48d00e6ffbf85e`
+
+running 15 tests
+test test_auto_create_missing_numeric_reference_creates_point_link ... ok
+test test_auto_create_missing_named_references_creates_point_links ... ok
+test test_auto_create_missing_numeric_reference_fills_existing_gap ... ok
+test test_deduplicate_duplicate_pair_with_named_links ... ok
+test test_deduplicate_mixed_named_and_numeric ... ok
+test test_deduplicate_duplicate_pair_with_numeric_links ... ok
+test test_deduplicate_with_different_pairs ... ok
+test test_deduplicate_nested_duplicates ... ok
+test test_deduplicate_triple_duplicate_pair ... ok
+test test_future_numeric_references_succeed_without_auto_create ... ok
+test test_deduplicate_named_links_multiple_queries ... ok
+test test_missing_named_reference_fails_without_auto_create ... ok
+test test_missing_numeric_reference_fails_without_auto_create ... ok
+test test_query_processor_empty ... ok
+test test_query_processor_create ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/unicode_sequence_converter_tests-5f45c52f53189d44`
+
+running 5 tests
+test caching_converter_decorator_reuses_cached_values ... ok
+test raw_number_converters_match_hybrid_external_reference_encoding ... ok
+test balanced_variant_and_right_sequence_walker_preserve_symbol_order ... ok
+test string_and_unicode_sequence_converters_round_trip_utf16_text ... ok
+test target_and_char_symbol_converters_create_and_decode_symbols ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running `/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/unicode_string_storage_tests-e82abeb94f422eaa`
+
+running 11 tests
+test create_and_retrieve_empty_string ... ok
+test create_and_retrieve_multiple_strings ... ok
+test create_and_retrieve_simple_string ... ok
+test create_and_retrieve_user_defined_type ... ok
+test deleting_non_named_link_does_not_affect_other_names ... ok
+test create_and_retrieve_unicode_string_as_utf16_sequence ... ok
+test name_external_reference_matches_csharp_hybrid_encoding ... ok
+test name_is_removed_when_external_reference_is_deleted ... ok
+test named_links_facade_matches_csharp_named_links_role ... ok
+test name_is_removed_when_link_is_deleted ... ok
+test pinned_types_are_created_and_named ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests link_cli
+     Running `/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustdoc --edition=2021 --crate-type lib --color auto --crate-name link_cli --test src/lib.rs --test-run-directory /tmp/gh-issue-solver-1778236390702/rust --extern anyhow=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libanyhow-81e0f801a5d79612.rlib --extern doublets=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libdoublets-790f75204a7d6c0a.rlib --extern link_cli=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblink_cli-a602234d4dd10bb7.rlib --extern links_notation=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblinks_notation-306af35b84e1f1a4.rlib --extern lino_arguments=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/liblino_arguments-379ca64484a82daf.rlib --extern tempfile=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libtempfile-af2880458f02d47b.rlib --extern thiserror=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps/libthiserror-5fa9468721e6a4e8.rlib -L dependency=/tmp/gh-issue-solver-1778236390702/rust/target/debug/deps -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' --error-format human`
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

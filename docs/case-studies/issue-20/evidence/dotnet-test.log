@@ -1,0 +1,762 @@
+Build started 05/08/2026 11:01:08.
+     1>Project "/tmp/gh-issue-solver-1778236390702/csharp/Foundation.Data.Doublets.Cli.sln" on node 1 (VSTest target(s)).
+     1>ValidateSolutionConfiguration:
+         Building solution configuration "Release|Any CPU".
+Test run for /tmp/gh-issue-solver-1778236390702/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net8/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v8.0)
+Microsoft (R) Test Execution Command Line Tool Version 17.8.0 (x64)
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 8.0.26)
+[xUnit.net 00:00:00.08]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.14]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.19]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[Trace] Constructing NamedLinksDecorator with names DB: /tmp/tmpvYyvNe.names.links
+[Trace] Constructing NamedLinksDecorator with names DB: /tmp/tmp4kYsTj.names.links
+  Passed Foundation.Data.Doublets.Cli.Tests.SimpleLinksDecoratorTests.CanConstructSimpleLinksDecorator [70 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.SimpleLinksDecoratorTests.Delete_WithRestriction_DoesNotThrow [8 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.SetName_OverwriteOldName [57 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.MakeNamesDatabaseFilename_CorrectlyGeneratesFilename(dbFilename: "test.db", expected: "test.names.links") [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.MakeNamesDatabaseFilename_CorrectlyGeneratesFilename(dbFilename: "a.b.c", expected: "a.b.names.links") [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.MakeNamesDatabaseFilename_CorrectlyGeneratesFilename(dbFilename: "/tmp/test.db", expected: "/tmp/test.names.links") [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.AfterCreation_SetNameAndGetName_ShouldWork [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.SimpleLinksDecoratorTests.DeleteAfterGetOrCreate_DoesNotThrow_WithTracing [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.CanConstructNamedLinksDecorator [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.SimpleLinksDecoratorTests.DeleteAfterGetOrCreate_DoesNotThrow [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.RemoveName_NonExistent_DoesNotThrow [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.RemoveName_ShouldReturnNullAfterRemoval [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.SetNameAndGetName_ShouldReturnSameName [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedLinksDecoratorTests.DeleteLink_RemovesNameAutomatically [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.DeleteSingleLinkTest_Source2Target2 [110 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreateLinkWithSource2Target2Test [112 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteAllLinksByIndexTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesDecoratorTests.Should_Implement_Both_ILinks_And_IPinnedTypes [15 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.DeleteMultipleLinksTest [7 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.CreateSingleLinkTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteAllLinksBySourceAndTargetTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.UpdateSingleLinkTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteLinksByAnyTargetTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.CreateLinkWithSource2Target2Test [8 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteLinksByAnySourceTest [9 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.MultipleUpdatesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.CreateMultipleLinksTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteMultipleLinksTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.BasicQueryProcessor.DeleteSingleLinkTest_Source1Target2 [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreateMultipleLinksTest [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.WriteToFile_WritesCompleteDatabaseAsLinoLines [48 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesDecoratorTests.Should_Support_Deconstruction [29 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesDecoratorTests.Should_Work_As_ILinks_Decorator [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.FormatStructure_RendersLeftBranchWithLinkIndexes [8 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.FormatStructure_RendersRepeatedSourceAndTargetAsReferenceOnRight [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesDecoratorTests.Should_Enumerate_PinnedTypes [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Validate_Existing_Links_With_Ulong [14 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.ReverseSourceWithTargetUsingVariablesTest [15 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.FormatDatabase_EscapesNamesThatNeedQuoting [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.FormatDatabase_UsesNamesForIndexesSourcesAndTargets_WhenNamesExist [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Destructure_PinnedTypes [7 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreateSingleLinkTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.FormatDatabase_SelectsQuoteStyleForNamesContainingQuotes [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_UsesProvidedPinnedTypesDecorator [8 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Validate_Existing_Links [4 ms]
+[Test] All links: (1: 2->1) (2: 1->2)
+  Passed Foundation.Data.Doublets.Cli.Tests.LinoDatabaseOutputTests.FormatDatabase_UsesNumberedReferences_WhenLinksHaveNoNames [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.NoUpdateUsingVariablesTest [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Reset_Enumerator [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteSingleLinkTest_Source1Target2 [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.MixedMultipleUpdatesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeleteSingleLinkTest_Source2Target2 [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Throw_Exception_For_Invalid_Link_Structure [9 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Create_And_Iterate_Over_Types [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_CanRemoveNames [16 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.PinnedTypesTests.Should_Create_And_Iterate_Over_Types_With_RealDataStore [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_DeleteRemovesAssociatedNames [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreationWithEmptySlotDuringUpdateTest [14 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetriveUserDefinedTypeTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreateSingleLinkWithIndexAfterDoubleGapTest [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringTypesTest(typeName: "UnicodeSymbol") [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_CanSetAndGetNames [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.MultipleUpdatesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringTypesTest(typeName: "EmptyString") [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_HandlesNonexistentNames [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreateSingleLinkWithIndexAfterGapTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringTypesTest(typeName: "String") [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreationDuringUpdateTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringTypesTest(typeName: "Name") [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_ReassigningExistingNameMovesNameToNewLink [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.UpdateSingleLinkTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringTypesTest(typeName: "UnicodeSequence") [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.SwapSourceAndTargetForAllLinksUsingVariablesTest [49 ms]
+=== Debug: Alternative Scenario ===
+Input changes:
+  1. (1: 1 2) -> (0: 0 0)
+  2. (1: 1 2) -> (1: 2 1)
+  3. (2: 2 1) -> (2: 1 2)
+Actual simplified changes:
+  1. (1: 1 2) -> (1: 2 1)
+  2. (2: 2 1) -> (2: 1 2)
+Count: 2
+=== End Debug ===
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_ImplementsILinks [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_CanConstructFromDatabaseFilename [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringTypesTest(typeName: "Type") [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.CreateSingleLinkWithIndexTest [6 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.NameIsRemovedWhenExternalReferenceIsDeletedTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.MixedQueryProcessor.DeletionDuringUpdateTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_Issue26_AlternativeScenario_NoSimplificationOccurs [13 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_CanEnumeratePinnedTypes [9 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_NoChange_StillKeepsFirstAndLastState [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.NameExternalReferenceTest [6 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_Issue26_UpdateOperationSimplification [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_SpecificExample_RemovesIntermediateStates [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveUnicodeStringTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_MultipleChainsFromSameBefore_RemovesIntermediateStates [3 ms]
+[Test] All links: (1: 2->1) (2: 2->2)
+[Test] All links: (1: 1->2) (2: 2->1)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_MultipleBranchesFromSameInitial_ProducesCorrectFinalStates [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.NameLookupConsistencyTest [17 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_MultipleBranchesFromSameInitial_ProducesCorrectFinalStates_InCorrectOrder [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.ChangesSimplifierTests.SimplifyChanges_SpecificExample_KeepsUnchangedStates [< 1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_CanOverwriteNames [7 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveSimpleStringTest [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.SwapEqualSourceAndTargetUsingVariablesHasAllChangesTest [2 ms]
+[Test] All links: (1: 1->1) (3: 3->3)
+[Test] All links: (1: 1->1) (2: 2->1)
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_ImplementsIPinnedTypes [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.DeletingNonNamedLinkDoesNotAffectOtherNamesTest [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MultipleUpdatesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveEmptyStringTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_ImplementsINamedTypes [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreationWithEmptySlotDuringUpdateTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.RetrieveTypeByNameTest [2 ms]
+[Test] All links: (21: 21->21)
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links: (2: 2->2)
+[Trace] Constructing NamedTypesDecorator with names DB: /tmp/tmpFMdkcm.names.links
+[ProcessQuery] Query: "(() ((link: link link)))"
+[ProcessQuery] Parser returned 1 top-level link(s).
+[ProcessQuery] Restriction link => Id="" Values.Count=0
+[ProcessQuery] Substitution link => Id="" Values.Count=1
+[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.
+[ValidateLinksExistOrWillBeCreated] Starting validation
+[ValidateLinksExistOrWillBeCreated] Numeric links to be created:
+[ValidateLinksExistOrWillBeCreated] Named links to be created: link
+[Trace] GetByName called for name: 'link'
+[Trace] GetByName result: 0
+[ValidateReferencesInPattern] Named link 'link' reference validated in substitution pattern
+[Trace] GetByName called for name: 'link'
+[Trace] GetByName result: 0
+[ValidateReferencesInPattern] Named link 'link' reference validated in substitution pattern
+[ValidateLinksExistOrWillBeCreated] Validation completed
+[Trace] GetByName called for name: 'link'
+[Trace] GetByName result: 0
+[Trace] Update called with restriction: [1]
+[Trace] Debug: handlerWrapper invoked - before=1,0,0, after=1,0,0
+[Trace] Update result: 4294967295
+[EnsureNestedLinkCreatedRecursively] Created named leaf 'link' => ID=1
+[Trace] SetName called for link: 1 with name: 'link'
+[Trace] RemoveName called for link: 1
+[Trace] RemoveName completed for link: 1
+[Trace] SetName result: 100
+[EnsureNestedLinkCreatedRecursively] Updating link ID=1 => Source=1, Target=1
+[Trace] Update called with restriction: [1,0,0]
+[Trace] Debug: handlerWrapper invoked - before=1,0,0, after=1,1,1
+[EnsureNestedLinkCreatedRecursively] Update handler: before=(1: 0->0), after=(1: 1->1)
+[Trace] Update result: 4294967295
+[ProcessQuery] Created link ID #1 from substitution pattern.
+[Test] All links: (1: 1->1)
+[Trace] GetByName called for name: 'link'
+[Trace] GetByName result: 1
+[Trace] GetName called for link: 1
+[Trace] GetName result: link
+[Test] All links: (1: 1->1)
+  Passed Foundation.Data.Doublets.Cli.Tests.NamedTypesDecoratorTests.NamedTypesDecorator_CanGetLinkByName [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLeftCompositeIntegerChildrenWithoutExtraLeaf_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.CreateAndRetrieveMultipleStringsTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.UnicodeStringStorageTests.NameIsRemovedWhenLinkIsDeletedTest [1 ms]
+[Test] All links: (1: 1->1)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Issue20_SubstituteFullPointWithUnboundParts_ShouldKeepFullPoint [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MatchAndDelete2LevelNestedLinksTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteLinksByAnyTargetTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateNamedLinkWithStringId_ShouldCreateSingleLink [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeletionDuringUpdateTest [2 ms]
+[Test] All links:
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2)
+[Test] All links: (1: 1->2) (2: 1->1)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 2->1)
+[Test] All links: (2: 2->2)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 2->1) (4: 3->3)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2)
+[Test] All links: (1: 1->2) (2: 2->1)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateNamedLinkWithMissingNamedReferences_ShouldThrowException [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithIntegerId_ShouldCreateSingleLink [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteAllLinksByIndexTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateNamedFamilyLinksTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateDuplicatePairWithNumericLinks_ShouldCreateOnlyOneSubLink [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.StringAliasesInVariableRestriction_ShouldConstrainMatchesToNamedLinks [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateSingleLinkWithIndexAfterGapTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateDuplicatePairWithNamedLinks_ShouldCreateOnlyOneSubLink [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateNamedLinkWithAutoCreateMissingNamedReferences_ShouldCreatePointLinks [2 ms]
+[Test] All links: (1: 2->1) (2: 1->1)
+[Test] ===== Starting UpdateNamedLinkNameTest =====
+[Trace] Constructing NamedTypesDecorator with names DB: /tmp/tmp8TJMDO.names.links
+[Test] Constants: Null=0, Any=4294967292, Continue=4294967295
+[Test] Step 1: Creating initial link
+[Test] Query: (() ((child: father mother)))
+[ProcessQuery] Query: "(() ((child: father mother)))"
+[ProcessQuery] Parser returned 1 top-level link(s).
+[ProcessQuery] Restriction link => Id="" Values.Count=0
+[ProcessQuery] Substitution link => Id="" Values.Count=1
+[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.
+[ValidateLinksExistOrWillBeCreated] Starting validation
+[ValidateLinksExistOrWillBeCreated] Numeric links to be created:
+[ValidateLinksExistOrWillBeCreated] Named links to be created: child
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 0
+[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference 'father' as point link.
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 0
+[Trace] Update called with restriction: [1]
+[Trace] Debug: handlerWrapper invoked - before=1,0,0, after=1,0,0
+[Trace] Update result: 4294967295
+[Trace] SetName called for link: 1 with name: 'father'
+[Trace] RemoveName called for link: 1
+[Trace] RemoveName completed for link: 1
+[Trace] SetName result: 108
+[Trace] Update called with restriction: [1,0,0]
+[Trace] Debug: handlerWrapper invoked - before=1,0,0, after=1,1,1
+[Trace] Update result: 4294967295
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 0
+[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference 'mother' as point link.
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 0
+[Trace] Update called with restriction: [2]
+[Trace] Debug: handlerWrapper invoked - before=2,0,0, after=2,0,0
+[Trace] Update result: 4294967295
+[Trace] SetName called for link: 2 with name: 'mother'
+[Trace] RemoveName called for link: 2
+[Trace] RemoveName completed for link: 2
+[Trace] SetName result: 110
+[Trace] Update called with restriction: [2,0,0]
+[Trace] Debug: handlerWrapper invoked - before=2,0,0, after=2,2,2
+[Trace] Update result: 4294967295
+[ValidateLinksExistOrWillBeCreated] Validation completed
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'father' => ID=1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'mother' => ID=2
+[EnsureLinkCreated] Creating link for (S=1, T=2).
+[EnsureLinkCreated] => assigned new ID=3
+[Trace] Update called with restriction: [3]
+[Trace] Debug: handlerWrapper invoked - before=3,0,0, after=3,1,2
+[Trace] Update result: 4294967295
+[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index=0, Source=1, Target=2 => Actual ID=3
+[Trace] SetName called for link: 3 with name: 'child'
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[Trace] SetName result: 118
+[ProcessQuery] Created link ID #3 from substitution pattern.
+[Test] Initial link creation completed
+[Test] Step 2: Verifying initial state
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[Test] Initial child ID: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] Initial father ID: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] Initial mother ID: 2
+[Test] Initial links count: 3
+[Test] Initial link: Index=(1: 1->1), Source=1, Target=1
+[Test] Initial link: Index=(2: 2->2), Source=2, Target=2
+[Test] Initial link: Index=(3: 1->2), Source=1, Target=2
+[Test] Initial state verification completed
+[Test] Step 3: Updating link name from 'child' to 'son'
+[Test] Query: (((child: father mother)) ((son: father mother)))
+[Test] Current state before update:
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[Test] - child name exists: True
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Test] - son name exists: False
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] - father name exists: True
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] - mother name exists: True
+[Test] Starting ProcessQuery for update...
+[Test] Current links before update:
+[Test]   Link: Index=(1: 1->1), Source=1, Target=1
+[Test]   Link: Index=(2: 2->2), Source=2, Target=2
+[Test]   Link: Index=(3: 1->2), Source=1, Target=2
+[ProcessQuery] Query: "(((child: father mother)) ((son: father mother)))"
+[ProcessQuery] Parser returned 1 top-level link(s).
+[ProcessQuery] Restriction link => Id="" Values.Count=1
+[ProcessQuery] Substitution link => Id="" Values.Count=1
+[ProcessQuery] Restriction patterns to parse: 1
+[ProcessQuery] Substitution patterns to parse: 1
+[ValidateLinksExistOrWillBeCreated] Starting validation
+[ValidateLinksExistOrWillBeCreated] Numeric links to be created:
+[ValidateLinksExistOrWillBeCreated] Named links to be created: son
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[ValidateReferencesInPattern] Named link 'child' reference validated in restriction pattern
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[ValidateReferencesInPattern] Named link 'father' reference validated in restriction pattern
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[ValidateReferencesInPattern] Named link 'mother' reference validated in restriction pattern
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[ValidateReferencesInPattern] Named link 'father' reference validated in substitution pattern
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[ValidateReferencesInPattern] Named link 'mother' reference validated in substitution pattern
+[ValidateLinksExistOrWillBeCreated] Validation completed
+[ProcessQuery] Converting restriction patterns => done.
+[ProcessQuery] Converting substitution patterns => done.
+[ProcessQuery] Finding solutions for restriction patterns...
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[ProcessQuery] Found 1 total solution(s) matching restriction patterns.
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[ProcessQuery] allSolutionsNoOperation=False
+[ProcessQuery] Some solutions lead to actual changes => building operations.
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[ProcessQuery] For a solution => substitution links count=1, restriction links count=1.
+[ProcessQuery] => 2 operation(s) derived from these patterns.
+[ProcessQuery] All planned operations => 2
+[ProcessQuery] Applying all planned operations...
+[ApplyAllPlannedOperations] Operation: before=(3:1->2), after=(0:0->0)
+[Trace] GetName called for link: 3
+[Trace] GetName result: child
+[ApplyAllPlannedOperations] Name for before.Index 3 = 'child'
+[ApplyAllPlannedOperations] Deleting link => ID=3, S=1, T=2
+[RemoveLinks] Found 1 link(s) matching (ID=3, S=1, T=2).
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[RemoveLinks] Deleting link => ID=3, S=1, T=2
+[Trace] Delete called with restriction: [3,1,2]
+[Trace] Debug: this._links is of type: Foundation.Data.Doublets.Cli.PinnedTypesDecorator`1[System.UInt32]
+[Trace] Debug: Calling underlying _links.Delete
+[Trace] Debug: handlerWrapper invoked - before=3,1,2, after=3,0,0
+[Test] Update ChangesHandler called:
+[Test] - Before state: (3: 1->2)
+[Test] - After state: (3: 0->0)
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Test] - child name during change: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Test] - son name during change: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] - father name during change: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] - mother name during change: 2
+[Test] - All links during change:
+[Test]   Link: Index=(1: 1->1), Source=1, Target=1
+[Test]   Link: Index=(2: 2->2), Source=2, Target=2
+[Test]   Link: Index=(3: 0->0), Source=0, Target=0
+[Trace] Debug: handlerWrapper invoked - before=3,0,0, after=null
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[Test] Update ChangesHandler called:
+[Test] - Before state: (3: 0->0)
+[Test] - After state:
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Test] - child name during change: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Test] - son name during change: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] - father name during change: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] - mother name during change: 2
+[Test] - All links during change:
+[Test]   Link: Index=(1: 1->1), Source=1, Target=1
+[Test]   Link: Index=(2: 2->2), Source=2, Target=2
+[Trace] Debug: Delete result: 4294967295
+[ApplyAllPlannedOperations] Operation: before=(0:0->0), after=(4294967292:1->2)
+[Trace] GetName called for link: 4294967292
+[Trace] GetName result: String
+[ApplyAllPlannedOperations] Name for after.Index 4294967292 = 'String' (pre-op)
+[ApplyAllPlannedOperations] Creating link => ID=4294967292, S=1, T=2
+[CreateOrUpdateLink] Detected wildcard substitution => nested create & name.
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'father' => ID=1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'mother' => ID=2
+[EnsureLinkCreated] Creating link for (S=1, T=2).
+[EnsureLinkCreated] => assigned new ID=3
+[Test] Update ChangesHandler called:
+[Test] - Before state:
+[Test] - After state: (3: 0->0)
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Test] - child name during change: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Test] - son name during change: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] - father name during change: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] - mother name during change: 2
+[Test] - All links during change:
+[Test]   Link: Index=(1: 1->1), Source=1, Target=1
+[Test]   Link: Index=(2: 2->2), Source=2, Target=2
+[Test]   Link: Index=(3: 0->0), Source=0, Target=0
+[Test] Creating new link: Index=3, Source=0, Target=0
+[Test] Checking if link exists: True
+[Test] Checking if source exists: False
+[Test] Checking if target exists: False
+[Test] Names before creation:
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Test] - child: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Test] - son: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] - father: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] - mother: 2
+[Trace] Update called with restriction: [3]
+[Trace] Debug: handlerWrapper invoked - before=3,0,0, after=3,1,2
+[Test] Update ChangesHandler called:
+[Test] - Before state: (3: 0->0)
+[Test] - After state: (3: 1->2)
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Test] - child name during change: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 0
+[Test] - son name during change: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] - father name during change: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] - mother name during change: 2
+[Test] - All links during change:
+[Test]   Link: Index=(1: 1->1), Source=1, Target=1
+[Test]   Link: Index=(2: 2->2), Source=2, Target=2
+[Test]   Link: Index=(3: 1->2), Source=1, Target=2
+[Trace] Update result: 4294967295
+[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index=0, Source=1, Target=2 => Actual ID=3
+[Trace] SetName called for link: 3 with name: 'son'
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[Trace] SetName result: 118
+[Trace] GetName called for link: 4294967292
+[Trace] GetName result: String
+[ApplyAllPlannedOperations] Name for after.Index 4294967292 = 'String' (post-op)
+[ProcessQuery] Restoring unexpected deletions if any...
+[RestoreUnexpectedLinkDeletions] No unexpected deletions found.
+[ProcessQuery] Finished processing query.
+[Test] Update operation completed
+[Test] Step 4: Verifying final state
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Test] Final child ID: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 3
+[Test] Final son ID: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] Final father ID: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] Final mother ID: 2
+[Test] Final links count: 3
+[Test] Final link: Index=(1: 1->1), Source=1, Target=1
+[Test] Final link: Index=(2: 2->2), Source=2, Target=2
+[Test] Final link: Index=(3: 1->2), Source=1, Target=2
+[Test] ===== UpdateNamedLinkNameTest completed successfully =====
+[Test] All links: (1: 1->1) (2: 2->2) (3: 3->3) (4: 4->4) (5: 5->5) (6: 6->6) (7: 5->6) (8: 4->7) (9: 3->8) (10: 2->9) (11: 1->10)
+[Test] All links: (1: 1->1) (2: 1->2)
+[Test] All links: (10: 10->10) (20: 10->20)
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 2->1) (4: 3->3)
+[Test] All links: (1: 1->1) (2: 1->2) (3: 3->1) (4: 1->4)
+[Test] All links: (1: 1->1) (2: 1->2)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 3->3) (4: 4->4) (5: 5->5) (6: 4->5) (7: 3->6) (8: 2->7) (9: 1->8)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateMultipleLinksWithCrossReferences_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MakeAllLinksToGoIntoFirstLinkUsingVariablesTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.UpdateNamedLinkNameTest [5 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Create6LevelNestedLinksTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateRightCompositeStringChildrenWithoutExtraLeaf_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithAutoCreateMissingNumericReferences_ShouldCreatePointLinks [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateMultipleLinksTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateMixedNamedAndNumericLinks_ShouldReuseExistingLinks [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MatchSelfReferencingAndMakeThemGoOutFromFirstLinkUsingVariablesTest [2 ms]
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links: (1: 1->2) (2: 2->2)
+[Test] All links: (1: 1->2) (2: 2->1)
+[Test] All links:
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2) (4: 2->1) (5: 3->4)
+[Test] All links: (1: 1->1) (2: 2->1)
+[Test] All links: (1: 1->1) (2: 2->2)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateRightCompositeIntegerChildrenWithoutExtraLeaf_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.EnsureCreated_WithSpecialAnyReference_ShouldThrowControlledException [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Create5LevelNestedLinksTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MatchWithExactIndexAndDelete2LevelNestedLinksTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.UpdateSingleLinkTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MixedMultipleUpdatesTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.NestedDeleteAllLinksBySourceAndTargetTest1 [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateWithDifferentPairs_ShouldNotDeduplicateDifferentLinks [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLeftCompositeStringChildrenWithoutExtraLeaf_ShouldSucceed [2 ms]
+[Test] All links: (1: 1->2) (2: 1->1)
+[Test] All links: (3: 3->3)
+[Test] All links: (1: 1->1) (2: 18->20) (18: 1->21) (19: 1->20) (20: 20->20) (21: 21->21)
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links: (1: 0->0)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.NoExactMatch2LevelNestedLinksTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MakeAllLinksToGoOutOfFirstLinkUsingVariablesTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateSingleLinkWithIndexAfterDoubleGapTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Issue20_SubstituteMatchedLinkAndOutgoingLink_ShouldPreserveExistingParts [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteNamedFamilyLinksRemovesNamesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ExactMatchAndDelete2LevelNestedLinksTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteByNamesTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithVariableReferences_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Create2LevelNestedLinksTest [1 ms]
+[Test] All links: (1: 1->1)
+[Trace] Constructing NamedTypesDecorator with names DB: /tmp/tmp9H36X3.names.links
+[Test] Starting UpdateNamedLinkNameTest
+[Test] Step 1: Creating initial link
+[ProcessQuery] Query: "(() ((child: father mother)))"
+[ProcessQuery] Parser returned 1 top-level link(s).
+[ProcessQuery] Restriction link => Id="" Values.Count=0
+[ProcessQuery] Substitution link => Id="" Values.Count=1
+[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.
+[ValidateLinksExistOrWillBeCreated] Starting validation
+[ValidateLinksExistOrWillBeCreated] Numeric links to be created:
+[ValidateLinksExistOrWillBeCreated] Named links to be created: child
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 0
+[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference 'father' as point link.
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 0
+[Trace] Update called with restriction: [1]
+[Trace] Debug: handlerWrapper invoked - before=1,0,0, after=1,0,0
+[Trace] Update result: 4294967295
+[Trace] SetName called for link: 1 with name: 'father'
+[Trace] RemoveName called for link: 1
+[Trace] RemoveName completed for link: 1
+[Trace] SetName result: 108
+[Trace] Update called with restriction: [1,0,0]
+[Trace] Debug: handlerWrapper invoked - before=1,0,0, after=1,1,1
+[Trace] Update result: 4294967295
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 0
+[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference 'mother' as point link.
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 0
+[Trace] Update called with restriction: [2]
+[Trace] Debug: handlerWrapper invoked - before=2,0,0, after=2,0,0
+[Trace] Update result: 4294967295
+[Trace] SetName called for link: 2 with name: 'mother'
+[Trace] RemoveName called for link: 2
+[Trace] RemoveName completed for link: 2
+[Trace] SetName result: 110
+[Trace] Update called with restriction: [2,0,0]
+[Trace] Debug: handlerWrapper invoked - before=2,0,0, after=2,2,2
+[Trace] Update result: 4294967295
+[ValidateLinksExistOrWillBeCreated] Validation completed
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'father' => ID=1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'mother' => ID=2
+[EnsureLinkCreated] Creating link for (S=1, T=2).
+[EnsureLinkCreated] => assigned new ID=3
+[Trace] Update called with restriction: [3]
+[Trace] Debug: handlerWrapper invoked - before=3,0,0, after=3,1,2
+[Trace] Update result: 4294967295
+[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index=0, Source=1, Target=2 => Actual ID=3
+[Trace] SetName called for link: 3 with name: 'child'
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[Trace] SetName result: 118
+[ProcessQuery] Created link ID #3 from substitution pattern.
+[Test] Initial link creation completed
+[Test] Step 2: Verifying initial state
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 3
+[Test] Initial child ID: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] Initial father ID: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] Initial mother ID: 2
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2)
+[Test] Initial links count: 3
+[Test] Initial state verification completed
+[Test] Step 3: Updating link name
+[Test] Removing old name 'child'
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[Test] Old name removed
+[Test] Creating new link with name 'son'
+[ProcessQuery] Query: "(() ((son: father mother)))"
+[ProcessQuery] Parser returned 1 top-level link(s).
+[ProcessQuery] Restriction link => Id="" Values.Count=0
+[ProcessQuery] Substitution link => Id="" Values.Count=1
+[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.
+[ValidateLinksExistOrWillBeCreated] Starting validation
+[ValidateLinksExistOrWillBeCreated] Numeric links to be created:
+[ValidateLinksExistOrWillBeCreated] Named links to be created: son
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[ValidateReferencesInPattern] Named link 'father' reference validated in substitution pattern
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[ValidateReferencesInPattern] Named link 'mother' reference validated in substitution pattern
+[ValidateLinksExistOrWillBeCreated] Validation completed
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'father' => ID=1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[EnsureNestedLinkCreatedRecursively] Found existing named leaf 'mother' => ID=2
+[EnsureLinkCreated] Link already found => ID=3 => no-op.
+[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index=0, Source=1, Target=2 => Actual ID=3
+[Trace] SetName called for link: 3 with name: 'son'
+[Trace] RemoveName called for link: 3
+[Trace] RemoveName completed for link: 3
+[Trace] SetName result: 123
+[ProcessQuery] Created link ID #3 from substitution pattern.
+[Test] New link creation completed
+[Test] Step 4: Verifying final state
+[Trace] GetByName called for name: 'child'
+[Trace] GetByName result: 0
+[Trace] GetByName called for name: 'son'
+[Trace] GetByName result: 3
+[Test] Final son ID: 3
+[Trace] GetByName called for name: 'father'
+[Trace] GetByName result: 1
+[Test] Final father ID: 1
+[Trace] GetByName called for name: 'mother'
+[Trace] GetByName result: 2
+[Test] Final mother ID: 2
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2)
+[Test] Final links count: 3
+[Test] Final state verification completed
+[Test] UpdateNamedLinkNameTest completed successfully
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links:
+[Test] All links: (2: 2->2)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 3->3) (4: 2->3) (5: 1->4)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2) (4: 3->3) (5: 3->4)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteLinksByAnySourceTest [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateTwoNamedLinksTest [4 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.NoUpdateUsingVariablesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MakeAllLinksSelfReferencingUsingVariablesTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteMultipleLinksTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.UpdateWithNonExistentReference_ShouldThrowException [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteSingleLinkTest_Source1Target2 [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteNamedLinkTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Create3LevelNestedLinksTest [1 ms]
+[Test] All links: (1: 1->1)
+[Test] All links: (1: 1->1)
+[Test] All links: (1: 1->1) (2: 2->2)
+[Test] All links: (1: 0->0)
+[Test] All links:
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2) (4: 3->3)
+[Test] All links: (1: 1->1) (2: 2->1)
+[Test] All links:
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateTripleDuplicatePair_ShouldCreateOnlyOneSubLink [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithValidSelfReference_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateSingleLinkTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreationDuringUpdateTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithWildcardReferences_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteSingleLinkTest_Source2Target2 [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateNamedLinks_MultipleQueries_ShouldReuseSameIds [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithNonExistentReference_ShouldThrowException [3 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.SwapSourceAndTargetForSingleLinkUsingVariablesTest [2 ms]
+[Test] All links: (1: 1->1) (2: 2->2) (3: 3->3) (4: 4->4) (5: 5->5) (6: 6->6) (7: 7->7) (8: 6->7) (9: 5->8) (10: 4->9) (11: 3->10) (12: 2->11) (13: 1->12)
+[Test] All links: (1: 1->1) (2: 2->1)
+[Test] All links:
+[Test] All links: (1: 1->1) (2: 2->2) (3: 1->2) (4: 3->3) (5: 4->4)
+[Test] All links: (1: 1->1) (2: 2->2) (3: 3->3) (4: 4->4) (5: 3->4) (6: 2->5) (7: 1->6)
+[Test] All links: (1: 1->1)
+[Test] All links: (1: 1->1) (2: 2->2)
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteAllLinksBySourceAndTargetTest2 [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Create7LevelNestedLinksTest [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkReferencingExistingLink_ShouldSucceed [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeleteAllLinksBySourceAndTargetTest1 [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.DeduplicateNestedDuplicates_ShouldDeduplicateAtAllLevels [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.Create4LevelNestedLinksTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateSingleLinkWithIndexTest [1 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.CreateLinkWithSource2Target2Test [2 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.CliExportIntegrationTests.ExportAlias_WritesNamedReferences [1 s]
+  Passed Foundation.Data.Doublets.Cli.Tests.CliExportIntegrationTests.ExportAlias_WritesNumberedReferences [1 s]
+[xUnit.net 00:00:09.88]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Passed Foundation.Data.Doublets.Cli.Tests.CliExportIntegrationTests.StructureOption_RendersLeftBranchWithIndexes [6 s]
+
+Test Run Successful.
+Total tests: 174
+     Passed: 174
+ Total time: 10.3246 Seconds
+     1>Done Building Project "/tmp/gh-issue-solver-1778236390702/csharp/Foundation.Data.Doublets.Cli.sln" (VSTest target(s)).
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.88
