@@ -209,17 +209,8 @@ namespace Foundation.Data.Doublets.Cli
         TraceIfEnabled(options, "[ProcessQuery] Some solutions lead to actual changes => building operations.");
         foreach (var solution in solutions)
         {
-          var substitutionLinks = substitutionInternalPatterns
-              .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
-              .Where(link => link != null)
-              .Select(link => new DoubletLink(link!))
-              .ToList();
-
-          var restrictionLinks = restrictionInternalPatterns
-              .Select(pattern => ApplySolutionToPattern(links, solution, pattern))
-              .Where(link => link != null)
-              .Select(link => new DoubletLink(link!))
-              .ToList();
+          var substitutionLinks = ApplySolutionToPatterns(links, solution, substitutionInternalPatterns, isSubstitution: true);
+          var restrictionLinks = ApplySolutionToPatterns(links, solution, restrictionInternalPatterns, isSubstitution: false);
 
           TraceIfEnabled(options,
               "[ProcessQuery] For a solution => " +
@@ -437,7 +428,7 @@ namespace Foundation.Data.Doublets.Cli
           TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Deleting link => ID={before.Index}, S={before.Source}, T={before.Target}");
           RemoveLinks(links, before, options);
         }
-        else if (before.Index == 0 && after.Index != 0)
+        else if (before.Index == 0 && (after.Index != 0 || after.Source != 0 || after.Target != 0))
         {
           TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Creating link => ID={after.Index}, S={after.Source}, T={after.Target}");
           CreateOrUpdateLink(links, after, options);
@@ -703,16 +694,12 @@ namespace Foundation.Data.Doublets.Cli
         INamedTypesLinks<uint> links)
     {
       var substitutedRestrictions = restrictions
-          .Select(r => ApplySolutionToPattern(links, solution, r))
+          .Select(r => ApplySolutionToPattern(links, solution, r, isSubstitution: false))
           .Where(link => link != null)
           .Select(link => new DoubletLink(link!))
           .ToList();
 
-      var substitutedSubstitutions = substitutions
-          .Select(s => ApplySolutionToPattern(links, solution, s))
-          .Where(link => link != null)
-          .Select(link => new DoubletLink(link!))
-          .ToList();
+      var substitutedSubstitutions = ApplySolutionToPatterns(links, solution, substitutions, isSubstitution: true);
 
       substitutedRestrictions.Sort((a, b) => a.Index.CompareTo(b.Index));
       substitutedSubstitutions.Sort((a, b) => a.Index.CompareTo(b.Index));
@@ -752,9 +739,12 @@ namespace Foundation.Data.Doublets.Cli
     private static DoubletLink? ApplySolutionToPattern(
         INamedTypesLinks<uint> links,
         Dictionary<string, uint> solution,
-        Pattern? pattern)
+        Pattern? pattern,
+        bool isSubstitution = false,
+        HashSet<uint>? visitedIndexes = null)
     {
       if (pattern == null) return null;
+      visitedIndexes ??= new HashSet<uint>();
 
       // Retrieve the ANY constant once for both leaf and composite cases
       var anyConstant = links.Constants.Any;
@@ -766,18 +756,125 @@ namespace Foundation.Data.Doublets.Cli
       }
       else
       {
-        uint resolvedIndex = ResolveId(links, pattern.Index, solution);
-        var sourceLink = ApplySolutionToPattern(links, solution, pattern.Source);
-        var targetLink = ApplySolutionToPattern(links, solution, pattern.Target);
+        uint resolvedIndex = ResolvePatternIndex(links, pattern.Index, solution, isSubstitution);
+        var sourceLink = ApplySolutionToPattern(links, solution, pattern.Source, isSubstitution, visitedIndexes);
+        var targetLink = ApplySolutionToPattern(links, solution, pattern.Target, isSubstitution, visitedIndexes);
 
         uint resolvedSource = sourceLink?.Index ?? anyConstant;
         uint resolvedTarget = targetLink?.Index ?? anyConstant;
+
+        PreserveExistingSubstitutionParts(links, solution, pattern, resolvedIndex, ref resolvedSource, ref resolvedTarget, isSubstitution, visitedIndexes);
 
         if (resolvedSource == 0) resolvedSource = anyConstant;
         if (resolvedTarget == 0) resolvedTarget = anyConstant;
 
         return new DoubletLink(resolvedIndex, resolvedSource, resolvedTarget);
       }
+    }
+
+    private static uint ResolvePatternIndex(
+        INamedTypesLinks<uint> links,
+        string identifier,
+        Dictionary<string, uint> solution,
+        bool isSubstitution)
+    {
+      if (isSubstitution && string.IsNullOrEmpty(identifier))
+      {
+        return links.Constants.Null;
+      }
+
+      if (isSubstitution && IsVariable(identifier) && !solution.ContainsKey(identifier))
+      {
+        return links.Constants.Null;
+      }
+
+      return ResolveId(links, identifier, solution);
+    }
+
+    private static List<DoubletLink> ApplySolutionToPatterns(
+        INamedTypesLinks<uint> links,
+        Dictionary<string, uint> solution,
+        List<Pattern> patterns,
+        bool isSubstitution)
+    {
+      var workingSolution = isSubstitution ? new Dictionary<string, uint>(solution) : solution;
+      return patterns
+          .Select(pattern => ApplySolutionToPattern(links, workingSolution, pattern, isSubstitution))
+          .Where(link => link != null)
+          .Select(link => new DoubletLink(link!))
+          .ToList();
+    }
+
+    private static void PreserveExistingSubstitutionParts(
+        INamedTypesLinks<uint> links,
+        Dictionary<string, uint> solution,
+        Pattern pattern,
+        uint resolvedIndex,
+        ref uint resolvedSource,
+        ref uint resolvedTarget,
+        bool isSubstitution,
+        HashSet<uint> visitedIndexes)
+    {
+      if (!isSubstitution || resolvedIndex == links.Constants.Null || resolvedIndex == links.Constants.Any || !links.Exists(resolvedIndex))
+      {
+        return;
+      }
+
+      if (!visitedIndexes.Add(resolvedIndex))
+      {
+        return;
+      }
+
+      try
+      {
+        var existingLink = new DoubletLink(links.GetLink(resolvedIndex));
+
+        if (ShouldPreserveExistingPart(pattern.Source, solution) && CanPreserveExistingPart(existingLink, existingLink.Source, visitedIndexes))
+        {
+          resolvedSource = existingLink.Source;
+          AssignVariableIfNeeded(pattern.Source!.Index, resolvedSource, solution);
+        }
+        else if (TryResolveVariablePart(pattern.Source, solution, out var boundSource))
+        {
+          resolvedSource = boundSource;
+        }
+
+        if (ShouldPreserveExistingPart(pattern.Target, solution) && CanPreserveExistingPart(existingLink, existingLink.Target, visitedIndexes))
+        {
+          resolvedTarget = existingLink.Target;
+          AssignVariableIfNeeded(pattern.Target!.Index, resolvedTarget, solution);
+        }
+        else if (TryResolveVariablePart(pattern.Target, solution, out var boundTarget))
+        {
+          resolvedTarget = boundTarget;
+        }
+      }
+      finally
+      {
+        visitedIndexes.Remove(resolvedIndex);
+      }
+    }
+
+    private static bool ShouldPreserveExistingPart(Pattern? partPattern, Dictionary<string, uint> solution)
+    {
+      return partPattern?.IsLeaf == true
+          && IsVariable(partPattern.Index)
+          && !solution.ContainsKey(partPattern.Index);
+    }
+
+    private static bool TryResolveVariablePart(Pattern? partPattern, Dictionary<string, uint> solution, out uint value)
+    {
+      value = default;
+      return partPattern?.IsLeaf == true
+          && IsVariable(partPattern.Index)
+          && solution.TryGetValue(partPattern.Index, out value);
+    }
+
+    private static bool CanPreserveExistingPart(DoubletLink existingLink, uint part, HashSet<uint> visitedIndexes)
+    {
+      return existingLink.IsFullPoint()
+          || existingLink.IsPartialPoint()
+          || !visitedIndexes.Contains(part);
     }
 
     private static void CreateOrUpdateLink(INamedTypesLinks<uint> links, DoubletLink linkDefinition, Options options)

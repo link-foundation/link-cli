@@ -1523,6 +1523,57 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void Issue20_SubstituteMatchedLinkAndOutgoingLink_ShouldPreserveExistingParts()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((1: 1 1) (18: 1 21) (19: 1 20) (20: 20 20) (21: 21 21)))");
+
+        ProcessQuery(links, "((($i: 1 21)) (($i: $s $t) ($i 20)))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(6, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 18, 1, 21);
+        AssertLinkExists(allLinks, 19, 1, 20);
+        AssertLinkExists(allLinks, 20, 20, 20);
+        AssertLinkExists(allLinks, 21, 21, 21);
+
+        var outgoingLink = Assert.Single(allLinks, link => link.Source == 18 && link.Target == 20);
+        Assert.NotEqual(links.Constants.Null, outgoingLink.Index);
+        Assert.NotEqual(links.Constants.Any, outgoingLink.Index);
+        Assert.DoesNotContain(allLinks, link => link.Index == links.Constants.Any || link.Source == links.Constants.Any || link.Target == links.Constants.Any);
+      });
+    }
+
+    [Fact]
+    public void Issue20_SubstituteFullPointWithUnboundParts_ShouldKeepFullPoint()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((21: 21 21)))");
+
+        ProcessQuery(links, "(((21: 21 21)) ((21: $s $t)))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 21, 21, 21);
+        Assert.DoesNotContain(allLinks, link => link.Source == links.Constants.Any || link.Target == links.Constants.Any);
+      });
+    }
+
+    [Fact]
+    public void EnsureCreated_WithSpecialAnyReference_ShouldThrowControlledException()
+    {
+      RunTestWithLinks(links =>
+      {
+        var exception = Assert.Throws<InvalidOperationException>(() => LinksExtensions.EnsureCreated(links, links.Constants.Any));
+
+        Assert.Contains("unsupported link address", exception.Message);
+      });
+    }
+
     // Helper methods
     private static void RunTestWithLinks(Action<NamedTypesDecorator<uint>> testAction, bool enableTracing = false)
     {

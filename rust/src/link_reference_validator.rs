@@ -296,7 +296,7 @@ impl LinkReferenceValidator {
             self.trace_msg(&format!(
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id} as point link."
             ));
-            storage.ensure_created(link_id);
+            storage.try_ensure_created(link_id)?;
             storage.update(link_id, link_id, link_id)?;
             if let Some(link) = storage.get_link(link_id) {
                 created.push(link);

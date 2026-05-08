@@ -12,6 +12,16 @@ use crate::named_types::{NamedTypes, NamedTypesDecorator};
 pub trait NamedTypeLinks {
     fn create(&mut self, source: u32, target: u32) -> u32;
     fn ensure_created(&mut self, id: u32) -> u32;
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        if id == 0 || id == u32::MAX {
+            return Err(LinkError::InvalidFormat(format!(
+                "Cannot ensure unsupported link address {id}"
+            ))
+            .into());
+        }
+
+        Ok(self.ensure_created(id))
+    }
     fn get_link(&mut self, id: u32) -> Option<Link>;
     fn exists(&mut self, id: u32) -> bool;
     fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link>;

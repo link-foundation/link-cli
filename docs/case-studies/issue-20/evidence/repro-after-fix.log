@@ -1,0 +1,113 @@
+[Trace] Constructing NamedTypesDecorator with names DB: /tmp/issue20-repro.names.links
+[ProcessQuery] Query: "((($i: 1 21)) (($i: $s $t) ($i 20)))"
+[ProcessQuery] Parser returned 1 top-level link(s).
+[ProcessQuery] Restriction link => Id="" Values.Count=1
+[ProcessQuery] Substitution link => Id="" Values.Count=2
+[ProcessQuery] Restriction patterns to parse: 1
+[ProcessQuery] Substitution patterns to parse: 2
+[ValidateLinksExistOrWillBeCreated] Starting validation
+[ValidateLinksExistOrWillBeCreated] Numeric links to be created: 2, 3
+[ValidateLinksExistOrWillBeCreated] Named links to be created:
+[ValidateReferencesInPattern] Link 1 reference validated in restriction pattern
+[ValidateReferencesInPattern] Link 21 reference validated in restriction pattern
+[ValidateReferencesInPattern] Link 20 reference validated in substitution pattern
+[ValidateLinksExistOrWillBeCreated] Validation completed
+[ProcessQuery] Converting restriction patterns => done.
+[ProcessQuery] Converting substitution patterns => done.
+[ProcessQuery] Finding solutions for restriction patterns...
+[ProcessQuery] Found 1 total solution(s) matching restriction patterns.
+[ProcessQuery] allSolutionsNoOperation=False
+[ProcessQuery] Some solutions lead to actual changes => building operations.
+[ProcessQuery] For a solution => substitution links count=2, restriction links count=1.
+[ProcessQuery] => 2 operation(s) derived from these patterns.
+[ProcessQuery] All planned operations => 2
+[ProcessQuery] Applying all planned operations...
+[ApplyAllPlannedOperations] Operation: before=(18:1->21), after=(18:1->21)
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[ApplyAllPlannedOperations] Name for before.Index 18 = ''
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[ApplyAllPlannedOperations] Name for after.Index 18 = '' (pre-op)
+[ApplyAllPlannedOperations] No changes for link => ID=18 => no-op.
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[ApplyAllPlannedOperations] Name for after.Index 18 = '' (post-op)
+[ApplyAllPlannedOperations] Operation: before=(0:0->0), after=(0:18->20)
+[ApplyAllPlannedOperations] Creating link => ID=0, S=18, T=20
+[CreateOrUpdateLink] Creating new link => (S=18,T=20).
+[CreateOrUpdateLink] => assigned new ID=2
+[Trace] Update called with restriction: [2]
+[Trace] Debug: handlerWrapper invoked - before=2,0,0, after=2,18,20
+[Trace] Update result: 4294967295
+[ProcessQuery] Restoring unexpected deletions if any...
+[RestoreUnexpectedLinkDeletions] No unexpected deletions found.
+[ProcessQuery] Finished processing query.
+[DEBUG] Raw changes before simplification:
+[DEBUG] 1. (18: 1 21) -> (18: 1 21)
+[DEBUG] 2. (0: 0 0) -> (2: 0 0)
+[DEBUG] 3. (2: 0 0) -> (2: 18 20)
+[DEBUG] Total raw changes: 3
+[DEBUG] Simplified changes count: 2
+[Trace] GetName called for link: 2
+[Trace] GetName result:
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[Trace] GetName called for link: 20
+[Trace] GetName result:
+() ((2: 18 20))
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 21
+[Trace] GetName result:
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 21
+[Trace] GetName result:
+((18: 1 21)) ((18: 1 21))
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 2
+[Trace] GetName result:
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[Trace] GetName called for link: 20
+[Trace] GetName result:
+[Trace] GetName called for link: 18
+[Trace] GetName result:
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 21
+[Trace] GetName result:
+[Trace] GetName called for link: 19
+[Trace] GetName result:
+[Trace] GetName called for link: 1
+[Trace] GetName result:
+[Trace] GetName called for link: 20
+[Trace] GetName result:
+[Trace] GetName called for link: 20
+[Trace] GetName result:
+[Trace] GetName called for link: 20
+[Trace] GetName result:
+[Trace] GetName called for link: 20
+[Trace] GetName result:
+[Trace] GetName called for link: 21
+[Trace] GetName result:
+[Trace] GetName called for link: 21
+[Trace] GetName result:
+[Trace] GetName called for link: 21
+[Trace] GetName result:
+(1: 1 1)
+(2: 18 20)
+(18: 1 21)
+(19: 1 20)
+(20: 20 20)
+(21: 21 21)

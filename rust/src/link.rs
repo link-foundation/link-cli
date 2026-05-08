@@ -31,6 +31,11 @@ impl Link {
         self.index == self.source && self.source == self.target
     }
 
+    /// Returns true if this link references itself from at least one side.
+    pub fn is_partial_point(&self) -> bool {
+        self.index == self.source || self.index == self.target
+    }
+
     /// Formats the link for display
     pub fn format(&self) -> String {
         format!("({} {} {})", self.index, self.source, self.target)

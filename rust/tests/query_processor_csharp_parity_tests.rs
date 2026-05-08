@@ -242,3 +242,52 @@ fn test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_
         Ok(())
     })
 }
+
+#[test]
+fn test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(
+            storage,
+            "(() ((1: 1 1) (18: 1 21) (19: 1 20) (20: 20 20) (21: 21 21)))",
+        )?;
+
+        processor.process_query(storage, "((($i: 1 21)) (($i: $s $t) ($i 20)))")?;
+
+        let links = sorted_links(storage);
+        assert_eq!(links.len(), 6);
+        assert_link_exists(storage, 1, 1, 1);
+        assert_link_exists(storage, 18, 1, 21);
+        assert_link_exists(storage, 19, 1, 20);
+        assert_link_exists(storage, 20, 20, 20);
+        assert_link_exists(storage, 21, 21, 21);
+
+        let outgoing_links = links
+            .iter()
+            .filter(|link| link.source == 18 && link.target == 20)
+            .collect::<Vec<_>>();
+        assert_eq!(outgoing_links.len(), 1);
+        assert_ne!(outgoing_links[0].index, 0);
+        assert_ne!(outgoing_links[0].index, u32::MAX);
+        assert!(links.iter().all(|link| {
+            link.index != u32::MAX && link.source != u32::MAX && link.target != u32::MAX
+        }));
+        Ok(())
+    })
+}
+
+#[test]
+fn test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((21: 21 21)))")?;
+
+        processor.process_query(storage, "(((21: 21 21)) ((21: $s $t)))")?;
+
+        assert_eq!(storage.all().len(), 1);
+        assert_link_exists(storage, 21, 21, 21);
+        assert!(storage
+            .all()
+            .iter()
+            .all(|link| link.source != u32::MAX && link.target != u32::MAX));
+        Ok(())
+    })
+}

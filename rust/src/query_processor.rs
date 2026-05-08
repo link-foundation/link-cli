@@ -4,7 +4,7 @@
 //! Corresponds to BasicQueryProcessor, MixedQueryProcessor, and AdvancedMixedQueryProcessor in C#
 
 use anyhow::Result;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::changes_simplifier::simplify_changes;
 use crate::error::LinkError;
@@ -604,18 +604,28 @@ impl QueryProcessor {
         solution: &HashMap<String, u32>,
         is_substitution: bool,
     ) -> Result<Vec<ResolvedLink>> {
-        patterns
-            .iter()
-            .map(|pattern| self.resolve_pattern(storage, pattern, solution, is_substitution))
-            .collect()
+        let mut working_solution = solution.clone();
+        let mut visited_indexes = HashSet::new();
+        let mut resolved = Vec::new();
+        for pattern in patterns {
+            resolved.push(self.resolve_pattern(
+                storage,
+                pattern,
+                &mut working_solution,
+                is_substitution,
+                &mut visited_indexes,
+            )?);
+        }
+        Ok(resolved)
     }
 
     fn resolve_pattern(
         &self,
         storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
-        solution: &HashMap<String, u32>,
+        solution: &mut HashMap<String, u32>,
         is_substitution: bool,
+        visited_indexes: &mut HashSet<u32>,
     ) -> Result<ResolvedLink> {
         if pattern.is_leaf() {
             let index = self.resolve_identifier(
@@ -628,20 +638,22 @@ impl QueryProcessor {
             return Ok(ResolvedLink::new(index, u32::MAX, u32::MAX, None));
         }
 
-        let source = self
+        let mut source = self
             .resolve_pattern(
                 storage,
                 pattern.source.as_deref().unwrap(),
                 solution,
                 is_substitution,
+                visited_indexes,
             )?
             .index;
-        let target = self
+        let mut target = self
             .resolve_pattern(
                 storage,
                 pattern.target.as_deref().unwrap(),
                 solution,
                 is_substitution,
+                visited_indexes,
             )?
             .index;
         let default_index = if is_substitution { 0 } else { u32::MAX };
@@ -652,6 +664,7 @@ impl QueryProcessor {
         if is_substitution
             && !pattern.index.is_empty()
             && !Self::is_numeric_or_wildcard(&pattern.index)
+            && !Self::is_variable(&pattern.index)
         {
             name = Some(pattern.index.clone());
             if index == 0 {
@@ -659,6 +672,18 @@ impl QueryProcessor {
                     index = existing_id;
                 }
             }
+        }
+
+        if is_substitution {
+            Self::preserve_existing_substitution_parts(
+                storage,
+                pattern,
+                solution,
+                index,
+                &mut source,
+                &mut target,
+                visited_indexes,
+            )?;
         }
 
         Ok(ResolvedLink::new(index, source, target, name))
@@ -810,7 +835,7 @@ impl QueryProcessor {
         definition: &ResolvedLink,
     ) -> Result<Link> {
         let id = if Self::is_normal_index(definition.index) {
-            storage.ensure_created(definition.index);
+            storage.try_ensure_created(definition.index)?;
             storage.update(definition.index, definition.source, definition.target)?;
             definition.index
         } else if let Some(existing_id) = storage.search(definition.source, definition.target) {
@@ -902,7 +927,7 @@ impl QueryProcessor {
             let link_id = if let Some(ref id) = lino_link.id {
                 if let Ok(num) = id.parse::<u32>() {
                     // Specific ID requested
-                    storage.ensure_created(num);
+                    storage.try_ensure_created(num)?;
                     storage.update(num, source_id, target_id)?;
                     num
                 } else if id == "*" || Self::is_variable(id) {
