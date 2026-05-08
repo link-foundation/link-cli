@@ -5,6 +5,19 @@ It is based on [associative theory](https://habr.com/ru/articles/895896) (also i
 
 It uses C# implementation of [a links data store](https://github.com/linksplatform?view_as=public) (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
 
+## WebAssembly Browser Workbench
+
+`clink` can run in the browser through the Rust query processor compiled to
+WebAssembly. The React workbench mirrors the current link set into
+[`doublets-web`](https://www.npmjs.com/package/doublets-web), the WebAssembly
+package built from `doublets-rs`.
+
+- Live demo: <https://link-foundation.github.io/link-cli/>
+- Browser app documentation: [README-WASM.md](README-WASM.md)
+- Implementation notes: [WEBASSEMBLY_IMPLEMENTATION.md](WEBASSEMBLY_IMPLEMENTATION.md)
+
+## Installation
+
 This CLI tool can be installed globally as `clink` using single command (that will work if you have [.NET](https://dotnet.microsoft.com/en-us/download) installed):
 
 ```bash
@@ -123,6 +136,47 @@ A short version of read operation will also work:
 clink '((($i:)) (($i:)))' --changes
 ```
 
+## Export database as LiNo
+
+Use `--out` or `--export` to write the complete database to a `.lino` file after the query is processed. The older `--lino-output` option is also accepted.
+
+```bash
+clink '() ((child: father mother))' --export database.lino
+```
+
+`database.lino`:
+
+```lino
+(father: father father)
+(mother: mother mother)
+(child: father mother)
+```
+
+When links do not have names, exported references are plain link numbers:
+
+```lino
+(1: 1 1)
+(2: 1 2)
+```
+
+## Persistent transformation triggers
+
+Store a query as a trigger with `--always` to apply it after later write operations:
+
+```bash
+clink --db graph.links --always '(((1: 1 1)) ((1: 1 2)))'
+clink --db graph.links --auto-create-missing-references '() ((1: 1 1))' --after
+```
+
+Use `--once` for a trigger that deletes itself after the first successful application, and `--never` to remove matching stored triggers:
+
+```bash
+clink --db graph.links --once '(((1: 1 1)) ((1: 1 2)))'
+clink --db graph.links --never '(((1: 1 1)) ((1: 1 2)))'
+```
+
+Triggers are stored as binary links using the structure `(Always ((Condition ...) (Substitution ...)))` or `(Once ((Condition ...) (Substitution ...)))`. By default they are kept in a companion `<database-name>.triggers.links` file, such as `graph.triggers.links` for `graph.links`. Use `--triggers-file path/to/triggers.links` to choose a different companion file, `--triggers` to enable trigger evaluation explicitly, or `--embed-triggers` to store trigger links in the main database file.
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.
@@ -197,6 +251,61 @@ clink '((* *)) ()' --changes --after
 ((2: 2 2)) ()
 ```
 
+## Link deduplication
+
+When creating nested links, identical sub-links are automatically deduplicated. This means if the same link pattern appears multiple times, it will only be created once and reused.
+
+### Example 1: Duplicate pair deduplication
+
+Create a nested structure where `(m a)` appears twice:
+
+```bash
+clink '() (((m a) (m a)))' --after
+```
+→
+```
+(m: m m)
+(a: a a)
+(3: m a)
+(4: 3 3)
+```
+
+In this example:
+- `m` and `a` are named self-referencing links
+- `(m a)` is created once with index 3
+- The outer link `((m a) (m a))` has index 4, pointing to link 3 twice (source=3, target=3)
+
+### Example 2: Multiple expressions with shared sub-links
+
+```bash
+clink '(((m a) (m a))) (((p a) (p a)))' --after
+```
+→
+```
+(p: p p)
+(a: a a)
+(3: p a)
+(4: 3 3)
+```
+
+The update operation replaces the structure, but note that `a` is reused between expressions.
+
+### Example 3: Different sub-links are not deduplicated
+
+```bash
+clink '() (((m a) (a m)))' --after
+```
+→
+```
+(m: m m)
+(a: a a)
+(3: m a)
+(4: a m)
+(5: 3 4)
+```
+
+Since `(m a)` and `(a m)` are different links, they are both created. The outer link references both of them.
+
 ## Complete examples:
 
 ```bash
@@ -215,63 +324,6 @@ clink '((($index: $source $target)) (($index: $target $source)))' --changes --af
 clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
-## Storable Transformation Patterns
-
-You can store transformation patterns to be automatically executed whenever data changes occur. This enables dynamic programmable behavior for the links network.
-
-### Store a transformation pattern
-
-Store a transformation pattern that changes any link with source 1 and target 1 to have target 2:
-
-```bash
-clink '((1 1)) ((1 2))' --always --changes
-```
-→
-```
-((1: 1 1)) ((1: 1 2))
-Transformation pattern stored: ((1 1)) ((1 2))
-```
-
-The pattern is saved in `patterns.json` file and will be automatically applied whenever any data change occurs.
-
-### Trigger stored patterns
-
-When you make any change to the data store, stored patterns are automatically executed:
-
-```bash
-clink '() ((1 1))' --changes --after
-```
-→
-```
-() ((1: 1 1))
-Applied stored pattern: ((1 1)) ((1 2)) - Success
-(1: 1 2)
-```
-
-Notice how the link was created as `(1 1)` but the stored pattern transformed it to `(1 2)`.
-
-### Remove a transformation pattern
-
-Remove a stored transformation pattern:
-
-```bash
-clink '((1 1)) ((1 2))' --never
-```
-→
-```
-Transformation pattern removed: ((1 1)) ((1 2))
-```
-
-### Use custom patterns file
-
-Store patterns in a separate file to avoid making the links network dynamically programmable:
-
-```bash
-clink '((2 2)) ((2 3))' --always --patterns-file my_patterns.json
-```
-
-This creates a separate `my_patterns.json` file for storing transformation patterns.
-
 ## All options and arguments
 
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
@@ -280,51 +332,56 @@ This creates a separate `my_patterns.json` file for storing transformation patte
 | `--query`               | string  | _None_         | `--apply`, `--do`, `-q`             | LiNo query for CRUD operation                                              |
 | `query` (positional)    | string  | _None_         | _N/A_                               | LiNo query for CRUD operation (provided as the first positional argument)  |
 | `--trace`               | bool    | `false`        | `-t`                                | Enable trace (verbose output)                                              |
+| `--auto-create-missing-references` | bool | `false` | _None_                              | Create missing numeric and named references as self-referential point links |
 | `--structure`           | uint?   | _None_         | `-s`                                | ID of the link to format its structure                                     |
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
-| `--always`              | bool    | `false`        | _None_                              | Store the query as a transformation pattern to be executed on every data store change |
-| `--never`               | bool    | `false`        | _None_                              | Remove the stored transformation pattern                                   |
-| `--patterns-file`       | string  | `patterns.json` | _None_                             | Path to the transformation patterns file                                   |
+| `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
+| `--always`              | bool    | `false`        | _None_                              | Store the query as an always-on persistent transformation trigger          |
+| `--once`                | bool    | `false`        | _None_                              | Store the query as a one-shot persistent transformation trigger            |
+| `--never`               | bool    | `false`        | _None_                              | Remove stored persistent transformation triggers matching the query        |
+| `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
+| `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
+| `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
 
 ## For developers and debugging
 
 ### Execute from root
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
 ```
 
 ### Execute from folder
 
 ```bash
-cd Foundation.Data.Doublets.Cli
+cd csharp/Foundation.Data.Doublets.Cli
 dotnet run -- '(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))' --changes --after
 ```
 
 ### Complete examples:
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '() ((1 1) (2 2))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((1 2) (2 1)) ()' --changes --after
 ```
 
 ```bash
-dotnet run --project Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '() ((1 2) (2 1))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((($index: $source $target)) (($index: $target $source)))' --changes --after
 
-dotnet run --project Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()' --changes --after
+dotnet run --project csharp/Foundation.Data.Doublets.Cli -- '((1: 2 1) (2: 1 2)) ()' --changes --after
 ```
 
 ### Publish next version:
 
 ```bash
-VERSION=$(awk -F'[<>]' '/<Version>/ {print $3}' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj) && git tag "v$VERSION" && git push origin "v$VERSION"
+VERSION=$(awk -F'[<>]' '/<Version>/ {print $3}' csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj) && git tag "v$VERSION" && git push origin "v$VERSION"
 ```
 
 ## Running a Specific Test with Detailed Output
