@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use std::collections::HashSet;
 use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
 use std::path::Path;
@@ -99,32 +100,30 @@ pub trait NamedTypeLinks {
     }
 
     fn format_structure(&mut self, id: u32) -> Result<String> {
-        let link = self.get_link(id).ok_or(LinkError::NotFound(id))?;
-        self.format_structure_recursive(&link, true)
+        let mut visited = HashSet::new();
+        self.format_structure_recursive(id, &mut visited)
     }
 
-    fn format_structure_recursive(&mut self, link: &Link, is_root: bool) -> Result<String> {
-        if link.is_full_point() && !is_root {
-            return self.format_reference(link.index);
+    fn format_structure_recursive(
+        &mut self,
+        id: u32,
+        visited: &mut HashSet<u32>,
+    ) -> Result<String> {
+        let link = self.get_link(id).ok_or(LinkError::NotFound(id))?;
+        if !visited.insert(id) {
+            return self.format_reference(id);
         }
 
-        let source = if link.source == link.index {
-            self.format_reference(link.index)?
-        } else if let Some(source_link) = self.get_link(link.source) {
-            self.format_structure_recursive(&source_link, false)?
+        let source = if self.exists(link.source) && !visited.contains(&link.source) {
+            self.format_structure_recursive(link.source, visited)?
         } else {
-            link.source.to_string()
+            self.format_reference(link.source)?
         };
+        let target = self.format_reference(link.target)?;
+        let index = self.format_reference(link.index)?;
+        visited.remove(&id);
 
-        let target = if link.target == link.index {
-            self.format_reference(link.index)?
-        } else if let Some(target_link) = self.get_link(link.target) {
-            self.format_structure_recursive(&target_link, false)?
-        } else {
-            link.target.to_string()
-        };
-
-        Ok(format!("({source} {target})"))
+        Ok(format!("({index}: {source} {target})"))
     }
 }
 

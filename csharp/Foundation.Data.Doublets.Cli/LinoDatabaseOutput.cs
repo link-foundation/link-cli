@@ -49,6 +49,12 @@ public static class LinoDatabaseOutput
         return $"({beforeText}) ({afterText})";
     }
 
+    public static string FormatStructure(INamedTypesLinks<uint> links, uint linkId)
+    {
+        var visited = new HashSet<uint>();
+        return FormatStructure(links, linkId, visited);
+    }
+
     public static string Namify(INamedTypesLinks<uint> namedLinks, string linksNotation)
     {
         return NumberTokenRegex.Replace(linksNotation, match =>
@@ -57,6 +63,39 @@ public static class LinoDatabaseOutput
             var name = namedLinks.GetName(numberLink);
             return name is null ? match.Value : EscapeReference(name);
         });
+    }
+
+    private static string FormatStructure(INamedTypesLinks<uint> links, uint linkId, HashSet<uint> visited)
+    {
+        if (!links.Exists(linkId))
+        {
+            throw new InvalidOperationException($"Link '{linkId}' does not exist.");
+        }
+
+        if (!visited.Add(linkId))
+        {
+            return FormatReference(links, linkId);
+        }
+
+        try
+        {
+            var link = new DoubletLink(links.GetLink(linkId));
+            var source = FormatStructureSource(links, link.Source, visited);
+            var target = FormatReference(links, link.Target);
+
+            return $"({FormatReference(links, link.Index)}: {source} {target})";
+        }
+        finally
+        {
+            visited.Remove(linkId);
+        }
+    }
+
+    private static string FormatStructureSource(INamedTypesLinks<uint> links, uint linkId, HashSet<uint> visited)
+    {
+        return links.Exists(linkId) && !visited.Contains(linkId)
+            ? FormatStructure(links, linkId, visited)
+            : FormatReference(links, linkId);
     }
 
     private static string FormatReference(INamedTypesLinks<uint> links, uint link)

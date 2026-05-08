@@ -113,6 +113,38 @@ public class LinoDatabaseOutputTests
         });
     }
 
+    [Fact]
+    public void FormatStructure_RendersLeftBranchWithLinkIndexes()
+    {
+        WithNamedLinks(links =>
+        {
+            var first = links.GetOrCreate(0u, 0u);
+            var second = links.GetOrCreate(first, first);
+            var third = links.GetOrCreate(second, first);
+            var fourth = links.GetOrCreate(third, second);
+
+            var formatted = LinoDatabaseOutput.FormatStructure(links, fourth);
+
+            Assert.Equal("(4: (3: (2: (1: 0 0) 1) 1) 2)", formatted);
+        });
+    }
+
+    [Fact]
+    public void FormatStructure_RendersRepeatedSourceAndTargetAsReferenceOnRight()
+    {
+        WithNamedLinks(links =>
+        {
+            var first = links.GetOrCreate(0u, 0u);
+            var second = links.GetOrCreate(first, first);
+            links.GetOrCreate(second, first);
+            var fourth = links.GetOrCreate(second, second);
+
+            var formatted = LinoDatabaseOutput.FormatStructure(links, fourth);
+
+            Assert.Equal("(4: (2: (1: 0 0) 1) 2)", formatted);
+        });
+    }
+
     private static void WithNamedLinks(Action<NamedTypesDecorator<uint>> test)
     {
         var dbPath = Path.GetTempFileName();

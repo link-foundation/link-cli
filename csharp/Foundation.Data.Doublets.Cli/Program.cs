@@ -99,8 +99,8 @@ rootCommand.SetAction(
       var linkId = structure.Value;
       try
       {
-        var structureFormatted = decoratedLinks.FormatStructure(linkId, link => decoratedLinks.IsFullPoint(linkId), true, true);
-        Console.WriteLine(LinoDatabaseOutput.Namify(decoratedLinks, structureFormatted));
+        var structureFormatted = LinoDatabaseOutput.FormatStructure(decoratedLinks, linkId);
+        Console.WriteLine(structureFormatted);
       }
       catch (Exception ex)
       {
