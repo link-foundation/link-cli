@@ -112,6 +112,44 @@ public class CliExportIntegrationTests
         }
     }
 
+    [Fact]
+    public async Task AlwaysTriggerOption_StoresTriggerAndAppliesItOnLaterChange()
+    {
+        var tempDirectory = CreateTempDirectory();
+
+        try
+        {
+            var dbPath = Path.Combine(tempDirectory, "triggered.links");
+            var triggersPath = Path.Combine(tempDirectory, "triggers.links");
+            var outputPath = Path.Combine(tempDirectory, "triggered.lino");
+
+            AssertClinkSucceeded(await RunClinkAsync(
+                "--db",
+                dbPath,
+                "--triggers-file",
+                triggersPath,
+                "--always",
+                "(((1: 1 1)) ((1: 1 2)))"));
+
+            var result = await RunClinkAsync(
+                "--db",
+                dbPath,
+                "--triggers-file",
+                triggersPath,
+                "--auto-create-missing-references",
+                "() ((1: 1 1))",
+                "--export",
+                outputPath);
+
+            AssertClinkSucceeded(result);
+            Assert.Equal(new[] { "(1: 1 2)", "(2: 2 2)" }, File.ReadAllLines(outputPath));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static async Task<CommandResult> RunClinkAsync(params string[] clinkArguments)
     {
         var csharpDirectory = FindCsharpDirectory();

@@ -66,6 +66,41 @@ var outputOption = new Option<string?>("--out", "--lino-output", "--export")
   Description = "Path to write the complete database as a LiNo file"
 };
 
+var alwaysOption = new Option<bool>("--always")
+{
+  Description = "Store the query as an always-on persistent transformation trigger",
+  DefaultValueFactory = _ => false
+};
+
+var onceOption = new Option<bool>("--once")
+{
+  Description = "Store the query as a persistent transformation trigger that deletes itself after it fires",
+  DefaultValueFactory = _ => false
+};
+
+var neverOption = new Option<bool>("--never")
+{
+  Description = "Remove stored persistent transformation triggers matching the query",
+  DefaultValueFactory = _ => false
+};
+
+var triggersOption = new Option<bool>("--triggers")
+{
+  Description = "Enable persistent transformation triggers for this command",
+  DefaultValueFactory = _ => false
+};
+
+var triggersFileOption = new Option<string?>("--triggers-file")
+{
+  Description = "Path to the persistent transformation trigger links database"
+};
+
+var embedTriggersOption = new Option<bool>("--embed-triggers")
+{
+  Description = "Store persistent transformation triggers directly in the main links database",
+  DefaultValueFactory = _ => false
+};
+
 var inputOption = new Option<string?>("--in", "--lino-input", "--import")
 {
   Description = "Path to read and import a LiNo file into the database"
@@ -81,6 +116,12 @@ rootCommand.Options.Add(structureOption);
 rootCommand.Options.Add(beforeOption);
 rootCommand.Options.Add(changesOption);
 rootCommand.Options.Add(afterOption);
+rootCommand.Options.Add(alwaysOption);
+rootCommand.Options.Add(onceOption);
+rootCommand.Options.Add(neverOption);
+rootCommand.Options.Add(triggersOption);
+rootCommand.Options.Add(triggersFileOption);
+rootCommand.Options.Add(embedTriggersOption);
 rootCommand.Options.Add(inputOption);
 rootCommand.Options.Add(outputOption);
 
@@ -96,10 +137,46 @@ rootCommand.SetAction(
     var before = parseResult.GetValue(beforeOption);
     var changes = parseResult.GetValue(changesOption);
     var after = parseResult.GetValue(afterOption);
+    var always = parseResult.GetValue(alwaysOption);
+    var once = parseResult.GetValue(onceOption);
+    var never = parseResult.GetValue(neverOption);
+    var triggers = parseResult.GetValue(triggersOption);
+    var triggersFile = parseResult.GetValue(triggersFileOption);
+    var embedTriggers = parseResult.GetValue(embedTriggersOption);
     var inputPath = parseResult.GetValue(inputOption);
     var outputPath = parseResult.GetValue(outputOption);
 
-    var decoratedLinks = new NamedTypesDecorator<uint>(db, trace);
+    var triggerCommandCount = new[] { always, once, never }.Count(value => value);
+    if (triggerCommandCount > 1)
+    {
+      Console.Error.WriteLine("Only one of --always, --once, or --never can be used at a time.");
+      return 1;
+    }
+
+    var baseLinks = new NamedTypesDecorator<uint>(db, trace);
+    INamedTypesLinks<uint> decoratedLinks = baseLinks;
+    PersistentTransformationDecorator? persistentLinks = null;
+    var defaultTriggersFile = PersistentTransformationDecorator.MakeTriggersDatabaseFilename(db);
+    var effectiveTriggersFile = string.IsNullOrWhiteSpace(triggersFile) ? defaultTriggersFile : triggersFile;
+    var persistentTransformationsEnabled = always
+      || once
+      || never
+      || triggers
+      || embedTriggers
+      || !string.IsNullOrWhiteSpace(triggersFile)
+      || File.Exists(effectiveTriggersFile);
+
+    if (persistentTransformationsEnabled)
+    {
+      var triggerLinks = embedTriggers
+        ? baseLinks
+        : new NamedTypesDecorator<uint>(effectiveTriggersFile, trace);
+      persistentLinks = new PersistentTransformationDecorator(baseLinks, triggerLinks, trace)
+      {
+        AutoCreateMissingReferences = autoCreateMissingReferences
+      };
+      decoratedLinks = persistentLinks;
+    }
 
     if (before)
     {
@@ -129,6 +206,27 @@ rootCommand.SetAction(
     }
 
     var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+
+    if ((always || once || never) && string.IsNullOrWhiteSpace(effectiveQuery))
+    {
+      Console.Error.WriteLine("--always, --once, and --never require a query.");
+      return 1;
+    }
+
+    if (persistentLinks is not null && (always || once))
+    {
+      var kind = always ? PersistentTransformationKind.Always : PersistentTransformationKind.Once;
+      var trigger = persistentLinks.StoreTrigger(kind, effectiveQuery);
+      Console.WriteLine($"{kind} persistent transformation trigger stored: {trigger}");
+      return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+    }
+
+    if (persistentLinks is not null && never)
+    {
+      var removed = persistentLinks.RemoveTriggers(effectiveQuery);
+      Console.WriteLine($"Persistent transformation triggers removed: {removed}");
+      return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+    }
 
     var changesList = new List<(DoubletLink Before, DoubletLink After)>();
 

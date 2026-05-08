@@ -224,6 +224,20 @@ namespace Foundation.Data.Doublets.Cli.Tests
             });
         }
 
+        [Fact]
+        public void ExternalReferenceCanUseNameThatAlreadyExistsInternallyTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                var storage = new UnicodeStringStorage<uint>(links);
+                var externalRef = links.Create(new uint[] { 0, 0 });
+
+                storage.NamedLinks.SetNameForExternalReference(externalRef, "Type");
+
+                Assert.Equal(externalRef, storage.NamedLinks.GetExternalReferenceByName("Type"));
+            });
+        }
+
         // Helper method to create a test environment with a temporary file
         private static void RunTestWithLinks(Action<ILinks<uint>> testAction)
         {

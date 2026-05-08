@@ -82,15 +82,25 @@ namespace Foundation.Data.Doublets.Cli
 
         public TLinkAddress GetExternalReferenceByName(string name)
         {
-            var reference = (Hybrid<TLinkAddress>)GetByName(name);
-            if (reference.IsExternal)
-            {
-                return TLinkAddress.CreateTruncating(reference.AbsoluteValue);
-            }
-            else
+            var nameSequence = _createString(name);
+            var nameLink = _links.SearchOrDefault(_nameType, nameSequence);
+            if (nameLink.Equals(_links.Constants.Null))
             {
                 return _links.Constants.Null;
             }
+
+            var any = _links.Constants.Any;
+            var query = new Link<TLinkAddress>(any, any, nameLink);
+            foreach (var link in _links.All(query))
+            {
+                var reference = (Hybrid<TLinkAddress>)_links.GetSource(link);
+                if (reference.IsExternal)
+                {
+                    return TLinkAddress.CreateTruncating(reference.AbsoluteValue);
+                }
+            }
+
+            return _links.Constants.Null;
         }
 
         public void RemoveName(TLinkAddress link)

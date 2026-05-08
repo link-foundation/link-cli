@@ -159,6 +159,24 @@ When links do not have names, exported references are plain link numbers:
 (2: 1 2)
 ```
 
+## Persistent transformation triggers
+
+Store a query as a trigger with `--always` to apply it after later write operations:
+
+```bash
+clink --db graph.links --always '(((1: 1 1)) ((1: 1 2)))'
+clink --db graph.links --auto-create-missing-references '() ((1: 1 1))' --after
+```
+
+Use `--once` for a trigger that deletes itself after the first successful application, and `--never` to remove matching stored triggers:
+
+```bash
+clink --db graph.links --once '(((1: 1 1)) ((1: 1 2)))'
+clink --db graph.links --never '(((1: 1 1)) ((1: 1 2)))'
+```
+
+Triggers are stored as binary links using the structure `(Always ((Condition ...) (Substitution ...)))` or `(Once ((Condition ...) (Substitution ...)))`. By default they are kept in a companion `<database-name>.triggers.links` file, such as `graph.triggers.links` for `graph.links`. Use `--triggers-file path/to/triggers.links` to choose a different companion file, `--triggers` to enable trigger evaluation explicitly, or `--embed-triggers` to store trigger links in the main database file.
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.
@@ -320,6 +338,12 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
 | `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
+| `--always`              | bool    | `false`        | _None_                              | Store the query as an always-on persistent transformation trigger          |
+| `--once`                | bool    | `false`        | _None_                              | Store the query as a one-shot persistent transformation trigger            |
+| `--never`               | bool    | `false`        | _None_                              | Remove stored persistent transformation triggers matching the query        |
+| `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
+| `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
+| `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
 
 ## For developers and debugging
 
