@@ -66,6 +66,11 @@ var outputOption = new Option<string?>("--out", "--lino-output", "--export")
   Description = "Path to write the complete database as a LiNo file"
 };
 
+var inputOption = new Option<string?>("--in", "--lino-input", "--import")
+{
+  Description = "Path to read and import a LiNo file into the database"
+};
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
 rootCommand.Options.Add(dbOption);
 rootCommand.Options.Add(queryOption);
@@ -76,6 +81,7 @@ rootCommand.Options.Add(structureOption);
 rootCommand.Options.Add(beforeOption);
 rootCommand.Options.Add(changesOption);
 rootCommand.Options.Add(afterOption);
+rootCommand.Options.Add(inputOption);
 rootCommand.Options.Add(outputOption);
 
 rootCommand.SetAction(
@@ -90,9 +96,20 @@ rootCommand.SetAction(
     var before = parseResult.GetValue(beforeOption);
     var changes = parseResult.GetValue(changesOption);
     var after = parseResult.GetValue(afterOption);
+    var inputPath = parseResult.GetValue(inputOption);
     var outputPath = parseResult.GetValue(outputOption);
 
     var decoratedLinks = new NamedTypesDecorator<uint>(db, trace);
+
+    if (before)
+    {
+      PrintAllLinks(decoratedLinks);
+    }
+
+    if (!TryReadLinoInput(decoratedLinks, inputPath))
+    {
+      return 1;
+    }
 
     if (structure.HasValue)
     {
@@ -109,11 +126,6 @@ rootCommand.SetAction(
       }
 
       return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
-    }
-
-    if (before)
-    {
-      PrintAllLinks(decoratedLinks);
     }
 
     var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
@@ -199,6 +211,25 @@ static bool TryWriteLinoOutput(INamedTypesLinks<uint> links, string? outputPath)
   catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException)
   {
     Console.Error.WriteLine($"Error writing LiNo output file '{outputPath}': {ex.Message}");
+    return false;
+  }
+}
+
+static bool TryReadLinoInput(INamedTypesLinks<uint> links, string? inputPath)
+{
+  if (string.IsNullOrWhiteSpace(inputPath))
+  {
+    return true;
+  }
+
+  try
+  {
+    LinoDatabaseInput.ReadFromFile(links, inputPath);
+    return true;
+  }
+  catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is FormatException)
+  {
+    Console.Error.WriteLine($"Error reading LiNo input file '{inputPath}': {ex.Message}");
     return false;
   }
 }

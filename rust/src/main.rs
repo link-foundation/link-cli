@@ -5,6 +5,7 @@
 
 use anyhow::Result;
 use link_cli::cli::{Cli, CliCommand};
+use link_cli::import_lino_file;
 use link_cli::{NamedTypeLinks, NamedTypesDecorator, QueryProcessor};
 
 fn main() -> Result<()> {
@@ -23,6 +24,15 @@ fn main() -> Result<()> {
     // Create link storage with separate named-type aliases.
     let mut storage = NamedTypesDecorator::new(&cli.db, cli.trace)?;
 
+    // Print before state if requested
+    if cli.before {
+        storage.print_all_lino()?;
+    }
+
+    if let Some(input_path) = &cli.lino_input {
+        import_lino_file(&mut storage, input_path)?;
+    }
+
     // If --structure is provided, handle it separately
     if let Some(link_id) = cli.structure {
         let structure_formatted = storage.format_structure(link_id)?;
@@ -31,11 +41,6 @@ fn main() -> Result<()> {
             storage.write_lino_output(output_path)?;
         }
         return Ok(());
-    }
-
-    // Print before state if requested
-    if cli.before {
-        storage.print_all_lino()?;
     }
 
     // Get effective query (option takes precedence over positional argument)

@@ -79,6 +79,39 @@ public class CliExportIntegrationTests
         }
     }
 
+    [Fact]
+    public async Task ImportOption_ReadsNumberedLinoFile()
+    {
+        var tempDirectory = CreateTempDirectory();
+
+        try
+        {
+            var dbPath = Path.Combine(tempDirectory, "imported.links");
+            var inputPath = Path.Combine(tempDirectory, "input.lino");
+            var outputPath = Path.Combine(tempDirectory, "output.lino");
+            await File.WriteAllLinesAsync(inputPath, new[]
+            {
+                "(1: 1 1)",
+                "(2: 1 2)",
+                "(3: 2 1)"
+            });
+
+            var result = await RunClinkAsync("--db", dbPath, "--import", inputPath, "--export", outputPath);
+
+            AssertClinkSucceeded(result);
+            Assert.Equal(new[]
+            {
+                "(1: 1 1)",
+                "(2: 1 2)",
+                "(3: 2 1)"
+            }, File.ReadAllLines(outputPath));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static async Task<CommandResult> RunClinkAsync(params string[] clinkArguments)
     {
         var csharpDirectory = FindCsharpDirectory();
