@@ -1,0 +1,1765 @@
+using Platform.Data;
+using Platform.Data.Doublets;
+using Platform.Data.Doublets.Memory.United.Generic;
+
+using DoubletLink = Platform.Data.Doublets.Link<uint>;
+
+using static Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor;
+
+namespace Foundation.Data.Doublets.Cli.Tests.Tests
+{
+  public class AdvancedMixedQueryProcessor
+  {
+    [Fact]
+    public void CreateSingleLinkTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 1, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void CreateSingleLinkWithIndexTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1: 1 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 1, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void CreateSingleLinkWithIndexAfterGapTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((2: 2 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void CreateSingleLinkWithIndexAfterDoubleGapTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((3: 3 3)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 3, 3, 3);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkWithSource2Target2Test()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1 1)))");
+        ProcessQuery(links, "(() ((2 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void CreateMultipleLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1 1) (2 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void Create2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(3, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        AssertLinkExists(allLinks, 3, 1, 2);
+      });
+    }
+
+    [Fact]
+    public void Create3LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((1 1) ((2 2) (3 3)))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(5, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        AssertLinkExists(allLinks, 3, 3, 3);
+        AssertLinkExists(allLinks, 4, 2, 3);
+        AssertLinkExists(allLinks, 5, 1, 4);
+      });
+    }
+
+    [Fact]
+    public void Create4LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) (4 4))))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(7, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        AssertLinkExists(allLinks, 3, 3, 3);
+        AssertLinkExists(allLinks, 4, 4, 4);
+        AssertLinkExists(allLinks, 5, 3, 4);
+        AssertLinkExists(allLinks, 6, 2, 5);
+        AssertLinkExists(allLinks, 7, 1, 6);
+      });
+    }
+
+    [Fact]
+    public void Create5LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Structure visualization:
+        // Leaves: (1 1), (2 2), (3 3), (4 4), (5 5)
+        // ((4 4) (5 5)) => #6: 4->5
+        // ((3 3) ((4 4) (5 5))) => #7: 3->6
+        // ((2 2) ((3 3) ((4 4) (5 5)))) => #8: 2->7
+        // ((1 1) ((2 2) ((3 3) ((4 4) (5 5))))) => #9: 1->8
+        //
+        // Query: "(() (((1 1) ((2 2) ((3 3) ((4 4) (5 5)))))))"
+        ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) ((4 4) (5 5)))))))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(9, allLinks.Count);
+
+        // Leaf links
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        AssertLinkExists(allLinks, 3, 3, 3);
+        AssertLinkExists(allLinks, 4, 4, 4);
+        AssertLinkExists(allLinks, 5, 5, 5);
+
+        // ((4 4) (5 5)) => #6:4->5
+        AssertLinkExists(allLinks, 6, 4, 5);
+
+        // ((3 3) ((4 4) (5 5))) => #7:3->6
+        AssertLinkExists(allLinks, 7, 3, 6);
+
+        // ((2 2) ((3 3) ((4 4) (5 5)))) => #8:2->7
+        AssertLinkExists(allLinks, 8, 2, 7);
+
+        // ((1 1) ((2 2) ((3 3) ((4 4) (5 5))))) => #9:1->8
+        AssertLinkExists(allLinks, 9, 1, 8);
+      });
+    }
+
+    [Fact]
+    public void Create6LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Structure:
+        // Leaves: (1 1), (2 2), (3 3), (4 4), (5 5), (6 6)
+        // ((5 5) (6 6)) => #7:5->6
+        // ((4 4) ((5 5) (6 6))) => #8:4->7
+        // ((3 3) ((4 4) ((5 5) (6 6)))) => #9:3->8
+        // ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))) => #10:2->9
+        // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6)))))) => #11:1->10
+        //
+        // Query: "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))))))"
+        ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))))))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(11, allLinks.Count);
+
+        // Leaf links
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        AssertLinkExists(allLinks, 3, 3, 3);
+        AssertLinkExists(allLinks, 4, 4, 4);
+        AssertLinkExists(allLinks, 5, 5, 5);
+        AssertLinkExists(allLinks, 6, 6, 6);
+
+        // ((5 5) (6 6)) => #7:5->6
+        AssertLinkExists(allLinks, 7, 5, 6);
+
+        // ((4 4) ((5 5) (6 6))) => #8:4->7
+        AssertLinkExists(allLinks, 8, 4, 7);
+
+        // ((3 3) ((4 4) ((5 5) (6 6)))) => #9:3->8
+        AssertLinkExists(allLinks, 9, 3, 8);
+
+        // ((2 2) ((3 3) ((4 4) ((5 5) (6 6))))) => #10:2->9
+        AssertLinkExists(allLinks, 10, 2, 9);
+
+        // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) (6 6)))))) => #11:1->10
+        AssertLinkExists(allLinks, 11, 1, 10);
+      });
+    }
+
+    [Fact]
+    public void Create7LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Leaves: (1 1), (2 2), (3 3), (4 4), (5 5), (6 6), (7 7)
+        // ((6 6) (7 7)) => #8:6->7
+        // ((5 5) ((6 6) (7 7))) => #9:5->8
+        // ((4 4) ((5 5) ((6 6) (7 7)))) => #10:4->9
+        // ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))) => #11:3->10
+        // ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))) => #12:2->11
+        // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))))) => #13:1->12
+        //
+        // Query: "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))))))"
+        ProcessQuery(links, "(() (((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))))))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(13, allLinks.Count);
+
+        // Leaf links
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        AssertLinkExists(allLinks, 3, 3, 3);
+        AssertLinkExists(allLinks, 4, 4, 4);
+        AssertLinkExists(allLinks, 5, 5, 5);
+        AssertLinkExists(allLinks, 6, 6, 6);
+        AssertLinkExists(allLinks, 7, 7, 7);
+
+        // ((6 6) (7 7)) => #8:6->7
+        AssertLinkExists(allLinks, 8, 6, 7);
+
+        // ((5 5) ((6 6) (7 7))) => #9:5->8
+        AssertLinkExists(allLinks, 9, 5, 8);
+
+        // ((4 4) ((5 5) ((6 6) (7 7)))) => #10:4->9
+        AssertLinkExists(allLinks, 10, 4, 9);
+
+        // ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))) => #11:3->10
+        AssertLinkExists(allLinks, 11, 3, 10);
+
+        // ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7)))))) => #12:2->11
+        AssertLinkExists(allLinks, 12, 2, 11);
+
+        // ((1 1) ((2 2) ((3 3) ((4 4) ((5 5) ((6 6) (7 7))))))) => #13:1->12
+        AssertLinkExists(allLinks, 13, 1, 12);
+      });
+    }
+
+    [Fact]
+    public void UpdateSingleLinkTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1)))");
+        ProcessQuery(links, "(() ((2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((1: 1 1)) ((1: 1 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 2);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void ExactMatchAndDelete2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+        // Act
+        ProcessQuery(links, "(((3: (1: 1 1) (2: 2 2))) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void MatchWithExactIndexAndDelete2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+        // Act
+        ProcessQuery(links, "(( (3: (1 *) (* 2)) ) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void MatchAndDelete2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() (((1 1) (2 2))))");
+
+        // Act
+        ProcessQuery(links, "(( ((1 *) (* 2)) ) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void NoExactMatch2LevelNestedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQueryStrict(links, "() ((1: 1 1) (2: 2 2))");
+
+        // Act
+        ProcessQueryStrict(links, "((1: (1: 1 1) (1: 2 1))) ()");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void NoUpdateUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1)))");
+        ProcessQuery(links, "(() ((2 2)))");
+
+        Options options = new Options();
+
+        var changes = new List<(DoubletLink, DoubletLink)>();
+        options.Query = "((($index: $source $target)) (($index: $source $target)))";
+        options.ChangesHandler = (before, after) =>
+              {
+                changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                return links.Constants.Continue;
+              };
+
+        // Act
+        ProcessQuery(links, options);
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        Assert.Equal(2, changes.Count);
+        AssertChangeExists(changes, new DoubletLink(1, 1, 1), new DoubletLink(1, 1, 1));
+        AssertChangeExists(changes, new DoubletLink(2, 2, 2), new DoubletLink(2, 2, 2));
+      });
+    }
+
+    [Fact]
+    public void SwapSourceAndTargetForSingleLinkUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1)))");
+        ProcessQuery(links, "(() ((1 2)))");
+
+        // Act
+        ProcessQuery(links, "(((2: $source $target)) ((2: $target $source)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+    [Fact]
+    public void SwapSourceAndTargetForAllLinksUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange: create initial links (1: 1 2) and (2: 2 1)
+        ProcessQuery(links, "(() ((1 2) (2 1)))");
+
+        // Act: swap source and target for all links
+        ProcessQuery(links, "((($index: $source $target)) (($index: $target $source)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 2, 1);
+        AssertLinkExists(allLinks, 2, 1, 2);
+      });
+    }
+
+    [Fact]
+    public void SwapEqualSourceAndTargetUsingVariablesHasAllChangesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "() ((1 1) (2 2))");
+        ProcessQuery(links, "((1: 1 1)) ((1: 1 2))");
+
+        Options options = new Options();
+
+        var changes = new List<(DoubletLink, DoubletLink)>();
+        options.Query = "((($index: $source $target)) (($index: $target $source)))";
+        options.ChangesHandler = (before, after) =>
+              {
+                changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                return links.Constants.Continue;
+              };
+
+        // Act
+        ProcessQuery(links, options);
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 2, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+        Assert.Equal(2, changes.Count);
+        AssertChangeExists(changes, new DoubletLink(1, 1, 2), new DoubletLink(1, 2, 1));
+        AssertChangeExists(changes, new DoubletLink(2, 2, 2), new DoubletLink(2, 2, 2));
+      });
+    }
+
+    [Fact]
+    public void MakeAllLinksToGoOutOfFirstLinkUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((2 2) (2 1)))");
+
+        // Act: make all links to go out of the first link
+        ProcessQuery(links, "((($index: $source $target)) (($index: 1 $target)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 2);
+        AssertLinkExists(allLinks, 2, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void MakeAllLinksToGoIntoFirstLinkUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((2 2) (1 2)))");
+
+        // Act: make all links to go into the first link
+        ProcessQuery(links, "((($index: $source $target)) (($index: $source 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 2, 1);
+        AssertLinkExists(allLinks, 2, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void MakeAllLinksSelfReferencingUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 1)))");
+
+        // Act: make all links  self-referencing
+        ProcessQuery(links, "((($index: $source $target)) (($index: $index $index)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void MatchSelfReferencingAndMakeThemGoOutFromFirstLinkUsingVariablesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1) (2 2) (3 1) (4 4)))");
+
+        // Act: match self-referencing links and make them go out from the first link
+        ProcessQuery(links, "((($index: $index $index)) (($index: 1 $index)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(4, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 1, 2);
+        AssertLinkExists(allLinks, 3, 3, 1);
+        AssertLinkExists(allLinks, 4, 1, 4);
+      });
+    }
+
+    [Fact]
+    public void MultipleUpdatesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((1: 1 1) (2: 2 2)) ((1: 1 2) (2: 2 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 2);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+    [Fact]
+    public void MixedMultipleUpdatesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((2: 2 2) (1: 1 1)) ((1: 1 2) (2: 2 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 2);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+    [Fact]
+    public void CreationDuringUpdateTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1)))");
+
+        // Act: Add new link with ID '2' by including it only in substitution
+        ProcessQuery(links, "(((1: 1 1)) ((1: 1 1) (2: 2 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void CreationWithEmptySlotDuringUpdateTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1)))");
+
+        // Act: Add new link with ID '2' by including it only in substitution
+        ProcessQuery(links, "(((1: 1 1)) ((1: 1 1) (3: 3 3)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 3, 3, 3);
+      });
+    }
+
+    [Fact]
+    public void DeletionDuringUpdateTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1) (2 2)))");
+
+        // Act: Remove link with ID '2' by omitting it in substitution
+        ProcessQuery(links, "(((1: 1 1) (2: 2 2)) ((1: 1 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 1, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void DeleteSingleLinkTest_Source1Target2()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2)))");
+        ProcessQuery(links, "(() ((2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((1 2)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void DeleteSingleLinkTest_Source2Target2()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((2 2)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+    [Fact]
+    public void DeleteMultipleLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((1 2) (2 2)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+    [Fact]
+    public void DeleteLinksByAnyTargetTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((1 *)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 2, 2, 2);
+      });
+    }
+
+    [Fact]
+    public void DeleteLinksByAnySourceTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 1) (1 2)))");
+
+        // Act
+        ProcessQuery(links, "(((* 2)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 1, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void DeleteAllLinksBySourceAndTargetTest1()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((* *)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+    [Fact]
+    public void NestedDeleteAllLinksBySourceAndTargetTest1()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "((((* *) (* *))) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+    [Fact]
+    public void DeleteAllLinksBySourceAndTargetTest2()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 1)))");
+
+        // Act
+        ProcessQuery(links, "(((* *)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+    [Fact]
+    public void DeleteAllLinksByIndexTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange
+        ProcessQuery(links, "(() ((1 2) (2 2)))");
+
+        // Act
+        ProcessQuery(links, "(((*:)) ())");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Empty(allLinks);
+      });
+    }
+
+    [Fact]
+    public void CreateNamedFamilyLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Prepare query: create (child: father mother)
+        var query = "(() ((child: father mother)))";
+        var options = new Options
+        {
+          Query = query,
+        };
+        ProcessQuery(links, options);
+
+        // Assert: links for 'father', 'mother', and 'child' exist and are named
+        var fatherId = links.GetByName("father");
+        var motherId = links.GetByName("mother");
+        var childId = links.GetByName("child");
+        Assert.NotEqual(links.Constants.Null, fatherId);
+        Assert.NotEqual(links.Constants.Null, motherId);
+        Assert.NotEqual(links.Constants.Null, childId);
+        Assert.Equal("father", links.GetName(fatherId));
+        Assert.Equal("mother", links.GetName(motherId));
+        Assert.Equal("child", links.GetName(childId));
+
+        // The child link should have father as source and mother as target
+        var allLinks = GetAllLinks(links);
+        var childLink = allLinks.First(l => l.Index == childId);
+        Assert.Equal(fatherId, childLink.Source);
+        Assert.Equal(motherId, childLink.Target);
+      });
+    }
+
+    [Fact]
+    public void CreateTwoNamedLinksTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        Console.WriteLine("[Test] Starting UpdateNamedLinkNameTest");
+
+        // Create initial link: (child: father mother)
+        Console.WriteLine("[Test] Step 1: Creating initial link");
+        var createOptions = new Options { Query = "(() ((child: father mother)))", Trace = true };
+        ProcessQuery(links, createOptions);
+        Console.WriteLine("[Test] Initial link creation completed");
+
+        // Verify initial state
+        Console.WriteLine("[Test] Step 2: Verifying initial state");
+        var initialChildId = links.GetByName("child");
+        Console.WriteLine($"[Test] Initial child ID: {initialChildId}");
+        var initialFatherId = links.GetByName("father");
+        Console.WriteLine($"[Test] Initial father ID: {initialFatherId}");
+        var initialMotherId = links.GetByName("mother");
+        Console.WriteLine($"[Test] Initial mother ID: {initialMotherId}");
+
+        Assert.NotEqual(links.Constants.Null, initialChildId);
+        Assert.NotEqual(links.Constants.Null, initialFatherId);
+        Assert.NotEqual(links.Constants.Null, initialMotherId);
+
+        var initialLinks = GetAllLinks(links);
+        Console.WriteLine($"[Test] Initial links count: {initialLinks.Count}");
+        var initialChildLink = initialLinks.First(l => l.Index == initialChildId);
+        Assert.Equal(initialFatherId, initialChildLink.Source);
+        Assert.Equal(initialMotherId, initialChildLink.Target);
+        Console.WriteLine("[Test] Initial state verification completed");
+
+        // Update child link to be named "son" instead
+        Console.WriteLine("[Test] Step 3: Updating link name");
+        // First, let's try to remove the old name
+        Console.WriteLine("[Test] Removing old name 'child'");
+        links.RemoveName(initialChildId);
+        Console.WriteLine("[Test] Old name removed");
+
+        // Then create the new link with the new name
+        Console.WriteLine("[Test] Creating new link with name 'son'");
+        var updateOptions = new Options { Query = "(() ((son: father mother)))", Trace = true };
+        ProcessQuery(links, updateOptions);
+        Console.WriteLine("[Test] New link creation completed");
+
+        // Verify final state
+        Console.WriteLine("[Test] Step 4: Verifying final state");
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        var finalSonId = links.GetByName("son");
+        Console.WriteLine($"[Test] Final son ID: {finalSonId}");
+        var finalFatherId = links.GetByName("father");
+        Console.WriteLine($"[Test] Final father ID: {finalFatherId}");
+        var finalMotherId = links.GetByName("mother");
+        Console.WriteLine($"[Test] Final mother ID: {finalMotherId}");
+
+        Assert.NotEqual(links.Constants.Null, finalSonId);
+        Assert.NotEqual(links.Constants.Null, finalFatherId);
+        Assert.NotEqual(links.Constants.Null, finalMotherId);
+
+        var finalLinks = GetAllLinks(links);
+        Console.WriteLine($"[Test] Final links count: {finalLinks.Count}");
+        var finalSonLink = Assert.Single(finalLinks, l => l.Index == finalSonId);
+        Assert.Equal(finalFatherId, finalSonLink.Source);
+        Assert.Equal(finalMotherId, finalSonLink.Target);
+        Console.WriteLine("[Test] Final state verification completed");
+        Console.WriteLine("[Test] UpdateNamedLinkNameTest completed successfully");
+      }, enableTracing: true);
+    }
+
+    [Fact]
+    public void UpdateNamedLinkNameTest()
+    {
+      Console.WriteLine("[Test] ===== Starting UpdateNamedLinkNameTest =====");
+      RunTestWithLinks(links =>
+      {
+        try
+        {
+          Console.WriteLine($"[Test] Constants: Null={links.Constants.Null}, Any={links.Constants.Any}, Continue={links.Constants.Continue}");
+          // Step 1: Creating initial link
+          Console.WriteLine("[Test] Step 1: Creating initial link");
+          var createQuery = "(() ((child: father mother)))";
+          Console.WriteLine($"[Test] Query: {createQuery}");
+
+          var createOptions = new Options
+          {
+            Query = createQuery,
+            Trace = true
+          };
+          ProcessQuery(links, createOptions);
+          Console.WriteLine("[Test] Initial link creation completed");
+
+          // Step 2: Verify initial state
+          Console.WriteLine("[Test] Step 2: Verifying initial state");
+          var childId = links.GetByName("child");
+          Console.WriteLine($"[Test] Initial child ID: {childId}");
+          var fatherId = links.GetByName("father");
+          Console.WriteLine($"[Test] Initial father ID: {fatherId}");
+          var motherId = links.GetByName("mother");
+          Console.WriteLine($"[Test] Initial mother ID: {motherId}");
+
+          var initialLinks = links.All().ToList();
+          Console.WriteLine($"[Test] Initial links count: {initialLinks.Count}");
+          foreach (var link in initialLinks)
+          {
+            var source = links.GetSource(link);
+            var target = links.GetTarget(link);
+            Console.WriteLine($"[Test] Initial link: Index={link}, Source={source}, Target={target}");
+          }
+          Console.WriteLine("[Test] Initial state verification completed");
+
+          // Step 3: Update link name
+          Console.WriteLine("[Test] Step 3: Updating link name from 'child' to 'son'");
+          var updateQuery = "(((child: father mother)) ((son: father mother)))";
+          Console.WriteLine($"[Test] Query: {updateQuery}");
+
+          // Log state before update
+          Console.WriteLine("[Test] Current state before update:");
+          Console.WriteLine($"[Test] - child name exists: {links.GetByName("child") != 0}");
+          Console.WriteLine($"[Test] - son name exists: {links.GetByName("son") != 0}");
+          Console.WriteLine($"[Test] - father name exists: {links.GetByName("father") != 0}");
+          Console.WriteLine($"[Test] - mother name exists: {links.GetByName("mother") != 0}");
+
+          Console.WriteLine("[Test] Starting ProcessQuery for update...");
+          Console.WriteLine("[Test] Current links before update:");
+          foreach (var link in links.All())
+          {
+            var source = links.GetSource(link);
+            var target = links.GetTarget(link);
+            Console.WriteLine($"[Test]   Link: Index={link}, Source={source}, Target={target}");
+          }
+
+          // Add detailed tracing for the update operation
+          var updateOptions = new Options
+          {
+            Query = updateQuery,
+            Trace = true,
+            ChangesHandler = (before, after) =>
+            {
+              Console.WriteLine($"[Test] Update ChangesHandler called:");
+              Console.WriteLine($"[Test] - Before state: {before}");
+              Console.WriteLine($"[Test] - After state: {after}");
+
+              // Log name states during change
+              Console.WriteLine($"[Test] - child name during change: {links.GetByName("child")}");
+              Console.WriteLine($"[Test] - son name during change: {links.GetByName("son")}");
+              Console.WriteLine($"[Test] - father name during change: {links.GetByName("father")}");
+              Console.WriteLine($"[Test] - mother name during change: {links.GetByName("mother")}");
+
+              // Log all links during change
+              Console.WriteLine("[Test] - All links during change:");
+              foreach (var link in links.All())
+              {
+                var source = links.GetSource(link);
+                var target = links.GetTarget(link);
+                Console.WriteLine($"[Test]   Link: Index={link}, Source={source}, Target={target}");
+              }
+
+              // Add detailed tracing for link creation
+              if (after != null && before == null)
+              {
+                var afterLink = new DoubletLink(after);
+                var source = links.GetSource(after);
+                var target = links.GetTarget(after);
+                Console.WriteLine($"[Test] Creating new link: Index={afterLink.Index}, Source={source}, Target={target}");
+                Console.WriteLine($"[Test] Checking if link exists: {links.Exists<uint, LinksConstants<uint>>(afterLink.Index)}");
+                Console.WriteLine($"[Test] Checking if source exists: {links.Exists<uint, LinksConstants<uint>>(source)}");
+                Console.WriteLine($"[Test] Checking if target exists: {links.Exists<uint, LinksConstants<uint>>(target)}");
+
+                // Log all names before creation
+                Console.WriteLine("[Test] Names before creation:");
+                foreach (var name in new[] { "child", "son", "father", "mother" })
+                {
+                  var id = links.GetByName(name);
+                  Console.WriteLine($"[Test] - {name}: {id}");
+                }
+              }
+
+              return links.Constants.Continue;
+            }
+          };
+
+          ProcessQuery(links, updateOptions);
+          Console.WriteLine("[Test] Update operation completed");
+
+          // Step 4: Verify final state
+          Console.WriteLine("[Test] Step 4: Verifying final state");
+          var finalChildId = links.GetByName("child");
+          Console.WriteLine($"[Test] Final child ID: {finalChildId}");
+          var finalSonId = links.GetByName("son");
+          Console.WriteLine($"[Test] Final son ID: {finalSonId}");
+          var finalFatherId = links.GetByName("father");
+          Console.WriteLine($"[Test] Final father ID: {finalFatherId}");
+          var finalMotherId = links.GetByName("mother");
+          Console.WriteLine($"[Test] Final mother ID: {finalMotherId}");
+
+          var finalLinks = links.All().ToList();
+          Console.WriteLine($"[Test] Final links count: {finalLinks.Count}");
+          foreach (var link in finalLinks)
+          {
+            var source = links.GetSource(link);
+            var target = links.GetTarget(link);
+            Console.WriteLine($"[Test] Final link: Index={link}, Source={source}, Target={target}");
+          }
+
+          // Verify the update was successful
+          Assert.Equal<uint>(0, finalChildId); // Old name should be gone
+          Assert.NotEqual<uint>(0, finalSonId); // New name should exist
+          Assert.Equal<uint>(finalFatherId, links.GetSource(finalSonId)); // Source should be father
+          Assert.Equal<uint>(finalMotherId, links.GetTarget(finalSonId)); // Target should be mother
+
+          Console.WriteLine("[Test] ===== UpdateNamedLinkNameTest completed successfully =====");
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine($"[Test] Error in UpdateNamedLinkNameTest: {ex}");
+          Console.WriteLine($"[Test] Stack trace: {ex.StackTrace}");
+          throw;
+        }
+      }, enableTracing: true);
+    }
+
+    [Fact]
+    public void DeleteNamedFamilyLinksRemovesNamesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Prepare query: create (child: father mother)
+        var query = "(() ((child: father mother)))";
+        var options = new Options
+        {
+          Query = query,
+        };
+        ProcessQuery(links, options);
+
+        // Delete the 'child' link
+        var childId = links.GetByName("child");
+        links.Delete(childId);
+
+        // Assert: 'child' name is removed, 'father' and 'mother' remain
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("father"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("mother"));
+      });
+    }
+
+    [Fact]
+    public void DeleteNamedLinkTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        ProcessQuery(links, "(((*:)) ())");
+
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        Assert.Equal(links.Constants.Null, links.GetByName("father"));
+        Assert.Equal(links.Constants.Null, links.GetByName("mother"));
+      });
+    }
+
+    [Fact]
+    public void DeleteByNamesTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Create link by name
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        // Delete link by name
+        ProcessQuery(links, "(((child: father mother)) ())");
+
+        Assert.Equal(links.Constants.Null, links.GetByName("child"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("father"));
+        Assert.NotEqual(links.Constants.Null, links.GetByName("mother"));
+      });
+    }
+
+    [Fact]
+    public void NameLookupConsistencyTest()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((x: 1 2)))");
+        ProcessQuery(links, "(((x: 1 2)) ((y: 1 2)))");
+        ProcessQuery(links, "(((y: 1 2)) ((z: 1 2)))");
+        links.Delete(links.GetByName("z"));
+        Assert.Equal(links.Constants.Null, links.GetByName("x"));
+        Assert.Equal(links.Constants.Null, links.GetByName("y"));
+        Assert.Equal(links.Constants.Null, links.GetByName("z"));
+      });
+    }
+
+    [Fact]
+    public void CreateNamedLinkWithStringId_ShouldCreateSingleLink()
+    {
+      RunTestWithLinks(links =>
+      {
+        var options = new Options { Query = "(() ((link: link link)))", Trace = true };
+        ProcessQuery(links, options);
+        var allLinks = GetAllLinks(links);
+        // This should only create a single named link with string id 'link'
+        Assert.Single(allLinks);
+        var linkId = links.GetByName("link");
+        Assert.NotEqual(links.Constants.Null, linkId);
+        var link = allLinks.First();
+        Assert.Equal(linkId, link.Index);
+        Assert.Equal(linkId, link.Source);
+        Assert.Equal(linkId, link.Target);
+        Assert.Equal("link", links.GetName(linkId));
+      }, enableTracing: true);
+    }
+
+    [Fact]
+    public void CreateLinkWithIntegerId_ShouldCreateSingleLink()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((1: 1 1)))");
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        var link = allLinks.First();
+        Assert.Equal(1u, link.Index);
+        Assert.Equal(1u, link.Source);
+        Assert.Equal(1u, link.Target);
+      });
+    }
+
+    [Fact]
+    public void CreateLeftCompositeIntegerChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQuery(links, "(() ((2: 2 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+        [Fact]
+    public void CreateRightCompositeIntegerChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((1: 1 1)))");
+        ProcessQuery(links, "(() ((2: 1 2)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 1, 2);
+      });
+    }
+
+    [Fact]
+    public void CreateLeftCompositeStringChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((type: type type)))");
+        ProcessQuery(links, "(() ((link: link type)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        // Expect only two links, but extra self-referential named link for 'link' is created indicating a bug.
+        Assert.Equal(2, allLinks.Count);
+        var typeId = links.GetByName("type");
+        var linkId = links.GetByName("link");
+        AssertLinkExists(allLinks, typeId, typeId, typeId);
+        AssertLinkExists(allLinks, linkId, linkId, typeId);
+      });
+    }
+
+    [Fact]
+    public void CreateRightCompositeStringChildrenWithoutExtraLeaf_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((type: type type)))");
+        ProcessQuery(links, "(() ((link: type link)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        var typeId = links.GetByName("type");
+        var linkId = links.GetByName("link");
+        AssertLinkExists(allLinks, typeId, typeId, typeId);
+        AssertLinkExists(allLinks, linkId, typeId, linkId);
+      });
+    }
+
+    // ============================================
+    // Link Deduplication Tests
+    // ============================================
+
+    [Fact]
+    public void DeduplicateDuplicatePairWithNamedLinks_ShouldCreateOnlyOneSubLink()
+    {
+      // Issue #65: Test deduplication of (m a) (m a) pattern
+      // Query: () (((m a) (m a)))
+      // Expected: m, a (named self-refs), link 3 = (m a), link 4 = (3 3)
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((m a) (m a))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(4, allLinks.Count);
+
+        // Get the named link IDs
+        var mId = links.GetByName("m");
+        var aId = links.GetByName("a");
+
+        Assert.NotEqual(links.Constants.Null, mId);
+        Assert.NotEqual(links.Constants.Null, aId);
+
+        // m and a should be self-referencing
+        AssertLinkExists(allLinks, mId, mId, mId);
+        AssertLinkExists(allLinks, aId, aId, aId);
+
+        // Find the (m a) link
+        var maLink = allLinks.FirstOrDefault(l => l.Source == mId && l.Target == aId);
+        Assert.NotEqual(default, maLink);
+
+        // Find the outer link ((m a) (m a)) which should be (maLink.Index maLink.Index)
+        var outerLink = allLinks.FirstOrDefault(l => l.Source == maLink.Index && l.Target == maLink.Index);
+        Assert.NotEqual(default, outerLink);
+
+        // Verify deduplication: the outer link's source and target should be the same
+        Assert.Equal(outerLink.Source, outerLink.Target);
+      });
+    }
+
+    [Fact]
+    public void DeduplicateDuplicatePairWithNumericLinks_ShouldCreateOnlyOneSubLink()
+    {
+      // Issue #65: Test deduplication with numeric IDs
+      // Query: () (((1 2) (1 2)))
+      // When using numeric IDs directly, they are treated as references (not creating self-refs)
+      // So (1 2) creates link with source=1, target=2
+      // The deduplication still works: ((1 2) (1 2)) creates only one (1 2) link
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((1 2) (1 2))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+
+        // Should have 2 links: (1 2) and ((1 2) (1 2))
+        Assert.Equal(2, allLinks.Count);
+
+        // Link 1 should be (1 2) - the deduplicated sub-link
+        AssertLinkExists(allLinks, 1, 1, 2);
+
+        // Link 2 should be (1 1) - referencing the same sub-link twice
+        AssertLinkExists(allLinks, 2, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void DeduplicateTripleDuplicatePair_ShouldCreateOnlyOneSubLink()
+    {
+      // Test with three identical pairs using named links: (((a b) ((a b) (a b))))
+      // The (a b) should only be created once
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((a b) ((a b) (a b)))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+
+        var aId = links.GetByName("a");
+        var bId = links.GetByName("b");
+
+        // a and b should be self-referencing
+        AssertLinkExists(allLinks, aId, aId, aId);
+        AssertLinkExists(allLinks, bId, bId, bId);
+
+        // Find (a b) link - the deduplicated sub-link
+        var abLink = allLinks.FirstOrDefault(l => l.Source == aId && l.Target == bId);
+        Assert.NotEqual(default, abLink);
+
+        // Find ((a b) (a b)) link - should reference abLink twice
+        var innerLink = allLinks.FirstOrDefault(l => l.Source == abLink.Index && l.Target == abLink.Index);
+        Assert.NotEqual(default, innerLink);
+
+        // Find outer link ((a b) ((a b) (a b)))
+        var outerLink = allLinks.FirstOrDefault(l => l.Source == abLink.Index && l.Target == innerLink.Index);
+        Assert.NotEqual(default, outerLink);
+
+        Assert.Equal(5, allLinks.Count);
+      });
+    }
+
+    [Fact]
+    public void DeduplicateMixedNamedAndNumericLinks_ShouldReuseExistingLinks()
+    {
+      // Test that named links are reused across queries
+      RunTestWithLinks(links =>
+      {
+        // First query creates (m a)
+        ProcessQuery(links, "(() ((m a)))");
+
+        var mId = links.GetByName("m");
+        var aId = links.GetByName("a");
+
+        // Second query should reuse existing m and a links
+        ProcessQuery(links, "(() (((m a) (m a))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+
+        // m and a should still have the same IDs
+        Assert.Equal(mId, links.GetByName("m"));
+        Assert.Equal(aId, links.GetByName("a"));
+
+        // Should have 4 links total: m, a, (m a), ((m a) (m a))
+        Assert.Equal(4, allLinks.Count);
+      });
+    }
+
+    [Fact]
+    public void DeduplicateWithDifferentPairs_ShouldNotDeduplicateDifferentLinks()
+    {
+      // Test that different pairs are NOT deduplicated
+      // Query: () (((a b) (b a))) - using named links
+      // (a b) and (b a) are different and should both be created
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() (((a b) (b a))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+
+        var aId = links.GetByName("a");
+        var bId = links.GetByName("b");
+
+        // a and b should be self-referencing
+        AssertLinkExists(allLinks, aId, aId, aId);
+        AssertLinkExists(allLinks, bId, bId, bId);
+
+        // Find (a b) link
+        var abLink = allLinks.FirstOrDefault(l => l.Source == aId && l.Target == bId);
+        Assert.NotEqual(default, abLink);
+
+        // Find (b a) link
+        var baLink = allLinks.FirstOrDefault(l => l.Source == bId && l.Target == aId);
+        Assert.NotEqual(default, baLink);
+
+        // Find outer link ((a b) (b a)) - should have different source and target
+        var outerLink = allLinks.FirstOrDefault(l => l.Source == abLink.Index && l.Target == baLink.Index);
+        Assert.NotEqual(default, outerLink);
+        Assert.NotEqual(outerLink.Source, outerLink.Target);
+
+        Assert.Equal(5, allLinks.Count);
+      });
+    }
+
+    [Fact]
+    public void DeduplicateNestedDuplicates_ShouldDeduplicateAtAllLevels()
+    {
+      // Test deeply nested deduplication using named links
+      // Query: () ((((x y) (x y)) ((x y) (x y))))
+      // (x y) is duplicated at multiple levels
+      RunTestWithLinks(links =>
+      {
+        // Act
+        ProcessQuery(links, "(() ((((x y) (x y)) ((x y) (x y)))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+
+        var xId = links.GetByName("x");
+        var yId = links.GetByName("y");
+
+        // x and y should be self-referencing
+        AssertLinkExists(allLinks, xId, xId, xId);
+        AssertLinkExists(allLinks, yId, yId, yId);
+
+        // Find (x y) - the base link
+        var xyLink = allLinks.FirstOrDefault(l => l.Source == xId && l.Target == yId);
+        Assert.NotEqual(default, xyLink);
+
+        // Find ((x y) (x y)) - references (x y) twice (deduplicated)
+        var level1Link = allLinks.FirstOrDefault(l => l.Source == xyLink.Index && l.Target == xyLink.Index);
+        Assert.NotEqual(default, level1Link);
+
+        // Find (((x y) (x y)) ((x y) (x y))) - references level1Link twice (deduplicated)
+        var level2Link = allLinks.FirstOrDefault(l => l.Source == level1Link.Index && l.Target == level1Link.Index);
+        Assert.NotEqual(default, level2Link);
+
+        // Total: x, y, (x y), ((x y) (x y)), (((x y) (x y)) ((x y) (x y)))
+        Assert.Equal(5, allLinks.Count);
+      });
+    }
+
+    [Fact]
+    public void DeduplicateNamedLinks_MultipleQueries_ShouldReuseSameIds()
+    {
+      // Issue #65: Verify that named links maintain consistent IDs across operations
+      RunTestWithLinks(links =>
+      {
+        // First create named links
+        ProcessQuery(links, "(() ((p: p p)))");
+        ProcessQuery(links, "(() ((a: a a)))");
+
+        var pId = links.GetByName("p");
+        var aId = links.GetByName("a");
+
+        // Now create ((p a) (p a)) - should reuse existing p and a
+        ProcessQuery(links, "(() (((p a) (p a))))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+
+        // p and a should still have the same IDs
+        Assert.Equal(pId, links.GetByName("p"));
+        Assert.Equal(aId, links.GetByName("a"));
+
+        // Verify the structure
+        AssertLinkExists(allLinks, pId, pId, pId);
+        AssertLinkExists(allLinks, aId, aId, aId);
+
+        // Find (p a) link
+        var paLink = allLinks.FirstOrDefault(l => l.Source == pId && l.Target == aId);
+        Assert.NotEqual(default, paLink);
+
+        // Find ((p a) (p a)) link - should reference paLink twice
+        var outerLink = allLinks.FirstOrDefault(l => l.Source == paLink.Index && l.Target == paLink.Index);
+        Assert.NotEqual(default, outerLink);
+      });
+    }
+
+    [Fact]
+    public void StringAliasesInVariableRestriction_ShouldConstrainMatchesToNamedLinks()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((father: father father)))");
+        ProcessQuery(links, "(() ((mother: mother mother)))");
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        var fatherId = links.GetByName("father");
+        var motherId = links.GetByName("mother");
+        var childId = links.GetByName("child");
+
+        ProcessQuery(links, "((($id: father mother)) (($id: mother father)))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(3, allLinks.Count);
+        AssertLinkExists(allLinks, fatherId, fatherId, fatherId);
+        AssertLinkExists(allLinks, motherId, motherId, motherId);
+        AssertLinkExists(allLinks, childId, motherId, fatherId);
+      });
+    }
+
+    // Helper methods
+    private static void RunTestWithLinks(Action<NamedTypesDecorator<uint>> testAction, bool enableTracing = false)
+    {
+      string tempDbFile = Path.GetTempFileName();
+      NamedTypesDecorator<uint>? decoratedLinks = null;
+      try
+      {
+        decoratedLinks = new NamedTypesDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        var task = Task.Run(() =>
+        {
+          testAction(decoratedLinks);
+        }, cts.Token);
+
+        try
+        {
+          task.Wait(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+          Console.WriteLine("[Test] Test was cancelled after 1 seconds timeout");
+          throw new TimeoutException("Test exceeded 1 seconds timeout");
+        }
+      }
+      finally
+      {
+        if (decoratedLinks != null && File.Exists(decoratedLinks.NamedLinksDatabaseFileName))
+        {
+          File.Delete(decoratedLinks.NamedLinksDatabaseFileName);
+        }
+        File.Delete(tempDbFile);
+      }
+    }
+
+    private static List<DoubletLink> GetAllLinks(NamedTypesDecorator<uint> links)
+    {
+      var any = links.Constants.Any;
+      var query = new DoubletLink(index: any, source: any, target: any);
+      var allLinks = links.All(query).Select(doublet => new DoubletLink(doublet)).ToList();
+      Console.WriteLine($"[Test] All links: {string.Join(" ", allLinks)}");
+      return allLinks;
+    }
+
+    private static void ProcessQuery(NamedTypesDecorator<uint> links, string query)
+    {
+      ProcessQuery(links, new Options { Query = query });
+    }
+
+    private static void ProcessQuery(NamedTypesDecorator<uint> links, Options options)
+    {
+      options.AutoCreateMissingReferences = true;
+      Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(links, options);
+    }
+
+    private static void ProcessQueryStrict(NamedTypesDecorator<uint> links, string query)
+    {
+      ProcessQueryStrict(links, new Options { Query = query });
+    }
+
+    private static void ProcessQueryStrict(NamedTypesDecorator<uint> links, Options options)
+    {
+      options.AutoCreateMissingReferences = false;
+      Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(links, options);
+    }
+
+    private static void AssertLinkExists(List<DoubletLink> allLinks, uint index, uint source, uint target)
+    {
+      var link = new DoubletLink(index, source, target);
+      Assert.True(allLinks.Contains(link), $"Link {link} not found in the list of all links ({string.Join(" ", allLinks)})");
+    }
+
+    private static void AssertChangeExists(List<(DoubletLink, DoubletLink)> changes, DoubletLink linkBefore, DoubletLink linkAfter)
+    {
+      Assert.Contains(changes, change => change.Item1 == linkBefore && change.Item2 == linkAfter);
+    }
+
+    // New tests for link reference validation
+
+    [Fact]
+    public void CreateLinkWithNonExistentReference_ShouldThrowException()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act & Assert - should throw exception for referencing non-existent link 10
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+          ProcessQueryStrict(links, "(() ((1: 10 20)))");
+        });
+
+        Assert.Contains("Invalid reference to non-existent link '10'", exception.Message);
+        Assert.Contains("--auto-create-missing-references", exception.Message);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkWithValidSelfReference_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act - should succeed because link 1 references itself
+        ProcessQueryStrict(links, "(() ((1: 1 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+        AssertLinkExists(allLinks, 1, 1, 1);
+      });
+    }
+
+    [Fact]
+    public void CreateMultipleLinksWithCrossReferences_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act - should succeed because both links are created in the same operation
+        ProcessQueryStrict(links, "(() ((1: 1 2) (2: 2 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 2);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkReferencingExistingLink_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange - create first link
+        ProcessQueryStrict(links, "(() ((1: 1 1)))");
+
+        // Act - should succeed because link 1 exists
+        ProcessQueryStrict(links, "(() ((2: 2 1)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 1, 1, 1);
+        AssertLinkExists(allLinks, 2, 2, 1);
+      });
+    }
+
+    [Fact]
+    public void UpdateWithNonExistentReference_ShouldThrowException()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Arrange - create initial link
+        ProcessQueryStrict(links, "(() ((1: 1 1)))");
+
+        // Act & Assert - should throw exception for referencing non-existent link 99
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+          ProcessQueryStrict(links, "(((1: 1 1)) ((1: 1 99)))");
+        });
+
+        Assert.Contains("Invalid reference to non-existent link '99'", exception.Message);
+      });
+    }
+
+    [Fact]
+    public void CreateNamedLinkWithMissingNamedReferences_ShouldThrowException()
+    {
+      RunTestWithLinks(links =>
+      {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+          ProcessQueryStrict(links, "(() ((child: father mother)))");
+        });
+
+        Assert.Contains("Invalid reference to non-existent link 'father'", exception.Message);
+        Assert.Contains("--auto-create-missing-references", exception.Message);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkWithAutoCreateMissingNumericReferences_ShouldCreatePointLinks()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((20: 10 20)))");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(2, allLinks.Count);
+        AssertLinkExists(allLinks, 10, 10, 10);
+        AssertLinkExists(allLinks, 20, 10, 20);
+      });
+    }
+
+    [Fact]
+    public void CreateNamedLinkWithAutoCreateMissingNamedReferences_ShouldCreatePointLinks()
+    {
+      RunTestWithLinks(links =>
+      {
+        ProcessQuery(links, "(() ((child: father mother)))");
+
+        var fatherId = links.GetByName("father");
+        var motherId = links.GetByName("mother");
+        var childId = links.GetByName("child");
+
+        var allLinks = GetAllLinks(links);
+        Assert.Equal(3, allLinks.Count);
+        AssertLinkExists(allLinks, fatherId, fatherId, fatherId);
+        AssertLinkExists(allLinks, motherId, motherId, motherId);
+        AssertLinkExists(allLinks, childId, fatherId, motherId);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkWithVariableReferences_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act - should succeed because variables are not validated
+        ProcessQueryStrict(links, "(() (($link: $source $target)))");
+
+        // Assert - one link should be created with variables resolved
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+      });
+    }
+
+    [Fact]
+    public void CreateLinkWithWildcardReferences_ShouldSucceed()
+    {
+      RunTestWithLinks(links =>
+      {
+        // Act - should succeed because wildcards are not validated
+        ProcessQueryStrict(links, "(() ((1: * *)))");
+
+        // Assert
+        var allLinks = GetAllLinks(links);
+        Assert.Single(allLinks);
+      });
+    }
+  }
+}
