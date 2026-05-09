@@ -1,0 +1,1992 @@
+Test	UNKNOWN STEP	﻿2026-05-02T06:01:33.5866948Z Current runner version: '2.334.0'
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5891709Z ##[group]Runner Image Provisioner
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5892525Z Hosted Compute Agent
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5893024Z Version: 20260213.493
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5893693Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5894568Z Build Date: 2026-02-13T00:28:41Z
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5895253Z Worker ID: {ac8dc53f-7dd1-4813-91ed-34220c6f6367}
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5895966Z Azure Region: westus
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5896501Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5897926Z ##[group]Operating System
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5898968Z Ubuntu
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5899456Z 24.04.4
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5899915Z LTS
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5900412Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5900865Z ##[group]Runner Image
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5901411Z Image: ubuntu-24.04
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5901910Z Version: 20260413.86.1
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5903140Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5904844Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5905739Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5906738Z ##[group]GITHUB_TOKEN Permissions
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5908741Z Contents: read
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5909347Z Metadata: read
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5909914Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5912463Z Secret source: Actions
+Test	UNKNOWN STEP	2026-05-02T06:01:33.5913256Z Prepare workflow directory
+Test	UNKNOWN STEP	2026-05-02T06:01:33.6258350Z Prepare all required actions
+Test	UNKNOWN STEP	2026-05-02T06:01:33.6298484Z Getting action download info
+Test	UNKNOWN STEP	2026-05-02T06:01:34.2193210Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Test	UNKNOWN STEP	2026-05-02T06:01:34.3476190Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+Test	UNKNOWN STEP	2026-05-02T06:01:34.5597010Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Test	UNKNOWN STEP	2026-05-02T06:01:34.6451804Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+Test	UNKNOWN STEP	2026-05-02T06:01:34.7380946Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Test	UNKNOWN STEP	2026-05-02T06:01:34.9893586Z Complete job name: Test
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0695184Z ##[group]Run actions/checkout@v4
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0696166Z with:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0696612Z   repository: link-foundation/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0697390Z   token: ***
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0697807Z   ssh-strict: true
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0698218Z   ssh-user: git
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0698648Z   persist-credentials: true
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0699123Z   clean: true
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0699547Z   sparse-checkout-cone-mode: true
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0700062Z   fetch-depth: 1
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0700463Z   fetch-tags: false
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0700880Z   show-progress: true
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0701292Z   lfs: false
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0701705Z   submodules: false
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0702156Z   set-safe-directory: true
+Test	UNKNOWN STEP	2026-05-02T06:01:35.0702913Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1852133Z Syncing repository: link-foundation/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1854042Z ##[group]Getting Git version info
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1855098Z Working directory is '/home/runner/work/link-cli/link-cli'
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1856189Z [command]/usr/bin/git version
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1889726Z git version 2.53.0
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1926431Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1942472Z Temporarily overriding HOME='/home/runner/work/_temp/42ea9fbc-0436-4eb0-8703-125c12e040d6' before making global git config changes
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1944021Z Adding repository directory to the temporary git global config as a safe directory
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1948676Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1985268Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1989322Z ##[group]Initializing the repository
+Test	UNKNOWN STEP	2026-05-02T06:01:35.1993492Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2079214Z hint: Using 'master' as the name for the initial branch. This default branch name
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2081168Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2082472Z hint: to use in all of your new repositories, which will suppress this warning,
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2083771Z hint: call:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2084774Z hint:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2085648Z hint: 	git config --global init.defaultBranch <name>
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2086718Z hint:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2087717Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2089463Z hint: 'development'. The just-created branch can be renamed via this command:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2090497Z hint:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2090913Z hint: 	git branch -m <name>
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2091366Z hint:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2091978Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2093270Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2127820Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2129865Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2130655Z ##[group]Disabling automatic garbage collection
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2133237Z [command]/usr/bin/git config --local gc.auto 0
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2164966Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2165685Z ##[group]Setting up auth
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2173099Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2207955Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2495506Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2526499Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2752429Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.2795271Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Test	UNKNOWN STEP	2026-05-02T06:01:35.3025540Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Test	UNKNOWN STEP	2026-05-02T06:01:35.3062083Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.3063900Z ##[group]Fetching the repository
+Test	UNKNOWN STEP	2026-05-02T06:01:35.3073914Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26050750382b801a4d9f33d1445627e2db2b7867:refs/remotes/origin/main
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8546166Z From https://github.com/link-foundation/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8547847Z  * [new ref]         26050750382b801a4d9f33d1445627e2db2b7867 -> origin/main
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8574928Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8575752Z ##[group]Determining the checkout info
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8577206Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8582131Z [command]/usr/bin/git sparse-checkout disable
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8619387Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8643775Z ##[group]Checking out the ref
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8647877Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8777217Z Switched to a new branch 'main'
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8779157Z branch 'main' set up to track 'origin/main'.
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8786536Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8820345Z [command]/usr/bin/git log -1 --format=%H
+Test	UNKNOWN STEP	2026-05-02T06:01:35.8841731Z 26050750382b801a4d9f33d1445627e2db2b7867
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9284919Z ##[group]Run dtolnay/rust-toolchain@stable
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9285589Z with:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9285998Z   targets: wasm32-unknown-unknown
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9286769Z   toolchain: stable
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9287177Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9422876Z ##[group]Run : parse toolchain version
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9423564Z [36;1m: parse toolchain version[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9424123Z [36;1mif [[ -z $toolchain ]]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9425314Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9426348Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9426932Z [36;1m  exit 1[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9427566Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9428333Z [36;1m  if [[ Linux == macOS ]]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9429341Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9430263Z [36;1m  else[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9431057Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9431916Z [36;1m  fi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9432483Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9433460Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9434455Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9435433Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9436336Z [36;1melse[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9436818Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9437404Z [36;1mfi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9463938Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9465037Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9465433Z   toolchain: stable
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9465853Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9615504Z ##[group]Run : construct rustup command line
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9616140Z [36;1m: construct rustup command line[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9616962Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9618108Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9619021Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9641213Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9641852Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9642255Z   targets: wasm32-unknown-unknown
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9642741Z   components: 
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9643155Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9734074Z ##[group]Run : set $CARGO_HOME
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9734935Z [36;1m: set $CARGO_HOME[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9735565Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9757102Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9757775Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9847407Z ##[group]Run : install rustup if needed
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9848000Z [36;1m: install rustup if needed[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9848575Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9849912Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9851235Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9851817Z [36;1mfi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9872731Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9873358Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9873965Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9874672Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9996864Z ##[group]Run rustup toolchain install stable --target wasm32-unknown-unknown --profile minimal --no-self-update
+Test	UNKNOWN STEP	2026-05-02T06:01:35.9999934Z [36;1mrustup toolchain install stable --target wasm32-unknown-unknown --profile minimal --no-self-update[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:36.0032725Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:36.0033775Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:36.0034681Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:36.0035530Z   RUSTUP_PERMIT_COPY_RENAME: 1
+Test	UNKNOWN STEP	2026-05-02T06:01:36.0036333Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:36.1510082Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2292128Z info: latest update on 2026-04-16 for version 1.95.0 (59807616e 2026-04-14)
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2420296Z info: removing previous version of component clippy
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2435025Z info: removing previous version of component rustfmt
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2446356Z info: removing previous version of component cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2491516Z info: removing previous version of component rust-std
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2538280Z info: removing previous version of component rustc
+Test	UNKNOWN STEP	2026-05-02T06:01:36.2589948Z info: downloading 6 components
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5023827Z 
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5104098Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.95.0 (59807616e 2026-04-14) (from rustc 1.94.1 (e408947bf 2026-03-25))
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5105402Z 
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5208065Z ##[group]Run rustup default stable
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5208397Z [36;1mrustup default stable[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5231155Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5231515Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5231743Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5232021Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5331130Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5337488Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5338076Z 
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5408335Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.95.0 (59807616e 2026-04-14)
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5409066Z 
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5452021Z ##[group]Run : create cachekey
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5452370Z [36;1m: create cachekey[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5452899Z [36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5453571Z [36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5454084Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5477528Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5477894Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5478107Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5478373Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5837280Z ##[group]Run : disable incremental compilation
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5837681Z [36;1m: disable incremental compilation[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5838051Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5838414Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5838723Z [36;1mfi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5860880Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5861267Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5861504Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5861764Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5931005Z ##[group]Run : enable colors in Cargo output
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5931348Z [36;1m: enable colors in Cargo output[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5931719Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5932071Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5932374Z [36;1mfi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5953070Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5953418Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5953632Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5954436Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.5954725Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6051605Z ##[group]Run : enable Cargo sparse registry
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6051960Z [36;1m: enable Cargo sparse registry[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6052509Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6053223Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6053962Z [36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6054838Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6055386Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6055893Z [36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6056490Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6057023Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6057384Z [36;1m  fi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6057584Z [36;1mfi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6079105Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6079459Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6079665Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6079936Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6080167Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6080410Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6413692Z ##[group]Run : work around spurious network errors in curl 8.0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6414434Z [36;1m: work around spurious network errors in curl 8.0[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6415292Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6415937Z [36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6416429Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6416757Z [36;1mfi[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6439404Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6439775Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6439997Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6440300Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6440612Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6440847Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6643213Z ##[group]Run rustc +stable --version --verbose
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6643597Z [36;1mrustc +stable --version --verbose[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6666875Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6667238Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6667448Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6667717Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6667945Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6668184Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6827694Z rustc 1.95.0 (59807616e 2026-04-14)
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6828497Z binary: rustc
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6829023Z commit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6829637Z commit-date: 2026-04-14
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6830147Z host: x86_64-unknown-linux-gnu
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6830597Z release: 1.95.0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6830975Z LLVM version: 22.1.2
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6910776Z ##[group]Run cargo install wasm-pack --version 0.14.0 --locked
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6911278Z [36;1mcargo install wasm-pack --version 0.14.0 --locked[0m
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6935279Z shell: /usr/bin/bash -e {0}
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6935553Z env:
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6935774Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6936055Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6936305Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:01:46.6936539Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:01:46.7230912Z [1m[92m    Updating[0m crates.io index
+Test	UNKNOWN STEP	2026-05-02T06:01:46.7582666Z [1m[92m Downloading[0m crates ...
+Test	UNKNOWN STEP	2026-05-02T06:01:46.7947252Z [1m[92m  Downloaded[0m wasm-pack v0.14.0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.8364773Z [1m[92m  Installing[0m wasm-pack v0.14.0
+Test	UNKNOWN STEP	2026-05-02T06:01:46.8432327Z [1m[92m    Updating[0m crates.io index
+Test	UNKNOWN STEP	2026-05-02T06:01:47.3670774Z [1m[92m    Updating[0m crates.io index
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6279773Z [1m[92m Downloading[0m crates ...
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6690792Z [1m[92m  Downloaded[0m itoa v1.0.17
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6712193Z [1m[92m  Downloaded[0m is_executable v0.1.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6728961Z [1m[92m  Downloaded[0m cargo-platform v0.3.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6745502Z [1m[92m  Downloaded[0m camino v1.2.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6768640Z [1m[92m  Downloaded[0m block-buffer v0.10.4
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6783516Z [1m[92m  Downloaded[0m socks v0.3.4
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6802215Z [1m[92m  Downloaded[0m serde v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6842902Z [1m[92m  Downloaded[0m zmij v1.0.16
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6865992Z [1m[92m  Downloaded[0m cc v1.2.53
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6900539Z [1m[92m  Downloaded[0m bzip2 v0.5.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.6922270Z [1m[92m  Downloaded[0m sysinfo v0.37.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7040674Z [1m[92m  Downloaded[0m serde_derive v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7078997Z [1m[92m  Downloaded[0m powerfmt v0.2.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7096451Z [1m[92m  Downloaded[0m serde_ignored v0.1.14
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7118095Z [1m[92m  Downloaded[0m same-file v1.0.6
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7136150Z [1m[92m  Downloaded[0m bzip2-sys v0.1.13+1.0.8
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7255856Z [1m[92m  Downloaded[0m scopeguard v1.2.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7277568Z [1m[92m  Downloaded[0m potential_utf v0.1.4
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7301145Z [1m[92m  Downloaded[0m num-conv v0.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7319709Z [1m[92m  Downloaded[0m version_check v0.9.5
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7342978Z [1m[92m  Downloaded[0m webpki-roots v0.26.11
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7363725Z [1m[92m  Downloaded[0m untrusted v0.9.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7392393Z [1m[92m  Downloaded[0m sha1 v0.10.6
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7419796Z [1m[92m  Downloaded[0m percent-encoding v2.3.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7437779Z [1m[92m  Downloaded[0m subtle v2.6.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7455557Z [1m[92m  Downloaded[0m time-core v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7474045Z [1m[92m  Downloaded[0m strsim v0.11.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7493227Z [1m[92m  Downloaded[0m zerofrom v0.1.6
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7509792Z [1m[92m  Downloaded[0m siphasher v1.0.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7526235Z [1m[92m  Downloaded[0m yoke-derive v0.8.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7540742Z [1m[92m  Downloaded[0m writeable v0.6.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7564053Z [1m[92m  Downloaded[0m unicode-width v0.2.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7622838Z [1m[92m  Downloaded[0m zeroize_derive v1.4.3
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7636584Z [1m[92m  Downloaded[0m utf8parse v0.2.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7649476Z [1m[92m  Downloaded[0m icu_properties v2.1.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7674843Z [1m[92m  Downloaded[0m zerofrom-derive v0.1.6
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7687568Z [1m[92m  Downloaded[0m yoke v0.8.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7707361Z [1m[92m  Downloaded[0m utf8_iter v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7719957Z [1m[92m  Downloaded[0m zeroize v1.8.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7735085Z [1m[92m  Downloaded[0m which v8.0.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7754582Z [1m[92m  Downloaded[0m zstd-safe v7.2.4
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7772025Z [1m[92m  Downloaded[0m xattr v1.6.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7795138Z [1m[92m  Downloaded[0m zstd v0.13.3
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7827090Z [1m[92m  Downloaded[0m tempfile v3.24.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7855006Z [1m[92m  Downloaded[0m zerovec-derive v0.11.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7871615Z [1m[92m  Downloaded[0m toml_parser v1.0.6+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7898693Z [1m[92m  Downloaded[0m toml_datetime v0.7.5+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7914004Z [1m[92m  Downloaded[0m toml v0.9.11+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7957407Z [1m[92m  Downloaded[0m tinystr v0.8.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.7979537Z [1m[92m  Downloaded[0m rustls-pki-types v1.14.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8006984Z [1m[92m  Downloaded[0m zopfli v0.8.3
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8031999Z [1m[92m  Downloaded[0m zerotrie v0.2.3
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8072172Z [1m[92m  Downloaded[0m tar v0.4.44
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8100132Z [1m[92m  Downloaded[0m typenum v1.19.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8129623Z [1m[92m  Downloaded[0m uuid v1.19.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8160779Z [1m[92m  Downloaded[0m smallvec v1.15.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8184551Z [1m[92m  Downloaded[0m unicode-ident v1.0.22
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8216632Z [1m[92m  Downloaded[0m thiserror-impl v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8233659Z [1m[92m  Downloaded[0m thiserror v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8300033Z [1m[92m  Downloaded[0m rustls-webpki v0.103.9
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8335000Z [1m[92m  Downloaded[0m url v2.5.8
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8362300Z [1m[92m  Downloaded[0m hashbrown v0.16.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8413780Z [1m[92m  Downloaded[0m zip v2.4.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8456969Z [1m[92m  Downloaded[0m ureq v2.12.1
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8510933Z [1m[92m  Downloaded[0m object v0.37.3
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8620708Z [1m[92m  Downloaded[0m lzma-sys v0.1.20
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8942786Z [1m[92m  Downloaded[0m zerovec v0.11.5
+Test	UNKNOWN STEP	2026-05-02T06:01:47.8997851Z [1m[92m  Downloaded[0m serde_json v1.0.149
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9072956Z [1m[92m  Downloaded[0m icu_properties_data v2.1.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9176496Z [1m[92m  Downloaded[0m gimli v0.32.3
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9246221Z [1m[92m  Downloaded[0m chrono v0.4.43
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9313450Z [1m[92m  Downloaded[0m xz2 v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9332428Z [1m[92m  Downloaded[0m toml_writer v1.0.6+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9348157Z [1m[92m  Downloaded[0m synstructure v0.13.2
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9360298Z [1m[92m  Downloaded[0m serde_spanned v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9373626Z [1m[92m  Downloaded[0m winnow v0.7.14
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9470752Z [1m[92m  Downloaded[0m time v0.3.45
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9600977Z [1m[92m  Downloaded[0m libc v0.2.180
+Test	UNKNOWN STEP	2026-05-02T06:01:47.9988541Z [1m[92m  Downloaded[0m indexmap v2.13.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0032407Z [1m[92m  Downloaded[0m idna v1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0068748Z [1m[92m  Downloaded[0m webpki-roots v1.0.5
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0103213Z [1m[92m  Downloaded[0m getrandom v0.2.17
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0134527Z [1m[92m  Downloaded[0m rustc-demangle v0.1.27
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0153114Z [1m[92m  Downloaded[0m num-traits v0.2.19
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0181123Z [1m[92m  Downloaded[0m icu_normalizer_data v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0203229Z [1m[92m  Downloaded[0m iana-time-zone v0.1.64
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0235679Z [1m[92m  Downloaded[0m syn v2.0.114
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0340382Z [1m[92m  Downloaded[0m simd-adler32 v0.3.8
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0360629Z [1m[92m  Downloaded[0m shlex v1.3.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0374544Z [1m[92m  Downloaded[0m icu_normalizer v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0410901Z [1m[92m  Downloaded[0m walkdir v2.5.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0430083Z [1m[92m  Downloaded[0m rustix v0.38.44
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0694137Z [1m[92m  Downloaded[0m memchr v2.7.6
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0748577Z [1m[92m  Downloaded[0m rustls v0.23.36
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0866535Z [1m[92m  Downloaded[0m icu_provider v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.0892981Z [1m[92m  Downloaded[0m rustix v1.1.3
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1162726Z [1m[92m  Downloaded[0m errno v0.3.14
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1178684Z [1m[92m  Downloaded[0m bitflags v2.10.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1220975Z [1m[92m  Downloaded[0m anstream v0.6.21
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1241564Z [1m[92m  Downloaded[0m parking_lot_core v0.9.12
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1262606Z [1m[92m  Downloaded[0m deranged v0.5.5
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1277283Z [1m[92m  Downloaded[0m clap_derive v4.5.49
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1298673Z [1m[92m  Downloaded[0m lock_api v0.4.14
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1312292Z [1m[92m  Downloaded[0m hmac v0.12.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1331841Z [1m[92m  Downloaded[0m anstyle-parse v0.2.7
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1348812Z [1m[92m  Downloaded[0m idna_adapter v1.2.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1358953Z [1m[92m  Downloaded[0m equivalent v1.0.2
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1369866Z [1m[92m  Downloaded[0m dialoguer v0.12.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1404367Z [1m[92m  Downloaded[0m path-clean v1.0.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1416345Z [1m[92m  Downloaded[0m icu_collections v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1476937Z [1m[92m  Downloaded[0m hex v0.4.3
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1494034Z [1m[92m  Downloaded[0m getrandom v0.3.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1529587Z [1m[92m  Downloaded[0m form_urlencoded v1.2.2
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1538719Z [1m[92m  Downloaded[0m flate2 v1.1.8
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1588397Z [1m[92m  Downloaded[0m zstd-sys v2.0.16+zstd.1.5.7
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1748902Z [1m[92m  Downloaded[0m crc-catalog v2.4.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1761186Z [1m[92m  Downloaded[0m backtrace v0.3.76
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1812031Z [1m[92m  Downloaded[0m parking_lot v0.12.5
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1838489Z [1m[92m  Downloaded[0m deflate64 v0.1.10
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1852579Z [1m[92m  Downloaded[0m siphasher v0.3.11
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1865712Z [1m[92m  Downloaded[0m quote v1.0.43
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1892698Z [1m[92m  Downloaded[0m inout v0.1.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1905119Z [1m[92m  Downloaded[0m icu_locale_core v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1972302Z [1m[92m  Downloaded[0m fastrand v2.3.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1985565Z [1m[92m  Downloaded[0m env_filter v0.1.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.1999898Z [1m[92m  Downloaded[0m jobserver v0.1.34
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2022639Z [1m[92m  Downloaded[0m glob v0.3.3
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2040742Z [1m[92m  Downloaded[0m env_home v0.1.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2054049Z [1m[92m  Downloaded[0m constant_time_eq v0.3.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2068326Z [1m[92m  Downloaded[0m once_cell v1.21.3
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2103375Z [1m[92m  Downloaded[0m lzma-rs v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2131147Z [1m[92m  Downloaded[0m generic-array v0.14.7
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2146449Z [1m[92m  Downloaded[0m filetime v0.2.27
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2165898Z [1m[92m  Downloaded[0m dirs-sys-next v0.1.2
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2179437Z [1m[92m  Downloaded[0m clap v4.5.54
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2276977Z [1m[92m  Downloaded[0m clap_builder v4.5.54
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2339951Z [1m[92m  Downloaded[0m aes v0.8.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2376510Z [1m[92m  Downloaded[0m pbkdf2 v0.12.2
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2390926Z [1m[92m  Downloaded[0m human-panic v2.0.6
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2404598Z [1m[92m  Downloaded[0m clap_lex v0.7.7
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2417485Z [1m[92m  Downloaded[0m anstyle-query v1.1.5
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2433257Z [1m[92m  Downloaded[0m linux-raw-sys v0.4.15
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2880020Z [1m[92m  Downloaded[0m adler2 v2.0.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2893223Z [1m[92m  Downloaded[0m stable_deref_trait v1.2.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2902786Z [1m[92m  Downloaded[0m shell-words v1.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2913183Z [1m[92m  Downloaded[0m proc-macro2 v1.0.105
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2943713Z [1m[92m  Downloaded[0m miniz_oxide v0.8.9
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2968947Z [1m[92m  Downloaded[0m fs4 v0.6.6
+Test	UNKNOWN STEP	2026-05-02T06:01:48.2993634Z [1m[92m  Downloaded[0m dirs-next v2.0.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3008207Z [1m[92m  Downloaded[0m digest v0.10.7
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3027617Z [1m[92m  Downloaded[0m autocfg v1.5.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3047033Z [1m[92m  Downloaded[0m log v0.4.29
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3071472Z [1m[92m  Downloaded[0m console v0.16.2
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3088803Z [1m[92m  Downloaded[0m colorchoice v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3099283Z [1m[92m  Downloaded[0m anyhow v1.0.100
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3139973Z [1m[92m  Downloaded[0m litemap v0.8.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3161723Z [1m[92m  Downloaded[0m ring v0.17.14
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3572879Z [1m[92m  Downloaded[0m find-msvc-tools v0.1.8
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3588932Z [1m[92m  Downloaded[0m env_logger v0.11.8
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3613714Z [1m[92m  Downloaded[0m crc32fast v1.5.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3633033Z [1m[92m  Downloaded[0m anstyle v1.0.13
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3648584Z [1m[92m  Downloaded[0m is_terminal_polyfill v1.70.2
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3658020Z [1m[92m  Downloaded[0m heck v0.5.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3671296Z [1m[92m  Downloaded[0m displaydoc v0.2.5
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3700969Z [1m[92m  Downloaded[0m crc v3.4.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3717654Z [1m[92m  Downloaded[0m cpufeatures v0.2.17
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3731216Z [1m[92m  Downloaded[0m cfg-if v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3743936Z [1m[92m  Downloaded[0m pkg-config v0.3.32
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3759562Z [1m[92m  Downloaded[0m serde_core v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3785818Z [1m[92m  Downloaded[0m semver v1.0.27
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3807937Z [1m[92m  Downloaded[0m crypto-common v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3817038Z [1m[92m  Downloaded[0m cipher v0.4.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3831184Z [1m[92m  Downloaded[0m binary-install v0.4.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3849722Z [1m[92m  Downloaded[0m bumpalo v3.19.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3874609Z [1m[92m  Downloaded[0m base64 v0.22.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.3911818Z [1m[92m  Downloaded[0m linux-raw-sys v0.11.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.4440372Z [1m[92m  Downloaded[0m byteorder v1.5.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.4455936Z [1m[92m  Downloaded[0m cargo_metadata v0.23.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.4473904Z [1m[92m  Downloaded[0m addr2line v0.25.1
+Test	UNKNOWN STEP	2026-05-02T06:01:48.5025785Z [1m[92m   Compiling[0m libc v0.2.180
+Test	UNKNOWN STEP	2026-05-02T06:01:48.5026696Z [1m[92m   Compiling[0m proc-macro2 v1.0.105
+Test	UNKNOWN STEP	2026-05-02T06:01:48.5027483Z [1m[92m   Compiling[0m unicode-ident v1.0.22
+Test	UNKNOWN STEP	2026-05-02T06:01:48.5028133Z [1m[92m   Compiling[0m quote v1.0.43
+Test	UNKNOWN STEP	2026-05-02T06:01:48.5572578Z [1m[92m   Compiling[0m shlex v1.3.0
+Test	UNKNOWN STEP	2026-05-02T06:01:48.6562349Z [1m[92m   Compiling[0m find-msvc-tools v0.1.8
+Test	UNKNOWN STEP	2026-05-02T06:01:48.6723645Z [1m[92m   Compiling[0m cfg-if v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:01:48.6999844Z [1m[92m   Compiling[0m pkg-config v0.3.32
+Test	UNKNOWN STEP	2026-05-02T06:01:49.3253128Z [1m[92m   Compiling[0m syn v2.0.114
+Test	UNKNOWN STEP	2026-05-02T06:01:49.3696135Z [1m[92m   Compiling[0m serde_core v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:01:49.5166021Z [1m[92m   Compiling[0m stable_deref_trait v1.2.1
+Test	UNKNOWN STEP	2026-05-02T06:01:49.5636154Z [1m[92m   Compiling[0m typenum v1.19.0
+Test	UNKNOWN STEP	2026-05-02T06:01:49.6608244Z [1m[92m   Compiling[0m jobserver v0.1.34
+Test	UNKNOWN STEP	2026-05-02T06:01:49.7455786Z [1m[92m   Compiling[0m version_check v0.9.5
+Test	UNKNOWN STEP	2026-05-02T06:01:49.9455978Z [1m[92m   Compiling[0m cc v1.2.53
+Test	UNKNOWN STEP	2026-05-02T06:01:49.9711592Z [1m[92m   Compiling[0m generic-array v0.14.7
+Test	UNKNOWN STEP	2026-05-02T06:01:51.3215614Z [1m[92m   Compiling[0m memchr v2.7.6
+Test	UNKNOWN STEP	2026-05-02T06:01:51.5746564Z [1m[92m   Compiling[0m writeable v0.6.2
+Test	UNKNOWN STEP	2026-05-02T06:01:51.7369678Z [1m[92m   Compiling[0m bitflags v2.10.0
+Test	UNKNOWN STEP	2026-05-02T06:01:52.0715746Z [1m[92m   Compiling[0m litemap v0.8.1
+Test	UNKNOWN STEP	2026-05-02T06:01:52.2145774Z [1m[92m   Compiling[0m crypto-common v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:01:52.2727688Z [1m[92m   Compiling[0m smallvec v1.15.1
+Test	UNKNOWN STEP	2026-05-02T06:01:52.4372390Z [1m[92m   Compiling[0m icu_properties_data v2.1.2
+Test	UNKNOWN STEP	2026-05-02T06:01:52.4586051Z [1m[92m   Compiling[0m icu_normalizer_data v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:52.5132636Z [1m[92m   Compiling[0m rustix v1.1.3
+Test	UNKNOWN STEP	2026-05-02T06:01:52.5316183Z [1m[92m   Compiling[0m getrandom v0.3.4
+Test	UNKNOWN STEP	2026-05-02T06:01:52.6062675Z [1m[92m   Compiling[0m subtle v2.6.1
+Test	UNKNOWN STEP	2026-05-02T06:01:52.6887132Z [1m[92m   Compiling[0m simd-adler32 v0.3.8
+Test	UNKNOWN STEP	2026-05-02T06:01:52.7085696Z [1m[92m   Compiling[0m synstructure v0.13.2
+Test	UNKNOWN STEP	2026-05-02T06:01:52.7895793Z [1m[92m   Compiling[0m zstd-sys v2.0.16+zstd.1.5.7
+Test	UNKNOWN STEP	2026-05-02T06:01:52.9935513Z [1m[92m   Compiling[0m ring v0.17.14
+Test	UNKNOWN STEP	2026-05-02T06:01:53.2256656Z [1m[92m   Compiling[0m log v0.4.29
+Test	UNKNOWN STEP	2026-05-02T06:01:53.2302889Z [1m[92m   Compiling[0m linux-raw-sys v0.11.0
+Test	UNKNOWN STEP	2026-05-02T06:01:53.3345631Z [1m[92m   Compiling[0m crc32fast v1.5.0
+Test	UNKNOWN STEP	2026-05-02T06:01:53.4075630Z [1m[92m   Compiling[0m adler2 v2.0.1
+Test	UNKNOWN STEP	2026-05-02T06:01:53.4732419Z [1m[92m   Compiling[0m miniz_oxide v0.8.9
+Test	UNKNOWN STEP	2026-05-02T06:01:54.5572178Z [1m[92m   Compiling[0m zerofrom-derive v0.1.6
+Test	UNKNOWN STEP	2026-05-02T06:01:55.5358329Z [1m[92m   Compiling[0m yoke-derive v0.8.1
+Test	UNKNOWN STEP	2026-05-02T06:01:55.6626914Z [1m[92m   Compiling[0m zerofrom v0.1.6
+Test	UNKNOWN STEP	2026-05-02T06:01:55.7415420Z [1m[92m   Compiling[0m zerovec-derive v0.11.2
+Test	UNKNOWN STEP	2026-05-02T06:01:56.4095868Z [1m[92m   Compiling[0m yoke v0.8.1
+Test	UNKNOWN STEP	2026-05-02T06:01:56.5544033Z [1m[92m   Compiling[0m displaydoc v0.2.5
+Test	UNKNOWN STEP	2026-05-02T06:01:56.6138678Z [1m[92m   Compiling[0m zeroize_derive v1.4.3
+Test	UNKNOWN STEP	2026-05-02T06:01:56.7156149Z [1m[92m   Compiling[0m zerovec v0.11.5
+Test	UNKNOWN STEP	2026-05-02T06:01:57.0275582Z [1m[92m   Compiling[0m zeroize v1.8.2
+Test	UNKNOWN STEP	2026-05-02T06:01:57.0355632Z [1m[92m   Compiling[0m zerotrie v0.2.3
+Test	UNKNOWN STEP	2026-05-02T06:01:57.1445832Z [1m[92m   Compiling[0m rustls-pki-types v1.14.0
+Test	UNKNOWN STEP	2026-05-02T06:01:57.3095789Z [1m[92m   Compiling[0m tinystr v0.8.2
+Test	UNKNOWN STEP	2026-05-02T06:01:57.4176109Z [1m[92m   Compiling[0m potential_utf v0.1.4
+Test	UNKNOWN STEP	2026-05-02T06:01:57.4459428Z [1m[92m   Compiling[0m icu_locale_core v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:57.5098258Z [1m[92m   Compiling[0m icu_collections v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:58.2943900Z [1m[92m   Compiling[0m icu_provider v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:58.7372995Z [1m[92m   Compiling[0m block-buffer v0.10.4
+Test	UNKNOWN STEP	2026-05-02T06:01:58.8150044Z [1m[92m   Compiling[0m serde v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:01:58.9556902Z [1m[92m   Compiling[0m zmij v1.0.16
+Test	UNKNOWN STEP	2026-05-02T06:01:59.0735534Z [1m[92m   Compiling[0m once_cell v1.21.3
+Test	UNKNOWN STEP	2026-05-02T06:01:59.2728505Z [1m[92m   Compiling[0m digest v0.10.7
+Test	UNKNOWN STEP	2026-05-02T06:01:59.4464815Z [1m[92m   Compiling[0m icu_normalizer v2.1.1
+Test	UNKNOWN STEP	2026-05-02T06:01:59.8879848Z [1m[92m   Compiling[0m icu_properties v2.1.2
+Test	UNKNOWN STEP	2026-05-02T06:02:00.6475672Z [1m[92m   Compiling[0m serde_derive v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:02:01.7281501Z [1m[92m   Compiling[0m lzma-sys v0.1.20
+Test	UNKNOWN STEP	2026-05-02T06:02:01.8526704Z [1m[92m   Compiling[0m bzip2-sys v0.1.13+1.0.8
+Test	UNKNOWN STEP	2026-05-02T06:02:01.9360004Z [1m[92m   Compiling[0m getrandom v0.2.17
+Test	UNKNOWN STEP	2026-05-02T06:02:02.0525751Z [1m[92m   Compiling[0m byteorder v1.5.0
+Test	UNKNOWN STEP	2026-05-02T06:02:02.2715590Z [1m[92m   Compiling[0m zstd-safe v7.2.4
+Test	UNKNOWN STEP	2026-05-02T06:02:02.3495749Z [1m[92m   Compiling[0m untrusted v0.9.0
+Test	UNKNOWN STEP	2026-05-02T06:02:02.4106100Z [1m[92m   Compiling[0m serde_json v1.0.149
+Test	UNKNOWN STEP	2026-05-02T06:02:02.4896117Z [1m[92m   Compiling[0m thiserror v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:02:02.6625704Z [1m[92m   Compiling[0m utf8parse v0.2.2
+Test	UNKNOWN STEP	2026-05-02T06:02:02.7085872Z [1m[92m   Compiling[0m anstyle-parse v0.2.7
+Test	UNKNOWN STEP	2026-05-02T06:02:07.6789717Z [1m[92m   Compiling[0m idna_adapter v1.2.1
+Test	UNKNOWN STEP	2026-05-02T06:02:07.9972665Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:02:09.0165455Z [1m[92m   Compiling[0m inout v0.1.4
+Test	UNKNOWN STEP	2026-05-02T06:02:09.0671023Z [1m[92m   Compiling[0m crc-catalog v2.4.0
+Test	UNKNOWN STEP	2026-05-02T06:02:09.0938458Z [1m[92m   Compiling[0m cpufeatures v0.2.17
+Test	UNKNOWN STEP	2026-05-02T06:02:09.1164606Z [1m[92m   Compiling[0m utf8_iter v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:02:09.1767988Z [1m[92m   Compiling[0m rustix v0.38.44
+Test	UNKNOWN STEP	2026-05-02T06:02:09.3022924Z [1m[92m   Compiling[0m autocfg v1.5.0
+Test	UNKNOWN STEP	2026-05-02T06:02:09.5336219Z [1m[92m   Compiling[0m object v0.37.3
+Test	UNKNOWN STEP	2026-05-02T06:02:09.6174872Z [1m[92m   Compiling[0m rustls v0.23.36
+Test	UNKNOWN STEP	2026-05-02T06:02:09.6823411Z [1m[92m   Compiling[0m powerfmt v0.2.0
+Test	UNKNOWN STEP	2026-05-02T06:02:09.8542621Z [1m[92m   Compiling[0m anstyle-query v1.1.5
+Test	UNKNOWN STEP	2026-05-02T06:02:09.8830222Z [1m[92m   Compiling[0m colorchoice v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:02:09.9132486Z [1m[92m   Compiling[0m anstyle v1.0.13
+Test	UNKNOWN STEP	2026-05-02T06:02:10.0701721Z [1m[92m   Compiling[0m itoa v1.0.17
+Test	UNKNOWN STEP	2026-05-02T06:02:10.2133678Z [1m[92m   Compiling[0m is_terminal_polyfill v1.70.2
+Test	UNKNOWN STEP	2026-05-02T06:02:10.2392423Z [1m[92m   Compiling[0m percent-encoding v2.3.2
+Test	UNKNOWN STEP	2026-05-02T06:02:10.4385591Z [1m[92m   Compiling[0m form_urlencoded v1.2.2
+Test	UNKNOWN STEP	2026-05-02T06:02:10.6330812Z [1m[92m   Compiling[0m anstream v0.6.21
+Test	UNKNOWN STEP	2026-05-02T06:02:11.0283439Z [1m[92m   Compiling[0m deranged v0.5.5
+Test	UNKNOWN STEP	2026-05-02T06:02:12.3280135Z [1m[92m   Compiling[0m num-traits v0.2.19
+Test	UNKNOWN STEP	2026-05-02T06:02:12.4196733Z [1m[92m   Compiling[0m idna v1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:13.6288042Z [1m[92m   Compiling[0m crc v3.4.0
+Test	UNKNOWN STEP	2026-05-02T06:02:13.7765627Z [1m[92m   Compiling[0m cipher v0.4.4
+Test	UNKNOWN STEP	2026-05-02T06:02:14.0105634Z [1m[92m   Compiling[0m rustls-webpki v0.103.9
+Test	UNKNOWN STEP	2026-05-02T06:02:14.7135589Z [1m[92m   Compiling[0m flate2 v1.1.8
+Test	UNKNOWN STEP	2026-05-02T06:02:15.2096441Z [1m[92m   Compiling[0m hmac v0.12.1
+Test	UNKNOWN STEP	2026-05-02T06:02:15.2959084Z [1m[92m   Compiling[0m webpki-roots v1.0.5
+Test	UNKNOWN STEP	2026-05-02T06:02:15.3675534Z [1m[92m   Compiling[0m hashbrown v0.16.1
+Test	UNKNOWN STEP	2026-05-02T06:02:15.9632276Z [1m[92m   Compiling[0m camino v1.2.2
+Test	UNKNOWN STEP	2026-05-02T06:02:16.0924579Z [1m[92m   Compiling[0m anyhow v1.0.100
+Test	UNKNOWN STEP	2026-05-02T06:02:16.2396284Z [1m[92m   Compiling[0m zip v2.4.2
+Test	UNKNOWN STEP	2026-05-02T06:02:16.2937164Z [1m[92m   Compiling[0m equivalent v1.0.2
+Test	UNKNOWN STEP	2026-05-02T06:02:16.3147068Z [1m[92m   Compiling[0m time-core v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:02:16.3992181Z [1m[92m   Compiling[0m parking_lot_core v0.9.12
+Test	UNKNOWN STEP	2026-05-02T06:02:16.4906589Z [1m[92m   Compiling[0m gimli v0.32.3
+Test	UNKNOWN STEP	2026-05-02T06:02:16.9625831Z [1m[92m   Compiling[0m winnow v0.7.14
+Test	UNKNOWN STEP	2026-05-02T06:02:17.8185909Z [1m[92m   Compiling[0m linux-raw-sys v0.4.15
+Test	UNKNOWN STEP	2026-05-02T06:02:18.1095513Z [1m[92m   Compiling[0m bumpalo v3.19.1
+Test	UNKNOWN STEP	2026-05-02T06:02:18.3285799Z [1m[92m   Compiling[0m num-conv v0.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:18.4047690Z [1m[92m   Compiling[0m time v0.3.45
+Test	UNKNOWN STEP	2026-05-02T06:02:19.0383016Z [1m[92m   Compiling[0m addr2line v0.25.1
+Test	UNKNOWN STEP	2026-05-02T06:02:19.0389417Z [1m[92m   Compiling[0m toml_parser v1.0.6+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:19.4495731Z [1m[92m   Compiling[0m zopfli v0.8.3
+Test	UNKNOWN STEP	2026-05-02T06:02:20.6036587Z [1m[92m   Compiling[0m xz2 v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:02:20.8359255Z [1m[92m   Compiling[0m indexmap v2.13.0
+Test	UNKNOWN STEP	2026-05-02T06:02:21.6535590Z [1m[92m   Compiling[0m webpki-roots v0.26.11
+Test	UNKNOWN STEP	2026-05-02T06:02:21.6981585Z [1m[92m   Compiling[0m pbkdf2 v0.12.2
+Test	UNKNOWN STEP	2026-05-02T06:02:21.7165816Z [1m[92m   Compiling[0m bzip2 v0.5.2
+Test	UNKNOWN STEP	2026-05-02T06:02:21.9575495Z [1m[92m   Compiling[0m aes v0.8.4
+Test	UNKNOWN STEP	2026-05-02T06:02:23.4505978Z [1m[92m   Compiling[0m lzma-rs v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:02:23.5586063Z [1m[92m   Compiling[0m url v2.5.8
+Test	UNKNOWN STEP	2026-05-02T06:02:26.3313785Z [1m[92m   Compiling[0m sha1 v0.10.6
+Test	UNKNOWN STEP	2026-05-02T06:02:26.7345594Z [1m[92m   Compiling[0m socks v0.3.4
+Test	UNKNOWN STEP	2026-05-02T06:02:27.1705355Z [1m[92m   Compiling[0m xattr v1.6.1
+Test	UNKNOWN STEP	2026-05-02T06:02:27.7788291Z [1m[92m   Compiling[0m toml_datetime v0.7.5+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:28.1555873Z [1m[92m   Compiling[0m serde_spanned v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:02:28.2339344Z [1m[92m   Compiling[0m filetime v0.2.27
+Test	UNKNOWN STEP	2026-05-02T06:02:28.3375926Z [1m[92m   Compiling[0m dirs-sys-next v0.1.2
+Test	UNKNOWN STEP	2026-05-02T06:02:28.3976447Z [1m[92m   Compiling[0m fastrand v2.3.0
+Test	UNKNOWN STEP	2026-05-02T06:02:28.6035584Z [1m[92m   Compiling[0m scopeguard v1.2.0
+Test	UNKNOWN STEP	2026-05-02T06:02:28.6475625Z [1m[92m   Compiling[0m toml_writer v1.0.6+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:28.8141247Z [1m[92m   Compiling[0m heck v0.5.0
+Test	UNKNOWN STEP	2026-05-02T06:02:28.8438240Z [1m[92m   Compiling[0m clap_lex v0.7.7
+Test	UNKNOWN STEP	2026-05-02T06:02:28.9745611Z [1m[92m   Compiling[0m deflate64 v0.1.10
+Test	UNKNOWN STEP	2026-05-02T06:02:29.1286340Z [1m[92m   Compiling[0m rustc-demangle v0.1.27
+Test	UNKNOWN STEP	2026-05-02T06:02:29.4480334Z [1m[92m   Compiling[0m constant_time_eq v0.3.1
+Test	UNKNOWN STEP	2026-05-02T06:02:29.4819251Z [1m[92m   Compiling[0m strsim v0.11.1
+Test	UNKNOWN STEP	2026-05-02T06:02:30.1920627Z [1m[92m   Compiling[0m base64 v0.22.1
+Test	UNKNOWN STEP	2026-05-02T06:02:30.2052656Z [1m[92m   Compiling[0m unicode-width v0.2.2
+Test	UNKNOWN STEP	2026-05-02T06:02:30.3745696Z [1m[92m   Compiling[0m console v0.16.2
+Test	UNKNOWN STEP	2026-05-02T06:02:30.6655510Z [1m[92m   Compiling[0m ureq v2.12.1
+Test	UNKNOWN STEP	2026-05-02T06:02:31.7395496Z [1m[92m   Compiling[0m clap_builder v4.5.54
+Test	UNKNOWN STEP	2026-05-02T06:02:38.8385549Z [1m[92m   Compiling[0m backtrace v0.3.76
+Test	UNKNOWN STEP	2026-05-02T06:02:40.0536681Z [1m[92m   Compiling[0m zstd v0.13.3
+Test	UNKNOWN STEP	2026-05-02T06:02:44.3005781Z [1m[92m   Compiling[0m clap_derive v4.5.49
+Test	UNKNOWN STEP	2026-05-02T06:02:44.3245934Z [1m[92m   Compiling[0m toml v0.9.11+spec-1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:44.6525941Z [1m[92m   Compiling[0m lock_api v0.4.14
+Test	UNKNOWN STEP	2026-05-02T06:02:44.8516339Z [1m[92m   Compiling[0m tempfile v3.24.0
+Test	UNKNOWN STEP	2026-05-02T06:02:44.9706136Z [1m[92m   Compiling[0m dirs-next v2.0.0
+Test	UNKNOWN STEP	2026-05-02T06:02:45.0523315Z [1m[92m   Compiling[0m tar v0.4.44
+Test	UNKNOWN STEP	2026-05-02T06:02:46.6325647Z [1m[92m   Compiling[0m fs4 v0.6.6
+Test	UNKNOWN STEP	2026-05-02T06:02:46.9595671Z [1m[92m   Compiling[0m uuid v1.19.0
+Test	UNKNOWN STEP	2026-05-02T06:02:47.2915986Z [1m[92m   Compiling[0m env_filter v0.1.4
+Test	UNKNOWN STEP	2026-05-02T06:02:47.4172587Z [1m[92m   Compiling[0m cargo-platform v0.3.2
+Test	UNKNOWN STEP	2026-05-02T06:02:47.9695684Z [1m[92m   Compiling[0m semver v1.0.27
+Test	UNKNOWN STEP	2026-05-02T06:02:48.0146157Z [1m[92m   Compiling[0m sysinfo v0.37.2
+Test	UNKNOWN STEP	2026-05-02T06:02:48.0795627Z [1m[92m   Compiling[0m is_executable v0.1.2
+Test	UNKNOWN STEP	2026-05-02T06:02:48.1335671Z [1m[92m   Compiling[0m shell-words v1.1.1
+Test	UNKNOWN STEP	2026-05-02T06:02:48.3196007Z [1m[92m   Compiling[0m hex v0.4.3
+Test	UNKNOWN STEP	2026-05-02T06:02:48.5755971Z [1m[92m   Compiling[0m iana-time-zone v0.1.64
+Test	UNKNOWN STEP	2026-05-02T06:02:48.6389613Z [1m[92m   Compiling[0m same-file v1.0.6
+Test	UNKNOWN STEP	2026-05-02T06:02:48.7335789Z [1m[92m   Compiling[0m siphasher v0.3.11
+Test	UNKNOWN STEP	2026-05-02T06:02:48.8816038Z [1m[92m   Compiling[0m env_home v0.1.0
+Test	UNKNOWN STEP	2026-05-02T06:02:48.9305668Z [1m[92m   Compiling[0m which v8.0.0
+Test	UNKNOWN STEP	2026-05-02T06:02:49.0185691Z [1m[92m   Compiling[0m binary-install v0.4.1
+Test	UNKNOWN STEP	2026-05-02T06:02:49.3246443Z [1m[92m   Compiling[0m walkdir v2.5.0
+Test	UNKNOWN STEP	2026-05-02T06:02:49.5935634Z [1m[92m   Compiling[0m chrono v0.4.43
+Test	UNKNOWN STEP	2026-05-02T06:02:50.1435929Z [1m[92m   Compiling[0m human-panic v2.0.6
+Test	UNKNOWN STEP	2026-05-02T06:02:50.8198677Z [1m[92m   Compiling[0m cargo_metadata v0.23.1
+Test	UNKNOWN STEP	2026-05-02T06:02:51.2915609Z [1m[92m   Compiling[0m dialoguer v0.12.0
+Test	UNKNOWN STEP	2026-05-02T06:02:52.5956218Z [1m[92m   Compiling[0m env_logger v0.11.8
+Test	UNKNOWN STEP	2026-05-02T06:02:53.2126213Z [1m[92m   Compiling[0m parking_lot v0.12.5
+Test	UNKNOWN STEP	2026-05-02T06:02:53.2933847Z [1m[92m   Compiling[0m clap v4.5.54
+Test	UNKNOWN STEP	2026-05-02T06:02:53.3326399Z [1m[92m   Compiling[0m serde_ignored v0.1.14
+Test	UNKNOWN STEP	2026-05-02T06:02:53.5085768Z [1m[92m   Compiling[0m siphasher v1.0.1
+Test	UNKNOWN STEP	2026-05-02T06:02:53.6525789Z [1m[92m   Compiling[0m path-clean v1.0.1
+Test	UNKNOWN STEP	2026-05-02T06:02:53.7316669Z [1m[92m   Compiling[0m glob v0.3.3
+Test	UNKNOWN STEP	2026-05-02T06:02:53.9890553Z [1m[92m   Compiling[0m wasm-pack v0.14.0
+Test	UNKNOWN STEP	2026-05-02T06:03:01.0877522Z [1m[92m    Finished[0m `release` profile [optimized] target(s) in 1m 14s
+Test	UNKNOWN STEP	2026-05-02T06:03:01.1056854Z [1m[92m  Installing[0m /home/runner/.cargo/bin/wasm-pack
+Test	UNKNOWN STEP	2026-05-02T06:03:01.1069704Z [1m[92m   Installed[0m package `wasm-pack v0.14.0` (executable `wasm-pack`)
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2055756Z ##[group]Run actions/setup-node@v4
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2056017Z with:
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2056191Z   node-version: 20.x
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2056391Z   cache: npm
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2056567Z   always-auth: false
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2056751Z   check-latest: false
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2057055Z   token: ***
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2057228Z env:
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2057396Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2057626Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2057818Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:03:01.2058019Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:01.3911058Z Found in cache @ /opt/hostedtoolcache/node/20.20.2/x64
+Test	UNKNOWN STEP	2026-05-02T06:03:01.3918239Z ##[group]Environment details
+Test	UNKNOWN STEP	2026-05-02T06:03:01.6794540Z node: v20.20.2
+Test	UNKNOWN STEP	2026-05-02T06:03:01.6794930Z npm: 10.8.2
+Test	UNKNOWN STEP	2026-05-02T06:03:01.6795266Z yarn: 1.22.22
+Test	UNKNOWN STEP	2026-05-02T06:03:01.6796058Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:01.6821669Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+Test	UNKNOWN STEP	2026-05-02T06:03:01.8633086Z /home/runner/.npm
+Test	UNKNOWN STEP	2026-05-02T06:03:02.1374573Z npm cache is not found
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2148442Z ##[group]Run actions/cache@v4
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2148692Z with:
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2148957Z   path: ~/.cargo/registry
+Test	UNKNOWN STEP	~/.cargo/git
+Test	UNKNOWN STEP	target
+Test	UNKNOWN STEP	rust/target
+Test	UNKNOWN STEP	
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2149437Z   key: Linux-wasm-cargo-a5bca161b00440911150f1345a216ce9214fc239f208774f3e6a9f2212452d80
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2149876Z   restore-keys: Linux-wasm-cargo-
+Test	UNKNOWN STEP	
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2150125Z   enableCrossOsArchive: false
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2150348Z   fail-on-cache-miss: false
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2150556Z   lookup-only: false
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2150736Z   save-always: false
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2150908Z env:
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2151066Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2151291Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2151485Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:03:02.2151676Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:02.6272146Z Cache hit for restore-key: Linux-wasm-cargo-215a3f4c382bd4d7ca34ac40d7e4a4bea743e6142feece078e28238cceeceb8a
+Test	UNKNOWN STEP	2026-05-02T06:03:03.9264049Z Received 0 of 341387361 (0.0%), 0.0 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:03:04.9279428Z Received 113246208 of 341387361 (33.2%), 53.9 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:03:05.9288590Z Received 230686720 of 341387361 (67.6%), 73.3 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:03:06.7326104Z Received 341387361 of 341387361 (100.0%), 85.5 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:03:06.7328867Z Cache Size: ~326 MB (341387361 B)
+Test	UNKNOWN STEP	2026-05-02T06:03:06.7439298Z [command]/usr/bin/tar -xf /home/runner/work/_temp/fbb8d08a-6a82-489e-bcda-1d0ec8f79c0d/cache.tzst -P -C /home/runner/work/link-cli/link-cli --use-compress-program unzstd
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5146672Z Cache restored successfully
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5376657Z Cache restored from key: Linux-wasm-cargo-215a3f4c382bd4d7ca34ac40d7e4a4bea743e6142feece078e28238cceeceb8a
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5486487Z ##[group]Run npm ci
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5486759Z [36;1mnpm ci[0m
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5621071Z shell: /usr/bin/bash -e {0}
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5621329Z env:
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5621510Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5621757Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5621964Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:03:09.5622165Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9193290Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9194077Z added 23 packages, and audited 24 packages in 3s
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9194791Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9195135Z 8 packages are looking for funding
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9195644Z   run `npm fund` for details
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9207566Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9207928Z found 0 vulnerabilities
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9378309Z ##[group]Run cargo test --manifest-path rust/Cargo.toml --all-features
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9378818Z [36;1mcargo test --manifest-path rust/Cargo.toml --all-features[0m
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9402369Z shell: /usr/bin/bash -e {0}
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9402605Z env:
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9402780Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9403034Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9403242Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9403447Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:12.9853939Z [1m[92m    Updating[0m crates.io index
+Test	UNKNOWN STEP	2026-05-02T06:03:13.0375153Z [1m[92m Downloading[0m crates ...
+Test	UNKNOWN STEP	2026-05-02T06:03:13.0897986Z [1m[92m  Downloaded[0m anstream v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:13.0929785Z [1m[92m  Downloaded[0m clap_derive v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:13.0955294Z [1m[92m  Downloaded[0m clap v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1067904Z [1m[92m  Downloaded[0m tempfile v3.27.0
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1098577Z [1m[92m  Downloaded[0m quote v1.0.45
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1129477Z [1m[92m  Downloaded[0m unicode-ident v1.0.24
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1159928Z [1m[92m  Downloaded[0m getrandom v0.4.2
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1200576Z [1m[92m  Downloaded[0m proc-macro2 v1.0.106
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1231722Z [1m[92m  Downloaded[0m anstyle-parse v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1249871Z [1m[92m  Downloaded[0m once_cell v1.21.4
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1288237Z [1m[92m  Downloaded[0m clap_builder v4.6.0
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1355119Z [1m[92m  Downloaded[0m syn v2.0.117
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1463438Z [1m[92m  Downloaded[0m rustix v1.1.4
+Test	UNKNOWN STEP	2026-05-02T06:03:13.1749483Z [1m[92m  Downloaded[0m libc v0.2.186
+Test	UNKNOWN STEP	2026-05-02T06:03:13.2185805Z [1m[92m  Downloaded[0m linux-raw-sys v0.12.1
+Test	UNKNOWN STEP	2026-05-02T06:03:13.3136073Z [1m[92m   Compiling[0m proc-macro2 v1.0.106
+Test	UNKNOWN STEP	2026-05-02T06:03:13.3137042Z [1m[92m   Compiling[0m unicode-ident v1.0.24
+Test	UNKNOWN STEP	2026-05-02T06:03:13.3137717Z [1m[92m   Compiling[0m quote v1.0.45
+Test	UNKNOWN STEP	2026-05-02T06:03:13.3138350Z [1m[92m   Compiling[0m libc v0.2.186
+Test	UNKNOWN STEP	2026-05-02T06:03:13.3727424Z [1m[92m   Compiling[0m getrandom v0.4.2
+Test	UNKNOWN STEP	2026-05-02T06:03:13.4709304Z [1m[92m   Compiling[0m rustix v1.1.4
+Test	UNKNOWN STEP	2026-05-02T06:03:13.4951933Z [1m[92m   Compiling[0m anstyle-parse v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:13.6015866Z [1m[92m   Compiling[0m anstyle v1.0.14
+Test	UNKNOWN STEP	2026-05-02T06:03:13.7433017Z [1m[92m   Compiling[0m linux-raw-sys v0.12.1
+Test	UNKNOWN STEP	2026-05-02T06:03:13.7675998Z [1m[92m   Compiling[0m colorchoice v1.0.5
+Test	UNKNOWN STEP	2026-05-02T06:03:13.8105768Z [1m[92m   Compiling[0m bitflags v2.11.1
+Test	UNKNOWN STEP	2026-05-02T06:03:14.0896222Z [1m[92m   Compiling[0m anstream v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:14.1777233Z [1m[92m   Compiling[0m syn v2.0.117
+Test	UNKNOWN STEP	2026-05-02T06:03:14.3628506Z [1m[92m   Compiling[0m fastrand v2.4.1
+Test	UNKNOWN STEP	2026-05-02T06:03:14.5237420Z [1m[92m   Compiling[0m once_cell v1.21.4
+Test	UNKNOWN STEP	2026-05-02T06:03:14.6385885Z [1m[92m   Compiling[0m clap_lex v1.1.0
+Test	UNKNOWN STEP	2026-05-02T06:03:14.6718152Z [1m[92m   Compiling[0m memmap2 v0.9.10
+Test	UNKNOWN STEP	2026-05-02T06:03:14.8056535Z [1m[92m   Compiling[0m clap_builder v4.6.0
+Test	UNKNOWN STEP	2026-05-02T06:03:14.8406542Z [1m[92m   Compiling[0m anyhow v1.0.102
+Test	UNKNOWN STEP	2026-05-02T06:03:15.7094544Z [1m[92m   Compiling[0m tempfile v3.27.0
+Test	UNKNOWN STEP	2026-05-02T06:03:17.0255935Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:17.0548526Z [1m[92m   Compiling[0m clap_derive v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:17.3485044Z [1m[92m   Compiling[0m serde_derive v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:18.1763174Z [1m[92m   Compiling[0m thiserror v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:18.2156280Z [1m[92m   Compiling[0m thiserror-impl v1.0.69
+Test	UNKNOWN STEP	2026-05-02T06:03:18.4286026Z [1m[92m   Compiling[0m platform-data v2.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:18.5626090Z [1m[92m   Compiling[0m platform-mem v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:18.7265918Z [1m[92m   Compiling[0m doublets v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:18.8495703Z [1m[92m   Compiling[0m clap v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:19.0875929Z [1m[92m   Compiling[0m thiserror v1.0.69
+Test	UNKNOWN STEP	2026-05-02T06:03:19.5448393Z [1m[92m   Compiling[0m serde v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:19.8531687Z [1m[92m   Compiling[0m lino-arguments v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:19.9462753Z [1m[92m   Compiling[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3213197Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 9.36s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3317129Z [1m[92m     Running[0m unittests src/lib.rs (rust/target/debug/deps/link_cli-d340ce7e6e4e80f5)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3328401Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3328593Z running 0 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3328887Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3329523Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3330097Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3331554Z [1m[92m     Running[0m unittests src/main.rs (rust/target/debug/deps/clink-8b57485f3e6bc6de)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3339948Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3340119Z running 0 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3340401Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3341025Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3341516Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3343860Z [1m[92m     Running[0m tests/changes_simplifier_tests.rs (rust/target/debug/deps/changes_simplifier_tests-f35e7109178f8287)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3352078Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3352220Z running 9 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3356803Z test test_simplify_chain ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3357366Z test test_simplify_empty ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3357961Z test test_simplify_issue26_update_operation ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3358662Z test test_simplify_issue26_alternative_scenario ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3359342Z test test_simplify_keeps_unchanged_states ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3360075Z test test_simplify_multiple_branches_from_same_initial ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3360704Z test test_simplify_no_op ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3361488Z test test_simplify_specific_example_removes_intermediate_states ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3362263Z test test_simplify_with_unchanged ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3362571Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3363569Z [1m[92m     Running[0m tests/cli_arguments_tests.rs (rust/target/debug/deps/cli_arguments_tests-5690f63b1f5ebd41)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3365122Z test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3365711Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3371661Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3371833Z running 5 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3375918Z test parses_csharp_option_aliases_without_direct_clap_dependency ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3376785Z test parses_inline_alias_values_and_boolean_values ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3377577Z test query_option_takes_precedence_over_positional_query ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3378335Z test rejects_extra_positional_queries ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3378938Z test returns_help_and_version_commands ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3379592Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3380190Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3380787Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3388865Z [1m[92m     Running[0m tests/cli_named_types_tests.rs (rust/target/debug/deps/cli_named_types_tests-f8e3161a20dbda82)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3389618Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3389761Z running 1 test
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3453849Z test cli_stores_string_aliases_in_separate_names_database ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3454526Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3455099Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3455452Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3456894Z [1m[92m     Running[0m tests/dependency_basis_tests.rs (rust/target/debug/deps/dependency_basis_tests-1921d0e4c0044681)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3464954Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3465160Z running 2 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3467740Z test rust_manifest_declares_required_basis_crates ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3468404Z test rust_manifest_uses_lino_arguments_without_direct_clap_dependency ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3468738Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3469215Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3469821Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3471064Z [1m[92m     Running[0m tests/link_storage_tests.rs (rust/target/debug/deps/link_storage_tests-4a62457bb635dc13)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3479314Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3479440Z running 12 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3484574Z test test_lino_lines_escape_names_that_need_quoting ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3485499Z test test_lino_lines_select_quote_style_for_names_containing_quotes ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3486490Z test test_lino_lines_use_numbered_references_without_names ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3487352Z test test_lino_lines_use_names_for_indexes_sources_and_targets ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3488027Z test test_storage_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3494035Z test test_storage_delete ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3495018Z test test_storage_get_or_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3495581Z test test_storage_named_links ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3496085Z test test_storage_search ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3496545Z test test_storage_update ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3497012Z test test_storage_persistence ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3497714Z test test_write_lino_output_writes_complete_database ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3498126Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3498733Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3499319Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3500159Z [1m[92m     Running[0m tests/link_tests.rs (rust/target/debug/deps/link_tests-cf6e058bd79f1c62)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3507781Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3507977Z running 5 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3511632Z test test_link_creation ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3512164Z test test_link_is_full_point ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3512629Z test test_link_format ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3513048Z test test_link_is_null ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3513692Z test test_link_round_trips_through_doublets_link ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3514101Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3514967Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3515556Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3516506Z [1m[92m     Running[0m tests/lino_link_tests.rs (rust/target/debug/deps/lino_link_tests-e5cad6c0a3a54635)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3523578Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3523746Z running 5 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3527851Z test test_lino_link_is_wildcard ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3528439Z test test_lino_link_is_numeric ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3528956Z test test_lino_link_is_variable ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3529429Z test test_lino_link_new ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3529772Z test test_lino_link_with_values ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3529967Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3530322Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3530715Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3531844Z [1m[92m     Running[0m tests/named_types_decorator_tests.rs (rust/target/debug/deps/named_types_decorator_tests-6ec4446ce107270b)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3540422Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3540601Z running 7 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3557986Z test default_names_database_path_matches_csharp_convention ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3560824Z test decorator_includes_pinned_types_decorator ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3561705Z test decorator_exposes_link_storage_operations_and_named_types ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3568036Z test decorator_can_be_built_from_existing_link_storages ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3569190Z test delete_removes_associated_name_from_names_database ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3579857Z test setting_second_name_replaces_first_name ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3584777Z test reassigning_existing_name_moves_name_to_new_link ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3585035Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3585407Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3585740Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3588024Z [1m[92m     Running[0m tests/parser_tests.rs (rust/target/debug/deps/parser_tests-77b3e71c374cfc5a)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3597231Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3597525Z running 8 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3601626Z test test_parse_empty ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3602227Z test test_parse_nested_link ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3603456Z test test_parse_link_with_id ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3604987Z test test_parse_links_notation_backtick_unicode_identifier ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3606019Z test test_parse_query_format ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3606529Z test test_parse_simple_link ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3607027Z test test_parse_wildcard ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3607493Z test test_parse_variable ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3607801Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3609223Z [1m[92m     Running[0m tests/pinned_types_decorator_tests.rs (rust/target/debug/deps/pinned_types_decorator_tests-2be8a182e5134711)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3610065Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3610619Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3617666Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3617804Z running 3 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3622205Z test decorator_rejects_unexpected_link_shape_at_reserved_address ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3623083Z test decorator_exposes_link_storage_operations_and_pinned_types ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3623626Z test decorator_supports_triplet_deconstruction_parity ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3623879Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3625369Z [1m[92m     Running[0m tests/query_processor_csharp_parity_tests.rs (rust/target/debug/deps/query_processor_csharp_parity_tests-e891656cc1b18e2a)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3626280Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3626621Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3633614Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3633756Z running 13 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3642056Z test test_create_deep_nested_numeric_links_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3651502Z test test_create_explicit_index_after_gap_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3660267Z test test_delete_by_source_target_pattern_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3665472Z test test_delete_by_wildcard_target_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3695296Z test test_delete_all_by_index_wildcard_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3735513Z test test_no_op_variable_query_returns_matched_changes ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3736657Z test test_string_composite_left_child_does_not_create_extra_leaf ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3737806Z test test_swap_all_links_using_variables_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3745868Z test test_delete_by_names_keeps_leaf_names_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3750804Z test test_unwrapped_create_query_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3783496Z test test_unknown_named_restriction_fails_without_auto_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3854388Z test test_named_link_rename_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3861909Z test test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3862940Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3863571Z test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3864153Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3865656Z [1m[92m     Running[0m tests/query_processor_tests.rs (rust/target/debug/deps/query_processor_tests-fcc4222298464831)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3876566Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3876753Z running 15 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3892501Z test test_auto_create_missing_numeric_reference_creates_point_link ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3893654Z test test_auto_create_missing_named_references_creates_point_links ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3896193Z test test_deduplicate_duplicate_pair_with_named_links ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3897495Z test test_auto_create_missing_numeric_reference_fills_existing_gap ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3898364Z test test_deduplicate_duplicate_pair_with_numeric_links ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3898968Z test test_deduplicate_triple_duplicate_pair ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3899788Z test test_deduplicate_named_links_multiple_queries ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3900466Z test test_deduplicate_mixed_named_and_numeric ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3902557Z test test_deduplicate_nested_duplicates ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3903373Z test test_deduplicate_with_different_pairs ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3905416Z test test_missing_named_reference_fails_without_auto_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3907749Z test test_future_numeric_references_succeed_without_auto_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3908199Z test test_query_processor_empty ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3908826Z test test_missing_numeric_reference_fails_without_auto_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3909465Z test test_query_processor_create ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3909802Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3910511Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3911044Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3912682Z [1m[92m     Running[0m tests/unicode_sequence_converter_tests.rs (rust/target/debug/deps/unicode_sequence_converter_tests-dbca84dd88aaca3a)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3922267Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3922405Z running 5 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3927302Z test caching_converter_decorator_reuses_cached_values ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3928494Z test raw_number_converters_match_hybrid_external_reference_encoding ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3929279Z test balanced_variant_and_right_sequence_walker_preserve_symbol_order ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3929908Z test target_and_char_symbol_converters_create_and_decode_symbols ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3930600Z test string_and_unicode_sequence_converters_round_trip_utf16_text ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3932380Z [1m[92m     Running[0m tests/unicode_string_storage_tests.rs (rust/target/debug/deps/unicode_string_storage_tests-3c8ce74330d9f074)
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3932882Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3933334Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3933964Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3941348Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3941533Z running 11 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3949486Z test create_and_retrieve_empty_string ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3962220Z test create_and_retrieve_simple_string ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3962640Z test create_and_retrieve_multiple_strings ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3963090Z test create_and_retrieve_unicode_string_as_utf16_sequence ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3963538Z test create_and_retrieve_user_defined_type ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3963972Z test deleting_non_named_link_does_not_affect_other_names ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3964848Z test name_is_removed_when_external_reference_is_deleted ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3965790Z test name_external_reference_matches_csharp_hybrid_encoding ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3966467Z test name_is_removed_when_link_is_deleted ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3967169Z test named_links_facade_matches_csharp_named_links_role ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3967678Z test pinned_types_are_created_and_named ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3967882Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3968236Z test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3968825Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.3969966Z [1m[92m   Doc-tests[0m link_cli
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4426311Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4426758Z running 0 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4428701Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4429432Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4430047Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4513883Z ##[group]Run npm run test:wasm
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4514431Z [36;1mnpm run test:wasm[0m
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4535004Z shell: /usr/bin/bash -e {0}
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4535230Z env:
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4535409Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4535650Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4535846Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:03:22.4536046Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:22.5790841Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.5791417Z > link-cli-web@2.3.0 test:wasm
+Test	UNKNOWN STEP	2026-05-02T06:03:22.5792010Z > wasm-pack test --node
+Test	UNKNOWN STEP	2026-05-02T06:03:22.5792325Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:22.8986090Z [INFO]: 🎯  Checking for the Wasm target...
+Test	UNKNOWN STEP	2026-05-02T06:03:23.0095194Z [1m[92m   Compiling[0m proc-macro2 v1.0.106
+Test	UNKNOWN STEP	2026-05-02T06:03:23.0096195Z [1m[92m   Compiling[0m unicode-ident v1.0.24
+Test	UNKNOWN STEP	2026-05-02T06:03:23.0103489Z [1m[92m   Compiling[0m quote v1.0.45
+Test	UNKNOWN STEP	2026-05-02T06:03:23.0114072Z [1m[92m   Compiling[0m once_cell v1.21.4
+Test	UNKNOWN STEP	2026-05-02T06:03:23.0755026Z [1m[92m   Compiling[0m wasm-bindgen-shared v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:23.1725574Z [1m[92m   Compiling[0m cfg-if v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:03:23.1967585Z [1m[92m   Compiling[0m bumpalo v3.20.2
+Test	UNKNOWN STEP	2026-05-02T06:03:23.2635640Z [1m[92m   Compiling[0m serde_core v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:23.3922399Z [1m[92m   Compiling[0m anstyle-parse v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:23.5036318Z [1m[92m   Compiling[0m serde v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:23.5705653Z [1m[92m   Compiling[0m memchr v2.8.0
+Test	UNKNOWN STEP	2026-05-02T06:03:23.7215812Z [1m[92m   Compiling[0m anstream v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:24.0278959Z [1m[92m   Compiling[0m zmij v1.0.21
+Test	UNKNOWN STEP	2026-05-02T06:03:24.1715794Z [1m[92m   Compiling[0m syn v2.0.117
+Test	UNKNOWN STEP	2026-05-02T06:03:24.2056669Z [1m[92m   Compiling[0m tempfile v3.27.0
+Test	UNKNOWN STEP	2026-05-02T06:03:24.2249322Z [1m[92m   Compiling[0m clap_builder v4.6.0
+Test	UNKNOWN STEP	2026-05-02T06:03:24.5675993Z [1m[92m   Compiling[0m serde_json v1.0.149
+Test	UNKNOWN STEP	2026-05-02T06:03:24.9096859Z [1m[92m   Compiling[0m nom v8.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:25.8263130Z [1m[92m   Compiling[0m itoa v1.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:27.5956187Z [1m[92m   Compiling[0m wasm-bindgen-macro-support v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:27.9496078Z [1m[92m   Compiling[0m links-notation v0.13.0
+Test	UNKNOWN STEP	2026-05-02T06:03:29.1774805Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:29.1775775Z [1m[92m   Compiling[0m serde_derive v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:29.1776709Z [1m[92m   Compiling[0m clap_derive v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:30.9811627Z [1m[92m   Compiling[0m thiserror v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:31.0197381Z [1m[92m   Compiling[0m thiserror-impl v1.0.69
+Test	UNKNOWN STEP	2026-05-02T06:03:31.5216211Z [1m[92m   Compiling[0m clap v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:31.5517150Z [1m[92m   Compiling[0m platform-mem v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:31.6953702Z [1m[92m   Compiling[0m platform-data v2.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:31.8196263Z [1m[92m   Compiling[0m doublets v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:32.4372245Z [1m[92m   Compiling[0m wasm-bindgen-test-macro v0.3.70
+Test	UNKNOWN STEP	2026-05-02T06:03:32.6038568Z [1m[92m   Compiling[0m wasm-bindgen-macro v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:32.7296277Z [1m[92m   Compiling[0m thiserror v1.0.69
+Test	UNKNOWN STEP	2026-05-02T06:03:32.7677043Z [1m[92m   Compiling[0m async-trait v0.1.89
+Test	UNKNOWN STEP	2026-05-02T06:03:32.9206255Z [1m[92m   Compiling[0m wasm-bindgen v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:33.6491722Z [1m[92m   Compiling[0m lino-arguments v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:33.7456393Z [1m[92m   Compiling[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Test	UNKNOWN STEP	2026-05-02T06:03:34.0717768Z [1m[92m   Compiling[0m js-sys v0.3.97
+Test	UNKNOWN STEP	2026-05-02T06:03:34.0719978Z [1m[92m   Compiling[0m console_error_panic_hook v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:03:41.1111923Z [1m[92m   Compiling[0m web-sys v0.3.97
+Test	UNKNOWN STEP	2026-05-02T06:03:41.1113959Z [1m[92m   Compiling[0m wasm-bindgen-futures v0.4.70
+Test	UNKNOWN STEP	2026-05-02T06:03:41.1286309Z [1m[92m   Compiling[0m wasm-bindgen-test v0.3.70
+Test	UNKNOWN STEP	2026-05-02T06:03:41.9629218Z [1m[92m   Compiling[0m clink-wasm v2.3.0 (/home/runner/work/link-cli/link-cli)
+Test	UNKNOWN STEP	2026-05-02T06:03:43.2137836Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 20.27s
+Test	UNKNOWN STEP	2026-05-02T06:03:43.2226792Z [INFO]: ⬇️  Installing wasm-bindgen...
+Test	UNKNOWN STEP	2026-05-02T06:03:43.6481919Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+Test	UNKNOWN STEP	2026-05-02T06:03:43.6517368Z [1m[92m     Running[0m unittests src/lib.rs (target/wasm32-unknown-unknown/debug/deps/clink_wasm-d036c04135117785.wasm)
+Test	UNKNOWN STEP	2026-05-02T06:03:43.8355353Z no tests to run!
+Test	UNKNOWN STEP	2026-05-02T06:03:43.8646092Z [1m[92m     Running[0m tests/web.rs (target/wasm32-unknown-unknown/debug/deps/web-ec97598a412b82e6.wasm)
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3755397Z running 4 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3843597Z test reports_invalid_options ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3849114Z test exposes_versions ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3976348Z test executes_lino_queries_with_the_rust_core ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3978708Z test creates_a_clink_instance ... ok
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3982256Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3983635Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.03s
+Test	UNKNOWN STEP	2026-05-02T06:03:46.3984523Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4051292Z [1m[92m   Doc-tests[0m clink_wasm
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4418135Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4418922Z running 0 tests
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4419299Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4420243Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4421154Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4565088Z ##[group]Run npm run build
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4565375Z [36;1mnpm run build[0m
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4586275Z shell: /usr/bin/bash -e {0}
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4586504Z env:
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4586685Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4586931Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4587149Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:03:46.4587358Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:03:46.5764659Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.5765568Z > link-cli-web@2.3.0 build
+Test	UNKNOWN STEP	2026-05-02T06:03:46.5766105Z > npm run build:wasm && npm run build:web
+Test	UNKNOWN STEP	2026-05-02T06:03:46.5766373Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.6971972Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.6972606Z > link-cli-web@2.3.0 build:wasm
+Test	UNKNOWN STEP	2026-05-02T06:03:46.6973178Z > wasm-pack build --target web --out-dir web/pkg
+Test	UNKNOWN STEP	2026-05-02T06:03:46.6973504Z 
+Test	UNKNOWN STEP	2026-05-02T06:03:46.7941532Z [INFO]: 🎯  Checking for the Wasm target...
+Test	UNKNOWN STEP	2026-05-02T06:03:46.8218981Z [INFO]: 🌀  Compiling to Wasm...
+Test	UNKNOWN STEP	2026-05-02T06:03:46.8943878Z [1m[92m   Compiling[0m proc-macro2 v1.0.106
+Test	UNKNOWN STEP	2026-05-02T06:03:46.8945650Z [1m[92m   Compiling[0m unicode-ident v1.0.24
+Test	UNKNOWN STEP	2026-05-02T06:03:46.8946658Z [1m[92m   Compiling[0m quote v1.0.45
+Test	UNKNOWN STEP	2026-05-02T06:03:46.8947561Z [1m[92m   Compiling[0m once_cell v1.21.4
+Test	UNKNOWN STEP	2026-05-02T06:03:46.9555959Z [1m[92m   Compiling[0m wasm-bindgen-shared v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:47.0283782Z [1m[92m   Compiling[0m serde_core v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:47.0516106Z [1m[92m   Compiling[0m cfg-if v1.0.4
+Test	UNKNOWN STEP	2026-05-02T06:03:47.0765904Z [1m[92m   Compiling[0m bumpalo v3.20.2
+Test	UNKNOWN STEP	2026-05-02T06:03:47.1096371Z [1m[92m   Compiling[0m anstyle-parse v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:47.2357143Z [1m[92m   Compiling[0m anstream v1.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:47.6566801Z [1m[92m   Compiling[0m serde v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:47.7283035Z [1m[92m   Compiling[0m memchr v2.8.0
+Test	UNKNOWN STEP	2026-05-02T06:03:47.8075730Z [1m[92m   Compiling[0m syn v2.0.117
+Test	UNKNOWN STEP	2026-05-02T06:03:47.8105525Z [1m[92m   Compiling[0m clap_builder v4.6.0
+Test	UNKNOWN STEP	2026-05-02T06:03:48.3045637Z [1m[92m   Compiling[0m tempfile v3.27.0
+Test	UNKNOWN STEP	2026-05-02T06:03:48.8521859Z [1m[92m   Compiling[0m zmij v1.0.21
+Test	UNKNOWN STEP	2026-05-02T06:03:48.9848709Z [1m[92m   Compiling[0m nom v8.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:49.7267519Z [1m[92m   Compiling[0m serde_json v1.0.149
+Test	UNKNOWN STEP	2026-05-02T06:03:50.1084883Z [1m[92m   Compiling[0m itoa v1.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:52.2277840Z [1m[92m   Compiling[0m wasm-bindgen-macro-support v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:52.6769111Z [1m[92m   Compiling[0m links-notation v0.13.0
+Test	UNKNOWN STEP	2026-05-02T06:03:52.8305799Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:54.0987620Z [1m[92m   Compiling[0m thiserror v2.0.18
+Test	UNKNOWN STEP	2026-05-02T06:03:54.1395159Z [1m[92m   Compiling[0m clap_derive v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:54.2545988Z [1m[92m   Compiling[0m serde_derive v1.0.228
+Test	UNKNOWN STEP	2026-05-02T06:03:55.7636016Z [1m[92m   Compiling[0m wasm-bindgen-macro v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:55.9235996Z [1m[92m   Compiling[0m thiserror-impl v1.0.69
+Test	UNKNOWN STEP	2026-05-02T06:03:55.9538883Z [1m[92m   Compiling[0m wasm-bindgen v0.2.120
+Test	UNKNOWN STEP	2026-05-02T06:03:56.8532732Z [1m[92m   Compiling[0m clap v4.6.1
+Test	UNKNOWN STEP	2026-05-02T06:03:56.8812776Z [1m[92m   Compiling[0m platform-mem v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:56.9657773Z [1m[92m   Compiling[0m thiserror v1.0.69
+Test	UNKNOWN STEP	2026-05-02T06:03:57.0005726Z [1m[92m   Compiling[0m platform-data v2.0.0
+Test	UNKNOWN STEP	2026-05-02T06:03:57.1247145Z [1m[92m   Compiling[0m doublets v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:57.2903663Z [1m[92m   Compiling[0m js-sys v0.3.97
+Test	UNKNOWN STEP	2026-05-02T06:03:57.5696803Z [1m[92m   Compiling[0m console_error_panic_hook v0.1.7
+Test	UNKNOWN STEP	2026-05-02T06:03:57.7494070Z [1m[92m   Compiling[0m lino-arguments v0.3.0
+Test	UNKNOWN STEP	2026-05-02T06:03:57.8657946Z [1m[92m   Compiling[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Test	UNKNOWN STEP	2026-05-02T06:04:04.5057624Z [1m[92m   Compiling[0m web-sys v0.3.97
+Test	UNKNOWN STEP	2026-05-02T06:04:05.4160599Z [1m[92m   Compiling[0m clink-wasm v2.3.0 (/home/runner/work/link-cli/link-cli)
+Test	UNKNOWN STEP	2026-05-02T06:04:06.2027820Z [1m[92m    Finished[0m `release` profile [optimized] target(s) in 19.37s
+Test	UNKNOWN STEP	2026-05-02T06:04:06.2106823Z [INFO]: ⬇️  Installing wasm-bindgen...
+Test	UNKNOWN STEP	2026-05-02T06:04:07.4747401Z [INFO]: Optimizing wasm binaries with `wasm-opt`...
+Test	UNKNOWN STEP	2026-05-02T06:04:10.7729266Z [INFO]: ✨   Done in 23.99s
+Test	UNKNOWN STEP	2026-05-02T06:04:10.7730287Z [INFO]: 📦   Your wasm pkg is ready to publish at /home/runner/work/link-cli/link-cli/web/pkg.
+Test	UNKNOWN STEP	2026-05-02T06:04:10.8883628Z 
+Test	UNKNOWN STEP	2026-05-02T06:04:10.8884619Z > link-cli-web@2.3.0 build:web
+Test	UNKNOWN STEP	2026-05-02T06:04:10.8885314Z > vite build --config web/vite.config.js
+Test	UNKNOWN STEP	2026-05-02T06:04:10.8885689Z 
+Test	UNKNOWN STEP	2026-05-02T06:04:11.0958025Z [36mvite v8.0.10 [32mbuilding client environment for production...[36m[39m
+Test	UNKNOWN STEP	2026-05-02T06:04:11.1077728Z [2K
+Test	UNKNOWN STEP	2026-05-02T06:04:11.3584976Z transforming...✓ 1736 modules transformed.
+Test	UNKNOWN STEP	2026-05-02T06:04:11.3859879Z rendering chunks...
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4241124Z computing gzip size...
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4318399Z dist/assets/favicon-CIVoLc1m.svg             0.37 kB │ gzip:   0.24 kB
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4319505Z dist/index.html                              0.63 kB │ gzip:   0.38 kB
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4320544Z dist/assets/doublets_web_bg-cVQpTmMF.wasm   51.41 kB │ gzip:  20.96 kB
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4321685Z dist/assets/clink_wasm_bg-CdOWT-Uc.wasm    283.33 kB │ gzip: 123.51 kB
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4322769Z dist/assets/index-D8XZ-J-o.css               5.91 kB │ gzip:   2.07 kB
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4323868Z dist/assets/index-BBASYPg3.js              220.94 kB │ gzip:  68.67 kB
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4324647Z 
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4324974Z [32m✓ built in 335ms[39m
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4666590Z ##[group]Run actions/upload-artifact@v4
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4666869Z with:
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4667045Z   name: link-cli-web
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4667237Z   path: dist/
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4667418Z   if-no-files-found: warn
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4667632Z   compression-level: 6
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4667822Z   overwrite: false
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4668014Z   include-hidden-files: false
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4668222Z env:
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4668384Z   CARGO_HOME: /home/runner/.cargo
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4668612Z   CARGO_INCREMENTAL: 0
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4668806Z   CARGO_TERM_COLOR: always
+Test	UNKNOWN STEP	2026-05-02T06:04:11.4669001Z ##[endgroup]
+Test	UNKNOWN STEP	2026-05-02T06:04:11.6946139Z With the provided path, there will be 6 files uploaded
+Test	UNKNOWN STEP	2026-05-02T06:04:11.6946980Z Artifact name is valid!
+Test	UNKNOWN STEP	2026-05-02T06:04:11.6947423Z Root directory input is valid!
+Test	UNKNOWN STEP	2026-05-02T06:04:12.0007031Z Beginning upload of artifact content to blob storage
+Test	UNKNOWN STEP	2026-05-02T06:04:12.6762174Z Uploaded bytes 214646
+Test	UNKNOWN STEP	2026-05-02T06:04:12.7635175Z Finished uploading artifact content to blob storage!
+Test	UNKNOWN STEP	2026-05-02T06:04:12.7638148Z SHA256 digest of uploaded artifact zip is 11ff9086b502a5e769855cd16651f03b9f56be5b3130e1056031d76222995151
+Test	UNKNOWN STEP	2026-05-02T06:04:12.7639434Z Finalizing artifact upload
+Test	UNKNOWN STEP	2026-05-02T06:04:12.9480731Z Artifact link-cli-web.zip successfully finalized. Artifact ID 6761095832
+Test	UNKNOWN STEP	2026-05-02T06:04:12.9482014Z Artifact link-cli-web has been successfully uploaded! Final size is 214646 bytes. Artifact ID is 6761095832
+Test	UNKNOWN STEP	2026-05-02T06:04:12.9486820Z Artifact download URL: https://github.com/link-foundation/link-cli/actions/runs/25245349330/artifacts/6761095832
+Test	UNKNOWN STEP	2026-05-02T06:04:13.0202063Z Post job cleanup.
+Test	UNKNOWN STEP	2026-05-02T06:04:13.1748128Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/link-cli/link-cli --files-from manifest.txt --use-compress-program zstdmt
+Test	UNKNOWN STEP	2026-05-02T06:04:20.0574087Z Sent 0 of 588770982 (0.0%), 0.0 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:04:21.0580801Z Sent 0 of 588770982 (0.0%), 0.0 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:04:22.0578645Z Sent 536870912 of 588770982 (91.2%), 170.7 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:04:22.2842027Z Sent 588770982 of 588770982 (100.0%), 174.1 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:04:22.4708827Z Cache saved with key: Linux-wasm-cargo-a5bca161b00440911150f1345a216ce9214fc239f208774f3e6a9f2212452d80
+Test	UNKNOWN STEP	2026-05-02T06:04:22.4871515Z Post job cleanup.
+Test	UNKNOWN STEP	2026-05-02T06:04:22.6668087Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/link-cli/link-cli --files-from manifest.txt --use-compress-program zstdmt
+Test	UNKNOWN STEP	2026-05-02T06:04:23.9656194Z Sent 15597568 of 19427037 (80.3%), 14.9 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:04:24.1645170Z Sent 19427037 of 19427037 (100.0%), 15.4 MBs/sec
+Test	UNKNOWN STEP	2026-05-02T06:04:24.4531833Z Cache saved with the key: node-cache-Linux-x64-npm-d315d8b9cf81d047cf497bbcc55d1d84ab2bcc1d591d7e669c7aa9738b286549
+Test	UNKNOWN STEP	2026-05-02T06:04:24.4652341Z Post job cleanup.
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5662482Z [command]/usr/bin/git version
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5700546Z git version 2.53.0
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5746812Z Temporarily overriding HOME='/home/runner/work/_temp/6b0cba42-ecef-4698-9c93-cef392d95ed9' before making global git config changes
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5748390Z Adding repository directory to the temporary git global config as a safe directory
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5760833Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5795908Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Test	UNKNOWN STEP	2026-05-02T06:04:24.5829094Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6048483Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6068954Z http.https://github.com/.extraheader
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6081965Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6113591Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6331021Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6360815Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Test	UNKNOWN STEP	2026-05-02T06:04:24.6695389Z Cleaning up orphan processes
+Test	UNKNOWN STEP	2026-05-02T06:04:24.7049631Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy GitHub Pages	UNKNOWN STEP	﻿2026-05-02T06:04:30.7482347Z Current runner version: '2.334.0'
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7505792Z ##[group]Runner Image Provisioner
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7506545Z Hosted Compute Agent
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7507014Z Version: 20260213.493
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7507507Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7508194Z Build Date: 2026-02-13T00:28:41Z
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7508798Z Worker ID: {88e212a4-eb60-4984-98c6-63a6848f2ff7}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7509364Z Azure Region: westus3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7509867Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7511462Z ##[group]Operating System
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7511989Z Ubuntu
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7512403Z 24.04.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7512894Z LTS
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7513264Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7513988Z ##[group]Runner Image
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7514499Z Image: ubuntu-24.04
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7514916Z Version: 20260413.86.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7516108Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7517393Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7518163Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7519110Z ##[group]GITHUB_TOKEN Permissions
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7521085Z Contents: read
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7521623Z Metadata: read
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7522025Z Pages: write
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7522434Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7524389Z Secret source: Actions
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7525314Z Prepare workflow directory
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7841944Z Prepare all required actions
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:30.7881833Z Getting action download info
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:31.3165843Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:31.4281755Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:31.6783102Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:31.7472074Z Download action repository 'actions/configure-pages@v5' (SHA:983d7736d9b0ae728b81ab479565c72886d7745b)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:32.4024419Z Download action repository 'actions/upload-pages-artifact@v3' (SHA:56afc609e74202658d3ffba0e8f6dda462b719fa)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:32.6472682Z Download action repository 'actions/deploy-pages@v4' (SHA:d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:33.9302782Z Getting action download info
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.0849968Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2071901Z Complete job name: Deploy GitHub Pages
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2685901Z ##[group]Run actions/checkout@v4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2686437Z with:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2686650Z   repository: link-foundation/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2687140Z   token: ***
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2687324Z   ssh-strict: true
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2687517Z   ssh-user: git
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2687717Z   persist-credentials: true
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2687940Z   clean: true
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2688193Z   sparse-checkout-cone-mode: true
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2688424Z   fetch-depth: 1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2688607Z   fetch-tags: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2688789Z   show-progress: true
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2688986Z   lfs: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2689149Z   submodules: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2689342Z   set-safe-directory: true
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.2689692Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3759794Z Syncing repository: link-foundation/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3761198Z ##[group]Getting Git version info
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3761569Z Working directory is '/home/runner/work/link-cli/link-cli'
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3762224Z [command]/usr/bin/git version
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3785678Z git version 2.53.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3808339Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3821660Z Temporarily overriding HOME='/home/runner/work/_temp/322a13ba-6e3d-4241-8463-5c8f169d463a' before making global git config changes
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3822622Z Adding repository directory to the temporary git global config as a safe directory
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3826701Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3853430Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3856631Z ##[group]Initializing the repository
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3860520Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3945765Z hint: Using 'master' as the name for the initial branch. This default branch name
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3946476Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3946990Z hint: to use in all of your new repositories, which will suppress this warning,
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3947357Z hint: call:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3947525Z hint:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3947797Z hint: 	git config --global init.defaultBranch <name>
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3948067Z hint:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3948382Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3948870Z hint: 'development'. The just-created branch can be renamed via this command:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3949205Z hint:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3949402Z hint: 	git branch -m <name>
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3949601Z hint:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3949919Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3950540Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3959645Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3985817Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3986503Z ##[group]Disabling automatic garbage collection
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.3990998Z [command]/usr/bin/git config --local gc.auto 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4014433Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4014990Z ##[group]Setting up auth
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4022154Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4047213Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4299100Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4325814Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4492297Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4517016Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4689431Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4717860Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4718592Z ##[group]Fetching the repository
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:34.4727810Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26050750382b801a4d9f33d1445627e2db2b7867:refs/remotes/origin/main
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1619766Z From https://github.com/link-foundation/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1620303Z  * [new ref]         26050750382b801a4d9f33d1445627e2db2b7867 -> origin/main
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1641817Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1642379Z ##[group]Determining the checkout info
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1643626Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1648637Z [command]/usr/bin/git sparse-checkout disable
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1678697Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1698664Z ##[group]Checking out the ref
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1702757Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1804261Z Switched to a new branch 'main'
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1805009Z branch 'main' set up to track 'origin/main'.
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1811095Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1841889Z [command]/usr/bin/git log -1 --format=%H
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.1859523Z 26050750382b801a4d9f33d1445627e2db2b7867
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2157666Z ##[group]Run dtolnay/rust-toolchain@stable
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2157969Z with:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2158157Z   targets: wasm32-unknown-unknown
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2158402Z   toolchain: stable
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2158628Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2279124Z ##[group]Run : parse toolchain version
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2279553Z [36;1m: parse toolchain version[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2279853Z [36;1mif [[ -z $toolchain ]]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2280424Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2281019Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2281280Z [36;1m  exit 1[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2281589Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2281998Z [36;1m  if [[ Linux == macOS ]]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2282532Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2282988Z [36;1m  else[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2283349Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2283754Z [36;1m  fi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2284012Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2284491Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2284900Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2285583Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2286035Z [36;1melse[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2286251Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2286511Z [36;1mfi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2302990Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2303309Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2303487Z   toolchain: stable
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2303672Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2426899Z ##[group]Run : construct rustup command line
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2427237Z [36;1m: construct rustup command line[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2427653Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2428244Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2428684Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2441308Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2441649Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2441865Z   targets: wasm32-unknown-unknown
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2442102Z   components: 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2442285Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2507297Z ##[group]Run : set $CARGO_HOME
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2507573Z [36;1m: set $CARGO_HOME[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2507863Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2520200Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2520520Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2585673Z ##[group]Run : install rustup if needed
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2585985Z [36;1m: install rustup if needed[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2586262Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2586952Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2587614Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2587977Z [36;1mfi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2599456Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2599760Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2600172Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2600404Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2660600Z ##[group]Run rustup toolchain install stable --target wasm32-unknown-unknown --profile minimal --no-self-update
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2661359Z [36;1mrustup toolchain install stable --target wasm32-unknown-unknown --profile minimal --no-self-update[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2673167Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2673547Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2673776Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2674122Z   RUSTUP_PERMIT_COPY_RENAME: 1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.2674415Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.4101023Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6003304Z info: latest update on 2026-04-16 for version 1.95.0 (59807616e 2026-04-14)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6136797Z info: removing previous version of component clippy
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6153976Z info: removing previous version of component rustfmt
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6165679Z info: removing previous version of component cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6202177Z info: removing previous version of component rust-std
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6231979Z info: removing previous version of component rustc
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:35.6272506Z info: downloading 6 components
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4639343Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4713372Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.95.0 (59807616e 2026-04-14) (from rustc 1.94.1 (e408947bf 2026-03-25))
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4714035Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4776401Z ##[group]Run rustup default stable
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4776744Z [36;1mrustup default stable[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4789731Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4790108Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4790408Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4790718Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4871046Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4880547Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4881055Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4945404Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.95.0 (59807616e 2026-04-14)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4946233Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4976981Z ##[group]Run : create cachekey
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4977408Z [36;1m: create cachekey[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4977940Z [36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4978640Z [36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4979150Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4991795Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4992220Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4992447Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.4992773Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5300492Z ##[group]Run : disable incremental compilation
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5300848Z [36;1m: disable incremental compilation[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5301155Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5301464Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5301728Z [36;1mfi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5314261Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5314615Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5314835Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5315062Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5362405Z ##[group]Run : enable colors in Cargo output
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5362738Z [36;1m: enable colors in Cargo output[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5363062Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5363363Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5363629Z [36;1mfi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5375778Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5376090Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5376276Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5376636Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5376841Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5427634Z ##[group]Run : enable Cargo sparse registry
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5427973Z [36;1m: enable Cargo sparse registry[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5428322Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5428976Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5429652Z [36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5430172Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5430664Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5431134Z [36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5431664Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5432131Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5432444Z [36;1m  fi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5432604Z [36;1mfi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5443968Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5444276Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5444463Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5444696Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5444900Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5445280Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5726906Z ##[group]Run : work around spurious network errors in curl 8.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5727331Z [36;1m: work around spurious network errors in curl 8.0[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5727841Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5728436Z [36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5728991Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5729467Z [36;1mfi[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5742490Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5742818Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5743053Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5743289Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5743489Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5743743Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5907293Z ##[group]Run rustc +stable --version --verbose
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5907635Z [36;1mrustc +stable --version --verbose[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5919910Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5920233Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5920416Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5920671Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5920867Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.5921069Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6052138Z rustc 1.95.0 (59807616e 2026-04-14)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6052835Z binary: rustc
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6053338Z commit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6053873Z commit-date: 2026-04-14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6054291Z host: x86_64-unknown-linux-gnu
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6054690Z release: 1.95.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6055324Z LLVM version: 22.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6119632Z ##[group]Run cargo install wasm-pack --version 0.14.0 --locked
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6120042Z [36;1mcargo install wasm-pack --version 0.14.0 --locked[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6132814Z shell: /usr/bin/bash -e {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6133045Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6133231Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6133472Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6133672Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6133879Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.6379290Z [1m[92m    Updating[0m crates.io index
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.7778079Z [1m[92m Downloading[0m crates ...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.9162185Z [1m[92m  Downloaded[0m wasm-pack v0.14.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.9687251Z [1m[92m  Installing[0m wasm-pack v0.14.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:46.9728486Z [1m[92m    Updating[0m crates.io index
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:47.6762951Z [1m[92m    Updating[0m crates.io index
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:47.9106045Z [1m[92m Downloading[0m crates ...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:47.9920729Z [1m[92m  Downloaded[0m anstyle-query v1.1.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0106803Z [1m[92m  Downloaded[0m adler2 v2.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0119250Z [1m[92m  Downloaded[0m autocfg v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0134941Z [1m[92m  Downloaded[0m anstream v0.6.21
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0152003Z [1m[92m  Downloaded[0m colorchoice v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0206756Z [1m[92m  Downloaded[0m cargo-platform v0.3.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0230337Z [1m[92m  Downloaded[0m anstyle v1.0.13
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0243826Z [1m[92m  Downloaded[0m potential_utf v0.1.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0253273Z [1m[92m  Downloaded[0m anstyle-parse v0.2.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0273137Z [1m[92m  Downloaded[0m powerfmt v0.2.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0285561Z [1m[92m  Downloaded[0m cargo_metadata v0.23.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0300616Z [1m[92m  Downloaded[0m clap_lex v0.7.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0330096Z [1m[92m  Downloaded[0m block-buffer v0.10.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0357630Z [1m[92m  Downloaded[0m rustc-demangle v0.1.27
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0382474Z [1m[92m  Downloaded[0m cfg-if v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0417327Z [1m[92m  Downloaded[0m pkg-config v0.3.32
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0433766Z [1m[92m  Downloaded[0m quote v1.0.43
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0456924Z [1m[92m  Downloaded[0m byteorder v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0468906Z [1m[92m  Downloaded[0m constant_time_eq v0.3.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0481875Z [1m[92m  Downloaded[0m num-conv v0.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0494204Z [1m[92m  Downloaded[0m env_filter v0.1.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0506138Z [1m[92m  Downloaded[0m cpufeatures v0.2.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0517565Z [1m[92m  Downloaded[0m proc-macro2 v1.0.105
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0543969Z [1m[92m  Downloaded[0m fastrand v2.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0555755Z [1m[92m  Downloaded[0m cipher v0.4.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0567338Z [1m[92m  Downloaded[0m anyhow v1.0.100
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0599837Z [1m[92m  Downloaded[0m is_terminal_polyfill v1.70.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0608670Z [1m[92m  Downloaded[0m is_executable v0.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0617865Z [1m[92m  Downloaded[0m env_home v0.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0627854Z [1m[92m  Downloaded[0m generic-array v0.14.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0638870Z [1m[92m  Downloaded[0m errno v0.3.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0653481Z [1m[92m  Downloaded[0m itoa v1.0.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0665456Z [1m[92m  Downloaded[0m equivalent v1.0.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0673357Z [1m[92m  Downloaded[0m bitflags v2.10.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0700424Z [1m[92m  Downloaded[0m crypto-common v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0708781Z [1m[92m  Downloaded[0m camino v1.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0731055Z [1m[92m  Downloaded[0m glob v0.3.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0744805Z [1m[92m  Downloaded[0m percent-encoding v2.3.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0753738Z [1m[92m  Downloaded[0m zerofrom-derive v0.1.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0762389Z [1m[92m  Downloaded[0m siphasher v1.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0771463Z [1m[92m  Downloaded[0m hex v0.4.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0784954Z [1m[92m  Downloaded[0m subtle v2.6.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0799146Z [1m[92m  Downloaded[0m siphasher v0.3.11
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0812229Z [1m[92m  Downloaded[0m version_check v0.9.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0825403Z [1m[92m  Downloaded[0m pbkdf2 v0.12.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0837249Z [1m[92m  Downloaded[0m zeroize_derive v1.4.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0846305Z [1m[92m  Downloaded[0m jobserver v0.1.34
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0861331Z [1m[92m  Downloaded[0m utf8_iter v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0869269Z [1m[92m  Downloaded[0m time-core v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0880443Z [1m[92m  Downloaded[0m yoke v0.8.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0897025Z [1m[92m  Downloaded[0m scopeguard v1.2.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0907314Z [1m[92m  Downloaded[0m path-clean v1.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0918892Z [1m[92m  Downloaded[0m xattr v1.6.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0934473Z [1m[92m  Downloaded[0m once_cell v1.21.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0952010Z [1m[92m  Downloaded[0m parking_lot v0.12.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0970417Z [1m[92m  Downloaded[0m yoke-derive v0.8.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0986176Z [1m[92m  Downloaded[0m zmij v1.0.16
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.0995789Z [1m[92m  Downloaded[0m xz2 v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1012728Z [1m[92m  Downloaded[0m zstd-safe v7.2.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1028988Z [1m[92m  Downloaded[0m walkdir v2.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1045014Z [1m[92m  Downloaded[0m toml_writer v1.0.6+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1057549Z [1m[92m  Downloaded[0m zerovec-derive v0.11.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1070775Z [1m[92m  Downloaded[0m unicode-ident v1.0.22
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1091304Z [1m[92m  Downloaded[0m toml_parser v1.0.6+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1112504Z [1m[92m  Downloaded[0m simd-adler32 v0.3.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1127533Z [1m[92m  Downloaded[0m backtrace v0.3.76
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1167584Z [1m[92m  Downloaded[0m zstd v0.13.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1191246Z [1m[92m  Downloaded[0m zerotrie v0.2.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1220868Z [1m[92m  Downloaded[0m url v2.5.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1244117Z [1m[92m  Downloaded[0m rustls-webpki v0.103.9
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1272305Z [1m[92m  Downloaded[0m zip v2.4.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1305507Z [1m[92m  Downloaded[0m zerovec v0.11.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1343664Z [1m[92m  Downloaded[0m ureq v2.12.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1384618Z [1m[92m  Downloaded[0m winnow v0.7.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1445491Z [1m[92m  Downloaded[0m sysinfo v0.37.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1513822Z [1m[92m  Downloaded[0m time v0.3.45
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1588586Z [1m[92m  Downloaded[0m webpki-roots v1.0.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1618135Z [1m[92m  Downloaded[0m object v0.37.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1689012Z [1m[92m  Downloaded[0m rustix v1.1.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1838381Z [1m[92m  Downloaded[0m gimli v0.32.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1888782Z [1m[92m  Downloaded[0m unicode-width v0.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.1932523Z [1m[92m  Downloaded[0m rustix v0.38.44
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2071782Z [1m[92m  Downloaded[0m rustls v0.23.36
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2146790Z [1m[92m  Downloaded[0m syn v2.0.114
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2214457Z [1m[92m  Downloaded[0m serde_json v1.0.149
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2263161Z [1m[92m  Downloaded[0m chrono v0.4.43
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2310093Z [1m[92m  Downloaded[0m icu_properties_data v2.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2372230Z [1m[92m  Downloaded[0m typenum v1.19.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2391223Z [1m[92m  Downloaded[0m serde v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2415708Z [1m[92m  Downloaded[0m idna v1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2442117Z [1m[92m  Downloaded[0m serde_core v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2460430Z [1m[92m  Downloaded[0m hashbrown v0.16.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2497958Z [1m[92m  Downloaded[0m clap_builder v4.5.54
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2540722Z [1m[92m  Downloaded[0m bzip2-sys v0.1.13+1.0.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2622769Z [1m[92m  Downloaded[0m zopfli v0.8.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2639104Z [1m[92m  Downloaded[0m uuid v1.19.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2661532Z [1m[92m  Downloaded[0m toml v0.9.11+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2687988Z [1m[92m  Downloaded[0m tempfile v3.24.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2705348Z [1m[92m  Downloaded[0m tar v0.4.44
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2723855Z [1m[92m  Downloaded[0m serde_derive v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2745056Z [1m[92m  Downloaded[0m indexmap v2.13.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2773989Z [1m[92m  Downloaded[0m lzma-sys v0.1.20
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.2957389Z [1m[92m  Downloaded[0m libc v0.2.180
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3167876Z [1m[92m  Downloaded[0m memchr v2.7.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3200203Z [1m[92m  Downloaded[0m bumpalo v3.19.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3219265Z [1m[92m  Downloaded[0m base64 v0.22.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3244281Z [1m[92m  Downloaded[0m zstd-sys v2.0.16+zstd.1.5.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3356706Z [1m[92m  Downloaded[0m smallvec v1.15.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3370847Z [1m[92m  Downloaded[0m rustls-pki-types v1.14.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3387847Z [1m[92m  Downloaded[0m miniz_oxide v0.8.9
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3406645Z [1m[92m  Downloaded[0m toml_datetime v0.7.5+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3417192Z [1m[92m  Downloaded[0m zeroize v1.8.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3426879Z [1m[92m  Downloaded[0m aes v0.8.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3448969Z [1m[92m  Downloaded[0m icu_properties v2.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3464961Z [1m[92m  Downloaded[0m icu_normalizer v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3487743Z [1m[92m  Downloaded[0m icu_locale_core v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3530044Z [1m[92m  Downloaded[0m icu_collections v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3567774Z [1m[92m  Downloaded[0m getrandom v0.3.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3589635Z [1m[92m  Downloaded[0m flate2 v1.1.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3624478Z [1m[92m  Downloaded[0m cc v1.2.53
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3645363Z [1m[92m  Downloaded[0m log v0.4.29
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3661544Z [1m[92m  Downloaded[0m icu_normalizer_data v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3676987Z [1m[92m  Downloaded[0m zerofrom v0.1.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3683135Z [1m[92m  Downloaded[0m which v8.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3695892Z [1m[92m  Downloaded[0m thiserror-impl v2.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3706031Z [1m[92m  Downloaded[0m synstructure v0.13.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3713958Z [1m[92m  Downloaded[0m num-traits v0.2.19
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3732038Z [1m[92m  Downloaded[0m icu_provider v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3750347Z [1m[92m  Downloaded[0m getrandom v0.2.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3769656Z [1m[92m  Downloaded[0m writeable v0.6.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3782168Z [1m[92m  Downloaded[0m tinystr v0.8.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3795770Z [1m[92m  Downloaded[0m thiserror v2.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3829883Z [1m[92m  Downloaded[0m semver v1.0.27
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3845818Z [1m[92m  Downloaded[0m webpki-roots v0.26.11
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3855689Z [1m[92m  Downloaded[0m utf8parse v0.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3862988Z [1m[92m  Downloaded[0m untrusted v0.9.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3873515Z [1m[92m  Downloaded[0m shlex v1.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.3882912Z [1m[92m  Downloaded[0m ring v0.17.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4154043Z [1m[92m  Downloaded[0m parking_lot_core v0.9.12
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4167003Z [1m[92m  Downloaded[0m litemap v0.8.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4182069Z [1m[92m  Downloaded[0m iana-time-zone v0.1.64
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4198966Z [1m[92m  Downloaded[0m shell-words v1.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4205417Z [1m[92m  Downloaded[0m serde_spanned v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4214334Z [1m[92m  Downloaded[0m serde_ignored v0.1.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4222850Z [1m[92m  Downloaded[0m displaydoc v0.2.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4240864Z [1m[92m  Downloaded[0m deflate64 v0.1.10
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4249825Z [1m[92m  Downloaded[0m crc32fast v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4264615Z [1m[92m  Downloaded[0m strsim v0.11.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4273019Z [1m[92m  Downloaded[0m stable_deref_trait v1.2.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4279613Z [1m[92m  Downloaded[0m socks v0.3.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4287918Z [1m[92m  Downloaded[0m sha1 v0.10.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4297861Z [1m[92m  Downloaded[0m fs4 v0.6.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4312048Z [1m[92m  Downloaded[0m filetime v0.2.27
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4322399Z [1m[92m  Downloaded[0m env_logger v0.11.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4339522Z [1m[92m  Downloaded[0m binary-install v0.4.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4351649Z [1m[92m  Downloaded[0m hmac v0.12.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4364131Z [1m[92m  Downloaded[0m clap_derive v4.5.49
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4378266Z [1m[92m  Downloaded[0m bzip2 v0.5.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4390381Z [1m[92m  Downloaded[0m human-panic v2.0.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4399476Z [1m[92m  Downloaded[0m dialoguer v0.12.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4419330Z [1m[92m  Downloaded[0m lzma-rs v0.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4435821Z [1m[92m  Downloaded[0m lock_api v0.4.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4445380Z [1m[92m  Downloaded[0m digest v0.10.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4456398Z [1m[92m  Downloaded[0m inout v0.1.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4463830Z [1m[92m  Downloaded[0m idna_adapter v1.2.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4470311Z [1m[92m  Downloaded[0m form_urlencoded v1.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4484738Z [1m[92m  Downloaded[0m same-file v1.0.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4493204Z [1m[92m  Downloaded[0m heck v0.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4501251Z [1m[92m  Downloaded[0m dirs-next v2.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4508606Z [1m[92m  Downloaded[0m linux-raw-sys v0.4.15
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4815424Z [1m[92m  Downloaded[0m find-msvc-tools v0.1.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4825880Z [1m[92m  Downloaded[0m deranged v0.5.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4836652Z [1m[92m  Downloaded[0m clap v4.5.54
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4887422Z [1m[92m  Downloaded[0m addr2line v0.25.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4900177Z [1m[92m  Downloaded[0m dirs-sys-next v0.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4907270Z [1m[92m  Downloaded[0m crc-catalog v2.4.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4914591Z [1m[92m  Downloaded[0m crc v3.4.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4924667Z [1m[92m  Downloaded[0m console v0.16.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.4941670Z [1m[92m  Downloaded[0m linux-raw-sys v0.11.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.5734774Z [1m[92m   Compiling[0m libc v0.2.180
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.5735670Z [1m[92m   Compiling[0m proc-macro2 v1.0.105
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.5736320Z [1m[92m   Compiling[0m quote v1.0.43
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.5737292Z [1m[92m   Compiling[0m unicode-ident v1.0.22
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.6366465Z [1m[92m   Compiling[0m shlex v1.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.7125929Z [1m[92m   Compiling[0m find-msvc-tools v0.1.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.7421793Z [1m[92m   Compiling[0m cfg-if v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:48.7706181Z [1m[92m   Compiling[0m pkg-config v0.3.32
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.3107110Z [1m[92m   Compiling[0m syn v2.0.114
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.3539799Z [1m[92m   Compiling[0m serde_core v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.4876324Z [1m[92m   Compiling[0m stable_deref_trait v1.2.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.5236472Z [1m[92m   Compiling[0m version_check v0.9.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.6065438Z [1m[92m   Compiling[0m jobserver v0.1.34
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.7186329Z [1m[92m   Compiling[0m typenum v1.19.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.7516482Z [1m[92m   Compiling[0m generic-array v0.14.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:49.8066673Z [1m[92m   Compiling[0m cc v1.2.53
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.0236474Z [1m[92m   Compiling[0m writeable v0.6.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.1857346Z [1m[92m   Compiling[0m bitflags v2.10.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.2137442Z [1m[92m   Compiling[0m memchr v2.7.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.5116590Z [1m[92m   Compiling[0m litemap v0.8.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.6506932Z [1m[92m   Compiling[0m crypto-common v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.7237707Z [1m[92m   Compiling[0m rustix v1.1.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:51.9166846Z [1m[92m   Compiling[0m subtle v2.6.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.0046789Z [1m[92m   Compiling[0m smallvec v1.15.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.1946967Z [1m[92m   Compiling[0m icu_normalizer_data v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.2007708Z [1m[92m   Compiling[0m icu_properties_data v2.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.2589781Z [1m[92m   Compiling[0m simd-adler32 v0.3.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.2626637Z [1m[92m   Compiling[0m getrandom v0.3.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.4137109Z [1m[92m   Compiling[0m synstructure v0.13.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.5486426Z [1m[92m   Compiling[0m ring v0.17.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.7692921Z [1m[92m   Compiling[0m zstd-sys v2.0.16+zstd.1.5.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.8486520Z [1m[92m   Compiling[0m linux-raw-sys v0.11.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.8797143Z [1m[92m   Compiling[0m log v0.4.29
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:52.9486746Z [1m[92m   Compiling[0m adler2 v2.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:53.0326485Z [1m[92m   Compiling[0m crc32fast v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:53.0546825Z [1m[92m   Compiling[0m miniz_oxide v0.8.9
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:53.8564409Z [1m[92m   Compiling[0m zerofrom-derive v0.1.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:54.6836537Z [1m[92m   Compiling[0m zerofrom v0.1.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:54.7344783Z [1m[92m   Compiling[0m yoke-derive v0.8.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:54.7466494Z [1m[92m   Compiling[0m zerovec-derive v0.11.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:55.4796528Z [1m[92m   Compiling[0m yoke v0.8.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:55.5377435Z [1m[92m   Compiling[0m displaydoc v0.2.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:55.5765612Z [1m[92m   Compiling[0m zerovec v0.11.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:55.8746759Z [1m[92m   Compiling[0m zeroize_derive v1.4.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:55.9976430Z [1m[92m   Compiling[0m zerotrie v0.2.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:56.1463852Z [1m[92m   Compiling[0m tinystr v0.8.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:56.2396480Z [1m[92m   Compiling[0m zeroize v1.8.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:56.2856699Z [1m[92m   Compiling[0m icu_locale_core v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:56.3566569Z [1m[92m   Compiling[0m potential_utf v0.1.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:56.3946675Z [1m[92m   Compiling[0m rustls-pki-types v1.14.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:56.4516514Z [1m[92m   Compiling[0m icu_collections v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:57.1036011Z [1m[92m   Compiling[0m icu_provider v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:57.7606339Z [1m[92m   Compiling[0m block-buffer v0.10.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:57.8426336Z [1m[92m   Compiling[0m once_cell v1.21.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:58.0106316Z [1m[92m   Compiling[0m zmij v1.0.16
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:58.1476587Z [1m[92m   Compiling[0m serde v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:58.3157300Z [1m[92m   Compiling[0m digest v0.10.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:58.4946643Z [1m[92m   Compiling[0m icu_normalizer v2.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:59.0181713Z [1m[92m   Compiling[0m icu_properties v2.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:04:59.8565893Z [1m[92m   Compiling[0m serde_derive v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:00.6636394Z [1m[92m   Compiling[0m lzma-sys v0.1.20
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:00.8167468Z [1m[92m   Compiling[0m bzip2-sys v0.1.13+1.0.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:00.9182955Z [1m[92m   Compiling[0m getrandom v0.2.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.0656858Z [1m[92m   Compiling[0m byteorder v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.2596433Z [1m[92m   Compiling[0m zstd-safe v7.2.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.3256562Z [1m[92m   Compiling[0m utf8parse v0.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.3686676Z [1m[92m   Compiling[0m serde_json v1.0.149
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.4320614Z [1m[92m   Compiling[0m thiserror v2.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.5458476Z [1m[92m   Compiling[0m untrusted v0.9.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:01.6476666Z [1m[92m   Compiling[0m anstyle-parse v0.2.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:06.7931833Z [1m[92m   Compiling[0m idna_adapter v1.2.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:07.0257059Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:07.8783010Z [1m[92m   Compiling[0m inout v0.1.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:07.9480239Z [1m[92m   Compiling[0m rustix v0.38.44
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.0946436Z [1m[92m   Compiling[0m anstyle v1.0.13
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.2810395Z [1m[92m   Compiling[0m colorchoice v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.3205246Z [1m[92m   Compiling[0m percent-encoding v2.3.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.5026572Z [1m[92m   Compiling[0m rustls v0.23.36
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.5626423Z [1m[92m   Compiling[0m object v0.37.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.6716426Z [1m[92m   Compiling[0m autocfg v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:08.9506501Z [1m[92m   Compiling[0m powerfmt v0.2.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:09.1186714Z [1m[92m   Compiling[0m is_terminal_polyfill v1.70.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:09.1424998Z [1m[92m   Compiling[0m utf8_iter v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:09.2264595Z [1m[92m   Compiling[0m anstyle-query v1.1.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:09.2656300Z [1m[92m   Compiling[0m cpufeatures v0.2.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:09.2922743Z [1m[92m   Compiling[0m crc-catalog v2.4.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:09.3277076Z [1m[92m   Compiling[0m itoa v1.0.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:12.1623145Z [1m[92m   Compiling[0m crc v3.4.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:12.2656726Z [1m[92m   Compiling[0m anstream v0.6.21
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:12.3076427Z [1m[92m   Compiling[0m idna v1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:12.7403110Z [1m[92m   Compiling[0m deranged v0.5.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:13.8478264Z [1m[92m   Compiling[0m num-traits v0.2.19
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:13.8940739Z [1m[92m   Compiling[0m rustls-webpki v0.103.9
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:14.6640255Z [1m[92m   Compiling[0m form_urlencoded v1.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:14.8646435Z [1m[92m   Compiling[0m cipher v0.4.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.0431356Z [1m[92m   Compiling[0m flate2 v1.1.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.0466338Z [1m[92m   Compiling[0m hmac v0.12.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.1317364Z [1m[92m   Compiling[0m webpki-roots v1.0.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.1906786Z [1m[92m   Compiling[0m hashbrown v0.16.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.5416407Z [1m[92m   Compiling[0m camino v1.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.6816507Z [1m[92m   Compiling[0m equivalent v1.0.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.7096503Z [1m[92m   Compiling[0m winnow v0.7.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:15.8636447Z [1m[92m   Compiling[0m gimli v0.32.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:16.8166496Z [1m[92m   Compiling[0m bumpalo v3.19.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.0296599Z [1m[92m   Compiling[0m zip v2.4.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.1018198Z [1m[92m   Compiling[0m anyhow v1.0.100
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.2436536Z [1m[92m   Compiling[0m time-core v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.3326586Z [1m[92m   Compiling[0m linux-raw-sys v0.4.15
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.5932856Z [1m[92m   Compiling[0m parking_lot_core v0.9.12
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.6486282Z [1m[92m   Compiling[0m num-conv v0.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:17.7543391Z [1m[92m   Compiling[0m time v0.3.45
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:18.4116928Z [1m[92m   Compiling[0m addr2line v0.25.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:18.8706379Z [1m[92m   Compiling[0m toml_parser v1.0.6+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:19.2756335Z [1m[92m   Compiling[0m zopfli v0.8.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:20.3866637Z [1m[92m   Compiling[0m indexmap v2.13.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:21.0276456Z [1m[92m   Compiling[0m webpki-roots v0.26.11
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:21.0536933Z [1m[92m   Compiling[0m pbkdf2 v0.12.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:21.1226431Z [1m[92m   Compiling[0m bzip2 v0.5.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:21.2016959Z [1m[92m   Compiling[0m aes v0.8.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:21.2286271Z [1m[92m   Compiling[0m xz2 v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:21.2776693Z [1m[92m   Compiling[0m url v2.5.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:24.1156447Z [1m[92m   Compiling[0m lzma-rs v0.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:24.8813725Z [1m[92m   Compiling[0m sha1 v0.10.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:25.2886322Z [1m[92m   Compiling[0m socks v0.3.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:25.7196384Z [1m[92m   Compiling[0m xattr v1.6.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:25.9511140Z [1m[92m   Compiling[0m toml_datetime v0.7.5+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:26.3147107Z [1m[92m   Compiling[0m serde_spanned v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:26.3277183Z [1m[92m   Compiling[0m filetime v0.2.27
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:26.3892287Z [1m[92m   Compiling[0m dirs-sys-next v0.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:26.4896509Z [1m[92m   Compiling[0m clap_lex v0.7.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:26.7696477Z [1m[92m   Compiling[0m base64 v0.22.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:26.8716555Z [1m[92m   Compiling[0m toml_writer v1.0.6+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:27.0576487Z [1m[92m   Compiling[0m scopeguard v1.2.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:27.0977715Z [1m[92m   Compiling[0m strsim v0.11.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:27.2337759Z [1m[92m   Compiling[0m rustc-demangle v0.1.27
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:27.8536495Z [1m[92m   Compiling[0m deflate64 v0.1.10
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:28.2556569Z [1m[92m   Compiling[0m fastrand v2.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:28.2806134Z [1m[92m   Compiling[0m heck v0.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:28.4216552Z [1m[92m   Compiling[0m constant_time_eq v0.3.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:28.4551246Z [1m[92m   Compiling[0m unicode-width v0.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:28.4717920Z [1m[92m   Compiling[0m clap_derive v4.5.49
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:28.6636947Z [1m[92m   Compiling[0m console v0.16.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:29.9499081Z [1m[92m   Compiling[0m tempfile v3.24.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:29.9936584Z [1m[92m   Compiling[0m backtrace v0.3.76
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:30.8767704Z [1m[92m   Compiling[0m clap_builder v4.5.54
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:32.9296590Z [1m[92m   Compiling[0m zstd v0.13.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:35.7876367Z [1m[92m   Compiling[0m lock_api v0.4.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:35.9726975Z [1m[92m   Compiling[0m toml v0.9.11+spec-1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:37.5996698Z [1m[92m   Compiling[0m ureq v2.12.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:41.1086533Z [1m[92m   Compiling[0m dirs-next v2.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:41.1926824Z [1m[92m   Compiling[0m tar v0.4.44
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:44.1436613Z [1m[92m   Compiling[0m fs4 v0.6.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:44.4296903Z [1m[92m   Compiling[0m uuid v1.19.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:44.4576253Z [1m[92m   Compiling[0m env_filter v0.1.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:44.8256269Z [1m[92m   Compiling[0m semver v1.0.27
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:44.8776753Z [1m[92m   Compiling[0m cargo-platform v0.3.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.1806563Z [1m[92m   Compiling[0m sysinfo v0.37.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.4296763Z [1m[92m   Compiling[0m siphasher v0.3.11
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.4676791Z [1m[92m   Compiling[0m iana-time-zone v0.1.64
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.5664562Z [1m[92m   Compiling[0m same-file v1.0.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.6588341Z [1m[92m   Compiling[0m hex v0.4.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.9026785Z [1m[92m   Compiling[0m env_home v0.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.9138141Z [1m[92m   Compiling[0m is_executable v0.1.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.9476831Z [1m[92m   Compiling[0m shell-words v1.1.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.9676557Z [1m[92m   Compiling[0m binary-install v0.4.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:45.9896625Z [1m[92m   Compiling[0m which v8.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:46.1390394Z [1m[92m   Compiling[0m dialoguer v0.12.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:46.3801370Z [1m[92m   Compiling[0m human-panic v2.0.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:47.0466467Z [1m[92m   Compiling[0m walkdir v2.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:47.8526558Z [1m[92m   Compiling[0m chrono v0.4.43
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:48.1451741Z [1m[92m   Compiling[0m cargo_metadata v0.23.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:48.2306546Z [1m[92m   Compiling[0m env_logger v0.11.8
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:48.8186586Z [1m[92m   Compiling[0m parking_lot v0.12.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:49.6486479Z [1m[92m   Compiling[0m clap v4.5.54
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:49.6764496Z [1m[92m   Compiling[0m serde_ignored v0.1.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:49.7516498Z [1m[92m   Compiling[0m siphasher v1.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:49.8336107Z [1m[92m   Compiling[0m path-clean v1.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:49.8886691Z [1m[92m   Compiling[0m glob v0.3.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:50.4970691Z [1m[92m   Compiling[0m wasm-pack v0.14.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9118118Z [1m[92m    Finished[0m `release` profile [optimized] target(s) in 1m 11s
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9289264Z [1m[92m  Installing[0m /home/runner/.cargo/bin/wasm-pack
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9291766Z [1m[92m   Installed[0m package `wasm-pack v0.14.0` (executable `wasm-pack`)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9895541Z ##[group]Run actions/setup-node@v4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9895802Z with:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9895968Z   node-version: 20.x
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9896155Z   cache: npm
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9896326Z   always-auth: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9896505Z   check-latest: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9896822Z   token: ***
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9896977Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9897154Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9897371Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9897564Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:57.9897756Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.1607841Z Found in cache @ /opt/hostedtoolcache/node/20.20.2/x64
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.1613649Z ##[group]Environment details
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.5066416Z node: v20.20.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.5066851Z npm: 10.8.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.5067150Z yarn: 1.22.22
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.5067915Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.5086722Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.6237692Z /home/runner/.npm
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:05:58.8906343Z Cache hit for: node-cache-Linux-x64-npm-d315d8b9cf81d047cf497bbcc55d1d84ab2bcc1d591d7e669c7aa9738b286549
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.1451763Z Received 11038429 of 19427037 (56.8%), 10.5 MBs/sec
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2154131Z Received 19427037 of 19427037 (100.0%), 17.3 MBs/sec
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2154704Z Cache Size: ~19 MB (19427037 B)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2181338Z [command]/usr/bin/tar -xf /home/runner/work/_temp/018b4fb5-ac52-48c2-9cfc-dc013b2184d7/cache.tzst -P -C /home/runner/work/link-cli/link-cli --use-compress-program unzstd
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2427028Z Cache restored successfully
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2440882Z Cache restored from key: node-cache-Linux-x64-npm-d315d8b9cf81d047cf497bbcc55d1d84ab2bcc1d591d7e669c7aa9738b286549
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2541336Z ##[group]Run npm ci
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2541574Z [36;1mnpm ci[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2563731Z shell: /usr/bin/bash -e {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2563974Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2564155Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2564401Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2564609Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:00.2564814Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8929166Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8936753Z added 23 packages, and audited 24 packages in 2s
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8937047Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8937225Z 8 packages are looking for funding
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8937508Z   run `npm fund` for details
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8937787Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.8937963Z found 0 vulnerabilities
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9074775Z ##[group]Run npm run build:pages
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9075060Z [36;1mnpm run build:pages[0m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9088299Z shell: /usr/bin/bash -e {0}
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9088552Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9088738Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9088985Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9089220Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:01.9089425Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.0277209Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.0278208Z > link-cli-web@2.3.0 build:pages
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.0279108Z > npm run build:wasm && DEPLOY_TARGET=github-pages npm run build:web
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.0279577Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.1457866Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.1458488Z > link-cli-web@2.3.0 build:wasm
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.1459190Z > wasm-pack build --target web --out-dir web/pkg
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:02.1459564Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.2685642Z [INFO]: 🎯  Checking for the Wasm target...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.2956904Z [INFO]: 🌀  Compiling to Wasm...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.3897962Z [1m[92m   Compiling[0m unicode-ident v1.0.24
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.3906945Z [1m[92m   Compiling[0m proc-macro2 v1.0.106
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.3907896Z [1m[92m   Compiling[0m quote v1.0.45
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.3915030Z [1m[92m   Compiling[0m wasm-bindgen-shared v0.2.120
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.4437250Z [1m[92m   Compiling[0m rustversion v1.0.22
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.4995040Z [1m[92m   Compiling[0m autocfg v1.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.5157683Z [1m[92m   Compiling[0m once_cell v1.21.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.7946321Z [1m[92m   Compiling[0m cfg-if v1.0.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.8119237Z [1m[92m   Compiling[0m num-traits v0.2.19
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.8198637Z [1m[92m   Compiling[0m bumpalo v3.20.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:03.9356745Z [1m[92m   Compiling[0m thiserror v2.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.0318049Z [1m[92m   Compiling[0m serde_core v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.1036933Z [1m[92m   Compiling[0m utf8parse v0.2.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.1424927Z [1m[92m   Compiling[0m syn v2.0.117
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.1543488Z [1m[92m   Compiling[0m anstyle-parse v1.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.1948676Z [1m[92m   Compiling[0m wasm-bindgen v0.2.120
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.2816974Z [1m[92m   Compiling[0m colorchoice v1.0.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.3256881Z [1m[92m   Compiling[0m is_terminal_polyfill v1.70.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.3542991Z [1m[92m   Compiling[0m anstyle v1.0.14
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.3629207Z [1m[92m   Compiling[0m anstyle-query v1.1.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.5567199Z [1m[92m   Compiling[0m anstream v1.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.9466805Z [1m[92m   Compiling[0m platform-num v0.8.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.9959828Z [1m[92m   Compiling[0m strsim v0.11.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:04.9964047Z [1m[92m   Compiling[0m heck v0.5.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:05.1336680Z [1m[92m   Compiling[0m clap_lex v1.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:05.3476950Z [1m[92m   Compiling[0m thiserror v1.0.69
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:05.4816722Z [1m[92m   Compiling[0m memchr v2.8.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:05.6356549Z [1m[92m   Compiling[0m serde v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:05.7628203Z [1m[92m   Compiling[0m fastrand v2.4.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:05.9126784Z [1m[92m   Compiling[0m dtor-proc-macro v0.0.5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.0428335Z [1m[92m   Compiling[0m tempfile v3.27.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.0511269Z [1m[92m   Compiling[0m dtor v0.0.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.1176779Z [1m[92m   Compiling[0m clap_builder v4.6.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.5516532Z [1m[92m   Compiling[0m beef v0.5.2
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.6270271Z [1m[92m   Compiling[0m ctor-proc-macro v0.0.6
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.7680623Z [1m[92m   Compiling[0m anyhow v1.0.102
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:06.9166728Z [1m[92m   Compiling[0m zmij v1.0.21
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.0236031Z [1m[92m   Compiling[0m slab v0.4.12
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.0357335Z [1m[92m   Compiling[0m pin-project-lite v0.2.17
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.0738027Z [1m[92m   Compiling[0m allocator-api2 v0.4.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.1316640Z [1m[92m   Compiling[0m futures-core v0.3.32
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.2096695Z [1m[92m   Compiling[0m futures-task v0.3.32
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.3068816Z [1m[92m   Compiling[0m wasm-bindgen-macro-support v0.2.120
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.4209357Z [1m[92m   Compiling[0m memmap2 v0.9.10
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:07.5366611Z [1m[92m   Compiling[0m futures-util v0.3.32
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:08.7257226Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:09.3210728Z [1m[92m   Compiling[0m clap_derive v4.6.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:09.7926731Z [1m[92m   Compiling[0m thiserror-impl v1.0.69
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:10.4066737Z [1m[92m   Compiling[0m wasm-bindgen-macro v0.2.120
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:10.7928239Z [1m[92m   Compiling[0m serde_derive v1.0.228
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:10.9866707Z [1m[92m   Compiling[0m clap v4.6.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:11.0547222Z [1m[92m   Compiling[0m platform-data v2.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:11.1896785Z [1m[92m   Compiling[0m platform-mem v0.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:11.3966684Z [1m[92m   Compiling[0m ctor v0.4.3
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:11.4236646Z [1m[92m   Compiling[0m nom v8.0.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:12.0517769Z [1m[92m   Compiling[0m platform-trees v0.3.4
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:12.1386530Z [1m[92m   Compiling[0m lino-env v0.1.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:12.5476655Z [1m[92m   Compiling[0m serde_json v1.0.149
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:12.6086705Z [1m[92m   Compiling[0m leak_slice v0.2.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:12.6340221Z [1m[92m   Compiling[0m tap v1.0.1
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:12.6869450Z [1m[92m   Compiling[0m dotenvy v0.15.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:13.2490931Z [1m[92m   Compiling[0m doublets v0.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:13.8536736Z [1m[92m   Compiling[0m js-sys v0.3.97
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:14.1476646Z [1m[92m   Compiling[0m lino-arguments v0.3.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:14.4200221Z [1m[92m   Compiling[0m links-notation v0.13.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:15.1116463Z [1m[92m   Compiling[0m itoa v1.0.18
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:15.3626771Z [1m[92m   Compiling[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:15.9606735Z [1m[92m   Compiling[0m console_error_panic_hook v0.1.7
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:20.7273849Z [1m[92m   Compiling[0m web-sys v0.3.97
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:21.5500190Z [1m[92m   Compiling[0m clink-wasm v2.3.0 (/home/runner/work/link-cli/link-cli)
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:22.3257158Z [1m[92m    Finished[0m `release` profile [optimized] target(s) in 19.02s
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:22.3334095Z [INFO]: ⬇️  Installing wasm-bindgen...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:24.3703531Z [INFO]: Optimizing wasm binaries with `wasm-opt`...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.1041123Z [INFO]: ✨   Done in 24.84s
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.1041789Z [INFO]: 📦   Your wasm pkg is ready to publish at /home/runner/work/link-cli/link-cli/web/pkg.
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.2115331Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.2115993Z > link-cli-web@2.3.0 build:web
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.2116722Z > vite build --config web/vite.config.js
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.2117137Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.3967805Z [36mvite v8.0.10 [32mbuilding client environment for production...[36m[39m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.4078435Z [2K
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6108731Z transforming...✓ 1736 modules transformed.
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6403678Z rendering chunks...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6770809Z computing gzip size...
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6822792Z dist/assets/favicon-CIVoLc1m.svg             0.37 kB │ gzip:   0.24 kB
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6823812Z dist/index.html                              0.66 kB │ gzip:   0.38 kB
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6824762Z dist/assets/doublets_web_bg-cVQpTmMF.wasm   51.41 kB │ gzip:  20.96 kB
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6826472Z dist/assets/clink_wasm_bg-CdOWT-Uc.wasm    283.33 kB │ gzip: 123.51 kB
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6827514Z dist/assets/index-D8XZ-J-o.css               5.91 kB │ gzip:   2.07 kB
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6828394Z dist/assets/index-BPCELU7J.js              220.96 kB │ gzip:  68.68 kB
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6828787Z 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.6829077Z [32m✓ built in 285ms[39m
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7089547Z ##[group]Run actions/configure-pages@v5
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7089809Z with:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7090116Z   token: ***
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7090295Z   enablement: false
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7090466Z env:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7090643Z   CARGO_HOME: /home/runner/.cargo
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7090876Z   CARGO_INCREMENTAL: 0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7091074Z   CARGO_TERM_COLOR: always
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:28.7091277Z ##[endgroup]
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.1698083Z ##[error]Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions, or consider exploring the `enablement` parameter for this action. Error: Not Found - https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.1710064Z ##[error]HttpError: Not Found - https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.1803269Z Post job cleanup.
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2694656Z [command]/usr/bin/git version
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2728054Z git version 2.53.0
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2766188Z Temporarily overriding HOME='/home/runner/work/_temp/b85c40e5-2954-4614-abf8-0f8c353aed06' before making global git config changes
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2766958Z Adding repository directory to the temporary git global config as a safe directory
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2779953Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2810801Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.2840297Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3016518Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3034335Z http.https://github.com/.extraheader
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3045604Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3071653Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3245770Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3272344Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3549494Z Evaluate and set environment url
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3552988Z Evaluated environment url: 
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3553627Z Cleaning up orphan processes
+Deploy GitHub Pages	UNKNOWN STEP	2026-05-02T06:06:29.3767802Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/configure-pages@v5, actions/setup-node@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

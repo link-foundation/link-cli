@@ -1,0 +1,41 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.126
+
+----------------
+Installed an ASP.NET Core HTTPS development certificate.
+To trust the certificate, view the instructions: https://aka.ms/dotnet-https-linux
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+Specify --help for a list of available options and commands.
+error: Unrecognized command or argument 'search'
+NuGet Command Line 6.8.2.32767
+
+Usage: dotnet nuget [options] [command]
+
+Options:
+  -h|--help  Show help information
+  --version  Show version information
+
+Commands:
+  add      Add a NuGet source.
+  delete   Deletes a package from the server.
+  disable  Disable a NuGet source.
+  enable   Enable a NuGet source.
+  list     List configured NuGet sources.
+  locals   Clears or lists local NuGet resources such as http requests cache, packages folder, plugin operations cache  or machine-wide global packages folder.
+  push     Pushes a package to the server and publishes it.
+  remove   Remove a NuGet source.
+  sign     Signs NuGet package(s) at <package-paths> with the specified certificate.
+  trust    Manage the trusted signers.
+  update   Update a NuGet source.
+  verify   Verifies a signed NuGet package.
+
+Use "dotnet nuget [command] --help" for more information about a command.
