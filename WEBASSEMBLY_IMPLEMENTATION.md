@@ -21,9 +21,9 @@ The browser app initializes two WebAssembly-backed runtimes:
   It uses an in-memory implementation of the `NamedTypeLinks` trait, so the same
   Rust `QueryProcessor` used by the native CLI can run in the browser without
   filesystem access.
-- `doublets-web@0.1.2`: the latest npm release of the WebAssembly bindings for
-  `doublets-rs`. The React app mirrors the current `Clink` snapshot into a
-  `UnitedLinks` instance after each query.
+- `doublets-web`: the WebAssembly bindings for `doublets-rs`. The committed
+  lockfile currently pins `0.1.2`, and the React app mirrors the current
+  `Clink` snapshot into a `UnitedLinks` instance after each query.
 
 ## Why the Old Proof of Concept Changed
 

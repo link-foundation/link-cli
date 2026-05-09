@@ -1,0 +1,32 @@
+LiNo CLI Tool for managing links data store
+
+Usage: clink [OPTIONS] [QUERY]
+
+Arguments:
+  [QUERY]  LiNo query for CRUD operation
+
+Options:
+  -d, --db <DB>, --data-source <DB>, --data <DB>
+          Path to the links database file [default: db.links]
+  -q, --query <QUERY>, --apply <QUERY>, --do <QUERY>
+          LiNo query for CRUD operation
+  -t, --trace
+          Enable trace (verbose output)
+      --auto-create-missing-references
+          Create missing numeric and named references as self-referential point links
+  -s, --structure <STRUCTURE>
+          ID of the link to format its structure
+  -b, --before
+          Print the state of the database before applying changes
+  -c, --changes
+          Print the changes applied by the query
+  -a, --after, --links
+          Print the state of the database after applying changes
+      --in <IN>, --lino-input <IN>, --import <IN>
+          Read and import a LiNo file into the database
+      --out <OUT>, --lino-output <OUT>, --export <OUT>
+          Write the complete database as a LiNo file
+  -h, --help
+          Print help
+  -V, --version
+          Print version
