@@ -1,0 +1,141 @@
+clink-wasm v2.3.0 (/tmp/gh-issue-solver-1778304097454)
+├── anyhow v1.0.102
+├── console_error_panic_hook v0.1.7
+│   ├── cfg-if v1.0.4
+│   └── wasm-bindgen v0.2.120
+│       ├── cfg-if v1.0.4
+│       ├── once_cell v1.21.4
+│       ├── wasm-bindgen-macro v0.2.120 (proc-macro)
+│       │   ├── quote v1.0.45
+│       │   │   └── proc-macro2 v1.0.106
+│       │   │       └── unicode-ident v1.0.24
+│       │   └── wasm-bindgen-macro-support v0.2.120
+│       │       ├── bumpalo v3.20.2
+│       │       ├── proc-macro2 v1.0.106 (*)
+│       │       ├── quote v1.0.45 (*)
+│       │       ├── syn v2.0.117
+│       │       │   ├── proc-macro2 v1.0.106 (*)
+│       │       │   ├── quote v1.0.45 (*)
+│       │       │   └── unicode-ident v1.0.24
+│       │       └── wasm-bindgen-shared v0.2.120
+│       │           └── unicode-ident v1.0.24
+│       └── wasm-bindgen-shared v0.2.120 (*)
+│       [build-dependencies]
+│       └── rustversion v1.0.22 (proc-macro)
+├── link-cli v0.1.0 (/tmp/gh-issue-solver-1778304097454/rust)
+│   ├── anyhow v1.0.102
+│   ├── doublets v0.3.0
+│   │   ├── cfg-if v1.0.4
+│   │   ├── leak_slice v0.2.0
+│   │   ├── platform-data v2.0.0
+│   │   │   ├── beef v0.5.2
+│   │   │   ├── platform-num v0.8.0
+│   │   │   │   └── num-traits v0.2.19
+│   │   │   │       └── libm v0.2.16
+│   │   │   │       [build-dependencies]
+│   │   │   │       └── autocfg v1.5.0
+│   │   │   └── thiserror v2.0.18
+│   │   │       └── thiserror-impl v2.0.18 (proc-macro)
+│   │   │           ├── proc-macro2 v1.0.106 (*)
+│   │   │           ├── quote v1.0.45 (*)
+│   │   │           └── syn v2.0.117 (*)
+│   │   ├── platform-mem v0.3.0
+│   │   │   ├── allocator-api2 v0.4.0
+│   │   │   ├── memmap2 v0.9.10
+│   │   │   │   └── libc v0.2.186
+│   │   │   ├── tempfile v3.27.0
+│   │   │   │   ├── fastrand v2.4.1
+│   │   │   │   ├── getrandom v0.4.2
+│   │   │   │   │   ├── cfg-if v1.0.4
+│   │   │   │   │   └── libc v0.2.186
+│   │   │   │   ├── once_cell v1.21.4
+│   │   │   │   └── rustix v1.1.4
+│   │   │   │       ├── bitflags v2.11.1
+│   │   │   │       └── linux-raw-sys v0.12.1
+│   │   │   └── thiserror v2.0.18 (*)
+│   │   ├── platform-num v0.8.0 (*)
+│   │   ├── platform-trees v0.3.4
+│   │   │   └── platform-num v0.8.0 (*)
+│   │   ├── tap v1.0.1
+│   │   └── thiserror v2.0.18 (*)
+│   ├── links-notation v0.13.0
+│   │   └── nom v8.0.0
+│   │       └── memchr v2.8.0
+│   ├── lino-arguments v0.3.0
+│   │   ├── clap v4.6.1
+│   │   │   ├── clap_builder v4.6.0
+│   │   │   │   ├── anstream v1.0.0
+│   │   │   │   │   ├── anstyle v1.0.14
+│   │   │   │   │   ├── anstyle-parse v1.0.0
+│   │   │   │   │   │   └── utf8parse v0.2.2
+│   │   │   │   │   ├── anstyle-query v1.1.5
+│   │   │   │   │   ├── colorchoice v1.0.5
+│   │   │   │   │   ├── is_terminal_polyfill v1.70.2
+│   │   │   │   │   └── utf8parse v0.2.2
+│   │   │   │   ├── anstyle v1.0.14
+│   │   │   │   ├── clap_lex v1.1.0
+│   │   │   │   └── strsim v0.11.1
+│   │   │   └── clap_derive v4.6.1 (proc-macro)
+│   │   │       ├── heck v0.5.0
+│   │   │       ├── proc-macro2 v1.0.106 (*)
+│   │   │       ├── quote v1.0.45 (*)
+│   │   │       └── syn v2.0.117 (*)
+│   │   ├── ctor v0.4.3
+│   │   │   ├── ctor-proc-macro v0.0.6 (proc-macro)
+│   │   │   └── dtor v0.0.6
+│   │   │       └── dtor-proc-macro v0.0.5 (proc-macro)
+│   │   ├── dotenvy v0.15.7
+│   │   ├── lino-env v0.1.0
+│   │   ├── serde v1.0.228
+│   │   │   ├── serde_core v1.0.228
+│   │   │   └── serde_derive v1.0.228 (proc-macro)
+│   │   │       ├── proc-macro2 v1.0.106 (*)
+│   │   │       ├── quote v1.0.45 (*)
+│   │   │       └── syn v2.0.117 (*)
+│   │   └── thiserror v1.0.69
+│   │       └── thiserror-impl v1.0.69 (proc-macro)
+│   │           ├── proc-macro2 v1.0.106 (*)
+│   │           ├── quote v1.0.45 (*)
+│   │           └── syn v2.0.117 (*)
+│   └── thiserror v2.0.18 (*)
+├── serde v1.0.228 (*)
+├── serde_json v1.0.149
+│   ├── itoa v1.0.18
+│   ├── memchr v2.8.0
+│   ├── serde_core v1.0.228
+│   └── zmij v1.0.21
+├── wasm-bindgen v0.2.120 (*)
+└── web-sys v0.3.97
+    ├── js-sys v0.3.97
+    │   ├── cfg-if v1.0.4
+    │   ├── futures-util v0.3.32
+    │   │   ├── futures-core v0.3.32
+    │   │   ├── futures-task v0.3.32
+    │   │   ├── pin-project-lite v0.2.17
+    │   │   └── slab v0.4.12
+    │   ├── once_cell v1.21.4
+    │   └── wasm-bindgen v0.2.120 (*)
+    └── wasm-bindgen v0.2.120 (*)
+[dev-dependencies]
+└── wasm-bindgen-test v0.3.70
+    ├── async-trait v0.1.89 (proc-macro)
+    │   ├── proc-macro2 v1.0.106 (*)
+    │   ├── quote v1.0.45 (*)
+    │   └── syn v2.0.117 (*)
+    ├── cast v0.3.0
+    ├── js-sys v0.3.97 (*)
+    ├── libm v0.2.16
+    ├── nu-ansi-term v0.50.3
+    ├── num-traits v0.2.19 (*)
+    ├── oorandom v11.1.5
+    ├── serde v1.0.228 (*)
+    ├── serde_json v1.0.149 (*)
+    ├── wasm-bindgen v0.2.120 (*)
+    ├── wasm-bindgen-futures v0.4.70
+    │   ├── js-sys v0.3.97 (*)
+    │   └── wasm-bindgen v0.2.120 (*)
+    ├── wasm-bindgen-test-macro v0.3.70 (proc-macro)
+    │   ├── proc-macro2 v1.0.106 (*)
+    │   ├── quote v1.0.45 (*)
+    │   └── syn v2.0.117 (*)
+    └── wasm-bindgen-test-shared v0.2.120

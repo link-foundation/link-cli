@@ -1,0 +1,2 @@
+wee_alloc v0.4.5
+└── clink-wasm v2.3.0 (/tmp/gh-issue-solver-1778304097454)

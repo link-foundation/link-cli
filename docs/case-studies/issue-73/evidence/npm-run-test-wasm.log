@@ -1,0 +1,42 @@
+
+> link-cli-web@2.3.0 test:wasm
+> wasm-pack test --node
+
+[INFO  wasm_pack::command] Running test command...
+[INFO  wasm_pack::command::test] Checking rustc version...
+[INFO  wasm_pack::command::test] Rustc version is correct.
+[INFO  wasm_pack::command::test] Adding wasm-target...
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO  wasm_pack::build::wasm_target] Found wasm32-unknown-unknown in "/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/wasm32-unknown-unknown/lib"
+[INFO  wasm_pack::command::test] Adding wasm-target was successful.
+[INFO  wasm_pack::command::test] Compiling tests to wasm...
+[INFO  wasm_pack::child] Running cd "/tmp/gh-issue-solver-1778304097454" && CARGO_BUILD_TARGET="wasm32-unknown-unknown" "cargo" "build" "--tests"
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
+[INFO  wasm_pack::command::test] Finished compiling tests to wasm.
+[INFO  wasm_pack::command::test] Identifying wasm-bindgen dependency...
+[INFO]: ⬇️  Installing wasm-bindgen...
+[INFO  wasm_pack::command::test] Getting wasm-bindgen-cli was successful.
+[INFO  wasm_pack::command::test] Running tests in node...
+[INFO  wasm_pack::child] Running cd "/tmp/gh-issue-solver-1778304097454" && CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER="/home/box/.cache/.wasm-pack/wasm-bindgen-6100c0c263093c56/wasm-bindgen-test-runner" WASM_BINDGEN_TEST_ONLY_NODE="1" "cargo" "test" "--target" "wasm32-unknown-unknown"
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running unittests src/lib.rs (target/wasm32-unknown-unknown/debug/deps/clink_wasm-e3be95b31677a023.wasm)
+no tests to run!
+     Running tests/dependabot_alert_tests.rs (target/wasm32-unknown-unknown/debug/deps/dependabot_alert_tests-c9bec50acd680678.wasm)
+no tests to run!
+     Running tests/web.rs (target/wasm32-unknown-unknown/debug/deps/web-ce1f414deecf83eb.wasm)
+running 4 tests
+test reports_invalid_options ... ok
+test exposes_versions ... ok
+test executes_lino_queries_with_the_rust_core ... ok
+test creates_a_clink_instance ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.03s
+
+   Doc-tests clink_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[INFO  wasm_pack::command::test] Finished running tests in node.
+[INFO  wasm_pack::command::test] Done in 3.62s.

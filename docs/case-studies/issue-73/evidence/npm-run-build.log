@@ -1,0 +1,60 @@
+
+> link-cli-web@2.3.0 build
+> npm run build:wasm && npm run build:web
+
+
+> link-cli-web@2.3.0 build:wasm
+> wasm-pack build --target web --out-dir web/pkg
+
+[INFO  wasm_pack::command] Running build command...
+[INFO  wasm_pack::command::build] Checking rustc version...
+[INFO  wasm_pack::command::build] rustc version is 95.
+[INFO  wasm_pack::command::build] Checking crate configuration...
+[INFO  wasm_pack::command::build] Crate is correctly configured.
+[INFO  wasm_pack::command::build] Checking for wasm-target...
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO  wasm_pack::build::wasm_target] Found wasm32-unknown-unknown in "/home/box/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/wasm32-unknown-unknown/lib"
+[INFO  wasm_pack::command::build] Checking for wasm-target was successful.
+[INFO  wasm_pack::command::build] Building wasm...
+[INFO]: 🌀  Compiling to Wasm...
+    Finished `release` profile [optimized] target(s) in 0.06s
+[INFO  wasm_pack::command::build] wasm built at "/tmp/gh-issue-solver-1778304097454/target/wasm32-unknown-unknown/release/clink_wasm.wasm".
+[INFO  wasm_pack::command::build] Creating a pkg directory...
+[INFO  wasm_pack::command::build] Created a pkg directory at "/tmp/gh-issue-solver-1778304097454".
+[INFO  wasm_pack::command::build] Identifying wasm-bindgen dependency...
+[INFO  wasm_pack::command::build] Installing wasm-bindgen-cli...
+[INFO]: ⬇️  Installing wasm-bindgen...
+[INFO  wasm_pack::command::build] Installing wasm-bindgen-cli was successful.
+[INFO  wasm_pack::command::build] Building the wasm bindings...
+[INFO  wasm_pack::child] Running "/home/box/.cache/.wasm-pack/wasm-bindgen-6100c0c263093c56/wasm-bindgen" "--version"
+[INFO  wasm_pack::child] Running "/home/box/.cache/.wasm-pack/wasm-bindgen-6100c0c263093c56/wasm-bindgen" "--version"
+[INFO  wasm_pack::child] Running "/home/box/.cache/.wasm-pack/wasm-bindgen-6100c0c263093c56/wasm-bindgen" "/tmp/gh-issue-solver-1778304097454/target/wasm32-unknown-unknown/release/clink_wasm.wasm" "--out-dir" "/tmp/gh-issue-solver-1778304097454/web/pkg" "--typescript" "--target" "web"
+[INFO  wasm_pack::command::build] wasm bindings were built at "/tmp/gh-issue-solver-1778304097454/web/pkg".
+[INFO  wasm_pack::command::build] executing wasm-opt with ["-O"]
+[INFO]: Optimizing wasm binaries with `wasm-opt`...
+[INFO  wasm_pack::child] Running "/home/box/.cache/.wasm-pack/wasm-opt-1ceaaea8b7b5f7e0/bin/wasm-opt" "/tmp/gh-issue-solver-1778304097454/web/pkg/clink_wasm_bg.wasm" "-o" "/tmp/gh-issue-solver-1778304097454/web/pkg/clink_wasm_bg.wasm-opt.wasm" "-O"
+[INFO  wasm_pack::command::build] Wrote a package.json at "/tmp/gh-issue-solver-1778304097454/web/pkg/package.json".
+[INFO  wasm_pack::command::build] Copying readme from crate...
+[INFO  wasm_pack::command::build] Copied readme from crate to "/tmp/gh-issue-solver-1778304097454/web/pkg".
+[INFO  wasm_pack::command::build] Copying license from crate...
+[INFO  wasm_pack::command::build] Copied license from crate to "/tmp/gh-issue-solver-1778304097454/web/pkg".
+[INFO  wasm_pack::command::build] Done in 3.39s.
+[INFO  wasm_pack::command::build] Your wasm pkg is ready to publish at /tmp/gh-issue-solver-1778304097454/web/pkg.
+[INFO]: ✨   Done in 3.39s
+[INFO]: 📦   Your wasm pkg is ready to publish at /tmp/gh-issue-solver-1778304097454/web/pkg.
+
+> link-cli-web@2.3.0 build:web
+> vite build --config web/vite.config.js
+
+vite v8.0.10 building client environment for production...
+[2Ktransforming...✓ 1736 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/assets/favicon-CIVoLc1m.svg             0.37 kB │ gzip:   0.24 kB
+dist/index.html                              0.63 kB │ gzip:   0.38 kB
+dist/assets/doublets_web_bg-cVQpTmMF.wasm   51.41 kB │ gzip:  20.96 kB
+dist/assets/clink_wasm_bg-BvHtCWnC.wasm    284.35 kB │ gzip: 123.89 kB
+dist/assets/index-D8XZ-J-o.css               5.91 kB │ gzip:   2.07 kB
+dist/assets/index-DKrl0KH8.js              220.94 kB │ gzip:  68.67 kB
+
+✓ built in 260ms

@@ -1,0 +1,22 @@
+   Compiling clink-wasm v2.3.0 (/tmp/gh-issue-solver-1778304097454)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.88s
+     Running tests/dependabot_alert_tests.rs (target/debug/deps/dependabot_alert_tests-899ddd3881f01299)
+
+running 1 test
+test root_wasm_crate_does_not_use_unmaintained_wee_alloc ... FAILED
+
+failures:
+
+---- root_wasm_crate_does_not_use_unmaintained_wee_alloc stdout ----
+
+thread 'root_wasm_crate_does_not_use_unmaintained_wee_alloc' (848439) panicked at tests/dependabot_alert_tests.rs:14:9:
+Cargo.toml must not reference wee_alloc; GHSA-rc23-xxgq-x27g has no patched version
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    root_wasm_crate_does_not_use_unmaintained_wee_alloc
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test dependabot_alert_tests`
