@@ -1,0 +1,6 @@
+Cargo.toml:18:wee_alloc = { version = "0.4.5", optional = true }
+Cargo.lock:182: "wee_alloc",
+Cargo.lock:972:name = "wee_alloc"
+src/lib.rs:8:#[cfg(feature = "wee_alloc")]
+src/lib.rs:9:#[global_allocator]
+src/lib.rs:10:static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;

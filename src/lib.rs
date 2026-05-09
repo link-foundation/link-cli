@@ -5,10 +5,6 @@ use link_cli::{Link, LinkError, NamedTypeLinks, QueryProcessor};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct ClinkOptions {

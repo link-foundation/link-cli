@@ -1,0 +1,28 @@
+   Compiling clink-wasm v2.3.0 (/tmp/gh-issue-solver-1778304097454)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running unittests src/lib.rs (target/debug/deps/clink_wasm-58f8c436e9d6cb16)
+
+running 2 tests
+test tests::rejects_invalid_options ... ok
+test tests::executes_queries_with_the_rust_core ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dependabot_alert_tests.rs (target/debug/deps/dependabot_alert_tests-899ddd3881f01299)
+
+running 1 test
+test root_wasm_crate_does_not_use_unmaintained_wee_alloc ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/web.rs (target/debug/deps/web-5130816949cd97d5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests clink_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
