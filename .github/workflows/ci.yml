@@ -17,6 +17,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: csharp
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout repository
