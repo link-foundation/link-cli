@@ -44,6 +44,28 @@ namespace Foundation.Data.Doublets.Cli.Tests
         }
 
         [Fact]
+        public void Should_Terminate_Enumeration_When_Iterated_Without_Take()
+        {
+            // Arrange
+            var tempDbFile = Path.GetTempFileName();
+            try
+            {
+                using var links = new UnitedMemoryLinks<ulong>(tempDbFile);
+                var pinnedTypes = new PinnedTypes<ulong>(links);
+
+                // Act
+                var result = pinnedTypes.ToList();
+
+                // Assert
+                Assert.Equal(new ulong[] { 1, 2, 3, 4, 5, 6 }, result);
+            }
+            finally
+            {
+                File.Delete(tempDbFile);
+            }
+        }
+
+        [Fact]
         public void Should_Validate_Existing_Links()
         {
             // Arrange
@@ -103,7 +125,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var allLinks = links.All();
                 
                 // Act & Assert
-                var exception = Assert.Throws<InvalidOperationException>(() =>
+                var exception = Assert.Throws<UnexpectedLinkStructureException>(() =>
                 {
                     var result = new List<ulong>();
                     foreach (var type in pinnedTypes.Take(numberOfTypes))

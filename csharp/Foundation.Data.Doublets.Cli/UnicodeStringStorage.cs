@@ -147,7 +147,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 current = Links.GetTarget(current);
             }
-            throw new Exception("The passed link does not contain a string.");
+            throw new InvalidLinkFormatException("The passed link does not contain a string.");
         }
     }
 }

@@ -56,6 +56,11 @@ namespace Foundation.Data.Doublets.Cli
         {
         }
 
+        /// <summary>
+        /// Gets the name associated with the specified link address.
+        /// </summary>
+        /// <param name="link">The link address to get the name for.</param>
+        /// <returns>The name associated with the link, or null if no name is set.</returns>
         public string? GetName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetName called for link: {link}");
@@ -64,6 +69,12 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
+        /// <summary>
+        /// Sets the name for the specified link address.
+        /// </summary>
+        /// <param name="link">The link address to name.</param>
+        /// <param name="name">The name to assign to the link.</param>
+        /// <returns>The link address representing the name assignment.</returns>
         public TLinkAddress SetName(TLinkAddress link, string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
@@ -74,6 +85,11 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
+        /// <summary>
+        /// Gets the link address associated with the specified name.
+        /// </summary>
+        /// <param name="name">The name to look up.</param>
+        /// <returns>The link address associated with the name, or Null if not found.</returns>
         public TLinkAddress GetByName(string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName called for name: '{name}'");
@@ -82,6 +98,10 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
+        /// <summary>
+        /// Removes the name association for the specified link address.
+        /// </summary>
+        /// <param name="link">The link address whose name should be removed.</param>
         public void RemoveName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");

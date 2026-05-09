@@ -20,6 +20,9 @@ namespace Foundation.Data.Doublets.Cli
 
     public static void ProcessQuery(ILinks<uint> links, Options options)
     {
+      ArgumentNullException.ThrowIfNull(links);
+      ArgumentNullException.ThrowIfNull(options);
+
       var query = options.Query;
       var @null = links.Constants.Null;
       var any = links.Constants.Any;
@@ -316,20 +319,32 @@ namespace Foundation.Data.Doublets.Cli
       return new DoubletLink(index, source, target);
     }
 
-    static void TryParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
+    static bool TryParseLinkId(string? id, LinksConstants<uint> constants, ref uint parsedValue)
     {
       if (string.IsNullOrEmpty(id))
       {
-        return;
+        return false;
       }
       if (id == "*")
       {
         parsedValue = constants.Any;
+        return true;
+      }
+      else if (id.EndsWith(":"))
+      {
+        var trimmed = id.TrimEnd(':');
+        if (uint.TryParse(trimmed, out uint linkId))
+        {
+          parsedValue = linkId;
+          return true;
+        }
       }
       else if (uint.TryParse(id, out uint linkId))
       {
         parsedValue = linkId;
+        return true;
       }
+      return false;
     }
   }
 }

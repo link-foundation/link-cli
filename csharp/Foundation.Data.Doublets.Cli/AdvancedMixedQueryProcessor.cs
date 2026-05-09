@@ -30,6 +30,9 @@ namespace Foundation.Data.Doublets.Cli
 
     public static void ProcessQuery(INamedTypesLinks<uint> links, Options options)
     {
+      ArgumentNullException.ThrowIfNull(links);
+      ArgumentNullException.ThrowIfNull(options);
+
       var query = options.Query;
       TraceIfEnabled(options, $"[ProcessQuery] Query: \"{query}\"");
 
@@ -123,16 +126,18 @@ namespace Foundation.Data.Doublets.Cli
           .ToList();
 
       // ----------------------------------------------------------------
-      // FIX: If we see restrictionLink with exactly 1 sub-link => that sub-link has 2 sub-values => no IDs => interpret as a single composite pattern
+      // FIX: If we see restrictionLink with exactly 1 sub-link => that sub-link has 2 sub-values => interpret as a single composite pattern
+      // This handles patterns like ((() (1 2))) where the outer restriction has a single composite child
       if (
           string.IsNullOrEmpty(restrictionLink.Id) &&
           restrictionLink.Values?.Count == 1
       )
       {
         var single = restrictionLink.Values[0];
+        // Check if this is a composite (has 2 sub-values) and doesn't have a numeric/wildcard ID
         if (
-            string.IsNullOrEmpty(single.Id) &&
-            single.Values?.Count == 2 && !IsNumericOrStar(single.Id)
+            single.Values?.Count == 2 &&
+            (string.IsNullOrEmpty(single.Id) || !IsNumericOrStar(single.Id))
         )
         {
           // Create a single composite pattern from ((1 *) (* 2))
@@ -150,7 +155,7 @@ namespace Foundation.Data.Doublets.Cli
           restrictionInternalPatterns.Add(topLevelPattern);
 
           TraceIfEnabled(options,
-              "[ProcessQuery] Detected single sub-link (no ID) with 2 sub-values => replaced with one composite restriction pattern.");
+              "[ProcessQuery] Detected single sub-link with 2 sub-values => replaced with one composite restriction pattern.");
         }
       }
       // ----------------------------------------------------------------
@@ -249,24 +254,32 @@ namespace Foundation.Data.Doublets.Cli
 
         var unexpectedDeletions = new List<DoubletLink>();
         var originalHandler = options.ChangesHandler;
-        options.ChangesHandler = (before, after) =>
-        {
-          var beforeLink = new DoubletLink(before);
-          var afterLink = new DoubletLink(after);
-          if (beforeLink.Index != 0 && afterLink.Index == 0)
-          {
-            bool isExpected = allPlannedOperations.Any(op => op.before.Index == beforeLink.Index && op.after.Index == 0);
-            if (!isExpected)
-            {
-              unexpectedDeletions.Add(new DoubletLink(beforeLink));
-              TraceIfEnabled(options, $"[ProcessQuery] Detected unexpected deletion of link #{beforeLink.Index} => will restore later.");
-            }
-          }
-          return originalHandler?.Invoke(before, after) ?? links.Constants.Continue;
-        };
 
-        TraceIfEnabled(options, "[ProcessQuery] Applying all planned operations...");
-        ApplyAllPlannedOperations(links, allPlannedOperations, options);
+        try
+        {
+          options.ChangesHandler = (before, after) =>
+          {
+            var beforeLink = new DoubletLink(before);
+            var afterLink = new DoubletLink(after);
+            if (beforeLink.Index != 0 && afterLink.Index == 0)
+            {
+              bool isExpected = allPlannedOperations.Any(op => op.before.Index == beforeLink.Index && op.after.Index == 0);
+              if (!isExpected)
+              {
+                unexpectedDeletions.Add(new DoubletLink(beforeLink));
+                TraceIfEnabled(options, $"[ProcessQuery] Detected unexpected deletion of link #{beforeLink.Index} => will restore later.");
+              }
+            }
+            return originalHandler?.Invoke(before, after) ?? links.Constants.Continue;
+          };
+
+          TraceIfEnabled(options, "[ProcessQuery] Applying all planned operations...");
+          ApplyAllPlannedOperations(links, allPlannedOperations, options);
+        }
+        finally
+        {
+          options.ChangesHandler = originalHandler;
+        }
 
         TraceIfEnabled(options, "[ProcessQuery] Restoring unexpected deletions if any...");
         RestoreUnexpectedLinkDeletions(links, unexpectedDeletions, intendedFinalStates, options);
@@ -680,9 +693,10 @@ namespace Foundation.Data.Doublets.Cli
       {
         return anyConstant;
       }
-      if (TryParseLinkId(identifier, links, ref anyConstant))
+      uint parsedValue = anyConstant;
+      if (TryParseLinkId(identifier, links, ref parsedValue))
       {
-        return anyConstant;
+        return parsedValue;
       }
       return anyConstant;
     }
@@ -921,10 +935,6 @@ namespace Foundation.Data.Doublets.Cli
           TraceIfEnabled(options,
               $"[CreateOrUpdateLink] Updating link #{linkDefinition.Index}: {existingDoublet.Source}->{linkDefinition.Source}, {existingDoublet.Target}->{linkDefinition.Target}.");
           LinksExtensions.EnsureCreated(links, linkDefinition.Index);
-          options.ChangesHandler?.Invoke(
-              new DoubletLink(linkDefinition.Index, nullConstant, nullConstant),
-              new DoubletLink(linkDefinition.Index, nullConstant, nullConstant)
-          );
           links.Update(
               new DoubletLink(linkDefinition.Index, anyConstant, anyConstant),
               linkDefinition,
@@ -1377,7 +1387,7 @@ namespace Foundation.Data.Doublets.Cli
           );
         }
 
-        AutoCreateMissingReferences(links, plan.MissingReferences, options);
+        AutoCreateMissingReferences(links, plan, options);
       }
 
       TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
@@ -1387,6 +1397,7 @@ namespace Foundation.Data.Doublets.Cli
     {
       public HashSet<uint> NumericIdsToBeCreated { get; } = new();
       public HashSet<string> NamesToBeCreated { get; } = new(StringComparer.Ordinal);
+      public HashSet<(uint Source, uint Target)> CompositePairsToBeCreated { get; } = new();
       public List<MissingLinkReference> MissingReferences { get; } = new();
       private readonly HashSet<string> _missingReferenceKeys = new(StringComparer.Ordinal);
 
@@ -1422,6 +1433,11 @@ namespace Foundation.Data.Doublets.Cli
         CollectImplicitDefinitions(pattern, links, plan, reservedNumericIds);
       }
 
+      foreach (var pattern in substitutionPatterns)
+      {
+        CollectCompositePairs(pattern, plan);
+      }
+
       return plan;
     }
 
@@ -1445,6 +1461,26 @@ namespace Foundation.Data.Doublets.Cli
         foreach (var subPattern in pattern.Values)
         {
           CollectExplicitDefinitions(subPattern, plan, reservedNumericIds);
+        }
+      }
+    }
+
+    private static void CollectCompositePairs(LinoLink pattern, LinkReferencePlan plan)
+    {
+      if (IsComposite(pattern) &&
+          TryGetConcreteIdentifier(pattern.Id, out var _ignoredIdentifier) &&
+          pattern.Values != null &&
+          TryGetConcreteNumericIdentifier(pattern.Values[0].Id, out var source) &&
+          TryGetConcreteNumericIdentifier(pattern.Values[1].Id, out var target))
+      {
+        plan.CompositePairsToBeCreated.Add((source, target));
+      }
+
+      if (pattern.Values != null)
+      {
+        foreach (var subPattern in pattern.Values)
+        {
+          CollectCompositePairs(subPattern, plan);
         }
       }
     }
@@ -1558,10 +1594,10 @@ namespace Foundation.Data.Doublets.Cli
 
     private static void AutoCreateMissingReferences(
         INamedTypesLinks<uint> links,
-        IList<MissingLinkReference> missingReferences,
+        LinkReferencePlan plan,
         Options options)
     {
-      foreach (var missing in missingReferences.Where(reference => reference.NumericId.HasValue).OrderBy(reference => reference.NumericId!.Value))
+      foreach (var missing in plan.MissingReferences.Where(reference => reference.NumericId.HasValue).OrderBy(reference => reference.NumericId!.Value))
       {
         var linkId = missing.NumericId!.Value;
         if (links.Exists(linkId))
@@ -1569,8 +1605,13 @@ namespace Foundation.Data.Doublets.Cli
           continue;
         }
 
-        TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {linkId} as point link.");
+        TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {linkId}.");
         LinksExtensions.EnsureCreated(links, linkId);
+        if (plan.CompositePairsToBeCreated.Contains((linkId, linkId)))
+        {
+          TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Link {linkId} exists as a placeholder because ({linkId}, {linkId}) is defined by the substitution.");
+          continue;
+        }
         links.Update(
           new DoubletLink(linkId, links.Constants.Null, links.Constants.Null),
           new DoubletLink(linkId, linkId, linkId),
@@ -1579,7 +1620,7 @@ namespace Foundation.Data.Doublets.Cli
         );
       }
 
-      foreach (var missing in missingReferences.Where(reference => !reference.NumericId.HasValue).OrderBy(reference => reference.Identifier, StringComparer.Ordinal))
+      foreach (var missing in plan.MissingReferences.Where(reference => !reference.NumericId.HasValue).OrderBy(reference => reference.Identifier, StringComparer.Ordinal))
       {
         if (links.GetByName(missing.Identifier) != links.Constants.Null)
         {
@@ -1625,6 +1666,12 @@ namespace Foundation.Data.Doublets.Cli
       }
 
       return true;
+    }
+
+    private static bool TryGetConcreteNumericIdentifier(string? id, out uint linkId)
+    {
+      linkId = 0;
+      return TryGetConcreteIdentifier(id, out var identifier) && uint.TryParse(identifier, out linkId);
     }
   }
 }
