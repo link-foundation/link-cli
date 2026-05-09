@@ -16,6 +16,13 @@ package built from `doublets-rs`.
 - Browser app documentation: [README-WASM.md](README-WASM.md)
 - Implementation notes: [WEBASSEMBLY_IMPLEMENTATION.md](WEBASSEMBLY_IMPLEMENTATION.md)
 
+## Documentation
+
+- [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
+- [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
+- [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind this documentation refresh.
+
 ## Installation
 
 This CLI tool can be installed globally as `clink` using single command (that will work if you have [.NET](https://dotnet.microsoft.com/en-us/download) installed):
@@ -26,6 +33,12 @@ dotnet tool install --global clink
 
 <img width="811" alt="Screenshot 2025-05-16 at 5 48 06 AM" src="https://github.com/user-attachments/assets/615df4ce-658e-4bab-a483-96fae200f106" />
 
+The NuGet tool is the C# implementation and exposes the complete production
+command surface, including persistent transformation triggers. The Rust
+implementation under `rust/` mirrors the core query engine, named references,
+LiNo import/export, structure formatting, and the WebAssembly workbench API.
+Persistent transformation trigger CLI options currently exist only in the C#
+tool.
 
 This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 
@@ -136,12 +149,141 @@ A short version of read operation will also work:
 clink '((($i:)) (($i:)))' --changes
 ```
 
+## Named references
+
+String references can name links. Names are persisted in a companion
+`<database-name>.names.links` file and are rendered in output whenever a link
+has a name. Missing named references are rejected by default; use
+`--auto-create-missing-references` when the query should create missing names as
+self-referential point links.
+
+Create a named `child` link from named `father` and `mother` references:
+
+```bash
+clink --db family.links --auto-create-missing-references '() ((child: father mother))' --changes --after
+```
+→
+```
+((father: 0 0)) ((father: father father))
+((mother: 0 0)) ((mother: mother mother))
+() ((child: father mother))
+(father: father father)
+(mother: mother mother)
+(child: father mother)
+```
+
+Read the named link without changing it:
+
+```bash
+clink --db family.links '(((child: father mother)) ((child: father mother)))' --changes
+```
+→
+```
+((child: father mother)) ((child: father mother))
+```
+
+Update the named link by swapping its source and target:
+
+```bash
+clink --db family.links '((child: father mother)) ((child: mother father))' --changes --after
+```
+→
+```
+((child: father mother)) ((child: mother father))
+(father: father father)
+(mother: mother mother)
+(child: mother father)
+```
+
+Delete the named link:
+
+```bash
+clink --db family.links '((child: mother father)) ()' --changes --after
+```
+→
+```
+((3: mother father)) ()
+(father: father father)
+(mother: mother mother)
+```
+
+The deleted link no longer has the `child` name when the deletion change is
+printed because deleting a link also removes its name mapping.
+
+Variables work with named references too. Starting from a database where `child`
+still points to `father mother`, this query reads every link and writes it back
+with source and target swapped:
+
+```bash
+clink --db family.links '((($index: $source $target)) (($index: $target $source)))' --changes --after
+```
+→
+```
+((father: father father)) ((father: father father))
+((mother: mother mother)) ((mother: mother mother))
+((child: father mother)) ((child: mother father))
+(father: father father)
+(mother: mother mother)
+(child: mother father)
+```
+
+If a name contains spaces, parentheses, colons, or quotes, the exporter quotes
+it in LiNo output.
+
+## Structure formatting
+
+Use `--structure <id>` to render the left branch of a link recursively. The
+formatter keeps the current link index and stops recursion when it would revisit
+a link.
+
+```bash
+clink --db family.links --structure 3
+```
+→
+```
+(child: (father: father father) mother)
+```
+
+For numbered links:
+
+```bash
+clink --db structure.links --structure 4
+```
+→
+```
+(4: (3: (2: (1: 1 1) 2) 1) 2)
+```
+
+## Import database from LiNo
+
+Use `--in`, `--import`, or `--lino-input` to read a `.lino` file before the
+query runs. Import accepts one complete two-value link definition per non-empty
+line.
+
+```lino
+(father: father father)
+(mother: mother mother)
+(child: father mother)
+```
+
+```bash
+clink --db imported.links --import family.lino --export exported.lino
+```
+
+`exported.lino`:
+
+```lino
+(father: father father)
+(mother: mother mother)
+(child: father mother)
+```
+
 ## Export database as LiNo
 
 Use `--out` or `--export` to write the complete database to a `.lino` file after the query is processed. The older `--lino-output` option is also accepted.
 
 ```bash
-clink '() ((child: father mother))' --export database.lino
+clink --auto-create-missing-references '() ((child: father mother))' --export database.lino
 ```
 
 `database.lino`:
@@ -176,6 +318,21 @@ clink --db graph.links --never '(((1: 1 1)) ((1: 1 2)))'
 ```
 
 Triggers are stored as binary links using the structure `(Always ((Condition ...) (Substitution ...)))` or `(Once ((Condition ...) (Substitution ...)))`. By default they are kept in a companion `<database-name>.triggers.links` file, such as `graph.triggers.links` for `graph.links`. Use `--triggers-file path/to/triggers.links` to choose a different companion file, `--triggers` to enable trigger evaluation explicitly, or `--embed-triggers` to store trigger links in the main database file.
+
+## Database files
+
+`--db` selects the primary links database file. With the default database name,
+the CLI uses these files:
+
+| File | Purpose |
+|------|---------|
+| `db.links` | Primary link triples. |
+| `db.names.links` | Named-reference sidecar used by `NamedTypesDecorator`. |
+| `db.triggers.links` | Persistent transformation trigger sidecar when trigger support is enabled. |
+
+Use `--triggers-file` to point trigger storage somewhere else, or
+`--embed-triggers` to store trigger links in the main database. Names are stored
+separately so the primary links database remains numeric.
 
 ## Update single link
 
@@ -326,6 +483,10 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 
 ## All options and arguments
 
+The C# NuGet tool supports every option below. The Rust CLI currently supports
+the core query, storage, output, import/export, and structure options; trigger
+options are C#-only for now.
+
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
 |-------------------------|---------|----------------|-------------------------------------|----------------------------------------------------------------------------|
 | `--db`                  | string  | `db.links`     | `--data-source`, `--data`, `-d`     | Path to the links database file                                            |
@@ -337,6 +498,7 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+| `--in`                  | string  | _None_         | `--import`, `--lino-input`          | Read and import a LiNo file before query execution                         |
 | `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
 | `--always`              | bool    | `false`        | _None_                              | Store the query as an always-on persistent transformation trigger          |
 | `--once`                | bool    | `false`        | _None_                              | Store the query as a one-shot persistent transformation trigger            |
@@ -344,6 +506,10 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 | `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
 | `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
 | `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
+
+The query can be passed as the first positional argument or through `--query`,
+`--apply`, or `--do`. In the Rust CLI, `--query` takes precedence when both
+`--query` and a positional query are provided.
 
 ## For developers and debugging
 

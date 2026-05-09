@@ -1,0 +1,28 @@
+Description:
+  LiNo CLI Tool for managing links data store
+
+Usage:
+  Foundation.Data.Doublets.Cli [<query>] [options]
+
+Arguments:
+  <query>  LiNo query for CRUD operation
+
+Options:
+  -d, --data, --data-source, --db <db>  Path to the links database file [default: db.links]
+  -q, --apply, --do, --query <query>    LiNo query for CRUD operation
+  -t, --trace                           Enable trace (verbose output)
+  --auto-create-missing-references      Create missing numeric and named references as self-referential point links
+  -s, --structure <structure>           ID of the link to format its structure
+  -b, --before                          Print the state of the database before applying changes
+  -c, --changes                         Print the changes applied by the query
+  -a, --after, --links                  Print the state of the database after applying changes
+  --always                              Store the query as an always-on persistent transformation trigger
+  --once                                Store the query as a persistent transformation trigger that deletes itself after it fires
+  --never                               Remove stored persistent transformation triggers matching the query
+  --triggers                            Enable persistent transformation triggers for this command
+  --triggers-file <triggers-file>       Path to the persistent transformation trigger links database
+  --embed-triggers                      Store persistent transformation triggers directly in the main links database
+  --import, --in, --lino-input <in>     Path to read and import a LiNo file into the database
+  --export, --lino-output, --out <out>  Path to write the complete database as a LiNo file
+  -?, -h, --help                        Show help and usage information
+  --version                             Show version information

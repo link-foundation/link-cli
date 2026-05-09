@@ -1,0 +1,14 @@
+{
+  "version": "6.0.1",
+  "description": "The default Vite plugin for React projects",
+  "repository": {
+    "url": "git+https://github.com/vitejs/vite-plugin-react.git",
+    "type": "git",
+    "directory": "packages/plugin-react"
+  },
+  "dist-tags": {
+    "alpha": "3.0.0-alpha.2",
+    "beta": "6.0.0-beta.0",
+    "latest": "6.0.1"
+  }
+}

@@ -1,0 +1,25 @@
+Command: clink --db named.links --auto-create-missing-references '() ((child: father mother))' --changes --after
+((father: 0 0)) ((father: father father))
+((mother: 0 0)) ((mother: mother mother))
+() ((child: father mother))
+(father: father father)
+(mother: mother mother)
+(child: father mother)
+
+Command: clink --db named.links '(((child: father mother)) ((child: father mother)))' --changes
+((child: father mother)) ((child: father mother))
+
+Command: clink --db named.links '((child: father mother)) ((child: mother father))' --changes --after
+((child: father mother)) ((child: mother father))
+(father: father father)
+(mother: mother mother)
+(child: mother father)
+
+Command: clink --db named.links '((child: mother father)) ()' --changes --after
+((3: mother father)) ()
+(father: father father)
+(mother: mother mother)
+
+Sidecar files:
+named.links
+named.names.links

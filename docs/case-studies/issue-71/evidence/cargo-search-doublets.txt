@@ -1,0 +1,6 @@
+doublets = "0.3.0"                       # Doublets (links) data structure implementation.
+doublets-decorators = "0.1.0-alpha.3"    # Decorators for doublets
+peacoqc-cli = "0.2.4"                    # Command-line tool for PeacoQC flow cytometry quality control
+network-isomorphism-solver = "0.2.0"     # Network isomorphism solver using Links Theory - determines if two networks are structu…
+peacoqc-rs = "0.2.4"                     # PeacoQC quality control algorithms for flow cytometry
+... and 9 crates more (use --limit N to see more)
