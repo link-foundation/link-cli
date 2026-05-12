@@ -1,0 +1,80 @@
+
+> link-cli-web@2.3.0 test:js
+> node --test test/*.test.mjs ../csharp/scripts/*.test.mjs
+
+TAP version 13
+# To /tmp/link-cli-csharp-version-J0P1ai/remote.git
+#  * [new branch]      main -> main
+# To /tmp/link-cli-csharp-version-J0P1ai/remote.git
+#    e32439b..d9b15a1  main -> main
+# To /tmp/link-cli-csharp-version-J0P1ai/remote.git
+#  * [new tag]         csharp-v2.4.0 -> csharp-v2.4.0
+# Subtest: merge-changesets honors the requested directory and package name
+ok 1 - merge-changesets honors the requested directory and package name
+  ---
+  duration_ms: 37.321605
+  ...
+# Subtest: create-github-release dry run uses tag prefix and component changelog
+ok 2 - create-github-release dry run uses tag prefix and component changelog
+  ---
+  duration_ms: 40.489554
+  ...
+# Subtest: create-github-release dry run reports matching assets without uploading
+ok 3 - create-github-release dry run reports matching assets without uploading
+  ---
+  duration_ms: 31.278658
+  ...
+# Subtest: version-and-commit creates a C\# release commit when the next tag is missing
+ok 4 - version-and-commit creates a C\# release commit when the next tag is missing
+  ---
+  duration_ms: 198.773245
+  ...
+# Subtest: buildGraph reflects create, delete, and recreate snapshots without stale nodes
+ok 5 - buildGraph reflects create, delete, and recreate snapshots without stale nodes
+  ---
+  duration_ms: 1.475782
+  ...
+# Subtest: language code package manifests and generated evidence stay out of the root folder
+ok 6 - language code package manifests and generated evidence stay out of the root folder
+  ---
+  duration_ms: 1.396294
+  ...
+# Subtest: JavaScript package scripts target the relocated WebAssembly crate and split script trees
+ok 7 - JavaScript package scripts target the relocated WebAssembly crate and split script trees
+  ---
+  duration_ms: 0.58232
+  ...
+# Subtest: WebAssembly workflow uses the JavaScript package lockfile from js
+ok 8 - WebAssembly workflow uses the JavaScript package lockfile from js
+  ---
+  duration_ms: 0.326979
+  ...
+# Subtest: WebAssembly workflow deploys GitHub Pages automatically on push to main
+ok 9 - WebAssembly workflow deploys GitHub Pages automatically on push to main
+  ---
+  duration_ms: 0.272848
+  ...
+# Subtest: CSharp release workflow attaches NuGet packages to GitHub Releases
+ok 10 - CSharp release workflow attaches NuGet packages to GitHub Releases
+  ---
+  duration_ms: 0.284053
+  ...
+# Subtest: CSharp and Rust release workflows are scheduled on every push to main
+ok 11 - CSharp and Rust release workflows are scheduled on every push to main
+  ---
+  duration_ms: 0.556461
+  ...
+# Subtest: GitHub workflows avoid Node 20 action major versions that are being retired
+ok 12 - GitHub workflows avoid Node 20 action major versions that are being retired
+  ---
+  duration_ms: 0.239738
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 362.717992

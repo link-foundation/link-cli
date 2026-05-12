@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'csharp/**'
-      - 'csharp/scripts/**'
-      - '.github/workflows/csharp.yml'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
@@ -67,12 +63,12 @@ jobs:
       any-code-changed: ${{ steps.changes.outputs.any-code-changed }}
       csharp-code-changed: ${{ steps.changes.outputs.csharp-code-changed }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20.x'
 
@@ -92,12 +88,12 @@ jobs:
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20.x'
 
@@ -140,15 +136,15 @@ jobs:
         needs.detect-changes.outputs.workflow-changed == 'true'
       )
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20.x'
 
@@ -173,10 +169,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
@@ -193,7 +189,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: false
 
@@ -204,10 +200,10 @@ jobs:
     needs: [lint, test]
     if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
@@ -221,7 +217,7 @@ jobs:
         run: dotnet pack --no-build --configuration Release --output ./artifacts
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-package
           path: csharp/artifacts/*.nupkg
@@ -236,17 +232,17 @@ jobs:
       contents: write
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20.x'
 
@@ -290,7 +286,9 @@ jobs:
           if [ -z "$PACKAGE_ID" ]; then
             PACKAGE_ID=clink
           fi
+          PACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
           echo "id=$PACKAGE_ID" >> "$GITHUB_OUTPUT"
+          echo "flat_container_id=$PACKAGE_ID_LOWER" >> "$GITHUB_OUTPUT"
 
       - name: Publish to NuGet
         id: nuget_publish
@@ -305,6 +303,26 @@ jobs:
             echo "NUGET_API_KEY not set, skipping NuGet publish"
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Verify package on NuGet
+        if: steps.version.outputs.version_committed == 'true' && steps.nuget_publish.outputs.published == 'true'
+        run: |
+          PACKAGE_ID="${{ steps.package.outputs.id }}"
+          PACKAGE_ID_LOWER="${{ steps.package.outputs.flat_container_id }}"
+          VERSION="${{ steps.version.outputs.new_version }}"
+          for DELAY in 0 5 10 20 30 60; do
+            if [ "$DELAY" != "0" ]; then
+              sleep "$DELAY"
+            fi
+            STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.nuspec" || true)
+            echo "NuGet status for ${PACKAGE_ID}@${VERSION}: ${STATUS}"
+            if [ "$STATUS" = "200" ]; then
+              echo "Verified ${PACKAGE_ID}@${VERSION} is available on NuGet"
+              exit 0
+            fi
+          done
+          echo "::error title=NuGet verification failed::${PACKAGE_ID}@${VERSION} was not available from NuGet after publish."
+          exit 1
 
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true'
@@ -331,18 +349,18 @@ jobs:
       contents: write
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20.x'
 
@@ -370,7 +388,9 @@ jobs:
           if [ -z "$PACKAGE_ID" ]; then
             PACKAGE_ID=clink
           fi
+          PACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
           echo "id=$PACKAGE_ID" >> "$GITHUB_OUTPUT"
+          echo "flat_container_id=$PACKAGE_ID_LOWER" >> "$GITHUB_OUTPUT"
 
       - name: Publish to NuGet
         id: nuget_publish
@@ -385,6 +405,26 @@ jobs:
             echo "NUGET_API_KEY not set, skipping NuGet publish"
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Verify package on NuGet
+        if: steps.version.outputs.version_committed == 'true' && steps.nuget_publish.outputs.published == 'true'
+        run: |
+          PACKAGE_ID="${{ steps.package.outputs.id }}"
+          PACKAGE_ID_LOWER="${{ steps.package.outputs.flat_container_id }}"
+          VERSION="${{ steps.version.outputs.new_version }}"
+          for DELAY in 0 5 10 20 30 60; do
+            if [ "$DELAY" != "0" ]; then
+              sleep "$DELAY"
+            fi
+            STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.nuspec" || true)
+            echo "NuGet status for ${PACKAGE_ID}@${VERSION}: ${STATUS}"
+            if [ "$STATUS" = "200" ]; then
+              echo "Verified ${PACKAGE_ID}@${VERSION} is available on NuGet"
+              exit 0
+            fi
+          done
+          echo "::error title=NuGet verification failed::${PACKAGE_ID}@${VERSION} was not available from NuGet after publish."
+          exit 1
 
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true'

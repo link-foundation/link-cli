@@ -52,12 +52,7 @@ const description = getArg('description') || '';
  * @returns {string}
  */
 function exec(command, silent = false) {
-  try {
-    return execSync(command, { encoding: 'utf-8', stdio: silent ? 'pipe' : 'inherit' });
-  } catch (error) {
-    if (silent) return '';
-    throw error;
-  }
+  return execSync(command, { encoding: 'utf-8', stdio: silent ? 'pipe' : 'inherit' });
 }
 
 /**
@@ -135,7 +130,7 @@ function updateCsproj(newVersion) {
  */
 function checkTagExists(version) {
   try {
-    exec(`git rev-parse csharp-v${version}`, true);
+    exec(`git rev-parse --verify --quiet refs/tags/csharp-v${version}`, true);
     return true;
   } catch {
     return false;
