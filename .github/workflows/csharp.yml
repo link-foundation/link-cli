@@ -318,7 +318,8 @@ jobs:
             --tag-prefix "csharp-v" \
             --language "C#" \
             --package-id "${{ steps.package.outputs.id }}" \
-            --changelog-path "csharp/CHANGELOG.md"
+            --changelog-path "csharp/CHANGELOG.md" \
+            --assets-glob "csharp/artifacts/*.nupkg"
 
   # === MANUAL INSTANT RELEASE ===
   instant-release:
@@ -397,4 +398,5 @@ jobs:
             --tag-prefix "csharp-v" \
             --language "C#" \
             --package-id "${{ steps.package.outputs.id }}" \
-            --changelog-path "csharp/CHANGELOG.md"
+            --changelog-path "csharp/CHANGELOG.md" \
+            --assets-glob "csharp/artifacts/*.nupkg"

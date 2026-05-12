@@ -77,3 +77,29 @@ test('WebAssembly workflow uses the JavaScript package lockfile from js', () => 
   assert.doesNotMatch(workflow, /(^|\s)- 'package(-lock)?\.json'/);
   assert.doesNotMatch(workflow, /(^|\s)- 'web\/\*\*'/);
 });
+
+test('WebAssembly workflow deploys GitHub Pages automatically on push to main', () => {
+  const workflow = readFileSync(join(repoRoot, '.github/workflows/wasm.yml'), 'utf8');
+
+  assert.match(workflow, /name: Deploy GitHub Pages/);
+  assert.match(workflow, /uses: actions\/deploy-pages@/);
+  assert.match(workflow, /uses: actions\/upload-pages-artifact@/);
+  assert.match(workflow, /uses: actions\/configure-pages@/);
+  assert.match(workflow, /pages: write/);
+  assert.match(workflow, /id-token: write/);
+  assert.match(
+    workflow,
+    /github\.event_name == 'push'[\s\S]*?github\.ref == 'refs\/heads\/main'/
+  );
+  assert.doesNotMatch(workflow, /inputs\.deploy_pages/);
+});
+
+test('CSharp release workflow attaches NuGet packages to GitHub Releases', () => {
+  const workflow = readFileSync(join(repoRoot, '.github/workflows/csharp.yml'), 'utf8');
+
+  const matches = workflow.match(/--assets-glob "csharp\/artifacts\/\*\.nupkg"/g) ?? [];
+  assert.ok(
+    matches.length >= 2,
+    `expected --assets-glob in both release jobs, found ${matches.length}`
+  );
+});
