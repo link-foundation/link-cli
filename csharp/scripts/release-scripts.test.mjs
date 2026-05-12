@@ -21,6 +21,11 @@ import {
   parseArgs as parseWaitForNugetArgs,
   waitForNugetPackage,
 } from './wait-for-nuget.mjs';
+import {
+  buildNugetBadges,
+  buildReleasePayload,
+  prependNugetBadges,
+} from './create-github-release.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -112,6 +117,110 @@ test('create-github-release dry run uses tag prefix and component changelog', ()
   assert.equal(payload.name, 'C# v2.4.0');
   assert.match(payload.body, /Fixed release automation\./);
   assert.match(payload.body, /Package: `clink`/);
+  // Issue #88: the body must lead with NuGet badges that link to the
+  // exact released version (not the package landing page).
+  assert.match(
+    payload.body,
+    /\[!\[NuGet\]\(https:\/\/img\.shields\.io\/nuget\/v\/clink\?logo=nuget&label=NuGet\)\]\(https:\/\/www\.nuget\.org\/packages\/clink\/2\.4\.0\)/
+  );
+  assert.match(
+    payload.body,
+    /\[!\[NuGet Downloads\]\(https:\/\/img\.shields\.io\/nuget\/dt\/clink\?logo=nuget&label=downloads\)\]\(https:\/\/www\.nuget\.org\/packages\/clink\/2\.4\.0\)/
+  );
+});
+
+test('create-github-release dry run omits NuGet badges when no package id is provided', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-no-package-'));
+  const changelog = join(dir, 'CHANGELOG.md');
+  writeFileSync(
+    changelog,
+    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n'
+  );
+
+  const stdout = runNode('csharp/scripts/create-github-release.mjs', [
+    '--release-version',
+    '2.4.0',
+    '--repository',
+    'link-foundation/link-cli',
+    '--tag-prefix',
+    'csharp-v',
+    '--language',
+    'C#',
+    '--changelog-path',
+    changelog,
+    '--dry-run',
+  ]);
+  const payload = JSON.parse(stdout.slice(stdout.indexOf('{')));
+
+  assert.doesNotMatch(payload.body, /img\.shields\.io\/nuget/);
+  assert.doesNotMatch(payload.body, /Package: `/);
+});
+
+test('buildNugetBadges links both badges to the exact version', () => {
+  const badges = buildNugetBadges('clink', '2.4.0');
+
+  assert.match(badges, /img\.shields\.io\/nuget\/v\/clink\?/);
+  assert.match(badges, /img\.shields\.io\/nuget\/dt\/clink\?/);
+  // Both clickable badge targets (outer `](url)` of each markdown link) must
+  // point to the version-specific NuGet URL.
+  const targets = [...badges.matchAll(/\)\]\(([^)]+)\)/g)].map((m) => m[1]);
+  assert.equal(targets.length, 2);
+  for (const target of targets) {
+    assert.equal(target, 'https://www.nuget.org/packages/clink/2.4.0');
+  }
+});
+
+test('buildNugetBadges URL-encodes the package id', () => {
+  const badges = buildNugetBadges('My.Package', '1.0.0');
+
+  assert.match(badges, /nuget\/v\/My\.Package/);
+  assert.match(badges, /packages\/My\.Package\/1\.0\.0/);
+});
+
+test('prependNugetBadges keeps existing shields.io NuGet badges intact', () => {
+  const notes =
+    '[![NuGet](https://img.shields.io/nuget/v/clink?label=NuGet)](https://www.nuget.org/packages/clink)\n\nExisting notes.';
+
+  const result = prependNugetBadges(notes, 'clink', '2.4.0');
+
+  assert.equal(result, notes);
+});
+
+test('prependNugetBadges is a no-op without a package id', () => {
+  const notes = 'Release v2.4.0.';
+
+  assert.equal(prependNugetBadges(notes, '', '2.4.0'), notes);
+  assert.equal(prependNugetBadges(notes, 'clink', ''), notes);
+});
+
+test('buildReleasePayload places NuGet badges above the package footer', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-payload-'));
+  const changelog = join(dir, 'CHANGELOG.md');
+  writeFileSync(
+    changelog,
+    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFirst line.\nSecond line.\n'
+  );
+
+  const payload = buildReleasePayload({
+    changelogPath: changelog,
+    language: 'C#',
+    packageId: 'clink',
+    releaseVersion: '2.4.0',
+    tagPrefix: 'csharp-v',
+  });
+
+  assert.equal(payload.tag_name, 'csharp-v2.4.0');
+  assert.equal(payload.name, 'C# v2.4.0');
+  const badgesIndex = payload.body.indexOf('![NuGet]');
+  const notesIndex = payload.body.indexOf('First line.');
+  const footerIndex = payload.body.indexOf('Package: `clink`');
+  assert.notEqual(badgesIndex, -1);
+  assert.notEqual(notesIndex, -1);
+  assert.notEqual(footerIndex, -1);
+  assert.ok(
+    badgesIndex < notesIndex && notesIndex < footerIndex,
+    `expected badges < notes < footer, got ${badgesIndex} ${notesIndex} ${footerIndex}`
+  );
 });
 
 test('create-github-release dry run reports matching assets without uploading', () => {
