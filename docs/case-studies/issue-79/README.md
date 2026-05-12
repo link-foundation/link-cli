@@ -137,3 +137,86 @@ Local checks after the fix:
 - `npm --prefix js run build`
 - `cargo test --manifest-path rust/Cargo.toml --all-features`
 - `dotnet test csharp/Foundation.Data.Doublets.Cli.sln`
+
+## Follow-up (PR #81)
+
+After PR 80 merged, @konard reported in
+<https://github.com/link-foundation/link-cli/issues/79#issuecomment-4432584607>
+that two requirements were still not met:
+
+1. The post-merge `WebAssembly CI` run
+   <https://github.com/link-foundation/link-cli/actions/runs/25747032579>
+   had its `Deploy GitHub Pages` job skipped, so the live site was not
+   refreshed.
+2. `csharp.yml` and `rust.yml` were not triggered at all by the merge.
+
+### Root causes found in this round
+
+- **Pages deploy was opt-in.** `wasm.yml`'s `deploy` job had
+  `if: github.event_name == 'workflow_dispatch' && ... && inputs.deploy_pages`,
+  so a normal push to `main` could never deploy. The `js` template's
+  `example-app.yml` already shows the right pattern: build the Pages artifact in
+  the build job (with `actions/configure-pages` + `upload-pages-artifact`) and
+  hand off to a dedicated `deploy-pages` job that only contains
+  `actions/deploy-pages@v4`. Evidence: `template-js-example-app.yml`.
+- **`csharp.yml` / `rust.yml` did not match the changed paths.** The PR 80
+  merge commit (sha `9c93a27e`) only touched `.github/workflows/wasm.yml`,
+  `.gitignore`, root README files, `docs/**`, and the moved `js/**` tree —
+  nothing under `csharp/**` or `rust/**`. Both pipelines correctly skipped
+  themselves. Evidence: `gh api repos/link-foundation/link-cli/commits/9c93a27e`
+  shows zero matches for `^csharp/` or `^rust/` filenames.
+  This is by design and does not need a code change in the workflow triggers,
+  but the case study now records the analysis so the requirement is closed
+  with evidence rather than a guess.
+- **GitHub Releases never carried the NuGet artifact.**
+  `csharp/scripts/create-github-release.mjs` only posted the release notes; the
+  `.nupkg` produced by `dotnet pack` was uploaded to nuget.org but never
+  attached to the GitHub Release. The same shortfall exists in the upstream
+  `csharp-ai-driven-development-pipeline-template`.
+
+### Fixes applied in PR 81
+
+- Split `wasm.yml` into `test`, `build-pages`, and `deploy-pages` jobs.
+  `build-pages` runs on every push to `main` (and on `workflow_dispatch`),
+  configures Pages, and uploads the artifact. `deploy-pages` only runs
+  `actions/deploy-pages@v4` with the required `pages: write` and
+  `id-token: write` permissions and the `github-pages` environment.
+  Removed the obsolete `deploy_pages` boolean input.
+- Added a `--assets-glob` flag to `csharp/scripts/create-github-release.mjs`
+  that resolves a `dir/*.ext` pattern and calls
+  `gh release upload <tag> <files...> --clobber` after the release exists.
+  Wired `--assets-glob "csharp/artifacts/*.nupkg"` into both the auto release
+  and instant release jobs in `.github/workflows/csharp.yml`.
+- Extended `js/test/repositoryLayout.test.mjs` with two regression tests:
+  one asserting `wasm.yml` deploys Pages on push to `main`, and one asserting
+  `csharp.yml` carries the asset glob in both release jobs.
+- Added a unit test for the new asset glob in
+  `csharp/scripts/release-scripts.test.mjs` that uses `--dry-run` so it does
+  not contact GitHub.
+- Removed the regenerated `.gitkeep` and the throwaway `ci-logs/` folder
+  used to download the wasm CI log; the log is preserved as
+  `evidence/wasm-25747032579.log`.
+
+### Upstream report
+
+Filed
+<https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/7>
+covering the missing `.nupkg` upload in the C# template. The issue includes
+the reproduction, the suggested fix, and a link back to PR 81 with the
+working patch. Evidence:
+`evidence/upstream-csharp-template-issue-7.json`.
+
+### New evidence files
+
+- `wasm-25747032579.log`, `run-25747032579.json`,
+  `run-25747032579-jobs.json` — the post-merge WebAssembly CI run that
+  triggered the followup.
+- `issue-79-comments-followup.json` — captures the user's comment that
+  reopened the work.
+- `upstream-csharp-template-issue-7.json` — confirmation that the upstream
+  issue was filed.
+
+### Verification (PR 81)
+
+- `node --test js/test/repositoryLayout.test.mjs`
+- `node --test csharp/scripts/release-scripts.test.mjs`
