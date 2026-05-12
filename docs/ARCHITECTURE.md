@@ -15,13 +15,13 @@ links database.
 | Path | Responsibility |
 |------|----------------|
 | `README.md` | User-facing quick start and feature overview. |
-| `docs/` | Requirements, architecture notes, behavior notes, screenshots, and case studies. |
+| `docs/` | Requirements, architecture notes, behavior notes, and case studies. |
 | `csharp/` | Production .NET CLI package published as the `clink` tool. |
 | `rust/` | Rust library and native `clink` binary that mirror core C# behavior. |
 | `csharp/scripts/` | C# release, changeset, and repository validation helpers. |
 | `rust/scripts/` | Rust release, changelog, crate publication, and repository validation helpers. |
 | `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
-| `web/` | React/Vite browser workbench. |
+| `js/` | React/Vite browser workbench and JavaScript package lockfile. |
 | `.github/workflows/` | Split C#, Rust, and WebAssembly CI workflows. |
 
 ## C# Implementation
@@ -84,10 +84,10 @@ Key files:
 
 - `rust/wasm/src/lib.rs`: exports `Clink` with `execute`, `snapshot`, `reset`, `version`,
   and `rustCoreVersion`.
-- `web/src/App.jsx`: React application, query editor, graph view, and runtime
+- `js/src/App.jsx`: React application, query editor, graph view, and runtime
   status.
-- `web/src/styles.css`: application styling.
-- `web/vite.config.js`: Vite build configuration.
+- `js/src/styles.css`: application styling.
+- `js/vite.config.js`: Vite build configuration.
 
 Runtime flow:
 
@@ -157,5 +157,4 @@ own.
 - Rust `doublets`: https://docs.rs/doublets/latest/doublets/
 - Rust `links-notation`: https://docs.rs/crate/links-notation/0.13.0
 - npm `doublets-web`: https://www.npmjs.com/package/doublets-web
-- WebAssembly local docs: [../README-WASM.md](../README-WASM.md)
-- WebAssembly implementation notes: [../WEBASSEMBLY_IMPLEMENTATION.md](../WEBASSEMBLY_IMPLEMENTATION.md)
+- WebAssembly local docs and implementation notes: [../js/README.md](../js/README.md)

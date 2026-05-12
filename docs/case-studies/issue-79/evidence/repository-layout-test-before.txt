@@ -1,0 +1,357 @@
+TAP version 13
+# Subtest: language code package manifests and generated evidence stay out of the root folder
+not ok 1 - language code package manifests and generated evidence stay out of the root folder
+  ---
+  duration_ms: 1.59355
+  location: '/tmp/gh-issue-solver-1778599399287/web/test/repositoryLayout.test.mjs:9:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    .gitkeep should live under the package-specific project tree or case-study evidence
+
+    true !== false
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/gh-issue-solver-1778599399287/web/test/repositoryLayout.test.mjs:24:12)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: JavaScript package scripts target the relocated WebAssembly crate and split script trees
+not ok 2 - JavaScript package scripts target the relocated WebAssembly crate and split script trees
+  ---
+  duration_ms: 0.248762
+  location: '/tmp/gh-issue-solver-1778599399287/web/test/repositoryLayout.test.mjs:49:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/gh-issue-solver-1778599399287/js/package.json'"
+  code: 'ENOENT'
+  stack: |-
+    readFileSync (node:fs:448:20)
+    TestContext.<anonymous> (file:///tmp/gh-issue-solver-1778599399287/web/test/repositoryLayout.test.mjs:51:5)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: WebAssembly workflow uses the JavaScript package lockfile from js
+not ok 3 - WebAssembly workflow uses the JavaScript package lockfile from js
+  ---
+  duration_ms: 0.980024
+  location: '/tmp/gh-issue-solver-1778599399287/web/test/repositoryLayout.test.mjs:71:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /js\/package-lock\.json/. Input:
+
+    'name: WebAssembly CI\n' +
+      '\n' +
+      'on:\n' +
+      '  push:\n' +
+      '    branches:\n' +
+      '      - main\n' +
+      '      - issue-*\n' +
+      '    paths:\n' +
+      "      - '.github/workflows/wasm.yml'\n" +
+      "      - 'package-lock.json'\n" +
+      "      - 'package.json'\n" +
+      "      - 'rust/**'\n" +
+      "      - 'web/**'\n" +
+      '  pull_request:\n' +
+      '    branches:\n' +
+      '      - main\n' +
+      '    paths:\n' +
+      "      - '.github/workflows/wasm.yml'\n" +
+      "      - 'package-lock.json'\n" +
+      "      - 'package.json'\n" +
+      "      - 'rust/**'\n" +
+      "      - 'web/**'\n" +
+      '  workflow_dispatch:\n' +
+      '    inputs:\n' +
+      '      deploy_pages:\n' +
+      "        description: 'Deploy the built app to GitHub Pages'\n" +
+      '        required: true\n' +
+      '        default: false\n' +
+      '        type: boolean\n' +
+      '\n' +
+      'concurrency:\n' +
+      '  group: wasm-${{ github.workflow }}-${{ github.ref }}\n' +
+      '  cancel-in-progress: true\n' +
+      '\n' +
+      'permissions:\n' +
+      '  contents: read\n' +
+      '\n' +
+      'jobs:\n' +
+      '  test:\n' +
+      '    name: Test\n' +
+      '    runs-on: ubuntu-latest\n' +
+      '\n' +
+      '    steps:\n' +
+      '      - uses: actions/checkout@v4\n' +
+      '\n' +
+      '      - name: Setup Rust\n' +
+      '        uses: dtolnay/rust-toolchain@stable\n' +
+      '        with:\n' +
+      '          targets: wasm32-unknown-unknown\n' +
+      '\n' +
+      '      - name: Install wasm-pack\n' +
+      '        run: cargo install wasm-pack --version 0.14.0 --locked\n' +
+      '\n' +
+      '      - name: Setup Node.js\n' +
+      '        uses: actions/setup-node@v4\n' +
+      '        with:\n' +
+      "          node-version: '20.x'\n" +
+      '          cache: npm\n' +
+      '\n' +
+      '      - name: Cache cargo registry\n' +
+      '        uses: actions/cache@v4\n' +
+      '        with:\n' +
+      '          path: |\n' +
+      '            ~/.cargo/registry\n' +
+      '            ~/.cargo/git\n' +
+      '            rust/target\n' +
+      '            rust/wasm/target\n' +
+      "          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}\n" +
+      '          restore-keys: |\n' +
+      '            ${{ runner.os }}-wasm-cargo-\n' +
+      '\n' +
+      '      - name: Install npm dependencies\n' +
+      '        run: npm ci\n' +
+      '\n' +
+      '      - name: Test Rust CLI core\n' +
+      '        run: cargo test --manifest-path rust/Cargo.toml --all-features\n' +
+      '\n' +
+      '      - name: Test WebAssembly wrapper\n' +
+      '        run: npm run test:wasm\n' +
+      '\n' +
+      '      - name: Build React WebAssembly app\n' +
+      '        run: npm run build\n' +
+      '\n' +
+      '      - name: Upload built app\n' +
+      '        uses: actions/upload-artifact@v4\n' +
+      '        with:\n' +
+      '          name: link-cli-web\n' +
+      '          path: dist/\n' +
+      '\n' +
+      '  deploy:\n' +
+      '    name: Deploy GitHub Pages\n' +
+      '    if: |\n' +
+      "      github.event_name == 'workflow_dispatch' &&\n" +
+      "      github.ref == 'refs/heads/main' &&\n" +
+      '      inputs.deploy_pages\n' +
+      '    needs: test\n' +
+      '    runs-on: ubuntu-latest\n' +
+      '    permissions:\n' +
+      '      contents: read\n' +
+      '      pages: write\n' +
+      '      id-token: write\n' +
+      '    environment:\n' +
+      '      name: github-pages\n' +
+      '      url: ${{ steps.deployment.outputs.page_url }}\n' +
+      '\n' +
+      '    steps:\n' +
+      '      - uses: actions/checkout@v4\n' +
+      '\n' +
+      '      - name: Setup Rust\n' +
+      '        uses: dtolnay/rust-toolchain@stable\n' +
+      '        with:\n' +
+      '          targets: wasm32-unknown-unknown\n' +
+      '\n' +
+      '      - name: Install wasm-pack\n' +
+      '        run: cargo install wasm-pack --version 0.14.0 --locked\n' +
+      '\n' +
+      '      - name: Setup Node.js\n' +
+      '        uses: actions/setup-node@v4\n' +
+      '        with:\n' +
+      "          node-version: '20.x'\n" +
+      '          cache: npm\n' +
+      '\n' +
+      '      - name: Install npm dependencies\n' +
+      '        run: npm ci\n' +
+      '\n' +
+      '      - name: Build GitHub Pages app\n' +
+      '        run: npm run build:pages\n' +
+      '\n' +
+      '      - name: Configure Pages\n' +
+      '        uses: actions/configure-pages@v5\n' +
+      '\n' +
+      '      - name: Upload Pages artifact\n' +
+      '        uses: actions/upload-pages-artifact@v3\n' +
+      '        with:\n' +
+      '          path: dist/\n' +
+      '\n' +
+      '      - name: Deploy to GitHub Pages\n' +
+      '        id: deployment\n' +
+      '        uses: actions/deploy-pages@v4\n'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    name: WebAssembly CI
+
+    on:
+      push:
+        branches:
+          - main
+          - issue-*
+        paths:
+          - '.github/workflows/wasm.yml'
+          - 'package-lock.json'
+          - 'package.json'
+          - 'rust/**'
+          - 'web/**'
+      pull_request:
+        branches:
+          - main
+        paths:
+          - '.github/workflows/wasm.yml'
+          - 'package-lock.json'
+          - 'package.json'
+          - 'rust/**'
+          - 'web/**'
+      workflow_dispatch:
+        inputs:
+          deploy_pages:
+            description: 'Deploy the built app to GitHub Pages'
+            required: true
+            default: false
+            type: boolean
+
+    concurrency:
+      group: wasm-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: read
+
+    jobs:
+      test:
+        name: Test
+        runs-on: ubuntu-latest
+
+        steps:
+          - uses: actions/checkout@v4
+
+          - name: Setup Rust
+            uses: dtolnay/rust-toolchain@stable
+            with:
+              targets: wasm32-unknown-unknown
+
+          - name: Install wasm-pack
+            run: cargo install wasm-pack --version 0.14.0 --locked
+
+          - name: Setup Node.js
+            uses: actions/setup-node@v4
+            with:
+              node-version: '20.x'
+              cache: npm
+
+          - name: Cache cargo registry
+            uses: actions/cache@v4
+            with:
+              path: |
+                ~/.cargo/registry
+                ~/.cargo/git
+                rust/target
+                rust/wasm/target
+              key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}
+              restore-keys: |
+                ${{ runner.os }}-wasm-cargo-
+
+          - name: Install npm dependencies
+            run: npm ci
+
+          - name: Test Rust CLI core
+            run: cargo test --manifest-path rust/Cargo.toml --all-features
+
+          - name: Test WebAssembly wrapper
+            run: npm run test:wasm
+
+          - name: Build React WebAssembly app
+            run: npm run build
+
+          - name: Upload built app
+            uses: actions/upload-artifact@v4
+            with:
+              name: link-cli-web
+              path: dist/
+
+      deploy:
+        name: Deploy GitHub Pages
+        if: |
+          github.event_name == 'workflow_dispatch' &&
+          github.ref == 'refs/heads/main' &&
+          inputs.deploy_pages
+        needs: test
+        runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          pages: write
+          id-token: write
+        environment:
+          name: github-pages
+          url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+          - uses: actions/checkout@v4
+
+          - name: Setup Rust
+            uses: dtolnay/rust-toolchain@stable
+            with:
+              targets: wasm32-unknown-unknown
+
+          - name: Install wasm-pack
+            run: cargo install wasm-pack --version 0.14.0 --locked
+
+          - name: Setup Node.js
+            uses: actions/setup-node@v4
+            with:
+              node-version: '20.x'
+              cache: npm
+
+          - name: Install npm dependencies
+            run: npm ci
+
+          - name: Build GitHub Pages app
+            run: npm run build:pages
+
+          - name: Configure Pages
+            uses: actions/configure-pages@v5
+
+          - name: Upload Pages artifact
+            uses: actions/upload-pages-artifact@v3
+            with:
+              path: dist/
+
+          - name: Deploy to GitHub Pages
+            id: deployment
+            uses: actions/deploy-pages@v4
+
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/gh-issue-solver-1778599399287/web/test/repositoryLayout.test.mjs:74:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48.392613

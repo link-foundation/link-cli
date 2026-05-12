@@ -54,7 +54,7 @@ Captured evidence is stored in `evidence/`.
 
 ## Regression Test
 
-`web/test/repositoryLayout.test.mjs` reproduces the original layout problem by
+`js/test/repositoryLayout.test.mjs` reproduces the original layout problem by
 asserting that root `Cargo.toml`, `Cargo.lock`, `scripts/`, `src/`, and `tests/`
 do not exist, while `csharp/scripts/`, `rust/scripts/`, and `rust/wasm/` do.
 

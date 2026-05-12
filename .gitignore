@@ -411,7 +411,7 @@ dist/
 pkg/
 pkg-node/
 pkg-bundler/
-web/pkg/
+js/pkg/
 
 # Local AI investigation artifacts
 ci-logs/
