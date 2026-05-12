@@ -1,9 +1,20 @@
 # link-cli
+
+[![C# CI/CD Pipeline](https://github.com/link-foundation/link-cli/actions/workflows/csharp.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/csharp.yml)
+[![Rust CI/CD Pipeline](https://github.com/link-foundation/link-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/rust.yml)
+[![WebAssembly CI](https://github.com/link-foundation/link-cli/actions/workflows/wasm.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/wasm.yml)
+[![NuGet](https://img.shields.io/nuget/v/clink?logo=nuget&label=NuGet)](https://www.nuget.org/packages/clink)
+[![Crates.io](https://img.shields.io/crates/v/link-cli?logo=rust&label=Crates.io)](https://crates.io/crates/link-cli)
+[![C# Release](https://img.shields.io/github/v/release/link-foundation/link-cli?filter=csharp-v*&label=C%23%20release)](https://github.com/link-foundation/link-cli/releases)
+[![Rust Release](https://img.shields.io/github/v/release/link-foundation/link-cli?filter=rust-v*&label=Rust%20release)](https://github.com/link-foundation/link-cli/releases)
+
 `clink` (`CLInk` `cLINK`), a CLI tool to manipulate links using single substitution operation.
 
 It is based on [associative theory](https://habr.com/ru/articles/895896) (also in [ru](https://habr.com/ru/articles/804617)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
-It uses C# implementation of [a links data store](https://github.com/linksplatform?view_as=public) (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
+It includes a production C# CLI package, a Rust CLI/library package, and a
+Rust-powered WebAssembly browser workbench built on [links data store](https://github.com/linksplatform?view_as=public)
+concepts (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
 
 ## WebAssembly Browser Workbench
 
@@ -24,6 +35,11 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind this documentation refresh.
 
 ## Installation
+
+Language package documentation:
+
+- [C# NuGet tool](csharp/README.md)
+- [Rust crate](rust/README.md)
 
 This CLI tool can be installed globally as `clink` using single command (that will work if you have [.NET](https://dotnet.microsoft.com/en-us/download) installed):
 

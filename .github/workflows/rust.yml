@@ -6,13 +6,13 @@ on:
       - main
     paths:
       - 'rust/**'
-      - 'scripts/**'
+      - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - 'rust/**'
-      - 'scripts/**'
+      - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
   workflow_dispatch:
     inputs:
@@ -36,10 +36,8 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
-
-defaults:
-  run:
-    working-directory: rust
+  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+  CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
 
 jobs:
   # === DETECT CHANGES - determines which jobs should run ===
@@ -60,19 +58,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
 
       - name: Detect changes
         id: changes
-        working-directory: .
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: node scripts/detect-code-changes.mjs
+        run: rust-script rust/scripts/detect-code-changes.rs
 
   # === CHANGELOG CHECK - only runs on PRs with code changes ===
   changelog:
@@ -85,24 +83,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
       - name: Check for changelog fragments
-        working-directory: .
-        run: |
-          # Get list of fragment files (excluding README and template)
-          FRAGMENTS=$(find rust/changelog.d -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
-
-          if [ "$FRAGMENTS" -eq 0 ]; then
-            echo "::warning::No changelog fragment found. Please add a changelog entry in rust/changelog.d/"
-            echo ""
-            echo "To create a changelog fragment:"
-            echo "  Create a new .md file in rust/changelog.d/ with your changes"
-            echo ""
-            echo "See rust/changelog.d/README.md for more information."
-            # Note: This is a warning, not a failure, to allow flexibility
-            exit 0
-          fi
-
-          echo "Changelog check passed - found $FRAGMENTS fragment(s)"
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/check-changelog-fragment.rs
 
   # === LINT AND FORMAT CHECK ===
   lint:
@@ -127,10 +118,8 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
+      - name: Install rust-script
+        run: cargo install rust-script
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -144,18 +133,13 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Check formatting
-        run: cargo fmt --all -- --check
+        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
 
       - name: Run Clippy
-        run: cargo clippy --all-targets --all-features
-
-      - name: Run release script tests
-        working-directory: .
-        run: node --test scripts/*.test.mjs
+        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features
 
       - name: Check file size limit
-        working-directory: .
-        run: node scripts/check-file-size.mjs --lang rust
+        run: rust-script rust/scripts/check-file-size.rs
 
   # === TEST ===
   test:
@@ -185,10 +169,10 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Run tests
-        run: cargo test --all-features --verbose
+        run: cargo test --manifest-path rust/Cargo.toml --all-features --verbose
 
       - name: Run doc tests
-        run: cargo test --doc --verbose
+        run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
 
   # === BUILD ===
   build:
@@ -214,10 +198,10 @@ jobs:
             ${{ runner.os }}-cargo-build-
 
       - name: Build release
-        run: cargo build --release --verbose
+        run: cargo build --manifest-path rust/Cargo.toml --release --verbose
 
       - name: Check package
-        run: cargo package --list
+        run: cargo package --manifest-path rust/Cargo.toml --list --allow-dirty
 
   # === AUTO RELEASE ===
   auto-release:
@@ -236,73 +220,81 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
+      - name: Install rust-script
+        run: cargo install rust-script
 
       - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+        run: rust-script rust/scripts/git-config.rs
 
       - name: Determine bump type from changelog fragments
         id: bump_type
-        working-directory: .
-        run: node scripts/get-bump-type.mjs --dir rust/changelog.d
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/get-bump-type.rs
 
       - name: Check if version already released or no fragments
         id: check
+        env:
+          HAS_FRAGMENTS: ${{ steps.bump_type.outputs.has_fragments }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUST_ROOT: rust
         run: |
-          # Check if there are changelog fragments
-          if [ "${{ steps.bump_type.outputs.has_fragments }}" != "true" ]; then
-            # No fragments - check if current version tag exists
-            CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml)
-            if git rev-parse "rust-v$CURRENT_VERSION" >/dev/null 2>&1; then
-              echo "No changelog fragments and rust-v$CURRENT_VERSION already released"
-              echo "should_release=false" >> $GITHUB_OUTPUT
-            else
-              echo "No changelog fragments but rust-v$CURRENT_VERSION not yet released"
-              echo "should_release=true" >> $GITHUB_OUTPUT
-              echo "skip_bump=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "Found changelog fragments, proceeding with release"
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "skip_bump=false" >> $GITHUB_OUTPUT
-          fi
+          rust-script rust/scripts/check-release-needed.rs \
+            --tag-prefix rust-v \
+            --repository "${{ github.repository }}"
 
       - name: Collect changelog and bump version
         id: version
         if: steps.check.outputs.should_release == 'true' && steps.check.outputs.skip_bump != 'true'
         working-directory: .
         run: |
-          node scripts/version-and-commit-rust.mjs \
+          rust-script rust/scripts/version-and-commit.rs \
+            --rust-root rust \
+            --tag-prefix rust-v \
             --bump-type "${{ steps.bump_type.outputs.bump_type }}"
 
       - name: Get current version
         id: current_version
         if: steps.check.outputs.should_release == 'true'
-        run: |
-          CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' Cargo.toml)
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/get-version.rs
 
       - name: Build release
         if: steps.check.outputs.should_release == 'true'
-        run: cargo build --release
+        run: cargo build --manifest-path rust/Cargo.toml --release
+
+      - name: Publish to Crates.io
+        id: publish_crate
+        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.crate_published != 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+          CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/publish-crate.rs
+
+      - name: Wait for Crate availability on Crates.io
+        if: steps.check.outputs.should_release == 'true'
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.current_version.outputs.version }}"
 
       - name: Create GitHub Release
         if: steps.check.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: .
         run: |
-          node scripts/create-github-release.mjs \
-            --release-version "${{ steps.current_version.outputs.version }}" \
+          RELEASE_VERSION="${{ steps.version.outputs.new_version }}"
+          if [ -z "$RELEASE_VERSION" ]; then
+            RELEASE_VERSION="${{ steps.current_version.outputs.version }}"
+          fi
+
+          rust-script rust/scripts/create-github-release.rs \
+            --rust-root rust \
+            --release-version "$RELEASE_VERSION" \
             --repository "${{ github.repository }}" \
             --tag-prefix "rust-v" \
-            --language "Rust" \
-            --changelog-path "rust/CHANGELOG.md"
+            --language "Rust"
 
   # === MANUAL RELEASE ===
   manual-release:
@@ -321,37 +313,48 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
+      - name: Install rust-script
+        run: cargo install rust-script
 
       - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+        run: rust-script rust/scripts/git-config.rs
 
       - name: Version and commit
         id: version
-        working-directory: .
         run: |
-          node scripts/version-and-commit-rust.mjs \
+          rust-script rust/scripts/version-and-commit.rs \
+            --rust-root rust \
+            --tag-prefix rust-v \
             --bump-type "${{ github.event.inputs.bump_type }}" \
             --description "${{ github.event.inputs.description }}"
 
       - name: Build release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
-        run: cargo build --release
+        run: cargo build --manifest-path rust/Cargo.toml --release
+
+      - name: Publish to Crates.io
+        id: publish_crate
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+          CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/publish-crate.rs
+
+      - name: Wait for Crate availability on Crates.io
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.version.outputs.new_version }}"
 
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: .
         run: |
-          node scripts/create-github-release.mjs \
+          rust-script rust/scripts/create-github-release.rs \
+            --rust-root rust \
             --release-version "${{ steps.version.outputs.new_version }}" \
             --repository "${{ github.repository }}" \
             --tag-prefix "rust-v" \
-            --language "Rust" \
-            --changelog-path "rust/CHANGELOG.md"
+            --language "Rust"

@@ -2,8 +2,8 @@
 
 The browser workbench combines three runtimes:
 
-- Rust `link-cli` core compiled to WebAssembly through the root `clink-wasm`
-  crate.
+- Rust `link-cli` core compiled to WebAssembly through the `rust/wasm`
+  `clink-wasm` crate.
 - React and Vite for the single-page browser interface in `web/`.
 - `doublets-web` for a live WebAssembly `UnitedLinks` mirror built from the
   current query result. The committed lockfile currently pins `0.1.2`.
@@ -81,7 +81,7 @@ Supported options are `before`, `changes`, `after`, `trace`,
 
 ```bash
 cargo test --manifest-path rust/Cargo.toml --all-features
-cargo test --lib
+cargo test --manifest-path rust/wasm/Cargo.toml --lib
 npm run test:wasm
 npm run build
 ```

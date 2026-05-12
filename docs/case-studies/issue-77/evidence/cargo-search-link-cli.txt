@@ -1,0 +1,6 @@
+network-isomorphism-solver = "0.2.0"    # Network isomorphism solver using Links Theory - determines if two networks are structur…
+blink-cli = "0.0.1"                     # The minimal, blazing-fast file sharing cli tool.
+canlink-cli = "0.3.3"                   # Command-line interface for CAN hardware abstraction layer
+chainlink_client = "0.0.1"              # This crate is reserved for the Chainlink project
+cufflink-cli = "0.11.5"                 # CLI for the Cufflink CRUD microservice platform — deploy, init, and manage services
+... and 5 crates more (use --limit N to see more)
