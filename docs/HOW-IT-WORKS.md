@@ -175,7 +175,7 @@ The trigger schema is link-backed, using named points such as `Always`, `Once`,
 
 The WebAssembly workbench uses the Rust query processor in the browser.
 
-1. The root `clink-wasm` crate compiles with `wasm-pack`.
+1. The `rust/wasm` `clink-wasm` crate compiles with `wasm-pack`.
 2. `Clink#execute(query, optionsJson)` parses JSON options.
 3. Browser storage keeps links and names in memory for the page session.
 4. The Rust query processor applies the LiNo query.

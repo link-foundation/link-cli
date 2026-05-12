@@ -9,7 +9,7 @@ React single-page app for GitHub Pages.
 
 ```text
 rust/                  Native Rust link-cli library and clink binary
-src/lib.rs             wasm-bindgen wrapper around the Rust query processor
+rust/wasm/             wasm-bindgen wrapper around the Rust query processor
 web/src/               React workbench
 web/pkg/               Generated Rust WASM package, ignored by git
 dist/                  Generated GitHub Pages artifact, ignored by git
@@ -39,7 +39,7 @@ now delegates query semantics to that shared Rust core.
 1. Installs stable Rust with the `wasm32-unknown-unknown` target.
 2. Installs npm dependencies with `npm ci`.
 3. Runs the Rust CLI core tests.
-4. Runs `wasm-pack test --node` for the wrapper.
+4. Runs `wasm-pack test rust/wasm --node` for the wrapper.
 5. Builds the React app.
 6. Deploys `dist/` to GitHub Pages on pushes to `main`.
 
@@ -54,7 +54,7 @@ The workflow uses current Pages and artifact actions:
 
 ```bash
 cargo test --manifest-path rust/Cargo.toml --all-features
-cargo test --lib
+cargo test --manifest-path rust/wasm/Cargo.toml --lib
 npm run test:wasm
 npm run build
 npm run dev

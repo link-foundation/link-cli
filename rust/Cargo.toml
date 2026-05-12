@@ -5,6 +5,7 @@ edition = "2021"
 description = "A CLI tool for links manipulation"
 license = "Unlicense"
 repository = "https://github.com/link-foundation/link-cli"
+readme = "README.md"
 authors = ["link-foundation"]
 keywords = ["links", "doublets", "cli", "database"]
 categories = ["command-line-utilities", "database"]

@@ -7,26 +7,18 @@ on:
       - issue-*
     paths:
       - '.github/workflows/wasm.yml'
-      - 'Cargo.lock'
-      - 'Cargo.toml'
       - 'package-lock.json'
       - 'package.json'
       - 'rust/**'
-      - 'src/**'
-      - 'tests/**'
       - 'web/**'
   pull_request:
     branches:
       - main
     paths:
       - '.github/workflows/wasm.yml'
-      - 'Cargo.lock'
-      - 'Cargo.toml'
       - 'package-lock.json'
       - 'package.json'
       - 'rust/**'
-      - 'src/**'
-      - 'tests/**'
       - 'web/**'
   workflow_dispatch:
     inputs:
@@ -71,9 +63,9 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
             rust/target
-          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('Cargo.lock', 'rust/Cargo.lock') }}
+            rust/wasm/target
+          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-wasm-cargo-
 

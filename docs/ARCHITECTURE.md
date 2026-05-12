@@ -18,10 +18,11 @@ links database.
 | `docs/` | Requirements, architecture notes, behavior notes, screenshots, and case studies. |
 | `csharp/` | Production .NET CLI package published as the `clink` tool. |
 | `rust/` | Rust library and native `clink` binary that mirror core C# behavior. |
-| `src/lib.rs` | `wasm-bindgen` wrapper around the Rust query processor. |
+| `csharp/scripts/` | C# release, changeset, and repository validation helpers. |
+| `rust/scripts/` | Rust release, changelog, crate publication, and repository validation helpers. |
+| `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
 | `web/` | React/Vite browser workbench. |
 | `.github/workflows/` | Split C#, Rust, and WebAssembly CI workflows. |
-| `scripts/` | Release, changelog, changeset, and repository validation helpers. |
 
 ## C# Implementation
 
@@ -81,7 +82,7 @@ The browser workbench is a wrapper around the Rust query processor.
 
 Key files:
 
-- `src/lib.rs`: exports `Clink` with `execute`, `snapshot`, `reset`, `version`,
+- `rust/wasm/src/lib.rs`: exports `Clink` with `execute`, `snapshot`, `reset`, `version`,
   and `rustCoreVersion`.
 - `web/src/App.jsx`: React application, query editor, graph view, and runtime
   status.
@@ -152,6 +153,7 @@ own.
 ## External References
 
 - NuGet `clink`: https://www.nuget.org/packages/clink
+- crates.io `link-cli`: https://crates.io/crates/link-cli
 - Rust `doublets`: https://docs.rs/doublets/latest/doublets/
 - Rust `links-notation`: https://docs.rs/crate/links-notation/0.13.0
 - npm `doublets-web`: https://www.npmjs.com/package/doublets-web

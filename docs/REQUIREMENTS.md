@@ -43,7 +43,7 @@ the core CLI behavior and is also used by the WebAssembly browser workbench.
 | Import a database from LiNo. | #25, #43 | `--in`, `--import`, and `--lino-input` read a LiNo file before query execution. |
 | Format a link structure. | #19, #48 | `--structure` recursively formats the left branch with indexes preserved. |
 | Store persistent transformations. | #3, #55 | C# supports `--always`, `--once`, `--never`, `--triggers`, `--triggers-file`, and `--embed-triggers`. |
-| Separate code by implementation language. | #63, #64 | C# code lives under `csharp/`; Rust code lives under `rust/`; WebAssembly wrapper code lives at the repository root plus `web/`. |
+| Separate code by implementation language. | #63, #64, #77 | C# code and release helpers live under `csharp/`; Rust code, release helpers, and the WebAssembly wrapper crate live under `rust/`; the browser app lives under `web/`. |
 | Provide Rust parity for core behavior. | #63, #67, #68 | Rust mirrors query processing, names, import/export, structure formatting, and Unicode sequence support. |
 | Run in a browser. | #12, #52, #69, #70 | The Rust query processor is wrapped with `wasm-bindgen` and surfaced through a React/Vite workbench. |
 | Keep CI split by surface area. | #63, #69 | Separate C#, Rust, and WebAssembly workflows run relevant checks. |
