@@ -1,0 +1,19 @@
+HTTP/2 200 
+date: Tue, 12 May 2026 22:00:52 GMT
+content-type: image/svg+xml;charset=utf-8
+access-control-allow-origin: *
+cross-origin-resource-policy: cross-origin
+cache-control: max-age=300, s-maxage=300
+expires: Tue, 12 May 2026 22:05:51 GMT
+content-security-policy: script-src 'none';
+vary: accept-encoding
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=sQEOn9nS3AEfF2NEJe%2FJ15i6tBC3EJFgOa339X2DUSM2MC%2BC9LwM%2FJLmO%2FxM99ADp4hB2BQ%2FUJ7mRg58%2BUCkjzqfJZzwpd%2Fy8o6fzQqlnmHs07yH3QBRBHeNo7TlyAdzZA%3D%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+via: 1.1 fly.io, 1.1 fly.io
+fly-request-id: 01KRF3A14AQA3RNND8QP11WF8J-fra
+last-modified: Tue, 12 May 2026 22:00:52 GMT
+cf-cache-status: MISS
+cf-ray: 9facb2da5ed98efb-FRA
+alt-svc: h3=":443"; ma=86400
+
