@@ -1,0 +1,31 @@
+Release	Build release package	2026-05-12T21:20:40.2545964Z   Foundation.Data.Doublets.Cli -> /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli/bin/Release/net8/publish/
+Release	Build release package	2026-05-12T21:20:40.5106745Z   Successfully created package '/home/runner/work/link-cli/link-cli/csharp/artifacts/clink.2.4.0.nupkg'.
+Release	Resolve NuGet package id	﻿2026-05-12T21:20:40.5365901Z ##[group]Run PACKAGE_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5366684Z ^[[36;1mPACKAGE_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5367145Z ^[[36;1mif [ -z "$PACKAGE_ID" ]; then^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5367351Z ^[[36;1m  PACKAGE_ID=clink^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5367518Z ^[[36;1mfi^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5367743Z ^[[36;1mPACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5368051Z ^[[36;1mecho "id=$PACKAGE_ID" >> "$GITHUB_OUTPUT"^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5368324Z ^[[36;1mecho "flat_container_id=$PACKAGE_ID_LOWER" >> "$GITHUB_OUTPUT"^[[0m
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5386813Z shell: /usr/bin/bash -e {0}
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5386999Z env:
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5387163Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5387370Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5387596Z   DOTNET_NOLOGO: true
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5387771Z   DOTNET_ROOT: /usr/share/dotnet
+Release	Resolve NuGet package id	2026-05-12T21:20:40.5387957Z ##[endgroup]
+Release	Validate NuGet API key	﻿2026-05-12T21:20:40.6279917Z ##[group]Run if [ -z "$NUGET_API_KEY" ]; then
+Release	Validate NuGet API key	2026-05-12T21:20:40.6280203Z ^[[36;1mif [ -z "$NUGET_API_KEY" ]; then^[[0m
+Release	Validate NuGet API key	2026-05-12T21:20:40.6280532Z ^[[36;1m  echo "::warning::NUGET_API_KEY is not configured — NuGet publish will be skipped."^[[0m
+Release	Validate NuGet API key	2026-05-12T21:20:40.6280852Z ^[[36;1m  exit 0^[[0m
+Release	Validate NuGet API key	2026-05-12T21:20:40.6280999Z ^[[36;1mfi^[[0m
+Release	Validate NuGet API key	2026-05-12T21:20:40.6281175Z ^[[36;1mecho "NUGET_API_KEY length: ${#NUGET_API_KEY}"^[[0m
+Release	Validate NuGet API key	2026-05-12T21:20:40.6298530Z shell: /usr/bin/bash -e {0}
+Release	Validate NuGet API key	2026-05-12T21:20:40.6298710Z env:
+Release	Validate NuGet API key	2026-05-12T21:20:40.6298980Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+Release	Validate NuGet API key	2026-05-12T21:20:40.6299188Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+Release	Validate NuGet API key	2026-05-12T21:20:40.6299378Z   DOTNET_NOLOGO: true
+Release	Validate NuGet API key	2026-05-12T21:20:40.6299537Z   DOTNET_ROOT: /usr/share/dotnet
+Release	Validate NuGet API key	2026-05-12T21:20:40.6300175Z   NUGET_API_KEY: ***
+Release	Validate NuGet API key	2026-05-12T21:20:40.6300357Z ##[endgroup]
