@@ -122,6 +122,35 @@ test('CSharp release workflow attaches NuGet packages to GitHub Releases', () =>
   );
 });
 
+test('CSharp release workflow includes self-healing release gates', () => {
+  // Regression guard for issue #84: if the NuGet publish failed after the
+  // version commit + tag were pushed, the next run on main must still resume.
+  const workflow = readFileSync(join(repoRoot, '.github/workflows/csharp.yml'), 'utf8');
+
+  assert.match(
+    workflow,
+    /Check if release is needed/,
+    'csharp.yml must include the Check if release is needed step (issue #84)'
+  );
+  assert.match(
+    workflow,
+    /node csharp\/scripts\/check-release-needed\.mjs/,
+    'csharp.yml must invoke csharp/scripts/check-release-needed.mjs'
+  );
+
+  const selfHealing = workflow.match(/steps\.check_release\.outputs\.should_release == 'true' && steps\.check_release\.outputs\.skip_bump == 'true'/g) ?? [];
+  assert.ok(
+    selfHealing.length >= 4,
+    `expected self-healing condition to gate at least 4 release steps in the release job, found ${selfHealing.length}`
+  );
+
+  const alreadyReleasedGates = workflow.match(/steps\.version\.outputs\.already_released == 'true'/g) ?? [];
+  assert.ok(
+    alreadyReleasedGates.length >= 5,
+    `expected already_released gate to appear in both release and instant-release jobs, found ${alreadyReleasedGates.length}`
+  );
+});
+
 test('CSharp and Rust release workflows are scheduled on every push to main', () => {
   for (const [name, workflowPath] of [
     ['CSharp', '.github/workflows/csharp.yml'],
