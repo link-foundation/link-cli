@@ -1,0 +1,1087 @@
+Test	Set up job	﻿2026-05-12T16:12:53.3227859Z Current runner version: '2.334.0'
+Test	Set up job	2026-05-12T16:12:53.3253084Z ##[group]Runner Image Provisioner
+Test	Set up job	2026-05-12T16:12:53.3253976Z Hosted Compute Agent
+Test	Set up job	2026-05-12T16:12:53.3254537Z Version: 20260213.493
+Test	Set up job	2026-05-12T16:12:53.3255101Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+Test	Set up job	2026-05-12T16:12:53.3255853Z Build Date: 2026-02-13T00:28:41Z
+Test	Set up job	2026-05-12T16:12:53.3256466Z Worker ID: {a9d9c039-c3a5-4097-b7a7-44f672348b83}
+Test	Set up job	2026-05-12T16:12:53.3257175Z Azure Region: westus3
+Test	Set up job	2026-05-12T16:12:53.3257759Z ##[endgroup]
+Test	Set up job	2026-05-12T16:12:53.3259452Z ##[group]Operating System
+Test	Set up job	2026-05-12T16:12:53.3260150Z Ubuntu
+Test	Set up job	2026-05-12T16:12:53.3260662Z 24.04.4
+Test	Set up job	2026-05-12T16:12:53.3261148Z LTS
+Test	Set up job	2026-05-12T16:12:53.3261577Z ##[endgroup]
+Test	Set up job	2026-05-12T16:12:53.3262500Z ##[group]Runner Image
+Test	Set up job	2026-05-12T16:12:53.3263076Z Image: ubuntu-24.04
+Test	Set up job	2026-05-12T16:12:53.3263592Z Version: 20260413.86.1
+Test	Set up job	2026-05-12T16:12:53.3264652Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+Test	Set up job	2026-05-12T16:12:53.3266280Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+Test	Set up job	2026-05-12T16:12:53.3267218Z ##[endgroup]
+Test	Set up job	2026-05-12T16:12:53.3268207Z ##[group]GITHUB_TOKEN Permissions
+Test	Set up job	2026-05-12T16:12:53.3270620Z Contents: read
+Test	Set up job	2026-05-12T16:12:53.3271297Z Metadata: read
+Test	Set up job	2026-05-12T16:12:53.3271800Z ##[endgroup]
+Test	Set up job	2026-05-12T16:12:53.3273800Z Secret source: Actions
+Test	Set up job	2026-05-12T16:12:53.3274579Z Prepare workflow directory
+Test	Set up job	2026-05-12T16:12:53.3710367Z Prepare all required actions
+Test	Set up job	2026-05-12T16:12:53.3748902Z Getting action download info
+Test	Set up job	2026-05-12T16:12:53.9220706Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Test	Set up job	2026-05-12T16:12:54.0566960Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+Test	Set up job	2026-05-12T16:12:54.3109364Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Test	Set up job	2026-05-12T16:12:54.4034300Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+Test	Set up job	2026-05-12T16:12:54.4958472Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Test	Set up job	2026-05-12T16:12:54.7549451Z Complete job name: Test
+Test	Run actions/checkout@v4	﻿2026-05-12T16:12:54.8325520Z ##[group]Run actions/checkout@v4
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8326487Z with:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8326969Z   repository: link-foundation/link-cli
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8327774Z   token: ***
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8328220Z   ssh-strict: true
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8328680Z   ssh-user: git
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8329359Z   persist-credentials: true
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8329912Z   clean: true
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8330380Z   sparse-checkout-cone-mode: true
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8330941Z   fetch-depth: 1
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8331392Z   fetch-tags: false
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8331871Z   show-progress: true
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8332354Z   lfs: false
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8332781Z   submodules: false
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8333254Z   set-safe-directory: true
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.8334068Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9485770Z Syncing repository: link-foundation/link-cli
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9488089Z ##[group]Getting Git version info
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9488907Z Working directory is '/home/runner/work/link-cli/link-cli'
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9490481Z [command]/usr/bin/git version
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9524410Z git version 2.53.0
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9554560Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9575168Z Temporarily overriding HOME='/home/runner/work/_temp/831ce6fc-083c-4a19-a669-742cddf16a7c' before making global git config changes
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9576820Z Adding repository directory to the temporary git global config as a safe directory
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9580491Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9613912Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9617777Z ##[group]Initializing the repository
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9621696Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9713703Z hint: Using 'master' as the name for the initial branch. This default branch name
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9716088Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9717495Z hint: to use in all of your new repositories, which will suppress this warning,
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9718560Z hint: call:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9718976Z hint:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9720160Z hint: 	git config --global init.defaultBranch <name>
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9721095Z hint:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9721739Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9722756Z hint: 'development'. The just-created branch can be renamed via this command:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9723563Z hint:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9724001Z hint: 	git branch -m <name>
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9724500Z hint:
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9725640Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9726757Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9728576Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9757762Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9759453Z ##[group]Disabling automatic garbage collection
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9762797Z [command]/usr/bin/git config --local gc.auto 0
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9791992Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9793562Z ##[group]Setting up auth
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9800032Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Test	Run actions/checkout@v4	2026-05-12T16:12:54.9831112Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0111186Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0145173Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0368194Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0401804Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0622319Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0656239Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0657221Z ##[group]Fetching the repository
+Test	Run actions/checkout@v4	2026-05-12T16:12:55.0664858Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9c93a27e662408102894dacb89c8ed841a151769:refs/remotes/origin/main
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5400537Z From https://github.com/link-foundation/link-cli
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5403767Z  * [new ref]         9c93a27e662408102894dacb89c8ed841a151769 -> origin/main
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5427929Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5429347Z ##[group]Determining the checkout info
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5430982Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5435354Z [command]/usr/bin/git sparse-checkout disable
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5470269Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5494859Z ##[group]Checking out the ref
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.5498714Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.6096027Z Switched to a new branch 'main'
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.6097468Z branch 'main' set up to track 'origin/main'.
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.6110671Z ##[endgroup]
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.6148591Z [command]/usr/bin/git log -1 --format=%H
+Test	Run actions/checkout@v4	2026-05-12T16:12:56.6172061Z 9c93a27e662408102894dacb89c8ed841a151769
+Test	Setup Rust	﻿2026-05-12T16:12:56.6809643Z ##[group]Run dtolnay/rust-toolchain@stable
+Test	Setup Rust	2026-05-12T16:12:56.6810805Z with:
+Test	Setup Rust	2026-05-12T16:12:56.6811597Z   targets: wasm32-unknown-unknown
+Test	Setup Rust	2026-05-12T16:12:56.6812814Z   toolchain: stable
+Test	Setup Rust	2026-05-12T16:12:56.6813627Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:12:56.6974537Z ##[group]Run : parse toolchain version
+Test	Setup Rust	2026-05-12T16:12:56.6975768Z ^[[36;1m: parse toolchain version^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6976765Z ^[[36;1mif [[ -z $toolchain ]]; then^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6978560Z ^[[36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6980781Z ^[[36;1m  echo "'toolchain' is a required input" >&2^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6981884Z ^[[36;1m  exit 1^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6983067Z ^[[36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6984548Z ^[[36;1m  if [[ Linux == macOS ]]; then^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6986399Z ^[[36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6988300Z ^[[36;1m  else^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6989878Z ^[[36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6991577Z ^[[36;1m  fi^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6992637Z ^[[36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6994554Z ^[[36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6996227Z ^[[36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.6998123Z ^[[36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7000051Z ^[[36;1melse^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7000942Z ^[[36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7002064Z ^[[36;1mfi^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7029666Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:12:56.7030905Z env:
+Test	Setup Rust	2026-05-12T16:12:56.7031581Z   toolchain: stable
+Test	Setup Rust	2026-05-12T16:12:56.7032331Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:12:56.7202173Z ##[group]Run : construct rustup command line
+Test	Setup Rust	2026-05-12T16:12:56.7203326Z ^[[36;1m: construct rustup command line^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7204904Z ^[[36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7207156Z ^[[36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7208915Z ^[[36;1mecho "downgrade=" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7232105Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:12:56.7233338Z env:
+Test	Setup Rust	2026-05-12T16:12:56.7234105Z   targets: wasm32-unknown-unknown
+Test	Setup Rust	2026-05-12T16:12:56.7235078Z   components: 
+Test	Setup Rust	2026-05-12T16:12:56.7235838Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:12:56.7370949Z ##[group]Run : set $CARGO_HOME
+Test	Setup Rust	2026-05-12T16:12:56.7372472Z ^[[36;1m: set $CARGO_HOME^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7374375Z ^[[36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7407107Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:12:56.7409229Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:12:56.7567244Z ##[group]Run : install rustup if needed
+Test	Setup Rust	2026-05-12T16:12:56.7568947Z ^[[36;1m: install rustup if needed^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7571027Z ^[[36;1mif ! command -v rustup &>/dev/null; then^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7575295Z ^[[36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7579727Z ^[[36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7581597Z ^[[36;1mfi^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7612173Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:12:56.7614262Z env:
+Test	Setup Rust	2026-05-12T16:12:56.7615395Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:12:56.7617128Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:12:56.7748953Z ##[group]Run rustup toolchain install stable --target wasm32-unknown-unknown --profile minimal --no-self-update
+Test	Setup Rust	2026-05-12T16:12:56.7752169Z ^[[36;1mrustup toolchain install stable --target wasm32-unknown-unknown --profile minimal --no-self-update^[[0m
+Test	Setup Rust	2026-05-12T16:12:56.7775648Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:12:56.7776826Z env:
+Test	Setup Rust	2026-05-12T16:12:56.7777518Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:12:56.7778459Z   RUSTUP_PERMIT_COPY_RENAME: 1
+Test	Setup Rust	2026-05-12T16:12:56.7779575Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:12:57.3980092Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+Test	Setup Rust	2026-05-12T16:12:57.6165021Z info: latest update on 2026-04-16 for version 1.95.0 (59807616e 2026-04-14)
+Test	Setup Rust	2026-05-12T16:12:57.6294053Z info: removing previous version of component clippy
+Test	Setup Rust	2026-05-12T16:12:57.6310131Z info: removing previous version of component rustfmt
+Test	Setup Rust	2026-05-12T16:12:57.6321384Z info: removing previous version of component cargo
+Test	Setup Rust	2026-05-12T16:12:57.6366711Z info: removing previous version of component rust-std
+Test	Setup Rust	2026-05-12T16:12:57.6412887Z info: removing previous version of component rustc
+Test	Setup Rust	2026-05-12T16:12:57.6461699Z info: downloading 6 components
+Test	Setup Rust	2026-05-12T16:13:07.2874176Z 
+Test	Setup Rust	2026-05-12T16:13:07.2957827Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.95.0 (59807616e 2026-04-14) (from rustc 1.94.1 (e408947bf 2026-03-25))
+Test	Setup Rust	2026-05-12T16:13:07.2959431Z 
+Test	Setup Rust	2026-05-12T16:13:07.3041197Z ##[group]Run rustup default stable
+Test	Setup Rust	2026-05-12T16:13:07.3041489Z ^[[36;1mrustup default stable^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3062885Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.3063213Z env:
+Test	Setup Rust	2026-05-12T16:13:07.3063434Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.3063670Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.3154886Z info: using existing install for stable-x86_64-unknown-linux-gnu
+Test	Setup Rust	2026-05-12T16:13:07.3163637Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+Test	Setup Rust	2026-05-12T16:13:07.3164137Z 
+Test	Setup Rust	2026-05-12T16:13:07.3232426Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.95.0 (59807616e 2026-04-14)
+Test	Setup Rust	2026-05-12T16:13:07.3233048Z 
+Test	Setup Rust	2026-05-12T16:13:07.3265221Z ##[group]Run : create cachekey
+Test	Setup Rust	2026-05-12T16:13:07.3265515Z ^[[36;1m: create cachekey^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3266010Z ^[[36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3266656Z ^[[36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3267159Z ^[[36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3287555Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.3287890Z env:
+Test	Setup Rust	2026-05-12T16:13:07.3288099Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.3288341Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.3616190Z ##[group]Run : disable incremental compilation
+Test	Setup Rust	2026-05-12T16:13:07.3616554Z ^[[36;1m: disable incremental compilation^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3616881Z ^[[36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3617224Z ^[[36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3617502Z ^[[36;1mfi^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3638009Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.3638337Z env:
+Test	Setup Rust	2026-05-12T16:13:07.3638518Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.3638750Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.3695582Z ##[group]Run : enable colors in Cargo output
+Test	Setup Rust	2026-05-12T16:13:07.3695896Z ^[[36;1m: enable colors in Cargo output^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3696187Z ^[[36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3696513Z ^[[36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3696780Z ^[[36;1mfi^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3715958Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.3716280Z env:
+Test	Setup Rust	2026-05-12T16:13:07.3716458Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.3716701Z   CARGO_INCREMENTAL: 0
+Test	Setup Rust	2026-05-12T16:13:07.3717073Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.3796763Z ##[group]Run : enable Cargo sparse registry
+Test	Setup Rust	2026-05-12T16:13:07.3797079Z ^[[36;1m: enable Cargo sparse registry^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3797618Z ^[[36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3798354Z ^[[36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3799415Z ^[[36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3800025Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3800551Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3801043Z ^[[36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3801614Z ^[[36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3802124Z ^[[36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3802476Z ^[[36;1m  fi^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3802649Z ^[[36;1mfi^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.3821407Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.3821734Z env:
+Test	Setup Rust	2026-05-12T16:13:07.3821908Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.3822152Z   CARGO_INCREMENTAL: 0
+Test	Setup Rust	2026-05-12T16:13:07.3822356Z   CARGO_TERM_COLOR: always
+Test	Setup Rust	2026-05-12T16:13:07.3822560Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.4131913Z ##[group]Run : work around spurious network errors in curl 8.0
+Test	Setup Rust	2026-05-12T16:13:07.4132366Z ^[[36;1m: work around spurious network errors in curl 8.0^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.4133076Z ^[[36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.4133696Z ^[[36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.4134161Z ^[[36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.4134482Z ^[[36;1mfi^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.4155190Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.4155543Z env:
+Test	Setup Rust	2026-05-12T16:13:07.4155721Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.4156063Z   CARGO_INCREMENTAL: 0
+Test	Setup Rust	2026-05-12T16:13:07.4156296Z   CARGO_TERM_COLOR: always
+Test	Setup Rust	2026-05-12T16:13:07.4156495Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.4341096Z ##[group]Run rustc +stable --version --verbose
+Test	Setup Rust	2026-05-12T16:13:07.4341436Z ^[[36;1mrustc +stable --version --verbose^[[0m
+Test	Setup Rust	2026-05-12T16:13:07.4361368Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Test	Setup Rust	2026-05-12T16:13:07.4361698Z env:
+Test	Setup Rust	2026-05-12T16:13:07.4361878Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Rust	2026-05-12T16:13:07.4362121Z   CARGO_INCREMENTAL: 0
+Test	Setup Rust	2026-05-12T16:13:07.4362317Z   CARGO_TERM_COLOR: always
+Test	Setup Rust	2026-05-12T16:13:07.4362520Z ##[endgroup]
+Test	Setup Rust	2026-05-12T16:13:07.4512653Z rustc 1.95.0 (59807616e 2026-04-14)
+Test	Setup Rust	2026-05-12T16:13:07.4513392Z binary: rustc
+Test	Setup Rust	2026-05-12T16:13:07.4513850Z commit-hash: 59807616e1fa2540724bfbac14d7976d7e4a3860
+Test	Setup Rust	2026-05-12T16:13:07.4514269Z commit-date: 2026-04-14
+Test	Setup Rust	2026-05-12T16:13:07.4514589Z host: x86_64-unknown-linux-gnu
+Test	Setup Rust	2026-05-12T16:13:07.4515050Z release: 1.95.0
+Test	Setup Rust	2026-05-12T16:13:07.4515496Z LLVM version: 22.1.2
+Test	Install wasm-pack	﻿2026-05-12T16:13:07.4581220Z ##[group]Run cargo install wasm-pack --version 0.14.0 --locked
+Test	Install wasm-pack	2026-05-12T16:13:07.4581687Z ^[[36;1mcargo install wasm-pack --version 0.14.0 --locked^[[0m
+Test	Install wasm-pack	2026-05-12T16:13:07.4602600Z shell: /usr/bin/bash -e {0}
+Test	Install wasm-pack	2026-05-12T16:13:07.4602841Z env:
+Test	Install wasm-pack	2026-05-12T16:13:07.4603016Z   CARGO_HOME: /home/runner/.cargo
+Test	Install wasm-pack	2026-05-12T16:13:07.4603253Z   CARGO_INCREMENTAL: 0
+Test	Install wasm-pack	2026-05-12T16:13:07.4603453Z   CARGO_TERM_COLOR: always
+Test	Install wasm-pack	2026-05-12T16:13:07.4603657Z ##[endgroup]
+Test	Install wasm-pack	2026-05-12T16:13:07.4879453Z ^[[1m^[[92m    Updating^[[0m crates.io index
+Test	Install wasm-pack	2026-05-12T16:13:07.6049711Z ^[[1m^[[92m Downloading^[[0m crates ...
+Test	Install wasm-pack	2026-05-12T16:13:07.6983651Z ^[[1m^[[92m  Downloaded^[[0m wasm-pack v0.14.0
+Test	Install wasm-pack	2026-05-12T16:13:07.7547148Z ^[[1m^[[92m  Installing^[[0m wasm-pack v0.14.0
+Test	Install wasm-pack	2026-05-12T16:13:07.7588365Z ^[[1m^[[92m    Updating^[[0m crates.io index
+Test	Install wasm-pack	2026-05-12T16:13:08.5171619Z ^[[1m^[[92m    Updating^[[0m crates.io index
+Test	Install wasm-pack	2026-05-12T16:13:08.7075169Z ^[[1m^[[92m Downloading^[[0m crates ...
+Test	Install wasm-pack	2026-05-12T16:13:08.7716318Z ^[[1m^[[92m  Downloaded^[[0m adler2 v2.0.1
+Test	Install wasm-pack	2026-05-12T16:13:08.7736103Z ^[[1m^[[92m  Downloaded^[[0m anstyle-query v1.1.5
+Test	Install wasm-pack	2026-05-12T16:13:08.7829715Z ^[[1m^[[92m  Downloaded^[[0m addr2line v0.25.1
+Test	Install wasm-pack	2026-05-12T16:13:08.7968494Z ^[[1m^[[92m  Downloaded^[[0m autocfg v1.5.0
+Test	Install wasm-pack	2026-05-12T16:13:08.7993820Z ^[[1m^[[92m  Downloaded^[[0m anstyle-parse v0.2.7
+Test	Install wasm-pack	2026-05-12T16:13:08.8021897Z ^[[1m^[[92m  Downloaded^[[0m quote v1.0.43
+Test	Install wasm-pack	2026-05-12T16:13:08.8067099Z ^[[1m^[[92m  Downloaded^[[0m block-buffer v0.10.4
+Test	Install wasm-pack	2026-05-12T16:13:08.8080250Z ^[[1m^[[92m  Downloaded^[[0m anstyle v1.0.13
+Test	Install wasm-pack	2026-05-12T16:13:08.8111362Z ^[[1m^[[92m  Downloaded^[[0m dirs-next v2.0.0
+Test	Install wasm-pack	2026-05-12T16:13:08.8131133Z ^[[1m^[[92m  Downloaded^[[0m colorchoice v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:08.8147038Z ^[[1m^[[92m  Downloaded^[[0m clap_lex v0.7.7
+Test	Install wasm-pack	2026-05-12T16:13:08.8164286Z ^[[1m^[[92m  Downloaded^[[0m anstream v0.6.21
+Test	Install wasm-pack	2026-05-12T16:13:08.8188174Z ^[[1m^[[92m  Downloaded^[[0m equivalent v1.0.2
+Test	Install wasm-pack	2026-05-12T16:13:08.8202288Z ^[[1m^[[92m  Downloaded^[[0m idna_adapter v1.2.1
+Test	Install wasm-pack	2026-05-12T16:13:08.8214960Z ^[[1m^[[92m  Downloaded^[[0m errno v0.3.14
+Test	Install wasm-pack	2026-05-12T16:13:08.8233598Z ^[[1m^[[92m  Downloaded^[[0m stable_deref_trait v1.2.1
+Test	Install wasm-pack	2026-05-12T16:13:08.8245513Z ^[[1m^[[92m  Downloaded^[[0m is_terminal_polyfill v1.70.2
+Test	Install wasm-pack	2026-05-12T16:13:08.8258358Z ^[[1m^[[92m  Downloaded^[[0m env_filter v0.1.4
+Test	Install wasm-pack	2026-05-12T16:13:08.8275778Z ^[[1m^[[92m  Downloaded^[[0m path-clean v1.0.1
+Test	Install wasm-pack	2026-05-12T16:13:08.8291369Z ^[[1m^[[92m  Downloaded^[[0m itoa v1.0.17
+Test	Install wasm-pack	2026-05-12T16:13:08.8314578Z ^[[1m^[[92m  Downloaded^[[0m pkg-config v0.3.32
+Test	Install wasm-pack	2026-05-12T16:13:08.8333724Z ^[[1m^[[92m  Downloaded^[[0m num-conv v0.1.0
+Test	Install wasm-pack	2026-05-12T16:13:08.8344015Z ^[[1m^[[92m  Downloaded^[[0m is_executable v0.1.2
+Test	Install wasm-pack	2026-05-12T16:13:08.8358432Z ^[[1m^[[92m  Downloaded^[[0m percent-encoding v2.3.2
+Test	Install wasm-pack	2026-05-12T16:13:08.8369789Z ^[[1m^[[92m  Downloaded^[[0m generic-array v0.14.7
+Test	Install wasm-pack	2026-05-12T16:13:08.8390652Z ^[[1m^[[92m  Downloaded^[[0m pbkdf2 v0.12.2
+Test	Install wasm-pack	2026-05-12T16:13:08.8406541Z ^[[1m^[[92m  Downloaded^[[0m shell-words v1.1.1
+Test	Install wasm-pack	2026-05-12T16:13:08.8422690Z ^[[1m^[[92m  Downloaded^[[0m constant_time_eq v0.3.1
+Test	Install wasm-pack	2026-05-12T16:13:08.8445542Z ^[[1m^[[92m  Downloaded^[[0m anyhow v1.0.100
+Test	Install wasm-pack	2026-05-12T16:13:08.8500698Z ^[[1m^[[92m  Downloaded^[[0m xattr v1.6.1
+Test	Install wasm-pack	2026-05-12T16:13:08.8522035Z ^[[1m^[[92m  Downloaded^[[0m filetime v0.2.27
+Test	Install wasm-pack	2026-05-12T16:13:08.8541861Z ^[[1m^[[92m  Downloaded^[[0m scopeguard v1.2.0
+Test	Install wasm-pack	2026-05-12T16:13:08.8556440Z ^[[1m^[[92m  Downloaded^[[0m digest v0.10.7
+Test	Install wasm-pack	2026-05-12T16:13:08.8575881Z ^[[1m^[[92m  Downloaded^[[0m jobserver v0.1.34
+Test	Install wasm-pack	2026-05-12T16:13:08.8607857Z ^[[1m^[[92m  Downloaded^[[0m version_check v0.9.5
+Test	Install wasm-pack	2026-05-12T16:13:08.8624722Z ^[[1m^[[92m  Downloaded^[[0m rustc-demangle v0.1.27
+Test	Install wasm-pack	2026-05-12T16:13:08.8644124Z ^[[1m^[[92m  Downloaded^[[0m parking_lot v0.12.5
+Test	Install wasm-pack	2026-05-12T16:13:08.8671325Z ^[[1m^[[92m  Downloaded^[[0m parking_lot_core v0.9.12
+Test	Install wasm-pack	2026-05-12T16:13:08.8696641Z ^[[1m^[[92m  Downloaded^[[0m human-panic v2.0.6
+Test	Install wasm-pack	2026-05-12T16:13:08.8717080Z ^[[1m^[[92m  Downloaded^[[0m serde_spanned v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:08.8730891Z ^[[1m^[[92m  Downloaded^[[0m utf8_iter v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:08.8743998Z ^[[1m^[[92m  Downloaded^[[0m icu_properties v2.1.2
+Test	Install wasm-pack	2026-05-12T16:13:08.8767344Z ^[[1m^[[92m  Downloaded^[[0m aes v0.8.4
+Test	Install wasm-pack	2026-05-12T16:13:08.8814133Z ^[[1m^[[92m  Downloaded^[[0m zeroize_derive v1.4.3
+Test	Install wasm-pack	2026-05-12T16:13:08.8828970Z ^[[1m^[[92m  Downloaded^[[0m siphasher v0.3.11
+Test	Install wasm-pack	2026-05-12T16:13:08.8844916Z ^[[1m^[[92m  Downloaded^[[0m webpki-roots v0.26.11
+Test	Install wasm-pack	2026-05-12T16:13:08.8861324Z ^[[1m^[[92m  Downloaded^[[0m idna v1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:08.8898859Z ^[[1m^[[92m  Downloaded^[[0m icu_properties_data v2.1.2
+Test	Install wasm-pack	2026-05-12T16:13:08.9013084Z ^[[1m^[[92m  Downloaded^[[0m zerofrom-derive v0.1.6
+Test	Install wasm-pack	2026-05-12T16:13:08.9025231Z ^[[1m^[[92m  Downloaded^[[0m clap_builder v4.5.54
+Test	Install wasm-pack	2026-05-12T16:13:08.9088070Z ^[[1m^[[92m  Downloaded^[[0m hashbrown v0.16.1
+Test	Install wasm-pack	2026-05-12T16:13:08.9143577Z ^[[1m^[[92m  Downloaded^[[0m zstd v0.13.3
+Test	Install wasm-pack	2026-05-12T16:13:08.9175064Z ^[[1m^[[92m  Downloaded^[[0m untrusted v0.9.0
+Test	Install wasm-pack	2026-05-12T16:13:08.9196589Z ^[[1m^[[92m  Downloaded^[[0m chrono v0.4.43
+Test	Install wasm-pack	2026-05-12T16:13:08.9266049Z ^[[1m^[[92m  Downloaded^[[0m which v8.0.0
+Test	Install wasm-pack	2026-05-12T16:13:08.9285866Z ^[[1m^[[92m  Downloaded^[[0m gimli v0.32.3
+Test	Install wasm-pack	2026-05-12T16:13:08.9358388Z ^[[1m^[[92m  Downloaded^[[0m object v0.37.3
+Test	Install wasm-pack	2026-05-12T16:13:08.9476106Z ^[[1m^[[92m  Downloaded^[[0m zmij v1.0.16
+Test	Install wasm-pack	2026-05-12T16:13:08.9494793Z ^[[1m^[[92m  Downloaded^[[0m thiserror v2.0.18
+Test	Install wasm-pack	2026-05-12T16:13:08.9558972Z ^[[1m^[[92m  Downloaded^[[0m tempfile v3.24.0
+Test	Install wasm-pack	2026-05-12T16:13:08.9593920Z ^[[1m^[[92m  Downloaded^[[0m rustls-pki-types v1.14.0
+Test	Install wasm-pack	2026-05-12T16:13:08.9619616Z ^[[1m^[[92m  Downloaded^[[0m proc-macro2 v1.0.105
+Test	Install wasm-pack	2026-05-12T16:13:08.9649378Z ^[[1m^[[92m  Downloaded^[[0m smallvec v1.15.1
+Test	Install wasm-pack	2026-05-12T16:13:08.9674858Z ^[[1m^[[92m  Downloaded^[[0m zstd-safe v7.2.4
+Test	Install wasm-pack	2026-05-12T16:13:08.9693675Z ^[[1m^[[92m  Downloaded^[[0m tar v0.4.44
+Test	Install wasm-pack	2026-05-12T16:13:08.9720087Z ^[[1m^[[92m  Downloaded^[[0m serde_core v1.0.228
+Test	Install wasm-pack	2026-05-12T16:13:08.9749026Z ^[[1m^[[92m  Downloaded^[[0m semver v1.0.27
+Test	Install wasm-pack	2026-05-12T16:13:08.9783511Z ^[[1m^[[92m  Downloaded^[[0m zopfli v0.8.3
+Test	Install wasm-pack	2026-05-12T16:13:08.9813605Z ^[[1m^[[92m  Downloaded^[[0m unicode-ident v1.0.22
+Test	Install wasm-pack	2026-05-12T16:13:08.9843133Z ^[[1m^[[92m  Downloaded^[[0m typenum v1.19.0
+Test	Install wasm-pack	2026-05-12T16:13:08.9877430Z ^[[1m^[[92m  Downloaded^[[0m zerotrie v0.2.3
+Test	Install wasm-pack	2026-05-12T16:13:08.9918993Z ^[[1m^[[92m  Downloaded^[[0m url v2.5.8
+Test	Install wasm-pack	2026-05-12T16:13:08.9948469Z ^[[1m^[[92m  Downloaded^[[0m serde v1.0.228
+Test	Install wasm-pack	2026-05-12T16:13:08.9990075Z ^[[1m^[[92m  Downloaded^[[0m zip v2.4.2
+Test	Install wasm-pack	2026-05-12T16:13:09.0034485Z ^[[1m^[[92m  Downloaded^[[0m ureq v2.12.1
+Test	Install wasm-pack	2026-05-12T16:13:09.0100873Z ^[[1m^[[92m  Downloaded^[[0m zerovec v0.11.5
+Test	Install wasm-pack	2026-05-12T16:13:09.0162138Z ^[[1m^[[92m  Downloaded^[[0m serde_json v1.0.149
+Test	Install wasm-pack	2026-05-12T16:13:09.0241410Z ^[[1m^[[92m  Downloaded^[[0m bzip2-sys v0.1.13+1.0.8
+Test	Install wasm-pack	2026-05-12T16:13:09.0356864Z ^[[1m^[[92m  Downloaded^[[0m winnow v0.7.14
+Test	Install wasm-pack	2026-05-12T16:13:09.0462552Z ^[[1m^[[92m  Downloaded^[[0m time v0.3.45
+Test	Install wasm-pack	2026-05-12T16:13:09.0600612Z ^[[1m^[[92m  Downloaded^[[0m sysinfo v0.37.2
+Test	Install wasm-pack	2026-05-12T16:13:09.0722128Z ^[[1m^[[92m  Downloaded^[[0m lzma-sys v0.1.20
+Test	Install wasm-pack	2026-05-12T16:13:09.1057846Z ^[[1m^[[92m  Downloaded^[[0m webpki-roots v1.0.5
+Test	Install wasm-pack	2026-05-12T16:13:09.1092237Z ^[[1m^[[92m  Downloaded^[[0m libc v0.2.180
+Test	Install wasm-pack	2026-05-12T16:13:09.1469713Z ^[[1m^[[92m  Downloaded^[[0m syn v2.0.114
+Test	Install wasm-pack	2026-05-12T16:13:09.1573540Z ^[[1m^[[92m  Downloaded^[[0m rustls v0.23.36
+Test	Install wasm-pack	2026-05-12T16:13:09.1689349Z ^[[1m^[[92m  Downloaded^[[0m unicode-width v0.2.2
+Test	Install wasm-pack	2026-05-12T16:13:09.1744111Z ^[[1m^[[92m  Downloaded^[[0m uuid v1.19.0
+Test	Install wasm-pack	2026-05-12T16:13:09.1773546Z ^[[1m^[[92m  Downloaded^[[0m rustix v0.38.44
+Test	Install wasm-pack	2026-05-12T16:13:09.2045858Z ^[[1m^[[92m  Downloaded^[[0m toml v0.9.11+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2086406Z ^[[1m^[[92m  Downloaded^[[0m rustix v1.1.3
+Test	Install wasm-pack	2026-05-12T16:13:09.2358011Z ^[[1m^[[92m  Downloaded^[[0m serde_derive v1.0.228
+Test	Install wasm-pack	2026-05-12T16:13:09.2390468Z ^[[1m^[[92m  Downloaded^[[0m rustls-webpki v0.103.9
+Test	Install wasm-pack	2026-05-12T16:13:09.2420060Z ^[[1m^[[92m  Downloaded^[[0m zerovec-derive v0.11.2
+Test	Install wasm-pack	2026-05-12T16:13:09.2435096Z ^[[1m^[[92m  Downloaded^[[0m zeroize v1.8.2
+Test	Install wasm-pack	2026-05-12T16:13:09.2452674Z ^[[1m^[[92m  Downloaded^[[0m yoke v0.8.1
+Test	Install wasm-pack	2026-05-12T16:13:09.2470113Z ^[[1m^[[92m  Downloaded^[[0m xz2 v0.1.7
+Test	Install wasm-pack	2026-05-12T16:13:09.2488250Z ^[[1m^[[92m  Downloaded^[[0m writeable v0.6.2
+Test	Install wasm-pack	2026-05-12T16:13:09.2507493Z ^[[1m^[[92m  Downloaded^[[0m toml_parser v1.0.6+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2530207Z ^[[1m^[[92m  Downloaded^[[0m toml_datetime v0.7.5+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2543178Z ^[[1m^[[92m  Downloaded^[[0m thiserror-impl v2.0.18
+Test	Install wasm-pack	2026-05-12T16:13:09.2557834Z ^[[1m^[[92m  Downloaded^[[0m synstructure v0.13.2
+Test	Install wasm-pack	2026-05-12T16:13:09.2568605Z ^[[1m^[[92m  Downloaded^[[0m shlex v1.3.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2582830Z ^[[1m^[[92m  Downloaded^[[0m walkdir v2.5.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2601321Z ^[[1m^[[92m  Downloaded^[[0m utf8parse v0.2.2
+Test	Install wasm-pack	2026-05-12T16:13:09.2611308Z ^[[1m^[[92m  Downloaded^[[0m toml_writer v1.0.6+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2625129Z ^[[1m^[[92m  Downloaded^[[0m tinystr v0.8.2
+Test	Install wasm-pack	2026-05-12T16:13:09.2647005Z ^[[1m^[[92m  Downloaded^[[0m simd-adler32 v0.3.8
+Test	Install wasm-pack	2026-05-12T16:13:09.2665839Z ^[[1m^[[92m  Downloaded^[[0m zstd-sys v2.0.16+zstd.1.5.7
+Test	Install wasm-pack	2026-05-12T16:13:09.2871749Z ^[[1m^[[92m  Downloaded^[[0m indexmap v2.13.0
+Test	Install wasm-pack	2026-05-12T16:13:09.2940059Z ^[[1m^[[92m  Downloaded^[[0m cc v1.2.53
+Test	Install wasm-pack	2026-05-12T16:13:09.2987434Z ^[[1m^[[92m  Downloaded^[[0m memchr v2.7.6
+Test	Install wasm-pack	2026-05-12T16:13:09.3066839Z ^[[1m^[[92m  Downloaded^[[0m icu_locale_core v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3134593Z ^[[1m^[[92m  Downloaded^[[0m icu_collections v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3196938Z ^[[1m^[[92m  Downloaded^[[0m bumpalo v3.19.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3222507Z ^[[1m^[[92m  Downloaded^[[0m backtrace v0.3.76
+Test	Install wasm-pack	2026-05-12T16:13:09.3272500Z ^[[1m^[[92m  Downloaded^[[0m zerofrom v0.1.6
+Test	Install wasm-pack	2026-05-12T16:13:09.3281727Z ^[[1m^[[92m  Downloaded^[[0m yoke-derive v0.8.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3291773Z ^[[1m^[[92m  Downloaded^[[0m subtle v2.6.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3303558Z ^[[1m^[[92m  Downloaded^[[0m socks v0.3.4
+Test	Install wasm-pack	2026-05-12T16:13:09.3317255Z ^[[1m^[[92m  Downloaded^[[0m miniz_oxide v0.8.9
+Test	Install wasm-pack	2026-05-12T16:13:09.3341736Z ^[[1m^[[92m  Downloaded^[[0m icu_normalizer_data v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3362708Z ^[[1m^[[92m  Downloaded^[[0m iana-time-zone v0.1.64
+Test	Install wasm-pack	2026-05-12T16:13:09.3390494Z ^[[1m^[[92m  Downloaded^[[0m base64 v0.22.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3428887Z ^[[1m^[[92m  Downloaded^[[0m icu_normalizer v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3463875Z ^[[1m^[[92m  Downloaded^[[0m flate2 v1.1.8
+Test	Install wasm-pack	2026-05-12T16:13:09.3512342Z ^[[1m^[[92m  Downloaded^[[0m siphasher v1.0.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3525112Z ^[[1m^[[92m  Downloaded^[[0m getrandom v0.3.4
+Test	Install wasm-pack	2026-05-12T16:13:09.3559837Z ^[[1m^[[92m  Downloaded^[[0m num-traits v0.2.19
+Test	Install wasm-pack	2026-05-12T16:13:09.3585448Z ^[[1m^[[92m  Downloaded^[[0m log v0.4.29
+Test	Install wasm-pack	2026-05-12T16:13:09.3610480Z ^[[1m^[[92m  Downloaded^[[0m icu_provider v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3635695Z ^[[1m^[[92m  Downloaded^[[0m getrandom v0.2.17
+Test	Install wasm-pack	2026-05-12T16:13:09.3664923Z ^[[1m^[[92m  Downloaded^[[0m clap v4.5.54
+Test	Install wasm-pack	2026-05-12T16:13:09.3757874Z ^[[1m^[[92m  Downloaded^[[0m hmac v0.12.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3777194Z ^[[1m^[[92m  Downloaded^[[0m dialoguer v0.12.0
+Test	Install wasm-pack	2026-05-12T16:13:09.3811892Z ^[[1m^[[92m  Downloaded^[[0m crc32fast v1.5.0
+Test	Install wasm-pack	2026-05-12T16:13:09.3830506Z ^[[1m^[[92m  Downloaded^[[0m console v0.16.2
+Test	Install wasm-pack	2026-05-12T16:13:09.3848759Z ^[[1m^[[92m  Downloaded^[[0m clap_derive v4.5.49
+Test	Install wasm-pack	2026-05-12T16:13:09.3871078Z ^[[1m^[[92m  Downloaded^[[0m cargo_metadata v0.23.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3889832Z ^[[1m^[[92m  Downloaded^[[0m camino v1.2.2
+Test	Install wasm-pack	2026-05-12T16:13:09.3910129Z ^[[1m^[[92m  Downloaded^[[0m bzip2 v0.5.2
+Test	Install wasm-pack	2026-05-12T16:13:09.3927936Z ^[[1m^[[92m  Downloaded^[[0m bitflags v2.10.0
+Test	Install wasm-pack	2026-05-12T16:13:09.3970469Z ^[[1m^[[92m  Downloaded^[[0m binary-install v0.4.1
+Test	Install wasm-pack	2026-05-12T16:13:09.3990146Z ^[[1m^[[92m  Downloaded^[[0m time-core v0.1.7
+Test	Install wasm-pack	2026-05-12T16:13:09.4001147Z ^[[1m^[[92m  Downloaded^[[0m strsim v0.11.1
+Test	Install wasm-pack	2026-05-12T16:13:09.4014376Z ^[[1m^[[92m  Downloaded^[[0m serde_ignored v0.1.14
+Test	Install wasm-pack	2026-05-12T16:13:09.4027278Z ^[[1m^[[92m  Downloaded^[[0m same-file v1.0.6
+Test	Install wasm-pack	2026-05-12T16:13:09.4041184Z ^[[1m^[[92m  Downloaded^[[0m once_cell v1.21.3
+Test	Install wasm-pack	2026-05-12T16:13:09.4066637Z ^[[1m^[[92m  Downloaded^[[0m lock_api v0.4.14
+Test	Install wasm-pack	2026-05-12T16:13:09.4079504Z ^[[1m^[[92m  Downloaded^[[0m ring v0.17.14
+Test	Install wasm-pack	2026-05-12T16:13:09.4486470Z ^[[1m^[[92m  Downloaded^[[0m litemap v0.8.1
+Test	Install wasm-pack	2026-05-12T16:13:09.4508271Z ^[[1m^[[92m  Downloaded^[[0m find-msvc-tools v0.1.8
+Test	Install wasm-pack	2026-05-12T16:13:09.4524700Z ^[[1m^[[92m  Downloaded^[[0m cipher v0.4.4
+Test	Install wasm-pack	2026-05-12T16:13:09.4544590Z ^[[1m^[[92m  Downloaded^[[0m deranged v0.5.5
+Test	Install wasm-pack	2026-05-12T16:13:09.4558400Z ^[[1m^[[92m  Downloaded^[[0m deflate64 v0.1.10
+Test	Install wasm-pack	2026-05-12T16:13:09.4572540Z ^[[1m^[[92m  Downloaded^[[0m byteorder v1.5.0
+Test	Install wasm-pack	2026-05-12T16:13:09.4588318Z ^[[1m^[[92m  Downloaded^[[0m linux-raw-sys v0.4.15
+Test	Install wasm-pack	2026-05-12T16:13:09.5030379Z ^[[1m^[[92m  Downloaded^[[0m sha1 v0.10.6
+Test	Install wasm-pack	2026-05-12T16:13:09.5045852Z ^[[1m^[[92m  Downloaded^[[0m powerfmt v0.2.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5056959Z ^[[1m^[[92m  Downloaded^[[0m potential_utf v0.1.4
+Test	Install wasm-pack	2026-05-12T16:13:09.5067970Z ^[[1m^[[92m  Downloaded^[[0m glob v0.3.3
+Test	Install wasm-pack	2026-05-12T16:13:09.5082680Z ^[[1m^[[92m  Downloaded^[[0m fs4 v0.6.6
+Test	Install wasm-pack	2026-05-12T16:13:09.5106285Z ^[[1m^[[92m  Downloaded^[[0m fastrand v2.3.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5118842Z ^[[1m^[[92m  Downloaded^[[0m env_logger v0.11.8
+Test	Install wasm-pack	2026-05-12T16:13:09.5143334Z ^[[1m^[[92m  Downloaded^[[0m lzma-rs v0.3.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5168608Z ^[[1m^[[92m  Downloaded^[[0m hex v0.4.3
+Test	Install wasm-pack	2026-05-12T16:13:09.5184220Z ^[[1m^[[92m  Downloaded^[[0m env_home v0.1.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5195116Z ^[[1m^[[92m  Downloaded^[[0m crc v3.4.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5212118Z ^[[1m^[[92m  Downloaded^[[0m cpufeatures v0.2.17
+Test	Install wasm-pack	2026-05-12T16:13:09.5225553Z ^[[1m^[[92m  Downloaded^[[0m cfg-if v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:09.5238285Z ^[[1m^[[92m  Downloaded^[[0m inout v0.1.4
+Test	Install wasm-pack	2026-05-12T16:13:09.5248928Z ^[[1m^[[92m  Downloaded^[[0m form_urlencoded v1.2.2
+Test	Install wasm-pack	2026-05-12T16:13:09.5257135Z ^[[1m^[[92m  Downloaded^[[0m heck v0.5.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5270074Z ^[[1m^[[92m  Downloaded^[[0m crc-catalog v2.4.0
+Test	Install wasm-pack	2026-05-12T16:13:09.5281494Z ^[[1m^[[92m  Downloaded^[[0m cargo-platform v0.3.2
+Test	Install wasm-pack	2026-05-12T16:13:09.5293439Z ^[[1m^[[92m  Downloaded^[[0m dirs-sys-next v0.1.2
+Test	Install wasm-pack	2026-05-12T16:13:09.5303057Z ^[[1m^[[92m  Downloaded^[[0m crypto-common v0.1.7
+Test	Install wasm-pack	2026-05-12T16:13:09.5312169Z ^[[1m^[[92m  Downloaded^[[0m displaydoc v0.2.5
+Test	Install wasm-pack	2026-05-12T16:13:09.5342491Z ^[[1m^[[92m  Downloaded^[[0m linux-raw-sys v0.11.0
+Test	Install wasm-pack	2026-05-12T16:13:09.6378122Z ^[[1m^[[92m   Compiling^[[0m libc v0.2.180
+Test	Install wasm-pack	2026-05-12T16:13:09.6378891Z ^[[1m^[[92m   Compiling^[[0m proc-macro2 v1.0.105
+Test	Install wasm-pack	2026-05-12T16:13:09.6379715Z ^[[1m^[[92m   Compiling^[[0m unicode-ident v1.0.22
+Test	Install wasm-pack	2026-05-12T16:13:09.6380347Z ^[[1m^[[92m   Compiling^[[0m quote v1.0.43
+Test	Install wasm-pack	2026-05-12T16:13:09.6921303Z ^[[1m^[[92m   Compiling^[[0m shlex v1.3.0
+Test	Install wasm-pack	2026-05-12T16:13:09.7770213Z ^[[1m^[[92m   Compiling^[[0m find-msvc-tools v0.1.8
+Test	Install wasm-pack	2026-05-12T16:13:09.8107960Z ^[[1m^[[92m   Compiling^[[0m cfg-if v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:09.8439333Z ^[[1m^[[92m   Compiling^[[0m pkg-config v0.3.32
+Test	Install wasm-pack	2026-05-12T16:13:10.4140774Z ^[[1m^[[92m   Compiling^[[0m serde_core v1.0.228
+Test	Install wasm-pack	2026-05-12T16:13:10.4854162Z ^[[1m^[[92m   Compiling^[[0m syn v2.0.114
+Test	Install wasm-pack	2026-05-12T16:13:10.5590910Z ^[[1m^[[92m   Compiling^[[0m stable_deref_trait v1.2.1
+Test	Install wasm-pack	2026-05-12T16:13:10.6050498Z ^[[1m^[[92m   Compiling^[[0m version_check v0.9.5
+Test	Install wasm-pack	2026-05-12T16:13:10.7577619Z ^[[1m^[[92m   Compiling^[[0m jobserver v0.1.34
+Test	Install wasm-pack	2026-05-12T16:13:10.8100414Z ^[[1m^[[92m   Compiling^[[0m typenum v1.19.0
+Test	Install wasm-pack	2026-05-12T16:13:10.8800543Z ^[[1m^[[92m   Compiling^[[0m generic-array v0.14.7
+Test	Install wasm-pack	2026-05-12T16:13:10.9480300Z ^[[1m^[[92m   Compiling^[[0m cc v1.2.53
+Test	Install wasm-pack	2026-05-12T16:13:12.3000468Z ^[[1m^[[92m   Compiling^[[0m litemap v0.8.1
+Test	Install wasm-pack	2026-05-12T16:13:12.4380484Z ^[[1m^[[92m   Compiling^[[0m memchr v2.7.6
+Test	Install wasm-pack	2026-05-12T16:13:12.4654282Z ^[[1m^[[92m   Compiling^[[0m bitflags v2.10.0
+Test	Install wasm-pack	2026-05-12T16:13:12.8050343Z ^[[1m^[[92m   Compiling^[[0m writeable v0.6.2
+Test	Install wasm-pack	2026-05-12T16:13:12.9591116Z ^[[1m^[[92m   Compiling^[[0m crypto-common v0.1.7
+Test	Install wasm-pack	2026-05-12T16:13:13.0200479Z ^[[1m^[[92m   Compiling^[[0m icu_properties_data v2.1.2
+Test	Install wasm-pack	2026-05-12T16:13:13.0920282Z ^[[1m^[[92m   Compiling^[[0m subtle v2.6.1
+Test	Install wasm-pack	2026-05-12T16:13:13.1811005Z ^[[1m^[[92m   Compiling^[[0m smallvec v1.15.1
+Test	Install wasm-pack	2026-05-12T16:13:13.3510671Z ^[[1m^[[92m   Compiling^[[0m icu_normalizer_data v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:13.4230434Z ^[[1m^[[92m   Compiling^[[0m simd-adler32 v0.3.8
+Test	Install wasm-pack	2026-05-12T16:13:13.6440773Z ^[[1m^[[92m   Compiling^[[0m getrandom v0.3.4
+Test	Install wasm-pack	2026-05-12T16:13:13.7450386Z ^[[1m^[[92m   Compiling^[[0m synstructure v0.13.2
+Test	Install wasm-pack	2026-05-12T16:13:13.8140428Z ^[[1m^[[92m   Compiling^[[0m rustix v1.1.3
+Test	Install wasm-pack	2026-05-12T16:13:13.9690545Z ^[[1m^[[92m   Compiling^[[0m zstd-sys v2.0.16+zstd.1.5.7
+Test	Install wasm-pack	2026-05-12T16:13:14.0621968Z ^[[1m^[[92m   Compiling^[[0m ring v0.17.14
+Test	Install wasm-pack	2026-05-12T16:13:14.1680976Z ^[[1m^[[92m   Compiling^[[0m linux-raw-sys v0.11.0
+Test	Install wasm-pack	2026-05-12T16:13:14.2496083Z ^[[1m^[[92m   Compiling^[[0m crc32fast v1.5.0
+Test	Install wasm-pack	2026-05-12T16:13:14.3715181Z ^[[1m^[[92m   Compiling^[[0m adler2 v2.0.1
+Test	Install wasm-pack	2026-05-12T16:13:14.3905460Z ^[[1m^[[92m   Compiling^[[0m log v0.4.29
+Test	Install wasm-pack	2026-05-12T16:13:14.4600479Z ^[[1m^[[92m   Compiling^[[0m miniz_oxide v0.8.9
+Test	Install wasm-pack	2026-05-12T16:13:15.1941485Z ^[[1m^[[92m   Compiling^[[0m zerofrom-derive v0.1.6
+Test	Install wasm-pack	2026-05-12T16:13:16.1892070Z ^[[1m^[[92m   Compiling^[[0m yoke-derive v0.8.1
+Test	Install wasm-pack	2026-05-12T16:13:16.1962900Z ^[[1m^[[92m   Compiling^[[0m zerofrom v0.1.6
+Test	Install wasm-pack	2026-05-12T16:13:16.2670283Z ^[[1m^[[92m   Compiling^[[0m displaydoc v0.2.5
+Test	Install wasm-pack	2026-05-12T16:13:16.7293014Z ^[[1m^[[92m   Compiling^[[0m zerovec-derive v0.11.2
+Test	Install wasm-pack	2026-05-12T16:13:17.0270417Z ^[[1m^[[92m   Compiling^[[0m yoke v0.8.1
+Test	Install wasm-pack	2026-05-12T16:13:17.1610988Z ^[[1m^[[92m   Compiling^[[0m zeroize_derive v1.4.3
+Test	Install wasm-pack	2026-05-12T16:13:17.4150671Z ^[[1m^[[92m   Compiling^[[0m zerotrie v0.2.3
+Test	Install wasm-pack	2026-05-12T16:13:17.5340484Z ^[[1m^[[92m   Compiling^[[0m zeroize v1.8.2
+Test	Install wasm-pack	2026-05-12T16:13:17.6501245Z ^[[1m^[[92m   Compiling^[[0m rustls-pki-types v1.14.0
+Test	Install wasm-pack	2026-05-12T16:13:17.6760643Z ^[[1m^[[92m   Compiling^[[0m zerovec v0.11.5
+Test	Install wasm-pack	2026-05-12T16:13:18.2298856Z ^[[1m^[[92m   Compiling^[[0m tinystr v0.8.2
+Test	Install wasm-pack	2026-05-12T16:13:18.3669396Z ^[[1m^[[92m   Compiling^[[0m icu_locale_core v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:18.5350675Z ^[[1m^[[92m   Compiling^[[0m potential_utf v0.1.4
+Test	Install wasm-pack	2026-05-12T16:13:18.6280528Z ^[[1m^[[92m   Compiling^[[0m icu_collections v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:19.1977701Z ^[[1m^[[92m   Compiling^[[0m icu_provider v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:19.7259893Z ^[[1m^[[92m   Compiling^[[0m block-buffer v0.10.4
+Test	Install wasm-pack	2026-05-12T16:13:19.7799991Z ^[[1m^[[92m   Compiling^[[0m zmij v1.0.16
+Test	Install wasm-pack	2026-05-12T16:13:19.8562611Z ^[[1m^[[92m   Compiling^[[0m serde v1.0.228
+Test	Install wasm-pack	2026-05-12T16:13:19.9479552Z ^[[1m^[[92m   Compiling^[[0m once_cell v1.21.3
+Test	Install wasm-pack	2026-05-12T16:13:20.1050806Z ^[[1m^[[92m   Compiling^[[0m digest v0.10.7
+Test	Install wasm-pack	2026-05-12T16:13:20.2747868Z ^[[1m^[[92m   Compiling^[[0m icu_normalizer v2.1.1
+Test	Install wasm-pack	2026-05-12T16:13:20.7956089Z ^[[1m^[[92m   Compiling^[[0m icu_properties v2.1.2
+Test	Install wasm-pack	2026-05-12T16:13:21.7145261Z ^[[1m^[[92m   Compiling^[[0m serde_derive v1.0.228
+Test	Install wasm-pack	2026-05-12T16:13:22.2272383Z ^[[1m^[[92m   Compiling^[[0m bzip2-sys v0.1.13+1.0.8
+Test	Install wasm-pack	2026-05-12T16:13:22.3500456Z ^[[1m^[[92m   Compiling^[[0m lzma-sys v0.1.20
+Test	Install wasm-pack	2026-05-12T16:13:22.5330876Z ^[[1m^[[92m   Compiling^[[0m getrandom v0.2.17
+Test	Install wasm-pack	2026-05-12T16:13:22.6751789Z ^[[1m^[[92m   Compiling^[[0m serde_json v1.0.149
+Test	Install wasm-pack	2026-05-12T16:13:22.7478366Z ^[[1m^[[92m   Compiling^[[0m thiserror v2.0.18
+Test	Install wasm-pack	2026-05-12T16:13:22.9050854Z ^[[1m^[[92m   Compiling^[[0m byteorder v1.5.0
+Test	Install wasm-pack	2026-05-12T16:13:23.0991770Z ^[[1m^[[92m   Compiling^[[0m untrusted v0.9.0
+Test	Install wasm-pack	2026-05-12T16:13:23.1566536Z ^[[1m^[[92m   Compiling^[[0m zstd-safe v7.2.4
+Test	Install wasm-pack	2026-05-12T16:13:23.2340200Z ^[[1m^[[92m   Compiling^[[0m utf8parse v0.2.2
+Test	Install wasm-pack	2026-05-12T16:13:23.2764680Z ^[[1m^[[92m   Compiling^[[0m anstyle-parse v0.2.7
+Test	Install wasm-pack	2026-05-12T16:13:29.2130960Z ^[[1m^[[92m   Compiling^[[0m idna_adapter v1.2.1
+Test	Install wasm-pack	2026-05-12T16:13:29.4945948Z ^[[1m^[[92m   Compiling^[[0m thiserror-impl v2.0.18
+Test	Install wasm-pack	2026-05-12T16:13:30.4550224Z ^[[1m^[[92m   Compiling^[[0m inout v0.1.4
+Test	Install wasm-pack	2026-05-12T16:13:30.5300270Z ^[[1m^[[92m   Compiling^[[0m autocfg v1.5.0
+Test	Install wasm-pack	2026-05-12T16:13:30.8180859Z ^[[1m^[[92m   Compiling^[[0m anstyle v1.0.13
+Test	Install wasm-pack	2026-05-12T16:13:31.0170821Z ^[[1m^[[92m   Compiling^[[0m percent-encoding v2.3.2
+Test	Install wasm-pack	2026-05-12T16:13:31.1703306Z ^[[1m^[[92m   Compiling^[[0m colorchoice v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:31.2010412Z ^[[1m^[[92m   Compiling^[[0m cpufeatures v0.2.17
+Test	Install wasm-pack	2026-05-12T16:13:31.2226024Z ^[[1m^[[92m   Compiling^[[0m rustix v0.38.44
+Test	Install wasm-pack	2026-05-12T16:13:31.4040814Z ^[[1m^[[92m   Compiling^[[0m object v0.37.3
+Test	Install wasm-pack	2026-05-12T16:13:31.5187415Z ^[[1m^[[92m   Compiling^[[0m powerfmt v0.2.0
+Test	Install wasm-pack	2026-05-12T16:13:31.6700883Z ^[[1m^[[92m   Compiling^[[0m crc-catalog v2.4.0
+Test	Install wasm-pack	2026-05-12T16:13:31.7062119Z ^[[1m^[[92m   Compiling^[[0m anstyle-query v1.1.5
+Test	Install wasm-pack	2026-05-12T16:13:31.7438386Z ^[[1m^[[92m   Compiling^[[0m itoa v1.0.17
+Test	Install wasm-pack	2026-05-12T16:13:31.7831955Z ^[[1m^[[92m   Compiling^[[0m is_terminal_polyfill v1.70.2
+Test	Install wasm-pack	2026-05-12T16:13:31.8156739Z ^[[1m^[[92m   Compiling^[[0m rustls v0.23.36
+Test	Install wasm-pack	2026-05-12T16:13:31.8757553Z ^[[1m^[[92m   Compiling^[[0m utf8_iter v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:31.9590027Z ^[[1m^[[92m   Compiling^[[0m idna v1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:34.5839597Z ^[[1m^[[92m   Compiling^[[0m anstream v0.6.21
+Test	Install wasm-pack	2026-05-12T16:13:34.9108310Z ^[[1m^[[92m   Compiling^[[0m crc v3.4.0
+Test	Install wasm-pack	2026-05-12T16:13:35.0480797Z ^[[1m^[[92m   Compiling^[[0m deranged v0.5.5
+Test	Install wasm-pack	2026-05-12T16:13:35.1480389Z ^[[1m^[[92m   Compiling^[[0m form_urlencoded v1.2.2
+Test	Install wasm-pack	2026-05-12T16:13:35.3312295Z ^[[1m^[[92m   Compiling^[[0m num-traits v0.2.19
+Test	Install wasm-pack	2026-05-12T16:13:35.4071139Z ^[[1m^[[92m   Compiling^[[0m cipher v0.4.4
+Test	Install wasm-pack	2026-05-12T16:13:35.6511010Z ^[[1m^[[92m   Compiling^[[0m rustls-webpki v0.103.9
+Test	Install wasm-pack	2026-05-12T16:13:36.1580429Z ^[[1m^[[92m   Compiling^[[0m flate2 v1.1.8
+Test	Install wasm-pack	2026-05-12T16:13:36.3350291Z ^[[1m^[[92m   Compiling^[[0m hmac v0.12.1
+Test	Install wasm-pack	2026-05-12T16:13:36.4160922Z ^[[1m^[[92m   Compiling^[[0m webpki-roots v1.0.5
+Test	Install wasm-pack	2026-05-12T16:13:36.4817064Z ^[[1m^[[92m   Compiling^[[0m anyhow v1.0.100
+Test	Install wasm-pack	2026-05-12T16:13:36.6410484Z ^[[1m^[[92m   Compiling^[[0m hashbrown v0.16.1
+Test	Install wasm-pack	2026-05-12T16:13:36.6594749Z ^[[1m^[[92m   Compiling^[[0m equivalent v1.0.2
+Test	Install wasm-pack	2026-05-12T16:13:36.6910639Z ^[[1m^[[92m   Compiling^[[0m parking_lot_core v0.9.12
+Test	Install wasm-pack	2026-05-12T16:13:36.7870743Z ^[[1m^[[92m   Compiling^[[0m linux-raw-sys v0.4.15
+Test	Install wasm-pack	2026-05-12T16:13:37.0942171Z ^[[1m^[[92m   Compiling^[[0m zip v2.4.2
+Test	Install wasm-pack	2026-05-12T16:13:37.1660405Z ^[[1m^[[92m   Compiling^[[0m camino v1.2.2
+Test	Install wasm-pack	2026-05-12T16:13:37.3230571Z ^[[1m^[[92m   Compiling^[[0m gimli v0.32.3
+Test	Install wasm-pack	2026-05-12T16:13:37.3290071Z ^[[1m^[[92m   Compiling^[[0m time-core v0.1.7
+Test	Install wasm-pack	2026-05-12T16:13:37.4190336Z ^[[1m^[[92m   Compiling^[[0m winnow v0.7.14
+Test	Install wasm-pack	2026-05-12T16:13:38.4869986Z ^[[1m^[[92m   Compiling^[[0m bumpalo v3.19.1
+Test	Install wasm-pack	2026-05-12T16:13:38.7110383Z ^[[1m^[[92m   Compiling^[[0m num-conv v0.1.0
+Test	Install wasm-pack	2026-05-12T16:13:38.7910692Z ^[[1m^[[92m   Compiling^[[0m time v0.3.45
+Test	Install wasm-pack	2026-05-12T16:13:39.4160818Z ^[[1m^[[92m   Compiling^[[0m toml_parser v1.0.6+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:39.4250406Z ^[[1m^[[92m   Compiling^[[0m zopfli v0.8.3
+Test	Install wasm-pack	2026-05-12T16:13:40.6570497Z ^[[1m^[[92m   Compiling^[[0m addr2line v0.25.1
+Test	Install wasm-pack	2026-05-12T16:13:40.9265627Z ^[[1m^[[92m   Compiling^[[0m indexmap v2.13.0
+Test	Install wasm-pack	2026-05-12T16:13:41.4420985Z ^[[1m^[[92m   Compiling^[[0m webpki-roots v0.26.11
+Test	Install wasm-pack	2026-05-12T16:13:41.4751051Z ^[[1m^[[92m   Compiling^[[0m pbkdf2 v0.12.2
+Test	Install wasm-pack	2026-05-12T16:13:41.5435373Z ^[[1m^[[92m   Compiling^[[0m xz2 v0.1.7
+Test	Install wasm-pack	2026-05-12T16:13:41.7840619Z ^[[1m^[[92m   Compiling^[[0m bzip2 v0.5.2
+Test	Install wasm-pack	2026-05-12T16:13:41.9380530Z ^[[1m^[[92m   Compiling^[[0m aes v0.8.4
+Test	Install wasm-pack	2026-05-12T16:13:43.1167924Z ^[[1m^[[92m   Compiling^[[0m url v2.5.8
+Test	Install wasm-pack	2026-05-12T16:13:45.7340569Z ^[[1m^[[92m   Compiling^[[0m lzma-rs v0.3.0
+Test	Install wasm-pack	2026-05-12T16:13:46.5373057Z ^[[1m^[[92m   Compiling^[[0m sha1 v0.10.6
+Test	Install wasm-pack	2026-05-12T16:13:46.9599763Z ^[[1m^[[92m   Compiling^[[0m socks v0.3.4
+Test	Install wasm-pack	2026-05-12T16:13:47.3896718Z ^[[1m^[[92m   Compiling^[[0m xattr v1.6.1
+Test	Install wasm-pack	2026-05-12T16:13:47.9890708Z ^[[1m^[[92m   Compiling^[[0m serde_spanned v1.0.4
+Test	Install wasm-pack	2026-05-12T16:13:48.0596460Z ^[[1m^[[92m   Compiling^[[0m toml_datetime v0.7.5+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:48.2686985Z ^[[1m^[[92m   Compiling^[[0m filetime v0.2.27
+Test	Install wasm-pack	2026-05-12T16:13:48.3465996Z ^[[1m^[[92m   Compiling^[[0m dirs-sys-next v0.1.2
+Test	Install wasm-pack	2026-05-12T16:13:48.4244041Z ^[[1m^[[92m   Compiling^[[0m heck v0.5.0
+Test	Install wasm-pack	2026-05-12T16:13:48.5229987Z ^[[1m^[[92m   Compiling^[[0m deflate64 v0.1.10
+Test	Install wasm-pack	2026-05-12T16:13:48.7461039Z ^[[1m^[[92m   Compiling^[[0m base64 v0.22.1
+Test	Install wasm-pack	2026-05-12T16:13:48.9837736Z ^[[1m^[[92m   Compiling^[[0m fastrand v2.3.0
+Test	Install wasm-pack	2026-05-12T16:13:49.1550500Z ^[[1m^[[92m   Compiling^[[0m strsim v0.11.1
+Test	Install wasm-pack	2026-05-12T16:13:49.1931430Z ^[[1m^[[92m   Compiling^[[0m rustc-demangle v0.1.27
+Test	Install wasm-pack	2026-05-12T16:13:50.0000481Z ^[[1m^[[92m   Compiling^[[0m scopeguard v1.2.0
+Test	Install wasm-pack	2026-05-12T16:13:50.0381114Z ^[[1m^[[92m   Compiling^[[0m clap_lex v0.7.7
+Test	Install wasm-pack	2026-05-12T16:13:50.2870505Z ^[[1m^[[92m   Compiling^[[0m toml_writer v1.0.6+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:50.3180517Z ^[[1m^[[92m   Compiling^[[0m constant_time_eq v0.3.1
+Test	Install wasm-pack	2026-05-12T16:13:50.3680441Z ^[[1m^[[92m   Compiling^[[0m unicode-width v0.2.2
+Test	Install wasm-pack	2026-05-12T16:13:50.4751081Z ^[[1m^[[92m   Compiling^[[0m toml v0.9.11+spec-1.1.0
+Test	Install wasm-pack	2026-05-12T16:13:50.5660976Z ^[[1m^[[92m   Compiling^[[0m console v0.16.2
+Test	Install wasm-pack	2026-05-12T16:13:51.9133913Z ^[[1m^[[92m   Compiling^[[0m clap_builder v4.5.54
+Test	Install wasm-pack	2026-05-12T16:13:55.4190510Z ^[[1m^[[92m   Compiling^[[0m lock_api v0.4.14
+Test	Install wasm-pack	2026-05-12T16:13:55.6120433Z ^[[1m^[[92m   Compiling^[[0m backtrace v0.3.76
+Test	Install wasm-pack	2026-05-12T16:13:58.3311108Z ^[[1m^[[92m   Compiling^[[0m zstd v0.13.3
+Test	Install wasm-pack	2026-05-12T16:14:01.3288748Z ^[[1m^[[92m   Compiling^[[0m tempfile v3.24.0
+Test	Install wasm-pack	2026-05-12T16:14:02.2580329Z ^[[1m^[[92m   Compiling^[[0m ureq v2.12.1
+Test	Install wasm-pack	2026-05-12T16:14:03.0790502Z ^[[1m^[[92m   Compiling^[[0m clap_derive v4.5.49
+Test	Install wasm-pack	2026-05-12T16:14:03.9320222Z ^[[1m^[[92m   Compiling^[[0m dirs-next v2.0.0
+Test	Install wasm-pack	2026-05-12T16:14:04.0215381Z ^[[1m^[[92m   Compiling^[[0m tar v0.4.44
+Test	Install wasm-pack	2026-05-12T16:14:04.7600491Z ^[[1m^[[92m   Compiling^[[0m fs4 v0.6.6
+Test	Install wasm-pack	2026-05-12T16:14:05.4520665Z ^[[1m^[[92m   Compiling^[[0m uuid v1.19.0
+Test	Install wasm-pack	2026-05-12T16:14:05.7710729Z ^[[1m^[[92m   Compiling^[[0m env_filter v0.1.4
+Test	Install wasm-pack	2026-05-12T16:14:05.9082591Z ^[[1m^[[92m   Compiling^[[0m semver v1.0.27
+Test	Install wasm-pack	2026-05-12T16:14:06.4790575Z ^[[1m^[[92m   Compiling^[[0m cargo-platform v0.3.2
+Test	Install wasm-pack	2026-05-12T16:14:06.5360808Z ^[[1m^[[92m   Compiling^[[0m sysinfo v0.37.2
+Test	Install wasm-pack	2026-05-12T16:14:06.9980379Z ^[[1m^[[92m   Compiling^[[0m is_executable v0.1.2
+Test	Install wasm-pack	2026-05-12T16:14:07.0070233Z ^[[1m^[[92m   Compiling^[[0m hex v0.4.3
+Test	Install wasm-pack	2026-05-12T16:14:07.0510981Z ^[[1m^[[92m   Compiling^[[0m shell-words v1.1.1
+Test	Install wasm-pack	2026-05-12T16:14:07.2340969Z ^[[1m^[[92m   Compiling^[[0m same-file v1.0.6
+Test	Install wasm-pack	2026-05-12T16:14:07.2470842Z ^[[1m^[[92m   Compiling^[[0m env_home v0.1.0
+Test	Install wasm-pack	2026-05-12T16:14:07.2940820Z ^[[1m^[[92m   Compiling^[[0m iana-time-zone v0.1.64
+Test	Install wasm-pack	2026-05-12T16:14:07.3250604Z ^[[1m^[[92m   Compiling^[[0m siphasher v0.3.11
+Test	Install wasm-pack	2026-05-12T16:14:07.4740467Z ^[[1m^[[92m   Compiling^[[0m binary-install v0.4.1
+Test	Install wasm-pack	2026-05-12T16:14:07.7220431Z ^[[1m^[[92m   Compiling^[[0m chrono v0.4.43
+Test	Install wasm-pack	2026-05-12T16:14:09.6860596Z ^[[1m^[[92m   Compiling^[[0m walkdir v2.5.0
+Test	Install wasm-pack	2026-05-12T16:14:10.4770689Z ^[[1m^[[92m   Compiling^[[0m which v8.0.0
+Test	Install wasm-pack	2026-05-12T16:14:10.5480477Z ^[[1m^[[92m   Compiling^[[0m dialoguer v0.12.0
+Test	Install wasm-pack	2026-05-12T16:14:10.8720768Z ^[[1m^[[92m   Compiling^[[0m human-panic v2.0.6
+Test	Install wasm-pack	2026-05-12T16:14:11.0161039Z ^[[1m^[[92m   Compiling^[[0m cargo_metadata v0.23.1
+Test	Install wasm-pack	2026-05-12T16:14:11.5350638Z ^[[1m^[[92m   Compiling^[[0m env_logger v0.11.8
+Test	Install wasm-pack	2026-05-12T16:14:11.7440609Z ^[[1m^[[92m   Compiling^[[0m parking_lot v0.12.5
+Test	Install wasm-pack	2026-05-12T16:14:12.1380698Z ^[[1m^[[92m   Compiling^[[0m clap v4.5.54
+Test	Install wasm-pack	2026-05-12T16:14:12.1723828Z ^[[1m^[[92m   Compiling^[[0m serde_ignored v0.1.14
+Test	Install wasm-pack	2026-05-12T16:14:12.3402894Z ^[[1m^[[92m   Compiling^[[0m siphasher v1.0.1
+Test	Install wasm-pack	2026-05-12T16:14:12.4850899Z ^[[1m^[[92m   Compiling^[[0m glob v0.3.3
+Test	Install wasm-pack	2026-05-12T16:14:12.5383006Z ^[[1m^[[92m   Compiling^[[0m path-clean v1.0.1
+Test	Install wasm-pack	2026-05-12T16:14:12.6749847Z ^[[1m^[[92m   Compiling^[[0m wasm-pack v0.14.0
+Test	Install wasm-pack	2026-05-12T16:14:19.9495438Z ^[[1m^[[92m    Finished^[[0m `release` profile [optimized] target(s) in 1m 12s
+Test	Install wasm-pack	2026-05-12T16:14:19.9679820Z ^[[1m^[[92m  Installing^[[0m /home/runner/.cargo/bin/wasm-pack
+Test	Install wasm-pack	2026-05-12T16:14:19.9684328Z ^[[1m^[[92m   Installed^[[0m package `wasm-pack v0.14.0` (executable `wasm-pack`)
+Test	Setup Node.js	﻿2026-05-12T16:14:20.0708036Z ##[group]Run actions/setup-node@v4
+Test	Setup Node.js	2026-05-12T16:14:20.0708304Z with:
+Test	Setup Node.js	2026-05-12T16:14:20.0708469Z   node-version: 20.x
+Test	Setup Node.js	2026-05-12T16:14:20.0708665Z   cache: npm
+Test	Setup Node.js	2026-05-12T16:14:20.0708876Z   cache-dependency-path: js/package-lock.json
+Test	Setup Node.js	2026-05-12T16:14:20.0709451Z   always-auth: false
+Test	Setup Node.js	2026-05-12T16:14:20.0709645Z   check-latest: false
+Test	Setup Node.js	2026-05-12T16:14:20.0709955Z   token: ***
+Test	Setup Node.js	2026-05-12T16:14:20.0710122Z env:
+Test	Setup Node.js	2026-05-12T16:14:20.0710285Z   CARGO_HOME: /home/runner/.cargo
+Test	Setup Node.js	2026-05-12T16:14:20.0710518Z   CARGO_INCREMENTAL: 0
+Test	Setup Node.js	2026-05-12T16:14:20.0710710Z   CARGO_TERM_COLOR: always
+Test	Setup Node.js	2026-05-12T16:14:20.0710907Z ##[endgroup]
+Test	Setup Node.js	2026-05-12T16:14:20.2500483Z Found in cache @ /opt/hostedtoolcache/node/20.20.2/x64
+Test	Setup Node.js	2026-05-12T16:14:20.2506584Z ##[group]Environment details
+Test	Setup Node.js	2026-05-12T16:14:20.5605748Z node: v20.20.2
+Test	Setup Node.js	2026-05-12T16:14:20.5606169Z npm: 10.8.2
+Test	Setup Node.js	2026-05-12T16:14:20.5606471Z yarn: 1.22.22
+Test	Setup Node.js	2026-05-12T16:14:20.5607680Z ##[endgroup]
+Test	Setup Node.js	2026-05-12T16:14:20.5631970Z [command]/opt/hostedtoolcache/node/20.20.2/x64/bin/npm config get cache
+Test	Setup Node.js	2026-05-12T16:14:20.6822453Z /home/runner/.npm
+Test	Setup Node.js	2026-05-12T16:14:20.9451851Z Cache hit for: node-cache-Linux-x64-npm-d315d8b9cf81d047cf497bbcc55d1d84ab2bcc1d591d7e669c7aa9738b286549
+Test	Setup Node.js	2026-05-12T16:14:22.1997417Z Received 15232733 of 19427037 (78.4%), 14.5 MBs/sec
+Test	Setup Node.js	2026-05-12T16:14:22.2450340Z Received 19427037 of 19427037 (100.0%), 17.7 MBs/sec
+Test	Setup Node.js	2026-05-12T16:14:22.2451018Z Cache Size: ~19 MB (19427037 B)
+Test	Setup Node.js	2026-05-12T16:14:22.2478798Z [command]/usr/bin/tar -xf /home/runner/work/_temp/48bc1077-9986-49f9-9011-55562eb0d51b/cache.tzst -P -C /home/runner/work/link-cli/link-cli --use-compress-program unzstd
+Test	Setup Node.js	2026-05-12T16:14:22.2910968Z Cache restored successfully
+Test	Setup Node.js	2026-05-12T16:14:22.2927844Z Cache restored from key: node-cache-Linux-x64-npm-d315d8b9cf81d047cf497bbcc55d1d84ab2bcc1d591d7e669c7aa9738b286549
+Test	Cache cargo registry	﻿2026-05-12T16:14:22.3661679Z ##[group]Run actions/cache@v4
+Test	Cache cargo registry	2026-05-12T16:14:22.3661954Z with:
+Test	Cache cargo registry	2026-05-12T16:14:22.3662236Z   path: ~/.cargo/registry
+Test	Cache cargo registry	~/.cargo/git
+Test	Cache cargo registry	rust/target
+Test	Cache cargo registry	rust/wasm/target
+Test	Cache cargo registry	
+Test	Cache cargo registry	2026-05-12T16:14:22.3662766Z   key: Linux-wasm-cargo-22376137081c5ebc35abde90b3a80a6689287fd12d6f0ceea94e66b1d419e921
+Test	Cache cargo registry	2026-05-12T16:14:22.3663216Z   restore-keys: Linux-wasm-cargo-
+Test	Cache cargo registry	
+Test	Cache cargo registry	2026-05-12T16:14:22.3663688Z   enableCrossOsArchive: false
+Test	Cache cargo registry	2026-05-12T16:14:22.3663920Z   fail-on-cache-miss: false
+Test	Cache cargo registry	2026-05-12T16:14:22.3664133Z   lookup-only: false
+Test	Cache cargo registry	2026-05-12T16:14:22.3664317Z   save-always: false
+Test	Cache cargo registry	2026-05-12T16:14:22.3664492Z env:
+Test	Cache cargo registry	2026-05-12T16:14:22.3664673Z   CARGO_HOME: /home/runner/.cargo
+Test	Cache cargo registry	2026-05-12T16:14:22.3664897Z   CARGO_INCREMENTAL: 0
+Test	Cache cargo registry	2026-05-12T16:14:22.3665095Z   CARGO_TERM_COLOR: always
+Test	Cache cargo registry	2026-05-12T16:14:22.3665298Z ##[endgroup]
+Test	Cache cargo registry	2026-05-12T16:14:22.7694032Z Cache hit for: Linux-wasm-cargo-22376137081c5ebc35abde90b3a80a6689287fd12d6f0ceea94e66b1d419e921
+Test	Cache cargo registry	2026-05-12T16:14:24.0108657Z Received 29360128 of 364861180 (8.0%), 27.9 MBs/sec
+Test	Cache cargo registry	2026-05-12T16:14:25.0110130Z Received 159383552 of 364861180 (43.7%), 75.9 MBs/sec
+Test	Cache cargo registry	2026-05-12T16:14:26.0125186Z Received 318767104 of 364861180 (87.4%), 101.2 MBs/sec
+Test	Cache cargo registry	2026-05-12T16:14:26.2557378Z Received 364861180 of 364861180 (100.0%), 107.1 MBs/sec
+Test	Cache cargo registry	2026-05-12T16:14:26.2560016Z Cache Size: ~348 MB (364861180 B)
+Test	Cache cargo registry	2026-05-12T16:14:26.2666300Z [command]/usr/bin/tar -xf /home/runner/work/_temp/df9ed0f3-87e2-4a84-be22-2b7b89879b2e/cache.tzst -P -C /home/runner/work/link-cli/link-cli --use-compress-program unzstd
+Test	Cache cargo registry	2026-05-12T16:14:29.1885709Z Cache restored successfully
+Test	Cache cargo registry	2026-05-12T16:14:29.2125805Z Cache restored from key: Linux-wasm-cargo-22376137081c5ebc35abde90b3a80a6689287fd12d6f0ceea94e66b1d419e921
+Test	Install npm dependencies	﻿2026-05-12T16:14:29.2231920Z ##[group]Run npm ci
+Test	Install npm dependencies	2026-05-12T16:14:29.2232174Z ^[[36;1mnpm ci^[[0m
+Test	Install npm dependencies	2026-05-12T16:14:29.2801939Z shell: /usr/bin/bash -e {0}
+Test	Install npm dependencies	2026-05-12T16:14:29.2802289Z env:
+Test	Install npm dependencies	2026-05-12T16:14:29.2802488Z   CARGO_HOME: /home/runner/.cargo
+Test	Install npm dependencies	2026-05-12T16:14:29.2802753Z   CARGO_INCREMENTAL: 0
+Test	Install npm dependencies	2026-05-12T16:14:29.2802969Z   CARGO_TERM_COLOR: always
+Test	Install npm dependencies	2026-05-12T16:14:29.2803187Z ##[endgroup]
+Test	Install npm dependencies	2026-05-12T16:14:31.1421418Z 
+Test	Install npm dependencies	2026-05-12T16:14:31.1422297Z added 23 packages, and audited 24 packages in 2s
+Test	Install npm dependencies	2026-05-12T16:14:31.1422676Z 
+Test	Install npm dependencies	2026-05-12T16:14:31.1422982Z 8 packages are looking for funding
+Test	Install npm dependencies	2026-05-12T16:14:31.1423351Z   run `npm fund` for details
+Test	Install npm dependencies	2026-05-12T16:14:31.1432997Z 
+Test	Install npm dependencies	2026-05-12T16:14:31.1433280Z found 0 vulnerabilities
+Test	Test Rust CLI core	﻿2026-05-12T16:14:31.1621609Z ##[group]Run cargo test --manifest-path rust/Cargo.toml --all-features
+Test	Test Rust CLI core	2026-05-12T16:14:31.1622115Z ^[[36;1mcargo test --manifest-path rust/Cargo.toml --all-features^[[0m
+Test	Test Rust CLI core	2026-05-12T16:14:31.1642893Z shell: /usr/bin/bash -e {0}
+Test	Test Rust CLI core	2026-05-12T16:14:31.1643125Z env:
+Test	Test Rust CLI core	2026-05-12T16:14:31.1643310Z   CARGO_HOME: /home/runner/.cargo
+Test	Test Rust CLI core	2026-05-12T16:14:31.1643552Z   CARGO_INCREMENTAL: 0
+Test	Test Rust CLI core	2026-05-12T16:14:31.1643756Z   CARGO_TERM_COLOR: always
+Test	Test Rust CLI core	2026-05-12T16:14:31.1643963Z ##[endgroup]
+Test	Test Rust CLI core	2026-05-12T16:14:31.2673627Z ^[[1m^[[92m   Compiling^[[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1000815Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 2.92s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1053012Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (rust/target/debug/deps/link_cli-d340ce7e6e4e80f5)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1064836Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1065068Z running 0 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1065351Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1065824Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1066222Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1067861Z ^[[1m^[[92m     Running^[[0m unittests src/main.rs (rust/target/debug/deps/clink-8b57485f3e6bc6de)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1076791Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1077006Z running 0 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1077238Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1077738Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1078106Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1080120Z ^[[1m^[[92m     Running^[[0m tests/changes_simplifier_tests.rs (rust/target/debug/deps/changes_simplifier_tests-f35e7109178f8287)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1088571Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1088759Z running 9 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1093209Z test test_simplify_empty ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1094184Z test test_simplify_issue26_alternative_scenario ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1095100Z test test_simplify_issue26_update_operation ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1096287Z test test_simplify_chain ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1096940Z test test_simplify_keeps_unchanged_states ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1097792Z test test_simplify_multiple_branches_from_same_initial ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1098499Z test test_simplify_no_op ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1099576Z test test_simplify_specific_example_removes_intermediate_states ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1100409Z test test_simplify_with_unchanged ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1100745Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1101284Z test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1101807Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1103270Z ^[[1m^[[92m     Running^[[0m tests/cli_arguments_tests.rs (rust/target/debug/deps/cli_arguments_tests-5690f63b1f5ebd41)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1111349Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1111737Z running 7 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1116214Z test parses_csharp_option_aliases_without_direct_clap_dependency ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1118811Z test parses_export_alias_as_lino_output_path ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1120325Z test parses_inline_export_alias_as_lino_output_path ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1123460Z ^[[1m^[[92m     Running^[[0m tests/cli_export_tests.rs (rust/target/debug/deps/cli_export_tests-3c6cb20a58ca35ef)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1124660Z test parses_inline_alias_values_and_boolean_values ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1126050Z test rejects_extra_positional_queries ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1126831Z test query_option_takes_precedence_over_positional_query ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1127282Z test returns_help_and_version_commands ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1127493Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1127847Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1128197Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1132135Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1132381Z running 3 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1167293Z test export_alias_writes_numbered_references ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1206409Z test export_alias_writes_named_references ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1212329Z ^[[1m^[[92m     Running^[[0m tests/cli_import_tests.rs (rust/target/debug/deps/cli_import_tests-0620bb8ff1891745)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1213925Z test structure_option_renders_left_branch_with_indexes ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1214389Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1215004Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1215591Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1220850Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1221023Z running 1 test
+Test	Test Rust CLI core	2026-05-12T16:14:34.1250058Z test import_option_reads_numbered_lino_file ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1250484Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1251100Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1251694Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1252763Z ^[[1m^[[92m     Running^[[0m tests/cli_named_types_tests.rs (rust/target/debug/deps/cli_named_types_tests-f8e3161a20dbda82)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1261133Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1261327Z running 1 test
+Test	Test Rust CLI core	2026-05-12T16:14:34.1322860Z test cli_stores_string_aliases_in_separate_names_database ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1323388Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1324034Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1324684Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1325820Z ^[[1m^[[92m     Running^[[0m tests/dependency_basis_tests.rs (rust/target/debug/deps/dependency_basis_tests-1921d0e4c0044681)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1333685Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1333894Z running 2 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1336704Z test rust_manifest_declares_required_basis_crates ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1337580Z test rust_manifest_uses_lino_arguments_without_direct_clap_dependency ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1337901Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1338327Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1338913Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1339958Z ^[[1m^[[92m     Running^[[0m tests/issue62_review_coverage_tests.rs (rust/target/debug/deps/issue62_review_coverage_tests-3ca90576ef123594)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1348336Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1349321Z running 4 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1358071Z test pinned_types_take_types_is_finite_and_deterministic ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1359945Z test unsupported_any_reference_is_rejected_without_placeholder_creation ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1363445Z test named_link_create_delete_recreate_clears_stale_name_mapping ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1366961Z test explicit_numeric_id_update_can_be_reversed_with_another_update ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1367515Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1368204Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1368824Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1370795Z ^[[1m^[[92m     Running^[[0m tests/link_storage_tests.rs (rust/target/debug/deps/link_storage_tests-4a62457bb635dc13)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1379565Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1380043Z running 14 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1389745Z test test_format_structure_renders_left_branch_with_link_indexes ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1390894Z test test_format_structure_renders_repeated_source_and_target_as_reference_on_right ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1391495Z test test_lino_lines_escape_names_that_need_quoting ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1392008Z test test_lino_lines_select_quote_style_for_names_containing_quotes ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1392524Z test test_lino_lines_use_numbered_references_without_names ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1393022Z test test_lino_lines_use_names_for_indexes_sources_and_targets ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1394831Z test test_storage_delete ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1400106Z test test_storage_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1401500Z test test_storage_get_or_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1402012Z test test_storage_named_links ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1402589Z test test_storage_persistence ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1403136Z test test_storage_search ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1403613Z test test_storage_update ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1404151Z test test_write_lino_output_writes_complete_database ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1404408Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1404763Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1405107Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1406414Z ^[[1m^[[92m     Running^[[0m tests/link_tests.rs (rust/target/debug/deps/link_tests-cf6e058bd79f1c62)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1414535Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1414710Z running 5 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1418133Z test test_link_format ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1418576Z test test_link_creation ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1419014Z test test_link_is_full_point ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1419811Z test test_link_is_null ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1420334Z test test_link_round_trips_through_doublets_link ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1420686Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1421137Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1422482Z ^[[1m^[[92m     Running^[[0m tests/lino_database_input_tests.rs (rust/target/debug/deps/lino_database_input_tests-3adf26a5fcbf9b34)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1423099Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1430698Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1430864Z running 3 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1435936Z test import_lino_text_creates_named_references_as_point_links ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1436931Z test import_lino_text_treats_out_of_range_numbers_as_names ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1437942Z test import_lino_text_reproduces_numbered_links_at_explicit_indexes ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1438468Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1438965Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1439807Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1440594Z ^[[1m^[[92m     Running^[[0m tests/lino_link_tests.rs (rust/target/debug/deps/lino_link_tests-e5cad6c0a3a54635)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1448864Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1449035Z running 5 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1452795Z test test_lino_link_is_numeric ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1454575Z test test_lino_link_is_variable ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1455171Z test test_lino_link_is_wildcard ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1455719Z test test_lino_link_new ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1456196Z test test_lino_link_with_values ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1456586Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1457108Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1457538Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1458221Z ^[[1m^[[92m     Running^[[0m tests/named_types_decorator_tests.rs (rust/target/debug/deps/named_types_decorator_tests-6ec4446ce107270b)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1464756Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1465465Z running 7 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1480686Z test decorator_includes_pinned_types_decorator ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1481825Z test default_names_database_path_matches_csharp_convention ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1483081Z test decorator_exposes_link_storage_operations_and_named_types ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1500253Z test delete_removes_associated_name_from_names_database ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1511822Z test decorator_can_be_built_from_existing_link_storages ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1512506Z test reassigning_existing_name_moves_name_to_new_link ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1513129Z test setting_second_name_replaces_first_name ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1513728Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1514789Z ^[[1m^[[92m     Running^[[0m tests/parser_tests.rs (rust/target/debug/deps/parser_tests-77b3e71c374cfc5a)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1515629Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1516363Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1523571Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1523859Z running 8 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1528256Z test test_parse_empty ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1529720Z test test_parse_links_notation_backtick_unicode_identifier ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1530555Z test test_parse_nested_link ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1531163Z test test_parse_link_with_id ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1533187Z test test_parse_simple_link ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1533705Z test test_parse_query_format ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1534220Z test test_parse_variable ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1534732Z test test_parse_wildcard ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1534914Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1535522Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1536395Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1537251Z ^[[1m^[[92m     Running^[[0m tests/pinned_types_decorator_tests.rs (rust/target/debug/deps/pinned_types_decorator_tests-2be8a182e5134711)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1545439Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1545588Z running 3 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1549494Z test decorator_exposes_link_storage_operations_and_pinned_types ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1552761Z test decorator_supports_triplet_deconstruction_parity ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1553753Z test decorator_rejects_unexpected_link_shape_at_reserved_address ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1554133Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1554499Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1555044Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1555847Z ^[[1m^[[92m     Running^[[0m tests/query_processor_csharp_parity_tests.rs (rust/target/debug/deps/query_processor_csharp_parity_tests-e891656cc1b18e2a)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1562833Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1563181Z running 15 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1584045Z test test_create_explicit_index_after_gap_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1585208Z test test_create_deep_nested_numeric_links_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1586298Z test test_delete_all_by_index_wildcard_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1592149Z test test_delete_by_source_target_pattern_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1610602Z test test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1620610Z test test_delete_by_wildcard_target_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1621766Z test test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1660192Z test test_delete_by_names_keeps_leaf_names_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1663346Z test test_no_op_variable_query_returns_matched_changes ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1665789Z test test_swap_all_links_using_variables_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1700476Z test test_string_composite_left_child_does_not_create_extra_leaf ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1720356Z test test_unwrapped_create_query_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1739032Z test test_unknown_named_restriction_fails_without_auto_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1748134Z test test_named_link_rename_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1759929Z test test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1760612Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1761019Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1761385Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1763654Z ^[[1m^[[92m     Running^[[0m tests/query_processor_tests.rs (rust/target/debug/deps/query_processor_tests-fcc4222298464831)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1773234Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1773411Z running 15 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1782535Z test test_auto_create_missing_numeric_reference_creates_point_link ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1783158Z test test_deduplicate_duplicate_pair_with_named_links ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1783679Z test test_auto_create_missing_named_references_creates_point_links ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1789779Z test test_auto_create_missing_numeric_reference_fills_existing_gap ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1791524Z test test_deduplicate_duplicate_pair_with_numeric_links ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1795495Z test test_deduplicate_nested_duplicates ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1805736Z test test_deduplicate_mixed_named_and_numeric ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1806481Z test test_deduplicate_triple_duplicate_pair ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1807619Z test test_deduplicate_named_links_multiple_queries ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1808239Z test test_deduplicate_with_different_pairs ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1808715Z test test_missing_named_reference_fails_without_auto_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1809641Z test test_missing_numeric_reference_fails_without_auto_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1810523Z test test_future_numeric_references_succeed_without_auto_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1811249Z test test_query_processor_empty ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1811810Z test test_query_processor_create ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1812000Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1812359Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1812722Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1813488Z ^[[1m^[[92m     Running^[[0m tests/unicode_sequence_converter_tests.rs (rust/target/debug/deps/unicode_sequence_converter_tests-dbca84dd88aaca3a)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1820087Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1820246Z running 5 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1825882Z test caching_converter_decorator_reuses_cached_values ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1826885Z test balanced_variant_and_right_sequence_walker_preserve_symbol_order ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1827803Z test raw_number_converters_match_hybrid_external_reference_encoding ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1828382Z test string_and_unicode_sequence_converters_round_trip_utf16_text ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1828933Z test target_and_char_symbol_converters_create_and_decode_symbols ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1829712Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1830175Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1830692Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1831674Z ^[[1m^[[92m     Running^[[0m tests/unicode_string_storage_tests.rs (rust/target/debug/deps/unicode_string_storage_tests-3c8ce74330d9f074)
+Test	Test Rust CLI core	2026-05-12T16:14:34.1840603Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1840919Z running 11 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.1848206Z test create_and_retrieve_empty_string ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1861509Z test create_and_retrieve_simple_string ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1861935Z test create_and_retrieve_multiple_strings ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1862388Z test create_and_retrieve_unicode_string_as_utf16_sequence ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1862824Z test create_and_retrieve_user_defined_type ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1863258Z test deleting_non_named_link_does_not_affect_other_names ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1864054Z test name_is_removed_when_external_reference_is_deleted ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1864978Z test name_external_reference_matches_csharp_hybrid_encoding ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1865771Z test name_is_removed_when_link_is_deleted ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1866588Z test named_links_facade_matches_csharp_named_links_role ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1867347Z test pinned_types_are_created_and_named ... ok
+Test	Test Rust CLI core	2026-05-12T16:14:34.1867750Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1868409Z test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.1868956Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.1870015Z ^[[1m^[[92m   Doc-tests^[[0m link_cli
+Test	Test Rust CLI core	2026-05-12T16:14:34.2327649Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.2328183Z running 0 tests
+Test	Test Rust CLI core	2026-05-12T16:14:34.2328473Z 
+Test	Test Rust CLI core	2026-05-12T16:14:34.2328881Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test Rust CLI core	2026-05-12T16:14:34.2329536Z 
+Test	Test WebAssembly wrapper	﻿2026-05-12T16:14:34.2407522Z ##[group]Run npm run test:wasm
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2407835Z ^[[36;1mnpm run test:wasm^[[0m
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2428434Z shell: /usr/bin/bash -e {0}
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2428669Z env:
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2428848Z   CARGO_HOME: /home/runner/.cargo
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2429376Z   CARGO_INCREMENTAL: 0
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2429598Z   CARGO_TERM_COLOR: always
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.2429806Z ##[endgroup]
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.3586462Z 
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.3586950Z > link-cli-web@2.3.0 test:wasm
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.3587570Z > wasm-pack test --node ../rust/wasm
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.3587916Z 
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.4749896Z [INFO]: 🎯  Checking for the Wasm target...
+Test	Test WebAssembly wrapper	2026-05-12T16:14:34.5922669Z ^[[1m^[[92m   Compiling^[[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Test	Test WebAssembly wrapper	2026-05-12T16:14:35.2325943Z ^[[1m^[[92m   Compiling^[[0m clink-wasm v2.3.0 (/home/runner/work/link-cli/link-cli/rust/wasm)
+Test	Test WebAssembly wrapper	2026-05-12T16:14:36.1580243Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized + debuginfo] target(s) in 1.64s
+Test	Test WebAssembly wrapper	2026-05-12T16:14:36.1677384Z [INFO]: ⬇️  Installing wasm-bindgen...
+Test	Test WebAssembly wrapper	2026-05-12T16:14:36.7632334Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+Test	Test WebAssembly wrapper	2026-05-12T16:14:36.7661285Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/wasm32-unknown-unknown/debug/deps/clink_wasm-5e5fcba89f74db83.wasm)
+Test	Test WebAssembly wrapper	2026-05-12T16:14:36.9571058Z no tests to run!
+Test	Test WebAssembly wrapper	2026-05-12T16:14:36.9852719Z ^[[1m^[[92m     Running^[[0m tests/dependabot_alert_tests.rs (target/wasm32-unknown-unknown/debug/deps/dependabot_alert_tests-098124fcbb1e3ba5.wasm)
+Test	Test WebAssembly wrapper	2026-05-12T16:14:37.0336829Z no tests to run!
+Test	Test WebAssembly wrapper	2026-05-12T16:14:37.0410544Z ^[[1m^[[92m     Running^[[0m tests/web.rs (target/wasm32-unknown-unknown/debug/deps/web-568af060111e1a1d.wasm)
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.4941545Z running 5 tests
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5029511Z test reports_invalid_options ... ok
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5213280Z test javascript_wasm_api_round_trips_create_update_delete_and_recreate ... ok
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5216317Z test exposes_versions ... ok
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5233891Z test executes_lino_queries_with_the_rust_core ... ok
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5235989Z test creates_a_clink_instance ... ok
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5239676Z 
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5240950Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.04s
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5241493Z 
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5304775Z ^[[1m^[[92m   Doc-tests^[[0m clink_wasm
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5657086Z 
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5657652Z running 0 tests
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5657926Z 
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5658558Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test	Test WebAssembly wrapper	2026-05-12T16:14:39.5658922Z 
+Test	Build React WebAssembly app	﻿2026-05-12T16:14:39.5812920Z ##[group]Run npm run build
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5813394Z ^[[36;1mnpm run build^[[0m
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5842065Z shell: /usr/bin/bash -e {0}
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5842305Z env:
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5842531Z   CARGO_HOME: /home/runner/.cargo
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5842782Z   CARGO_INCREMENTAL: 0
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5842988Z   CARGO_TERM_COLOR: always
+Test	Build React WebAssembly app	2026-05-12T16:14:39.5843203Z ##[endgroup]
+Test	Build React WebAssembly app	2026-05-12T16:14:39.6994158Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:39.6995058Z > link-cli-web@2.3.0 build
+Test	Build React WebAssembly app	2026-05-12T16:14:39.6995683Z > npm run build:wasm && npm run build:web
+Test	Build React WebAssembly app	2026-05-12T16:14:39.6996041Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:39.8117515Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:39.8118082Z > link-cli-web@2.3.0 build:wasm
+Test	Build React WebAssembly app	2026-05-12T16:14:39.8118937Z > wasm-pack build --target web --out-dir ../../js/pkg ../rust/wasm
+Test	Build React WebAssembly app	2026-05-12T16:14:39.8119720Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:39.9081731Z [INFO]: 🎯  Checking for the Wasm target...
+Test	Build React WebAssembly app	2026-05-12T16:14:39.9356412Z [INFO]: 🌀  Compiling to Wasm...
+Test	Build React WebAssembly app	2026-05-12T16:14:40.0065345Z ^[[1m^[[92m   Compiling^[[0m link-cli v0.1.0 (/home/runner/work/link-cli/link-cli/rust)
+Test	Build React WebAssembly app	2026-05-12T16:14:41.1350574Z ^[[1m^[[92m   Compiling^[[0m clink-wasm v2.3.0 (/home/runner/work/link-cli/link-cli/rust/wasm)
+Test	Build React WebAssembly app	2026-05-12T16:14:41.9025917Z ^[[1m^[[92m    Finished^[[0m `release` profile [optimized] target(s) in 1.95s
+Test	Build React WebAssembly app	2026-05-12T16:14:41.9102822Z [INFO]: ⬇️  Installing wasm-bindgen...
+Test	Build React WebAssembly app	2026-05-12T16:14:43.4380087Z [INFO]: Optimizing wasm binaries with `wasm-opt`...
+Test	Build React WebAssembly app	2026-05-12T16:14:46.8625029Z [INFO]: License key is set in Cargo.toml but no LICENSE file(s) were found; Please add the LICENSE file(s) to your project directory
+Test	Build React WebAssembly app	2026-05-12T16:14:46.8626478Z [INFO]: ✨   Done in 6.96s
+Test	Build React WebAssembly app	2026-05-12T16:14:46.8627253Z [INFO]: 📦   Your wasm pkg is ready to publish at ../js/pkg.
+Test	Build React WebAssembly app	2026-05-12T16:14:46.9754572Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:46.9757221Z > link-cli-web@2.3.0 build:web
+Test	Build React WebAssembly app	2026-05-12T16:14:46.9757915Z > vite build --config vite.config.js
+Test	Build React WebAssembly app	2026-05-12T16:14:46.9758293Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:47.1803517Z ^[[36mvite v8.0.10 ^[[32mbuilding client environment for production...^[[36m^[[39m
+Test	Build React WebAssembly app	2026-05-12T16:14:47.1921939Z ^[[2K
+Test	Build React WebAssembly app	2026-05-12T16:14:47.4309629Z transforming...✓ 1737 modules transformed.
+Test	Build React WebAssembly app	2026-05-12T16:14:47.4593329Z rendering chunks...
+Test	Build React WebAssembly app	2026-05-12T16:14:47.4968831Z computing gzip size...
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5025620Z ../dist/assets/favicon-CIVoLc1m.svg             0.37 kB │ gzip:   0.24 kB
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5026762Z ../dist/index.html                              0.63 kB │ gzip:   0.38 kB
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5027881Z ../dist/assets/doublets_web_bg-cVQpTmMF.wasm   51.41 kB │ gzip:  20.96 kB
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5029354Z ../dist/assets/clink_wasm_bg-Bog79H2E.wasm    284.42 kB │ gzip: 123.90 kB
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5030584Z ../dist/assets/index-D8XZ-J-o.css               5.91 kB │ gzip:   2.07 kB
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5031732Z ../dist/assets/index-BnV7WCY7.js              220.94 kB │ gzip:  68.69 kB
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5032244Z 
+Test	Build React WebAssembly app	2026-05-12T16:14:47.5032579Z ^[[32m✓ built in 321ms^[[39m
+Test	Upload built app	﻿2026-05-12T16:14:47.5361202Z ##[group]Run actions/upload-artifact@v4
+Test	Upload built app	2026-05-12T16:14:47.5361503Z with:
+Test	Upload built app	2026-05-12T16:14:47.5361682Z   name: link-cli-web
+Test	Upload built app	2026-05-12T16:14:47.5361874Z   path: dist/
+Test	Upload built app	2026-05-12T16:14:47.5362065Z   if-no-files-found: warn
+Test	Upload built app	2026-05-12T16:14:47.5362288Z   compression-level: 6
+Test	Upload built app	2026-05-12T16:14:47.5362491Z   overwrite: false
+Test	Upload built app	2026-05-12T16:14:47.5362690Z   include-hidden-files: false
+Test	Upload built app	2026-05-12T16:14:47.5362909Z env:
+Test	Upload built app	2026-05-12T16:14:47.5363081Z   CARGO_HOME: /home/runner/.cargo
+Test	Upload built app	2026-05-12T16:14:47.5363323Z   CARGO_INCREMENTAL: 0
+Test	Upload built app	2026-05-12T16:14:47.5363542Z   CARGO_TERM_COLOR: always
+Test	Upload built app	2026-05-12T16:14:47.5363747Z ##[endgroup]
+Test	Upload built app	2026-05-12T16:14:47.7563953Z With the provided path, there will be 6 files uploaded
+Test	Upload built app	2026-05-12T16:14:47.7571335Z Artifact name is valid!
+Test	Upload built app	2026-05-12T16:14:47.7572170Z Root directory input is valid!
+Test	Upload built app	2026-05-12T16:14:48.0326431Z Beginning upload of artifact content to blob storage
+Test	Upload built app	2026-05-12T16:14:48.5474901Z Uploaded bytes 215109
+Test	Upload built app	2026-05-12T16:14:48.6151220Z Finished uploading artifact content to blob storage!
+Test	Upload built app	2026-05-12T16:14:48.6154653Z SHA256 digest of uploaded artifact zip is c62ba0541c730f470cbb7139b38714564138a0941f9ba4547d33e0d402a060bf
+Test	Upload built app	2026-05-12T16:14:48.6156432Z Finalizing artifact upload
+Test	Upload built app	2026-05-12T16:14:48.7914030Z Artifact link-cli-web.zip successfully finalized. Artifact ID 6949558956
+Test	Upload built app	2026-05-12T16:14:48.7915688Z Artifact link-cli-web has been successfully uploaded! Final size is 215109 bytes. Artifact ID is 6949558956
+Test	Upload built app	2026-05-12T16:14:48.7923151Z Artifact download URL: https://github.com/link-foundation/link-cli/actions/runs/25747032579/artifacts/6949558956
+Test	Post Cache cargo registry	﻿2026-05-12T16:14:48.8608380Z Post job cleanup.
+Test	Post Cache cargo registry	2026-05-12T16:14:48.9926130Z Cache hit occurred on the primary key Linux-wasm-cargo-22376137081c5ebc35abde90b3a80a6689287fd12d6f0ceea94e66b1d419e921, not saving cache.
+Test	Post Setup Node.js	﻿2026-05-12T16:14:49.0012657Z Post job cleanup.
+Test	Post Setup Node.js	2026-05-12T16:14:49.1592453Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-d315d8b9cf81d047cf497bbcc55d1d84ab2bcc1d591d7e669c7aa9738b286549, not saving cache.
+Test	Post Run actions/checkout@v4	﻿2026-05-12T16:14:49.1705757Z Post job cleanup.
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2698881Z [command]/usr/bin/git version
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2735216Z git version 2.53.0
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2780534Z Temporarily overriding HOME='/home/runner/work/_temp/ddf0d8fa-3a8d-4dce-962c-139e92ececa0' before making global git config changes
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2782155Z Adding repository directory to the temporary git global config as a safe directory
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2787527Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2824279Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.2857244Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.3085773Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.3106936Z http.https://github.com/.extraheader
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.3119683Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.3150987Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.3364684Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Test	Post Run actions/checkout@v4	2026-05-12T16:14:49.3394997Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Test	Complete job	﻿2026-05-12T16:14:49.3720789Z Cleaning up orphan processes
+Test	Complete job	2026-05-12T16:14:49.4100632Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

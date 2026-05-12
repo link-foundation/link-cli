@@ -3,11 +3,12 @@
 /**
  * Create GitHub Release from CHANGELOG.md
  * Usage:
- *   node csharp/scripts/create-github-release.mjs --release-version <version> --repository <owner/repo> [--tag-prefix v] [--changelog-path CHANGELOG.md]
+ *   node csharp/scripts/create-github-release.mjs --release-version <version> --repository <owner/repo> [--tag-prefix v] [--changelog-path CHANGELOG.md] [--assets-glob csharp/artifacts/*.nupkg]
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { execFileSync } from 'child_process';
+import { dirname, basename, join, isAbsolute } from 'path';
 
 // Simple argument parsing
 const args = process.argv.slice(2);
@@ -23,7 +24,31 @@ const tagPrefix = getArg('tag-prefix', 'v');
 const changelogPath = getArg('changelog-path', 'CHANGELOG.md');
 const language = getArg('language', '');
 const packageId = getArg('package-id', '');
+const assetsGlob = getArg('assets-glob', '');
 const dryRun = args.includes('--dry-run');
+
+/**
+ * Resolve a simple `directory/*.ext` glob to a list of file paths.
+ * Only `*` in the file name part is supported; matches are returned in name order.
+ */
+function resolveAssets(pattern) {
+  if (!pattern) return [];
+  const dir = dirname(pattern) || '.';
+  const filePattern = basename(pattern);
+  if (!existsSync(dir)) return [];
+
+  if (!filePattern.includes('*')) {
+    const candidate = isAbsolute(pattern) ? pattern : join(dir, filePattern);
+    return existsSync(candidate) ? [candidate] : [];
+  }
+
+  const escaped = filePattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  const regex = new RegExp(`^${escaped}$`);
+  return readdirSync(dir)
+    .filter((name) => regex.test(name))
+    .sort()
+    .map((name) => join(dir, name));
+}
 
 if (!version || !repository) {
   console.error('Error: Missing required arguments');
@@ -81,30 +106,47 @@ try {
     process.exit(0);
   }
 
+  const assetPaths = resolveAssets(assetsGlob);
+
+  let releaseExists = false;
   try {
     execFileSync('gh', ['release', 'view', tag, '--repo', repository], {
       stdio: 'ignore',
     });
-    console.log(`Release ${tag} already exists, skipping`);
-    process.exit(0);
+    releaseExists = true;
+    console.log(`Release ${tag} already exists, will reconcile assets`);
   } catch {
     // Release does not exist yet.
   }
 
-  try {
-    execFileSync('gh', ['api', `repos/${repository}/releases`, '-X', 'POST', '--input', '-'], {
-      input: JSON.stringify(payload),
-      encoding: 'utf-8',
-      stdio: ['pipe', 'inherit', 'inherit'],
-    });
-    console.log(`Created GitHub release: ${tag}`);
-  } catch (error) {
-    // Check if release already exists
-    if (error.message && error.message.includes('already exists')) {
-      console.log(`Release ${tag} already exists, skipping`);
-    } else {
-      throw error;
+  if (!releaseExists) {
+    try {
+      execFileSync('gh', ['api', `repos/${repository}/releases`, '-X', 'POST', '--input', '-'], {
+        input: JSON.stringify(payload),
+        encoding: 'utf-8',
+        stdio: ['pipe', 'inherit', 'inherit'],
+      });
+      console.log(`Created GitHub release: ${tag}`);
+    } catch (error) {
+      if (error.message && error.message.includes('already exists')) {
+        console.log(`Release ${tag} already exists, will reconcile assets`);
+      } else {
+        throw error;
+      }
     }
+  }
+
+  if (assetPaths.length === 0) {
+    if (assetsGlob) {
+      console.log(`No assets matched ${assetsGlob}, skipping asset upload`);
+    }
+  } else {
+    console.log(`Uploading ${assetPaths.length} asset(s) to ${tag}`);
+    execFileSync(
+      'gh',
+      ['release', 'upload', tag, ...assetPaths, '--clobber', '--repo', repository],
+      { stdio: 'inherit' }
+    );
   }
 } catch (error) {
   console.error('Error creating release:', error.message);

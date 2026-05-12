@@ -17,16 +17,10 @@ on:
       - 'js/**'
       - 'rust/**'
   workflow_dispatch:
-    inputs:
-      deploy_pages:
-        description: 'Deploy the built app to GitHub Pages'
-        required: true
-        default: false
-        type: boolean
 
 concurrency:
   group: wasm-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -35,6 +29,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -87,21 +82,14 @@ jobs:
           name: link-cli-web
           path: dist/
 
-  deploy:
-    name: Deploy GitHub Pages
+  build-pages:
+    name: Build GitHub Pages app
     if: |
-      github.event_name == 'workflow_dispatch' &&
-      github.ref == 'refs/heads/main' &&
-      inputs.deploy_pages
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -121,22 +109,52 @@ jobs:
           cache: npm
           cache-dependency-path: js/package-lock.json
 
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+            rust/wasm/target
+          key: ${{ runner.os }}-wasm-pages-cargo-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-wasm-pages-cargo-
+            ${{ runner.os }}-wasm-cargo-
+
       - name: Install npm dependencies
         working-directory: js
         run: npm ci
 
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Build GitHub Pages app
         working-directory: js
         run: npm run build:pages
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: dist/
 
-      - name: Deploy to GitHub Pages
+  deploy-pages:
+    name: Deploy GitHub Pages
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
+    needs: build-pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy Pages artifact
         id: deployment
         uses: actions/deploy-pages@v4

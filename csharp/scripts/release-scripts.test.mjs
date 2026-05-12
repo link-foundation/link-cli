@@ -80,3 +80,34 @@ test('create-github-release dry run uses tag prefix and component changelog', ()
   assert.match(payload.body, /Fixed release automation\./);
   assert.match(payload.body, /Package: `clink`/);
 });
+
+test('create-github-release dry run reports matching assets without uploading', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-assets-'));
+  const changelog = join(dir, 'CHANGELOG.md');
+  writeFileSync(
+    changelog,
+    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n'
+  );
+  const artifacts = join(dir, 'artifacts');
+  mkdirSync(artifacts, { recursive: true });
+  writeFileSync(join(artifacts, 'clink.2.4.0.nupkg'), 'fake');
+  writeFileSync(join(artifacts, 'clink.2.4.0.snupkg'), 'fake');
+  writeFileSync(join(artifacts, 'unrelated.txt'), 'fake');
+
+  const stdout = runNode('csharp/scripts/create-github-release.mjs', [
+    '--release-version',
+    '2.4.0',
+    '--repository',
+    'link-foundation/link-cli',
+    '--tag-prefix',
+    'csharp-v',
+    '--changelog-path',
+    changelog,
+    '--assets-glob',
+    join(artifacts, '*.nupkg'),
+    '--dry-run',
+  ]);
+  const payload = JSON.parse(stdout.slice(stdout.indexOf('{')));
+
+  assert.equal(payload.tag_name, 'csharp-v2.4.0');
+});
