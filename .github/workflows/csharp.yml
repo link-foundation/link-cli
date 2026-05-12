@@ -367,22 +367,9 @@ jobs:
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
         run: |
-          PACKAGE_ID="${{ steps.package.outputs.id }}"
-          PACKAGE_ID_LOWER="${{ steps.package.outputs.flat_container_id }}"
-          VERSION="${{ steps.release_version.outputs.version }}"
-          for DELAY in 0 5 10 20 30 60; do
-            if [ "$DELAY" != "0" ]; then
-              sleep "$DELAY"
-            fi
-            STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.nuspec" || true)
-            echo "NuGet status for ${PACKAGE_ID}@${VERSION}: ${STATUS}"
-            if [ "$STATUS" = "200" ]; then
-              echo "Verified ${PACKAGE_ID}@${VERSION} is available on NuGet"
-              exit 0
-            fi
-          done
-          echo "::error title=NuGet verification failed::${PACKAGE_ID}@${VERSION} was not available from NuGet after publish."
-          exit 1
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.id }}" \
+            --release-version "${{ steps.release_version.outputs.version }}"
 
       - name: Create GitHub Release
         if: >-
@@ -481,22 +468,9 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true')
         run: |
-          PACKAGE_ID="${{ steps.package.outputs.id }}"
-          PACKAGE_ID_LOWER="${{ steps.package.outputs.flat_container_id }}"
-          VERSION="${{ steps.version.outputs.new_version }}"
-          for DELAY in 0 5 10 20 30 60; do
-            if [ "$DELAY" != "0" ]; then
-              sleep "$DELAY"
-            fi
-            STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.nuspec" || true)
-            echo "NuGet status for ${PACKAGE_ID}@${VERSION}: ${STATUS}"
-            if [ "$STATUS" = "200" ]; then
-              echo "Verified ${PACKAGE_ID}@${VERSION} is available on NuGet"
-              exit 0
-            fi
-          done
-          echo "::error title=NuGet verification failed::${PACKAGE_ID}@${VERSION} was not available from NuGet after publish."
-          exit 1
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.id }}" \
+            --release-version "${{ steps.version.outputs.new_version }}"
 
       - name: Create GitHub Release
         if: >-

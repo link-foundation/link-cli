@@ -14,6 +14,13 @@ import test from 'node:test';
 import { promisify } from 'node:util';
 
 import { decide, readCsprojInfo } from './check-release-needed.mjs';
+import {
+  DEFAULT_MAX_ATTEMPTS,
+  DEFAULT_SLEEP_SECONDS,
+  createNugetNuspecUrl,
+  parseArgs as parseWaitForNugetArgs,
+  waitForNugetPackage,
+} from './wait-for-nuget.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -380,4 +387,80 @@ test('check-release-needed CLI short-circuits when NuGet and GitHub already have
   assert.match(outputs, /^skip_bump=false$/m);
   assert.match(outputs, /^nuget_published=true$/m);
   assert.match(outputs, /^github_release_exists=true$/m);
+});
+
+test('wait-for-nuget defaults to two-minute checks across the NuGet indexing window', () => {
+  const config = parseWaitForNugetArgs(
+    ['--package-id', 'clink', '--release-version', '2.4.0'],
+    {}
+  );
+
+  assert.equal(config.packageId, 'clink');
+  assert.equal(config.releaseVersion, '2.4.0');
+  assert.equal(config.maxAttempts, DEFAULT_MAX_ATTEMPTS);
+  assert.equal(config.sleepSeconds, DEFAULT_SLEEP_SECONDS);
+  assert.equal(DEFAULT_MAX_ATTEMPTS, 8);
+  assert.equal(DEFAULT_SLEEP_SECONDS, 120);
+});
+
+test('wait-for-nuget builds the flat-container nuspec URL', () => {
+  assert.equal(
+    createNugetNuspecUrl({
+      flatContainerUrl: 'https://api.nuget.org/v3-flatcontainer/',
+      packageId: 'Clink',
+      version: '2.4.0',
+    }),
+    'https://api.nuget.org/v3-flatcontainer/clink/2.4.0/clink.nuspec'
+  );
+});
+
+test('wait-for-nuget succeeds when indexing takes longer than the old 125 second loop', async () => {
+  let attempts = 0;
+  const sleeps = [];
+
+  const available = await waitForNugetPackage({
+    checkAvailability: async () => {
+      attempts++;
+      return {
+        available: attempts === 8,
+        status: attempts === 8 ? 200 : 404,
+      };
+    },
+    maxAttempts: 8,
+    packageId: 'clink',
+    sleepFn: async (seconds) => {
+      sleeps.push(seconds);
+    },
+    sleepSeconds: 120,
+    stdout: () => {},
+    version: '2.4.0',
+  });
+
+  assert.equal(available, true);
+  assert.equal(attempts, 8);
+  assert.deepEqual(sleeps, [120, 120, 120, 120, 120, 120, 120]);
+});
+
+test('wait-for-nuget fails only after exhausting all attempts', async () => {
+  let attempts = 0;
+  const sleeps = [];
+
+  const available = await waitForNugetPackage({
+    checkAvailability: async () => {
+      attempts++;
+      return { available: false, status: 404 };
+    },
+    maxAttempts: 3,
+    packageId: 'clink',
+    sleepFn: async (seconds) => {
+      sleeps.push(seconds);
+    },
+    sleepSeconds: 120,
+    stdout: () => {},
+    version: '2.4.0',
+  });
+
+  assert.equal(available, false);
+  assert.equal(attempts, 3);
+  assert.deepEqual(sleeps, [120, 120]);
 });
