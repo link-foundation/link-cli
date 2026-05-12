@@ -14,39 +14,11 @@
  * ### Added
  * - Your changes here
  *
- * Usage: node scripts/get-bump-type.mjs [--default <patch|minor|major>]
- *
- * Uses link-foundation libraries:
- * - use-m: Dynamic package loading without package.json dependencies
- * - lino-arguments: Unified configuration from CLI args, env vars, and .lenv files
+ * Usage: node scripts/get-bump-type.mjs [--dir <path>] [--default <patch|minor|major>]
  */
 
 import { readFileSync, readdirSync, existsSync, appendFileSync } from 'fs';
 import { join } from 'path';
-
-// Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
-
-// Import lino-arguments for CLI argument parsing
-const { makeConfig } = await use('lino-arguments');
-
-// Parse CLI arguments
-const config = makeConfig({
-  yargs: ({ yargs, getenv }) =>
-    yargs
-      .option('default', {
-        type: 'string',
-        default: getenv('DEFAULT_BUMP', 'patch'),
-        describe: 'Default bump type if no fragments specify one',
-        choices: ['major', 'minor', 'patch'],
-      }),
-});
-
-const { default: defaultBump } = config;
-
-const CHANGELOG_DIR = 'changelog.d';
 
 // Bump type priority (higher = more significant)
 const BUMP_PRIORITY = {
@@ -54,6 +26,33 @@ const BUMP_PRIORITY = {
   minor: 2,
   major: 3,
 };
+
+/**
+ * Parse command-line options.
+ * @returns {{changelogDir: string, defaultBump: string}}
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const getArg = (name, fallback) => {
+    const index = args.indexOf(`--${name}`);
+    if (index === -1) {
+      return fallback;
+    }
+    return args[index + 1] ?? fallback;
+  };
+
+  const defaultBump = getArg('default', process.env.DEFAULT_BUMP || 'patch');
+  if (!BUMP_PRIORITY[defaultBump]) {
+    throw new Error(
+      `Invalid default bump type "${defaultBump}". Expected major, minor, or patch.`
+    );
+  }
+
+  return {
+    changelogDir: getArg('dir', process.env.CHANGELOG_DIR || 'changelog.d'),
+    defaultBump,
+  };
+}
 
 /**
  * Parse frontmatter from a markdown file
@@ -84,15 +83,17 @@ function parseFrontmatter(content) {
 
 /**
  * Get all changelog fragments and determine bump type
+ * @param {string} changelogDir
+ * @param {string} defaultBump
  * @returns {{bumpType: string, fragmentCount: number}}
  */
-function determineBumpType() {
-  if (!existsSync(CHANGELOG_DIR)) {
-    console.log(`No ${CHANGELOG_DIR} directory found`);
+function determineBumpType(changelogDir, defaultBump) {
+  if (!existsSync(changelogDir)) {
+    console.log(`No ${changelogDir} directory found`);
     return { bumpType: defaultBump, fragmentCount: 0 };
   }
 
-  const files = readdirSync(CHANGELOG_DIR)
+  const files = readdirSync(changelogDir)
     .filter((f) => f.endsWith('.md') && f !== 'README.md')
     .sort();
 
@@ -105,7 +106,7 @@ function determineBumpType() {
   let highestBumpType = defaultBump;
 
   for (const file of files) {
-    const content = readFileSync(join(CHANGELOG_DIR, file), 'utf-8');
+    const content = readFileSync(join(changelogDir, file), 'utf-8');
     const { bump } = parseFrontmatter(content);
 
     if (bump && BUMP_PRIORITY[bump]) {
@@ -138,7 +139,11 @@ function setOutput(key, value) {
 }
 
 try {
-  const { bumpType, fragmentCount } = determineBumpType();
+  const { changelogDir, defaultBump } = parseArgs();
+  const { bumpType, fragmentCount } = determineBumpType(
+    changelogDir,
+    defaultBump
+  );
 
   console.log(`\nDetermined bump type: ${bumpType} (from ${fragmentCount} fragment(s))`);
 

@@ -110,10 +110,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-changes]
     if: |
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' ||
-      needs.detect-changes.outputs.rs-changed == 'true' ||
-      needs.detect-changes.outputs.toml-changed == 'true'
+      always() && !cancelled() && (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        needs.detect-changes.outputs.rs-changed == 'true' ||
+        needs.detect-changes.outputs.toml-changed == 'true' ||
+        needs.detect-changes.outputs.mjs-changed == 'true' ||
+        needs.detect-changes.outputs.docs-changed == 'true' ||
+        needs.detect-changes.outputs.workflow-changed == 'true'
+      )
     steps:
       - uses: actions/checkout@v4
 
@@ -144,6 +149,10 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 
+      - name: Run release script tests
+        working-directory: .
+        run: node --test scripts/*.test.mjs
+
       - name: Check file size limit
         working-directory: .
         run: node scripts/check-file-size.mjs --lang rust
@@ -153,7 +162,7 @@ jobs:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: [detect-changes, changelog]
-    if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -186,7 +195,7 @@ jobs:
     name: Build Package
     runs-on: ubuntu-latest
     needs: [lint, test]
-    if: always() && needs.lint.result == 'success' && needs.test.result == 'success'
+    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
     steps:
       - uses: actions/checkout@v4
 
@@ -214,7 +223,7 @@ jobs:
   auto-release:
     name: Auto Release
     needs: [lint, test, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: always() && !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -291,13 +300,15 @@ jobs:
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.current_version.outputs.version }}" \
             --repository "${{ github.repository }}" \
-            --tag-prefix "rust-v"
+            --tag-prefix "rust-v" \
+            --language "Rust" \
+            --changelog-path "rust/CHANGELOG.md"
 
   # === MANUAL RELEASE ===
   manual-release:
     name: Manual Release
     needs: [lint, test, build]
-    if: github.event_name == 'workflow_dispatch'
+    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -320,18 +331,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Collect changelog fragments
-        working-directory: .
-        run: |
-          # Check if there are any fragments to collect
-          FRAGMENTS=$(find rust/changelog.d -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
-          if [ "$FRAGMENTS" -gt 0 ]; then
-            echo "Found $FRAGMENTS changelog fragment(s), collecting..."
-            node scripts/collect-changelog.mjs --dir rust/changelog.d --output rust/CHANGELOG.md
-          else
-            echo "No changelog fragments found, skipping collection"
-          fi
-
       - name: Version and commit
         id: version
         working-directory: .
@@ -353,4 +352,6 @@ jobs:
           node scripts/create-github-release.mjs \
             --release-version "${{ steps.version.outputs.new_version }}" \
             --repository "${{ github.repository }}" \
-            --tag-prefix "rust-v"
+            --tag-prefix "rust-v" \
+            --language "Rust" \
+            --changelog-path "rust/CHANGELOG.md"

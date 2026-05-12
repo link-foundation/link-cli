@@ -4,9 +4,6 @@
  * Collect changelog fragments into CHANGELOG.md
  * This script collects all .md files from changelog.d/ (except README.md)
  * and prepends them to CHANGELOG.md, then removes the processed fragments.
- *
- * Uses link-foundation libraries:
- * - use-m: Dynamic package loading without package.json dependencies
  */
 
 import {
@@ -18,16 +15,47 @@ import {
 } from 'fs';
 import { join } from 'path';
 
-const CHANGELOG_DIR = 'changelog.d';
-const CHANGELOG_FILE = 'CHANGELOG.md';
 const INSERT_MARKER = '<!-- changelog-insert-here -->';
 
 /**
+ * Parse command-line options.
+ * @returns {{changelogDir: string, changelogFile: string, manifestPath: string}}
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const getArg = (name, fallback) => {
+    const index = args.indexOf(`--${name}`);
+    if (index === -1) {
+      return fallback;
+    }
+    return args[index + 1] ?? fallback;
+  };
+
+  const changelogDir = getArg('dir', process.env.CHANGELOG_DIR || 'changelog.d');
+  const changelogFile = getArg(
+    'output',
+    process.env.CHANGELOG_FILE || 'CHANGELOG.md'
+  );
+  const manifestPath =
+    getArg('manifest', process.env.CARGO_TOML || '') ||
+    (changelogDir.startsWith('rust/') || changelogFile.startsWith('rust/')
+      ? 'rust/Cargo.toml'
+      : 'Cargo.toml');
+
+  return {
+    changelogDir,
+    changelogFile,
+    manifestPath,
+  };
+}
+
+/**
  * Get version from Cargo.toml
+ * @param {string} manifestPath
  * @returns {string}
  */
-function getVersionFromCargo() {
-  const cargoToml = readFileSync('Cargo.toml', 'utf-8');
+function getVersionFromCargo(manifestPath) {
+  const cargoToml = readFileSync(manifestPath, 'utf-8');
   const match = cargoToml.match(/^version\s*=\s*"([^"]+)"/m);
 
   if (!match) {
@@ -53,20 +81,21 @@ function stripFrontmatter(content) {
 
 /**
  * Collect all changelog fragments
+ * @param {string} changelogDir
  * @returns {string}
  */
-function collectFragments() {
-  if (!existsSync(CHANGELOG_DIR)) {
+function collectFragments(changelogDir) {
+  if (!existsSync(changelogDir)) {
     return '';
   }
 
-  const files = readdirSync(CHANGELOG_DIR)
+  const files = readdirSync(changelogDir)
     .filter((f) => f.endsWith('.md') && f !== 'README.md')
     .sort();
 
   const fragments = [];
   for (const file of files) {
-    const rawContent = readFileSync(join(CHANGELOG_DIR, file), 'utf-8');
+    const rawContent = readFileSync(join(changelogDir, file), 'utf-8');
     // Strip frontmatter (which contains bump type metadata)
     const content = stripFrontmatter(rawContent);
     if (content) {
@@ -81,13 +110,14 @@ function collectFragments() {
  * Update CHANGELOG.md with collected fragments
  * @param {string} version
  * @param {string} fragments
+ * @param {string} changelogFile
  */
-function updateChangelog(version, fragments) {
+function updateChangelog(version, fragments, changelogFile) {
   const dateStr = new Date().toISOString().split('T')[0];
   const newEntry = `\n## [${version}] - ${dateStr}\n\n${fragments}\n`;
 
-  if (existsSync(CHANGELOG_FILE)) {
-    let content = readFileSync(CHANGELOG_FILE, 'utf-8');
+  if (existsSync(changelogFile)) {
+    let content = readFileSync(changelogFile, 'utf-8');
 
     if (content.includes(INSERT_MARKER)) {
       content = content.replace(INSERT_MARKER, `${INSERT_MARKER}${newEntry}`);
@@ -112,7 +142,7 @@ function updateChangelog(version, fragments) {
       }
     }
 
-    writeFileSync(CHANGELOG_FILE, content, 'utf-8');
+    writeFileSync(changelogFile, content, 'utf-8');
   } else {
     const content = `# Changelog
 
@@ -124,44 +154,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ${INSERT_MARKER}
 ${newEntry}
 `;
-    writeFileSync(CHANGELOG_FILE, content, 'utf-8');
+    writeFileSync(changelogFile, content, 'utf-8');
   }
 
-  console.log(`Updated CHANGELOG.md with version ${version}`);
+  console.log(`Updated ${changelogFile} with version ${version}`);
 }
 
 /**
  * Remove processed changelog fragments
+ * @param {string} changelogDir
  */
-function removeFragments() {
-  if (!existsSync(CHANGELOG_DIR)) {
+function removeFragments(changelogDir) {
+  if (!existsSync(changelogDir)) {
     return;
   }
 
-  const files = readdirSync(CHANGELOG_DIR).filter(
+  const files = readdirSync(changelogDir).filter(
     (f) => f.endsWith('.md') && f !== 'README.md'
   );
 
   for (const file of files) {
-    const filePath = join(CHANGELOG_DIR, file);
+    const filePath = join(changelogDir, file);
     unlinkSync(filePath);
     console.log(`Removed ${filePath}`);
   }
 }
 
 try {
-  const version = getVersionFromCargo();
+  const { changelogDir, changelogFile, manifestPath } = parseArgs();
+  const version = getVersionFromCargo(manifestPath);
   console.log(`Collecting changelog fragments for version ${version}`);
 
-  const fragments = collectFragments();
+  const fragments = collectFragments(changelogDir);
 
   if (!fragments) {
     console.log('No changelog fragments found');
     process.exit(0);
   }
 
-  updateChangelog(version, fragments);
-  removeFragments();
+  updateChangelog(version, fragments, changelogFile);
+  removeFragments(changelogDir);
 
   console.log('Changelog collection complete');
 } catch (error) {

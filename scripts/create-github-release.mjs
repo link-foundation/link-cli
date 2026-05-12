@@ -2,43 +2,48 @@
 
 /**
  * Create GitHub Release from CHANGELOG.md
- * Usage: bun run scripts/create-github-release.mjs --release-version <version> --repository <repository>
+ * Usage:
+ *   node scripts/create-github-release.mjs --release-version <version> --repository <owner/repo> [--tag-prefix v] [--changelog-path CHANGELOG.md]
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 // Simple argument parsing
 const args = process.argv.slice(2);
-const getArg = (name) => {
+const getArg = (name, fallback = null) => {
   const index = args.indexOf(`--${name}`);
-  if (index === -1) return null;
-  return args[index + 1];
+  if (index === -1) return fallback;
+  return args[index + 1] ?? fallback;
 };
 
 const version = getArg('release-version');
 const repository = getArg('repository');
+const tagPrefix = getArg('tag-prefix', 'v');
+const changelogPath = getArg('changelog-path', 'CHANGELOG.md');
+const language = getArg('language', '');
+const packageId = getArg('package-id', '');
+const dryRun = args.includes('--dry-run');
 
 if (!version || !repository) {
   console.error('Error: Missing required arguments');
   console.error(
-    'Usage: bun run scripts/create-github-release.mjs --release-version <version> --repository <repository>'
+    'Usage: node scripts/create-github-release.mjs --release-version <version> --repository <repository>'
   );
   process.exit(1);
 }
 
-const tag = `v${version}`;
+const tag = `${tagPrefix}${version}`;
 
 console.log(`Creating GitHub release for ${tag}...`);
 
 /**
  * Extract changelog content for a specific version
  * @param {string} version
+ * @param {string} changelogPath
  * @returns {string}
  */
-function getChangelogForVersion(version) {
-  const changelogPath = 'CHANGELOG.md';
-
+function getChangelogForVersion(version, changelogPath) {
   if (!existsSync(changelogPath)) {
     return `Release v${version}`;
   }
@@ -60,18 +65,35 @@ function getChangelogForVersion(version) {
 }
 
 try {
-  const releaseNotes = getChangelogForVersion(version);
+  const releaseNotes = getChangelogForVersion(version, changelogPath);
+  const body = packageId
+    ? `${releaseNotes}\n\nPackage: \`${packageId}\``
+    : releaseNotes;
 
-  // Create release using gh CLI
-  const payload = JSON.stringify({
+  const payload = {
     tag_name: tag,
-    name: `v${version}`,
-    body: releaseNotes,
-  });
+    name: language ? `${language} v${version}` : `v${version}`,
+    body,
+  };
+
+  if (dryRun) {
+    console.log(JSON.stringify(payload, null, 2));
+    process.exit(0);
+  }
 
   try {
-    execSync(`gh api repos/${repository}/releases -X POST --input -`, {
-      input: payload,
+    execFileSync('gh', ['release', 'view', tag, '--repo', repository], {
+      stdio: 'ignore',
+    });
+    console.log(`Release ${tag} already exists, skipping`);
+    process.exit(0);
+  } catch {
+    // Release does not exist yet.
+  }
+
+  try {
+    execFileSync('gh', ['api', `repos/${repository}/releases`, '-X', 'POST', '--input', '-'], {
+      input: JSON.stringify(payload),
       encoding: 'utf-8',
       stdio: ['pipe', 'inherit', 'inherit'],
     });

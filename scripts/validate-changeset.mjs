@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 /**
  * Validate changeset for CI - ensures exactly one valid changeset is added by the PR
@@ -9,16 +9,41 @@
  * - Validates that the PR adds exactly one changeset with proper format
  * - Falls back to checking all changesets for local development
  *
- * IMPORTANT: Update the package name below to match your csproj
+ * Usage:
+ *   node scripts/validate-changeset.mjs --dir csharp/.changeset --package-name Foundation.Data.Doublets.Cli
  */
 
 import { execSync } from 'child_process';
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
-// Package name must match the package name in the changeset files
-const PACKAGE_NAME = 'MyPackage';
-const CHANGESET_DIR = '.changeset';
+/**
+ * Parse command-line options.
+ * @returns {{changesetDir: string, packageName: string}}
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const getArg = (name, fallback) => {
+    const index = args.indexOf(`--${name}`);
+    if (index === -1) {
+      return fallback;
+    }
+    return args[index + 1] ?? fallback;
+  };
+
+  return {
+    changesetDir: getArg(
+      'dir',
+      process.env.CHANGESET_DIR || 'csharp/.changeset'
+    ),
+    packageName: getArg(
+      'package-name',
+      process.env.PACKAGE_NAME || 'Foundation.Data.Doublets.Cli'
+    ),
+  };
+}
+
+const { changesetDir, packageName } = parseArgs();
 
 /**
  * Ensure a git commit is available locally, fetching if necessary
@@ -51,11 +76,11 @@ function parseAddedChangesets(diffOutput) {
     const [status, filePath] = line.split('\t');
     if (
       status === 'A' &&
-      filePath.startsWith(`${CHANGESET_DIR}/`) &&
+      filePath.startsWith(`${changesetDir}/`) &&
       filePath.endsWith('.md') &&
       !filePath.endsWith('README.md')
     ) {
-      addedChangesets.push(filePath.replace(`${CHANGESET_DIR}/`, ''));
+      addedChangesets.push(filePath.replace(`${changesetDir}/`, ''));
     }
   }
   return addedChangesets;
@@ -114,10 +139,10 @@ function getAllChangesets() {
   console.log(
     'Warning: Could not determine PR diff, checking all changesets in directory'
   );
-  if (!existsSync(CHANGESET_DIR)) {
+  if (!existsSync(changesetDir)) {
     return [];
   }
-  return readdirSync(CHANGESET_DIR).filter(
+  return readdirSync(changesetDir).filter(
     (file) =>
       file.endsWith('.md') && file !== 'README.md' && file !== 'config.json'
   );
@@ -163,7 +188,7 @@ function validateChangesetFile(filePath) {
 
     // Check if changeset has a valid type (major, minor, or patch)
     const versionTypeRegex = new RegExp(
-      `^['"]${PACKAGE_NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]:\\s+(major|minor|patch)`,
+      `^['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]:\\s+(major|minor|patch)`,
       'm'
     );
     const versionTypeMatch = content.match(versionTypeRegex);
@@ -171,7 +196,7 @@ function validateChangesetFile(filePath) {
     if (!versionTypeMatch) {
       return {
         valid: false,
-        error: `Changeset must specify a version type: major, minor, or patch\nExpected format:\n---\n'${PACKAGE_NAME}': patch\n---\n\nYour description here`,
+        error: `Changeset must specify a version type: major, minor, or patch\nExpected format:\n---\n'${packageName}': patch\n---\n\nYour description here`,
       };
     }
 
@@ -222,10 +247,12 @@ try {
   // Ensure exactly one changeset file was added
   if (changesetCount === 0) {
     console.error(
-      '::error::No changeset found in this PR. Please add a changeset file in .changeset/ directory.'
+      `::error::No changeset found in this PR. Please add a changeset file in ${changesetDir}/ directory.`
     );
-    console.error('\nTo create a changeset, add a file like .changeset/my-change.md with:');
-    console.error(`---\n'${PACKAGE_NAME}': patch\n---\n\nDescription of your changes`);
+    console.error(
+      `\nTo create a changeset, add a file like ${changesetDir}/my-change.md with:`
+    );
+    console.error(`---\n'${packageName}': patch\n---\n\nDescription of your changes`);
     process.exit(1);
   } else if (changesetCount > 1) {
     console.error(
@@ -240,7 +267,7 @@ try {
   }
 
   // Validate the single changeset file
-  const changesetFile = join(CHANGESET_DIR, addedChangesetFiles[0]);
+  const changesetFile = join(changesetDir, addedChangesetFiles[0]);
   console.log(`Validating changeset: ${changesetFile}`);
 
   const validation = validateChangesetFile(changesetFile);
