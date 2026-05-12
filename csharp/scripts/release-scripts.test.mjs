@@ -21,6 +21,13 @@ function runNode(script, args, options = {}) {
   });
 }
 
+function runGit(args, cwd) {
+  return execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+  });
+}
+
 test('merge-changesets honors the requested directory and package name', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-changesets-'));
   const changesetDir = join(dir, 'csharp', '.changeset');
@@ -110,4 +117,52 @@ test('create-github-release dry run reports matching assets without uploading', 
   const payload = JSON.parse(stdout.slice(stdout.indexOf('{')));
 
   assert.equal(payload.tag_name, 'csharp-v2.4.0');
+});
+
+test('version-and-commit creates a C# release commit when the next tag is missing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-csharp-version-'));
+  const remote = join(dir, 'remote.git');
+  const work = join(dir, 'work');
+  const outputFile = join(dir, 'github-output.txt');
+
+  mkdirSync(work, { recursive: true });
+  runGit(['init', '--bare', '--initial-branch=main', remote], dir);
+  runGit(['init', '-b', 'main'], work);
+  runGit(['config', 'user.name', 'Test User'], work);
+  runGit(['config', 'user.email', 'test@example.com'], work);
+
+  const projectDir = join(work, 'csharp', 'Foundation.Data.Doublets.Cli');
+  const changesetDir = join(work, 'csharp', '.changeset');
+  mkdirSync(projectDir, { recursive: true });
+  mkdirSync(changesetDir, { recursive: true });
+  writeFileSync(
+    join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'),
+    '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><Version>2.3.0</Version></PropertyGroup></Project>\n'
+  );
+  writeFileSync(
+    join(changesetDir, 'release.md'),
+    "---\n'Foundation.Data.Doublets.Cli': minor\n---\n\nFix release automation.\n"
+  );
+
+  runGit(['add', '.'], work);
+  runGit(['commit', '-m', 'initial'], work);
+  runGit(['remote', 'add', 'origin', remote], work);
+  runGit(['push', '-u', 'origin', 'main'], work);
+
+  runNode('csharp/scripts/version-and-commit.mjs', ['--mode', 'changeset'], {
+    cwd: work,
+    env: { GITHUB_OUTPUT: outputFile },
+  });
+
+  const csproj = readFileSync(
+    join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'),
+    'utf8'
+  );
+  const outputs = readFileSync(outputFile, 'utf8');
+
+  assert.match(csproj, /<Version>2\.4\.0<\/Version>/);
+  assert.match(outputs, /^version_committed=true$/m);
+  assert.match(outputs, /^new_version=2\.4\.0$/m);
+  assert.match(runGit(['rev-parse', '--verify', 'csharp-v2.4.0'], work), /[a-f0-9]{40}/);
+  assert.match(runGit(['ls-remote', '--tags', 'origin', 'csharp-v2.4.0'], work), /csharp-v2\.4\.0/);
 });

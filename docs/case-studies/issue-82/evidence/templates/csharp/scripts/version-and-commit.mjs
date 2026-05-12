@@ -2,11 +2,11 @@
 
 /**
  * Bump version in csproj, update changelog, and commit changes
- * Used by the CI/CD pipeline for C# releases
+ * Used by the CI/CD pipeline for releases
  *
  * Usage:
- *   Changeset mode: node csharp/scripts/version-and-commit.mjs --mode changeset
- *   Instant mode:   node csharp/scripts/version-and-commit.mjs --mode instant --bump-type <major|minor|patch> [--description <desc>]
+ *   Changeset mode: bun run scripts/version-and-commit.mjs --mode changeset
+ *   Instant mode:   bun run scripts/version-and-commit.mjs --mode instant --bump-type <major|minor|patch> [--description <desc>]
  */
 
 import {
@@ -21,10 +21,10 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 
 // Package name must match the package name in the changeset files
-const PACKAGE_NAME = 'Foundation.Data.Doublets.Cli';
-const CSPROJ_PATH = 'csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj';
-const CHANGESET_DIR = 'csharp/.changeset';
-const CHANGELOG_FILE = 'csharp/CHANGELOG.md';
+const PACKAGE_NAME = 'MyPackage';
+const CSPROJ_PATH = 'src/MyPackage/MyPackage.csproj';
+const CHANGESET_DIR = '.changeset';
+const CHANGELOG_FILE = 'CHANGELOG.md';
 
 // Version bump type priority (higher number = higher priority)
 const BUMP_PRIORITY = {
@@ -52,7 +52,12 @@ const description = getArg('description') || '';
  * @returns {string}
  */
 function exec(command, silent = false) {
-  return execSync(command, { encoding: 'utf-8', stdio: silent ? 'pipe' : 'inherit' });
+  try {
+    return execSync(command, { encoding: 'utf-8', stdio: silent ? 'pipe' : 'inherit' });
+  } catch (error) {
+    if (silent) return '';
+    throw error;
+  }
 }
 
 /**
@@ -130,7 +135,7 @@ function updateCsproj(newVersion) {
  */
 function checkTagExists(version) {
   try {
-    exec(`git rev-parse --verify --quiet refs/tags/csharp-v${version}`, true);
+    exec(`git rev-parse v${version}`, true);
     return true;
   } catch {
     return false;
@@ -330,7 +335,7 @@ try {
     // Instant mode: use provided bump type
     if (!bumpTypeArg || !['major', 'minor', 'patch'].includes(bumpTypeArg)) {
       console.error(
-        'Usage: node csharp/scripts/version-and-commit.mjs --mode instant --bump-type <major|minor|patch> [--description <desc>]'
+        'Usage: bun run scripts/version-and-commit.mjs --mode instant --bump-type <major|minor|patch> [--description <desc>]'
       );
       process.exit(1);
     }
@@ -348,7 +353,7 @@ try {
 
   // Check if this version was already released
   if (checkTagExists(newVersion)) {
-    console.log(`Tag csharp-v${newVersion} already exists`);
+    console.log(`Tag v${newVersion} already exists`);
     setOutput('already_released', 'true');
     setOutput('new_version', newVersion);
     process.exit(0);
@@ -384,17 +389,17 @@ try {
 
   // Commit changes
   const commitMsg = description
-    ? `chore(csharp): release v${newVersion}\n\n${description}`
-    : `chore(csharp): release v${newVersion}`;
+    ? `chore: release v${newVersion}\n\n${description}`
+    : `chore: release v${newVersion}`;
   exec(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`);
   console.log(`Committed version ${newVersion}`);
 
   // Create tag
   const tagMsg = description
-    ? `C# Release v${newVersion}\n\n${description}`
-    : `C# Release v${newVersion}`;
-  exec(`git tag -a csharp-v${newVersion} -m "${tagMsg.replace(/"/g, '\\"')}"`);
-  console.log(`Created tag csharp-v${newVersion}`);
+    ? `Release v${newVersion}\n\n${description}`
+    : `Release v${newVersion}`;
+  exec(`git tag -a v${newVersion} -m "${tagMsg.replace(/"/g, '\\"')}"`);
+  console.log(`Created tag v${newVersion}`);
 
   // Push changes and tag
   exec('git push');

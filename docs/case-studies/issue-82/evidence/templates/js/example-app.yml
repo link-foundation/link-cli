@@ -1,0 +1,187 @@
+name: Example app
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'examples/universal-app/**'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/example-app.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'examples/universal-app/**'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/example-app.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  web-build:
+    name: Build web app
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: examples/universal-app/package-lock.json
+
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v6
+
+      - name: Install app dependencies
+        run: npm ci --prefix examples/universal-app
+
+      - name: Build app
+        run: npm run example:web:build
+        env:
+          GITHUB_PAGES: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          VITE_REPOSITORY_URL: https://github.com/${{ github.repository }}
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: universal-example-web
+          path: examples/universal-app/dist
+          if-no-files-found: error
+
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: examples/universal-app/dist
+
+  pages-deploy:
+    name: Deploy GitHub Pages
+    needs: [web-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  desktop-package:
+    name: Package desktop app (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: examples/universal-app/package-lock.json
+
+      - name: Install app dependencies
+        run: npm ci --prefix examples/universal-app
+
+      - name: Package Electron app
+        run: npm run example:desktop:package
+        env:
+          VITE_REPOSITORY_URL: https://github.com/${{ github.repository }}
+
+      - name: Upload desktop package
+        uses: actions/upload-artifact@v7
+        with:
+          name: universal-example-desktop-${{ matrix.os }}
+          path: examples/universal-app/out
+          if-no-files-found: error
+
+  android-build:
+    name: Build Android app
+    if: github.event_name == 'workflow_dispatch' && vars.EXAMPLE_APP_ENABLE_ANDROID_BUILD == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: examples/universal-app/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install app dependencies
+        run: npm ci --prefix examples/universal-app
+
+      - name: Add Android project
+        run: npm --prefix examples/universal-app run mobile:android:add
+
+      - name: Build Android project
+        run: npm --prefix examples/universal-app run mobile:android:build
+
+      - name: Upload Android output
+        uses: actions/upload-artifact@v7
+        with:
+          name: universal-example-android
+          path: |
+            examples/universal-app/android/app/build/outputs/**/*.apk
+            examples/universal-app/android/app/build/outputs/**/*.aab
+          if-no-files-found: warn
+
+  ios-build:
+    name: Build iOS app
+    if: github.event_name == 'workflow_dispatch' && vars.EXAMPLE_APP_ENABLE_IOS_BUILD == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: examples/universal-app/package-lock.json
+
+      - name: Install app dependencies
+        run: npm ci --prefix examples/universal-app
+
+      - name: Add iOS project
+        run: npm --prefix examples/universal-app run mobile:ios:add
+
+      - name: Build iOS project
+        run: npm --prefix examples/universal-app run mobile:ios:build

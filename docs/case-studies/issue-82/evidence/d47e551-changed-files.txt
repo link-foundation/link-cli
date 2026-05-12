@@ -1,0 +1,11 @@
+M	.github/workflows/csharp.yml
+M	.github/workflows/wasm.yml
+M	csharp/scripts/create-github-release.mjs
+M	csharp/scripts/release-scripts.test.mjs
+M	docs/case-studies/issue-79/README.md
+A	docs/case-studies/issue-79/evidence/issue-79-comments-followup.json
+A	docs/case-studies/issue-79/evidence/run-25747032579-jobs.json
+A	docs/case-studies/issue-79/evidence/run-25747032579.json
+A	docs/case-studies/issue-79/evidence/upstream-csharp-template-issue-7.json
+A	docs/case-studies/issue-79/evidence/wasm-25747032579.log
+M	js/test/repositoryLayout.test.mjs

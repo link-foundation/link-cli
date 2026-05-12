@@ -1,0 +1,12 @@
+ .github/workflows/csharp.yml                       |    6 +-
+ .github/workflows/wasm.yml                         |   64 +-
+ csharp/scripts/create-github-release.mjs           |   76 +-
+ csharp/scripts/release-scripts.test.mjs            |   31 +
+ docs/case-studies/issue-79/README.md               |   83 ++
+ .../evidence/issue-79-comments-followup.json       |    1 +
+ .../issue-79/evidence/run-25747032579-jobs.json    |    1 +
+ .../issue-79/evidence/run-25747032579.json         |    1 +
+ .../evidence/upstream-csharp-template-issue-7.json |    1 +
+ .../issue-79/evidence/wasm-25747032579.log         | 1087 ++++++++++++++++++++
+ js/test/repositoryLayout.test.mjs                  |   26 +
+ 11 files changed, 1335 insertions(+), 42 deletions(-)

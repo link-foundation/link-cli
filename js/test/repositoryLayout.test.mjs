@@ -6,6 +6,24 @@ import test from 'node:test';
 
 const repoRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
+function getIndentedBlock(text, header) {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => line === header);
+  assert.notEqual(start, -1, `${header} should exist`);
+
+  const indent = header.search(/\S/);
+  const block = [];
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim() && line.search(/\S/) <= indent) {
+      break;
+    }
+    block.push(line);
+  }
+
+  return block.join('\n');
+}
+
 test('language code package manifests and generated evidence stay out of the root folder', () => {
   for (const entry of [
     '.gitkeep',
@@ -102,4 +120,34 @@ test('CSharp release workflow attaches NuGet packages to GitHub Releases', () =>
     matches.length >= 2,
     `expected --assets-glob in both release jobs, found ${matches.length}`
   );
+});
+
+test('CSharp and Rust release workflows are scheduled on every push to main', () => {
+  for (const [name, workflowPath] of [
+    ['CSharp', '.github/workflows/csharp.yml'],
+    ['Rust', '.github/workflows/rust.yml'],
+  ]) {
+    const workflow = readFileSync(join(repoRoot, workflowPath), 'utf8');
+    const pushBlock = getIndentedBlock(workflow, '  push:');
+
+    assert.match(pushBlock, /branches:\n\s+- main/);
+    assert.doesNotMatch(
+      pushBlock,
+      /^\s+paths:/m,
+      `${name} release workflow push trigger must not be path-filtered`
+    );
+  }
+});
+
+test('GitHub workflows avoid Node 20 action major versions that are being retired', () => {
+  for (const workflowPath of [
+    '.github/workflows/csharp.yml',
+    '.github/workflows/rust.yml',
+    '.github/workflows/wasm.yml',
+  ]) {
+    const workflow = readFileSync(join(repoRoot, workflowPath), 'utf8');
+
+    assert.doesNotMatch(workflow, /actions\/[^@\s]+@v4/);
+    assert.doesNotMatch(workflow, /codecov\/codecov-action@v4/);
+  }
 });
