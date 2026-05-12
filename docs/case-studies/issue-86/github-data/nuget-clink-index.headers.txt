@@ -1,0 +1,20 @@
+HTTP/2 200 
+date: Tue, 12 May 2026 21:29:51 GMT
+content-type: application/json
+content-length: 375
+cache-control: max-age=0, no-cache
+last-modified: Tue, 12 May 2026 21:24:36 GMT
+etag: 0x8DEB06CDE3CBED4
+x-ms-request-id: 44ac3760-f01e-0074-4d56-e28907000000
+x-ms-version: 2009-09-19
+x-ms-lease-status: unlocked
+x-ms-blob-type: BlockBlob
+access-control-expose-headers: x-ms-request-id,Server,x-ms-version,Content-Type,Cache-Control,ETag,Last-Modified,x-ms-lease-status,x-ms-blob-type,Content-Length,Date,Transfer-Encoding
+access-control-allow-origin: *
+x-azure-ref: 20260512T212951Z-1669c75c96bvxvrchC1FRAx93s00000008wg000000002suq
+x-fd-int-roxy-purgeid: 0
+x-cache: TCP_MISS
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+accept-ranges: bytes
+

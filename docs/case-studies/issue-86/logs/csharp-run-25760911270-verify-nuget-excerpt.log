@@ -1,0 +1,61 @@
+Release	Validate NuGet API key	2026-05-12T21:20:40.6300357Z ##[endgroup]
+Release	Validate NuGet API key	2026-05-12T21:20:40.7251733Z NUGET_API_KEY length: 46
+Release	Publish to NuGet	﻿2026-05-12T21:20:40.7280378Z ##[group]Run if [ -n "$NUGET_API_KEY" ]; then
+Release	Publish to NuGet	2026-05-12T21:20:40.7280643Z ^[[36;1mif [ -n "$NUGET_API_KEY" ]; then^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7281241Z ^[[36;1m  dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7281713Z ^[[36;1m  echo "published=true" >> "$GITHUB_OUTPUT"^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7281933Z ^[[36;1melse^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7282128Z ^[[36;1m  echo "NUGET_API_KEY not set, skipping NuGet publish"^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7282396Z ^[[36;1m  echo "published=false" >> "$GITHUB_OUTPUT"^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7282611Z ^[[36;1mfi^[[0m
+Release	Publish to NuGet	2026-05-12T21:20:40.7300184Z shell: /usr/bin/bash -e {0}
+Release	Publish to NuGet	2026-05-12T21:20:40.7300357Z env:
+Release	Publish to NuGet	2026-05-12T21:20:40.7300524Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+Release	Publish to NuGet	2026-05-12T21:20:40.7300740Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+Release	Publish to NuGet	2026-05-12T21:20:40.7300925Z   DOTNET_NOLOGO: true
+Release	Publish to NuGet	2026-05-12T21:20:40.7301093Z   DOTNET_ROOT: /usr/share/dotnet
+Release	Publish to NuGet	2026-05-12T21:20:40.7301493Z   NUGET_API_KEY: ***
+Release	Publish to NuGet	2026-05-12T21:20:40.7301681Z ##[endgroup]
+Release	Publish to NuGet	2026-05-12T21:20:41.0369432Z Pushing clink.2.4.0.nupkg to 'https://www.nuget.org/api/v2/package'...
+Release	Publish to NuGet	2026-05-12T21:20:41.0449600Z   PUT https://www.nuget.org/api/v2/package/
+Release	Publish to NuGet	2026-05-12T21:20:41.6573341Z   Created https://www.nuget.org/api/v2/package/ 611ms
+Release	Publish to NuGet	2026-05-12T21:20:41.6587760Z Your package was pushed.
+Release	Verify package on NuGet	﻿2026-05-12T21:20:41.6736746Z ##[group]Run PACKAGE_ID="clink"
+Release	Verify package on NuGet	2026-05-12T21:20:41.6737115Z ^[[36;1mPACKAGE_ID="clink"^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6737407Z ^[[36;1mPACKAGE_ID_LOWER="clink"^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6737695Z ^[[36;1mVERSION="2.4.0"^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6737973Z ^[[36;1mfor DELAY in 0 5 10 20 30 60; do^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6738285Z ^[[36;1m  if [ "$DELAY" != "0" ]; then^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6738589Z ^[[36;1m    sleep "$DELAY"^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6739032Z ^[[36;1m  fi^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6739771Z ^[[36;1m  STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "https://api.nuget.org/v3-flatcontainer/${PACKAGE_ID_LOWER}/${VERSION}/${PACKAGE_ID_LOWER}.nuspec" || true)^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6740668Z ^[[36;1m  echo "NuGet status for ${PACKAGE_ID}@${VERSION}: ${STATUS}"^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6741109Z ^[[36;1m  if [ "$STATUS" = "200" ]; then^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6741528Z ^[[36;1m    echo "Verified ${PACKAGE_ID}@${VERSION} is available on NuGet"^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6741953Z ^[[36;1m    exit 0^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6742183Z ^[[36;1m  fi^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6742445Z ^[[36;1mdone^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6743001Z ^[[36;1mecho "::error title=NuGet verification failed::${PACKAGE_ID}@${VERSION} was not available from NuGet after publish."^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6743644Z ^[[36;1mexit 1^[[0m
+Release	Verify package on NuGet	2026-05-12T21:20:41.6769522Z shell: /usr/bin/bash -e {0}
+Release	Verify package on NuGet	2026-05-12T21:20:41.6769820Z env:
+Release	Verify package on NuGet	2026-05-12T21:20:41.6770092Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+Release	Verify package on NuGet	2026-05-12T21:20:41.6770439Z   DOTNET_CLI_TELEMETRY_OPTOUT: true
+Release	Verify package on NuGet	2026-05-12T21:20:41.6770736Z   DOTNET_NOLOGO: true
+Release	Verify package on NuGet	2026-05-12T21:20:41.6771000Z   DOTNET_ROOT: /usr/share/dotnet
+Release	Verify package on NuGet	2026-05-12T21:20:41.6771287Z ##[endgroup]
+Release	Verify package on NuGet	2026-05-12T21:20:41.7602880Z NuGet status for clink@2.4.0: 404
+Release	Verify package on NuGet	2026-05-12T21:20:46.8276625Z NuGet status for clink@2.4.0: 404
+Release	Verify package on NuGet	2026-05-12T21:20:56.8959205Z NuGet status for clink@2.4.0: 404
+Release	Verify package on NuGet	2026-05-12T21:21:16.9670333Z NuGet status for clink@2.4.0: 404
+Release	Verify package on NuGet	2026-05-12T21:21:47.0368546Z NuGet status for clink@2.4.0: 404
+Release	Verify package on NuGet	2026-05-12T21:22:47.1082969Z NuGet status for clink@2.4.0: 404
+Release	Verify package on NuGet	2026-05-12T21:22:47.1099540Z ##[error]clink@2.4.0 was not available from NuGet after publish.
+Release	Verify package on NuGet	2026-05-12T21:22:47.1106918Z ##[error]Process completed with exit code 1.
+Release	Post Run actions/checkout@v6	﻿2026-05-12T21:22:47.1186011Z Post job cleanup.
+Release	Post Run actions/checkout@v6	2026-05-12T21:22:47.1854100Z [command]/usr/bin/git version
+Release	Post Run actions/checkout@v6	2026-05-12T21:22:47.1884440Z git version 2.53.0
+Release	Post Run actions/checkout@v6	2026-05-12T21:22:47.1914993Z Temporarily overriding HOME='/home/runner/work/_temp/92f808f0-b247-4818-bb43-01124b0e705b' before making global git config changes
+Release	Post Run actions/checkout@v6	2026-05-12T21:22:47.1916435Z Adding repository directory to the temporary git global config as a safe directory
+Release	Post Run actions/checkout@v6	2026-05-12T21:22:47.1919469Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+Release	Post Run actions/checkout@v6	2026-05-12T21:22:47.1944593Z Removing SSH command configuration

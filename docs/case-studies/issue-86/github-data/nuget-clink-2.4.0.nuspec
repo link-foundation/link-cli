@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>clink</id>
+    <version>2.4.0</version>
+    <authors>link-foundation</authors>
+    <license type="expression">Unlicense</license>
+    <licenseUrl>https://licenses.nuget.org/Unlicense</licenseUrl>
+    <readme>README.md</readme>
+    <description>A CLI tool for links manipulation.</description>
+    <packageTypes>
+      <packageType name="DotnetTool" />
+    </packageTypes>
+    <repository type="git" url="https://github.com/link-foundation/link-cli" commit="0c8092c56b0fb11704f89398b6d831cd9bbe007d" />
+  </metadata>
+</package>

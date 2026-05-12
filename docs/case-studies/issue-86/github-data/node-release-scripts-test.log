@@ -1,0 +1,96 @@
+TAP version 13
+# To /tmp/link-cli-csharp-version-B2h4Ok/remote.git
+#  * [new branch]      main -> main
+# To /tmp/link-cli-csharp-version-B2h4Ok/remote.git
+#    e5097e3..a6548e3  main -> main
+# To /tmp/link-cli-csharp-version-B2h4Ok/remote.git
+#  * [new tag]         csharp-v2.4.0 -> csharp-v2.4.0
+# Subtest: merge-changesets honors the requested directory and package name
+ok 1 - merge-changesets honors the requested directory and package name
+  ---
+  duration_ms: 47.129199
+  ...
+# Subtest: create-github-release dry run uses tag prefix and component changelog
+ok 2 - create-github-release dry run uses tag prefix and component changelog
+  ---
+  duration_ms: 42.059955
+  ...
+# Subtest: create-github-release dry run reports matching assets without uploading
+ok 3 - create-github-release dry run reports matching assets without uploading
+  ---
+  duration_ms: 48.076063
+  ...
+# Subtest: version-and-commit creates a C\# release commit when the next tag is missing
+ok 4 - version-and-commit creates a C\# release commit when the next tag is missing
+  ---
+  duration_ms: 252.062581
+  ...
+# Subtest: check-release-needed decide(): changesets take the normal release path
+ok 5 - check-release-needed decide(): changesets take the normal release path
+  ---
+  duration_ms: 0.412365
+  ...
+# Subtest: check-release-needed decide(): self-heals when csproj version is missing from NuGet
+ok 6 - check-release-needed decide(): self-heals when csproj version is missing from NuGet
+  ---
+  duration_ms: 0.145717
+  ...
+# Subtest: check-release-needed decide(): self-heals when package id is unknown to NuGet
+ok 7 - check-release-needed decide(): self-heals when package id is unknown to NuGet
+  ---
+  duration_ms: 0.219178
+  ...
+# Subtest: check-release-needed decide(): self-heals GitHub release when NuGet already has the version
+ok 8 - check-release-needed decide(): self-heals GitHub release when NuGet already has the version
+  ---
+  duration_ms: 0.185668
+  ...
+# Subtest: check-release-needed decide(): no-op when both NuGet and GitHub release exist
+ok 9 - check-release-needed decide(): no-op when both NuGet and GitHub release exist
+  ---
+  duration_ms: 0.20009
+  ...
+# Subtest: check-release-needed readCsprojInfo() extracts version and package id
+ok 10 - check-release-needed readCsprojInfo() extracts version and package id
+  ---
+  duration_ms: 0.971041
+  ...
+# Subtest: check-release-needed CLI writes self-healing outputs when NuGet version is missing
+ok 11 - check-release-needed CLI writes self-healing outputs when NuGet version is missing
+  ---
+  duration_ms: 171.073606
+  ...
+# Subtest: check-release-needed CLI short-circuits when NuGet and GitHub already have the release
+ok 12 - check-release-needed CLI short-circuits when NuGet and GitHub already have the release
+  ---
+  duration_ms: 138.601645
+  ...
+# Subtest: wait-for-nuget defaults to two-minute checks across the NuGet indexing window
+ok 13 - wait-for-nuget defaults to two-minute checks across the NuGet indexing window
+  ---
+  duration_ms: 0.510924
+  ...
+# Subtest: wait-for-nuget builds the flat-container nuspec URL
+ok 14 - wait-for-nuget builds the flat-container nuspec URL
+  ---
+  duration_ms: 0.314169
+  ...
+# Subtest: wait-for-nuget succeeds when indexing takes longer than the old 125 second loop
+ok 15 - wait-for-nuget succeeds when indexing takes longer than the old 125 second loop
+  ---
+  duration_ms: 0.761378
+  ...
+# Subtest: wait-for-nuget fails only after exhausting all attempts
+ok 16 - wait-for-nuget fails only after exhausting all attempts
+  ---
+  duration_ms: 0.258997
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 780.920654
