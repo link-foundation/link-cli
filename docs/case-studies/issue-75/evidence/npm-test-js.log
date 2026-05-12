@@ -1,0 +1,39 @@
+
+> link-cli-web@2.3.0 test:js
+> node --test web/test/*.test.mjs scripts/*.test.mjs
+
+TAP version 13
+# Subtest: get-bump-type reads fragments from the requested directory
+ok 1 - get-bump-type reads fragments from the requested directory
+  ---
+  duration_ms: 80.556821
+  ...
+# Subtest: merge-changesets honors the requested directory and package name
+ok 2 - merge-changesets honors the requested directory and package name
+  ---
+  duration_ms: 75.438739
+  ...
+# Subtest: create-github-release dry run uses tag prefix and component changelog
+ok 3 - create-github-release dry run uses tag prefix and component changelog
+  ---
+  duration_ms: 55.32434
+  ...
+# Subtest: collect-changelog honors component paths from the repository root
+ok 4 - collect-changelog honors component paths from the repository root
+  ---
+  duration_ms: 56.601556
+  ...
+# Subtest: buildGraph reflects create, delete, and recreate snapshots without stale nodes
+ok 5 - buildGraph reflects create, delete, and recreate snapshots without stale nodes
+  ---
+  duration_ms: 3.411735
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 373.468516

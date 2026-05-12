@@ -1,0 +1,7 @@
+
+Checking files for maximum 1000 lines...
+
+Checking Rust files in rust/...
+  Found 50 Rust file(s)
+
+Checked 50 file(s) - all within the line limit

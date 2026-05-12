@@ -1,0 +1,129 @@
+TAP version 13
+# node:fs:1521
+#   const result = binding.readdir(
+#                          ^
+# Error: ENOENT: no such file or directory, scandir '.changeset'
+#     at readdirSync (node:fs:1521:26)
+#     at main (file:///tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs:189:26)
+#     at file:///tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs:264:1
+#     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+#     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+#   errno: -2,
+#   code: 'ENOENT',
+#   syscall: 'scandir',
+#   path: '.changeset'
+# }
+# Node.js v20.20.2
+# Subtest: get-bump-type reads fragments from the requested directory
+not ok 1 - get-bump-type reads fragments from the requested directory
+  ---
+  duration_ms: 1866.915858
+  location: '/tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:24:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /Determined bump type: minor/. Input:
+
+    'No changelog.d directory found\n' +
+      '\n' +
+      'Determined bump type: patch (from 0 fragment(s))\n' +
+      'Output: bump_type=patch\n' +
+      'Output: fragment_count=0\n' +
+      'Output: has_fragments=false\n'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    No changelog.d directory found
+
+    Determined bump type: patch (from 0 fragment(s))
+    Output: bump_type=patch
+    Output: fragment_count=0
+    Output: has_fragments=false
+
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:43:10)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: merge-changesets honors the requested directory and package name
+not ok 2 - merge-changesets honors the requested directory and package name
+  ---
+  duration_ms: 35.780723
+  location: '/tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:49:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Command failed: /home/box/.nvm/versions/node/v20.20.2/bin/node /tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs --dir /tmp/link-cli-changesets-dlDSij/csharp/.changeset --package-name Foundation.Data.Doublets.Cli
+    node:fs:1521
+      const result = binding.readdir(
+                             ^
+
+    Error: ENOENT: no such file or directory, scandir '.changeset'
+        at readdirSync (node:fs:1521:26)
+        at main (file:///tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs:189:26)
+        at file:///tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs:264:1
+        at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+        at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+        at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'scandir',
+      path: '.changeset'
+    }
+
+    Node.js v20.20.2
+
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    readdirSync (node:fs:1521:26)
+    main (file:///tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs:189:26)
+    file:///tmp/gh-issue-solver-1778578530665/scripts/merge-changesets.mjs:264:1
+    ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+    async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+    async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+    genericNodeError (node:internal/errors:984:15)
+    wrappedFn (node:internal/errors:538:14)
+    checkExecSyncError (node:child_process:891:11)
+    execFileSync (node:child_process:927:15)
+    runNode (file:///tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:17:10)
+    TestContext.<anonymous> (file:///tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:63:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+  ...
+# Subtest: create-github-release dry run uses tag prefix and component changelog
+not ok 3 - create-github-release dry run uses tag prefix and component changelog
+  ---
+  duration_ms: 971.000056
+  location: '/tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:78:1'
+  failureType: 'testCodeFailure'
+  error: 'Unexpected non-whitespace character after JSON at position 1759'
+  code: 'ERR_TEST_FAILURE'
+  name: 'SyntaxError'
+  stack: |-
+    JSON.parse (<anonymous>)
+    TestContext.<anonymous> (file:///tmp/gh-issue-solver-1778578530665/scripts/release-scripts.test.mjs:101:24)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2934.724611
