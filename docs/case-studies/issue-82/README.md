@@ -30,7 +30,7 @@ Prepared PR: https://github.com/link-foundation/link-cli/pull/83
 - Downloaded logs: `run-25749404027-csharp.log`, `run-25749403949-wasm.log`.
 - Commit diff evidence: `d47e551-changed-files.txt`, `d47e551-diff-stat.txt`.
 - Release state: `recent-releases.txt`.
-- Template snapshots: `evidence/templates/{js,rust,csharp}`.
+- Template metadata: `template-{js,rust,csharp}-file-tree.json` and `template-{js,rust,csharp}-workflows.json`.
 - Regression and validation logs: `test-logs/regression-before-fix.log`, `test-logs/regression-after-action-updates.log`, `test-logs/npm-test-js.log`, `test-logs/dotnet-test.log`, `test-logs/cargo-test.log`, `test-logs/cargo-clippy.log`, `test-logs/npm-build-after-ci.log`.
 - Verified action tags: `verified-action-tags.txt`.
 
@@ -49,7 +49,7 @@ The downloaded GitHub Actions logs also reported Node 20 action deprecation warn
 
 ## Template Comparison
 
-The JavaScript, Rust, and C# release templates do not use `push.paths` filters for the main release workflow. They schedule release workflows on every push to `main`, then use internal change detection and release-needed scripts to decide what work to perform.
+The JavaScript, Rust, and C# release templates do not use `push.paths` filters for the main release workflow. They schedule release workflows on every push to `main`, then use internal change detection and release-needed scripts to decide what work to perform. The template workflow metadata in this case study links to the public upstream files instead of copying template code into this repository.
 
 The local Rust and C# workflows did use `push.paths`. That is the direct reason Rust did not run for `d47e551`: the merge commit changed C# workflow/script files, WebAssembly workflow files, JavaScript tests, and documentation, but no `rust/**` file. The Rust workflow never reached its own release-needed logic.
 

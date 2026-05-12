@@ -33,11 +33,6 @@ docs/case-studies/issue-82/evidence/template-js-file-tree.json
 docs/case-studies/issue-82/evidence/template-js-workflows.json
 docs/case-studies/issue-82/evidence/template-rust-file-tree.json
 docs/case-studies/issue-82/evidence/template-rust-workflows.json
-docs/case-studies/issue-82/evidence/templates/csharp/release.yml
-docs/case-studies/issue-82/evidence/templates/js/example-app.yml
-docs/case-studies/issue-82/evidence/templates/js/links.yml
-docs/case-studies/issue-82/evidence/templates/js/release.yml
-docs/case-studies/issue-82/evidence/templates/rust/release.yml
 docs/case-studies/issue-82/evidence/test-logs/cargo-clippy.log
 docs/case-studies/issue-82/evidence/test-logs/cargo-fmt-check.log
 docs/case-studies/issue-82/evidence/test-logs/cargo-test.log
