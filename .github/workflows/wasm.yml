@@ -7,19 +7,15 @@ on:
       - issue-*
     paths:
       - '.github/workflows/wasm.yml'
-      - 'package-lock.json'
-      - 'package.json'
+      - 'js/**'
       - 'rust/**'
-      - 'web/**'
   pull_request:
     branches:
       - main
     paths:
       - '.github/workflows/wasm.yml'
-      - 'package-lock.json'
-      - 'package.json'
+      - 'js/**'
       - 'rust/**'
-      - 'web/**'
   workflow_dispatch:
     inputs:
       deploy_pages:
@@ -56,6 +52,7 @@ jobs:
         with:
           node-version: '20.x'
           cache: npm
+          cache-dependency-path: js/package-lock.json
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -70,15 +67,18 @@ jobs:
             ${{ runner.os }}-wasm-cargo-
 
       - name: Install npm dependencies
+        working-directory: js
         run: npm ci
 
       - name: Test Rust CLI core
         run: cargo test --manifest-path rust/Cargo.toml --all-features
 
       - name: Test WebAssembly wrapper
+        working-directory: js
         run: npm run test:wasm
 
       - name: Build React WebAssembly app
+        working-directory: js
         run: npm run build
 
       - name: Upload built app
@@ -119,18 +119,21 @@ jobs:
         with:
           node-version: '20.x'
           cache: npm
+          cache-dependency-path: js/package-lock.json
 
       - name: Install npm dependencies
+        working-directory: js
         run: npm ci
 
       - name: Build GitHub Pages app
+        working-directory: js
         run: npm run build:pages
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: dist/
 

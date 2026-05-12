@@ -14,6 +14,7 @@ Pull request: https://github.com/link-foundation/link-cli/pull/52
   as the latest release.
 - `evidence/doublets-web-issue-5.json`: dependency issue details from
   https://github.com/linksplatform/doublets-web/issues/5.
+- `screenshots/`: browser workbench desktop and mobile verification captures.
 
 GitHub Actions log downloads for runs `17617650587` and `17617649689` returned
 HTTP 410 on 2026-05-01, so the exact old log bodies were no longer available.
@@ -65,7 +66,7 @@ The run metadata still showed both failures were on branch SHA
 - Mirror each Rust query snapshot into a `doublets-web` `UnitedLinks` instance.
 - Replace the old CI workflow with stable Rust, npm, `wasm-pack`, Vite build,
   artifact upload v4, and GitHub Pages deployment.
-- Ignore generated `target/`, `web/pkg/`, `dist/`, and local investigation
+- Ignore generated `target/`, `js/pkg/`, `dist/`, and local investigation
   artifacts.
 
 ## Residual Risks

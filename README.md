@@ -24,8 +24,7 @@ WebAssembly. The React workbench mirrors the current link set into
 package built from `doublets-rs`.
 
 - Live demo: <https://link-foundation.github.io/link-cli/>
-- Browser app documentation: [README-WASM.md](README-WASM.md)
-- Implementation notes: [WEBASSEMBLY_IMPLEMENTATION.md](WEBASSEMBLY_IMPLEMENTATION.md)
+- Browser app documentation and implementation notes: [js/README.md](js/README.md)
 
 ## Documentation
 
