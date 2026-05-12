@@ -256,6 +256,19 @@ jobs:
           echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "changeset_count=$CHANGESET_COUNT" >> $GITHUB_OUTPUT
 
+      - name: Check if release is needed
+        # Self-healing gate: even when a changeset is absent, resume publishing
+        # if the csproj <Version> is missing on NuGet or its GitHub release does
+        # not exist. See docs/case-studies/issue-84/README.md and the JS
+        # template's check-release-needed.mjs for the same pattern.
+        id: check_release
+        working-directory: .
+        env:
+          HAS_CHANGESETS: ${{ steps.check_changesets.outputs.has_changesets }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node csharp/scripts/check-release-needed.mjs
+
       - name: Merge multiple changesets
         if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_changesets.outputs.changeset_count > 1
         working-directory: .
@@ -271,8 +284,29 @@ jobs:
         working-directory: .
         run: node csharp/scripts/version-and-commit.mjs --mode changeset
 
+      - name: Resolve release version
+        # Picks the version that downstream steps should publish. Prefers the
+        # one just committed; falls back to the csproj <Version> reported by
+        # check-release-needed for self-healing re-runs.
+        id: release_version
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        run: |
+          if [ -n "${{ steps.version.outputs.new_version }}" ]; then
+            VERSION="${{ steps.version.outputs.new_version }}"
+          else
+            VERSION="${{ steps.check_release.outputs.current_version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing version: $VERSION"
+
       - name: Build release package
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         run: |
           dotnet restore
           dotnet build --configuration Release
@@ -280,7 +314,10 @@ jobs:
 
       - name: Resolve NuGet package id
         id: package
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         run: |
           PACKAGE_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
           if [ -z "$PACKAGE_ID" ]; then
@@ -290,9 +327,28 @@ jobs:
           echo "id=$PACKAGE_ID" >> "$GITHUB_OUTPUT"
           echo "flat_container_id=$PACKAGE_ID_LOWER" >> "$GITHUB_OUTPUT"
 
+      - name: Validate NuGet API key
+        # Upfront validation surfaces an expired/invalid NUGET_API_KEY before
+        # we attempt a push that would otherwise return HTTP 403 mid-flight.
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::warning::NUGET_API_KEY is not configured — NuGet publish will be skipped."
+            exit 0
+          fi
+          echo "NUGET_API_KEY length: ${#NUGET_API_KEY}"
+
       - name: Publish to NuGet
         id: nuget_publish
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
@@ -305,11 +361,15 @@ jobs:
           fi
 
       - name: Verify package on NuGet
-        if: steps.version.outputs.version_committed == 'true' && steps.nuget_publish.outputs.published == 'true'
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
         run: |
           PACKAGE_ID="${{ steps.package.outputs.id }}"
           PACKAGE_ID_LOWER="${{ steps.package.outputs.flat_container_id }}"
-          VERSION="${{ steps.version.outputs.new_version }}"
+          VERSION="${{ steps.release_version.outputs.version }}"
           for DELAY in 0 5 10 20 30 60; do
             if [ "$DELAY" != "0" ]; then
               sleep "$DELAY"
@@ -325,13 +385,16 @@ jobs:
           exit 1
 
       - name: Create GitHub Release
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: .
         run: |
           node csharp/scripts/create-github-release.mjs \
-            --release-version "${{ steps.version.outputs.new_version }}" \
+            --release-version "${{ steps.release_version.outputs.version }}" \
             --repository "${{ github.repository }}" \
             --tag-prefix "csharp-v" \
             --language "C#" \
@@ -374,7 +437,9 @@ jobs:
             --description "${{ github.event.inputs.description }}"
 
       - name: Build package
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
         run: |
           dotnet restore
           dotnet build --configuration Release
@@ -382,7 +447,9 @@ jobs:
 
       - name: Resolve NuGet package id
         id: package
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
         run: |
           PACKAGE_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
           if [ -z "$PACKAGE_ID" ]; then
@@ -394,7 +461,9 @@ jobs:
 
       - name: Publish to NuGet
         id: nuget_publish
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
@@ -407,7 +476,10 @@ jobs:
           fi
 
       - name: Verify package on NuGet
-        if: steps.version.outputs.version_committed == 'true' && steps.nuget_publish.outputs.published == 'true'
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true')
         run: |
           PACKAGE_ID="${{ steps.package.outputs.id }}"
           PACKAGE_ID_LOWER="${{ steps.package.outputs.flat_container_id }}"
@@ -427,7 +499,9 @@ jobs:
           exit 1
 
       - name: Create GitHub Release
-        if: steps.version.outputs.version_committed == 'true'
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: .

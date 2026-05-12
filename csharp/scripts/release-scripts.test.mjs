@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import {
   mkdirSync,
   mkdtempSync,
@@ -7,9 +7,15 @@ import {
   readdirSync,
   writeFileSync,
 } from 'node:fs';
+import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
+import { promisify } from 'node:util';
+
+import { decide, readCsprojInfo } from './check-release-needed.mjs';
+
+const execFileAsync = promisify(execFile);
 
 const repoRoot = new URL('../..', import.meta.url).pathname;
 
@@ -19,6 +25,19 @@ function runNode(script, args, options = {}) {
     encoding: 'utf8',
     env: { ...process.env, ...(options.env ?? {}) },
   });
+}
+
+async function runNodeAsync(script, args, options = {}) {
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [join(repoRoot, script), ...args],
+    {
+      cwd: options.cwd ?? repoRoot,
+      encoding: 'utf8',
+      env: { ...process.env, ...(options.env ?? {}) },
+    }
+  );
+  return stdout;
 }
 
 function runGit(args, cwd) {
@@ -165,4 +184,200 @@ test('version-and-commit creates a C# release commit when the next tag is missin
   assert.match(outputs, /^new_version=2\.4\.0$/m);
   assert.match(runGit(['rev-parse', '--verify', 'csharp-v2.4.0'], work), /[a-f0-9]{40}/);
   assert.match(runGit(['ls-remote', '--tags', 'origin', 'csharp-v2.4.0'], work), /csharp-v2\.4\.0/);
+});
+
+test('check-release-needed decide(): changesets take the normal release path', () => {
+  const result = decide({
+    hasChangesets: true,
+    currentVersion: '2.4.0',
+    publishedVersions: ['2.2.2'],
+    githubReleaseExists: false,
+  });
+  assert.equal(result.shouldRelease, true);
+  assert.equal(result.skipBump, false);
+  assert.equal(result.nugetPublished, false);
+  assert.match(result.reason, /changesets present/);
+});
+
+test('check-release-needed decide(): self-heals when csproj version is missing from NuGet', () => {
+  const result = decide({
+    hasChangesets: false,
+    currentVersion: '2.4.0',
+    publishedVersions: ['2.2.2', '2.3.0'],
+    githubReleaseExists: false,
+  });
+  assert.equal(result.shouldRelease, true);
+  assert.equal(result.skipBump, true);
+  assert.equal(result.nugetPublished, false);
+  assert.match(result.reason, /not yet published on NuGet/);
+});
+
+test('check-release-needed decide(): self-heals when package id is unknown to NuGet', () => {
+  const result = decide({
+    hasChangesets: false,
+    currentVersion: '0.1.0',
+    publishedVersions: null,
+    githubReleaseExists: false,
+  });
+  assert.equal(result.shouldRelease, true);
+  assert.equal(result.skipBump, true);
+  assert.equal(result.nugetPublished, false);
+  assert.match(result.reason, /not yet registered on NuGet/);
+});
+
+test('check-release-needed decide(): self-heals GitHub release when NuGet already has the version', () => {
+  const result = decide({
+    hasChangesets: false,
+    currentVersion: '2.4.0',
+    publishedVersions: ['2.2.2', '2.4.0'],
+    githubReleaseExists: false,
+  });
+  assert.equal(result.shouldRelease, true);
+  assert.equal(result.skipBump, true);
+  assert.equal(result.nugetPublished, true);
+  assert.match(result.reason, /no GitHub release/);
+});
+
+test('check-release-needed decide(): no-op when both NuGet and GitHub release exist', () => {
+  const result = decide({
+    hasChangesets: false,
+    currentVersion: '2.4.0',
+    publishedVersions: ['2.2.2', '2.4.0'],
+    githubReleaseExists: true,
+  });
+  assert.equal(result.shouldRelease, false);
+  assert.equal(result.skipBump, false);
+  assert.equal(result.nugetPublished, true);
+  assert.match(result.reason, /no release needed/);
+});
+
+test('check-release-needed readCsprojInfo() extracts version and package id', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-csproj-info-'));
+  const csprojPath = join(dir, 'sample.csproj');
+  writeFileSync(
+    csprojPath,
+    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>1.2.3</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n'
+  );
+
+  const info = readCsprojInfo(csprojPath);
+  assert.equal(info.version, '1.2.3');
+  assert.equal(info.packageId, 'clink');
+});
+
+function startNugetAndGithubMock({ versions, githubReleaseStatus }) {
+  const sockets = new Set();
+  const server = createServer((req, res) => {
+    res.setHeader('connection', 'close');
+    if (req.url?.startsWith('/nuget/')) {
+      if (versions === null) {
+        res.writeHead(404).end();
+      } else {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ versions }));
+      }
+      return;
+    }
+    if (req.url?.startsWith('/github/')) {
+      res.writeHead(githubReleaseStatus).end();
+      return;
+    }
+    res.writeHead(500).end();
+  });
+  server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+  });
+
+  return new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({
+        nugetUrl: `http://127.0.0.1:${port}/nuget`,
+        githubUrl: `http://127.0.0.1:${port}/github`,
+        close: () => new Promise((r) => {
+          for (const socket of sockets) {
+            socket.destroy();
+          }
+          server.close(() => r());
+        }),
+      });
+    });
+  });
+}
+
+test('check-release-needed CLI writes self-healing outputs when NuGet version is missing', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-check-release-'));
+  const csprojPath = join(dir, 'project.csproj');
+  const outputFile = join(dir, 'github-output.txt');
+  writeFileSync(
+    csprojPath,
+    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>2.4.0</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n'
+  );
+
+  const mock = await startNugetAndGithubMock({
+    versions: ['2.2.0', '2.2.1', '2.2.2'],
+    githubReleaseStatus: 404,
+  });
+
+  try {
+    await runNodeAsync(
+      'csharp/scripts/check-release-needed.mjs',
+      ['--csproj', csprojPath, '--repository', 'link-foundation/link-cli'],
+      {
+        env: {
+          GITHUB_OUTPUT: outputFile,
+          HAS_CHANGESETS: 'false',
+          NUGET_INDEX_URL: mock.nugetUrl,
+          GITHUB_API_URL: mock.githubUrl,
+        },
+      }
+    );
+  } finally {
+    await mock.close();
+  }
+
+  const outputs = readFileSync(outputFile, 'utf8');
+  assert.match(outputs, /^should_release=true$/m);
+  assert.match(outputs, /^skip_bump=true$/m);
+  assert.match(outputs, /^current_version=2\.4\.0$/m);
+  assert.match(outputs, /^nuget_published=false$/m);
+  assert.match(outputs, /^github_release_exists=false$/m);
+});
+
+test('check-release-needed CLI short-circuits when NuGet and GitHub already have the release', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-check-release-noop-'));
+  const csprojPath = join(dir, 'project.csproj');
+  const outputFile = join(dir, 'github-output.txt');
+  writeFileSync(
+    csprojPath,
+    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>2.4.0</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n'
+  );
+
+  const mock = await startNugetAndGithubMock({
+    versions: ['2.3.0', '2.4.0'],
+    githubReleaseStatus: 200,
+  });
+
+  try {
+    await runNodeAsync(
+      'csharp/scripts/check-release-needed.mjs',
+      ['--csproj', csprojPath, '--repository', 'link-foundation/link-cli'],
+      {
+        env: {
+          GITHUB_OUTPUT: outputFile,
+          HAS_CHANGESETS: 'false',
+          NUGET_INDEX_URL: mock.nugetUrl,
+          GITHUB_API_URL: mock.githubUrl,
+        },
+      }
+    );
+  } finally {
+    await mock.close();
+  }
+
+  const outputs = readFileSync(outputFile, 'utf8');
+  assert.match(outputs, /^should_release=false$/m);
+  assert.match(outputs, /^skip_bump=false$/m);
+  assert.match(outputs, /^nuget_published=true$/m);
+  assert.match(outputs, /^github_release_exists=true$/m);
 });
