@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,23 +9,27 @@
     <ToolCommandName>clink</ToolCommandName>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RootNamespace>Foundation.Data.Doublets.Cli</RootNamespace>
+    <AssemblyName>clink</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>link-foundation</Authors>
-    <Description>A CLI tool for links manipulation.</Description>
+    <Description>A CLI tool for links manipulation. The reusable library API ships separately as the Foundation.Data.Doublets.Cli NuGet package.</Description>
     <PackageId>clink</PackageId>
     <Version>2.4.0</Version>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>cli;links;doublets;lino;tool</PackageTags>
+    <PackageProjectUrl>https://github.com/link-foundation/link-cli</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Platform.Data" Version="0.16.1" />
-    <PackageReference Include="Platform.Data.Doublets" Version="0.18.1" />
-    <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.6.5" />
-    <PackageReference Include="Link.Foundation.Links.Notation" Version="0.13.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Foundation.Data.Doublets.Cli.Library\Foundation.Data.Doublets.Cli.Library.csproj" />
   </ItemGroup>
 
   <ItemGroup>

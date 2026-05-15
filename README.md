@@ -3,8 +3,10 @@
 [![C# CI/CD Pipeline](https://github.com/link-foundation/link-cli/actions/workflows/csharp.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/csharp.yml)
 [![Rust CI/CD Pipeline](https://github.com/link-foundation/link-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/rust.yml)
 [![WebAssembly CI](https://github.com/link-foundation/link-cli/actions/workflows/wasm.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/wasm.yml)
-[![NuGet](https://img.shields.io/nuget/v/clink?logo=nuget&label=NuGet)](https://www.nuget.org/packages/clink)
+[![NuGet (clink)](https://img.shields.io/nuget/v/clink?logo=nuget&label=clink)](https://www.nuget.org/packages/clink)
+[![NuGet (library)](https://img.shields.io/nuget/v/Foundation.Data.Doublets.Cli?logo=nuget&label=Foundation.Data.Doublets.Cli)](https://www.nuget.org/packages/Foundation.Data.Doublets.Cli)
 [![Crates.io](https://img.shields.io/crates/v/link-cli?logo=rust&label=Crates.io)](https://crates.io/crates/link-cli)
+[![Docs.rs](https://docs.rs/link-cli/badge.svg)](https://docs.rs/link-cli)
 [![C# Release](https://img.shields.io/github/v/release/link-foundation/link-cli?filter=csharp-v*&label=C%23%20release)](https://github.com/link-foundation/link-cli/releases?q=C%23&expanded=true)
 [![Rust Release](https://img.shields.io/github/v/release/link-foundation/link-cli?filter=rust-v*&label=Rust%20release)](https://github.com/link-foundation/link-cli/releases?q=Rust&expanded=true)
 
@@ -12,9 +14,15 @@
 
 It is based on [associative theory](https://habr.com/ru/articles/895896) (also in [ru](https://habr.com/ru/articles/804617)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
-It includes a production C# CLI package, a Rust CLI/library package, and a
-Rust-powered WebAssembly browser workbench built on [links data store](https://github.com/linksplatform?view_as=public)
+It includes a production C# CLI/library pair on NuGet, a Rust CLI/library
+crate on Crates.io, and a Rust-powered WebAssembly browser workbench built on
+[links data store](https://github.com/linksplatform?view_as=public)
 concepts (see also in [ru](https://github.com/linksplatform/.github/blob/main/profile/README.ru.md)).
+Both ecosystems ship a runnable CLI and a reusable public library with full
+auto-generated API documentation (DocFX for C#, `cargo doc`/docs.rs for Rust)
+so external projects can embed the parser, query processors, decorators,
+named/pinned types, persistent transformation triggers, and LiNo I/O without
+re-implementing any of the internals.
 
 ## WebAssembly Browser Workbench
 
@@ -31,29 +39,53 @@ package built from `doublets-rs`.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
-- [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind this documentation refresh.
+- [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
+- [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
+
+### API references
+
+- C# library: package page at <https://www.nuget.org/packages/Foundation.Data.Doublets.Cli> and the DocFX-generated reference on [GitHub Pages](https://link-foundation.github.io/link-cli/csharp/).
+- Rust library: <https://docs.rs/link-cli> (also mirrored on [GitHub Pages](https://link-foundation.github.io/link-cli/rust/link_cli/)).
+- Combined landing page: <https://link-foundation.github.io/link-cli/>.
 
 ## Installation
 
 Language package documentation:
 
-- [C# NuGet tool](csharp/README.md)
-- [Rust crate](rust/README.md)
+- [C# NuGet tool and library](csharp/README.md)
+- [Rust crate (CLI + library)](rust/README.md)
 
-This CLI tool can be installed globally as `clink` using single command (that will work if you have [.NET](https://dotnet.microsoft.com/en-us/download) installed):
+Each language ships **both** a CLI binary and a public library, so external
+projects can either run the tool directly or pull in the parser, query
+processors, decorators, and LiNo I/O via a package reference.
+
+### C# (.NET)
 
 ```bash
+# CLI: install the `clink` command globally.
 dotnet tool install --global clink
+
+# Library: embed the parser, processors, and decorators in another .NET project.
+dotnet add package Foundation.Data.Doublets.Cli
 ```
 
 <img width="811" alt="Screenshot 2025-05-16 at 5 48 06 AM" src="https://github.com/user-attachments/assets/615df4ce-658e-4bab-a483-96fae200f106" />
 
-The NuGet tool is the C# implementation and exposes the complete production
-command surface, including persistent transformation triggers. The Rust
-implementation under `rust/` mirrors the core query engine, named references,
-LiNo import/export, structure formatting, and the WebAssembly workbench API.
-Persistent transformation trigger CLI options currently exist only in the C#
-tool.
+### Rust
+
+```bash
+# CLI: build and install the `clink` binary from crates.io.
+cargo install link-cli
+
+# Library: pull `link_cli` into your own Cargo project.
+cargo add link-cli
+```
+
+The NuGet CLI tool is the C# implementation and exposes the complete production
+command surface, including persistent transformation triggers. The Rust crate
+mirrors the core query engine, named references, LiNo import/export, structure
+formatting, and the WebAssembly workbench API. Persistent transformation
+trigger CLI options currently exist only in the C# tool.
 
 This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 

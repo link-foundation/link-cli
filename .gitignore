@@ -418,3 +418,9 @@ ci-logs/
 gh-data/
 experiments/
 .playwright-mcp/
+
+# Generated API documentation
+csharp/_site/
+csharp/docs/api/*.yml
+csharp/docs/api/*.manifest
+_site/

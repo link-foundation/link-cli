@@ -193,6 +193,48 @@ test('prependNugetBadges is a no-op without a package id', () => {
   assert.equal(prependNugetBadges(notes, 'clink', ''), notes);
 });
 
+test('buildNugetBadges accepts multiple package ids', () => {
+  const badges = buildNugetBadges(['clink', 'Foundation.Data.Doublets.Cli'], '2.4.0');
+
+  assert.match(badges, /img\.shields\.io\/nuget\/v\/clink\?/);
+  assert.match(
+    badges,
+    /img\.shields\.io\/nuget\/v\/Foundation\.Data\.Doublets\.Cli\?/
+  );
+  assert.match(badges, /img\.shields\.io\/nuget\/dt\/clink\?/);
+  assert.match(
+    badges,
+    /img\.shields\.io\/nuget\/dt\/Foundation\.Data\.Doublets\.Cli\?/
+  );
+});
+
+test('buildReleasePayload includes badges for both CLI and library packages', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-dual-release-payload-'));
+  const changelog = join(dir, 'CHANGELOG.md');
+  writeFileSync(
+    changelog,
+    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nDual package release.\n'
+  );
+
+  const payload = buildReleasePayload({
+    changelogPath: changelog,
+    language: 'C#',
+    packageIds: ['clink', 'Foundation.Data.Doublets.Cli'],
+    releaseVersion: '2.4.0',
+    tagPrefix: 'csharp-v',
+  });
+
+  assert.match(payload.body, /img\.shields\.io\/nuget\/v\/clink\?/);
+  assert.match(
+    payload.body,
+    /img\.shields\.io\/nuget\/v\/Foundation\.Data\.Doublets\.Cli\?/
+  );
+  assert.match(
+    payload.body,
+    /Packages: `clink`, `Foundation\.Data\.Doublets\.Cli`/
+  );
+});
+
 test('buildReleasePayload places NuGet badges above the package footer', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-payload-'));
   const changelog = join(dir, 'CHANGELOG.md');

@@ -312,20 +312,23 @@ jobs:
           dotnet build --configuration Release
           dotnet pack --no-build --configuration Release --output ./artifacts
 
-      - name: Resolve NuGet package id
+      - name: Resolve NuGet package ids
         id: package
         if: >-
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         run: |
-          PACKAGE_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
-          if [ -z "$PACKAGE_ID" ]; then
-            PACKAGE_ID=clink
+          CLI_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
+          if [ -z "$CLI_ID" ]; then
+            CLI_ID=clink
           fi
-          PACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
-          echo "id=$PACKAGE_ID" >> "$GITHUB_OUTPUT"
-          echo "flat_container_id=$PACKAGE_ID_LOWER" >> "$GITHUB_OUTPUT"
+          LIB_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | head -n 1)
+          if [ -z "$LIB_ID" ]; then
+            LIB_ID=Foundation.Data.Doublets.Cli
+          fi
+          echo "id=$CLI_ID" >> "$GITHUB_OUTPUT"
+          echo "library_id=$LIB_ID" >> "$GITHUB_OUTPUT"
 
       - name: Validate NuGet API key
         # Upfront validation surfaces an expired/invalid NUGET_API_KEY before
@@ -360,7 +363,7 @@ jobs:
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Verify package on NuGet
+      - name: Verify CLI package on NuGet
         if: >-
           steps.nuget_publish.outputs.published == 'true' && (
           steps.version.outputs.version_committed == 'true' ||
@@ -369,6 +372,17 @@ jobs:
         run: |
           node scripts/wait-for-nuget.mjs \
             --package-id "${{ steps.package.outputs.id }}" \
+            --release-version "${{ steps.release_version.outputs.version }}"
+
+      - name: Verify library package on NuGet
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        run: |
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.library_id }}" \
             --release-version "${{ steps.release_version.outputs.version }}"
 
       - name: Create GitHub Release
@@ -386,6 +400,7 @@ jobs:
             --tag-prefix "csharp-v" \
             --language "C#" \
             --package-id "${{ steps.package.outputs.id }}" \
+            --package-id "${{ steps.package.outputs.library_id }}" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
 
@@ -432,19 +447,22 @@ jobs:
           dotnet build --configuration Release
           dotnet pack --no-build --configuration Release --output ./artifacts
 
-      - name: Resolve NuGet package id
+      - name: Resolve NuGet package ids
         id: package
         if: >-
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true'
         run: |
-          PACKAGE_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
-          if [ -z "$PACKAGE_ID" ]; then
-            PACKAGE_ID=clink
+          CLI_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
+          if [ -z "$CLI_ID" ]; then
+            CLI_ID=clink
           fi
-          PACKAGE_ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
-          echo "id=$PACKAGE_ID" >> "$GITHUB_OUTPUT"
-          echo "flat_container_id=$PACKAGE_ID_LOWER" >> "$GITHUB_OUTPUT"
+          LIB_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | head -n 1)
+          if [ -z "$LIB_ID" ]; then
+            LIB_ID=Foundation.Data.Doublets.Cli
+          fi
+          echo "id=$CLI_ID" >> "$GITHUB_OUTPUT"
+          echo "library_id=$LIB_ID" >> "$GITHUB_OUTPUT"
 
       - name: Publish to NuGet
         id: nuget_publish
@@ -462,7 +480,7 @@ jobs:
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Verify package on NuGet
+      - name: Verify CLI package on NuGet
         if: >-
           steps.nuget_publish.outputs.published == 'true' && (
           steps.version.outputs.version_committed == 'true' ||
@@ -470,6 +488,16 @@ jobs:
         run: |
           node scripts/wait-for-nuget.mjs \
             --package-id "${{ steps.package.outputs.id }}" \
+            --release-version "${{ steps.version.outputs.new_version }}"
+
+      - name: Verify library package on NuGet
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true')
+        run: |
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.library_id }}" \
             --release-version "${{ steps.version.outputs.new_version }}"
 
       - name: Create GitHub Release
@@ -486,5 +514,6 @@ jobs:
             --tag-prefix "csharp-v" \
             --language "C#" \
             --package-id "${{ steps.package.outputs.id }}" \
+            --package-id "${{ steps.package.outputs.library_id }}" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"

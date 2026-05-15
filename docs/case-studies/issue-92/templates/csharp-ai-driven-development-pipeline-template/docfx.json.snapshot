@@ -1,0 +1,44 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "src/MyPackage",
+          "files": ["**/*.csproj"]
+        }
+      ],
+      "dest": "docs/api",
+      "includePrivateMembers": false,
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "noRestore": false,
+      "namespaceLayout": "flattened",
+      "memberLayout": "samePage",
+      "allowCompilationErrors": false
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.{md,yml}"],
+        "src": "docs",
+        "exclude": ["_site/**", "obj/**"]
+      }
+    ],
+    "resource": [
+      {
+        "files": ["images/**"],
+        "src": "docs",
+        "exclude": ["_site/**", "obj/**"]
+      }
+    ],
+    "output": "_site",
+    "globalMetadata": {
+      "_appName": "MyPackage",
+      "_appTitle": "MyPackage API Documentation",
+      "_enableSearch": true,
+      "pdf": false
+    },
+    "template": ["default", "modern"]
+  }
+}

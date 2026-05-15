@@ -2,13 +2,15 @@
 name = "link-cli"
 version = "0.1.0"
 edition = "2021"
-description = "A CLI tool for links manipulation"
+description = "A CLI tool and reusable library for links manipulation backed by a LiNo-notation doublet storage engine."
 license = "Unlicense"
 repository = "https://github.com/link-foundation/link-cli"
+documentation = "https://docs.rs/link-cli"
+homepage = "https://github.com/link-foundation/link-cli"
 readme = "README.md"
 authors = ["link-foundation"]
 keywords = ["links", "doublets", "cli", "database"]
-categories = ["command-line-utilities", "database"]
+categories = ["command-line-utilities", "database", "data-structures"]
 
 [lib]
 name = "link_cli"

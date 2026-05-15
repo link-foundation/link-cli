@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Foundation.Data.Doublets.Cli.Library\Foundation.Data.Doublets.Cli.Library.csproj" />
     <ProjectReference Include="..\Foundation.Data.Doublets.Cli\Foundation.Data.Doublets.Cli.csproj" />
   </ItemGroup>
 
