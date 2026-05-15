@@ -40,37 +40,72 @@ export function getArg(argv, name, fallback = null) {
 }
 
 /**
- * Build NuGet version + downloads badges that link to a specific package version.
- * Mirrors the Rust release script that emits Crates.io + Docs.rs badges.
- * @param {string} packageId NuGet package id (e.g. `clink`).
- * @param {string} version Bare semver string (e.g. `2.4.0`).
- * @returns {string} A single line of two markdown badges separated by a space.
+ * Collect every occurrence of `--flag value` and `--flag=value` style arguments.
+ * Used when a single release covers multiple NuGet packages (e.g. the CLI tool
+ * package plus its sibling library package).
+ * @param {string[]} argv
+ * @param {string} name
+ * @returns {string[]}
  */
-export function buildNugetBadges(packageId, version) {
-  const id = encodeURIComponent(packageId);
-  const versionPath = encodeURIComponent(version);
-  const versionUrl = `https://www.nuget.org/packages/${id}/${versionPath}`;
-  const versionBadge = `[![NuGet](https://img.shields.io/nuget/v/${id}?logo=nuget&label=NuGet)](${versionUrl})`;
-  const downloadsBadge = `[![NuGet Downloads](https://img.shields.io/nuget/dt/${id}?logo=nuget&label=downloads)](${versionUrl})`;
-  return `${versionBadge} ${downloadsBadge}`;
+export function getAllArgs(argv, name) {
+  const flag = `--${name}`;
+  const eqPrefix = `${flag}=`;
+  const values = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === flag) {
+      if (argv[i + 1] !== undefined) {
+        values.push(argv[i + 1]);
+        i++;
+      }
+      continue;
+    }
+    if (a.startsWith(eqPrefix)) {
+      values.push(a.slice(eqPrefix.length));
+    }
+  }
+  return values;
 }
 
 /**
- * Prepend NuGet badges to release notes when a package id is known and badges
- * are not already present. Returns the notes unchanged otherwise.
+ * Build NuGet version + downloads badges that link to a specific package version.
+ * Mirrors the Rust release script that emits Crates.io + Docs.rs badges.
+ * Accepts either a single package id (legacy callers) or an array — when an
+ * array is supplied each id's two badges are joined onto one line.
+ * @param {string|string[]} packageIds NuGet package id(s).
+ * @param {string} version Bare semver string (e.g. `2.4.0`).
+ * @returns {string} A single line of markdown badges.
+ */
+export function buildNugetBadges(packageIds, version) {
+  const ids = Array.isArray(packageIds) ? packageIds : [packageIds];
+  const versionPath = encodeURIComponent(version);
+  const lines = ids.map((packageId) => {
+    const id = encodeURIComponent(packageId);
+    const versionUrl = `https://www.nuget.org/packages/${id}/${versionPath}`;
+    const versionBadge = `[![NuGet](https://img.shields.io/nuget/v/${id}?logo=nuget&label=NuGet)](${versionUrl})`;
+    const downloadsBadge = `[![NuGet Downloads](https://img.shields.io/nuget/dt/${id}?logo=nuget&label=downloads)](${versionUrl})`;
+    return `${versionBadge} ${downloadsBadge}`;
+  });
+  return lines.join('\n');
+}
+
+/**
+ * Prepend NuGet badges to release notes when one or more package ids are
+ * known and shield.io NuGet badges are not already present.
  * @param {string} releaseNotes
- * @param {string} packageId
+ * @param {string|string[]} packageIds
  * @param {string} version
  * @returns {string}
  */
-export function prependNugetBadges(releaseNotes, packageId, version) {
-  if (!packageId || !version) {
+export function prependNugetBadges(releaseNotes, packageIds, version) {
+  const ids = (Array.isArray(packageIds) ? packageIds : [packageIds]).filter(Boolean);
+  if (ids.length === 0 || !version) {
     return releaseNotes;
   }
   if (/img\.shields\.io\/nuget\//i.test(releaseNotes)) {
     return releaseNotes;
   }
-  return `${buildNugetBadges(packageId, version)}\n\n${releaseNotes}`;
+  return `${buildNugetBadges(ids, version)}\n\n${releaseNotes}`;
 }
 
 /**
@@ -101,21 +136,28 @@ export function getChangelogForVersion(version, changelogPath) {
 
 /**
  * Build the GitHub release API payload.
- * @param {{changelogPath: string, language: string, packageId: string, releaseVersion: string, tagPrefix: string}} options
+ * @param {{changelogPath: string, language: string, packageId?: string, packageIds?: string[], releaseVersion: string, tagPrefix: string}} options
  * @returns {{tag_name: string, name: string, body: string}}
  */
 export function buildReleasePayload({
   changelogPath,
   language,
   packageId,
+  packageIds,
   releaseVersion,
   tagPrefix,
 }) {
+  const ids = (packageIds && packageIds.length > 0
+    ? packageIds
+    : [packageId].filter(Boolean));
   const changelogNotes = getChangelogForVersion(releaseVersion, changelogPath);
-  const notesWithPackage = packageId
-    ? `${changelogNotes}\n\nPackage: \`${packageId}\``
-    : changelogNotes;
-  const body = prependNugetBadges(notesWithPackage, packageId, releaseVersion);
+  const footer = ids.length === 0
+    ? ''
+    : ids.length === 1
+      ? `\n\nPackage: \`${ids[0]}\``
+      : `\n\nPackages: ${ids.map((id) => `\`${id}\``).join(', ')}`;
+  const notesWithPackage = `${changelogNotes}${footer}`;
+  const body = prependNugetBadges(notesWithPackage, ids, releaseVersion);
 
   return {
     tag_name: `${tagPrefix}${releaseVersion}`,
@@ -155,7 +197,8 @@ function main(argv) {
   const tagPrefix = getArg(argv, 'tag-prefix', 'v');
   const changelogPath = getArg(argv, 'changelog-path', 'CHANGELOG.md');
   const language = getArg(argv, 'language', '');
-  const packageId = getArg(argv, 'package-id', '');
+  const packageIds = getAllArgs(argv, 'package-id');
+  const packageId = packageIds[0] || '';
   const assetsGlob = getArg(argv, 'assets-glob', '');
   const dryRun = argv.includes('--dry-run');
 
@@ -171,6 +214,7 @@ function main(argv) {
     changelogPath,
     language,
     packageId,
+    packageIds,
     releaseVersion: version,
     tagPrefix,
   });

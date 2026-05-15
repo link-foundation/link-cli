@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Foundation.Data.Doublets.Cli</RootNamespace>
+    <AssemblyName>Foundation.Data.Doublets.Cli</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>link-foundation</Authors>
+    <Description>Public library exposing the parser, query processors, decorators, named/pinned types, persistent transformation triggers, and LiNo I/O used by the clink CLI.</Description>
+    <PackageId>Foundation.Data.Doublets.Cli</PackageId>
+    <Version>2.4.0</Version>
+    <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>links;doublets;lino;cli;library</PackageTags>
+    <PackageProjectUrl>https://github.com/link-foundation/link-cli</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Platform.Data" Version="0.16.1" />
+    <PackageReference Include="Platform.Data.Doublets" Version="0.18.1" />
+    <PackageReference Include="Platform.Data.Doublets.Sequences" Version="0.6.5" />
+    <PackageReference Include="Link.Foundation.Links.Notation" Version="0.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

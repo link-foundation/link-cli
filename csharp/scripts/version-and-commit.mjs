@@ -23,6 +23,12 @@ import { execSync } from 'child_process';
 // Package name must match the package name in the changeset files
 const PACKAGE_NAME = 'Foundation.Data.Doublets.Cli';
 const CSPROJ_PATH = 'csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj';
+// The library project ships as a separate NuGet package
+// (`Foundation.Data.Doublets.Cli`) and must share the CLI tool's release
+// version so both packages reference each other consistently. The path
+// is optional — when the library csproj does not exist (e.g. inside unit
+// tests for this script), the bump silently skips the second update.
+const LIBRARY_CSPROJ_PATH = 'csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj';
 const CHANGESET_DIR = 'csharp/.changeset';
 const CHANGELOG_FILE = 'csharp/CHANGELOG.md';
 
@@ -110,17 +116,29 @@ function calculateNewVersion(current, bumpType) {
 }
 
 /**
- * Update version in csproj
+ * Update version in a csproj at the given path.
+ * @param {string} path
  * @param {string} newVersion
  */
-function updateCsproj(newVersion) {
-  let csproj = readFileSync(CSPROJ_PATH, 'utf-8');
+function updateCsprojAt(path, newVersion) {
+  let csproj = readFileSync(path, 'utf-8');
   csproj = csproj.replace(
     /<Version>[^<]+<\/Version>/,
     `<Version>${newVersion}</Version>`
   );
-  writeFileSync(CSPROJ_PATH, csproj, 'utf-8');
-  console.log(`Updated csproj to version ${newVersion}`);
+  writeFileSync(path, csproj, 'utf-8');
+  console.log(`Updated ${path} to version ${newVersion}`);
+}
+
+/**
+ * Update version in the CLI csproj and, when present, the library csproj.
+ * @param {string} newVersion
+ */
+function updateCsproj(newVersion) {
+  updateCsprojAt(CSPROJ_PATH, newVersion);
+  if (existsSync(LIBRARY_CSPROJ_PATH)) {
+    updateCsprojAt(LIBRARY_CSPROJ_PATH, newVersion);
+  }
 }
 
 /**
@@ -368,7 +386,11 @@ try {
   }
 
   // Stage all changed files
-  exec(`git add ${CSPROJ_PATH} ${CHANGELOG_FILE} ${CHANGESET_DIR}/`);
+  const stagedPaths = [CSPROJ_PATH, CHANGELOG_FILE, `${CHANGESET_DIR}/`];
+  if (existsSync(LIBRARY_CSPROJ_PATH)) {
+    stagedPaths.push(LIBRARY_CSPROJ_PATH);
+  }
+  exec(`git add ${stagedPaths.join(' ')}`);
 
   // Check if there are changes to commit
   try {
