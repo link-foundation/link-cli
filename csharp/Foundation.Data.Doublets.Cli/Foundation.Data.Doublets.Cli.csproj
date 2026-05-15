@@ -16,7 +16,7 @@
     <Authors>link-foundation</Authors>
     <Description>A CLI tool for links manipulation. The reusable library API ships separately as the Foundation.Data.Doublets.Cli NuGet package.</Description>
     <PackageId>clink</PackageId>
-    <Version>2.4.0</Version>
+    <Version>2.5.0</Version>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

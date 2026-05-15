@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [2.5.0] - 2026-05-15
+
+Split the C# distribution into two NuGet packages so external .NET
+projects can consume the public library without pulling in the
+`dotnet tool` packaging:
+
+- `clink` — unchanged dotnet tool, now built from a CLI csproj that only
+  contains `Program.cs` and `System.CommandLine` wiring.
+- `Foundation.Data.Doublets.Cli` — new library package that ships the
+  parser, query processors (basic / advanced / mixed), `ChangesSimplifier`,
+  named/pinned type decorators, persistent transformation trigger
+  decorator, LiNo I/O adapters, the `UnicodeStringStorage` extension, and
+  every other reusable building block. Generated XML doc comments are
+  packed alongside the assembly and rendered into a DocFX site published
+  to GitHub Pages.
+
 ## [2.4.0] - 2026-05-12
 
 Added `--export` as an alias for `--out` database export.
