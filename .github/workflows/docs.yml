@@ -1,0 +1,159 @@
+name: Docs
+
+# Build and deploy a unified API reference site that hosts both the C#
+# (`Foundation.Data.Doublets.Cli`) and Rust (`link-cli`) library docs.
+#
+# GitHub Pages allows only one deployment per repository, so this workflow
+# combines DocFX-generated C# docs (under `/csharp/`) and `cargo doc`-generated
+# Rust docs (under `/rust/`) into a single site that also includes a small
+# landing page linking out to both. The deploy job runs on pushes to `main`
+# and on manual dispatch, mirroring the AI driven development pipeline
+# templates' approach (see docs/case-studies/issue-92/templates).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'csharp/Foundation.Data.Doublets.Cli.Library/**'
+      - 'csharp/docs/**'
+      - 'csharp/docfx.json'
+      - 'rust/src/**'
+      - 'rust/Cargo.toml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'csharp/Foundation.Data.Doublets.Cli.Library/**'
+      - 'csharp/docs/**'
+      - 'csharp/docfx.json'
+      - 'rust/src/**'
+      - 'rust/Cargo.toml'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: docs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-docs-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-docs-
+
+      - name: Install DocFX
+        run: dotnet tool update -g docfx
+
+      - name: Restore C# dependencies
+        working-directory: csharp
+        run: dotnet restore
+
+      - name: Build C# documentation
+        working-directory: csharp
+        run: docfx docfx.json -o _site
+
+      - name: Build Rust documentation
+        run: cargo doc --manifest-path rust/Cargo.toml --no-deps --all-features
+
+      - name: Assemble unified site
+        run: |
+          set -euo pipefail
+          mkdir -p _site/csharp _site/rust
+          cp -R csharp/_site/. _site/csharp/
+          cp -R rust/target/doc/. _site/rust/
+          # Landing page that links into both sub-sites.
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <title>link-cli API documentation</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <style>
+                body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; }
+                h1 { margin-bottom: 0.25rem; }
+                ul { list-style: none; padding: 0; }
+                li { margin: 0.5rem 0; }
+                a { text-decoration: none; color: #0366d6; }
+                a:hover { text-decoration: underline; }
+                code { background: #f3f3f3; padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
+              </style>
+            </head>
+            <body>
+              <h1>link-cli API documentation</h1>
+              <p>Generated reference for the C# and Rust library packages that
+              ship alongside the <code>clink</code> CLI.</p>
+              <ul>
+                <li><a href="csharp/">C# – <code>Foundation.Data.Doublets.Cli</code> (DocFX)</a></li>
+                <li><a href="rust/link_cli/">Rust – <code>link-cli</code> (rustdoc)</a></li>
+              </ul>
+              <p>Source: <a href="https://github.com/link-foundation/link-cli">github.com/link-foundation/link-cli</a></p>
+            </body>
+          </html>
+          HTML
+
+      - name: List unified site (debug)
+        run: |
+          echo "::group::_site tree"
+          find _site -maxdepth 3 -print
+          echo "::endgroup::"
+
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: actions/configure-pages@v6
+
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Print resolved deployment URL (debug)
+        run: |
+          echo "Pages deployed to: ${{ steps.deployment.outputs.page_url }}"
