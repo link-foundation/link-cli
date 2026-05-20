@@ -68,11 +68,7 @@ fn transactions_log_flag_prints_recorded_transitions() -> Result<()> {
     let db = dir.path().join("data.links");
 
     // Apply two link creations.
-    ensure_success(&run_query(
-        &db,
-        "() ((1 1) (2 2))",
-        &["--transactions"],
-    )?)?;
+    ensure_success(&run_query(&db, "() ((1 1) (2 2))", &["--transactions"])?)?;
 
     // Then print the log.
     let out = run_query(&db, "", &["--transactions", "--log"])?;
