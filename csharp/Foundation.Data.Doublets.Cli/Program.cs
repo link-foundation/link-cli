@@ -106,6 +106,76 @@ var inputOption = new Option<string?>("--in", "--lino-input", "--import")
   Description = "Path to read and import a LiNo file into the database"
 };
 
+var transactionsOption = new Option<bool>("--transactions")
+{
+  Description = "Enable the transactions layer (default log path: <db>.transitions.links)",
+  DefaultValueFactory = _ => false
+};
+
+var transactionsFileOption = new Option<string?>("--transactions-file")
+{
+  Description = "Path to the transitions log store (default: <db>.transitions.links). Implies --transactions."
+};
+
+var commitModeOption = new Option<string?>("--commit-mode")
+{
+  Description = "Choose 'sync' or 'async' commits (default: sync). Implies --transactions."
+};
+
+var retentionOption = new Option<string?>("--retention")
+{
+  Description = "Log retention policy: 'infinite', 'sized:<n>', or 'chunked:<n>:<dir>'. Implies --transactions."
+};
+
+var vcOption = new Option<bool>("--vc")
+{
+  Description = "Enable the version-control decorator (implies --transactions)",
+  DefaultValueFactory = _ => false
+};
+
+var vcFileOption = new Option<string?>("--vc-file")
+{
+  Description = "Path to the version-control branches store (default: <db>.versioncontrol.links)"
+};
+
+var branchOption = new Option<string?>("--branch")
+{
+  Description = "Switch to a branch (creating it if --branch-from is also passed). Implies --vc."
+};
+
+var branchFromOption = new Option<long?>("--branch-from")
+{
+  Description = "When creating a branch with --branch, fork from this sequence point."
+};
+
+var checkoutOption = new Option<string?>("--checkout")
+{
+  Description = "Time-travel to a specific transition sequence or named tag. Implies --vc."
+};
+
+var tagOption = new Option<string?>("--tag")
+{
+  Description = "Create a tag in the form 'name' (at current head) or 'name=<seq>'. Implies --vc."
+};
+
+var listBranchesOption = new Option<bool>("--list-branches")
+{
+  Description = "List version-control branches and exit.",
+  DefaultValueFactory = _ => false
+};
+
+var listTagsOption = new Option<bool>("--list-tags")
+{
+  Description = "List version-control tags and exit.",
+  DefaultValueFactory = _ => false
+};
+
+var logOption = new Option<bool>("--log")
+{
+  Description = "Print the transitions log and exit. Implies --transactions.",
+  DefaultValueFactory = _ => false
+};
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
 rootCommand.Options.Add(dbOption);
 rootCommand.Options.Add(queryOption);
@@ -124,6 +194,19 @@ rootCommand.Options.Add(triggersFileOption);
 rootCommand.Options.Add(embedTriggersOption);
 rootCommand.Options.Add(inputOption);
 rootCommand.Options.Add(outputOption);
+rootCommand.Options.Add(transactionsOption);
+rootCommand.Options.Add(transactionsFileOption);
+rootCommand.Options.Add(commitModeOption);
+rootCommand.Options.Add(retentionOption);
+rootCommand.Options.Add(vcOption);
+rootCommand.Options.Add(vcFileOption);
+rootCommand.Options.Add(branchOption);
+rootCommand.Options.Add(branchFromOption);
+rootCommand.Options.Add(checkoutOption);
+rootCommand.Options.Add(tagOption);
+rootCommand.Options.Add(listBranchesOption);
+rootCommand.Options.Add(listTagsOption);
+rootCommand.Options.Add(logOption);
 
 rootCommand.SetAction(
   parseResult =>
@@ -145,6 +228,19 @@ rootCommand.SetAction(
     var embedTriggers = parseResult.GetValue(embedTriggersOption);
     var inputPath = parseResult.GetValue(inputOption);
     var outputPath = parseResult.GetValue(outputOption);
+    var transactionsFlag = parseResult.GetValue(transactionsOption);
+    var transactionsPathRaw = parseResult.GetValue(transactionsFileOption);
+    var commitModeRaw = parseResult.GetValue(commitModeOption);
+    var retentionRaw = parseResult.GetValue(retentionOption);
+    var vc = parseResult.GetValue(vcOption);
+    var vcFile = parseResult.GetValue(vcFileOption);
+    var branchName = parseResult.GetValue(branchOption);
+    var branchFrom = parseResult.GetValue(branchFromOption);
+    var checkoutPoint = parseResult.GetValue(checkoutOption);
+    var tagSpec = parseResult.GetValue(tagOption);
+    var listBranches = parseResult.GetValue(listBranchesOption);
+    var listTags = parseResult.GetValue(listTagsOption);
+    var showLog = parseResult.GetValue(logOption);
 
     var triggerCommandCount = new[] { always, once, never }.Count(value => value);
     if (triggerCommandCount > 1)
@@ -153,8 +249,91 @@ rootCommand.SetAction(
       return 1;
     }
 
+    var vcRequested = vc
+      || !string.IsNullOrWhiteSpace(vcFile)
+      || !string.IsNullOrWhiteSpace(branchName)
+      || branchFrom.HasValue
+      || !string.IsNullOrWhiteSpace(checkoutPoint)
+      || !string.IsNullOrWhiteSpace(tagSpec)
+      || listBranches
+      || listTags;
+
+    var transactionsRequested = transactionsFlag
+      || !string.IsNullOrWhiteSpace(transactionsPathRaw)
+      || !string.IsNullOrWhiteSpace(commitModeRaw)
+      || !string.IsNullOrWhiteSpace(retentionRaw)
+      || showLog
+      || vcRequested;
+
+    CommitMode commitMode = CommitMode.Sync;
+    if (!string.IsNullOrWhiteSpace(commitModeRaw))
+    {
+      if (commitModeRaw.Equals("sync", StringComparison.OrdinalIgnoreCase))
+      {
+        commitMode = CommitMode.Sync;
+      }
+      else if (commitModeRaw.Equals("async", StringComparison.OrdinalIgnoreCase))
+      {
+        commitMode = CommitMode.Async;
+      }
+      else
+      {
+        Console.Error.WriteLine($"Invalid --commit-mode value '{commitModeRaw}'. Use 'sync' or 'async'.");
+        return 1;
+      }
+    }
+
+    LogRetentionPolicy? retentionPolicy = null;
+    if (!string.IsNullOrWhiteSpace(retentionRaw))
+    {
+      try
+      {
+        retentionPolicy = LogRetentionPolicy.Parse(retentionRaw);
+      }
+      catch (ArgumentException ex)
+      {
+        Console.Error.WriteLine($"Invalid --retention value: {ex.Message}");
+        return 1;
+      }
+    }
+
     var baseLinks = new NamedTypesDecorator<uint>(db, trace);
     INamedTypesLinks<uint> decoratedLinks = baseLinks;
+    NamedTypesDecorator<uint>? transitionsStore = null;
+    NamedTypesDecorator<uint>? vcBranchesStore = null;
+    TransactionsDecorator? transactionsLinks = null;
+    VersionControlDecorator? vcLinks = null;
+
+    if (transactionsRequested)
+    {
+      var effectiveTransactionsFile = !string.IsNullOrWhiteSpace(transactionsPathRaw)
+        ? transactionsPathRaw
+        : TransactionsDecorator.MakeTransitionsDatabaseFilename(db);
+      transitionsStore = new NamedTypesDecorator<uint>(effectiveTransactionsFile, trace);
+      transactionsLinks = new TransactionsDecorator(
+        baseLinks,
+        transitionsStore,
+        retentionPolicy,
+        commitMode,
+        trace);
+      decoratedLinks = transactionsLinks;
+    }
+
+    if (vcRequested)
+    {
+      if (transactionsLinks is null)
+      {
+        Console.Error.WriteLine("--vc requires the transactions layer (this should have been auto-enabled).");
+        return 1;
+      }
+      var effectiveVcFile = !string.IsNullOrWhiteSpace(vcFile)
+        ? vcFile
+        : VersionControlDecorator.MakeVersionControlDatabaseFilename(db);
+      vcBranchesStore = new NamedTypesDecorator<uint>(effectiveVcFile, trace);
+      vcLinks = new VersionControlDecorator(transactionsLinks, vcBranchesStore, trace);
+      decoratedLinks = vcLinks;
+    }
+
     PersistentTransformationDecorator? persistentLinks = null;
     var defaultTriggersFile = PersistentTransformationDecorator.MakeTriggersDatabaseFilename(db);
     var effectiveTriggersFile = string.IsNullOrWhiteSpace(triggersFile) ? defaultTriggersFile : triggersFile;
@@ -169,14 +348,164 @@ rootCommand.SetAction(
     if (persistentTransformationsEnabled)
     {
       var triggerLinks = embedTriggers
-        ? baseLinks
+        ? (INamedTypesLinks<uint>)baseLinks
         : new NamedTypesDecorator<uint>(effectiveTriggersFile, trace);
-      persistentLinks = new PersistentTransformationDecorator(baseLinks, triggerLinks, trace)
+      persistentLinks = new PersistentTransformationDecorator(decoratedLinks, triggerLinks, trace)
       {
         AutoCreateMissingReferences = autoCreateMissingReferences
       };
       decoratedLinks = persistentLinks;
     }
+
+    try
+    {
+      return RunCli();
+    }
+    finally
+    {
+      transactionsLinks?.Shutdown();
+    }
+
+    int RunCli()
+    {
+      if (vcLinks is not null)
+      {
+        if (!string.IsNullOrWhiteSpace(checkoutPoint))
+        {
+          if (!TryResolveSequence(vcLinks, checkoutPoint, out var seq))
+          {
+            Console.Error.WriteLine($"Unknown checkout point '{checkoutPoint}'.");
+            return 1;
+          }
+          try
+          {
+            vcLinks.Checkout(seq);
+            if (trace) Console.WriteLine($"Checked out seq {seq} on branch '{vcLinks.CurrentBranch}'.");
+          }
+          catch (Exception ex)
+          {
+            Console.Error.WriteLine($"Error during --checkout: {ex.Message}");
+            return 1;
+          }
+        }
+
+        if (!string.IsNullOrWhiteSpace(branchName))
+        {
+          var existing = vcLinks.ListBranches().Any(b => b.Name == branchName);
+          if (!existing)
+          {
+            try
+            {
+              vcLinks.Branch(branchName, branchFrom);
+              if (trace) Console.WriteLine($"Created branch '{branchName}'.");
+            }
+            catch (Exception ex)
+            {
+              Console.Error.WriteLine($"Error creating branch '{branchName}': {ex.Message}");
+              return 1;
+            }
+          }
+          try
+          {
+            vcLinks.SwitchBranch(branchName);
+            if (trace) Console.WriteLine($"Switched to branch '{branchName}'.");
+          }
+          catch (Exception ex)
+          {
+            Console.Error.WriteLine($"Error switching to branch '{branchName}': {ex.Message}");
+            return 1;
+          }
+        }
+
+        if (!string.IsNullOrWhiteSpace(tagSpec))
+        {
+          var eq = tagSpec.IndexOf('=');
+          string tagName;
+          long? tagSeq = null;
+          if (eq < 0)
+          {
+            tagName = tagSpec;
+          }
+          else
+          {
+            tagName = tagSpec.Substring(0, eq);
+            var point = tagSpec.Substring(eq + 1);
+            if (!TryResolveSequence(vcLinks, point, out var resolved))
+            {
+              Console.Error.WriteLine($"Unknown tag point '{point}'.");
+              return 1;
+            }
+            tagSeq = resolved;
+          }
+          try
+          {
+            vcLinks.Tag(tagName, tagSeq);
+            if (trace) Console.WriteLine($"Tagged '{tagName}' at seq {tagSeq ?? vcLinks.CurrentSequence}.");
+          }
+          catch (Exception ex)
+          {
+            Console.Error.WriteLine($"Error creating tag '{tagName}': {ex.Message}");
+            return 1;
+          }
+        }
+
+        if (listBranches)
+        {
+          foreach (var info in vcLinks.ListBranches())
+          {
+            var marker = info.Name == vcLinks.CurrentBranch ? "*" : " ";
+            var parent = info.Parent ?? "-";
+            Console.WriteLine($"{marker} {info.Name}\tparent={parent}\tfork={info.ForkSeq}\thead={info.Head}");
+          }
+          return 0;
+        }
+
+        if (listTags)
+        {
+          foreach (var tag in vcLinks.ListTags().OrderBy(t => t.Key, StringComparer.Ordinal))
+          {
+            Console.WriteLine($"{tag.Key}\t{tag.Value}");
+          }
+          return 0;
+        }
+      }
+
+      if (showLog)
+      {
+        if (transactionsLinks is null)
+        {
+          Console.Error.WriteLine("--log requires the transactions layer.");
+          return 1;
+        }
+        foreach (var transition in transactionsLinks.Log)
+        {
+          Console.WriteLine($"{transition.Sequence}\t{transition.Timestamp:O}\t{transition.Kind}\t{transition.TransactionId:N}\t({transition.Before.Index},{transition.Before.Source},{transition.Before.Target}) -> ({transition.After.Index},{transition.After.Source},{transition.After.Target})");
+        }
+        return 0;
+      }
+
+      return RunQueryPipeline();
+    }
+
+    bool TryResolveSequence(VersionControlDecorator vc, string point, out long sequence)
+    {
+      sequence = 0;
+      if (string.IsNullOrWhiteSpace(point)) return false;
+      if (long.TryParse(point, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var direct))
+      {
+        sequence = direct;
+        return true;
+      }
+      if (vc.TryGetTag(point, out var tagSeq))
+      {
+        sequence = tagSeq;
+        return true;
+      }
+      return false;
+    }
+
+    int RunQueryPipeline()
+    {
 
     if (before)
     {
@@ -279,6 +608,7 @@ rootCommand.SetAction(
     }
 
     return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+    }
   }
 );
 
