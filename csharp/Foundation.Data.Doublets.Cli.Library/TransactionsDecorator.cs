@@ -321,11 +321,22 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     }
 
     var @continue = _inner.Constants.Continue;
-    var observed = new List<(DoubletLink Before, DoubletLink After)>();
+    DoubletLink? firstBefore = null;
+    DoubletLink? lastAfter = null;
+    var observedAny = false;
 
     WriteHandler<uint> wrapped = (before, after) =>
     {
-      observed.Add((LinkOrEmpty(before), LinkOrEmpty(after)));
+      // The underlying store can fire the handler multiple times for one
+      // logical write (e.g. Delete first clears the link, then removes it).
+      // Collapse them into a single transition with the original before
+      // state and the final after state.
+      if (!observedAny)
+      {
+        firstBefore = before is null ? default(DoubletLink?) : new DoubletLink(before);
+        observedAny = true;
+      }
+      lastAfter = after is null ? default(DoubletLink?) : new DoubletLink(after);
       return userHandler is null ? @continue : userHandler(before, after);
     };
 
@@ -348,9 +359,9 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
       throw;
     }
 
-    foreach (var (before, after) in observed)
+    if (observedAny)
     {
-      RecordTransition(transaction, kind, before, after);
+      RecordTransition(transaction, kind, firstBefore ?? default, lastAfter ?? default);
     }
 
     if (ownsTransaction)
@@ -604,11 +615,9 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         case TransitionKind.Delete:
           if (transition.Before.Index != 0 && !_inner.Exists(transition.Before.Index))
           {
-            var recreated = _inner.CreateAndUpdate(_inner.Constants.Null, _inner.Constants.Null);
-            _inner.Update(
-              new DoubletLink(recreated, _inner.Constants.Any, _inner.Constants.Any),
-              new DoubletLink(transition.Before.Index, transition.Before.Source, transition.Before.Target),
-              null);
+            // Doublets storage reuses freed slots in order, so creating
+            // with the original source/target restores the link in place.
+            _inner.CreateAndUpdate(transition.Before.Source, transition.Before.Target);
           }
           break;
       }
@@ -628,11 +637,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         case TransitionKind.Create:
           if (transition.After.Index != 0 && !_inner.Exists(transition.After.Index))
           {
-            var recreated = _inner.CreateAndUpdate(_inner.Constants.Null, _inner.Constants.Null);
-            _inner.Update(
-              new DoubletLink(recreated, _inner.Constants.Any, _inner.Constants.Any),
-              new DoubletLink(transition.After.Index, transition.After.Source, transition.After.Target),
-              null);
+            _inner.CreateAndUpdate(transition.After.Source, transition.After.Target);
           }
           break;
         case TransitionKind.Update:
