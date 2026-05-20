@@ -34,6 +34,30 @@ GitHub Pages alongside the C# DocFX site by `.github/workflows/docs.yml`.
 clink '() ((1 1))' --changes --after
 ```
 
+### Optional Transactions and Version Control
+
+Pass `--transactions` (or any flag in the family — `--transactions-file`,
+`--commit-mode`, `--retention`, `--log`) to record each Create/Update/Delete
+as a reversible transition in a sidecar doublets store. Pass `--vc`
+(or `--vc-file`, `--branch`, `--branch-from`, `--checkout`, `--tag`,
+`--list-branches`, `--list-tags`) to add a version-control layer over the
+recorded transitions log:
+
+```bash
+# Record reversible transitions into data.transitions.links
+clink --db data.links --transactions --auto-create-missing-references '() ((1 1))'
+clink --db data.links --log
+
+# Branch and tag on top of the transitions log
+clink --db data.links --vc --tag v1
+clink --db data.links --vc --branch feature --branch-from 1
+clink --db data.links --vc --list-branches
+```
+
+End-to-end demo scripts live in
+[`examples/transactions/`](../examples/transactions) and
+[`examples/version-control/`](../examples/version-control).
+
 ## Develop
 
 ```bash

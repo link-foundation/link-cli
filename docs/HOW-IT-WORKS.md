@@ -171,6 +171,75 @@ write operations.
 The trigger schema is link-backed, using named points such as `Always`, `Once`,
 `Condition`, and `Substitution`.
 
+## Optional Transactions
+
+Pass `--transactions` (or any flag in the family — `--transactions-file`,
+`--commit-mode`, `--retention`, `--log`) to wrap the storage in a
+`TransactionsDecorator`. Every Create / Update / Delete then writes a
+*reversible* transition into a sidecar doublets store. The default
+sidecar is named like the database:
+
+```text
+data.links          # primary store
+data.transitions.links   # transitions log (sidecar)
+```
+
+Inspect the log with `--log`:
+
+```text
+1  2026-05-20T14:14:03  Create  cf1f...  (0,0,0) -> (1,1,1)
+2  2026-05-20T14:14:03  Create  ca32...  (0,0,0) -> (2,2,2)
+```
+
+The library exposes `BeginTransaction()` returning a handle with
+`Commit()` and `Rollback()`. A handle dropped without commit rolls back
+automatically.
+
+Retention policies (`--retention`):
+
+- `infinite` — keep every transition (default).
+- `sized:<N>` — drop the oldest *applied* transitions once the live log
+  exceeds N. Never drops un-applied transitions.
+- `chunked:<N>:<DIR>` — archive the oldest N applied transitions into a
+  rolling file inside `DIR` once the live log reaches N.
+
+Commit modes (`--commit-mode`):
+
+- `sync` (default) — flushes data side-effects before commit returns.
+- `async` — durably persists the log first, then applies side-effects.
+
+Recovery: on open, every committed-but-not-applied transition is
+replayed against the underlying store.
+
+When no transaction flag is passed, behaviour is byte-identical to the
+bare CLI — no sidecar is written.
+
+## Optional Version Control
+
+Pass `--vc` (or any flag in the family) to add a version-control layer
+above transactions. The decorator stores branches, tags, current-branch,
+and applied-seq markers inside a second sidecar:
+
+```text
+data.versioncontrol.links
+```
+
+Operations:
+
+- `--branch <name> [--branch-from <seq>]` — switch to a branch, creating
+  it forked off `<seq>` when missing.
+- `--tag <name>` or `--tag <name>=<seq>` — name a sequence number.
+- `--checkout <seq|tag>` — time-travel the live store backward or
+  forward to a sequence number or named tag.
+- `--list-branches` / `--list-tags` — print and exit.
+
+Switching branches rewinds (undoes) transitions that are not part of the
+target branch and replays transitions that are. Checkout to seq=0
+rewinds everything; checkout to a higher seq replays as needed.
+
+When no version-control flag is passed, no `versioncontrol.links`
+sidecar is created.
+
 ## Browser Runtime
 
 The WebAssembly workbench uses the Rust query processor in the browser.

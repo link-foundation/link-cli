@@ -40,6 +40,12 @@ Key files:
 - `LinoDatabaseOutput.cs`: database export, change formatting, and structure
   formatting.
 - `PersistentTransformationDecorator.cs`: stored trigger support.
+- `TransactionsDecorator.cs`: optional transactions layer that records each
+  Create/Update/Delete as a reversible transition into a sidecar doublets
+  store.
+- `VersionControlDecorator.cs`: optional version-control layer that sits above
+  the transactions decorator and provides branching, tagging, and time-travel
+  checkout.
 
 Main C# dependencies:
 
@@ -64,6 +70,10 @@ Key files:
 - `rust/src/named_types.rs`: names sidecar storage.
 - `rust/src/lino_database_input.rs`: `.lino` import.
 - `rust/src/sequences/`: Unicode sequence conversion and related parity code.
+- `rust/src/transactions/`: optional transactions decorator and the
+  `TransitionLog`, retention-policy, and commit-mode types.
+- `rust/src/version_control/`: optional version-control decorator with
+  branching, tagging, and time-travel checkout.
 
 Main Rust dependencies:
 
@@ -109,6 +119,8 @@ the primary filename.
 | `<name>.links` | C# and Rust | Primary numeric links database. |
 | `<name>.names.links` | C# and Rust | Mapping between string names and numeric link references. |
 | `<name>.triggers.links` | C# | Persistent trigger definitions when triggers are not embedded. |
+| `<name>.transitions.links` | C# and Rust | Optional transitions log (created when `--transactions` is requested). |
+| `<name>.versioncontrol.links` | C# and Rust | Optional version-control branches/tags store (created when `--vc` is requested). |
 
 For `graph.links`, the default names file is `graph.names.links`, and the
 default triggers file is `graph.triggers.links`.
@@ -126,7 +138,55 @@ The high-level pipeline is the same across C# and Rust:
 7. Apply writes to storage.
 8. Format requested output: before, changes, after, structure, import/export.
 
-## Persistent Transformation Triggers
+## Optional Transactions Layer
+
+The `TransactionsDecorator` (C#) and `transactions::TransactionsDecorator`
+(Rust) wrap a `NamedTypesDecorator` and record each Create / Update /
+Delete as a reversible `Transition` (before + after doublet state, plus a
+sequence number, transaction id, and timestamp). Transitions are serialized
+as names inside a *second* doublets store — the transitions log itself is
+also a links database, so the same storage, recovery, and tooling apply.
+
+Composition: `LinkStorage → NamedTypesDecorator → TransactionsDecorator`.
+
+Public surface:
+
+- `Create / Update / Delete / CreateAndUpdate` — recorded automatically.
+- `BeginTransaction()` — explicit batch with `Commit()` and `Rollback()`;
+  drop without commit rolls back automatically.
+- `Log()` — read the recorded transitions.
+- Three retention policies: `infinite`, `sized:<n>` (drop oldest applied),
+  and `chunked:<n>:<dir>` (archive oldest applied to rolling files).
+- Two commit modes: `sync` (default — flushes data side-effects before
+  returning) and `async` (durably persists the log first).
+- Crash recovery: on open, every committed-but-not-applied transition is
+  replayed against the underlying store.
+
+When no transaction flag is passed at the CLI and the decorator is not
+instantiated through the library API, the existing `NamedTypesDecorator`
+behaviour is preserved exactly — no transitions file is written and no
+extra runtime cost is paid.
+
+## Optional Version-Control Layer
+
+The `VersionControlDecorator` (C#) and `version_control::VersionControlDecorator`
+(Rust) sit *above* the transactions decorator and add three operations
+over the recorded transitions log:
+
+- **Branching** — `Branch(name, forkSeq?)` creates a new branch that
+  points at an existing sequence number; `SwitchBranch(name)` rewinds or
+  replays transitions so the live store matches the target branch's head.
+- **Tagging** — `Tag(name, seq?)` records a stable name for any
+  sequence number.
+- **Time-travel checkout** — `Checkout(seq)` rewinds (or replays) the
+  live store to an arbitrary sequence number.
+
+Composition:
+`LinkStorage → NamedTypesDecorator → TransactionsDecorator → VersionControlDecorator`.
+
+Branch metadata, tags, current-branch, and applied-seq markers are all
+stored inside a second sidecar doublets store so version-control state
+is itself a links database.
 
 C# trigger support stores transformation queries as links. `--always` and
 `--once` create trigger records, `--never` removes matching records, and normal
