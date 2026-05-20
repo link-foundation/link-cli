@@ -628,6 +628,50 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     }
   }
 
+  /// <summary>
+  /// Revert a single transition's side-effect against the data store
+  /// without writing a new log entry. Intended for use by higher-level
+  /// decorators (e.g. version control) that need to drive replay/rewind
+  /// without producing additional transitions.
+  /// </summary>
+  public void RevertTransition(Transition transition)
+  {
+    lock (_lock)
+    {
+      _replaying = true;
+      try
+      {
+        TryRevertTransition(transition);
+      }
+      finally
+      {
+        _replaying = false;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Apply a single transition's side-effect against the data store
+  /// without writing a new log entry. Intended for use by higher-level
+  /// decorators (e.g. version control) that need to drive replay/rewind
+  /// without producing additional transitions.
+  /// </summary>
+  public void ApplyTransition(Transition transition)
+  {
+    lock (_lock)
+    {
+      _replaying = true;
+      try
+      {
+        TryApplyTransition(transition, recordApplied: false);
+      }
+      finally
+      {
+        _replaying = false;
+      }
+    }
+  }
+
   private void TryApplyTransition(Transition transition, bool recordApplied)
   {
     try
