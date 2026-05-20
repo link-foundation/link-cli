@@ -15,8 +15,7 @@ use tempfile::NamedTempFile;
 fn make_tx() -> (TransactionsDecorator, Vec<NamedTempFile>) {
     let data_file = NamedTempFile::new().expect("create temp file");
     let log_file = NamedTempFile::new().expect("create temp file");
-    let data_links =
-        NamedTypesDecorator::new(data_file.path(), false).expect("open data links");
+    let data_links = NamedTypesDecorator::new(data_file.path(), false).expect("open data links");
     let log_links = NamedTypesDecorator::new(log_file.path(), false).expect("open log links");
     let tx = TransactionsDecorator::new(
         data_links,
@@ -38,7 +37,11 @@ fn auto_transaction_records_create_and_update() -> Result<()> {
     assert_ne!(0, created);
 
     let log = tx.log();
-    assert_eq!(2, log.len(), "create_and_update must record two transitions");
+    assert_eq!(
+        2,
+        log.len(),
+        "create_and_update must record two transitions"
+    );
     assert_eq!(TransitionKind::Create, log[0].kind);
     assert_eq!(TransitionKind::Update, log[1].kind);
     assert_eq!(created, log[0].after.index);
@@ -54,7 +57,10 @@ fn rollback_undoes_create() -> Result<()> {
     assert!(tx.exists(created));
     tx.rollback()?;
 
-    assert!(!tx.exists(created), "rolled-back create must remove the link");
+    assert!(
+        !tx.exists(created),
+        "rolled-back create must remove the link"
+    );
     Ok(())
 }
 
@@ -117,9 +123,7 @@ fn rollback_undoes_delete() -> Result<()> {
 #[test]
 fn sized_retention_drops_oldest_after_applied() -> Result<()> {
     let (mut tx, _guards) = make_tx();
-    tx.set_retention_policy(LogRetentionPolicy::Sized {
-        max_transitions: 3,
-    });
+    tx.set_retention_policy(LogRetentionPolicy::Sized { max_transitions: 3 });
 
     for _ in 0..5 {
         tx.create_and_update(0, 0)?;

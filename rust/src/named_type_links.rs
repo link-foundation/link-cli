@@ -259,6 +259,126 @@ impl NamedTypeLinks for NamedTypesDecorator {
     }
 }
 
+impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
+    fn create(&mut self, source: u32, target: u32) -> u32 {
+        crate::transactions::TransactionsDecorator::create(self, source, target)
+            .expect("TransactionsDecorator::create failed in NamedTypeLinks bridge")
+    }
+
+    fn ensure_created(&mut self, id: u32) -> u32 {
+        crate::transactions::TransactionsDecorator::ensure_created(self, id)
+    }
+
+    fn get_link(&mut self, id: u32) -> Option<Link> {
+        self.get(id).copied()
+    }
+
+    fn exists(&mut self, id: u32) -> bool {
+        crate::transactions::TransactionsDecorator::exists(self, id)
+    }
+
+    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        crate::transactions::TransactionsDecorator::update(self, id, source, target)
+    }
+
+    fn delete(&mut self, id: u32) -> Result<Link> {
+        crate::transactions::TransactionsDecorator::delete(self, id)
+    }
+
+    fn all_links(&mut self) -> Vec<Link> {
+        self.all().into_iter().copied().collect()
+    }
+
+    fn search(&mut self, source: u32, target: u32) -> Option<u32> {
+        crate::transactions::TransactionsDecorator::search(self, source, target)
+    }
+
+    fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
+        crate::transactions::TransactionsDecorator::get_or_create(self, source, target)
+            .expect("TransactionsDecorator::get_or_create failed in NamedTypeLinks bridge")
+    }
+
+    fn get_name(&mut self, id: u32) -> Result<Option<String>> {
+        NamedTypes::get_name(self.inner_mut(), id)
+    }
+
+    fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
+        NamedTypes::set_name(self.inner_mut(), id, name)
+    }
+
+    fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
+        NamedTypes::get_by_name(self.inner_mut(), name)
+    }
+
+    fn remove_name(&mut self, id: u32) -> Result<()> {
+        NamedTypes::remove_name(self.inner_mut(), id)
+    }
+
+    fn save(&mut self) -> Result<()> {
+        crate::transactions::TransactionsDecorator::save(self)
+    }
+}
+
+impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
+    fn create(&mut self, source: u32, target: u32) -> u32 {
+        crate::version_control::VersionControlDecorator::create(self, source, target)
+            .expect("VersionControlDecorator::create failed in NamedTypeLinks bridge")
+    }
+
+    fn ensure_created(&mut self, id: u32) -> u32 {
+        crate::version_control::VersionControlDecorator::ensure_created(self, id)
+    }
+
+    fn get_link(&mut self, id: u32) -> Option<Link> {
+        self.get(id).copied()
+    }
+
+    fn exists(&mut self, id: u32) -> bool {
+        crate::version_control::VersionControlDecorator::exists(self, id)
+    }
+
+    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        crate::version_control::VersionControlDecorator::update(self, id, source, target)
+    }
+
+    fn delete(&mut self, id: u32) -> Result<Link> {
+        crate::version_control::VersionControlDecorator::delete(self, id)
+    }
+
+    fn all_links(&mut self) -> Vec<Link> {
+        self.all().into_iter().copied().collect()
+    }
+
+    fn search(&mut self, source: u32, target: u32) -> Option<u32> {
+        crate::version_control::VersionControlDecorator::search(self, source, target)
+    }
+
+    fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
+        crate::version_control::VersionControlDecorator::get_or_create(self, source, target)
+            .expect("VersionControlDecorator::get_or_create failed in NamedTypeLinks bridge")
+    }
+
+    fn get_name(&mut self, id: u32) -> Result<Option<String>> {
+        NamedTypes::get_name(self.transactions_mut().inner_mut(), id)
+    }
+
+    fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
+        NamedTypes::set_name(self.transactions_mut().inner_mut(), id, name)
+    }
+
+    fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
+        NamedTypes::get_by_name(self.transactions_mut().inner_mut(), name)
+    }
+
+    fn remove_name(&mut self, id: u32) -> Result<()> {
+        NamedTypes::remove_name(self.transactions_mut().inner_mut(), id)
+    }
+
+    fn save(&mut self) -> Result<()> {
+        crate::version_control::VersionControlDecorator::save(self)
+    }
+}
+
 pub(crate) fn escape_lino_reference(reference: &str) -> String {
     if reference.is_empty() || reference.trim().is_empty() {
         return String::new();

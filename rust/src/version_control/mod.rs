@@ -187,6 +187,21 @@ impl VersionControlDecorator {
         self.transactions.all()
     }
 
+    pub fn search(&self, source: u32, target: u32) -> Option<u32> {
+        self.transactions.search(source, target)
+    }
+
+    pub fn get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        if let Some(existing) = self.transactions.search(source, target) {
+            return Ok(existing);
+        }
+        self.create(source, target)
+    }
+
+    pub fn ensure_created(&mut self, id: u32) -> u32 {
+        self.transactions.ensure_created(id)
+    }
+
     fn attribute_new_transitions(&mut self, before_seq: i64) -> Result<()> {
         let after_seq = self.transactions.last_logged_sequence();
         if after_seq <= before_seq {
@@ -228,9 +243,7 @@ impl VersionControlDecorator {
         if fork_seq > 0 {
             let path = self.build_branch_seqs(&parent);
             if !path.contains(&fork_seq) {
-                bail!(
-                    "Fork point {fork_seq} is not reachable on branch '{parent}'.",
-                );
+                bail!("Fork point {fork_seq} is not reachable on branch '{parent}'.",);
             }
         }
         self.create_branch(name, Some(parent), fork_seq, fork_seq)?;
@@ -261,9 +274,7 @@ impl VersionControlDecorator {
         let current = self.current_branch.clone();
         let path = self.build_branch_seqs(&current);
         if sequence > 0 && !path.contains(&sequence) {
-            bail!(
-                "Sequence {sequence} is not reachable on branch '{current}'.",
-            );
+            bail!("Sequence {sequence} is not reachable on branch '{current}'.",);
         }
         let target_path: Vec<i64> = path.iter().copied().filter(|s| *s <= sequence).collect();
         self.apply_diff_to(target_path, &current)?;
@@ -377,11 +388,11 @@ impl VersionControlDecorator {
         if !self.branches.contains_key(DEFAULT_BRANCH_NAME) {
             // Pre-existing transitions are attributed to the default branch.
             for s in 1..=existing {
-                if !self.transition_branches.contains_key(&s) {
-                    self.transition_branches
-                        .insert(s, DEFAULT_BRANCH_NAME.to_string());
-                    let marker =
-                        format!("{TRANSITION_PREFIX}{s}:branch={DEFAULT_BRANCH_NAME}");
+                if let std::collections::btree_map::Entry::Vacant(entry) =
+                    self.transition_branches.entry(s)
+                {
+                    entry.insert(DEFAULT_BRANCH_NAME.to_string());
+                    let marker = format!("{TRANSITION_PREFIX}{s}:branch={DEFAULT_BRANCH_NAME}");
                     self.write_immutable_marker(&marker)?;
                 }
             }
@@ -507,7 +518,8 @@ impl VersionControlDecorator {
                 if let Some(colon) = rest.find(":branch=") {
                     if let Ok(seq) = rest[..colon].parse::<i64>() {
                         let branch_name = &rest[colon + ":branch=".len()..];
-                        self.transition_branches.insert(seq, branch_name.to_string());
+                        self.transition_branches
+                            .insert(seq, branch_name.to_string());
                     }
                 }
             }
@@ -567,9 +579,8 @@ mod tests {
 
     #[test]
     fn make_version_control_database_filename_returns_sibling_path() {
-        let path = VersionControlDecorator::make_version_control_database_filename(
-            "/var/data/db.links",
-        );
+        let path =
+            VersionControlDecorator::make_version_control_database_filename("/var/data/db.links");
         assert_eq!(path, PathBuf::from("/var/data/db.versioncontrol.links"));
     }
 

@@ -65,9 +65,10 @@ pub enum CommitMode {
 }
 
 /// Retention policy for the transitions log.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum LogRetentionPolicy {
     /// Keep every transition forever (default).
+    #[default]
     Infinite,
     /// Drop the oldest applied transitions once the live log exceeds
     /// `max_transitions`. Never drops un-applied transitions (R7).
@@ -79,12 +80,6 @@ pub enum LogRetentionPolicy {
         chunk_size: u64,
         archive_directory: PathBuf,
     },
-}
-
-impl Default for LogRetentionPolicy {
-    fn default() -> Self {
-        Self::Infinite
-    }
 }
 
 impl LogRetentionPolicy {
@@ -482,6 +477,23 @@ impl TransactionsDecorator {
         self.inner.query(index, source, target)
     }
 
+    pub fn search(&self, source: u32, target: u32) -> Option<u32> {
+        self.inner.search(source, target)
+    }
+
+    pub fn get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        if let Some(existing) = self.inner.search(source, target) {
+            return Ok(existing);
+        }
+        self.create(source, target)
+    }
+
+    pub fn ensure_created(&mut self, id: u32) -> u32 {
+        // ensure_created is used by recovery/replay only and is not
+        // itself a logical write; bypass transition recording.
+        self.inner.ensure_created(id)
+    }
+
     fn ensure_open_transaction(&mut self) -> bool {
         if self.current.is_none() {
             self.current = Some(PendingTransaction {
@@ -505,11 +517,9 @@ impl TransactionsDecorator {
         self.sequence_counter += 1;
         let sequence = self.sequence_counter;
         let timestamp_ms = now_unix_ms();
-        let transaction_id = self
-            .current
-            .as_ref()
-            .map(|tx| tx.id)
-            .ok_or_else(|| anyhow!("internal: missing open transaction while recording transition"))?;
+        let transaction_id = self.current.as_ref().map(|tx| tx.id).ok_or_else(|| {
+            anyhow!("internal: missing open transaction while recording transition")
+        })?;
         let transition = Transition {
             transaction_id,
             sequence,
@@ -743,10 +753,7 @@ impl TransactionsDecorator {
 
     fn mark_applied(&mut self, transition: &Transition) -> Result<()> {
         if self.applied.insert(transition.sequence) {
-            self.write_marker(&format!(
-                "{APPLIED_MARKER_PREFIX}{}",
-                transition.sequence
-            ))?;
+            self.write_marker(&format!("{APPLIED_MARKER_PREFIX}{}", transition.sequence))?;
             if transition.sequence > self.applied_sequence {
                 self.applied_sequence = transition.sequence;
             }
@@ -767,12 +774,7 @@ impl TransactionsDecorator {
         self.applied_sequence = 0;
 
         // Read every named link from the log store.
-        let all_links: Vec<Link> = self
-            .log_store
-            .all()
-            .into_iter()
-            .copied()
-            .collect();
+        let all_links: Vec<Link> = self.log_store.all().into_iter().copied().collect();
         for link in &all_links {
             let name = match self.log_store.get_name(link.index)? {
                 Some(value) => value,
@@ -891,11 +893,17 @@ impl TransactionsDecorator {
                 }
             }
         }
-        std::fs::create_dir_all(archive_directory)
-            .with_context(|| format!("failed to create archive dir {}", archive_directory.display()))?;
+        std::fs::create_dir_all(archive_directory).with_context(|| {
+            format!(
+                "failed to create archive dir {}",
+                archive_directory.display()
+            )
+        })?;
         let timestamp = now_unix_ms();
-        let file_name =
-            format!("transitions-chunk-{timestamp}-{:032x}.log", new_transaction_id());
+        let file_name = format!(
+            "transitions-chunk-{timestamp}-{:032x}.log",
+            new_transaction_id()
+        );
         let path = archive_directory.join(file_name);
         use std::io::Write;
         let mut file = std::fs::File::create(&path)
@@ -961,7 +969,9 @@ mod tests {
         ));
         assert!(matches!(
             LogRetentionPolicy::parse("sized:1000").unwrap(),
-            LogRetentionPolicy::Sized { max_transitions: 1000 }
+            LogRetentionPolicy::Sized {
+                max_transitions: 1000
+            }
         ));
         match LogRetentionPolicy::parse("chunked:500:/tmp/x").unwrap() {
             LogRetentionPolicy::Chunked {

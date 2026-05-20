@@ -4,7 +4,7 @@ use link_cli::cli::{Cli, CliCommand};
 
 fn parse_run(args: &[&str]) -> Cli {
     match Cli::parse_from(args).expect("CLI arguments should parse") {
-        CliCommand::Run(cli) => cli,
+        CliCommand::Run(cli) => *cli,
         other => panic!("expected run command, got {other:?}"),
     }
 }

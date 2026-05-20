@@ -90,11 +90,17 @@ fn checkout_and_forward_replay_restores_state() -> Result<()> {
 
     vc.checkout(after_first)?;
     assert!(vc.exists(a), "first link must remain after partial rewind");
-    assert!(!vc.exists(b), "second link must disappear after partial rewind");
+    assert!(
+        !vc.exists(b),
+        "second link must disappear after partial rewind"
+    );
 
     vc.checkout(after_second)?;
     assert!(vc.exists(a));
-    assert!(vc.exists(b), "second link must reappear after forward checkout");
+    assert!(
+        vc.exists(b),
+        "second link must reappear after forward checkout"
+    );
     Ok(())
 }
 
@@ -123,8 +129,14 @@ fn switch_branch_applies_and_rewinds_transitions() -> Result<()> {
 
     vc.switch_branch(DEFAULT_BRANCH_NAME)?;
     assert_eq!(DEFAULT_BRANCH_NAME, vc.current_branch());
-    assert!(vc.exists(a), "main-branch link must remain after switching back");
-    assert!(!vc.exists(b), "feature-branch link must disappear after switching back to main");
+    assert!(
+        vc.exists(a),
+        "main-branch link must remain after switching back"
+    );
+    assert!(
+        !vc.exists(b),
+        "feature-branch link must disappear after switching back to main"
+    );
     assert_eq!(head_before_branch, vc.current_sequence());
 
     vc.switch_branch("feature")?;
@@ -200,10 +212,7 @@ fn recover_rebuilds_state_from_branches_store() -> Result<()> {
         false,
     )?;
     let reopened = VersionControlDecorator::new(tx, vc_links, false)?;
-    assert!(reopened
-        .list_branches()
-        .iter()
-        .any(|b| b.name == "feature"));
+    assert!(reopened.list_branches().iter().any(|b| b.name == "feature"));
     assert!(reopened.try_get_tag("checkpoint").is_some());
     Ok(())
 }
