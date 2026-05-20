@@ -5,7 +5,7 @@
 
 use anyhow::Result;
 use link_cli::{
-    CommitMode, LogRetentionPolicy, NamedTypesDecorator, TransactionsDecorator,
+    CommitMode, Link, LogRetentionPolicy, NamedTypesDecorator, TransactionsDecorator,
     VersionControlDecorator, DEFAULT_BRANCH_NAME,
 };
 use tempfile::NamedTempFile;
@@ -231,4 +231,130 @@ fn duplicate_branch_throws() -> Result<()> {
     vc.branch("feature", None)?;
     assert!(vc.branch("feature", None).is_err());
     Ok(())
+}
+
+#[test]
+fn full_stack_acid_rollback_is_atomic_and_isolated() -> Result<()> {
+    let (mut vc, _guard) = make_vc();
+    let baseline = snapshot(&vc);
+    let initial_sequence = vc.current_sequence();
+
+    vc.begin_transaction()?;
+    let a = vc.create_and_update(0, 0)?;
+    let b = vc.create_and_update(0, 0)?;
+    vc.update(a, b, b)?;
+
+    assert!(vc.exists(a));
+    assert!(vc.exists(b));
+    assert!(vc.begin_transaction().is_err());
+    assert!(vc.branch("blocked", None).is_err());
+
+    vc.rollback()?;
+
+    assert_eq!(initial_sequence, vc.current_sequence());
+    let main = vc
+        .list_branches()
+        .into_iter()
+        .find(|branch| branch.name == DEFAULT_BRANCH_NAME)
+        .expect("main branch must exist");
+    assert_eq!(initial_sequence, main.head);
+    assert_eq!(baseline, snapshot(&vc));
+    Ok(())
+}
+
+#[test]
+fn full_stack_acid_commit_is_consistent_and_durable_across_reopen() -> Result<()> {
+    let data_file = NamedTempFile::new()?;
+    let log_file = NamedTempFile::new()?;
+    let vc_file = NamedTempFile::new()?;
+    let data_path = data_file.path().to_path_buf();
+    let log_path = log_file.path().to_path_buf();
+    let vc_path = vc_file.path().to_path_buf();
+
+    let (a, b, committed_sequence) = {
+        let data_links = NamedTypesDecorator::new(&data_path, false)?;
+        let log_links = NamedTypesDecorator::new(&log_path, false)?;
+        let vc_links = NamedTypesDecorator::new(&vc_path, false)?;
+        let tx = TransactionsDecorator::new(
+            data_links,
+            log_links,
+            LogRetentionPolicy::default(),
+            CommitMode::default(),
+            false,
+        )?;
+        let mut vc = VersionControlDecorator::new(tx, vc_links, false)?;
+
+        vc.begin_transaction()?;
+        let a = vc.create_and_update(0, 0)?;
+        let b = vc.create_and_update(0, 0)?;
+        vc.update(a, b, b)?;
+        vc.commit()?;
+
+        let committed_sequence = vc.current_sequence();
+        assert!(committed_sequence >= 5);
+        assert_eq!(
+            vc.transactions().last_logged_sequence(),
+            vc.transactions().applied_sequence()
+        );
+        let main = vc
+            .list_branches()
+            .into_iter()
+            .find(|branch| branch.name == DEFAULT_BRANCH_NAME)
+            .expect("main branch must exist");
+        assert_eq!(committed_sequence, main.head);
+
+        vc.tag("acid-commit", None)?;
+        vc.branch("audit", None)?;
+        vc.switch_branch("audit")?;
+        vc.delete(b)?;
+        assert!(!vc.exists(b));
+
+        vc.switch_branch(DEFAULT_BRANCH_NAME)?;
+        assert!(vc.exists(a));
+        assert!(vc.exists(b));
+        let restored = vc.get(a).copied().expect("link a must exist");
+        assert_eq!(b, restored.source);
+        assert_eq!(b, restored.target);
+        vc.save()?;
+
+        (a, b, committed_sequence)
+    };
+
+    let data_links = NamedTypesDecorator::new(&data_path, false)?;
+    let log_links = NamedTypesDecorator::new(&log_path, false)?;
+    let vc_links = NamedTypesDecorator::new(&vc_path, false)?;
+    let tx = TransactionsDecorator::new(
+        data_links,
+        log_links,
+        LogRetentionPolicy::default(),
+        CommitMode::default(),
+        false,
+    )?;
+    let reopened = VersionControlDecorator::new(tx, vc_links, false)?;
+
+    assert_eq!(
+        Some(committed_sequence),
+        reopened.try_get_tag("acid-commit")
+    );
+    assert!(reopened
+        .list_branches()
+        .iter()
+        .any(|branch| branch.name == "audit"));
+    assert_eq!(DEFAULT_BRANCH_NAME, reopened.current_branch());
+    assert!(reopened.exists(a));
+    assert!(reopened.exists(b));
+    let restored = reopened.get(a).copied().expect("link a must exist");
+    assert_eq!(b, restored.source);
+    assert_eq!(b, restored.target);
+    assert_eq!(
+        reopened.transactions().last_logged_sequence(),
+        reopened.transactions().applied_sequence()
+    );
+    Ok(())
+}
+
+fn snapshot(vc: &VersionControlDecorator) -> Vec<Link> {
+    let mut links: Vec<Link> = vc.all().into_iter().copied().collect();
+    links.sort_by_key(|link| (link.index, link.source, link.target));
+    links
 }

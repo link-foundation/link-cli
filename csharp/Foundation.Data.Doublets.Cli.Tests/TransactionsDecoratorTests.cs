@@ -232,8 +232,9 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
       finally
       {
+        dataLinks?.Dispose();
         Cleanup(dataFile);
-        if (dataLinks is not null) Cleanup(dataLinks.NamedLinksDatabaseFileName);
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dataFile));
       }
     }
 
@@ -254,10 +255,12 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       finally
       {
         tx?.Shutdown();
+        dataLinks?.Dispose();
+        logLinks?.Dispose();
         Cleanup(dataFile);
         Cleanup(logFile);
-        if (dataLinks is not null) Cleanup(dataLinks.NamedLinksDatabaseFileName);
-        if (logLinks is not null) Cleanup(logLinks.NamedLinksDatabaseFileName);
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dataFile));
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(logFile));
       }
     }
 

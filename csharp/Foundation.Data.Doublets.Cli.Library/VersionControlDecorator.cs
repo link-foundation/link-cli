@@ -20,6 +20,8 @@ public interface IVersionControlLinks : INamedTypesLinks<uint>
 {
   string CurrentBranch { get; }
   long CurrentSequence { get; }
+  ITransaction BeginTransaction();
+  Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
   IReadOnlyList<BranchInfo> ListBranches();
   IReadOnlyDictionary<string, long> ListTags();
   void Branch(string name, long? from = null);
@@ -59,6 +61,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
   private uint _appliedLink;
   private string _currentBranch = DefaultBranchName;
   private long _currentApplied;
+  private VersionControlTransaction? _activeTransaction;
   private readonly bool _trace;
 
   public VersionControlDecorator(
@@ -92,6 +95,29 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
     lock (_lock) return _tags.TryGetValue(name, out sequence);
   }
 
+  public ITransaction BeginTransaction()
+  {
+    lock (_lock)
+    {
+      if (_activeTransaction is not null)
+      {
+        throw new InvalidOperationException("Nested version-control transactions are not supported.");
+      }
+
+      var beforeSequence = _transactions.LastLoggedSequence;
+      var branchName = _currentBranch;
+      var inner = _transactions.BeginTransaction();
+      _activeTransaction = new VersionControlTransaction(this, inner, branchName, beforeSequence);
+      return _activeTransaction;
+    }
+  }
+
+  public Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+  {
+    cancellationToken.ThrowIfCancellationRequested();
+    return Task.FromResult(BeginTransaction());
+  }
+
   // -- Write overrides (attribute new transitions to the current branch) --
 
   public override uint Create(IList<uint>? substitution, WriteHandler<uint>? handler)
@@ -115,24 +141,34 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
     {
       var beforeSeq = _transactions.LastLoggedSequence;
       var result = innerWrite();
-      var afterSeq = _transactions.LastLoggedSequence;
-      if (afterSeq > beforeSeq)
+      if (_activeTransaction is null)
       {
-        for (var s = beforeSeq + 1; s <= afterSeq; s++)
-        {
-          _transitionBranches[s] = _currentBranch;
-          WriteImmutableMarker($"{TransitionPrefix}{s.ToString(CultureInfo.InvariantCulture)}:branch={_currentBranch}");
-        }
-        if (_branches.TryGetValue(_currentBranch, out var info))
-        {
-          var updated = info with { Head = afterSeq };
-          _branches[_currentBranch] = updated;
-          UpdateBranchLinkLocked(updated);
-        }
-        _currentApplied = afterSeq;
-        SetAppliedLocked(afterSeq);
+        AttributeNewTransitionsLocked(beforeSeq, _currentBranch);
       }
       return result;
+    }
+  }
+
+  private void AttributeNewTransitionsLocked(long beforeSeq, string branchName)
+  {
+    var afterSeq = _transactions.LastLoggedSequence;
+    if (afterSeq <= beforeSeq) return;
+
+    for (var s = beforeSeq + 1; s <= afterSeq; s++)
+    {
+      _transitionBranches[s] = branchName;
+      WriteImmutableMarker($"{TransitionPrefix}{s.ToString(CultureInfo.InvariantCulture)}:branch={branchName}");
+    }
+    if (_branches.TryGetValue(branchName, out var info))
+    {
+      var updated = info with { Head = afterSeq };
+      _branches[branchName] = updated;
+      UpdateBranchLinkLocked(updated);
+    }
+    if (string.Equals(_currentBranch, branchName, StringComparison.Ordinal))
+    {
+      _currentApplied = afterSeq;
+      SetAppliedLocked(afterSeq);
     }
   }
 
@@ -146,6 +182,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
     }
     lock (_lock)
     {
+      EnsureNoOpenTransactionLocked(nameof(Branch));
       if (_branches.ContainsKey(name))
       {
         throw new InvalidOperationException($"Branch '{name}' already exists.");
@@ -173,6 +210,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
   {
     lock (_lock)
     {
+      EnsureNoOpenTransactionLocked(nameof(SwitchBranch));
       if (!_branches.TryGetValue(name, out var target))
       {
         throw new InvalidOperationException($"Unknown branch '{name}'.");
@@ -187,6 +225,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
   {
     lock (_lock)
     {
+      EnsureNoOpenTransactionLocked(nameof(Checkout));
       if (sequence < 0)
       {
         throw new ArgumentOutOfRangeException(nameof(sequence), sequence, "Sequence must be non-negative.");
@@ -209,6 +248,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
     }
     lock (_lock)
     {
+      EnsureNoOpenTransactionLocked(nameof(Tag));
       var seq = sequence ?? _currentApplied;
       if (seq < 0)
       {
@@ -256,6 +296,45 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
     }
     _currentApplied = targetPath.Count == 0 ? 0 : targetPath[^1];
     SetAppliedLocked(_currentApplied);
+  }
+
+  private void EnsureNoOpenTransactionLocked(string operation)
+  {
+    if (_activeTransaction is not null)
+    {
+      throw new InvalidOperationException($"{operation} is not allowed while a version-control transaction is open.");
+    }
+  }
+
+  private void CommitVersionTransaction(VersionControlTransaction transaction)
+  {
+    lock (_lock)
+    {
+      transaction.Inner.Commit();
+      if (ReferenceEquals(_activeTransaction, transaction))
+      {
+        _activeTransaction = null;
+        AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.BranchName);
+      }
+    }
+  }
+
+  private void RollbackVersionTransaction(VersionControlTransaction transaction)
+  {
+    lock (_lock)
+    {
+      try
+      {
+        transaction.Inner.Rollback();
+      }
+      finally
+      {
+        if (ReferenceEquals(_activeTransaction, transaction))
+        {
+          _activeTransaction = null;
+        }
+      }
+    }
   }
 
   private List<long> BuildBranchSeqsLocked(string branchName)
@@ -502,5 +581,51 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
   private void Trace(string message)
   {
     if (_trace) Console.WriteLine($"[VersionControl] {message}");
+  }
+
+  private sealed class VersionControlTransaction : ITransaction
+  {
+    private readonly VersionControlDecorator _owner;
+
+    internal VersionControlTransaction(
+      VersionControlDecorator owner,
+      ITransaction inner,
+      string branchName,
+      long beforeSequence)
+    {
+      _owner = owner;
+      Inner = inner;
+      BranchName = branchName;
+      BeforeSequence = beforeSequence;
+    }
+
+    internal ITransaction Inner { get; }
+    internal string BranchName { get; }
+    internal long BeforeSequence { get; }
+
+    public Guid Id => Inner.Id;
+    public DateTimeOffset StartedAt => Inner.StartedAt;
+    public bool IsCommitted => Inner.IsCommitted;
+    public bool IsRolledBack => Inner.IsRolledBack;
+    public IReadOnlyList<Transition> Transitions => Inner.Transitions;
+
+    public void Commit() => _owner.CommitVersionTransaction(this);
+
+    public Task CommitAsync(CancellationToken cancellationToken = default)
+    {
+      cancellationToken.ThrowIfCancellationRequested();
+      _owner.CommitVersionTransaction(this);
+      return Task.CompletedTask;
+    }
+
+    public void Rollback() => _owner.RollbackVersionTransaction(this);
+
+    public void Dispose()
+    {
+      if (!Inner.IsCommitted && !Inner.IsRolledBack)
+      {
+        _owner.RollbackVersionTransaction(this);
+      }
+    }
   }
 }

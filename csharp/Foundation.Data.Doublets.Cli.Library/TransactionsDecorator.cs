@@ -321,22 +321,27 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     }
 
     var @continue = _inner.Constants.Continue;
-    DoubletLink? firstBefore = null;
-    DoubletLink? lastAfter = null;
-    var observedAny = false;
+    var observed = new Dictionary<uint, (DoubletLink? Before, DoubletLink? After)>();
+    var observedOrder = new List<uint>();
 
     WriteHandler<uint> wrapped = (before, after) =>
     {
-      // The underlying store can fire the handler multiple times for one
-      // logical write (e.g. Delete first clears the link, then removes it).
-      // Collapse them into a single transition with the original before
-      // state and the final after state.
-      if (!observedAny)
+      var beforeLink = before is null ? default(DoubletLink?) : new DoubletLink(before);
+      var afterLink = after is null ? default(DoubletLink?) : new DoubletLink(after);
+      var key = beforeLink?.Index ?? afterLink?.Index ?? 0;
+      if (key != 0)
       {
-        firstBefore = before is null ? default(DoubletLink?) : new DoubletLink(before);
-        observedAny = true;
+        if (!observed.TryGetValue(key, out var state))
+        {
+          observedOrder.Add(key);
+          state = (beforeLink, afterLink);
+        }
+        else
+        {
+          state = (state.Before ?? beforeLink, afterLink);
+        }
+        observed[key] = state;
       }
-      lastAfter = after is null ? default(DoubletLink?) : new DoubletLink(after);
       return userHandler is null ? @continue : userHandler(before, after);
     };
 
@@ -359,9 +364,12 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
       throw;
     }
 
-    if (observedAny)
+    foreach (var key in observedOrder)
     {
-      RecordTransition(transaction, kind, firstBefore ?? default, lastAfter ?? default);
+      var state = observed[key];
+      var before = state.Before ?? default;
+      var after = state.After ?? default;
+      RecordTransition(transaction, kind, before, after);
     }
 
     if (ownsTransaction)
@@ -595,31 +603,13 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
   {
     try
     {
-      switch (transition.Kind)
+      if (transition.Before.Index == 0)
       {
-        case TransitionKind.Create:
-          if (transition.After.Index != 0 && _inner.Exists(transition.After.Index))
-          {
-            _inner.Delete(new DoubletLink(transition.After.Index, _inner.Constants.Any, _inner.Constants.Any), null);
-          }
-          break;
-        case TransitionKind.Update:
-          if (transition.Before.Index != 0 && _inner.Exists(transition.Before.Index))
-          {
-            _inner.Update(
-              new DoubletLink(transition.Before.Index, _inner.Constants.Any, _inner.Constants.Any),
-              new DoubletLink(transition.Before.Index, transition.Before.Source, transition.Before.Target),
-              null);
-          }
-          break;
-        case TransitionKind.Delete:
-          if (transition.Before.Index != 0 && !_inner.Exists(transition.Before.Index))
-          {
-            // Doublets storage reuses freed slots in order, so creating
-            // with the original source/target restores the link in place.
-            _inner.CreateAndUpdate(transition.Before.Source, transition.Before.Target);
-          }
-          break;
+        DeleteIfExists(transition.After.Index);
+      }
+      else
+      {
+        RestoreLink(transition.Before);
       }
     }
     catch (Exception ex)
@@ -676,29 +666,13 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
   {
     try
     {
-      switch (transition.Kind)
+      if (transition.After.Index == 0)
       {
-        case TransitionKind.Create:
-          if (transition.After.Index != 0 && !_inner.Exists(transition.After.Index))
-          {
-            _inner.CreateAndUpdate(transition.After.Source, transition.After.Target);
-          }
-          break;
-        case TransitionKind.Update:
-          if (transition.After.Index != 0 && _inner.Exists(transition.After.Index))
-          {
-            _inner.Update(
-              new DoubletLink(transition.After.Index, _inner.Constants.Any, _inner.Constants.Any),
-              new DoubletLink(transition.After.Index, transition.After.Source, transition.After.Target),
-              null);
-          }
-          break;
-        case TransitionKind.Delete:
-          if (transition.Before.Index != 0 && _inner.Exists(transition.Before.Index))
-          {
-            _inner.Delete(new DoubletLink(transition.Before.Index, _inner.Constants.Any, _inner.Constants.Any), null);
-          }
-          break;
+        DeleteIfExists(transition.Before.Index);
+      }
+      else
+      {
+        RestoreLink(transition.After);
       }
 
       if (recordApplied)
@@ -718,6 +692,27 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     {
       WriteMarker(AppliedMarkerPrefix + transition.Sequence.ToString(CultureInfo.InvariantCulture));
       if (transition.Sequence > _appliedSequence) _appliedSequence = transition.Sequence;
+    }
+  }
+
+  private void RestoreLink(DoubletLink link)
+  {
+    if (link.Index == 0) return;
+    if (!_inner.Exists(link.Index))
+    {
+      _inner.EnsureCreated(link.Index);
+    }
+    _inner.Update(
+      new DoubletLink(link.Index, _inner.Constants.Any, _inner.Constants.Any),
+      new DoubletLink(link.Index, link.Source, link.Target),
+      null);
+  }
+
+  private void DeleteIfExists(uint index)
+  {
+    if (index != 0 && _inner.Exists(index))
+    {
+      _inner.Delete(new DoubletLink(index, _inner.Constants.Any, _inner.Constants.Any), null);
     }
   }
 

@@ -194,6 +194,138 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       });
     }
 
+    [Fact]
+    public void FullStackAcidRollbackIsAtomicAndIsolated()
+    {
+      RunWithVc((vc, _, _) =>
+      {
+        var baseline = Snapshot(vc);
+        var initialSequence = vc.CurrentSequence;
+
+        using (var transaction = vc.BeginTransaction())
+        {
+          var a = vc.CreateAndUpdate(vc.Constants.Null, vc.Constants.Null);
+          var b = vc.CreateAndUpdate(vc.Constants.Null, vc.Constants.Null);
+          vc.Update(
+            new DoubletLink(a, vc.Constants.Any, vc.Constants.Any),
+            new DoubletLink(a, b, b),
+            null);
+
+          Assert.True(vc.Exists(a));
+          Assert.True(vc.Exists(b));
+          Assert.Throws<InvalidOperationException>(() => vc.BeginTransaction());
+          Assert.Throws<InvalidOperationException>(() => vc.Branch("blocked"));
+
+          transaction.Rollback();
+        }
+
+        Assert.Equal(initialSequence, vc.CurrentSequence);
+        Assert.Equal(initialSequence, vc.ListBranches().Single(b => b.Name == VersionControlDecorator.DefaultBranchName).Head);
+        Assert.Equal(baseline, Snapshot(vc));
+      });
+    }
+
+    [Fact]
+    public void FullStackAcidCommitIsConsistentAndDurableAcrossReopen()
+    {
+      var dataFile = Path.GetTempFileName();
+      var logFile = Path.GetTempFileName();
+      var vcFile = Path.GetTempFileName();
+      NamedTypesDecorator<uint>? dataLinks = null;
+      NamedTypesDecorator<uint>? logLinks = null;
+      NamedTypesDecorator<uint>? vcLinks = null;
+      TransactionsDecorator? tx = null;
+      NamedTypesDecorator<uint>? reopenedDataLinks = null;
+      NamedTypesDecorator<uint>? reopenedLogLinks = null;
+      NamedTypesDecorator<uint>? reopenedVcLinks = null;
+      TransactionsDecorator? reopenedTx = null;
+
+      try
+      {
+        uint a;
+        uint b;
+        long committedSequence;
+
+        dataLinks = new NamedTypesDecorator<uint>(dataFile);
+        logLinks = new NamedTypesDecorator<uint>(logFile);
+        vcLinks = new NamedTypesDecorator<uint>(vcFile);
+        tx = new TransactionsDecorator(dataLinks, logLinks);
+        var vc = new VersionControlDecorator(tx, vcLinks);
+
+        using (var transaction = vc.BeginTransaction())
+        {
+          a = vc.CreateAndUpdate(vc.Constants.Null, vc.Constants.Null);
+          b = vc.CreateAndUpdate(vc.Constants.Null, vc.Constants.Null);
+          vc.Update(
+            new DoubletLink(a, vc.Constants.Any, vc.Constants.Any),
+            new DoubletLink(a, b, b),
+            null);
+          transaction.Commit();
+        }
+
+        committedSequence = vc.CurrentSequence;
+        Assert.True(committedSequence >= 5);
+        Assert.Equal(tx.LastLoggedSequence, tx.AppliedSequence);
+        Assert.Equal(committedSequence, vc.ListBranches().Single(branch => branch.Name == VersionControlDecorator.DefaultBranchName).Head);
+
+        vc.Tag("acid-commit");
+        vc.Branch("audit");
+        vc.SwitchBranch("audit");
+        vc.Delete(new DoubletLink(b, vc.Constants.Any, vc.Constants.Any), null);
+        Assert.False(vc.Exists(b));
+
+        vc.SwitchBranch(VersionControlDecorator.DefaultBranchName);
+        Assert.True(vc.Exists(a));
+        Assert.True(vc.Exists(b));
+        var restored = new DoubletLink(vc.GetLink(a));
+        Assert.Equal(b, restored.Source);
+        Assert.Equal(b, restored.Target);
+
+        tx.Shutdown();
+        tx = null;
+        dataLinks.Dispose();
+        dataLinks = null;
+        logLinks.Dispose();
+        logLinks = null;
+        vcLinks.Dispose();
+        vcLinks = null;
+
+        reopenedDataLinks = new NamedTypesDecorator<uint>(dataFile);
+        reopenedLogLinks = new NamedTypesDecorator<uint>(logFile);
+        reopenedVcLinks = new NamedTypesDecorator<uint>(vcFile);
+        reopenedTx = new TransactionsDecorator(reopenedDataLinks, reopenedLogLinks);
+        var reopened = new VersionControlDecorator(reopenedTx, reopenedVcLinks);
+
+        Assert.True(reopened.TryGetTag("acid-commit", out var tagSequence));
+        Assert.Equal(committedSequence, tagSequence);
+        Assert.Contains(reopened.ListBranches(), branch => branch.Name == "audit");
+        Assert.Equal(VersionControlDecorator.DefaultBranchName, reopened.CurrentBranch);
+        Assert.True(reopened.Exists(a));
+        Assert.True(reopened.Exists(b));
+        restored = new DoubletLink(reopened.GetLink(a));
+        Assert.Equal(b, restored.Source);
+        Assert.Equal(b, restored.Target);
+        Assert.Equal(reopenedTx.LastLoggedSequence, reopenedTx.AppliedSequence);
+      }
+      finally
+      {
+        tx?.Shutdown();
+        reopenedTx?.Shutdown();
+        dataLinks?.Dispose();
+        logLinks?.Dispose();
+        vcLinks?.Dispose();
+        reopenedDataLinks?.Dispose();
+        reopenedLogLinks?.Dispose();
+        reopenedVcLinks?.Dispose();
+        Cleanup(dataFile);
+        Cleanup(logFile);
+        Cleanup(vcFile);
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dataFile));
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(logFile));
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(vcFile));
+      }
+    }
+
     private static void RunWithVc(Action<VersionControlDecorator, TransactionsDecorator, NamedTypesDecorator<uint>> action)
     {
       var dataFile = Path.GetTempFileName();
@@ -215,18 +347,33 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       finally
       {
         tx?.Shutdown();
+        dataLinks?.Dispose();
+        logLinks?.Dispose();
+        vcLinks?.Dispose();
         Cleanup(dataFile);
         Cleanup(logFile);
         Cleanup(vcFile);
-        if (dataLinks is not null) Cleanup(dataLinks.NamedLinksDatabaseFileName);
-        if (logLinks is not null) Cleanup(logLinks.NamedLinksDatabaseFileName);
-        if (vcLinks is not null) Cleanup(vcLinks.NamedLinksDatabaseFileName);
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dataFile));
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(logFile));
+        Cleanup(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(vcFile));
       }
     }
 
     private static void Cleanup(string path)
     {
       if (File.Exists(path)) File.Delete(path);
+    }
+
+    private static IReadOnlyList<DoubletLink> Snapshot(ILinks<uint> links)
+    {
+      var any = links.Constants.Any;
+      var query = new DoubletLink(any, any, any);
+      return links.All(query)
+        .Select(link => new DoubletLink(link))
+        .OrderBy(link => link.Index)
+        .ThenBy(link => link.Source)
+        .ThenBy(link => link.Target)
+        .ToArray();
     }
   }
 }

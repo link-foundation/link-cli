@@ -18,7 +18,7 @@ use anyhow::{bail, Result};
 
 use crate::link::Link;
 use crate::named_types::{NamedTypes, NamedTypesDecorator};
-use crate::transactions::{TransactionsDecorator, Transition};
+use crate::transactions::{TransactionHandle, TransactionsDecorator, Transition};
 
 /// Default name of the initial branch (analogous to git's `main`).
 pub const DEFAULT_BRANCH_NAME: &str = "main";
@@ -63,7 +63,14 @@ pub struct VersionControlDecorator {
     applied_link: u32,
     current_branch: String,
     current_applied: i64,
+    active_transaction: Option<VersionControlTransactionState>,
     trace: bool,
+}
+
+#[derive(Debug, Clone)]
+struct VersionControlTransactionState {
+    branch_name: String,
+    before_sequence: i64,
 }
 
 impl VersionControlDecorator {
@@ -84,6 +91,7 @@ impl VersionControlDecorator {
             applied_link: 0,
             current_branch: DEFAULT_BRANCH_NAME.to_string(),
             current_applied: 0,
+            active_transaction: None,
             trace,
         };
         decorator.recover()?;
@@ -145,33 +153,80 @@ impl VersionControlDecorator {
         &self.branches_store
     }
 
+    pub fn begin_transaction(&mut self) -> Result<TransactionHandle> {
+        if self.active_transaction.is_some() {
+            bail!("Nested version-control transactions are not supported.");
+        }
+        let before_sequence = self.transactions.last_logged_sequence();
+        let branch_name = self.current_branch.clone();
+        let handle = self.transactions.begin_transaction()?;
+        self.active_transaction = Some(VersionControlTransactionState {
+            branch_name,
+            before_sequence,
+        });
+        Ok(handle)
+    }
+
+    pub fn commit(&mut self) -> Result<()> {
+        let state = self
+            .active_transaction
+            .as_ref()
+            .cloned()
+            .ok_or_else(|| anyhow::anyhow!("No version-control transaction is open."))?;
+        self.transactions.commit()?;
+        self.active_transaction = None;
+        self.attribute_new_transitions_for_branch(state.before_sequence, &state.branch_name)?;
+        Ok(())
+    }
+
+    pub fn rollback(&mut self) -> Result<()> {
+        self.active_transaction
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No version-control transaction is open."))?;
+        self.transactions.rollback()?;
+        self.active_transaction = None;
+        Ok(())
+    }
+
     // -- Write API (attribute new transitions to the current branch) ----
 
     pub fn create(&mut self, source: u32, target: u32) -> Result<u32> {
         let before_seq = self.transactions.last_logged_sequence();
         let id = self.transactions.create(source, target)?;
-        self.attribute_new_transitions(before_seq)?;
+        if self.active_transaction.is_none() {
+            let branch = self.current_branch.clone();
+            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
+        }
         Ok(id)
     }
 
     pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
         let before_seq = self.transactions.last_logged_sequence();
         let result = self.transactions.update(id, source, target)?;
-        self.attribute_new_transitions(before_seq)?;
+        if self.active_transaction.is_none() {
+            let branch = self.current_branch.clone();
+            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
+        }
         Ok(result)
     }
 
     pub fn delete(&mut self, id: u32) -> Result<Link> {
         let before_seq = self.transactions.last_logged_sequence();
         let result = self.transactions.delete(id)?;
-        self.attribute_new_transitions(before_seq)?;
+        if self.active_transaction.is_none() {
+            let branch = self.current_branch.clone();
+            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
+        }
         Ok(result)
     }
 
     pub fn create_and_update(&mut self, source: u32, target: u32) -> Result<u32> {
         let before_seq = self.transactions.last_logged_sequence();
         let id = self.transactions.create_and_update(source, target)?;
-        self.attribute_new_transitions(before_seq)?;
+        if self.active_transaction.is_none() {
+            let branch = self.current_branch.clone();
+            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
+        }
         Ok(id)
     }
 
@@ -202,33 +257,40 @@ impl VersionControlDecorator {
         self.transactions.ensure_created(id)
     }
 
-    fn attribute_new_transitions(&mut self, before_seq: i64) -> Result<()> {
+    fn attribute_new_transitions_for_branch(
+        &mut self,
+        before_seq: i64,
+        branch_name: &str,
+    ) -> Result<()> {
         let after_seq = self.transactions.last_logged_sequence();
         if after_seq <= before_seq {
             return Ok(());
         }
-        let branch_name = self.current_branch.clone();
         for s in (before_seq + 1)..=after_seq {
-            self.transition_branches.insert(s, branch_name.clone());
+            self.transition_branches.insert(s, branch_name.to_string());
             let marker = format!("{TRANSITION_PREFIX}{s}:branch={branch_name}");
             self.write_immutable_marker(&marker)?;
         }
-        if let Some(info) = self.branches.get(&branch_name).cloned() {
+        if let Some(info) = self.branches.get(branch_name).cloned() {
             let updated = BranchInfo {
                 head: after_seq,
                 ..info
             };
-            self.branches.insert(branch_name.clone(), updated.clone());
+            self.branches
+                .insert(branch_name.to_string(), updated.clone());
             self.update_branch_link(&updated)?;
         }
-        self.current_applied = after_seq;
-        self.set_applied(after_seq)?;
+        if self.current_branch == branch_name {
+            self.current_applied = after_seq;
+            self.set_applied(after_seq)?;
+        }
         Ok(())
     }
 
     // -- Branching ----------------------------------------------------
 
     pub fn branch(&mut self, name: &str, from: Option<i64>) -> Result<()> {
+        self.ensure_no_open_transaction("branch")?;
         if name.trim().is_empty() {
             bail!("Branch name must not be empty.");
         }
@@ -255,6 +317,7 @@ impl VersionControlDecorator {
     }
 
     pub fn switch_branch(&mut self, name: &str) -> Result<()> {
+        self.ensure_no_open_transaction("switch_branch")?;
         if !self.branches.contains_key(name) {
             bail!("Unknown branch '{name}'.");
         }
@@ -268,6 +331,7 @@ impl VersionControlDecorator {
     }
 
     pub fn checkout(&mut self, sequence: i64) -> Result<()> {
+        self.ensure_no_open_transaction("checkout")?;
         if sequence < 0 {
             bail!("Sequence must be non-negative.");
         }
@@ -285,6 +349,7 @@ impl VersionControlDecorator {
     }
 
     pub fn tag(&mut self, name: &str, sequence: Option<i64>) -> Result<()> {
+        self.ensure_no_open_transaction("tag")?;
         if name.trim().is_empty() {
             bail!("Tag name must not be empty.");
         }
@@ -335,6 +400,13 @@ impl VersionControlDecorator {
         }
         self.current_applied = target_path.last().copied().unwrap_or(0);
         self.set_applied(self.current_applied)?;
+        Ok(())
+    }
+
+    fn ensure_no_open_transaction(&self, operation: &str) -> Result<()> {
+        if self.active_transaction.is_some() {
+            bail!("{operation} is not allowed while a version-control transaction is open.");
+        }
         Ok(())
     }
 

@@ -151,9 +151,13 @@ Composition: `LinkStorage → NamedTypesDecorator → TransactionsDecorator`.
 
 Public surface:
 
-- `Create / Update / Delete / CreateAndUpdate` — recorded automatically.
-- `BeginTransaction()` — explicit batch with `Commit()` and `Rollback()`;
-  drop without commit rolls back automatically.
+- `Create / Update / Delete / CreateAndUpdate` — recorded automatically;
+  logical writes that affect multiple links record one transition per affected
+  link so rollback and checkout restore the complete graph.
+- `BeginTransaction()` / `begin_transaction()` — explicit batches with
+  commit and rollback APIs. C# returns a disposable transaction handle;
+  Rust keeps the active transaction on the decorator and commits or rolls
+  it back through that decorator.
 - `Log()` — read the recorded transitions.
 - Three retention policies: `infinite`, `sized:<n>` (drop oldest applied),
   and `chunked:<n>:<dir>` (archive oldest applied to rolling files).
@@ -161,6 +165,9 @@ Public surface:
   returning) and `async` (durably persists the log first).
 - Crash recovery: on open, every committed-but-not-applied transition is
   replayed against the underlying store.
+- Deterministic disposal: file-backed `NamedTypesDecorator` instances close
+  the decorated data and names stores so tests and callers can reopen the same
+  sidecar files in-process.
 
 When no transaction flag is passed at the CLI and the decorator is not
 instantiated through the library API, the existing `NamedTypesDecorator`
@@ -180,6 +187,9 @@ over the recorded transitions log:
   sequence number.
 - **Time-travel checkout** — `Checkout(seq)` rewinds (or replays) the
   live store to an arbitrary sequence number.
+- **Version-control transactions** — `BeginTransaction()` delegates to the
+  inner transactions layer and defers branch attribution until commit; rollback
+  leaves branch heads and transition-to-branch metadata unchanged.
 
 Composition:
 `LinkStorage → NamedTypesDecorator → TransactionsDecorator → VersionControlDecorator`.

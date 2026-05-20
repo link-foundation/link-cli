@@ -191,9 +191,10 @@ Inspect the log with `--log`:
 2  2026-05-20T14:14:03  Create  ca32...  (0,0,0) -> (2,2,2)
 ```
 
-The library exposes `BeginTransaction()` returning a handle with
-`Commit()` and `Rollback()`. A handle dropped without commit rolls back
-automatically.
+The C# library exposes `BeginTransaction()` returning a handle with
+`Commit()` and `Rollback()`; disposing an uncommitted handle rolls back.
+The Rust library exposes the same explicit flow as
+`begin_transaction()`, `commit()`, and `rollback()` on the decorator.
 
 Retention policies (`--retention`):
 
