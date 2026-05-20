@@ -41,6 +41,7 @@ package built from `doublets-rs`.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
+- [docs/case-studies/issue-94/README.md](docs/case-studies/issue-94/README.md): evidence and analysis for the optional transactions and version-control layers.
 
 ### API references
 
