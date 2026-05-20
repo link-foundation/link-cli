@@ -35,6 +35,7 @@ mod query_types;
 pub mod sequences;
 pub mod transactions;
 mod unicode_string_storage;
+pub mod version_control;
 
 // Re-export main types for easy access
 pub use changes_simplifier::simplify_changes;
@@ -56,3 +57,4 @@ pub use transactions::{
     Transition, TransitionKind,
 };
 pub use unicode_string_storage::UnicodeStringStorage;
+pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};
