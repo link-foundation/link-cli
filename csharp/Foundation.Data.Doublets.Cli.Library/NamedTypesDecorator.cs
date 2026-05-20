@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Reflection;
 using Platform.Delegates;
 using Platform.Memory;
 using Platform.Data;
@@ -12,7 +13,7 @@ using Platform.Data.Doublets.Memory.United.Generic;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>
+    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -24,6 +25,8 @@ namespace Foundation.Data.Doublets.Cli
         public readonly PinnedTypesDecorator<TLinkAddress> PinnedTypesDecorator;
         public readonly NamedLinks<TLinkAddress> NamedLinks;
         public readonly string NamedLinksDatabaseFileName;
+        private readonly ILinks<TLinkAddress> _namedLinksFacade;
+        private bool _disposed;
 
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
@@ -53,6 +56,7 @@ namespace Foundation.Data.Doublets.Cli
             var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
             var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            _namedLinksFacade = decoratedNamesLinks;
             NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
             NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
@@ -60,6 +64,52 @@ namespace Foundation.Data.Doublets.Cli
         public NamedTypesDecorator(string databaseFilename, bool tracingEnabled = false)
             : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            DisposeLinksFacade(_namedLinksFacade);
+            DisposeLinksFacade(PinnedTypesDecorator);
+        }
+
+        private static void DisposeLinksFacade(object? facade)
+        {
+            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            DisposeLinksFacade(facade, visited);
+        }
+
+        private static void DisposeLinksFacade(object? facade, HashSet<object> visited)
+        {
+            if (facade is null || !visited.Add(facade))
+            {
+                return;
+            }
+
+            foreach (var inner in EnumerateInnerLinks(facade))
+            {
+                DisposeLinksFacade(inner, visited);
+            }
+
+            if (facade is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+
+        private static IEnumerable<object?> EnumerateInnerLinks(object facade)
+        {
+            for (var type = facade.GetType(); type is not null; type = type.BaseType)
+            {
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                {
+                    if (typeof(ILinks<TLinkAddress>).IsAssignableFrom(field.FieldType))
+                    {
+                        yield return field.GetValue(facade);
+                    }
+                }
+            }
         }
 
         public IEnumerator<TLinkAddress> GetEnumerator()

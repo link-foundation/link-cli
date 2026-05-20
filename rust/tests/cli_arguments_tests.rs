@@ -4,7 +4,7 @@ use link_cli::cli::{Cli, CliCommand};
 
 fn parse_run(args: &[&str]) -> Cli {
     match Cli::parse_from(args).expect("CLI arguments should parse") {
-        CliCommand::Run(cli) => cli,
+        CliCommand::Run(cli) => *cli,
         other => panic!("expected run command, got {other:?}"),
     }
 }
@@ -107,4 +107,121 @@ fn rejects_extra_positional_queries() {
     let error = Cli::parse_from(["clink", "(1 2)", "(3 4)"]).expect_err("extra query should fail");
 
     assert!(error.to_string().contains("unexpected extra positional"));
+}
+
+#[test]
+fn parses_transactions_flag_family() {
+    let cli = parse_run(&[
+        "clink",
+        "--transactions",
+        "--transactions-file",
+        "trans.links",
+        "--commit-mode",
+        "async",
+        "--retention",
+        "sized:128",
+        "--log",
+    ]);
+
+    assert!(cli.transactions);
+    assert_eq!(cli.transactions_file.as_deref(), Some("trans.links"));
+    assert_eq!(cli.commit_mode.as_deref(), Some("async"));
+    assert_eq!(cli.retention.as_deref(), Some("sized:128"));
+    assert!(cli.show_log);
+    assert!(cli.transactions_requested());
+    assert!(!cli.vc_requested());
+}
+
+#[test]
+fn parses_inline_transactions_flag_values() {
+    let cli = parse_run(&[
+        "clink",
+        "--transactions=true",
+        "--transactions-file=tx.links",
+        "--commit-mode=sync",
+        "--retention=chunked:64:/tmp/archive",
+        "--log=true",
+    ]);
+
+    assert!(cli.transactions);
+    assert_eq!(cli.transactions_file.as_deref(), Some("tx.links"));
+    assert_eq!(cli.commit_mode.as_deref(), Some("sync"));
+    assert_eq!(cli.retention.as_deref(), Some("chunked:64:/tmp/archive"));
+    assert!(cli.show_log);
+}
+
+#[test]
+fn parses_version_control_flag_family() {
+    let cli = parse_run(&[
+        "clink",
+        "--vc",
+        "--vc-file",
+        "vc.links",
+        "--branch",
+        "feature",
+        "--branch-from",
+        "3",
+        "--checkout",
+        "main",
+        "--tag",
+        "release=2",
+        "--list-branches",
+        "--list-tags",
+    ]);
+
+    assert!(cli.vc);
+    assert_eq!(cli.vc_file.as_deref(), Some("vc.links"));
+    assert_eq!(cli.branch.as_deref(), Some("feature"));
+    assert_eq!(cli.branch_from, Some(3));
+    assert_eq!(cli.checkout.as_deref(), Some("main"));
+    assert_eq!(cli.tag.as_deref(), Some("release=2"));
+    assert!(cli.list_branches);
+    assert!(cli.list_tags);
+    assert!(cli.vc_requested());
+    // version-control implies transactions.
+    assert!(cli.transactions_requested());
+}
+
+#[test]
+fn parses_inline_version_control_flag_values() {
+    let cli = parse_run(&[
+        "clink",
+        "--vc=true",
+        "--vc-file=vc.bin",
+        "--branch=topic",
+        "--branch-from=7",
+        "--checkout=v1.0",
+        "--tag=v2.0",
+        "--list-branches=false",
+        "--list-tags=true",
+    ]);
+
+    assert!(cli.vc);
+    assert_eq!(cli.vc_file.as_deref(), Some("vc.bin"));
+    assert_eq!(cli.branch.as_deref(), Some("topic"));
+    assert_eq!(cli.branch_from, Some(7));
+    assert_eq!(cli.checkout.as_deref(), Some("v1.0"));
+    assert_eq!(cli.tag.as_deref(), Some("v2.0"));
+    assert!(!cli.list_branches);
+    assert!(cli.list_tags);
+}
+
+#[test]
+fn defaults_have_no_transactions_or_vc_requested() {
+    let cli = parse_run(&["clink"]);
+
+    assert!(!cli.transactions_requested());
+    assert!(!cli.vc_requested());
+    assert!(!cli.transactions);
+    assert!(!cli.vc);
+}
+
+#[test]
+fn rejects_invalid_branch_from_value() {
+    let error = Cli::parse_from(["clink", "--branch-from", "not-a-number"])
+        .expect_err("invalid branch-from should fail");
+    assert!(
+        error.to_string().contains("invalid sequence value"),
+        "unexpected error message: {error}"
+    );
 }
