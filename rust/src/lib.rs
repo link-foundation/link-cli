@@ -33,6 +33,7 @@ mod query_processor;
 mod query_processor_substitution;
 mod query_types;
 pub mod sequences;
+pub mod transactions;
 mod unicode_string_storage;
 
 // Re-export main types for easy access
@@ -50,4 +51,8 @@ pub use parser::Parser;
 pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
+pub use transactions::{
+    CommitMode, DoubletLink, LogRetentionPolicy, TransactionHandle, TransactionsDecorator,
+    Transition, TransitionKind,
+};
 pub use unicode_string_storage::UnicodeStringStorage;
