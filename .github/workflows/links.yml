@@ -73,7 +73,7 @@ jobs:
       - name: Check broken links against Web Archive
         if: steps.lychee.outputs.exit_code != 0
         id: webarchive
-        run: node scripts/check-web-archive.mjs
+        run: node .github/scripts/check-web-archive.mjs
         env:
           LYCHEE_OUTPUT: lychee/out.md
 

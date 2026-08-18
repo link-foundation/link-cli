@@ -1,10 +1,12 @@
 name: WebAssembly CI
 
 on:
+  # Only main on push: PR branches are covered by the pull_request trigger, and
+  # listing them here made every push to an issue-* branch run this workflow
+  # twice (issue #96).
   push:
     branches:
       - main
-      - issue-*
     paths:
       - '.github/workflows/wasm.yml'
       - 'js/**'
@@ -71,6 +73,12 @@ jobs:
       - name: Test WebAssembly wrapper
         working-directory: js
         run: npm run test:wasm
+
+      # js/test/*.test.mjs existed but no workflow ever ran it, so repository
+      # layout regressions passed CI unnoticed (issue #96).
+      - name: Test JavaScript
+        working-directory: js
+        run: npm run test:js
 
       - name: Build React WebAssembly app
         working-directory: js

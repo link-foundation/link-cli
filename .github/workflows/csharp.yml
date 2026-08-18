@@ -164,7 +164,7 @@ jobs:
 
       - name: Run workflow policy tests
         working-directory: .
-        run: node --test scripts/*.test.mjs
+        run: node --test .github/scripts/*.test.mjs
 
       - name: Restore dependencies
         run: dotnet restore

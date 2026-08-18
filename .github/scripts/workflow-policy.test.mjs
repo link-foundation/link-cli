@@ -11,7 +11,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const workflowsDir = join(repoRoot, '.github', 'workflows');
 
 const workflows = readdirSync(workflowsDir)
@@ -79,6 +79,50 @@ function readChoiceOptions(text, inputName) {
   }
   return options;
 }
+
+// A workflow that lists PR branches under `push:` while also reacting to
+// `pull_request:` runs twice for every push to such a branch, doubling CI cost
+// and producing duplicate status checks (issue #96).
+test('no workflow reacts to both pull_request and non-main push branches', () => {
+  for (const workflow of workflows) {
+    if (!/^ {2}pull_request:$/m.test(workflow.text)) continue;
+    const lines = workflow.text.split('\n');
+    const pushIndex = lines.findIndex((line) => line === '  push:');
+    if (pushIndex === -1) continue;
+    const branches = [];
+    let inBranches = false;
+    for (const line of lines.slice(pushIndex + 1)) {
+      if (line.trim() === '') continue;
+      const indent = line.length - line.trimStart().length;
+      if (indent <= 2) break; // left the push trigger
+      if (indent === 4) {
+        inBranches = line.trim() === 'branches:';
+        continue;
+      }
+      if (inBranches) {
+        const item = /^-\s+(.+?)\s*$/.exec(line.trim());
+        if (item) branches.push(item[1].replace(/^['"]|['"]$/g, ''));
+      }
+    }
+    const extraneous = branches.filter((branch) => branch !== 'main');
+    assert.deepEqual(
+      extraneous,
+      [],
+      `${workflow.name} triggers on both pull_request and push to ${extraneous.join(', ')}, so PR branches run twice`,
+    );
+  }
+});
+
+// Tests that never run in CI are the purest false negative: js/test held a
+// failing repository-layout test for months because no workflow invoked it.
+test('the JavaScript unit tests are executed by a workflow', () => {
+  const jsTests = readdirSync(join(repoRoot, 'js', 'test')).filter((name) => name.endsWith('.test.mjs'));
+  assert.ok(jsTests.length > 0, 'expected JavaScript tests under js/test');
+  assert.ok(
+    workflows.some((workflow) => /npm run test:js/.test(workflow.text)),
+    'no workflow runs "npm run test:js", so js/test/*.test.mjs never executes in CI',
+  );
+});
 
 for (const workflow of workflows) {
   // A job without a timeout can hang for the runner's six-hour default and

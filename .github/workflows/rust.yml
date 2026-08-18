@@ -163,7 +163,7 @@ jobs:
       # Guards the workflow invariants restored in issue #96 (timeouts, least
       # privilege, no masked failures, no dead release modes).
       - name: Run workflow policy tests
-        run: node --test scripts/*.test.mjs
+        run: node --test .github/scripts/*.test.mjs
 
   # === TEST ===
   test:
