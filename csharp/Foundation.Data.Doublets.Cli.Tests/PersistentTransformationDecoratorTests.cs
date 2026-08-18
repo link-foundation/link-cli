@@ -72,12 +72,14 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     {
       var dataFile = Path.GetTempFileName();
       var triggerFile = Path.GetTempFileName();
-      NamedTypesDecorator<uint>? dataLinks = null;
-      NamedTypesDecorator<uint>? triggerLinks = null;
+      var dataNamesFile = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dataFile);
+      var triggerNamesFile = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(triggerFile);
       try
       {
-        dataLinks = new NamedTypesDecorator<uint>(dataFile);
-        triggerLinks = new NamedTypesDecorator<uint>(triggerFile);
+        // Both decorators are disposed at the end of the try block, before the finally deletes the
+        // backing files: Windows refuses to delete a file that is still memory-mapped.
+        using var dataLinks = new NamedTypesDecorator<uint>(dataFile);
+        using var triggerLinks = new NamedTypesDecorator<uint>(triggerFile);
         var links = new PersistentTransformationDecorator(dataLinks, triggerLinks)
         {
           AutoCreateMissingReferences = true
@@ -89,14 +91,8 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       {
         DeleteIfExists(dataFile);
         DeleteIfExists(triggerFile);
-        if (dataLinks is not null)
-        {
-          DeleteIfExists(dataLinks.NamedLinksDatabaseFileName);
-        }
-        if (triggerLinks is not null)
-        {
-          DeleteIfExists(triggerLinks.NamedLinksDatabaseFileName);
-        }
+        DeleteIfExists(dataNamesFile);
+        DeleteIfExists(triggerNamesFile);
       }
     }
 

@@ -13,14 +13,16 @@ namespace Foundation.Data.Doublets.Cli.Tests
         public void CanConstructSimpleLinksDecorator()
         {
             var tempDbFile = Path.GetTempFileName();
+            var namesDbFile = SimpleLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
+                using var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
                 Assert.NotNull(decorator);
             }
             finally
             {
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+                if (File.Exists(namesDbFile)) File.Delete(namesDbFile);
             }
         }
 
@@ -28,9 +30,10 @@ namespace Foundation.Data.Doublets.Cli.Tests
         public void Delete_WithRestriction_DoesNotThrow()
         {
             var tempDbFile = Path.GetTempFileName();
+            var namesDbFile = SimpleLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
+                using var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
                 var source = 1u;
                 var target = 2u;
                 // create a link so there is something to delete
@@ -46,6 +49,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             finally
             {
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+                if (File.Exists(namesDbFile)) File.Delete(namesDbFile);
             }
         }
 
@@ -53,9 +57,10 @@ namespace Foundation.Data.Doublets.Cli.Tests
         public void DeleteAfterGetOrCreate_DoesNotThrow()
         {
             var tempDbFile = Path.GetTempFileName();
+            var namesDbFile = SimpleLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
+                using var decorator = new SimpleLinksDecorator<uint>(tempDbFile);
                 var source = 1u;
                 var target = 1u;
                 var link = decorator.GetOrCreate(source, target);
@@ -65,6 +70,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             finally
             {
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
+                if (File.Exists(namesDbFile)) File.Delete(namesDbFile);
             }
         }
 
@@ -72,8 +78,9 @@ namespace Foundation.Data.Doublets.Cli.Tests
         public void DeleteAfterGetOrCreate_DoesNotThrow_WithTracing()
         {
             var tempDbFile = Path.GetTempFileName();
-            var decorator = new SimpleLinksDecorator<uint>(tempDbFile, true);
+            var namesDbFile = SimpleLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try {
+                using var decorator = new SimpleLinksDecorator<uint>(tempDbFile, true);
                 var source = 1u;
                 var target = 1u;
                 var link = decorator.GetOrCreate(source, target);
@@ -83,7 +90,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             finally
             {
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
-                if (File.Exists(decorator.NamedLinksDatabaseFileName)) File.Delete(decorator.NamedLinksDatabaseFileName);
+                if (File.Exists(namesDbFile)) File.Delete(namesDbFile);
             }
         }
     }

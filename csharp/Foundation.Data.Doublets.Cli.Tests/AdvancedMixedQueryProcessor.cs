@@ -1,3 +1,4 @@
+using System.Globalization;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Memory.United.Generic;
@@ -1575,15 +1576,42 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
     }
 
     // Helper methods
+
+    /// <summary>
+    /// Wall-clock budget for a single test body. Every test here is expected to finish in
+    /// milliseconds, so this is a deadlock guard, not a performance assertion: the previous value of
+    /// one second was tight enough that a loaded CI runner failed tests that were perfectly correct.
+    /// Override with the LINK_CLI_TEST_TIMEOUT_SECONDS environment variable.
+    /// </summary>
+    private static TimeSpan TestTimeout
+    {
+      get
+      {
+        const int defaultTimeoutSeconds = 60;
+        var configured = Environment.GetEnvironmentVariable("LINK_CLI_TEST_TIMEOUT_SECONDS");
+        if (!string.IsNullOrWhiteSpace(configured)
+            && int.TryParse(configured, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seconds)
+            && seconds > 0)
+        {
+          return TimeSpan.FromSeconds(seconds);
+        }
+        return TimeSpan.FromSeconds(defaultTimeoutSeconds);
+      }
+    }
+
     private static void RunTestWithLinks(Action<NamedTypesDecorator<uint>> testAction, bool enableTracing = false)
     {
       string tempDbFile = Path.GetTempFileName();
-      NamedTypesDecorator<uint>? decoratedLinks = null;
+      var namesDbFile = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
       try
       {
-        decoratedLinks = new NamedTypesDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
+        // Disposed at the end of the try block, before the finally deletes the backing files. The
+        // decorator owns memory-mapped handles for both databases; POSIX tolerates unlinking a file
+        // that is still mapped, Windows fails the delete with IOException.
+        using var decoratedLinks = new NamedTypesDecorator<uint>(tempDbFile, tracingEnabled: enableTracing);
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+        var timeout = TestTimeout;
+        using var cts = new CancellationTokenSource(timeout);
         var task = Task.Run(() =>
         {
           testAction(decoratedLinks);
@@ -1595,17 +1623,20 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
         catch (OperationCanceledException)
         {
-          Console.WriteLine("[Test] Test was cancelled after 1 seconds timeout");
-          throw new TimeoutException("Test exceeded 1 seconds timeout");
+          Console.WriteLine($"[Test] Test was cancelled after {timeout.TotalSeconds} seconds timeout");
+          throw new TimeoutException($"Test exceeded {timeout.TotalSeconds} seconds timeout");
         }
       }
       finally
       {
-        if (decoratedLinks != null && File.Exists(decoratedLinks.NamedLinksDatabaseFileName))
+        if (File.Exists(namesDbFile))
         {
-          File.Delete(decoratedLinks.NamedLinksDatabaseFileName);
+          File.Delete(namesDbFile);
         }
-        File.Delete(tempDbFile);
+        if (File.Exists(tempDbFile))
+        {
+          File.Delete(tempDbFile);
+        }
       }
     }
 

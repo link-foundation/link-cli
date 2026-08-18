@@ -48,17 +48,19 @@ namespace Foundation.Data.Doublets.Cli.Tests
     private static void RunTestWithLinks(Action<NamedTypesDecorator<uint>> testAction)
     {
       var tempDbFile = Path.GetTempFileName();
-      NamedTypesDecorator<uint>? links = null;
+      var namesDbFile = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
       try
       {
-        links = new NamedTypesDecorator<uint>(tempDbFile);
+        // Disposed at the end of the try block, before the finally deletes the backing files:
+        // Windows refuses to delete a file that is still memory-mapped.
+        using var links = new NamedTypesDecorator<uint>(tempDbFile);
         testAction(links);
       }
       finally
       {
-        if (links != null && File.Exists(links.NamedLinksDatabaseFileName))
+        if (File.Exists(namesDbFile))
         {
-          File.Delete(links.NamedLinksDatabaseFileName);
+          File.Delete(namesDbFile);
         }
         if (File.Exists(tempDbFile))
         {
