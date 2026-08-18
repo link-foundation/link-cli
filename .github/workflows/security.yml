@@ -31,8 +31,22 @@ jobs:
       security-events: write
     strategy:
       fail-fast: false
+      # build-mode has to be declared per language. Leaving it unset made every
+      # run log "Cannot build an overlay database because build-mode is set to
+      # 'undefined'" and fall back to a full database, and drove the standalone
+      # autobuild step, whose inputs the action now reports as DEPRECATED
+      # (issue #96). Only C# needs a compiler; the other three are analysed from
+      # source.
       matrix:
-        language: [csharp, rust, javascript-typescript, actions]
+        include:
+          - language: csharp
+            build-mode: autobuild
+          - language: rust
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+          - language: actions
+            build-mode: none
     steps:
       - uses: actions/checkout@v6
 
@@ -42,13 +56,13 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      # With build-mode set here the action builds the database itself, so the
+      # deprecated github/codeql-action/autobuild step is no longer needed.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4
