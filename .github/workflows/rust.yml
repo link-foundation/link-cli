@@ -155,6 +155,14 @@ jobs:
       - name: Check file size limit
         run: rust-script rust/scripts/check-file-size.rs
 
+      # A dependency bump in Cargo.toml without the matching Cargo.lock update
+      # otherwise passes CI while every job silently re-resolves the graph
+      # (issue #96). --locked turns that drift into a failure.
+      - name: Verify Cargo.lock is up to date
+        run: |
+          cargo metadata --locked --format-version 1 --manifest-path rust/Cargo.toml > /dev/null
+          cargo metadata --locked --format-version 1 --manifest-path rust/wasm/Cargo.toml > /dev/null
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
