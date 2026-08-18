@@ -1,10 +1,12 @@
 name: WebAssembly CI
 
 on:
+  # Only main on push: PR branches are covered by the pull_request trigger, and
+  # listing them here made every push to an issue-* branch run this workflow
+  # twice (issue #96).
   push:
     branches:
       - main
-      - issue-*
     paths:
       - '.github/workflows/wasm.yml'
       - 'js/**'
@@ -72,6 +74,12 @@ jobs:
         working-directory: js
         run: npm run test:wasm
 
+      # js/test/*.test.mjs existed but no workflow ever ran it, so repository
+      # layout regressions passed CI unnoticed (issue #96).
+      - name: Test JavaScript
+        working-directory: js
+        run: npm run test:js
+
       - name: Build React WebAssembly app
         working-directory: js
         run: npm run build
@@ -82,79 +90,7 @@ jobs:
           name: link-cli-web
           path: dist/
 
-  build-pages:
-    name: Build GitHub Pages app
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
-    needs: test
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        run: cargo install wasm-pack --version 0.14.0 --locked
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20.x'
-          cache: npm
-          cache-dependency-path: js/package-lock.json
-
-      - name: Cache cargo registry
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            rust/target
-            rust/wasm/target
-          key: ${{ runner.os }}-wasm-pages-cargo-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-wasm-pages-cargo-
-            ${{ runner.os }}-wasm-cargo-
-
-      - name: Install npm dependencies
-        working-directory: js
-        run: npm ci
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
-      - name: Build GitHub Pages app
-        working-directory: js
-        run: npm run build:pages
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist/
-
-  deploy-pages:
-    name: Deploy GitHub Pages
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
-    needs: build-pages
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy Pages artifact
-        id: deployment
-        uses: actions/deploy-pages@v5
+  # GitHub Pages is published by docs.yml alone: it assembles this workbench
+  # together with the C# and Rust API references into a single artifact. This
+  # workflow used to deploy the workbench on its own, which replaced the docs
+  # already published at /csharp/ and /rust/ (issue #96).

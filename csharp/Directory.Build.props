@@ -1,0 +1,18 @@
+<Project>
+
+  <!--
+    Repository-wide build settings. Mirrors the csharp-ai-driven-development-pipeline-template so
+    that warnings cannot accumulate silently: before this file existed, CI built with warnings and
+    reported success regardless (see issue #96).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+  </PropertyGroup>
+
+</Project>

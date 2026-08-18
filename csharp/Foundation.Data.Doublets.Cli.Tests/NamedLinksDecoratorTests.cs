@@ -16,32 +16,57 @@ namespace Foundation.Data.Doublets.Cli.Tests
             // Arrange
             var tempDbFile = Path.GetTempFileName();
 
-            // Act
-            var decorator = new NamedLinksDecorator<uint>(tempDbFile, true);
             var namesDatabaseFilename = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
-
-            // Assert
-            Assert.NotNull(decorator);
-
-            // Clean up
-            if (File.Exists(tempDbFile))
+            try
             {
-                File.Delete(tempDbFile);
+                // Act
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, true);
+
+                // Assert
+                Assert.NotNull(decorator);
             }
-            if (File.Exists(namesDatabaseFilename))
+            finally
             {
-                File.Delete(namesDatabaseFilename);
+                // Clean up: the decorator is disposed by the `using` above, so the memory-mapped
+                // files are unlocked and can be deleted on Windows as well.
+                if (File.Exists(tempDbFile))
+                {
+                    File.Delete(tempDbFile);
+                }
+                if (File.Exists(namesDatabaseFilename))
+                {
+                    File.Delete(namesDatabaseFilename);
+                }
             }
         }
 
+        // Asserted as "directory of the input" + "expected file name" rather than as one hard-coded
+        // string: the implementation builds the result with Path.Combine, which emits '\\' on Windows,
+        // so an expectation such as "/tmp/test.names.links" passes on Linux and macOS but fails on
+        // Windows for a purely cosmetic reason.
         [Theory]
-        [InlineData("/tmp/test.db", "/tmp/test.names.links")]
+        [InlineData("/tmp/test.db", "test.names.links")]
         [InlineData("test.db", "test.names.links")]
         [InlineData("a.b.c", "a.b.names.links")]
-        public void MakeNamesDatabaseFilename_CorrectlyGeneratesFilename(string dbFilename, string expected)
+        public void MakeNamesDatabaseFilename_CorrectlyGeneratesFilename(string dbFilename, string expectedFileName)
         {
             var result = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(dbFilename);
-            Assert.Equal(expected, result);
+
+            Assert.Equal(expectedFileName, Path.GetFileName(result));
+            Assert.Equal(Path.GetDirectoryName(dbFilename), Path.GetDirectoryName(result));
+        }
+
+        // All three decorators duplicate MakeNamesDatabaseFilename; they must agree on every platform.
+        [Theory]
+        [InlineData("/tmp/test.db")]
+        [InlineData("test.db")]
+        [InlineData("a.b.c")]
+        public void MakeNamesDatabaseFilename_IsConsistentAcrossDecorators(string dbFilename)
+        {
+            var expected = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(dbFilename);
+
+            Assert.Equal(expected, NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(dbFilename));
+            Assert.Equal(expected, SimpleLinksDecorator<uint>.MakeNamesDatabaseFilename(dbFilename));
         }
 
         [Fact]
@@ -51,7 +76,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             var expectedNamesDb = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
                 var link = decorator.GetOrCreate(10u, 20u);
                 string name = "testName";
                 decorator.SetName(link, name);
@@ -72,7 +97,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             var expectedNamesDb = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
                 var link = decorator.GetOrCreate(1u, 2u);
                 string firstName = "first";
                 string secondName = "second";
@@ -95,7 +120,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             var expectedNamesDb = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
                 var link = decorator.GetOrCreate(5u, 6u);
                 string name = "name";
                 decorator.SetName(link, name);
@@ -117,7 +142,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             var expectedNamesDb = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
                 var link = decorator.GetOrCreate(7u, 8u);
                 decorator.RemoveName(link);
                 Assert.Null(decorator.GetName(link));
@@ -136,7 +161,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             var expectedNamesDb = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
-                var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
                 var link = decorator.GetOrCreate(10u, 20u);
                 string name = "myLinkName";
                 decorator.SetName(link, name);
@@ -153,9 +178,10 @@ namespace Foundation.Data.Doublets.Cli.Tests
         public void DeleteLink_RemovesNameAutomatically()
         {
             var tempDbFile = Path.GetTempFileName();
-            var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
+            var namesDatabaseFilename = NamedLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
             try
             {
+                using var decorator = new NamedLinksDecorator<uint>(tempDbFile, false);
                 var source = 1u;
                 var target = 1u;
                 var link = decorator.GetOrCreate(source, target);
@@ -169,7 +195,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             finally
             {
                 if (File.Exists(tempDbFile)) File.Delete(tempDbFile);
-                if (File.Exists(decorator.NamedLinksDatabaseFileName)) File.Delete(decorator.NamedLinksDatabaseFileName);
+                if (File.Exists(namesDatabaseFilename)) File.Delete(namesDatabaseFilename);
             }
         }
     }

@@ -96,8 +96,14 @@ test('WebAssembly workflow uses the JavaScript package lockfile from js', () => 
   assert.doesNotMatch(workflow, /(^|\s)- 'web\/\*\*'/);
 });
 
-test('WebAssembly workflow deploys GitHub Pages automatically on push to main', () => {
-  const workflow = readFileSync(join(repoRoot, '.github/workflows/wasm.yml'), 'utf8');
+test('the documentation workflow deploys GitHub Pages automatically on push to main', () => {
+  // GitHub Pages serves a single site per repository. wasm.yml used to deploy
+  // the workbench on its own while docs.yml deployed the API references, so
+  // whichever ran last replaced the other one's files and the documentation
+  // URLs in README.md answered 404. docs.yml is now the only publisher and
+  // assembles the workbench and both API references into one artifact
+  // (issue #96).
+  const workflow = readFileSync(join(repoRoot, '.github/workflows/docs.yml'), 'utf8');
 
   assert.match(workflow, /name: Deploy GitHub Pages/);
   assert.match(workflow, /uses: actions\/deploy-pages@/);
@@ -109,7 +115,19 @@ test('WebAssembly workflow deploys GitHub Pages automatically on push to main', 
     workflow,
     /github\.event_name == 'push'[\s\S]*?github\.ref == 'refs\/heads\/main'/
   );
-  assert.doesNotMatch(workflow, /inputs\.deploy_pages/);
+  assert.match(
+    workflow,
+    /npm run build:pages/,
+    'docs.yml must build the WebAssembly workbench it publishes at the site root'
+  );
+
+  const wasmWorkflow = readFileSync(join(repoRoot, '.github/workflows/wasm.yml'), 'utf8');
+  assert.doesNotMatch(
+    wasmWorkflow,
+    /uses: actions\/(deploy-pages|upload-pages-artifact)@/,
+    'a second Pages artifact replaces the published site'
+  );
+  assert.doesNotMatch(wasmWorkflow, /inputs\.deploy_pages/);
 });
 
 test('CSharp release workflow attaches NuGet packages to GitHub Releases', () => {

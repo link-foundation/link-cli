@@ -424,3 +424,7 @@ csharp/_site/
 csharp/docs/api/*.yml
 csharp/docs/api/*.manifest
 _site/
+
+# Issue/PR investigation logs are deliberately tracked so the evidence behind a
+# change ships with the pull request (issue #96).
+!dev/log/

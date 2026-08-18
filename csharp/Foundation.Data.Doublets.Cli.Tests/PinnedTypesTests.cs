@@ -84,7 +84,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
-                
+
                 // Act
                 var result = new List<ulong>();
                 foreach (var type in pinnedTypes.Take(numberOfTypes))
@@ -123,7 +123,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
-                
+
                 // Act & Assert
                 var exception = Assert.Throws<UnexpectedLinkStructureException>(() =>
                 {
@@ -155,7 +155,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var enumerator = pinnedTypes.GetEnumerator();
 
                 var allLinks = links.All();
-                
+
                 // Act
                 enumerator.MoveNext();
                 var first = enumerator.Current;
@@ -192,7 +192,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
-                
+
                 // Act
                 var result = new List<ulong>();
                 foreach (var type in pinnedTypes.Take(numberOfTypes))
@@ -223,7 +223,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var pinnedTypes = new PinnedTypes<ulong>(links);
 
                 var allLinks = links.All();
-                
+
                 // Act
                 var result = new List<ulong>();
                 foreach (var type in pinnedTypes.Take(numberOfTypes))

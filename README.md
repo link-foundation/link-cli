@@ -47,7 +47,7 @@ package built from `doublets-rs`.
 
 - C# library: package page at <https://www.nuget.org/packages/Foundation.Data.Doublets.Cli> and the DocFX-generated reference on [GitHub Pages](https://link-foundation.github.io/link-cli/csharp/).
 - Rust library: <https://docs.rs/link-cli> (also mirrored on [GitHub Pages](https://link-foundation.github.io/link-cli/rust/link_cli/)).
-- Combined landing page: <https://link-foundation.github.io/link-cli/>.
+- API landing page: <https://link-foundation.github.io/link-cli/docs/> (the site root hosts the WebAssembly workbench).
 
 ## Installation
 

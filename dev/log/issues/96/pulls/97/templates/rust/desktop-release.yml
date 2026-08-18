@@ -1,0 +1,171 @@
+name: Desktop Release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: [CI/CD Pipeline]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (defaults to the latest published release)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  resolve:
+    name: Resolve release
+    if: ${{ vars.DESKTOP_RELEASE_ENABLED == 'true' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      should_build: ${{ steps.release.outputs.should_build }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Resolve release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REPO: ${{ github.repository }}
+          WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: bash scripts/desktop-release-resolve.sh
+
+  build:
+    name: Build ${{ matrix.label }}
+    needs: resolve
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || needs.resolve.outputs.should_build == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: linux-x64, runner: ubuntu-latest }
+          - { label: linux-arm64, runner: ubuntu-24.04-arm }
+          - { label: macos-x64, runner: macos-15-intel }
+          - { label: macos-arm64, runner: macos-14 }
+          - { label: windows-x64, runner: windows-latest }
+          - { label: windows-arm64, runner: windows-11-arm }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name != 'pull_request' && needs.resolve.outputs.tag || '' }}
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Package desktop application
+        env:
+          DESKTOP_RELEASE_TAG: ${{ github.event_name == 'pull_request' && 'dry-run' || needs.resolve.outputs.tag }}
+          # electron-builder 26 requires both values for certificate-free PR builds:
+          CSC_FOR_PULL_REQUEST: 'true'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: bash scripts/package-desktop.sh "${{ matrix.label }}" desktop-dist
+      - name: Smoke test release assets
+        env:
+          OUTPUT_DIR: desktop-dist
+        run: |
+          set -euo pipefail
+          first_asset="$(find "$OUTPUT_DIR" -type f -size +0c -print -quit)"
+          [ -n "$first_asset" ] || { echo "No non-empty desktop assets were produced" >&2; exit 1; }
+          find "$OUTPUT_DIR" -type f -size +0c -print | sed 's/^/Verified /'
+          # Electron apps must retain a signature envelope. Use
+          # electron-builder --mac ... -c.mac.identity=- and set
+          # CSC_FOR_PULL_REQUEST=true on the ad-hoc path.
+          while IFS= read -r app; do
+            [ -f "$app/Contents/_CodeSignature/CodeResources" ] || {
+              echo "Missing macOS CodeResources signature envelope: $app" >&2; exit 1;
+            }
+          done < <(find "$OUTPUT_DIR" -type d -name '*.app' -print)
+      - name: Create checksum fragment
+        run: |
+          set -euo pipefail
+          cd desktop-dist
+          if command -v sha256sum >/dev/null; then
+            find . -type f -print0 | sort -z | xargs -0 sha256sum
+          else
+            find . -type f -exec shasum -a 256 {} +
+          fi | sed 's#  \./#  #' > "SHA256SUMS-${{ matrix.label }}.partial"
+      - name: Upload packaged assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-assets-${{ matrix.label }}
+          path: desktop-dist
+          retention-days: 7
+      - name: Upload checksum fragment
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-checksums-${{ matrix.label }}
+          path: desktop-dist/SHA256SUMS-${{ matrix.label }}.partial
+          retention-days: 7
+
+  finalize:
+    name: Publish checksums and provenance
+    needs: [resolve, build]
+    if: ${{ !cancelled() && github.event_name != 'pull_request' && needs.build.result == 'success' && needs.resolve.outputs.should_build == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v8
+        env:
+          NODE_OPTIONS: --disable-warning=DEP0005
+        with:
+          pattern: desktop-assets-*
+          path: release-assets
+      - uses: actions/download-artifact@v8
+        env:
+          NODE_OPTIONS: --disable-warning=DEP0005
+        with:
+          pattern: desktop-checksums-*
+          path: checksums
+          merge-multiple: true
+      - name: Consolidate release metadata
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          cat checksums/*.partial | sort -k2 > SHA256SUMS.txt
+          {
+            echo 'Desktop build provenance'
+            echo '========================'
+            echo 'Status     : complete'
+            echo 'Repository : ${{ github.repository }}'
+            echo "Release tag: $TAG"
+            echo 'Targets    : linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-arm64'
+            echo 'Attestation: verify each asset with gh attestation verify <file> --repo ${{ github.repository }}'
+            echo 'Run        : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          } > BUILD-PROVENANCE.txt
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release-assets/**/*
+            SHA256SUMS.txt
+      - name: Upload release metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' assets < <(find release-assets -type f ! -name '*.partial' -print0)
+          [ ${#assets[@]} -gt 0 ] || { echo 'No release assets were downloaded' >&2; exit 1; }
+          gh release upload "$TAG" "${assets[@]}" SHA256SUMS.txt BUILD-PROVENANCE.txt \
+            --repo "${{ github.repository }}" --clobber

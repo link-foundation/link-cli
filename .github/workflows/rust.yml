@@ -12,6 +12,14 @@ on:
       - '.github/workflows/rust.yml'
   workflow_dispatch:
     inputs:
+      release_mode:
+        description: 'Release mode'
+        required: true
+        type: choice
+        default: 'instant'
+        options:
+          - instant
+          - changelog-pr
       bump_type:
         description: 'Version bump type'
         required: true
@@ -25,9 +33,16 @@ on:
         required: false
         type: string
 
+# Reader runs (PR validation) are cancelled when superseded; runs on main are
+# writers - they publish to crates.io and push version commits, so cancelling
+# one mid-flight would leave a half-published release behind (issue #96).
 concurrency:
   group: rust-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default; the publishing jobs opt into more below.
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -40,6 +55,7 @@ jobs:
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.event_name != 'workflow_dispatch'
     outputs:
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
@@ -72,6 +88,7 @@ jobs:
   changelog:
     name: Changelog Fragment Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
@@ -95,9 +112,10 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [detect-changes]
     if: |
-      always() && !cancelled() && (
+      !cancelled() && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -129,20 +147,47 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Check formatting
-        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+        run: |
+          cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+          cargo fmt --manifest-path rust/wasm/Cargo.toml --all -- --check
 
+      # `-D warnings` is what makes this a gate: without it clippy prints its
+      # findings and still exits 0, so lint warnings accumulated invisibly
+      # (issue #96). The wasm crate is a separate workspace and was not linted
+      # at all until now.
       - name: Run Clippy
-        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features
+        run: |
+          cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+          cargo clippy --manifest-path rust/wasm/Cargo.toml --all-targets --all-features -- -D warnings
 
       - name: Check file size limit
         run: rust-script rust/scripts/check-file-size.rs
+
+      # A dependency bump in Cargo.toml without the matching Cargo.lock update
+      # otherwise passes CI while every job silently re-resolves the graph
+      # (issue #96). --locked turns that drift into a failure.
+      - name: Verify Cargo.lock is up to date
+        run: |
+          cargo metadata --locked --format-version 1 --manifest-path rust/Cargo.toml > /dev/null
+          cargo metadata --locked --format-version 1 --manifest-path rust/wasm/Cargo.toml > /dev/null
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      # Guards the workflow invariants restored in issue #96 (timeouts, least
+      # privilege, no masked failures, no dead release modes).
+      - name: Run workflow policy tests
+        run: node --test .github/scripts/*.test.mjs
 
   # === TEST ===
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     needs: [detect-changes, changelog]
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -170,12 +215,56 @@ jobs:
       - name: Run doc tests
         run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
 
+  # === SEMANTIC MERGE CONFLICT CHECK ===
+  # Every other job tests the pull request head. A pull request can be green in
+  # isolation and still break `main`: two changes that merge without a textual
+  # conflict can still contradict each other semantically, and the breakage only
+  # appears after the merge lands (issue #96). This job merges the head into the
+  # current tip of the base branch and re-runs the fast checks on that tree.
+  # Ported from the Rust pipeline template's "Simulate fresh merge" step.
+  fresh-merge:
+    name: Simulate Fresh Merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+    needs: [detect-changes]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-fresh-merge-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fresh-merge-
+
+      - name: Simulate fresh merge with base branch
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          FRESH_MERGE_CHECKS: |
+            cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+            cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+            cargo test --manifest-path rust/Cargo.toml --all-features
+        run: bash .github/scripts/simulate-fresh-merge.sh
+
   # === BUILD ===
   build:
     name: Build Package
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [lint, test]
-    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -203,8 +292,14 @@ jobs:
   auto-release:
     name: Auto Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Writer group: never cancel a release that may already have published a
+    # crate or pushed a version commit.
+    concurrency:
+      group: rust-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -296,8 +391,14 @@ jobs:
   manual-release:
     name: Manual Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Writer group: never cancel a release that may already have published a
+    # crate or pushed a version commit.
+    concurrency:
+      group: rust-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -354,3 +455,63 @@ jobs:
             --repository "${{ github.repository }}" \
             --tag-prefix "rust-v" \
             --language "Rust"
+
+  # === MANUAL CHANGELOG PR ===
+  # Mirrors the C# 'changeset-pr' mode and the Rust pipeline template: instead of
+  # releasing straight away, open a pull request carrying the changelog fragment
+  # so the release goes through the normal review path (issue #96).
+  changelog-pr:
+    name: Create Changelog PR
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changelog-pr'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Writer group: never cancel a run that may already have pushed a branch.
+    concurrency:
+      group: rust-writer-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
+      - name: Create changelog fragment
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
+        run: |
+          rust-script rust/scripts/create-changelog-fragment.rs \
+            --rust-root rust \
+            --bump-type "$BUMP_TYPE" \
+            --description "$DESCRIPTION"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: add changelog for manual ${{ github.event.inputs.bump_type }} release'
+          branch: changelog-manual-release-${{ github.run_id }}
+          delete-branch: true
+          title: 'chore: manual ${{ github.event.inputs.bump_type }} release'
+          body: |
+            ## Manual Release Request
+
+            This PR was created by a manual workflow trigger to prepare a **${{ github.event.inputs.bump_type }}** release.
+
+            ### Release Details
+            - **Type:** ${{ github.event.inputs.bump_type }}
+            - **Description:** ${{ github.event.inputs.description || 'Manual release' }}
+            - **Triggered by:** @${{ github.actor }}
+
+            ### Next Steps
+            1. Review the changelog fragment in this PR
+            2. Merge this PR to main
+            3. The automated release workflow will publish to crates.io and create a GitHub release

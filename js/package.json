@@ -12,7 +12,7 @@
     "dev": "npm run build:wasm && vite --config vite.config.js --host 0.0.0.0",
     "preview": "vite preview --config vite.config.js --host 0.0.0.0",
     "test": "npm run test:wasm && npm run test:js && npm run build",
-    "test:js": "node --test test/*.test.mjs ../csharp/scripts/*.test.mjs",
+    "test:js": "node --test test/*.test.mjs ../csharp/scripts/*.test.mjs ../.github/scripts/*.test.mjs",
     "test:wasm": "wasm-pack test --node ../rust/wasm",
     "clean": "rm -rf ../dist pkg ../pkg ../pkg-node ../pkg-bundler ../target ../rust/wasm/target"
   },

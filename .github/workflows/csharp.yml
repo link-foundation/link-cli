@@ -33,9 +33,16 @@ on:
         required: false
         type: string
 
+# Reader runs (PR validation) are cancelled when superseded; runs on main are
+# writers - they publish to NuGet and push version commits, so cancelling one
+# mid-flight would leave a half-published release behind (issue #96).
 concurrency:
   group: csharp-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default; the publishing jobs opt into more below.
+permissions:
+  contents: read
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -51,6 +58,7 @@ jobs:
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name != 'workflow_dispatch'
     outputs:
       cs-changed: ${{ steps.changes.outputs.cs-changed }}
@@ -85,6 +93,7 @@ jobs:
   changeset-check:
     name: Changeset Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
     steps:
@@ -122,9 +131,10 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [detect-changes]
     if: |
-      always() && !cancelled() && (
+      !cancelled() && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -152,18 +162,30 @@ jobs:
         working-directory: .
         run: node --test csharp/scripts/*.test.mjs
 
+      - name: Run workflow policy tests
+        working-directory: .
+        run: node --test .github/scripts/*.test.mjs
+
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+
       - name: Build
         run: dotnet build --no-restore --configuration Release
+
+      - name: Check file sizes
+        working-directory: .
+        run: node csharp/scripts/check-file-size.mjs
 
   # === TEST ON MULTIPLE OS ===
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [detect-changes, changeset-check]
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
+    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -183,22 +205,53 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        # Windows has pre-existing file locking issues with some tests
-        continue-on-error: ${{ matrix.os == 'windows-latest' }}
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: false
+
+  # === SEMANTIC MERGE CONFLICT CHECK ===
+  # The jobs above test the pull request head. Two pull requests that each pass
+  # can still break `main` once merged, because a clean textual merge does not
+  # imply a compiling one (issue #96). This job merges the head into the current
+  # tip of the base branch and rebuilds and retests that tree.
+  fresh-merge:
+    name: Simulate Fresh Merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+    needs: [detect-changes]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      # The script rewrites the working tree (detached checkout + merge), so it
+      # has to run from the repository root, not from the csharp/ default.
+      - name: Simulate fresh merge with base branch
+        working-directory: .
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          FRESH_MERGE_CHECKS: |
+            dotnet build csharp --configuration Release
+            dotnet test csharp --no-build --configuration Release --verbosity normal
+        run: bash .github/scripts/simulate-fresh-merge.sh
 
   # === BUILD PACKAGE ===
   build:
     name: Build Package
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [lint, test]
-    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -226,8 +279,14 @@ jobs:
   release:
     name: Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Writer group: never cancel a release that may already have pushed a
+    # package or a version commit.
+    concurrency:
+      group: csharp-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       packages: write
@@ -408,8 +467,14 @@ jobs:
   instant-release:
     name: Instant Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Writer group: never cancel a release that may already have pushed a
+    # package or a version commit.
+    concurrency:
+      group: csharp-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       packages: write
@@ -517,3 +582,70 @@ jobs:
             --package-id "${{ steps.package.outputs.library_id }}" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
+
+  # === MANUAL CHANGESET PR ===
+  # The workflow_dispatch input above advertises a 'changeset-pr' release mode,
+  # but no job used to handle it: selecting it silently did nothing while the
+  # run still reported success (issue #96). This job implements the advertised
+  # mode - it opens a pull request carrying the changeset instead of releasing
+  # straight away. The branch name matches the 'changeset-manual-release-*'
+  # prefix that changeset-check already skips.
+  changeset-pr:
+    name: Create Changeset PR
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changeset-pr'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Writer group: never cancel a run that may already have pushed a branch.
+    concurrency:
+      group: csharp-writer-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create changeset file
+        working-directory: .
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          CHANGESET_FILE="csharp/.changeset/manual-release-${RUN_ID}.md"
+          DESCRIPTION_TEXT="${DESCRIPTION:-Manual ${BUMP_TYPE} release}"
+          {
+            echo '---'
+            echo "'Foundation.Data.Doublets.Cli': ${BUMP_TYPE}"
+            echo '---'
+            echo
+            echo "${DESCRIPTION_TEXT}"
+          } > "$CHANGESET_FILE"
+          echo "Created changeset: $CHANGESET_FILE"
+          cat "$CHANGESET_FILE"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: add changeset for manual ${{ github.event.inputs.bump_type }} release'
+          branch: changeset-manual-release-${{ github.run_id }}
+          delete-branch: true
+          title: 'chore: manual ${{ github.event.inputs.bump_type }} release'
+          body: |
+            ## Manual Release Request
+
+            This PR was created by a manual workflow trigger to prepare a **${{ github.event.inputs.bump_type }}** release.
+
+            ### Release Details
+            - **Type:** ${{ github.event.inputs.bump_type }}
+            - **Description:** ${{ github.event.inputs.description || 'Manual release' }}
+            - **Triggered by:** @${{ github.actor }}
+
+            ### Next Steps
+            1. Review the changeset in this PR
+            2. Merge this PR to main
+            3. The automated release workflow will version, publish, and create a GitHub release

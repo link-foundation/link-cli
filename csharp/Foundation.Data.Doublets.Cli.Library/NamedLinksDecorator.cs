@@ -10,9 +10,11 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>
+    public sealed class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -24,7 +26,11 @@ namespace Foundation.Data.Doublets.Cli
         // Tracing flag remains; no in-memory mapping needed
         public readonly NamedLinks<TLinkAddress> NamedLinks;
         public readonly string NamedLinksDatabaseFileName;
+        private readonly ILinks<TLinkAddress> _namedLinksFacade;
+        private bool _disposed;
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
@@ -39,6 +45,8 @@ namespace Foundation.Data.Doublets.Cli
             return namesDatabaseFilename;
         }
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
         public NamedLinksDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false) : base(links)
         {
             _tracingEnabled = tracingEnabled;
@@ -47,6 +55,7 @@ namespace Foundation.Data.Doublets.Cli
             var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
             var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            _namedLinksFacade = decoratedNamesLinks;
             NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
             NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
@@ -54,6 +63,17 @@ namespace Foundation.Data.Doublets.Cli
         public NamedLinksDecorator(string databaseFilename, bool tracingEnabled = false)
             : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
+        }
+
+        /// <summary>
+        /// Releases the memory-mapped file handles of both the data and the names databases.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            LinksFacadeDisposer.Dispose(_namedLinksFacade);
+            LinksFacadeDisposer.Dispose(_links);
         }
 
         /// <summary>

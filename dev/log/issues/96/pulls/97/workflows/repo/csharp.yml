@@ -1,0 +1,519 @@
+name: C# CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'csharp/**'
+      - 'csharp/scripts/**'
+      - '.github/workflows/csharp.yml'
+  workflow_dispatch:
+    inputs:
+      release_mode:
+        description: 'Release mode'
+        required: true
+        type: choice
+        default: 'instant'
+        options:
+          - instant
+          - changeset-pr
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      description:
+        description: 'Release description (optional)'
+        required: false
+        type: string
+
+concurrency:
+  group: csharp-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+defaults:
+  run:
+    working-directory: csharp
+
+jobs:
+  # === DETECT CHANGES - determines which jobs should run ===
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch'
+    outputs:
+      cs-changed: ${{ steps.changes.outputs.cs-changed }}
+      csproj-changed: ${{ steps.changes.outputs.csproj-changed }}
+      sln-changed: ${{ steps.changes.outputs.sln-changed }}
+      props-changed: ${{ steps.changes.outputs.props-changed }}
+      mjs-changed: ${{ steps.changes.outputs.mjs-changed }}
+      docs-changed: ${{ steps.changes.outputs.docs-changed }}
+      workflow-changed: ${{ steps.changes.outputs.workflow-changed }}
+      any-code-changed: ${{ steps.changes.outputs.any-code-changed }}
+      csharp-code-changed: ${{ steps.changes.outputs.csharp-code-changed }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Detect changes
+        id: changes
+        working-directory: .
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node csharp/scripts/detect-code-changes.mjs
+
+  # === CHANGESET CHECK - only runs on PRs with code changes ===
+  changeset-check:
+    name: Changeset Validation
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Validate changeset
+        working-directory: .
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Skip changeset check for automated release PRs
+          if [[ "${{ github.head_ref }}" == "changeset-release/"* ]] || [[ "${{ github.head_ref }}" == "changeset-manual-release-"* ]]; then
+            echo "Skipping changeset check for automated release PR"
+            exit 0
+          fi
+
+          # Check if changeset exists in csharp/.changeset
+          CHANGESET_COUNT=$(find csharp/.changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
+          if [ "$CHANGESET_COUNT" -eq 0 ]; then
+            echo "::warning::No changeset found in csharp/.changeset/. Please add a changeset for C# code changes."
+          else
+            echo "Found $CHANGESET_COUNT changeset file(s)"
+          fi
+
+  # === LINT AND FORMAT CHECK ===
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: |
+      always() && !cancelled() && (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        needs.detect-changes.outputs.cs-changed == 'true' ||
+        needs.detect-changes.outputs.csproj-changed == 'true' ||
+        needs.detect-changes.outputs.sln-changed == 'true' ||
+        needs.detect-changes.outputs.props-changed == 'true' ||
+        needs.detect-changes.outputs.mjs-changed == 'true' ||
+        needs.detect-changes.outputs.docs-changed == 'true' ||
+        needs.detect-changes.outputs.workflow-changed == 'true'
+      )
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Run release script tests
+        working-directory: .
+        run: node --test csharp/scripts/*.test.mjs
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+  # === TEST ON MULTIPLE OS ===
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: [detect-changes, changeset-check]
+    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        # Windows has pre-existing file locking issues with some tests
+        continue-on-error: ${{ matrix.os == 'windows-latest' }}
+        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
+
+  # === BUILD PACKAGE ===
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Release
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Pack NuGet package
+        run: dotnet pack --no-build --configuration Release --output ./artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-package
+          path: csharp/artifacts/*.nupkg
+
+  # === AUTOMATIC RELEASE ===
+  release:
+    name: Release
+    needs: [lint, test, build]
+    if: always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Check for changesets
+        id: check_changesets
+        working-directory: .
+        run: |
+          # Count changeset files (excluding README.md and config.json)
+          CHANGESET_COUNT=$(find csharp/.changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
+          echo "Found $CHANGESET_COUNT changeset file(s)"
+          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "changeset_count=$CHANGESET_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Check if release is needed
+        # Self-healing gate: even when a changeset is absent, resume publishing
+        # if the csproj <Version> is missing on NuGet or its GitHub release does
+        # not exist. See docs/case-studies/issue-84/README.md and the JS
+        # template's check-release-needed.mjs for the same pattern.
+        id: check_release
+        working-directory: .
+        env:
+          HAS_CHANGESETS: ${{ steps.check_changesets.outputs.has_changesets }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node csharp/scripts/check-release-needed.mjs
+
+      - name: Merge multiple changesets
+        if: steps.check_changesets.outputs.has_changesets == 'true' && steps.check_changesets.outputs.changeset_count > 1
+        working-directory: .
+        run: |
+          echo "Multiple changesets detected, merging..."
+          node csharp/scripts/merge-changesets.mjs \
+            --dir csharp/.changeset \
+            --package-name Foundation.Data.Doublets.Cli
+
+      - name: Version and commit
+        if: steps.check_changesets.outputs.has_changesets == 'true'
+        id: version
+        working-directory: .
+        run: node csharp/scripts/version-and-commit.mjs --mode changeset
+
+      - name: Resolve release version
+        # Picks the version that downstream steps should publish. Prefers the
+        # one just committed; falls back to the csproj <Version> reported by
+        # check-release-needed for self-healing re-runs.
+        id: release_version
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        run: |
+          if [ -n "${{ steps.version.outputs.new_version }}" ]; then
+            VERSION="${{ steps.version.outputs.new_version }}"
+          else
+            VERSION="${{ steps.check_release.outputs.current_version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing version: $VERSION"
+
+      - name: Build release package
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        run: |
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet pack --no-build --configuration Release --output ./artifacts
+
+      - name: Resolve NuGet package ids
+        id: package
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        run: |
+          CLI_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
+          if [ -z "$CLI_ID" ]; then
+            CLI_ID=clink
+          fi
+          LIB_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | head -n 1)
+          if [ -z "$LIB_ID" ]; then
+            LIB_ID=Foundation.Data.Doublets.Cli
+          fi
+          echo "id=$CLI_ID" >> "$GITHUB_OUTPUT"
+          echo "library_id=$LIB_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Validate NuGet API key
+        # Upfront validation surfaces an expired/invalid NUGET_API_KEY before
+        # we attempt a push that would otherwise return HTTP 403 mid-flight.
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::warning::NUGET_API_KEY is not configured — NuGet publish will be skipped."
+            exit 0
+          fi
+          echo "NUGET_API_KEY length: ${#NUGET_API_KEY}"
+
+      - name: Publish to NuGet
+        id: nuget_publish
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -n "$NUGET_API_KEY" ]; then
+            dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "NUGET_API_KEY not set, skipping NuGet publish"
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify CLI package on NuGet
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        run: |
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.id }}" \
+            --release-version "${{ steps.release_version.outputs.version }}"
+
+      - name: Verify library package on NuGet
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        run: |
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.library_id }}" \
+            --release-version "${{ steps.release_version.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: .
+        run: |
+          node csharp/scripts/create-github-release.mjs \
+            --release-version "${{ steps.release_version.outputs.version }}" \
+            --repository "${{ github.repository }}" \
+            --tag-prefix "csharp-v" \
+            --language "C#" \
+            --package-id "${{ steps.package.outputs.id }}" \
+            --package-id "${{ steps.package.outputs.library_id }}" \
+            --changelog-path "csharp/CHANGELOG.md" \
+            --assets-glob "csharp/artifacts/*.nupkg"
+
+  # === MANUAL INSTANT RELEASE ===
+  instant-release:
+    name: Instant Release
+    needs: [lint, test, build]
+    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Version and commit
+        id: version
+        working-directory: .
+        run: |
+          node csharp/scripts/version-and-commit.mjs \
+            --mode instant \
+            --bump-type "${{ github.event.inputs.bump_type }}" \
+            --description "${{ github.event.inputs.description }}"
+
+      - name: Build package
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
+        run: |
+          dotnet restore
+          dotnet build --configuration Release
+          dotnet pack --no-build --configuration Release --output ./artifacts
+
+      - name: Resolve NuGet package ids
+        id: package
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
+        run: |
+          CLI_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj | head -n 1)
+          if [ -z "$CLI_ID" ]; then
+            CLI_ID=clink
+          fi
+          LIB_ID=$(sed -n 's:.*<PackageId>\(.*\)</PackageId>.*:\1:p' Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj | head -n 1)
+          if [ -z "$LIB_ID" ]; then
+            LIB_ID=Foundation.Data.Doublets.Cli
+          fi
+          echo "id=$CLI_ID" >> "$GITHUB_OUTPUT"
+          echo "library_id=$LIB_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to NuGet
+        id: nuget_publish
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -n "$NUGET_API_KEY" ]; then
+            dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "NUGET_API_KEY not set, skipping NuGet publish"
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify CLI package on NuGet
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true')
+        run: |
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.id }}" \
+            --release-version "${{ steps.version.outputs.new_version }}"
+
+      - name: Verify library package on NuGet
+        if: >-
+          steps.nuget_publish.outputs.published == 'true' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true')
+        run: |
+          node scripts/wait-for-nuget.mjs \
+            --package-id "${{ steps.package.outputs.library_id }}" \
+            --release-version "${{ steps.version.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        if: >-
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: .
+        run: |
+          node csharp/scripts/create-github-release.mjs \
+            --release-version "${{ steps.version.outputs.new_version }}" \
+            --repository "${{ github.repository }}" \
+            --tag-prefix "csharp-v" \
+            --language "C#" \
+            --package-id "${{ steps.package.outputs.id }}" \
+            --package-id "${{ steps.package.outputs.library_id }}" \
+            --changelog-path "csharp/CHANGELOG.md" \
+            --assets-glob "csharp/artifacts/*.nupkg"

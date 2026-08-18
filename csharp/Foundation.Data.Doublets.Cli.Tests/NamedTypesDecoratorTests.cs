@@ -11,7 +11,7 @@ using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
 namespace Foundation.Data.Doublets.Cli.Tests
 {
-    public class NamedTypesDecoratorTests : IDisposable
+    public sealed class NamedTypesDecoratorTests : IDisposable
     {
         private readonly string _tempDbPath;
         private readonly string _tempNamesDbPath;
@@ -26,6 +26,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             if (File.Exists(_tempDbPath)) File.Delete(_tempDbPath);
             if (File.Exists(_tempNamesDbPath)) File.Delete(_tempNamesDbPath);
+            GC.SuppressFinalize(this);
         }
 
         private static void RunTestWithLinks(Action<ILinks<uint>> testAction)
@@ -49,7 +50,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 Assert.True(decorator is ILinks<uint>);
             });
@@ -60,7 +61,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 Assert.True(decorator is INamedTypes<uint>);
             });
@@ -71,7 +72,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 Assert.True(decorator is IPinnedTypes<uint>);
             });
@@ -83,7 +84,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             RunTestWithLinks(links =>
             {
                 var pinnedTypesDecorator = new PinnedTypesDecorator<uint>(links);
-                var decorator = new NamedTypesDecorator<uint>(pinnedTypesDecorator, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(pinnedTypesDecorator, _tempNamesDbPath);
 
                 Assert.Same(pinnedTypesDecorator, decorator.PinnedTypesDecorator);
                 Assert.True(decorator is ILinks<uint>);
@@ -97,7 +98,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var types = decorator.Take(3).ToArray();
                 var (type1, type2, type3) = decorator;
@@ -114,7 +115,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var link1 = decorator.GetOrCreate(10u, 20u);
                 var link2 = decorator.GetOrCreate(30u, 40u);
@@ -138,7 +139,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var link = decorator.GetOrCreate(50u, 60u);
                 decorator.SetName(link, "UniqueTestName");
@@ -154,7 +155,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var link = decorator.GetOrCreate(70u, 80u);
                 decorator.SetName(link, "TemporaryName");
@@ -177,7 +178,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var link = decorator.GetOrCreate(90u, 100u);
                 decorator.SetName(link, "FirstName");
@@ -203,7 +204,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var firstLink = decorator.GetOrCreate(10u, 11u);
                 var secondLink = decorator.GetOrCreate(20u, 21u);
@@ -222,7 +223,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var link = decorator.GetOrCreate(110u, 120u);
                 decorator.SetName(link, "LinkToDelete");
@@ -245,7 +246,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
 
             try
             {
-                var decorator = new NamedTypesDecorator<uint>(tempDbFile);
+                using var decorator = new NamedTypesDecorator<uint>(tempDbFile);
                 var link = decorator.GetOrCreate(1u, 2u);
 
                 decorator.SetName(link, "FromFile");
@@ -265,7 +266,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             RunTestWithLinks(links =>
             {
-                var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
+                using var decorator = new NamedTypesDecorator<uint>(links, _tempNamesDbPath);
 
                 var linkByNonexistentName = decorator.GetByName("NonexistentName");
                 Assert.Equal(links.Constants.Null, linkByNonexistentName);

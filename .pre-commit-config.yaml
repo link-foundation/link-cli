@@ -1,0 +1,56 @@
+# Local mirror of the cheap CI gates, so the same defects fail on `git commit`
+# instead of ten minutes into a workflow run. Ported from the AI driven
+# development pipeline templates for issue #96 and adapted to this monorepo:
+# every hook has to point at the stack-specific manifest, because the three
+# projects live under csharp/, rust/ and js/.
+#
+# Install once with:
+#   pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      # Mirrors the "Lint and Format Check" job of rust.yml.
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --manifest-path rust/Cargo.toml --all --
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      # Mirrors the "Lint and Format Check" job of csharp.yml. The solution sets
+      # TreatWarningsAsErrors in csharp/Directory.Build.props, so a plain build
+      # is already the warning gate.
+      - id: dotnet-format
+        name: dotnet format
+        entry: dotnet format csharp --verify-no-changes
+        language: system
+        types: [c#]
+        pass_filenames: false
+
+      # Mirrors the workflow policy and repository layout guards. These are pure
+      # Node with no dependencies, so they are fast enough for every commit.
+      - id: workflow-policy
+        name: workflow policy and repository layout tests
+        entry: node --test .github/scripts/*.test.mjs js/test/*.test.mjs csharp/scripts/*.test.mjs
+        language: system
+        files: ^(\.github/|js/|csharp/|rust/|\.lycheeignore|README\.md)
+        pass_filenames: false

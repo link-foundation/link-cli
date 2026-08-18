@@ -98,7 +98,7 @@ public class LinoDatabaseInputTests
 
         try
         {
-            var links = new NamedTypesDecorator<uint>(dbPath, false);
+            using var links = new NamedTypesDecorator<uint>(dbPath, false);
             test(links);
         }
         finally

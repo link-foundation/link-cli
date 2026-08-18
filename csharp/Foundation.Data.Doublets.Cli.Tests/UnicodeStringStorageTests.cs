@@ -245,7 +245,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             try
             {
                 var constants = new LinksConstants<uint>(enableExternalReferencesSupport: true);
-                var memory = new FileMappedResizableDirectMemory(tempDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
+                using var memory = new FileMappedResizableDirectMemory(tempDbFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
                 using var links = new UnitedMemoryLinks<uint>(memory, UnitedMemoryLinks<uint>.DefaultLinksSizeStep, constants, Platform.Data.Doublets.Memory.IndexTreeType.Default);
                 var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
                 testAction(decoratedLinks);

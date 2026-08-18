@@ -11,9 +11,11 @@ using Platform.Data.Doublets.Decorators;
 using Platform.Data.Doublets.Memory;
 using Platform.Data.Doublets.Memory.United.Generic;
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
+    public sealed class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -28,6 +30,8 @@ namespace Foundation.Data.Doublets.Cli
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
@@ -47,6 +51,8 @@ namespace Foundation.Data.Doublets.Cli
         {
         }
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
         public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false) : base(pinnedTypesDecorator)
         {
             _tracingEnabled = tracingEnabled;
@@ -70,46 +76,8 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (_disposed) return;
             _disposed = true;
-            DisposeLinksFacade(_namedLinksFacade);
-            DisposeLinksFacade(PinnedTypesDecorator);
-        }
-
-        private static void DisposeLinksFacade(object? facade)
-        {
-            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-            DisposeLinksFacade(facade, visited);
-        }
-
-        private static void DisposeLinksFacade(object? facade, HashSet<object> visited)
-        {
-            if (facade is null || !visited.Add(facade))
-            {
-                return;
-            }
-
-            foreach (var inner in EnumerateInnerLinks(facade))
-            {
-                DisposeLinksFacade(inner, visited);
-            }
-
-            if (facade is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-
-        private static IEnumerable<object?> EnumerateInnerLinks(object facade)
-        {
-            for (var type = facade.GetType(); type is not null; type = type.BaseType)
-            {
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-                {
-                    if (typeof(ILinks<TLinkAddress>).IsAssignableFrom(field.FieldType))
-                    {
-                        yield return field.GetValue(facade);
-                    }
-                }
-            }
+            LinksFacadeDisposer.Dispose(_namedLinksFacade);
+            LinksFacadeDisposer.Dispose(PinnedTypesDecorator);
         }
 
         public IEnumerator<TLinkAddress> GetEnumerator()
