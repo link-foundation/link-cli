@@ -142,6 +142,13 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
+    # GitHub Pages allows a single deployment at a time for the whole
+    # repository, and both docs.yml and wasm.yml deploy to it. A shared,
+    # non-cancellable writer group serialises them instead of letting the
+    # second one fail with "another deployment is in progress" (issue #96).
+    concurrency:
+      group: github-pages-${{ github.repository }}
+      cancel-in-progress: false
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest

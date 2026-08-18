@@ -25,9 +25,16 @@ on:
         required: false
         type: string
 
+# Reader runs (PR validation) are cancelled when superseded; runs on main are
+# writers - they publish to crates.io and push version commits, so cancelling
+# one mid-flight would leave a half-published release behind (issue #96).
 concurrency:
   group: rust-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default; the publishing jobs opt into more below.
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -40,6 +47,7 @@ jobs:
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.event_name != 'workflow_dispatch'
     outputs:
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
@@ -72,6 +80,7 @@ jobs:
   changelog:
     name: Changelog Fragment Check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
@@ -95,9 +104,10 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [detect-changes]
     if: |
-      always() && !cancelled() && (
+      !cancelled() && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -141,8 +151,9 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     needs: [detect-changes, changelog]
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -174,8 +185,9 @@ jobs:
   build:
     name: Build Package
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [lint, test]
-    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -203,8 +215,14 @@ jobs:
   auto-release:
     name: Auto Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Writer group: never cancel a release that may already have published a
+    # crate or pushed a version commit.
+    concurrency:
+      group: rust-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -296,8 +314,14 @@ jobs:
   manual-release:
     name: Manual Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Writer group: never cancel a release that may already have published a
+    # crate or pushed a version commit.
+    concurrency:
+      group: rust-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
