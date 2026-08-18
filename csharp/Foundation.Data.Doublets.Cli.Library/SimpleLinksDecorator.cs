@@ -77,12 +77,14 @@ namespace Foundation.Data.Doublets.Cli
         public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
         {
             var constants = _links.Constants;
-            return _links.Delete(restriction, (before, after) => {
-                if (handler == null) {
+            return _links.Delete(restriction, (before, after) =>
+            {
+                if (handler == null)
+                {
                     return constants.Continue;
                 }
                 return handler(before, after);
             });
         }
     }
-} 
+}

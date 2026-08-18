@@ -79,7 +79,8 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             var tempDbFile = Path.GetTempFileName();
             var namesDbFile = SimpleLinksDecorator<uint>.MakeNamesDatabaseFilename(tempDbFile);
-            try {
+            try
+            {
                 using var decorator = new SimpleLinksDecorator<uint>(tempDbFile, true);
                 var source = 1u;
                 var target = 1u;
@@ -94,4 +95,4 @@ namespace Foundation.Data.Doublets.Cli.Tests
             }
         }
     }
-} 
+}
