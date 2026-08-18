@@ -59,6 +59,7 @@ jobs:
             --timeout 30
             --exclude-path docs/case-studies
             --exclude-path dev/log
+            --root-dir ${{ github.workspace }}/js
             './**/*.md'
             './**/*.html'
           # Don't fail the workflow immediately - we want to check web archive first

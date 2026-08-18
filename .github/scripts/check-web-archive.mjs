@@ -10,7 +10,7 @@
  * - Links that have no web archive version (clearly marked as unrecoverable)
  *
  * Usage:
- *   node scripts/check-web-archive.mjs
+ *   node .github/scripts/check-web-archive.mjs
  *
  * Environment variables:
  *   - LYCHEE_OUTPUT: Path to lychee markdown output file (default: lychee/out.md)
@@ -24,6 +24,8 @@
  */
 
 import { readFileSync, appendFileSync, existsSync } from 'fs';
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 const WAYBACK_API = 'https://archive.org/wayback/available?url=';
 
@@ -41,42 +43,63 @@ function setOutput(name, value) {
 }
 
 /**
- * Extract broken URLs from lychee markdown output
+ * Extract the "Errors per input" section of a lychee markdown report.
+ *
+ * Everything after it - most importantly "## Redirects per input" - describes
+ * links that resolved successfully. Scanning the whole report made every
+ * redirected link look broken and failed the workflow for healthy URLs
+ * (issue #96).
+ * @param {string} content - The markdown content from lychee
+ * @returns {string} The errors section, or an empty string when there is none
+ */
+function extractErrorsSection(content) {
+  const lines = content.split('\n');
+  const start = lines.findIndex((line) => /^#+\s+Errors per input\s*$/.test(line));
+  if (start === -1) {
+    return '';
+  }
+  const heading = /^(#+)\s/.exec(lines[start])[1].length;
+  const section = [];
+  for (const line of lines.slice(start + 1)) {
+    const next = /^(#+)\s/.exec(line);
+    if (next && next[1].length <= heading) {
+      break; // a sibling or parent heading ends the errors section
+    }
+    section.push(line);
+  }
+  return section.join('\n');
+}
+
+/**
+ * Extract broken links from lychee markdown output.
  * Lychee markdown format includes lines like:
  *   * [404] https://example.com/broken-link
- *   * [ERROR] https://another-broken.com
+ *   * [ERROR] <file:///repo/missing.yml> | File not found
  * @param {string} content - The markdown content from lychee
- * @returns {string[]} Array of broken URLs
+ * @returns {{urls: string[], others: string[]}} Broken http(s) URLs, and broken
+ *   links that cannot be looked up in the Wayback Machine (local files,
+ *   unresolvable root-relative links, ...)
  */
-function extractBrokenUrls(content) {
+function extractBrokenLinks(content) {
+  const section = extractErrorsSection(content);
   const urls = [];
+  const others = [];
 
-  // Match lines with error status codes or ERROR markers followed by URLs
-  // Lychee output format: [STATUS_CODE] URL or bullet points with links
-  const urlPattern =
-    /\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+(https?:\/\/[^\s)]+)/gi;
+  // One bullet per broken link; the status marker is always present.
+  const entryPattern =
+    /^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?([^\s>|)]+)>?/gim;
   let match;
-
-  while ((match = urlPattern.exec(content)) !== null) {
-    const url = match[1].trim();
-    if (url && !urls.includes(url)) {
-      urls.push(url);
+  while ((match = entryPattern.exec(section)) !== null) {
+    const link = match[1].trim().replace(/[.,;!?]+$/, '');
+    if (!link) continue;
+    if (/^https?:\/\//i.test(link)) {
+      if (!urls.includes(link)) urls.push(link);
+    } else if (!others.includes(link)) {
+      others.push(link);
     }
   }
 
-  // Also match plain URL lines in broken sections
-  // Lychee sometimes outputs: `[ERROR] url | description`
-  const linePattern = /^\s*(?:\*|-)\s+.*?(https?:\/\/[^\s|)>\]]+)/gm;
-  let lineMatch;
-
-  while ((lineMatch = linePattern.exec(content)) !== null) {
-    const url = lineMatch[1].trim().replace(/[.,;!?]+$/, '');
-    if (url && !urls.includes(url) && url.startsWith('http')) {
-      urls.push(url);
-    }
-  }
-
-  return urls;
+  return { urls, others };
 }
 
 /**
@@ -159,12 +182,34 @@ async function main() {
   }
 
   const content = readFileSync(lycheeOutput, 'utf-8');
-  const brokenUrls = extractBrokenUrls(content);
+  const { urls: brokenUrls, others: unarchivableLinks } =
+    extractBrokenLinks(content);
+
+  if (unarchivableLinks.length > 0) {
+    // Local files and unresolvable root-relative links have no Wayback
+    // equivalent. Reporting `all_archived=true` for them turned a real lychee
+    // failure into a green run (issue #96).
+    console.log(
+      `✗ ${unarchivableLinks.length} broken link(s) cannot be checked against the Web Archive:`
+    );
+    for (const link of unarchivableLinks) {
+      console.log(`  ${link}`);
+      console.log(
+        '::error title=Broken link - not recoverable from the Web Archive::' +
+          `Broken link detected: ${link}\n` +
+          'It is not an http(s) URL (missing file, unresolvable relative link, ...),\n' +
+          'so the Wayback Machine cannot provide a fallback.\n' +
+          'How to fix: correct the path, restore the missing file, or pass --root-dir\n' +
+          'to lychee so root-relative links resolve.'
+      );
+    }
+    console.log('');
+  }
 
   if (brokenUrls.length === 0) {
     console.log('No broken URLs found in lychee output.');
-    setOutput('all_archived', 'true');
-    process.exit(0);
+    setOutput('all_archived', unarchivableLinks.length === 0 ? 'true' : 'false');
+    process.exit(unarchivableLinks.length === 0 ? 0 : 1);
   }
 
   console.log(
@@ -238,7 +283,8 @@ async function main() {
     }
   }
 
-  const allArchived = withoutArchive.length === 0;
+  const allArchived =
+    withoutArchive.length === 0 && unarchivableLinks.length === 0;
   setOutput('all_archived', allArchived ? 'true' : 'false');
 
   if (!allArchived) {
@@ -257,7 +303,12 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error('Unexpected error:', error);
-  process.exit(1);
-});
+export { extractErrorsSection, extractBrokenLinks };
+
+// Only run when executed directly, so the unit tests can import the parsers.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error('Unexpected error:', error);
+    process.exit(1);
+  });
+}

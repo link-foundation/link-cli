@@ -3,12 +3,15 @@ name: Docs
 # Build and deploy a unified API reference site that hosts both the C#
 # (`Foundation.Data.Doublets.Cli`) and Rust (`link-cli`) library docs.
 #
-# GitHub Pages allows only one deployment per repository, so this workflow
-# combines DocFX-generated C# docs (under `/csharp/`) and `cargo doc`-generated
-# Rust docs (under `/rust/`) into a single site that also includes a small
-# landing page linking out to both. The deploy job runs on pushes to `main`
-# and on manual dispatch, mirroring the AI driven development pipeline
-# templates' approach (see docs/case-studies/issue-92/templates).
+# GitHub Pages serves a single site per repository, so this workflow is the
+# only publisher: it combines the WebAssembly workbench (site root), the
+# DocFX-generated C# docs (under `/csharp/`), the `cargo doc`-generated Rust
+# docs (under `/rust/`), and an API landing page (under `/docs/`) into one
+# artifact. Until issue #96 wasm.yml deployed the workbench separately, so
+# whichever workflow finished last replaced the other one's files and the
+# documentation URLs advertised in README.md answered 404. The deploy job runs
+# on pushes to `main` and on manual dispatch, mirroring the AI driven
+# development pipeline templates' approach (see docs/case-studies/issue-92/templates).
 
 on:
   push:
@@ -19,6 +22,8 @@ on:
       - 'csharp/docfx.json'
       - 'rust/src/**'
       - 'rust/Cargo.toml'
+      - 'rust/wasm/**'
+      - 'js/**'
       - '.github/workflows/docs.yml'
   pull_request:
     branches: [main]
@@ -28,6 +33,8 @@ on:
       - 'csharp/docfx.json'
       - 'rust/src/**'
       - 'rust/Cargo.toml'
+      - 'rust/wasm/**'
+      - 'js/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -61,6 +68,18 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.14.0 --locked
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+          cache: npm
+          cache-dependency-path: js/package-lock.json
 
       - name: Cache cargo registry
         uses: actions/cache@v5
@@ -69,7 +88,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: ${{ runner.os }}-cargo-docs-${{ hashFiles('rust/Cargo.lock') }}
+            rust/wasm/target
+          key: ${{ runner.os }}-cargo-docs-${{ hashFiles('rust/Cargo.lock', 'rust/wasm/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-docs-
 
@@ -87,14 +107,24 @@ jobs:
       - name: Build Rust documentation
         run: cargo doc --manifest-path rust/Cargo.toml --no-deps --all-features
 
+      - name: Install npm dependencies
+        working-directory: js
+        run: npm ci
+
+      - name: Build WebAssembly workbench
+        working-directory: js
+        run: npm run build:pages
+
       - name: Assemble unified site
         run: |
           set -euo pipefail
-          mkdir -p _site/csharp _site/rust
+          mkdir -p _site/csharp _site/rust _site/docs
+          # The workbench owns the site root; the docs live in sub-folders.
+          cp -R dist/. _site/
           cp -R csharp/_site/. _site/csharp/
           cp -R rust/target/doc/. _site/rust/
-          # Landing page that links into both sub-sites.
-          cat > _site/index.html <<'HTML'
+          # Landing page that links into both documentation sub-sites.
+          cat > _site/docs/index.html <<'HTML'
           <!doctype html>
           <html lang="en">
             <head>
@@ -116,8 +146,9 @@ jobs:
               <p>Generated reference for the C# and Rust library packages that
               ship alongside the <code>clink</code> CLI.</p>
               <ul>
-                <li><a href="csharp/">C# – <code>Foundation.Data.Doublets.Cli</code> (DocFX)</a></li>
-                <li><a href="rust/link_cli/">Rust – <code>link-cli</code> (rustdoc)</a></li>
+                <li><a href="../csharp/">C# – <code>Foundation.Data.Doublets.Cli</code> (DocFX)</a></li>
+                <li><a href="../rust/link_cli/">Rust – <code>link-cli</code> (rustdoc)</a></li>
+                <li><a href="../">WebAssembly workbench</a></li>
               </ul>
               <p>Source: <a href="https://github.com/link-foundation/link-cli">github.com/link-foundation/link-cli</a></p>
             </body>
@@ -142,10 +173,7 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    # GitHub Pages allows a single deployment at a time for the whole
-    # repository, and both docs.yml and wasm.yml deploy to it. A shared,
-    # non-cancellable writer group serialises them instead of letting the
-    # second one fail with "another deployment is in progress" (issue #96).
+    # Single writer for GitHub Pages: never cancel a deployment mid-flight.
     concurrency:
       group: github-pages-${{ github.repository }}
       cancel-in-progress: false

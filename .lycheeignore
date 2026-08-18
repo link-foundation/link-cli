@@ -2,3 +2,13 @@
 
 # npmjs.com returns 403 to link checkers because of bot protection.
 https://www\.npmjs\.com
+
+# DocFX generates csharp/docs/api/*.yml into the build output; the files are
+# deliberately not committed, so the relative link from csharp/docs/index.md
+# cannot be resolved from a source checkout.
+csharp/docs/api/
+
+# Sub-sites of the unified GitHub Pages site, published by
+# .github/workflows/docs.yml on merge to main. A pull request that documents
+# them would otherwise fail on URLs it is about to create.
+https://link-foundation\.github\.io/link-cli/(csharp|rust|docs)/

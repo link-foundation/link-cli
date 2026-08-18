@@ -194,3 +194,30 @@ for (const workflow of workflows) {
     }
   });
 }
+
+// GitHub Pages serves a single site per repository, so two workflows that both
+// upload a Pages artifact silently overwrite each other: whichever deploys last
+// wins and the other one's URLs answer 404. Until issue #96 both docs.yml and
+// wasm.yml deployed, which is why the API reference links in README.md were
+// broken. docs.yml now assembles everything into one artifact.
+test('exactly one workflow publishes GitHub Pages', () => {
+  const publishers = workflows
+    .filter((workflow) => /uses:\s*actions\/deploy-pages@/.test(workflow.text))
+    .map((workflow) => workflow.name);
+  assert.deepEqual(
+    publishers,
+    ['docs.yml'],
+    `expected docs.yml to be the only Pages publisher, found: ${publishers.join(', ')}`,
+  );
+});
+
+test('only the Pages publisher uploads a Pages artifact', () => {
+  const uploaders = workflows
+    .filter((workflow) => /uses:\s*actions\/upload-pages-artifact@/.test(workflow.text))
+    .map((workflow) => workflow.name);
+  assert.deepEqual(
+    uploaders,
+    ['docs.yml'],
+    `a second Pages artifact replaces the published site, found: ${uploaders.join(', ')}`,
+  );
+});
