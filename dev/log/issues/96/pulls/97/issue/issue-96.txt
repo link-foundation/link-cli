@@ -1,0 +1,66 @@
+title:	Check for all false positives, false negatives, warnings and errors in CI/CD and fix them all
+state:	OPEN
+author:	konard (Konstantin Diachenko)
+labels:	bug
+comments:	0
+assignees:	
+projects:	
+milestone:	
+issue-type:	Bug
+parent:	
+sub-issues:	
+sub-issues-completed:	
+blocked-by:	
+blocking:	
+number:	96
+--
+### Latest default-branch CI/CD runs
+
+| Workflow | Status | Conclusion | Run |
+| --- | --- | --- | --- |
+| Docs | completed | success | [run](https://github.com/link-foundation/link-cli/actions/runs/26176444416) |
+| C# CI/CD Pipeline | completed | failure | [run](https://github.com/link-foundation/link-cli/actions/runs/26176444325) |
+| WebAssembly CI | completed | success | [run](https://github.com/link-foundation/link-cli/actions/runs/26176444415) |
+| Rust CI/CD Pipeline | completed | success | [run](https://github.com/link-foundation/link-cli/actions/runs/26176444323) |
+
+Use all the best practices from CI/CD templates (check full file tree to compare for all GitHub workflow and CI/CD scripts file), if the same issue is found in template report issue also in templates:
+
+- https://github.com/link-foundation/rust-ai-driven-development-pipeline-template
+- https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template
+- https://github.com/link-foundation/js-ai-driven-development-pipeline-template
+
+We should compare all files, so we don't have more CI/CD errors in the future and reuse all the best practices from these templates.
+
+Follow the CI/CD best practices collected in [https://github.com/link-assistant/hive-mind/blob/main/docs/CI-CD-BEST-PRACTICES.md](https://github.com/link-assistant/hive-mind/blob/main/docs/CI-CD-BEST-PRACTICES.md).
+
+Please plan and execute everything in this single pull request, you have unlimited time and context, as context auto-compacts and you can continue indefinitely, until it is each and every requirement fully addressed, and everything is totally done.
+
+---
+
+<details>
+<summary>Context collected by <code>/fix --ci-cd</code></summary>
+
+- **Repository:** [link-foundation/link-cli](https://github.com/link-foundation/link-cli)
+- **Default branch:** `main`
+- **Latest commit:** `ab2ce8b` ([commit](https://github.com/link-foundation/link-cli/commit/ab2ce8be8e671c91e011d4f02eea10a19deea809)) — Merge pull request #95 from link-foundation/issue-94-c873317dc78c
+- **CI/CD runs found:** 4 (1 not passing)
+
+**Detected languages**
+
+- **Rust** — 45.6%
+- **C#** — 42.2%
+- **JavaScript** — 11.3%
+- **CSS** — 0.8%
+- **HTML** — 0.1%
+
+**Recommended CI/CD templates**
+
+Apply the best practices from these templates, in priority order (most-used language first):
+
+1. **Rust** — [link-foundation/rust-ai-driven-development-pipeline-template](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template) _(detected: Rust)_
+2. **C#** — [link-foundation/csharp-ai-driven-development-pipeline-template](https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template) _(detected: C#)_
+3. **JavaScript / TypeScript** — [link-foundation/js-ai-driven-development-pipeline-template](https://github.com/link-foundation/js-ai-driven-development-pipeline-template) _(detected: JavaScript)_
+
+Other detected languages without a dedicated template: CSS, HTML.
+
+</details>

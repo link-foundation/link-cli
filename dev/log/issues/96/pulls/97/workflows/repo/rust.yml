@@ -1,0 +1,356 @@
+name: Rust CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'rust/**'
+      - 'rust/scripts/**'
+      - '.github/workflows/rust.yml'
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      description:
+        description: 'Release description (optional)'
+        required: false
+        type: string
+
+concurrency:
+  group: rust-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
+  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+  CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
+
+jobs:
+  # === DETECT CHANGES - determines which jobs should run ===
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch'
+    outputs:
+      rs-changed: ${{ steps.changes.outputs.rs-changed }}
+      toml-changed: ${{ steps.changes.outputs.toml-changed }}
+      mjs-changed: ${{ steps.changes.outputs.mjs-changed }}
+      docs-changed: ${{ steps.changes.outputs.docs-changed }}
+      workflow-changed: ${{ steps.changes.outputs.workflow-changed }}
+      any-code-changed: ${{ steps.changes.outputs.any-code-changed }}
+      rust-code-changed: ${{ steps.changes.outputs.rust-code-changed }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
+      - name: Detect changes
+        id: changes
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: rust-script rust/scripts/detect-code-changes.rs
+
+  # === CHANGELOG CHECK - only runs on PRs with code changes ===
+  changelog:
+    name: Changelog Fragment Check
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
+      - name: Check for changelog fragments
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/check-changelog-fragment.rs
+
+  # === LINT AND FORMAT CHECK ===
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: |
+      always() && !cancelled() && (
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        needs.detect-changes.outputs.rs-changed == 'true' ||
+        needs.detect-changes.outputs.toml-changed == 'true' ||
+        needs.detect-changes.outputs.mjs-changed == 'true' ||
+        needs.detect-changes.outputs.docs-changed == 'true' ||
+        needs.detect-changes.outputs.workflow-changed == 'true'
+      )
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features
+
+      - name: Check file size limit
+        run: rust-script rust/scripts/check-file-size.rs
+
+  # === TEST ===
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: [detect-changes, changelog]
+    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run tests
+        run: cargo test --manifest-path rust/Cargo.toml --all-features --verbose
+
+      - name: Run doc tests
+        run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
+
+  # === BUILD ===
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      - name: Build release
+        run: cargo build --manifest-path rust/Cargo.toml --release --verbose
+
+      - name: Check package
+        run: cargo package --manifest-path rust/Cargo.toml --list --allow-dirty
+
+  # === AUTO RELEASE ===
+  auto-release:
+    name: Auto Release
+    needs: [lint, test, build]
+    if: always() && !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
+      - name: Configure git
+        run: rust-script rust/scripts/git-config.rs
+
+      - name: Determine bump type from changelog fragments
+        id: bump_type
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/get-bump-type.rs
+
+      - name: Check if version already released or no fragments
+        id: check
+        env:
+          HAS_FRAGMENTS: ${{ steps.bump_type.outputs.has_fragments }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUST_ROOT: rust
+        run: |
+          rust-script rust/scripts/check-release-needed.rs \
+            --tag-prefix rust-v \
+            --repository "${{ github.repository }}"
+
+      - name: Collect changelog and bump version
+        id: version
+        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.skip_bump != 'true'
+        working-directory: .
+        run: |
+          rust-script rust/scripts/version-and-commit.rs \
+            --rust-root rust \
+            --tag-prefix rust-v \
+            --bump-type "${{ steps.bump_type.outputs.bump_type }}"
+
+      - name: Get current version
+        id: current_version
+        if: steps.check.outputs.should_release == 'true'
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/get-version.rs
+
+      - name: Build release
+        if: steps.check.outputs.should_release == 'true'
+        run: cargo build --manifest-path rust/Cargo.toml --release
+
+      - name: Publish to Crates.io
+        id: publish_crate
+        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.crate_published != 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+          CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/publish-crate.rs
+
+      - name: Wait for Crate availability on Crates.io
+        if: steps.check.outputs.should_release == 'true'
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.current_version.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: steps.check.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_VERSION="${{ steps.version.outputs.new_version }}"
+          if [ -z "$RELEASE_VERSION" ]; then
+            RELEASE_VERSION="${{ steps.current_version.outputs.version }}"
+          fi
+
+          rust-script rust/scripts/create-github-release.rs \
+            --rust-root rust \
+            --release-version "$RELEASE_VERSION" \
+            --repository "${{ github.repository }}" \
+            --tag-prefix "rust-v" \
+            --language "Rust"
+
+  # === MANUAL RELEASE ===
+  manual-release:
+    name: Manual Release
+    needs: [lint, test, build]
+    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install rust-script
+        run: cargo install rust-script
+
+      - name: Configure git
+        run: rust-script rust/scripts/git-config.rs
+
+      - name: Version and commit
+        id: version
+        run: |
+          rust-script rust/scripts/version-and-commit.rs \
+            --rust-root rust \
+            --tag-prefix rust-v \
+            --bump-type "${{ github.event.inputs.bump_type }}" \
+            --description "${{ github.event.inputs.description }}"
+
+      - name: Build release
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        run: cargo build --manifest-path rust/Cargo.toml --release
+
+      - name: Publish to Crates.io
+        id: publish_crate
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+          CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/publish-crate.rs
+
+      - name: Wait for Crate availability on Crates.io
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        env:
+          RUST_ROOT: rust
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.version.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          rust-script rust/scripts/create-github-release.rs \
+            --rust-root rust \
+            --release-version "${{ steps.version.outputs.new_version }}" \
+            --repository "${{ github.repository }}" \
+            --tag-prefix "rust-v" \
+            --language "Rust"
