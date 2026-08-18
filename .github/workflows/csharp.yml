@@ -33,9 +33,16 @@ on:
         required: false
         type: string
 
+# Reader runs (PR validation) are cancelled when superseded; runs on main are
+# writers - they publish to NuGet and push version commits, so cancelling one
+# mid-flight would leave a half-published release behind (issue #96).
 concurrency:
   group: csharp-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default; the publishing jobs opt into more below.
+permissions:
+  contents: read
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -51,6 +58,7 @@ jobs:
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name != 'workflow_dispatch'
     outputs:
       cs-changed: ${{ steps.changes.outputs.cs-changed }}
@@ -85,6 +93,7 @@ jobs:
   changeset-check:
     name: Changeset Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
     steps:
@@ -122,9 +131,10 @@ jobs:
   lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [detect-changes]
     if: |
-      always() && !cancelled() && (
+      !cancelled() && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -155,15 +165,23 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+
       - name: Build
         run: dotnet build --no-restore --configuration Release
+
+      - name: Check file sizes
+        working-directory: .
+        run: node csharp/scripts/check-file-size.mjs
 
   # === TEST ON MULTIPLE OS ===
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     needs: [detect-changes, changeset-check]
-    if: always() && !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped')
+    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -183,8 +201,6 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        # Windows has pre-existing file locking issues with some tests
-        continue-on-error: ${{ matrix.os == 'windows-latest' }}
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Upload coverage to Codecov
@@ -197,8 +213,9 @@ jobs:
   build:
     name: Build Package
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [lint, test]
-    if: always() && !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success'
+    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -226,8 +243,14 @@ jobs:
   release:
     name: Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Writer group: never cancel a release that may already have pushed a
+    # package or a version commit.
+    concurrency:
+      group: csharp-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       packages: write
@@ -408,8 +431,14 @@ jobs:
   instant-release:
     name: Instant Release
     needs: [lint, test, build]
-    if: always() && !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success'
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Writer group: never cancel a release that may already have pushed a
+    # package or a version commit.
+    concurrency:
+      group: csharp-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: write
       packages: write
