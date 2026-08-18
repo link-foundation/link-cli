@@ -194,7 +194,7 @@ public interface ITransactionsLinks : INamedTypesLinks<uint>
 /// retention policies, and crash recovery. Optional — no behavioural
 /// change if not opted in (R8).
 /// </summary>
-public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransactionsLinks
+public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransactionsLinks, IDisposable
 {
   internal const string CommitMarkerPrefix = "__transactions:commit:";
   internal const string RollbackMarkerPrefix = "__transactions:rollback:";
@@ -519,6 +519,12 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
   /// <summary>
   /// Stops the background worker. The wrapped data store and log store
   /// are not disposed here; callers are expected to own those.
+  /// </summary>
+  public void Dispose() => Shutdown();
+
+  /// <summary>
+  /// Stops the background worker. Kept as a named method for backwards
+  /// compatibility; <see cref="Dispose"/> delegates to it.
   /// </summary>
   public void Shutdown()
   {

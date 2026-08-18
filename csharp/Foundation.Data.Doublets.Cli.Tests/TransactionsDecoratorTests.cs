@@ -254,7 +254,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
       finally
       {
-        tx?.Shutdown();
+        tx?.Dispose();
         dataLinks?.Dispose();
         logLinks?.Dispose();
         Cleanup(dataFile);

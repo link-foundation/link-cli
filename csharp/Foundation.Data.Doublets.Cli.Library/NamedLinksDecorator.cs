@@ -10,9 +10,11 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IDisposable
+    public sealed class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -27,6 +29,8 @@ namespace Foundation.Data.Doublets.Cli
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
@@ -41,6 +45,8 @@ namespace Foundation.Data.Doublets.Cli
             return namesDatabaseFilename;
         }
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
         public NamedLinksDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false) : base(links)
         {
             _tracingEnabled = tracingEnabled;

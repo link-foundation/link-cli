@@ -38,7 +38,7 @@ public interface IVersionControlLinks : INamedTypesLinks<uint>
 /// (<see cref="Tag"/>) over the transitions log. Optional — when not
 /// instantiated the underlying transactions decorator behaves identically.
 /// </summary>
-public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks
+public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
 {
   /// <summary>Default name of the initial branch (analogous to git's <c>main</c>).</summary>
   public const string DefaultBranchName = "main";
@@ -63,6 +63,22 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
   private long _currentApplied;
   private VersionControlTransaction? _activeTransaction;
   private readonly bool _trace;
+
+  /// <summary>
+  /// Rolls back and releases the transaction that is still open, if any.
+  /// The wrapped transactions decorator and branches store are owned by
+  /// the caller and are deliberately left untouched.
+  /// </summary>
+  public void Dispose()
+  {
+    VersionControlTransaction? active;
+    lock (_lock)
+    {
+      active = _activeTransaction;
+      _activeTransaction = null;
+    }
+    active?.Dispose();
+  }
 
   public VersionControlDecorator(
     TransactionsDecorator transactions,

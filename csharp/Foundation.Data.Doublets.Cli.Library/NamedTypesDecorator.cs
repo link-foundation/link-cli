@@ -11,9 +11,11 @@ using Platform.Data.Doublets.Decorators;
 using Platform.Data.Doublets.Memory;
 using Platform.Data.Doublets.Memory.United.Generic;
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
+    public sealed class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -28,6 +30,8 @@ namespace Foundation.Data.Doublets.Cli
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
@@ -47,6 +51,8 @@ namespace Foundation.Data.Doublets.Cli
         {
         }
 
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
         public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false) : base(pinnedTypesDecorator)
         {
             _tracingEnabled = tracingEnabled;

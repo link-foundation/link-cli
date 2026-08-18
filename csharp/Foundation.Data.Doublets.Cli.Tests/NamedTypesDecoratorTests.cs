@@ -11,7 +11,7 @@ using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
 namespace Foundation.Data.Doublets.Cli.Tests
 {
-    public class NamedTypesDecoratorTests : IDisposable
+    public sealed class NamedTypesDecoratorTests : IDisposable
     {
         private readonly string _tempDbPath;
         private readonly string _tempNamesDbPath;
@@ -26,6 +26,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
         {
             if (File.Exists(_tempDbPath)) File.Delete(_tempDbPath);
             if (File.Exists(_tempNamesDbPath)) File.Delete(_tempNamesDbPath);
+            GC.SuppressFinalize(this);
         }
 
         private static void RunTestWithLinks(Action<ILinks<uint>> testAction)

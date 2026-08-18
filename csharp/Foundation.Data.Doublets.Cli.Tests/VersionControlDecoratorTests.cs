@@ -250,7 +250,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         logLinks = new NamedTypesDecorator<uint>(logFile);
         vcLinks = new NamedTypesDecorator<uint>(vcFile);
         tx = new TransactionsDecorator(dataLinks, logLinks);
-        var vc = new VersionControlDecorator(tx, vcLinks);
+        using var vc = new VersionControlDecorator(tx, vcLinks);
 
         using (var transaction = vc.BeginTransaction())
         {
@@ -281,7 +281,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         Assert.Equal(b, restored.Source);
         Assert.Equal(b, restored.Target);
 
-        tx.Shutdown();
+        tx.Dispose();
         tx = null;
         dataLinks.Dispose();
         dataLinks = null;
@@ -294,7 +294,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         reopenedLogLinks = new NamedTypesDecorator<uint>(logFile);
         reopenedVcLinks = new NamedTypesDecorator<uint>(vcFile);
         reopenedTx = new TransactionsDecorator(reopenedDataLinks, reopenedLogLinks);
-        var reopened = new VersionControlDecorator(reopenedTx, reopenedVcLinks);
+        using var reopened = new VersionControlDecorator(reopenedTx, reopenedVcLinks);
 
         Assert.True(reopened.TryGetTag("acid-commit", out var tagSequence));
         Assert.Equal(committedSequence, tagSequence);
@@ -309,8 +309,8 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
       }
       finally
       {
-        tx?.Shutdown();
-        reopenedTx?.Shutdown();
+        tx?.Dispose();
+        reopenedTx?.Dispose();
         dataLinks?.Dispose();
         logLinks?.Dispose();
         vcLinks?.Dispose();
@@ -341,12 +341,12 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         logLinks = new NamedTypesDecorator<uint>(logFile);
         vcLinks = new NamedTypesDecorator<uint>(vcFile);
         tx = new TransactionsDecorator(dataLinks, logLinks);
-        var vc = new VersionControlDecorator(tx, vcLinks);
+        using var vc = new VersionControlDecorator(tx, vcLinks);
         action(vc, tx, dataLinks);
       }
       finally
       {
-        tx?.Shutdown();
+        tx?.Dispose();
         dataLinks?.Dispose();
         logLinks?.Dispose();
         vcLinks?.Dispose();

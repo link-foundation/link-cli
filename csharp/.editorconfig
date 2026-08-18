@@ -1,0 +1,20 @@
+# C# analyzer configuration for link-cli.
+#
+# The repository builds with the default (recommended) .NET analyzer set and
+# TreatWarningsAsErrors, so no warning can reach a green CI run again (issue #96).
+#
+# On top of that, the resource-lifetime rules are promoted to errors. Issue #96 was
+# caused precisely by a leaked memory-mapped file handle, which is invisible on POSIX
+# and fatal on Windows, so these rules are worth failing the build over.
+
+root = true
+
+[*.cs]
+# CA1001: types that own disposable fields must be disposable.
+dotnet_diagnostic.CA1001.severity = error
+# CA1063: implement IDisposable correctly.
+dotnet_diagnostic.CA1063.severity = error
+# CA1816: Dispose should call GC.SuppressFinalize.
+dotnet_diagnostic.CA1816.severity = error
+# CA2000: dispose objects before losing scope.
+dotnet_diagnostic.CA2000.severity = error
