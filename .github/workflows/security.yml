@@ -111,3 +111,27 @@ jobs:
       - name: Audit current lock
         working-directory: js
         run: npm audit --package-lock-only --audit-level=high
+
+  # === COMMITTED SECRETS ===
+  # CodeQL and the audit jobs look at code and dependencies; nothing looked at
+  # the literal contents of the tree. This repository commits CI evidence under
+  # dev/log, which is exactly where a token pasted from a workflow log would end
+  # up unnoticed (issue #96). Ported from the pipeline templates' secrets-scan
+  # job. .gitignore doubles as the ignore file, so node_modules and build output
+  # are skipped.
+  secrets-scan:
+    name: Scan for committed secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-secrets-scan
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+
+      - name: Run secretlint
+        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
