@@ -70,46 +70,8 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (_disposed) return;
             _disposed = true;
-            DisposeLinksFacade(_namedLinksFacade);
-            DisposeLinksFacade(PinnedTypesDecorator);
-        }
-
-        private static void DisposeLinksFacade(object? facade)
-        {
-            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-            DisposeLinksFacade(facade, visited);
-        }
-
-        private static void DisposeLinksFacade(object? facade, HashSet<object> visited)
-        {
-            if (facade is null || !visited.Add(facade))
-            {
-                return;
-            }
-
-            foreach (var inner in EnumerateInnerLinks(facade))
-            {
-                DisposeLinksFacade(inner, visited);
-            }
-
-            if (facade is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-
-        private static IEnumerable<object?> EnumerateInnerLinks(object facade)
-        {
-            for (var type = facade.GetType(); type is not null; type = type.BaseType)
-            {
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-                {
-                    if (typeof(ILinks<TLinkAddress>).IsAssignableFrom(field.FieldType))
-                    {
-                        yield return field.GetValue(facade);
-                    }
-                }
-            }
+            LinksFacadeDisposer.Dispose(_namedLinksFacade);
+            LinksFacadeDisposer.Dispose(PinnedTypesDecorator);
         }
 
         public IEnumerator<TLinkAddress> GetEnumerator()

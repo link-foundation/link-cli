@@ -10,7 +10,7 @@ using Platform.Data.Doublets.Memory;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class SimpleLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>
+    public class SimpleLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -22,6 +22,8 @@ namespace Foundation.Data.Doublets.Cli
         // Tracing flag remains; no in-memory mapping needed
         public readonly NamedLinks<TLinkAddress> NamedLinks;
         public readonly string NamedLinksDatabaseFileName;
+        private readonly ILinks<TLinkAddress> _namedLinksFacade;
+        private bool _disposed;
 
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
@@ -45,6 +47,7 @@ namespace Foundation.Data.Doublets.Cli
             var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
             var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            _namedLinksFacade = decoratedNamesLinks;
             NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
             NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
@@ -52,6 +55,17 @@ namespace Foundation.Data.Doublets.Cli
         public SimpleLinksDecorator(string databaseFilename, bool tracingEnabled = false)
             : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
+        }
+
+        /// <summary>
+        /// Releases the memory-mapped file handles of both the data and the names databases.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            LinksFacadeDisposer.Dispose(_namedLinksFacade);
+            LinksFacadeDisposer.Dispose(_links);
         }
 
         public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)

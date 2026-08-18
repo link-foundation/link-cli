@@ -184,7 +184,7 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     /// <summary>
-    /// An equality comparer for Link<uint> that checks Index/Source/Target.
+    /// An equality comparer for Link{uint} that checks Index/Source/Target.
     /// </summary>
     private class LinkEqualityComparer : IEqualityComparer<Link<uint>>
     {
