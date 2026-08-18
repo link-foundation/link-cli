@@ -162,6 +162,10 @@ jobs:
         working-directory: .
         run: node --test csharp/scripts/*.test.mjs
 
+      - name: Run workflow policy tests
+        working-directory: .
+        run: node --test scripts/*.test.mjs
+
       - name: Restore dependencies
         run: dotnet restore
 
@@ -546,3 +550,70 @@ jobs:
             --package-id "${{ steps.package.outputs.library_id }}" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
+
+  # === MANUAL CHANGESET PR ===
+  # The workflow_dispatch input above advertises a 'changeset-pr' release mode,
+  # but no job used to handle it: selecting it silently did nothing while the
+  # run still reported success (issue #96). This job implements the advertised
+  # mode - it opens a pull request carrying the changeset instead of releasing
+  # straight away. The branch name matches the 'changeset-manual-release-*'
+  # prefix that changeset-check already skips.
+  changeset-pr:
+    name: Create Changeset PR
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changeset-pr'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Writer group: never cancel a run that may already have pushed a branch.
+    concurrency:
+      group: csharp-writer-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create changeset file
+        working-directory: .
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          CHANGESET_FILE="csharp/.changeset/manual-release-${RUN_ID}.md"
+          DESCRIPTION_TEXT="${DESCRIPTION:-Manual ${BUMP_TYPE} release}"
+          {
+            echo '---'
+            echo "'Foundation.Data.Doublets.Cli': ${BUMP_TYPE}"
+            echo '---'
+            echo
+            echo "${DESCRIPTION_TEXT}"
+          } > "$CHANGESET_FILE"
+          echo "Created changeset: $CHANGESET_FILE"
+          cat "$CHANGESET_FILE"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: add changeset for manual ${{ github.event.inputs.bump_type }} release'
+          branch: changeset-manual-release-${{ github.run_id }}
+          delete-branch: true
+          title: 'chore: manual ${{ github.event.inputs.bump_type }} release'
+          body: |
+            ## Manual Release Request
+
+            This PR was created by a manual workflow trigger to prepare a **${{ github.event.inputs.bump_type }}** release.
+
+            ### Release Details
+            - **Type:** ${{ github.event.inputs.bump_type }}
+            - **Description:** ${{ github.event.inputs.description || 'Manual release' }}
+            - **Triggered by:** @${{ github.actor }}
+
+            ### Next Steps
+            1. Review the changeset in this PR
+            2. Merge this PR to main
+            3. The automated release workflow will version, publish, and create a GitHub release
