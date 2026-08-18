@@ -213,6 +213,38 @@ jobs:
         with:
           fail_ci_if_error: false
 
+  # === SEMANTIC MERGE CONFLICT CHECK ===
+  # The jobs above test the pull request head. Two pull requests that each pass
+  # can still break `main` once merged, because a clean textual merge does not
+  # imply a compiling one (issue #96). This job merges the head into the current
+  # tip of the base branch and rebuilds and retests that tree.
+  fresh-merge:
+    name: Simulate Fresh Merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+    needs: [detect-changes]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      # The script rewrites the working tree (detached checkout + merge), so it
+      # has to run from the repository root, not from the csharp/ default.
+      - name: Simulate fresh merge with base branch
+        working-directory: .
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          FRESH_MERGE_CHECKS: |
+            dotnet build csharp --configuration Release
+            dotnet test csharp --no-build --configuration Release --verbosity normal
+        run: bash .github/scripts/simulate-fresh-merge.sh
+
   # === BUILD PACKAGE ===
   build:
     name: Build Package

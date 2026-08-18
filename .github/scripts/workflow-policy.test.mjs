@@ -221,3 +221,36 @@ test('only the Pages publisher uploads a Pages artifact', () => {
     `a second Pages artifact replaces the published site, found: ${uploaders.join(', ')}`,
   );
 });
+
+// `cargo clippy` without `-D warnings` prints its findings and exits 0, so lint
+// regressions land silently. Both Rust workspaces must be gated (issue #96).
+test('every clippy invocation denies warnings', () => {
+  for (const workflow of workflows) {
+    const invocations = workflow.text
+      .split('\n')
+      .map((line, index) => ({ line: line.trim(), number: index + 1 }))
+      .filter(({ line }) => /^(run:\s*)?cargo clippy\b/.test(line));
+    for (const { line, number } of invocations) {
+      assert.match(
+        line,
+        /--\s+-D\s+warnings/,
+        `${workflow.name}:${number}: "${line}" does not fail on clippy warnings`,
+      );
+    }
+  }
+});
+
+// A pull request that is green on its own head can still break main: a clean
+// textual merge is not necessarily a compiling one. Each stack that has a
+// pull-request pipeline re-runs its checks on the simulated merge result.
+test('the Rust and C# pipelines simulate a fresh merge on pull requests', () => {
+  for (const name of ['rust.yml', 'csharp.yml']) {
+    const workflow = workflows.find((candidate) => candidate.name === name);
+    assert.ok(workflow, `${name} is missing`);
+    assert.match(
+      workflow.text,
+      /simulate-fresh-merge\.sh/,
+      `${name} does not run .github/scripts/simulate-fresh-merge.sh`,
+    );
+  }
+});

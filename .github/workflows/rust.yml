@@ -147,10 +147,18 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Check formatting
-        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+        run: |
+          cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+          cargo fmt --manifest-path rust/wasm/Cargo.toml --all -- --check
 
+      # `-D warnings` is what makes this a gate: without it clippy prints its
+      # findings and still exits 0, so lint warnings accumulated invisibly
+      # (issue #96). The wasm crate is a separate workspace and was not linted
+      # at all until now.
       - name: Run Clippy
-        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features
+        run: |
+          cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+          cargo clippy --manifest-path rust/wasm/Cargo.toml --all-targets --all-features -- -D warnings
 
       - name: Check file size limit
         run: rust-script rust/scripts/check-file-size.rs
@@ -206,6 +214,49 @@ jobs:
 
       - name: Run doc tests
         run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
+
+  # === SEMANTIC MERGE CONFLICT CHECK ===
+  # Every other job tests the pull request head. A pull request can be green in
+  # isolation and still break `main`: two changes that merge without a textual
+  # conflict can still contradict each other semantically, and the breakage only
+  # appears after the merge lands (issue #96). This job merges the head into the
+  # current tip of the base branch and re-runs the fast checks on that tree.
+  # Ported from the Rust pipeline template's "Simulate fresh merge" step.
+  fresh-merge:
+    name: Simulate Fresh Merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+    needs: [detect-changes]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-fresh-merge-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fresh-merge-
+
+      - name: Simulate fresh merge with base branch
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          FRESH_MERGE_CHECKS: |
+            cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+            cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+            cargo test --manifest-path rust/Cargo.toml --all-features
+        run: bash .github/scripts/simulate-fresh-merge.sh
 
   # === BUILD ===
   build:
