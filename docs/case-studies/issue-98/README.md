@@ -59,12 +59,19 @@ even though only the Rust library was named in the issue title.
 
 ```
 docs/case-studies/issue-98/
-├── README.md                     # This document.
+├── README.md                       # This document.
+├── evidence/
+│   └── doublets_persistence.rs     # Reproduction of the upstream data-loss bug (§4.2).
 └── github-data/
-    ├── issue-98.json             # Raw issue payload at investigation time.
-    ├── issue-98-comments.json    # Issue comments at investigation time.
-    └── pr-99.json                # PR snapshot.
+    ├── issue-98.json               # Raw issue payload at investigation time.
+    ├── issue-98-comments.json      # Issue comments at investigation time.
+    └── pr-99.json                  # PR snapshot.
 ```
+
+Runnable demonstrations of the delivered feature live outside this folder,
+in [`examples/embedded-store/`](../../../examples/embedded-store) — one
+program per language, each embedding the library without going through the
+`clink` binary.
 
 ## 4. Root-cause analysis
 
@@ -96,8 +103,10 @@ fn grow_filled(&mut self, cap: usize, value: Self::Item) -> Result<&mut [Self::I
 `FileMapped` correctly computes how many elements were already initialised on
 disk and passes that as the `inited` argument — and the default `grow_filled`
 ignores it. Every link in an existing file is overwritten with zeros on open.
-`experiments/doublets_persistence.rs` reproduces this against upstream
-`doublets` directly, with no `link-cli` code involved.
+[`evidence/doublets_persistence.rs`](evidence/doublets_persistence.rs)
+reproduces this against upstream `doublets` directly, with no `link-cli`
+code involved: it writes two links, closes the store, reopens it, and
+prints `reopened count=0`.
 
 `storage::PersistentFileMapped` works around it by forwarding to
 `RawMem::grow_filled_exact`, which fills only `uninit[inited..]`. This is a
@@ -246,7 +255,7 @@ tests then cover the same matrix in-process on all three CI operating systems.
   `RawMem::grow_filled`. It should be reported upstream; until it is fixed,
   any consumer that constructs a `FileMapped`-backed `doublets` store *without*
   this wrapper will lose data on reopen. The reproduction lives in
-  `experiments/doublets_persistence.rs`.
+  [`evidence/doublets_persistence.rs`](evidence/doublets_persistence.rs).
 - **MSRV 1.89.** Advisory locking uses `std::fs::File::lock`, stabilised in
   1.89. Consumers on an older toolchain cannot build the crate.
 - **`net10.0` for C#.** Forced by `Link.Foundation.Links.Notation` 0.16.1,

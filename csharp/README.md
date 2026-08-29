@@ -82,6 +82,11 @@ library API for explicit batches. End-to-end demo scripts live in
 transactional store, not only as the code behind `clink`.
 
 ```csharp
+using Foundation.Data.Doublets.Cli;
+// `CreateAndUpdate` and `Exists` are extension methods on `ILinks<T>`.
+using Platform.Data;
+using Platform.Data.Doublets;
+
 // A `ulong`-addressed store; the CLI's own `uint` store is the
 // non-generic `TransactionsDecorator`.
 using var data = new NamedTypesDecorator<ulong>("db.links");
@@ -94,6 +99,10 @@ using (var transaction = transactions.BeginTransaction())
     transaction.Commit();
 }
 ```
+
+A runnable version of this is
+[`examples/embedded-store/csharp`](../examples/embedded-store/csharp)
+(`dotnet run --project examples/embedded-store/csharp`).
 
 - **Any address type.** `TransactionsDecorator<TLinkAddress>` works over any
   `INamedTypesLinks<TLinkAddress>` whose address is an

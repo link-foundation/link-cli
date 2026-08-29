@@ -408,6 +408,9 @@ own:
   sidecar — shared for readers, exclusive for writers — and expose a cheap
   fingerprint that answers "has anyone else written since I last looked?".
 
+Runnable demos for both languages live in
+[`examples/embedded-store/`](examples/embedded-store).
+
 See [rust/README.md](rust/README.md#use-as-a-library),
 [csharp/README.md](csharp/README.md#use-as-a-library), and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#embedding-the-library) for the

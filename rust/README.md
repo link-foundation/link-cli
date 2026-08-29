@@ -89,6 +89,10 @@ fn main() -> Result<(), link_cli::LinkError> {
 }
 ```
 
+A runnable, self-checking version of this is
+[`examples/embedded_store.rs`](examples/embedded_store.rs)
+(`cargo run --example embedded_store`).
+
 - **Any address type.** `GenericTransactionsDecorator<T, S, L>` is generic over
   the doublets address type, the wrapped store, and the transitions log.
   `TransactionsDecorator` is the `u32` + `NamedTypesDecorator` specialisation
