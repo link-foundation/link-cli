@@ -225,6 +225,7 @@ worked around.
 | Addresses (R6) | Address allocation matches the C# store, free list persisted (§5.2). |
 | `--changes` (R6) | Placeholder updates, full delete cascades, deterministic order (§5.3). |
 | Unspecified halves (R6) | `resolve_unspecified` / `search_unspecified` at the write boundary (§5.4). |
+| Layout | The two files the new code pushed past the 1000-line CI gate are split the way the repository already splits large ones — a child module reaching the parent's private items, so nothing is widened beyond `pub(super)`: `query_processor/mutations.rs` (the write side, next to the existing `query_processor/matching.rs`, mirroring C#'s `AdvancedMixedQueryProcessor.Mutations.cs`) and `transactions/recovery.rs` (transition replay, crash recovery, log retention). |
 | Library (R4, R5) | Every module of `link_cli` is public, along with the query patterns, the resolved links, the link reference validator and the transition wire-format constants. `NamedTypeLinks` is documented as *the* seam: every layer is written against it and every decorator both implements it and wraps another implementation of it, so a cache, an access check or a remote store slots in anywhere — including under `QueryProcessor`, which never learns what is beneath it. |
 
 ### C#
