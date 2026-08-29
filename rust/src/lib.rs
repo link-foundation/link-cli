@@ -39,6 +39,12 @@ pub mod transactions;
 mod unicode_string_storage;
 pub mod version_control;
 
+/// The `doublets` crate this library is built on, re-exported so
+/// downstream crates can name upstream types (stores, decorators,
+/// `LinkReference` implementations) without adding their own dependency
+/// and risking a version mismatch.
+pub use doublets;
+
 // Re-export main types for easy access
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
@@ -55,8 +61,8 @@ pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
 pub use storage::{
-    lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, LinksStorage, LinksStorageRef,
-    LockMode, PersistentFileMapped, StorageRevision,
+    decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, LinksStorage,
+    LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore, StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,

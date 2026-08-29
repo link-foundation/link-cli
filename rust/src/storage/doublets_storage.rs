@@ -35,6 +35,7 @@ use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
 use doublets::data::{Flow, LinkReference};
+use doublets::decorators::{AutomaticUniquenessAndUsagesResolution, DecoratorsExt};
 use doublets::unit::{LinkPart, Store as UnitStore};
 use doublets::Doublets;
 
@@ -46,6 +47,17 @@ use crate::storage::traits::{LinksStorage, StorageRevision};
 
 /// The file-mapped `doublets` store used by [`DoubletsStorage::open`].
 pub type FileMappedUnitStore<T> = UnitStore<T, PersistentFileMapped<LinkPart<T>>>;
+
+/// The file-mapped store wrapped in the upstream decorator stack that C#
+/// applies by default, produced by
+/// [`DoubletsStorage::with_automatic_uniqueness_and_usages_resolution`].
+///
+/// This is the Rust spelling of the C# type produced by
+/// `ILinksExtensions.DecorateWithAutomaticUniquenessAndUsagesResolution`,
+/// which `Foundation.Data.Doublets.Cli.Library` applies to every
+/// `UnitedMemoryLinks<TLinkAddress>` it opens.
+pub type ResolvedFileMappedUnitStore<T> =
+    AutomaticUniquenessAndUsagesResolution<T, FileMappedUnitStore<T>>;
 
 /// A [`LinksStorage`] over any `doublets` store.
 pub struct DoubletsStorage<T: LinkReference, S: Doublets<T>> {
@@ -143,6 +155,62 @@ impl<T: LinkReference, S: Doublets<T>> DoubletsStorage<T, S> {
             lock: None,
             address: PhantomData,
         })
+    }
+
+    /// Replaces the underlying store with `map(store)`, keeping the path,
+    /// advisory lock and change-detection fingerprint of this storage.
+    ///
+    /// This is the extension point for stacking any `doublets` decorator
+    /// (or a custom one) under the transactions and version control
+    /// layers:
+    ///
+    /// ```no_run
+    /// use doublets::decorators::DecoratorsExt;
+    /// use link_cli::storage::DoubletsStorage;
+    ///
+    /// # fn main() -> Result<(), link_cli::LinkError> {
+    /// let storage = DoubletsStorage::<u32, _>::open("links.data")?
+    ///     .map_store(|store| store.with_inner_reference_existence_validation());
+    /// # Ok(()) }
+    /// ```
+    pub fn map_store<S2, F>(self, map: F) -> DoubletsStorage<T, S2>
+    where
+        S2: Doublets<T>,
+        F: FnOnce(S) -> S2,
+    {
+        DoubletsStorage {
+            store: map(self.store),
+            path: self.path,
+            known_revision: self.known_revision,
+            lock: self.lock,
+            address: PhantomData,
+        }
+    }
+
+    /// Wraps the underlying store in the same decorator stack C# applies
+    /// through `ILinksExtensions.DecorateWithAutomaticUniquenessAndUsagesResolution`.
+    ///
+    /// After this call `(source, target)` pairs are unique: creating or
+    /// updating a link into a pair that already exists resolves to the
+    /// existing link, re-points every usage of the redundant link at the
+    /// survivor and deletes the redundant link. Deleting a link cascades
+    /// to its usages and resets its contents first.
+    ///
+    /// ```no_run
+    /// use link_cli::storage::{DoubletsStorage, LinksStorage};
+    ///
+    /// # fn main() -> Result<(), link_cli::LinkError> {
+    /// let mut storage = DoubletsStorage::<u32, _>::open("links.data")?
+    ///     .with_automatic_uniqueness_and_usages_resolution();
+    /// let first = storage.create_link(1, 1)?;
+    /// let second = storage.create_link(1, 1)?;
+    /// assert_eq!(first, second);
+    /// # Ok(()) }
+    /// ```
+    pub fn with_automatic_uniqueness_and_usages_resolution(
+        self,
+    ) -> DoubletsStorage<T, AutomaticUniquenessAndUsagesResolution<T, S>> {
+        self.map_store(DecoratorsExt::with_automatic_uniqueness_and_usages_resolution)
     }
 
     /// The database file backing this storage, when known.
