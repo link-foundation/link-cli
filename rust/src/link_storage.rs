@@ -33,13 +33,30 @@ fn observe(
     doublets::data::Flow::Continue
 }
 
+/// Prefix of the database line that records the freed addresses.
+///
+/// It is a comment so that a database written by this version still loads in
+/// one that predates it, and so that a database written before it still loads
+/// here — [`LinkStorage::restore_unused`] reconstructs the list when the line
+/// is absent.
+const UNUSED_HEADER: &str = "# unused:";
+
 /// LinkStorage provides persistent storage for links
 /// Corresponds to the storage functionality in NamedLinksDecorator in C#
 pub struct LinkStorage {
     links: HashMap<u32, Link>,
     names: HashMap<u32, String>,
     name_to_id: HashMap<String, u32>,
-    next_id: u32,
+    /// The highest address ever handed out and not given back, i.e. the
+    /// `AllocatedLinks` counter of the C# store.
+    allocated: u32,
+    /// Addresses below [`Self::allocated`] that were freed and can be handed
+    /// out again, most recently freed last.
+    ///
+    /// The C# store keeps the same set as a linked list threaded through the
+    /// freed links themselves, pushing and popping at its head; a stack is the
+    /// same structure without the threading.
+    unused: Vec<u32>,
     db_path: PathBuf,
     revision: StorageRevision,
     trace: bool,
@@ -58,7 +75,8 @@ impl LinkStorage {
             links: HashMap::new(),
             names: HashMap::new(),
             name_to_id: HashMap::new(),
-            next_id: 1,
+            allocated: 0,
+            unused: Vec::new(),
             db_path,
             revision: StorageRevision::default(),
             trace,
@@ -96,7 +114,8 @@ impl LinkStorage {
         self.links.clear();
         self.names.clear();
         self.name_to_id.clear();
-        self.next_id = 1;
+        self.allocated = 0;
+        self.unused.clear();
         if self.db_path.exists() {
             self.load()?;
         }
@@ -110,10 +129,16 @@ impl LinkStorage {
             .with_context(|| format!("Failed to open database: {}", self.db_path.display()))?;
 
         let reader = BufReader::new(file);
+        let mut recorded_unused = None;
 
         for line in reader.lines() {
             let line = line?;
             let line = line.trim();
+
+            if let Some(addresses) = line.strip_prefix(UNUSED_HEADER) {
+                recorded_unused = Some(Self::parse_unused_header(addresses));
+                continue;
+            }
 
             if line.is_empty() || line.starts_with('#') {
                 continue;
@@ -122,8 +147,8 @@ impl LinkStorage {
             // Parse link format: (index source target) or (index source target "name")
             if let Some((link, name)) = self.parse_link_line(line) {
                 self.links.insert(link.index, link);
-                if link.index >= self.next_id {
-                    self.next_id = link.index + 1;
+                if link.index > self.allocated {
+                    self.allocated = link.index;
                 }
                 if let Some(name) = name {
                     self.names.insert(link.index, name.clone());
@@ -131,6 +156,8 @@ impl LinkStorage {
                 }
             }
         }
+
+        self.unused = self.restore_unused(recorded_unused);
 
         if self.trace {
             eprintln!(
@@ -164,6 +191,97 @@ impl LinkStorage {
         None
     }
 
+    /// Parses the addresses recorded by an [`UNUSED_HEADER`] line into the
+    /// stack order the allocator uses.
+    ///
+    /// The line lists them the way the C# store's free list reads — most
+    /// recently freed first — and the stack pops from its end, so the two are
+    /// reverses of each other.
+    fn parse_unused_header(addresses: &str) -> Vec<u32> {
+        let mut unused: Vec<u32> = addresses
+            .split_whitespace()
+            .filter_map(|address| address.parse().ok())
+            .collect();
+        unused.reverse();
+        unused
+    }
+
+    /// The freed-address stack to start from after a load.
+    ///
+    /// A database this version wrote records the stack, because the order
+    /// decides which address the next link gets and nothing in the list of
+    /// stored links implies it. A database written before this version (or by
+    /// hand) does not, so the addresses missing below the highest stored one
+    /// are recovered instead, lowest reused first — an order the file does at
+    /// least determine.
+    ///
+    /// Addresses that a hand-edited file records but that are in use, or that
+    /// sit above the highest stored link, are dropped: handing them out would
+    /// overwrite a link or leave a hole the allocator would hand out twice.
+    fn restore_unused(&self, recorded: Option<Vec<u32>>) -> Vec<u32> {
+        match recorded {
+            Some(recorded) => {
+                let mut seen = HashSet::new();
+                recorded
+                    .into_iter()
+                    .filter(|address| {
+                        *address > 0
+                            && *address < self.allocated
+                            && !self.links.contains_key(address)
+                            && seen.insert(*address)
+                    })
+                    .collect()
+            }
+            None => (1..self.allocated)
+                .filter(|address| !self.links.contains_key(address))
+                .rev()
+                .collect(),
+        }
+    }
+
+    /// Hands out the address of the next link, reusing a freed one first.
+    ///
+    /// This is `ResizableDirectMemoryLinks.AllocateLink` in the C#
+    /// implementation: an address is only taken from beyond the end of the
+    /// store when no freed one is left. Reuse is observable — it decides the
+    /// address a query reports for a link it creates — so the two
+    /// implementations have to agree on it.
+    fn allocate(&mut self) -> u32 {
+        match self.unused.pop() {
+            Some(address) => address,
+            None => {
+                self.allocated += 1;
+                self.allocated
+            }
+        }
+    }
+
+    /// Gives `address` back to the allocator.
+    ///
+    /// Freeing the highest allocated address shrinks the store rather than
+    /// growing the free list, and takes with it every freed address that has
+    /// become the new end — `ResizableDirectMemoryLinks.Delete` does exactly
+    /// this, which is why C# reuses the address of a link it just appended
+    /// before it reuses one freed earlier.
+    fn release(&mut self, address: u32) {
+        if address == 0 || address > self.allocated {
+            return;
+        }
+        if address < self.allocated {
+            self.unused.push(address);
+            return;
+        }
+        self.allocated = address - 1;
+        while let Some(position) = self
+            .unused
+            .iter()
+            .position(|&freed| freed == self.allocated)
+        {
+            self.unused.remove(position);
+            self.allocated -= 1;
+        }
+    }
+
     /// Saves all links to the database file
     pub fn save(&self) -> Result<()> {
         let file = OpenOptions::new()
@@ -174,6 +292,19 @@ impl LinkStorage {
             .with_context(|| format!("Failed to create database: {}", self.db_path.display()))?;
 
         let mut writer = BufWriter::new(file);
+
+        // The freed addresses first: which of them the next link gets is not
+        // implied by the links that follow, and reloading has to resume the
+        // allocator exactly where it stopped.
+        if !self.unused.is_empty() {
+            let recorded: Vec<String> = self
+                .unused
+                .iter()
+                .rev()
+                .map(|address| address.to_string())
+                .collect();
+            writeln!(writer, "{UNUSED_HEADER} {}", recorded.join(" "))?;
+        }
 
         // Sort by index for consistent output
         let mut links: Vec<_> = self.links.values().collect();
@@ -205,9 +336,11 @@ impl LinkStorage {
     }
 
     /// Creates a new link and returns its ID
+    ///
+    /// The address is the one [`LinkStorage::allocate`] hands out: a freed one
+    /// when the store has any, and only otherwise a fresh one past the end.
     pub fn create(&mut self, source: u32, target: u32) -> u32 {
-        let id = self.next_id;
-        self.next_id += 1;
+        let id = self.allocate();
 
         let link = Link::new(id, source, target);
         self.links.insert(id, link);
@@ -219,33 +352,44 @@ impl LinkStorage {
         id
     }
 
-    /// Creates a link with a specific ID, ensuring all links up to that ID exist
+    /// Creates the link at `id`, as an empty `(id: 0 0)` link.
+    ///
+    /// Reaching a specific address means asking the allocator for links until
+    /// it hands that one out, and the ones it handed out on the way are freed
+    /// again — they were never asked for. This is `ILinksExtensions.EnsureCreated`
+    /// in the C# implementation:
+    ///
+    /// ```csharp
+    /// do { createdLink = creator(); createdLinks.Add(createdLink); }
+    /// while (createdLink != max);
+    /// for (var i = 0; i < createdLinks.Count; i++)
+    ///     if (!nonExistentAddresses.Contains(createdLinks[i]))
+    ///         links.Delete(createdLinks[i]);
+    /// ```
+    ///
+    /// Freeing them in the order they were created is what leaves the last one
+    /// on top of the free list, so it is the address the next created link
+    /// gets.
     pub fn ensure_created(&mut self, id: u32) -> u32 {
-        if self.links.contains_key(&id) {
+        if id == 0 || self.links.contains_key(&id) {
             return id;
         }
 
-        if self.next_id > id {
-            let link = Link::new(id, 0, 0);
-            self.links.insert(id, link);
-            if self.trace {
-                eprintln!("[TRACE] Ensured link: ({} 0 0)", id);
+        let mut passed_over = Vec::new();
+        loop {
+            let created = self.create(0, 0);
+            if created == id {
+                break;
             }
-            return id;
+            passed_over.push(created);
         }
 
-        // Create placeholder links up to the requested ID
-        while self.next_id <= id {
-            let placeholder_id = self.next_id;
-            self.next_id += 1;
-            if placeholder_id == id {
-                let link = Link::new(id, 0, 0);
-                self.links.insert(id, link);
-                if self.trace {
-                    eprintln!("[TRACE] Ensured link: ({} 0 0)", id);
-                }
-                return id;
-            }
+        for address in passed_over {
+            let _ = self.delete_raw(address);
+        }
+
+        if self.trace {
+            eprintln!("[TRACE] Ensured link: ({} 0 0)", id);
         }
 
         id
@@ -297,6 +441,7 @@ impl LinkStorage {
         }
 
         if let Some(link) = self.links.remove(&id) {
+            self.release(id);
             if self.trace {
                 eprintln!(
                     "[TRACE] Deleted link: ({} {} {})",
@@ -388,9 +533,20 @@ impl LinkStorage {
         Ok(before)
     }
 
-    /// Returns all links
+    /// Every stored link, ordered by address.
+    ///
+    /// The order is part of the contract, not an implementation detail: the
+    /// query processor enumerates links through this method, so an
+    /// unspecified order would make pattern matching — and with it the order
+    /// `--changes` reports and the order a cascading delete visits usages —
+    /// vary between runs of the very same query. `HashMap::values` is exactly
+    /// such an order, seeded randomly per process. Sorting reproduces what the
+    /// C# store does naturally: `UnitedMemoryLinks` walks allocated addresses
+    /// from `1` upwards.
     pub fn all(&self) -> Vec<&Link> {
-        self.links.values().collect()
+        let mut links: Vec<&Link> = self.links.values().collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
     }
 
     /// Returns all links matching a query pattern

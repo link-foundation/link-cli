@@ -14,6 +14,13 @@ trap 'rm -rf "$WORK"' EXIT
 
 failures=0
 
+# Arguments prepended to every invocation of a scenario, and trigger commands
+# run before its queries. Both are set by `trigger_scenario` (or by the caller,
+# just before it) and cleared again by `scenario`, so the plain scenarios below
+# keep running exactly as they did.
+EXTRA=()
+TRIGGER_SETUP=()
+
 # Runs the query sequence through both CLIs and leaves, for each of them, the
 # final database dump in "$WORK/<lang>/final" and one accepted/rejected verdict
 # per query in "$WORK/<lang>/status".
@@ -28,16 +35,46 @@ run_both() {
   rm -rf "$rs_dir" "$cs_dir"; mkdir -p "$rs_dir" "$cs_dir"
   : > "$rs_dir/status"; : > "$cs_dir/status"
 
+  # Trigger commands come in (flag, query) pairs and run before the queries.
+  # Their stdout is compared too: it carries the address the trigger was stored
+  # at, and how many triggers a --never removed.
+  local i
+  for ((i = 0; i < ${#TRIGGER_SETUP[@]}; i += 2)); do
+    run_command "$RS" "$rs_dir" "${TRIGGER_SETUP[i]}" "${TRIGGER_SETUP[i + 1]}"
+    run_command "$CS" "$cs_dir" "${TRIGGER_SETUP[i]}" "${TRIGGER_SETUP[i + 1]}"
+  done
+
   local q
   for q in "$@"; do
-    "$RS" --db "$rs_dir/l.links" --query "$q" > "$rs_dir/out" 2>&1
+    "$RS" --db "$rs_dir/l.links" ${EXTRA[@]+"${EXTRA[@]}"} --query "$q" > "$rs_dir/out" 2>&1
     verdict "$?" "$q" >> "$rs_dir/status"
-    "$CS" --db "$cs_dir/l.links" --query "$q" > "$cs_dir/out" 2>&1
+    "$CS" --db "$cs_dir/l.links" ${EXTRA[@]+"${EXTRA[@]}"} --query "$q" > "$cs_dir/out" 2>&1
     verdict "$?" "$q" >> "$cs_dir/status"
   done
 
-  "$RS" --db "$rs_dir/l.links" --after > "$rs_dir/final" 2>&1
-  "$CS" --db "$cs_dir/l.links" --after > "$cs_dir/final" 2>&1
+  dump "$RS" "$rs_dir"
+  dump "$CS" "$cs_dir"
+}
+
+# Runs one non-query command and records both its verdict and its stdout.
+# stderr is dropped: the two implementations agree on *what* they reject, not on
+# how they word it.
+run_command() {
+  local bin="$1" dir="$2"; shift 2
+  "$bin" --db "$dir/l.links" ${EXTRA[@]+"${EXTRA[@]}"} "$@" > "$dir/out" 2> /dev/null
+  verdict "$?" "$*" >> "$dir/status"
+  sed 's/^/  /' "$dir/out" >> "$dir/status"
+}
+
+# The final database, plus the trigger sidecar when the scenario created one, so
+# that how a trigger is *stored* is compared and not just what it did.
+dump() {
+  local bin="$1" dir="$2"
+  "$bin" --db "$dir/l.links" --after > "$dir/final" 2>&1
+  if [ -f "$dir/l.triggers.links" ]; then
+    echo "triggers:" >> "$dir/final"
+    "$bin" --db "$dir/l.triggers.links" --after >> "$dir/final" 2>&1
+  fi
 }
 
 verdict() {
@@ -65,6 +102,7 @@ report_divergence() {
 scenario() {
   local name="$1"; shift
   run_both "$@"
+  EXTRA=(); TRIGGER_SETUP=()
 
   if agree; then
     echo "PASS  $name"
@@ -84,6 +122,7 @@ scenario() {
 known_difference() {
   local name="$1" reason="$2"; shift 2
   run_both "$@"
+  EXTRA=(); TRIGGER_SETUP=()
 
   if agree; then
     failures=$((failures + 1))
@@ -117,6 +156,57 @@ scenario "explicit index after gap"   '() ((5: 5 5))'
 scenario "reverse update chain"       '() ((1 1))' '() ((2 2))' '((1: 1 1)) ((1: 1 2))' '((1: 1 2)) ((1: 1 1))'
 scenario "point to non-point"         '() ((1 1))' '((1: 1 1)) ((1: 0 0))'
 scenario "delete self referencing"    '() ((1 1))' '() ((1 1) (1 1))' '((1: 1 1)) ()'
+
+# Which address a new link gets is observable, so the two stores have to hand
+# out addresses in the same order: a freed address is reused before the store
+# grows, the most recently freed one first, and freeing the last link shrinks
+# the store instead of leaving a hole.
+scenario "reuse a freed address"      '() ((1 1) (2 2) (3 3))' '((2: 2 2)) ()' '() ((1 3))'
+scenario "reuse after a shrink"       '() ((1 1) (2 2) (3 3))' '((3: 3 3)) ()' '() ((1 2))'
+scenario "reuse the newest hole first" '() ((1 1) (2 2) (3 3) (4 4) (5 5))' \
+  '((2: 2 2)) ()' '((4: 4 4)) ()' '() ((1 3))' '() ((3 1))' '() ((1 5))'
+
+# Reaching a requested address creates the addresses before it too, and those
+# have to be given back -- they were never asked for.
+EXTRA=(--auto-create-missing-references)
+scenario "auto-create frees the addresses it passed over" \
+  '() ((1 1) (2 2) (3 3))' '((2: 2 2)) ()' '((3: 3 3)) ()' '() ((1 4))'
+EXTRA=(--auto-create-missing-references)
+scenario "auto-create leaves the new link the first address" '(() ((1 2)))'
+
+# trigger_scenario <name> [<trigger-flag> <trigger-query>]... -- <query>...
+#
+# Stores (or removes) persistent transformation triggers, then runs the queries.
+# Every invocation gets --auto-create-missing-references so that a substitution
+# introducing a reference the database does not have yet can actually be
+# applied; without it both CLIs would merely agree on refusing to fire.
+trigger_scenario() {
+  local name="$1"; shift
+  TRIGGER_SETUP=()
+  while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do
+    TRIGGER_SETUP+=("$1"); shift
+  done
+  shift
+  EXTRA+=(--auto-create-missing-references)
+  scenario "$name" "$@"
+}
+
+trigger_scenario "always trigger fires" \
+  --always '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))'
+trigger_scenario "always trigger keeps firing" \
+  --always '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))' '((1: 1 2)) ((1: 1 1))'
+trigger_scenario "once trigger fires only once" \
+  --once '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))' '((1: 1 2)) ((1: 1 1))'
+trigger_scenario "never removes a stored trigger" \
+  --always '(((1: 1 1)) ((1: 1 2)))' --never '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))'
+trigger_scenario "never on an empty trigger store" \
+  --never '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))'
+trigger_scenario "trigger without a match stays dormant" \
+  --always '(((7: 7 7)) ((7: 7 8)))' -- '() ((1: 1 1))'
+
+EXTRA=(--embed-triggers)
+trigger_scenario "trigger embedded in the main database" \
+  --always '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))'
 
 known_difference "update into duplicate" \
   "Platform.Data.Doublets 0.18.1 MergeUsages corrupts the usages it repoints (see ../csharp-merge-usages), so C# leaves (2: 2 0) where doublets-rs rebases the usage onto the surviving link and leaves (2: 2 2)." \
