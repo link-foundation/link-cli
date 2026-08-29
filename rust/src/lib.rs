@@ -59,8 +59,9 @@ pub use storage::{
     LockMode, PersistentFileMapped, StorageRevision,
 };
 pub use transactions::{
-    CommitMode, DoubletLink, LogRetentionPolicy, TransactionHandle, TransactionsDecorator,
-    Transition, TransitionKind,
+    CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
+    GenericTransition, LogRetentionPolicy, TransactionHandle, TransactionsDecorator, Transition,
+    TransitionKind, TransitionLogStore,
 };
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};

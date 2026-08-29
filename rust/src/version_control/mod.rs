@@ -135,7 +135,7 @@ impl VersionControlDecorator {
         self.tags.get(name).copied()
     }
 
-    pub fn save(&self) -> Result<()> {
+    pub fn save(&mut self) -> Result<()> {
         self.transactions.save()?;
         self.branches_store.save()?;
         Ok(())
@@ -254,7 +254,9 @@ impl VersionControlDecorator {
     }
 
     pub fn ensure_created(&mut self, id: u32) -> u32 {
-        self.transactions.ensure_created(id)
+        self.transactions
+            .ensure_created(id)
+            .expect("TransactionsDecorator::ensure_created failed")
     }
 
     fn attribute_new_transitions_for_branch(

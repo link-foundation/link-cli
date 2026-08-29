@@ -211,9 +211,11 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
             match created.cmp(&index) {
                 std::cmp::Ordering::Equal => return Ok(index),
                 std::cmp::Ordering::Less => continue,
-                std::cmp::Ordering::Greater => return Err(LinkError::StorageError(format!(
+                std::cmp::Ordering::Greater => {
+                    return Err(LinkError::StorageError(format!(
                     "could not reserve link address {index}: the store allocated {created} instead"
-                ))),
+                )))
+                }
             }
         }
     }
