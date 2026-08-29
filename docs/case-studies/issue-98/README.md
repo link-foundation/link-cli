@@ -61,7 +61,8 @@ even though only the Rust library was named in the issue title.
 docs/case-studies/issue-98/
 ├── README.md                       # This document.
 ├── evidence/
-│   └── doublets_persistence.rs     # Reproduction of the upstream data-loss bug (§4.2).
+│   ├── doublets_persistence.rs     # Reproduction of the upstream data-loss bug (§4.2).
+│   └── csharp-file-lock/           # Two-process harness for the C# advisory lock (§6).
 └── github-data/
     ├── issue-98.json               # Raw issue payload at investigation time.
     ├── issue-98-comments.json      # Issue comments at investigation time.
@@ -232,10 +233,11 @@ The Rust suite asserts the locking semantics across *real processes*
 (`exclusive_lock_is_honoured_across_processes` re-executes the test binary as
 a lock probe), because an in-process assertion would not distinguish
 `flock` from the runtime's own bookkeeping. The C# equivalent was verified the
-same way with a two-process harness kept in `experiments/csharp-file-lock/`,
-which confirmed on Linux/.NET 10 that exclusive-vs-exclusive and
-exclusive-vs-shared block while shared-vs-shared succeeds; the committed xunit
-tests then cover the same matrix in-process on all three CI operating systems.
+same way with the two-process harness in
+[`evidence/csharp-file-lock/`](evidence/csharp-file-lock) (`./run.sh`), which
+confirmed on Linux/.NET 10 that exclusive-vs-exclusive and exclusive-vs-shared
+block while shared-vs-shared succeeds; the committed xunit tests then cover the
+same matrix in-process on all three CI operating systems.
 
 ## 7. What the issue asked for versus what shipped
 

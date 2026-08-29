@@ -17,8 +17,8 @@
 //! initialised on disk and passes it as the `inited` argument, but the
 //! default `grow_filled` ignores it. The consequence is that opening an
 //! existing file-mapped `doublets` database zeroes it: every link is
-//! lost. `experiments/doublets_persistence.rs` reproduces this against
-//! upstream `doublets` directly.
+//! lost. `docs/case-studies/issue-98/evidence/doublets_persistence.rs`
+//! reproduces this against upstream `doublets` directly.
 //!
 //! [`PersistentFileMapped`] fixes this by forwarding to
 //! `RawMem::grow_filled_exact`, which fills only `uninit[inited..]` and
