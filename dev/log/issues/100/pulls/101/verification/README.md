@@ -1,7 +1,7 @@
 # Issue 100 / PR 101 verification logs
 
 Captured on the final commit of `issue-100-f2e0ccb162ad`, so the numbers quoted
-in [the case study](../../../../../../docs/case-studies/issue-100/README.md#8-verification)
+in [the case study](../../../../../../../docs/case-studies/issue-100/README.md#8-verification)
 can be checked against the runs that produced them.
 
 | File | Command | Result |
