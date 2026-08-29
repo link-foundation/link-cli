@@ -21,13 +21,13 @@ name = "clink"
 path = "src/main.rs"
 
 [dependencies]
-thiserror = "2.0.18"
-anyhow = "1.0.102"
+thiserror = "2.0.20"
+anyhow = "1.0.104"
 # Issue 67 Rust basis crates:
 # Source: http://github.com/linksplatform/doublets-rs
-doublets = "0.3.0"
+doublets = "0.4.0"
 # Source: http://github.com/link-foundation/links-notation
-links-notation = "0.13.0"
+links-notation = "0.16.1"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.3.0"
 
