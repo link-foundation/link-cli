@@ -54,7 +54,7 @@ jobs:
         if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       # With build-mode set here the action builds the database itself, so the
       # deprecated github/codeql-action/autobuild step is no longer needed.

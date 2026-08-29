@@ -20,8 +20,8 @@ public interface IVersionControlLinks : INamedTypesLinks<uint>
 {
     string CurrentBranch { get; }
     long CurrentSequence { get; }
-    ITransaction BeginTransaction();
-    Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+    ITransaction<uint> BeginTransaction();
+    Task<ITransaction<uint>> BeginTransactionAsync(CancellationToken cancellationToken = default);
     IReadOnlyList<BranchInfo> ListBranches();
     IReadOnlyDictionary<string, long> ListTags();
     void Branch(string name, long? from = null);
@@ -111,7 +111,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         lock (_lock) return _tags.TryGetValue(name, out sequence);
     }
 
-    public ITransaction BeginTransaction()
+    public ITransaction<uint> BeginTransaction()
     {
         lock (_lock)
         {
@@ -128,7 +128,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         }
     }
 
-    public Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public Task<ITransaction<uint>> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(BeginTransaction());
@@ -375,7 +375,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         return seqs;
     }
 
-    private Transition? FindTransition(long sequence)
+    private Transition<uint>? FindTransition(long sequence)
     {
         foreach (var t in _transactions.Log)
         {
@@ -599,13 +599,13 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         if (_trace) Console.WriteLine($"[VersionControl] {message}");
     }
 
-    private sealed class VersionControlTransaction : ITransaction
+    private sealed class VersionControlTransaction : ITransaction<uint>
     {
         private readonly VersionControlDecorator _owner;
 
         internal VersionControlTransaction(
           VersionControlDecorator owner,
-          ITransaction inner,
+          ITransaction<uint> inner,
           string branchName,
           long beforeSequence)
         {
@@ -615,7 +615,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
             BeforeSequence = beforeSequence;
         }
 
-        internal ITransaction Inner { get; }
+        internal ITransaction<uint> Inner { get; }
         internal string BranchName { get; }
         internal long BeforeSequence { get; }
 
@@ -623,7 +623,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         public DateTimeOffset StartedAt => Inner.StartedAt;
         public bool IsCommitted => Inner.IsCommitted;
         public bool IsRolledBack => Inner.IsRolledBack;
-        public IReadOnlyList<Transition> Transitions => Inner.Transitions;
+        public IReadOnlyList<Transition<uint>> Transitions => Inner.Transitions;
 
         public void Commit() => _owner.CommitVersionTransaction(this);
 

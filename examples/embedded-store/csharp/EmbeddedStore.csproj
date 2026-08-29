@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Foundation.Data.Doublets.Cli.Examples</RootNamespace>
+    <AssemblyName>embedded-store</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -3,14 +3,70 @@
 //! Mirrors the C# `TransactionsDecorator` in
 //! `csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.cs`.
 //!
-//! The decorator wraps a [`NamedTypesDecorator`] and records every
-//! `create` / `update` / `delete` as a reversible [`Transition`] in a
-//! sidecar doublets log store. Supports explicit transactions, sync
-//! commits, three retention policies, and crash recovery (R1-R7, R10).
+//! The decorator records every `create` / `update` / `delete` as a
+//! reversible [`GenericTransition`] in a sidecar log. It supports
+//! explicit transactions, sync commits, three retention policies, and
+//! crash recovery (R1-R7, R10).
 //!
-//! Optional — when not opted in, the bare [`NamedTypesDecorator`]
-//! behaves identically (R8, R9, R17).
+//! Optional — when not opted in, the bare
+//! [`NamedTypesDecorator`](crate::NamedTypesDecorator) behaves
+//! identically (R8, R9, R17).
+//!
+//! # Reuse outside the CLI
+//!
+//! [`GenericTransactionsDecorator`] is generic over three things:
+//!
+//! * `T` — the doublets address type (`u32`, `u64`, `usize`, ...);
+//! * `S` — the wrapped store, any [`LinksStorage<T>`] implementation,
+//!   including [`DoubletsStorage`](crate::DoubletsStorage) over a
+//!   file-mapped or caller-owned `doublets::unit::Store`;
+//! * `L` — the transitions log, any [`TransitionLogStore`].
+//!
+//! [`TransactionsDecorator`] is the `u32` + `NamedTypesDecorator`
+//! specialisation used by `clink` itself.
+//!
+//! ```no_run
+//! use link_cli::transactions::{
+//!     CommitMode, FileTransitionLog, GenericTransactionsDecorator, LogRetentionPolicy,
+//! };
+//! use link_cli::DoubletsStorage;
+//!
+//! # fn main() -> Result<(), link_cli::LinkError> {
+//! let store = DoubletsStorage::<usize, _>::open_exclusive("db.links")?;
+//! let log = FileTransitionLog::open("db.transitions.log")?;
+//! let mut tx = GenericTransactionsDecorator::new(
+//!     store,
+//!     log,
+//!     LogRetentionPolicy::default(),
+//!     CommitMode::default(),
+//!     false,
+//! )?;
+//!
+//! tx.begin_transaction()?;
+//! let link = tx.create(0, 0)?;
+//! tx.commit()?;
+//! tx.save()?;
+//! # let _ = link;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Durability
+//!
+//! Transitions are appended to the log *before* the write they describe
+//! is reported as committed, and [`FileTransitionLog`] `fsync`s each
+//! append by default, so a crash can lose at most the transition that
+//! was in flight. The data store itself is made durable by
+//! [`GenericTransactionsDecorator::save`], which calls
+//! [`LinksStorage::flush`] — for a memory-mapped store that is the
+//! `fsync` of the mapping; for the CLI's in-memory store it is the
+//! rewrite of the database file. Recovery, run by
+//! [`GenericTransactionsDecorator::new`], replays committed-but-unapplied
+//! transitions and rolls back transitions that were never committed, so
+//! a store that lost unflushed writes is brought back in line with the
+//! log.
 
+mod log;
 mod types;
 
 use std::collections::HashSet;
@@ -18,42 +74,53 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::{anyhow, bail, Context, Result};
+use doublets::data::LinkReference;
 
-use crate::link::Link;
-use crate::named_types::{NamedTypes, NamedTypesDecorator};
+use crate::error::LinkError;
+use crate::link::GenericLink;
+use crate::named_types::NamedTypesDecorator;
+use crate::storage::{LinksStorage, LinksStorageRef};
 
-pub use types::{CommitMode, DoubletLink, LogRetentionPolicy, Transition, TransitionKind};
+pub use log::{FileTransitionLog, TransitionLogStore};
+pub use types::{
+    CommitMode, DoubletLink, GenericDoubletLink, GenericTransition, LogRetentionPolicy, Transition,
+    TransitionKind,
+};
 use types::{
     APPLIED_MARKER_PREFIX, COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX,
 };
 
 /// Pending state of a transaction (used by the explicit transaction
 /// handle and by per-write auto-transactions).
-struct PendingTransaction {
+struct PendingTransaction<T> {
     id: u128,
-    transitions: Vec<Transition>,
+    transitions: Vec<GenericTransition<T>>,
     auto_commit: bool,
     started_ms: i64,
 }
 
-/// Snapshot of an open transaction (returned by [`TransactionsDecorator::begin_transaction`]).
+/// Snapshot of an open transaction (returned by [`GenericTransactionsDecorator::begin_transaction`]).
 #[derive(Debug, Clone)]
 pub struct TransactionHandle {
     pub id: u128,
     pub started_ms: i64,
 }
 
-/// The transactions decorator wraps a [`NamedTypesDecorator`] and
-/// records every write as a reversible [`Transition`] in `log_store`.
-pub struct TransactionsDecorator {
-    inner: NamedTypesDecorator,
-    log_store: NamedTypesDecorator,
-    log: Vec<Transition>,
+/// The transactions decorator wraps any [`LinksStorage`] and records
+/// every write as a reversible [`GenericTransition`] in `log_store`.
+pub struct GenericTransactionsDecorator<T, S, L>
+where
+    T: LinkReference,
+    S: LinksStorage<T>,
+    L: TransitionLogStore,
+{
+    inner: S,
+    log_store: L,
+    log: Vec<GenericTransition<T>>,
     committed: HashSet<u128>,
     rolled_back: HashSet<u128>,
     applied: HashSet<i64>,
-    current: Option<PendingTransaction>,
+    current: Option<PendingTransaction<T>>,
     sequence_counter: i64,
     applied_sequence: i64,
     retention_policy: LogRetentionPolicy,
@@ -62,16 +129,26 @@ pub struct TransactionsDecorator {
     trace: bool,
 }
 
-impl TransactionsDecorator {
+/// The `u32` + [`NamedTypesDecorator`] specialisation used by `clink`.
+pub type TransactionsDecorator =
+    GenericTransactionsDecorator<u32, NamedTypesDecorator, NamedTypesDecorator>;
+
+impl<T, S, L> GenericTransactionsDecorator<T, S, L>
+where
+    T: LinkReference,
+    S: LinksStorage<T>,
+    L: TransitionLogStore,
+{
     /// Creates a new transactions decorator wrapping `inner`, using
-    /// `log_store` as the sidecar log store.
+    /// `log_store` as the sidecar log. Runs crash recovery before
+    /// returning.
     pub fn new(
-        inner: NamedTypesDecorator,
-        log_store: NamedTypesDecorator,
+        inner: S,
+        log_store: L,
         retention_policy: LogRetentionPolicy,
         commit_mode: CommitMode,
         trace: bool,
-    ) -> Result<Self> {
+    ) -> Result<Self, LinkError> {
         let mut decorator = Self {
             inner,
             log_store,
@@ -130,67 +207,88 @@ impl TransactionsDecorator {
     }
 
     /// Returns a snapshot of the transitions log in sequence order.
-    pub fn log(&self) -> Vec<Transition> {
+    pub fn log(&self) -> Vec<GenericTransition<T>> {
         self.log.clone()
     }
 
-    pub fn inner(&self) -> &NamedTypesDecorator {
+    pub fn inner(&self) -> &S {
         &self.inner
     }
 
-    pub fn inner_mut(&mut self) -> &mut NamedTypesDecorator {
+    pub fn inner_mut(&mut self) -> &mut S {
         &mut self.inner
     }
 
-    pub fn log_store(&self) -> &NamedTypesDecorator {
+    pub fn log_store(&self) -> &L {
         &self.log_store
     }
 
-    pub fn log_store_mut(&mut self) -> &mut NamedTypesDecorator {
+    pub fn log_store_mut(&mut self) -> &mut L {
         &mut self.log_store
     }
 
-    pub fn into_inner(self) -> (NamedTypesDecorator, NamedTypesDecorator) {
+    pub fn into_inner(self) -> (S, L) {
         (self.inner, self.log_store)
     }
 
-    pub fn save(&self) -> Result<()> {
-        self.inner.save()?;
-        self.log_store.save()?;
+    /// Makes both the data store and the transitions log durable.
+    pub fn flush(&mut self) -> Result<(), LinkError> {
+        self.inner.flush()?;
+        self.log_store.flush_log()?;
         Ok(())
+    }
+
+    /// Alias of [`flush`](Self::flush), kept for parity with the other
+    /// decorators and with the C# API.
+    pub fn save(&mut self) -> Result<(), LinkError> {
+        self.flush()
+    }
+
+    /// Cheap check for "has another process written to the wrapped
+    /// store since we last read or wrote it?".
+    pub fn has_external_changes(&self) -> Result<bool, LinkError> {
+        self.inner.has_external_changes()
+    }
+
+    /// Re-reads the wrapped store and rebuilds the transactions state
+    /// from the log — the recovery path after another process wrote.
+    pub fn reload(&mut self) -> Result<(), LinkError> {
+        if self.current.is_some() {
+            return Err(LinkError::Transaction(
+                "Cannot reload while a transaction is open.".to_string(),
+            ));
+        }
+        self.inner.reload()?;
+        self.recover()
     }
 
     // ----- Write API ------------------------------------------------------
 
-    pub fn create(&mut self, source: u32, target: u32) -> Result<u32> {
+    pub fn create(&mut self, source: T, target: T) -> Result<T, LinkError> {
         if self.replaying {
-            return Ok(self.inner.create(source, target));
+            return self.inner.create_link(source, target);
         }
         let owns = self.ensure_open_transaction();
-        let id = self.inner.create(source, target);
+        let id = self.inner.create_link(source, target)?;
         let after = self
             .inner
-            .get(id)
-            .map(DoubletLink::from_link)
-            .unwrap_or_else(|| DoubletLink::new(id, source, target));
-        self.record_transition(TransitionKind::Create, DoubletLink::empty(), after)?;
+            .get_link(id)
+            .map(|link| GenericDoubletLink::from_link(&link))
+            .unwrap_or_else(|| GenericDoubletLink::new(id, source, target));
+        self.record_transition(TransitionKind::Create, GenericDoubletLink::empty(), after)?;
         if owns {
             self.commit_current()?;
         }
         Ok(id)
     }
 
-    pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+    pub fn update(&mut self, id: T, source: T, target: T) -> Result<GenericLink<T>, LinkError> {
         if self.replaying {
-            return self.inner.update(id, source, target);
+            return self.inner.update_link(id, source, target);
         }
-        let before = self
-            .inner
-            .get(id)
-            .map(DoubletLink::from_link)
-            .unwrap_or_else(|| DoubletLink::new(id, 0, 0));
+        let before = self.snapshot(id);
         let owns = self.ensure_open_transaction();
-        let prev = match self.inner.update(id, source, target) {
+        let prev = match self.inner.update_link(id, source, target) {
             Ok(prev) => prev,
             Err(err) => {
                 if owns {
@@ -201,9 +299,9 @@ impl TransactionsDecorator {
         };
         let after = self
             .inner
-            .get(id)
-            .map(DoubletLink::from_link)
-            .unwrap_or_else(|| DoubletLink::new(id, source, target));
+            .get_link(id)
+            .map(|link| GenericDoubletLink::from_link(&link))
+            .unwrap_or_else(|| GenericDoubletLink::new(id, source, target));
         self.record_transition(TransitionKind::Update, before, after)?;
         if owns {
             self.commit_current()?;
@@ -211,17 +309,13 @@ impl TransactionsDecorator {
         Ok(prev)
     }
 
-    pub fn delete(&mut self, id: u32) -> Result<Link> {
+    pub fn delete(&mut self, id: T) -> Result<GenericLink<T>, LinkError> {
         if self.replaying {
-            return self.inner.delete(id);
+            return self.inner.delete_link(id);
         }
-        let before = self
-            .inner
-            .get(id)
-            .map(DoubletLink::from_link)
-            .unwrap_or_else(|| DoubletLink::new(id, 0, 0));
+        let before = self.snapshot(id);
         let owns = self.ensure_open_transaction();
-        let deleted = match self.inner.delete(id) {
+        let deleted = match self.inner.delete_link(id) {
             Ok(d) => d,
             Err(err) => {
                 if owns {
@@ -230,7 +324,7 @@ impl TransactionsDecorator {
                 return Err(err);
             }
         };
-        self.record_transition(TransitionKind::Delete, before, DoubletLink::empty())?;
+        self.record_transition(TransitionKind::Delete, before, GenericDoubletLink::empty())?;
         if owns {
             self.commit_current()?;
         }
@@ -241,9 +335,10 @@ impl TransactionsDecorator {
     /// initialised with source/target in a single pair of transitions
     /// (matches the C# `CreateAndUpdate` extension semantics, which
     /// always emits a Create followed by an Update transition).
-    pub fn create_and_update(&mut self, source: u32, target: u32) -> Result<u32> {
+    pub fn create_and_update(&mut self, source: T, target: T) -> Result<T, LinkError> {
         let owns = self.ensure_open_transaction();
-        let id = self.create(0, 0)?;
+        let zero = T::from_byte(0);
+        let id = self.create(zero, zero)?;
         self.update(id, source, target)?;
         if owns {
             self.commit_current()?;
@@ -251,42 +346,34 @@ impl TransactionsDecorator {
         Ok(id)
     }
 
-    pub fn exists(&self, id: u32) -> bool {
-        self.inner.exists(id)
+    pub fn exists(&self, id: T) -> bool {
+        self.inner.link_exists(id)
     }
 
-    pub fn get(&self, id: u32) -> Option<&Link> {
-        self.inner.get(id)
+    pub fn search(&self, source: T, target: T) -> Option<T> {
+        self.inner.search_link(source, target)
     }
 
-    pub fn all(&self) -> Vec<&Link> {
-        self.inner.all()
-    }
-
-    pub fn query(
-        &self,
-        index: Option<u32>,
-        source: Option<u32>,
-        target: Option<u32>,
-    ) -> Vec<&Link> {
-        self.inner.query(index, source, target)
-    }
-
-    pub fn search(&self, source: u32, target: u32) -> Option<u32> {
-        self.inner.search(source, target)
-    }
-
-    pub fn get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
-        if let Some(existing) = self.inner.search(source, target) {
+    pub fn get_or_create(&mut self, source: T, target: T) -> Result<T, LinkError> {
+        if let Some(existing) = self.inner.search_link(source, target) {
             return Ok(existing);
         }
         self.create(source, target)
     }
 
-    pub fn ensure_created(&mut self, id: u32) -> u32 {
+    pub fn ensure_created(&mut self, id: T) -> Result<T, LinkError> {
         // ensure_created is used by recovery/replay only and is not
         // itself a logical write; bypass transition recording.
-        self.inner.ensure_created(id)
+        self.inner.ensure_link_created(id)
+    }
+
+    /// Current state of `id` as a doublet, or an empty one at `id`.
+    fn snapshot(&self, id: T) -> GenericDoubletLink<T> {
+        let zero = T::from_byte(0);
+        self.inner
+            .get_link(id)
+            .map(|link| GenericDoubletLink::from_link(&link))
+            .unwrap_or_else(|| GenericDoubletLink::new(id, zero, zero))
     }
 
     fn ensure_open_transaction(&mut self) -> bool {
@@ -306,16 +393,18 @@ impl TransactionsDecorator {
     fn record_transition(
         &mut self,
         kind: TransitionKind,
-        before: DoubletLink,
-        after: DoubletLink,
-    ) -> Result<()> {
+        before: GenericDoubletLink<T>,
+        after: GenericDoubletLink<T>,
+    ) -> Result<(), LinkError> {
         self.sequence_counter += 1;
         let sequence = self.sequence_counter;
         let timestamp_ms = now_unix_ms();
         let transaction_id = self.current.as_ref().map(|tx| tx.id).ok_or_else(|| {
-            anyhow!("internal: missing open transaction while recording transition")
+            LinkError::Transaction(
+                "internal: missing open transaction while recording transition".to_string(),
+            )
         })?;
-        let transition = Transition {
+        let transition = GenericTransition {
             transaction_id,
             sequence,
             timestamp_ms,
@@ -345,28 +434,27 @@ impl TransactionsDecorator {
         Ok(())
     }
 
-    fn write_transition_to_log(&mut self, transition: &Transition) -> Result<()> {
-        // Always allocate a fresh link so each transition has its own
-        // log entry (mirrors C# `CreateAndUpdate(Null, Null)`).
-        let link = self.log_store.create(0, 0);
-        let name = format!("{TRANSITION_NAME_PREFIX}{}", transition.serialize());
-        self.log_store.set_name(link, &name)?;
-        Ok(())
+    fn write_transition_to_log(
+        &mut self,
+        transition: &GenericTransition<T>,
+    ) -> Result<(), LinkError> {
+        self.log_store.append_log_entry(&format!(
+            "{TRANSITION_NAME_PREFIX}{}",
+            transition.serialize()
+        ))
     }
 
-    fn write_marker(&mut self, name: &str) -> Result<()> {
-        // Always allocate a fresh link so markers do not overwrite one
-        // another (mirrors C# `CreateAndUpdate(Null, Null)`).
-        let link = self.log_store.create(0, 0);
-        self.log_store.set_name(link, name)?;
-        Ok(())
+    fn write_marker(&mut self, name: &str) -> Result<(), LinkError> {
+        self.log_store.append_log_entry(name)
     }
 
     // ----- Transaction handle --------------------------------------------
 
-    pub fn begin_transaction(&mut self) -> Result<TransactionHandle> {
+    pub fn begin_transaction(&mut self) -> Result<TransactionHandle, LinkError> {
         if self.current.is_some() {
-            bail!("Nested transactions are not supported.");
+            return Err(LinkError::Transaction(
+                "Nested transactions are not supported.".to_string(),
+            ));
         }
         let id = new_transaction_id();
         let started_ms = now_unix_ms();
@@ -379,14 +467,14 @@ impl TransactionsDecorator {
         Ok(TransactionHandle { id, started_ms })
     }
 
-    pub fn commit(&mut self) -> Result<()> {
+    pub fn commit(&mut self) -> Result<(), LinkError> {
         if self.current.is_none() {
             return Ok(());
         }
         self.commit_current()
     }
 
-    fn commit_current(&mut self) -> Result<()> {
+    fn commit_current(&mut self) -> Result<(), LinkError> {
         let pending = match self.current.take() {
             Some(p) => p,
             None => return Ok(()),
@@ -410,7 +498,7 @@ impl TransactionsDecorator {
         Ok(())
     }
 
-    pub fn rollback(&mut self) -> Result<()> {
+    pub fn rollback(&mut self) -> Result<(), LinkError> {
         let pending = match self.current.take() {
             Some(p) => p,
             None => return Ok(()),
@@ -435,7 +523,7 @@ impl TransactionsDecorator {
 
     /// Public helper for higher-level decorators (e.g. version control)
     /// — applies a single transition without writing a new log entry.
-    pub fn apply_transition(&mut self, transition: &Transition) {
+    pub fn apply_transition(&mut self, transition: &GenericTransition<T>) {
         self.replaying = true;
         self.try_apply_transition(transition, false);
         self.replaying = false;
@@ -443,32 +531,38 @@ impl TransactionsDecorator {
 
     /// Public helper for higher-level decorators (e.g. version control)
     /// — reverts a single transition without writing a new log entry.
-    pub fn revert_transition(&mut self, transition: &Transition) {
+    pub fn revert_transition(&mut self, transition: &GenericTransition<T>) {
         self.replaying = true;
         self.try_revert_transition(transition);
         self.replaying = false;
     }
 
-    fn try_apply_transition(&mut self, transition: &Transition, record_applied: bool) {
-        let result: Result<()> = match transition.kind {
+    fn try_apply_transition(&mut self, transition: &GenericTransition<T>, record_applied: bool) {
+        let zero = T::from_byte(0);
+        let result: Result<(), LinkError> = match transition.kind {
             TransitionKind::Create => {
-                if transition.after.index != 0 && !self.inner.exists(transition.after.index) {
-                    self.inner.ensure_created(transition.after.index);
+                if transition.after.index != zero && !self.inner.link_exists(transition.after.index)
+                {
                     self.inner
-                        .update(
-                            transition.after.index,
-                            transition.after.source,
-                            transition.after.target,
-                        )
-                        .map(|_| ())
+                        .ensure_link_created(transition.after.index)
+                        .and_then(|_| {
+                            self.inner
+                                .update_link(
+                                    transition.after.index,
+                                    transition.after.source,
+                                    transition.after.target,
+                                )
+                                .map(|_| ())
+                        })
                 } else {
                     Ok(())
                 }
             }
             TransitionKind::Update => {
-                if transition.after.index != 0 && self.inner.exists(transition.after.index) {
+                if transition.after.index != zero && self.inner.link_exists(transition.after.index)
+                {
                     self.inner
-                        .update(
+                        .update_link(
                             transition.after.index,
                             transition.after.source,
                             transition.after.target,
@@ -479,8 +573,10 @@ impl TransactionsDecorator {
                 }
             }
             TransitionKind::Delete => {
-                if transition.before.index != 0 && self.inner.exists(transition.before.index) {
-                    self.inner.delete(transition.before.index).map(|_| ())
+                if transition.before.index != zero
+                    && self.inner.link_exists(transition.before.index)
+                {
+                    self.inner.delete_link(transition.before.index).map(|_| ())
                 } else {
                     Ok(())
                 }
@@ -499,19 +595,23 @@ impl TransactionsDecorator {
         }
     }
 
-    fn try_revert_transition(&mut self, transition: &Transition) {
-        let result = match transition.kind {
+    fn try_revert_transition(&mut self, transition: &GenericTransition<T>) {
+        let zero = T::from_byte(0);
+        let result: Result<(), LinkError> = match transition.kind {
             TransitionKind::Create => {
-                if transition.after.index != 0 && self.inner.exists(transition.after.index) {
-                    self.inner.delete(transition.after.index).map(|_| ())
+                if transition.after.index != zero && self.inner.link_exists(transition.after.index)
+                {
+                    self.inner.delete_link(transition.after.index).map(|_| ())
                 } else {
                     Ok(())
                 }
             }
             TransitionKind::Update => {
-                if transition.before.index != 0 && self.inner.exists(transition.before.index) {
+                if transition.before.index != zero
+                    && self.inner.link_exists(transition.before.index)
+                {
                     self.inner
-                        .update(
+                        .update_link(
                             transition.before.index,
                             transition.before.source,
                             transition.before.target,
@@ -522,15 +622,20 @@ impl TransactionsDecorator {
                 }
             }
             TransitionKind::Delete => {
-                if transition.before.index != 0 && !self.inner.exists(transition.before.index) {
-                    self.inner.ensure_created(transition.before.index);
+                if transition.before.index != zero
+                    && !self.inner.link_exists(transition.before.index)
+                {
                     self.inner
-                        .update(
-                            transition.before.index,
-                            transition.before.source,
-                            transition.before.target,
-                        )
-                        .map(|_| ())
+                        .ensure_link_created(transition.before.index)
+                        .and_then(|_| {
+                            self.inner
+                                .update_link(
+                                    transition.before.index,
+                                    transition.before.source,
+                                    transition.before.target,
+                                )
+                                .map(|_| ())
+                        })
                 } else {
                     Ok(())
                 }
@@ -546,7 +651,7 @@ impl TransactionsDecorator {
         }
     }
 
-    fn mark_applied(&mut self, transition: &Transition) -> Result<()> {
+    fn mark_applied(&mut self, transition: &GenericTransition<T>) -> Result<(), LinkError> {
         if self.applied.insert(transition.sequence) {
             self.write_marker(&format!("{APPLIED_MARKER_PREFIX}{}", transition.sequence))?;
             if transition.sequence > self.applied_sequence {
@@ -560,7 +665,14 @@ impl TransactionsDecorator {
 
     /// Rebuilds the in-memory log and marker tables from the sidecar
     /// log store and re-applies committed-but-unapplied side-effects.
-    pub fn recover(&mut self) -> Result<()> {
+    ///
+    /// Entries that cannot be parsed are skipped: an append-only log
+    /// can end in the partial entry of a crashed write, and the
+    /// links-backed log can hold names that belong to other features.
+    /// An entry whose addresses do not fit into `T` is *not* skipped —
+    /// that means the log was written by a wider address type and
+    /// silently dropping it would corrupt the recovered state.
+    pub fn recover(&mut self) -> Result<(), LinkError> {
         self.log.clear();
         self.committed.clear();
         self.rolled_back.clear();
@@ -568,29 +680,33 @@ impl TransactionsDecorator {
         self.sequence_counter = 0;
         self.applied_sequence = 0;
 
-        // Read every named link from the log store.
-        let all_links: Vec<Link> = self.log_store.all().into_iter().copied().collect();
-        for link in &all_links {
-            let name = match self.log_store.get_name(link.index)? {
-                Some(value) => value,
-                None => continue,
-            };
-            if let Some(payload) = name.strip_prefix(TRANSITION_NAME_PREFIX) {
-                if let Some(transition) = Transition::try_parse(payload) {
-                    insert_ordered(&mut self.log, transition);
-                    if transition.sequence > self.sequence_counter {
-                        self.sequence_counter = transition.sequence;
+        for entry in self.log_store.read_log_entries()? {
+            if let Some(payload) = entry.strip_prefix(TRANSITION_NAME_PREFIX) {
+                match GenericTransition::<T>::parse(payload) {
+                    Ok(transition) => {
+                        insert_ordered(&mut self.log, transition);
+                        if transition.sequence > self.sequence_counter {
+                            self.sequence_counter = transition.sequence;
+                        }
+                    }
+                    Err(LinkError::AddressOutOfRange(value)) => {
+                        return Err(LinkError::AddressOutOfRange(value))
+                    }
+                    Err(error) => {
+                        if self.trace {
+                            eprintln!("[Transactions] Skipping unreadable log entry: {error}");
+                        }
                     }
                 }
-            } else if let Some(rest) = name.strip_prefix(COMMIT_MARKER_PREFIX) {
+            } else if let Some(rest) = entry.strip_prefix(COMMIT_MARKER_PREFIX) {
                 if let Ok(tx_id) = u128::from_str_radix(rest, 16) {
                     self.committed.insert(tx_id);
                 }
-            } else if let Some(rest) = name.strip_prefix(ROLLBACK_MARKER_PREFIX) {
+            } else if let Some(rest) = entry.strip_prefix(ROLLBACK_MARKER_PREFIX) {
                 if let Ok(tx_id) = u128::from_str_radix(rest, 16) {
                     self.rolled_back.insert(tx_id);
                 }
-            } else if let Some(rest) = name.strip_prefix(APPLIED_MARKER_PREFIX) {
+            } else if let Some(rest) = entry.strip_prefix(APPLIED_MARKER_PREFIX) {
                 if let Ok(seq) = rest.parse::<i64>() {
                     self.applied.insert(seq);
                     if seq > self.applied_sequence {
@@ -601,7 +717,7 @@ impl TransactionsDecorator {
         }
 
         // Re-apply committed-but-not-applied transitions (crash mid-async).
-        let log_snapshot: Vec<Transition> = self.log.clone();
+        let log_snapshot: Vec<GenericTransition<T>> = self.log.clone();
         self.replaying = true;
         for transition in &log_snapshot {
             if !self.committed.contains(&transition.transaction_id) {
@@ -634,7 +750,7 @@ impl TransactionsDecorator {
         Ok(())
     }
 
-    fn enforce_retention(&mut self) -> Result<()> {
+    fn enforce_retention(&mut self) -> Result<(), LinkError> {
         match self.retention_policy.clone() {
             LogRetentionPolicy::Infinite => Ok(()),
             LogRetentionPolicy::Sized { max_transitions } => self.enforce_sized(max_transitions),
@@ -645,7 +761,7 @@ impl TransactionsDecorator {
         }
     }
 
-    fn enforce_sized(&mut self, max_transitions: u64) -> Result<()> {
+    fn enforce_sized(&mut self, max_transitions: u64) -> Result<(), LinkError> {
         if max_transitions == 0 {
             return Ok(());
         }
@@ -670,14 +786,19 @@ impl TransactionsDecorator {
         Ok(())
     }
 
-    fn enforce_chunked(&mut self, chunk_size: u64, archive_directory: &Path) -> Result<()> {
+    fn enforce_chunked(
+        &mut self,
+        chunk_size: u64,
+        archive_directory: &Path,
+    ) -> Result<(), LinkError> {
         if chunk_size == 0 {
             return Ok(());
         }
         if (self.log.len() as u64) < chunk_size {
             return Ok(());
         }
-        let chunk: Vec<Transition> = self.log.iter().take(chunk_size as usize).copied().collect();
+        let chunk: Vec<GenericTransition<T>> =
+            self.log.iter().take(chunk_size as usize).copied().collect();
         for transition in &chunk {
             if !self.applied.contains(&transition.sequence) {
                 self.replaying = true;
@@ -688,11 +809,11 @@ impl TransactionsDecorator {
                 }
             }
         }
-        std::fs::create_dir_all(archive_directory).with_context(|| {
-            format!(
-                "failed to create archive dir {}",
+        std::fs::create_dir_all(archive_directory).map_err(|error| {
+            LinkError::StorageError(format!(
+                "failed to create archive dir {}: {error}",
                 archive_directory.display()
-            )
+            ))
         })?;
         let timestamp = now_unix_ms();
         let file_name = format!(
@@ -701,8 +822,12 @@ impl TransactionsDecorator {
         );
         let path = archive_directory.join(file_name);
         use std::io::Write;
-        let mut file = std::fs::File::create(&path)
-            .with_context(|| format!("failed to create archive file {}", path.display()))?;
+        let mut file = std::fs::File::create(&path).map_err(|error| {
+            LinkError::StorageError(format!(
+                "failed to create archive file {}: {error}",
+                path.display()
+            ))
+        })?;
         for transition in &chunk {
             writeln!(file, "{}", transition.serialize())?;
         }
@@ -719,9 +844,38 @@ impl TransactionsDecorator {
     }
 }
 
+/// Read paths that lend out references, available whenever the wrapped
+/// store keeps its links resident in memory.
+impl<T, S, L> GenericTransactionsDecorator<T, S, L>
+where
+    T: LinkReference,
+    S: LinksStorageRef<T>,
+    L: TransitionLogStore,
+{
+    pub fn get(&self, id: T) -> Option<&GenericLink<T>> {
+        self.inner.get_link_ref(id)
+    }
+
+    pub fn all(&self) -> Vec<&GenericLink<T>> {
+        self.inner.all_link_refs()
+    }
+
+    pub fn query(
+        &self,
+        index: Option<T>,
+        source: Option<T>,
+        target: Option<T>,
+    ) -> Vec<&GenericLink<T>> {
+        self.inner.query_link_refs(index, source, target)
+    }
+}
+
 // ----- Helpers ----------------------------------------------------------
 
-fn insert_ordered(list: &mut Vec<Transition>, transition: Transition) {
+fn insert_ordered<T: LinkReference>(
+    list: &mut Vec<GenericTransition<T>>,
+    transition: GenericTransition<T>,
+) {
     let mut lo = 0usize;
     let mut hi = list.len();
     while lo < hi {
@@ -793,5 +947,22 @@ mod tests {
         };
         let parsed = Transition::try_parse(&t.serialize()).unwrap();
         assert_eq!(t, parsed);
+    }
+
+    #[test]
+    fn wide_transition_is_rejected_by_a_narrow_address_type() {
+        let wide = GenericTransition::<u64> {
+            transaction_id: 7,
+            sequence: 1,
+            timestamp_ms: 0,
+            kind: TransitionKind::Create,
+            before: GenericDoubletLink::empty(),
+            after: GenericDoubletLink::new(u32::MAX as u64 + 1, 0, 0),
+        };
+        assert!(matches!(
+            GenericTransition::<u32>::parse(&wide.serialize()),
+            Err(LinkError::AddressOutOfRange(_))
+        ));
+        assert!(GenericTransition::<u64>::parse(&wide.serialize()).is_ok());
     }
 }

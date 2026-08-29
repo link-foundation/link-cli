@@ -4,8 +4,7 @@ using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Data.Doublets.Decorators;
 using Platform.Delegates;
-
-using DoubletLink = Platform.Data.Doublets.Link<uint>;
+using System.Numerics;
 
 namespace Foundation.Data.Doublets.Cli;
 
@@ -100,13 +99,14 @@ public abstract record LogRetentionPolicy
 /// operation can be undone (replay <c>After → Before</c>) or replayed
 /// (<c>Before → After</c>).
 /// </summary>
-public readonly record struct Transition(
+public readonly record struct Transition<TLinkAddress>(
   Guid TransactionId,
   long Sequence,
   DateTimeOffset Timestamp,
   TransitionKind Kind,
-  DoubletLink Before,
-  DoubletLink After)
+  Link<TLinkAddress> Before,
+  Link<TLinkAddress> After)
+  where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
     internal const string SchemaVersion = "v1";
 
@@ -120,11 +120,25 @@ public readonly record struct Transition(
           Sequence.ToString(CultureInfo.InvariantCulture),
           Timestamp.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture),
           ((int)Kind).ToString(CultureInfo.InvariantCulture),
-          $"{Before.Index},{Before.Source},{Before.Target}",
-          $"{After.Index},{After.Source},{After.Target}");
+          FormatLink(Before),
+          FormatLink(After));
     }
 
-    public static bool TryParse(string text, out Transition transition)
+    /// <summary>Formats a link as <c>index,source,target</c> in decimal,
+    /// so that a log written by a <c>uint</c>-addressed store reads back
+    /// unchanged in a <c>ulong</c>-addressed one.</summary>
+    private static string FormatLink(Link<TLinkAddress> link)
+    {
+        return string.Concat(
+          Format(link.Index), ",", Format(link.Source), ",", Format(link.Target));
+    }
+
+    private static string Format(TLinkAddress address)
+    {
+        return address.ToString(null, CultureInfo.InvariantCulture);
+    }
+
+    public static bool TryParse(string text, out Transition<TLinkAddress> transition)
     {
         transition = default;
         if (string.IsNullOrWhiteSpace(text)) return false;
@@ -136,7 +150,7 @@ public readonly record struct Transition(
         if (!int.TryParse(parts[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kindValue)) return false;
         if (!TryParseLink(parts[5], out var before)) return false;
         if (!TryParseLink(parts[6], out var after)) return false;
-        transition = new Transition(
+        transition = new Transition<TLinkAddress>(
           txId,
           seq,
           DateTimeOffset.FromUnixTimeMilliseconds(ms),
@@ -146,28 +160,29 @@ public readonly record struct Transition(
         return true;
     }
 
-    private static bool TryParseLink(string text, out DoubletLink link)
+    private static bool TryParseLink(string text, out Link<TLinkAddress> link)
     {
         link = default;
         var parts = text.Split(',');
         if (parts.Length != 3) return false;
-        if (!uint.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var index)) return false;
-        if (!uint.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var source)) return false;
-        if (!uint.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var target)) return false;
-        link = new DoubletLink(index, source, target);
+        if (!TLinkAddress.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var index)) return false;
+        if (!TLinkAddress.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var source)) return false;
+        if (!TLinkAddress.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var target)) return false;
+        link = new Link<TLinkAddress>(index, source, target);
         return true;
     }
 }
 
 /// <summary>A live transaction handle. Disposal without commit rolls
 /// back automatically (R10).</summary>
-public interface ITransaction : IDisposable
+public interface ITransaction<TLinkAddress> : IDisposable
+  where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
     Guid Id { get; }
     DateTimeOffset StartedAt { get; }
     bool IsCommitted { get; }
     bool IsRolledBack { get; }
-    IReadOnlyList<Transition> Transitions { get; }
+    IReadOnlyList<Transition<TLinkAddress>> Transitions { get; }
     void Commit();
     void Rollback();
     Task CommitAsync(CancellationToken cancellationToken = default);
@@ -175,11 +190,12 @@ public interface ITransaction : IDisposable
 
 /// <summary>A links store with transactional semantics layered on top
 /// of the underlying <see cref="INamedTypesLinks{TLinkAddress}"/>.</summary>
-public interface ITransactionsLinks : INamedTypesLinks<uint>
+public interface ITransactionsLinks<TLinkAddress> : INamedTypesLinks<TLinkAddress>
+  where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
-    ITransaction BeginTransaction();
-    Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
-    IReadOnlyList<Transition> Log { get; }
+    ITransaction<TLinkAddress> BeginTransaction();
+    Task<ITransaction<TLinkAddress>> BeginTransactionAsync(CancellationToken cancellationToken = default);
+    IReadOnlyList<Transition<TLinkAddress>> Log { get; }
     LogRetentionPolicy RetentionPolicy { get; set; }
     CommitMode CommitMode { get; set; }
     void Recover();
@@ -189,23 +205,24 @@ public interface ITransactionsLinks : INamedTypesLinks<uint>
 
 /// <summary>
 /// Decorator that records every <c>Create</c>/<c>Update</c>/<c>Delete</c>
-/// as a reversible <see cref="Transition"/> in a sidecar doublets log
+/// as a reversible <see cref="Transition{TLinkAddress}"/> in a sidecar doublets log
 /// store. Supports explicit transactions, sync/async commits, three log
 /// retention policies, and crash recovery. Optional — no behavioural
 /// change if not opted in (R8).
 /// </summary>
-public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransactionsLinks, IDisposable
+public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, ITransactionsLinks<TLinkAddress>, IDisposable
+  where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
     internal const string CommitMarkerPrefix = "__transactions:commit:";
     internal const string RollbackMarkerPrefix = "__transactions:rollback:";
     internal const string AppliedMarkerPrefix = "__transactions:applied:";
     internal const string TransitionNamePrefix = "__transactions:transition:";
 
-    private readonly INamedTypesLinks<uint> _inner;
-    private readonly INamedTypesLinks<uint> _logStore;
+    private readonly INamedTypesLinks<TLinkAddress> _inner;
+    private readonly INamedTypesLinks<TLinkAddress> _logStore;
     private readonly bool _trace;
     private readonly object _lock = new();
-    private readonly List<Transition> _log = new();
+    private readonly List<Transition<TLinkAddress>> _log = new();
     private readonly HashSet<Guid> _committed = new();
     private readonly HashSet<Guid> _rolledBack = new();
     private readonly HashSet<long> _applied = new();
@@ -221,8 +238,8 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     private CommitMode _commitMode;
 
     public TransactionsDecorator(
-      INamedTypesLinks<uint> inner,
-      INamedTypesLinks<uint> logStore,
+      INamedTypesLinks<TLinkAddress> inner,
+      INamedTypesLinks<TLinkAddress> logStore,
       LogRetentionPolicy? retentionPolicy = null,
       CommitMode commitMode = CommitMode.Sync,
       bool trace = false)
@@ -249,7 +266,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         set { lock (_lock) _retentionPolicy = value ?? LogRetentionPolicy.Default; }
     }
 
-    public IReadOnlyList<Transition> Log
+    public IReadOnlyList<Transition<TLinkAddress>> Log
     {
         get { lock (_lock) return _log.ToArray(); }
     }
@@ -257,7 +274,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     public long AppliedSequence { get { lock (_lock) return _appliedSequence; } }
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
 
-    public ITransaction BeginTransaction()
+    public ITransaction<TLinkAddress> BeginTransaction()
     {
         lock (_lock)
         {
@@ -271,7 +288,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         }
     }
 
-    public Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public Task<ITransaction<TLinkAddress>> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(BeginTransaction());
@@ -279,25 +296,25 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
 
     // Write API (wraps the user's handler so we observe before/after) -------
 
-    public override uint Create(IList<uint>? substitution, WriteHandler<uint>? handler)
+    public override TLinkAddress Create(IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
     {
         return RunWrite(TransitionKind.Create, h => _inner.Create(substitution, h), handler);
     }
 
-    public override uint Update(IList<uint>? restriction, IList<uint>? substitution, WriteHandler<uint>? handler)
+    public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
     {
         return RunWrite(TransitionKind.Update, h => _inner.Update(restriction, substitution, h), handler);
     }
 
-    public override uint Delete(IList<uint>? restriction, WriteHandler<uint>? handler)
+    public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
     {
         return RunWrite(TransitionKind.Delete, h => _inner.Delete(restriction, h), handler);
     }
 
-    private uint RunWrite(
+    private TLinkAddress RunWrite(
       TransitionKind kind,
-      Func<WriteHandler<uint>, uint> innerCall,
-      WriteHandler<uint>? userHandler)
+      Func<WriteHandler<TLinkAddress>, TLinkAddress> innerCall,
+      WriteHandler<TLinkAddress>? userHandler)
     {
         if (_replaying)
         {
@@ -321,15 +338,17 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         }
 
         var @continue = _inner.Constants.Continue;
-        var observed = new Dictionary<uint, (DoubletLink? Before, DoubletLink? After)>();
-        var observedOrder = new List<uint>();
+        var observed = new Dictionary<TLinkAddress, (Link<TLinkAddress>? Before, Link<TLinkAddress>? After)>();
+        var observedOrder = new List<TLinkAddress>();
 
-        WriteHandler<uint> wrapped = (before, after) =>
+        WriteHandler<TLinkAddress> wrapped = (before, after) =>
         {
-            var beforeLink = before is null ? default(DoubletLink?) : new DoubletLink(before);
-            var afterLink = after is null ? default(DoubletLink?) : new DoubletLink(after);
-            var key = beforeLink?.Index ?? afterLink?.Index ?? 0;
-            if (key != 0)
+            var beforeLink = before is null ? default(Link<TLinkAddress>?) : new Link<TLinkAddress>(before);
+            var afterLink = after is null ? default(Link<TLinkAddress>?) : new Link<TLinkAddress>(after);
+            var key = beforeLink.HasValue ? beforeLink.Value.Index
+                    : afterLink.HasValue ? afterLink.Value.Index
+                    : TLinkAddress.Zero;
+            if (key != TLinkAddress.Zero)
             {
                 if (!observed.TryGetValue(key, out var state))
                 {
@@ -345,7 +364,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
             return userHandler is null ? @continue : userHandler(before, after);
         };
 
-        uint result;
+        TLinkAddress result;
         try
         {
             result = innerCall(wrapped);
@@ -380,20 +399,20 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         return result;
     }
 
-    private static DoubletLink LinkOrEmpty(IList<uint>? raw)
+    private static Link<TLinkAddress> LinkOrEmpty(IList<TLinkAddress>? raw)
     {
-        return raw is null ? default : new DoubletLink(raw);
+        return raw is null ? default : new Link<TLinkAddress>(raw);
     }
 
-    private static uint NullHandler(IList<uint>? before, IList<uint>? after) => default;
+    private static TLinkAddress NullHandler(IList<TLinkAddress>? before, IList<TLinkAddress>? after) => TLinkAddress.Zero;
 
-    private void RecordTransition(Transaction transaction, TransitionKind kind, DoubletLink before, DoubletLink after)
+    private void RecordTransition(Transaction transaction, TransitionKind kind, Link<TLinkAddress> before, Link<TLinkAddress> after)
     {
-        Transition transition;
+        Transition<TLinkAddress> transition;
         lock (_lock)
         {
             var sequence = ++_sequenceCounter;
-            transition = new Transition(
+            transition = new Transition<TLinkAddress>(
               transaction.Id,
               sequence,
               DateTimeOffset.UtcNow,
@@ -409,10 +428,10 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
 
     // INamedTypes forwarding ------------------------------------------------
 
-    public string? GetName(uint link) => _inner.GetName(link);
-    public uint SetName(uint link, string name) => _inner.SetName(link, name);
-    public uint GetByName(string name) => _inner.GetByName(name);
-    public void RemoveName(uint link) => _inner.RemoveName(link);
+    public string? GetName(TLinkAddress link) => _inner.GetName(link);
+    public TLinkAddress SetName(TLinkAddress link, string name) => _inner.SetName(link, name);
+    public TLinkAddress GetByName(string name) => _inner.GetByName(name);
+    public void RemoveName(TLinkAddress link) => _inner.RemoveName(link);
 
     // Recovery --------------------------------------------------------------
 
@@ -428,17 +447,17 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
             _appliedSequence = 0;
 
             var any = _logStore.Constants.Any;
-            var anyLink = new DoubletLink(any, any, any);
+            var anyLink = new Link<TLinkAddress>(any, any, any);
             foreach (var raw in _logStore.All(anyLink))
             {
-                var link = new DoubletLink(raw);
+                var link = new Link<TLinkAddress>(raw);
                 var name = _logStore.GetName(link.Index);
                 if (string.IsNullOrEmpty(name)) continue;
 
                 if (name.StartsWith(TransitionNamePrefix, StringComparison.Ordinal))
                 {
                     var payload = name.Substring(TransitionNamePrefix.Length);
-                    if (Transition.TryParse(payload, out var transition))
+                    if (Transition<TLinkAddress>.TryParse(payload, out var transition))
                     {
                         InsertOrdered(_log, transition);
                         if (transition.Sequence > _sequenceCounter)
@@ -520,11 +539,27 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     /// Stops the background worker. The wrapped data store and log store
     /// are not disposed here; callers are expected to own those.
     /// </summary>
-    public void Dispose() => Shutdown();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Stops the background worker. Derived decorators that own extra
+    /// resources override this and call <c>base.Dispose(disposing)</c>.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            Shutdown();
+        }
+    }
 
     /// <summary>
     /// Stops the background worker. Kept as a named method for backwards
-    /// compatibility; <see cref="Dispose"/> delegates to it.
+    /// compatibility; <see cref="Dispose()"/> delegates to it.
     /// </summary>
     public void Shutdown()
     {
@@ -549,7 +584,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     internal void OnCommit(Transaction transaction, bool forceAsync)
     {
         bool runAsync;
-        Transition[] transitions;
+        Transition<TLinkAddress>[] transitions;
         lock (_lock)
         {
             if (transaction.IsCommitted || transaction.IsRolledBack) return;
@@ -605,11 +640,11 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         }
     }
 
-    private void TryRevertTransition(Transition transition)
+    private void TryRevertTransition(Transition<TLinkAddress> transition)
     {
         try
         {
-            if (transition.Before.Index == 0)
+            if (transition.Before.Index == TLinkAddress.Zero)
             {
                 DeleteIfExists(transition.After.Index);
             }
@@ -630,7 +665,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
-    public void RevertTransition(Transition transition)
+    public void RevertTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
@@ -652,7 +687,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
-    public void ApplyTransition(Transition transition)
+    public void ApplyTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
@@ -668,11 +703,11 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         }
     }
 
-    private void TryApplyTransition(Transition transition, bool recordApplied)
+    private void TryApplyTransition(Transition<TLinkAddress> transition, bool recordApplied)
     {
         try
         {
-            if (transition.After.Index == 0)
+            if (transition.After.Index == TLinkAddress.Zero)
             {
                 DeleteIfExists(transition.Before.Index);
             }
@@ -692,7 +727,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         }
     }
 
-    private void MarkApplied(Transition transition)
+    private void MarkApplied(Transition<TLinkAddress> transition)
     {
         if (_applied.Add(transition.Sequence))
         {
@@ -701,28 +736,28 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         }
     }
 
-    private void RestoreLink(DoubletLink link)
+    private void RestoreLink(Link<TLinkAddress> link)
     {
-        if (link.Index == 0) return;
+        if (link.Index == TLinkAddress.Zero) return;
         if (!_inner.Exists(link.Index))
         {
             _inner.EnsureCreated(link.Index);
         }
         _inner.Update(
-          new DoubletLink(link.Index, _inner.Constants.Any, _inner.Constants.Any),
-          new DoubletLink(link.Index, link.Source, link.Target),
+          new Link<TLinkAddress>(link.Index, _inner.Constants.Any, _inner.Constants.Any),
+          new Link<TLinkAddress>(link.Index, link.Source, link.Target),
           null);
     }
 
-    private void DeleteIfExists(uint index)
+    private void DeleteIfExists(TLinkAddress index)
     {
-        if (index != 0 && _inner.Exists(index))
+        if (index != TLinkAddress.Zero && _inner.Exists(index))
         {
-            _inner.Delete(new DoubletLink(index, _inner.Constants.Any, _inner.Constants.Any), null);
+            _inner.Delete(new Link<TLinkAddress>(index, _inner.Constants.Any, _inner.Constants.Any), null);
         }
     }
 
-    internal void WriteTransitionToLog(Transition transition)
+    internal void WriteTransitionToLog(Transition<TLinkAddress> transition)
     {
         var link = _logStore.CreateAndUpdate(_logStore.Constants.Null, _logStore.Constants.Null);
         var name = TransitionNamePrefix + transition.Serialize();
@@ -735,7 +770,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         _logStore.SetName(link, name);
     }
 
-    private static void InsertOrdered(List<Transition> list, Transition transition)
+    private static void InsertOrdered(List<Transition<TLinkAddress>> list, Transition<TLinkAddress> transition)
     {
         var lo = 0;
         var hi = list.Count;
@@ -815,7 +850,7 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         _log.RemoveRange(0, chunk.Count);
     }
 
-    private async Task ApplyTransitionsAsync(IReadOnlyList<Transition> transitions)
+    private async Task ApplyTransitionsAsync(IReadOnlyList<Transition<TLinkAddress>> transitions)
     {
         foreach (var transition in transitions)
         {
@@ -870,14 +905,14 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
 
     // Transaction handle ----------------------------------------------------
 
-    internal sealed class Transaction : ITransaction
+    internal sealed class Transaction : ITransaction<TLinkAddress>
     {
-        private readonly TransactionsDecorator _owner;
-        private readonly List<Transition> _transitions = new();
+        private readonly TransactionsDecorator<TLinkAddress> _owner;
+        private readonly List<Transition<TLinkAddress>> _transitions = new();
         private readonly bool _autoCommit;
         private int _state; // 0 = open, 1 = committed, 2 = rolled back
 
-        public Transaction(TransactionsDecorator owner, bool autoCommit)
+        public Transaction(TransactionsDecorator<TLinkAddress> owner, bool autoCommit)
         {
             _owner = owner;
             _autoCommit = autoCommit;
@@ -889,9 +924,9 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
         public DateTimeOffset StartedAt { get; }
         public bool IsCommitted => _state == 1;
         public bool IsRolledBack => _state == 2;
-        public IReadOnlyList<Transition> Transitions => _transitions;
+        public IReadOnlyList<Transition<TLinkAddress>> Transitions => _transitions;
 
-        internal void AddTransition(Transition transition) => _transitions.Add(transition);
+        internal void AddTransition(Transition<TLinkAddress> transition) => _transitions.Add(transition);
         internal void MarkCommitted() => _state = 1;
         internal void MarkRolledBack() => _state = 2;
 
@@ -923,5 +958,30 @@ public sealed class TransactionsDecorator : LinksDecoratorBase<uint>, ITransacti
                 }
             }
         }
+    }
+}
+
+/// <summary>
+/// The <c>uint</c>-addressed transactions decorator used by the
+/// <c>clink</c> CLI.
+/// </summary>
+/// <remarks>
+/// Nothing but a convenience name for
+/// <see cref="TransactionsDecorator{TLinkAddress}"/> closed over
+/// <see cref="uint"/>: consumers that address their doublets store with
+/// <see cref="ulong"/> (or any other <see cref="IUnsignedNumber{TSelf}"/>)
+/// use the generic form directly.
+/// </remarks>
+public sealed class TransactionsDecorator : TransactionsDecorator<uint>
+{
+    /// <inheritdoc cref="TransactionsDecorator{TLinkAddress}(INamedTypesLinks{TLinkAddress}, INamedTypesLinks{TLinkAddress}, LogRetentionPolicy, CommitMode, bool)"/>
+    public TransactionsDecorator(
+      INamedTypesLinks<uint> inner,
+      INamedTypesLinks<uint> logStore,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false)
+      : base(inner, logStore, retentionPolicy, commitMode, trace)
+    {
     }
 }

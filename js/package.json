@@ -17,14 +17,14 @@
     "clean": "rm -rf ../dist pkg ../pkg ../pkg-node ../pkg-bundler ../target ../rust/wasm/target"
   },
   "dependencies": {
-    "doublets-web": "^0.1.2",
-    "lucide-react": "^1.14.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "doublets-web": "^0.1.3",
+    "lucide-react": "^1.37.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.10",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.2.2",
     "vite-plugin-wasm": "^3.6.0"
   }
 }

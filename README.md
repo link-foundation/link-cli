@@ -42,6 +42,7 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
 - [docs/case-studies/issue-94/README.md](docs/case-studies/issue-94/README.md): evidence and analysis for the optional transactions and version-control layers.
+- [docs/case-studies/issue-98/README.md](docs/case-studies/issue-98/README.md): evidence and analysis for making the libraries reusable as a doublets-backed transactional store.
 
 ### API references
 
@@ -381,6 +382,39 @@ the CLI uses these files:
 Use `--triggers-file` to point trigger storage somewhere else, or
 `--embed-triggers` to store trigger links in the main database. Names are stored
 separately so the primary links database remains numeric.
+
+## Use as an embedded store
+
+Both libraries can be embedded as a transactional links store instead of being
+driven through the CLI. The transactions layer is written against a storage
+abstraction rather than one concrete store, so an application can supply its
+own:
+
+- **Any address type.** Rust's `GenericTransactionsDecorator<T, S, L>` and C#'s
+  `TransactionsDecorator<TLinkAddress>` are generic over the doublets address
+  type (`u32`/`u64`/`usize`, `uint`/`ulong`). The transitions wire format writes
+  addresses in decimal, so a log written by a narrow store reads back unchanged
+  in a wider one, and an address that does not fit is rejected rather than
+  truncated.
+- **A real doublets store.** Rust's `storage::DoubletsStorage` wraps a
+  file-mapped `doublets::unit::Store`, or adopts one the caller already owns.
+  Its links are mutated **in place**, so the inode never changes and other
+  processes that mapped the same file keep observing the same data.
+- **Stated durability.** Writes to a file-mapped store survive a *process*
+  crash with no explicit save; surviving a *machine* crash needs the `fsync`
+  that `flush()` performs. Crash recovery replays committed-but-unapplied
+  transitions and rolls back uncommitted ones when the store is reopened.
+- **Multi-process access.** Both implementations lock a `<database>.lock`
+  sidecar — shared for readers, exclusive for writers — and expose a cheap
+  fingerprint that answers "has anyone else written since I last looked?".
+
+Runnable demos for both languages live in
+[`examples/embedded-store/`](examples/embedded-store).
+
+See [rust/README.md](rust/README.md#use-as-a-library),
+[csharp/README.md](csharp/README.md#use-as-a-library), and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#embedding-the-library) for the
+details.
 
 ## Update single link
 

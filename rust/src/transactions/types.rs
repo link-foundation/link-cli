@@ -1,10 +1,17 @@
 //! Value types and serialization helpers for the transactions layer.
+//!
+//! Every type here is generic over the doublets address type `T` so the
+//! transactions layer can be reused with `usize`- or `u64`-addressed
+//! stores. The `u32` specialisations ([`DoubletLink`], [`Transition`])
+//! are what the `clink` CLI itself uses.
 
 use std::path::PathBuf;
 
 use anyhow::{anyhow, bail, Result};
+use doublets::data::LinkReference;
 
-use crate::link::Link;
+use crate::error::LinkError;
+use crate::link::GenericLink;
 
 /// The kind of write operation recorded by a [`Transition`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -109,107 +116,165 @@ impl LogRetentionPolicy {
 }
 
 /// A single doublet link state captured by a transition (mirror of the
-/// C# `Platform.Data.Doublets.Link<uint>`).
+/// C# `Platform.Data.Doublets.Link<TLinkAddress>`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
-pub struct DoubletLink {
-    pub index: u32,
-    pub source: u32,
-    pub target: u32,
+pub struct GenericDoubletLink<T> {
+    pub index: T,
+    pub source: T,
+    pub target: T,
 }
 
-impl DoubletLink {
-    pub const fn new(index: u32, source: u32, target: u32) -> Self {
+impl<T> GenericDoubletLink<T> {
+    pub const fn new(index: T, source: T, target: T) -> Self {
         Self {
             index,
             source,
             target,
         }
     }
+}
 
-    pub const fn empty() -> Self {
-        Self::new(0, 0, 0)
+impl<T: LinkReference> GenericDoubletLink<T> {
+    /// The all-zero doublet used for the missing side of a create/delete.
+    pub fn empty() -> Self {
+        let zero = T::from_byte(0);
+        Self::new(zero, zero, zero)
     }
 
-    pub fn from_link(link: &Link) -> Self {
+    pub fn from_link(link: &GenericLink<T>) -> Self {
+        Self::new(link.index, link.source, link.target)
+    }
+
+    fn serialize(&self) -> String {
+        format!("{},{},{}", self.index, self.source, self.target)
+    }
+
+    fn parse(text: &str) -> Result<Self, LinkError> {
+        let parts: Vec<&str> = text.split(',').collect();
+        if parts.len() != 3 {
+            return Err(LinkError::InvalidFormat(format!(
+                "expected 'index,source,target' in transition, got '{text}'"
+            )));
+        }
+        Ok(Self::new(
+            parse_address(parts[0])?,
+            parse_address(parts[1])?,
+            parse_address(parts[2])?,
+        ))
+    }
+}
+
+impl<T: LinkReference> From<GenericLink<T>> for GenericDoubletLink<T> {
+    fn from(link: GenericLink<T>) -> Self {
         Self::new(link.index, link.source, link.target)
     }
 }
+
+impl<T: LinkReference> From<GenericDoubletLink<T>> for GenericLink<T> {
+    fn from(link: GenericDoubletLink<T>) -> Self {
+        Self::new(link.index, link.source, link.target)
+    }
+}
+
+/// The `u32`-addressed doublet used by the `clink` CLI.
+pub type DoubletLink = GenericDoubletLink<u32>;
 
 /// Reversible write captured by the transactions layer. Holds both
 /// `before` and `after` link states so the operation can be undone or
 /// replayed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Transition {
+pub struct GenericTransition<T> {
     pub transaction_id: u128,
     pub sequence: i64,
     pub timestamp_ms: i64,
     pub kind: TransitionKind,
-    pub before: DoubletLink,
-    pub after: DoubletLink,
+    pub before: GenericDoubletLink<T>,
+    pub after: GenericDoubletLink<T>,
 }
 
-impl Transition {
+/// The `u32`-addressed transition used by the `clink` CLI.
+pub type Transition = GenericTransition<u32>;
+
+impl<T: LinkReference> GenericTransition<T> {
     pub(crate) const SCHEMA_VERSION: &'static str = "v1";
 
-    /// Encodes the transition as a single line stored as the *name*
-    /// of one link in the log doublets store.
+    /// Encodes the transition as a single line stored as one entry of
+    /// the transitions log.
+    ///
+    /// Addresses are written in decimal, so a log written by a
+    /// `u32`-addressed store reads back unchanged in a `u64`- or
+    /// `usize`-addressed one.
     pub fn serialize(&self) -> String {
         format!(
-            "{schema}|{tx:032x}|{seq}|{ms}|{kind}|{bi},{bs},{bt}|{ai},{as_},{at}",
+            "{schema}|{tx:032x}|{seq}|{ms}|{kind}|{before}|{after}",
             schema = Self::SCHEMA_VERSION,
             tx = self.transaction_id,
             seq = self.sequence,
             ms = self.timestamp_ms,
             kind = self.kind.as_u8(),
-            bi = self.before.index,
-            bs = self.before.source,
-            bt = self.before.target,
-            ai = self.after.index,
-            as_ = self.after.source,
-            at = self.after.target,
+            before = self.before.serialize(),
+            after = self.after.serialize(),
         )
     }
 
     /// Parses a serialized transition.
-    pub fn try_parse(text: &str) -> Option<Self> {
+    ///
+    /// Returns [`LinkError::InvalidFormat`] for anything that is not a
+    /// well-formed entry — including the partial line a crash can leave
+    /// at the end of an append-only log — and
+    /// [`LinkError::AddressOutOfRange`] for a structurally valid entry
+    /// whose addresses do not fit into `T`. The two are distinct on
+    /// purpose: recovery skips torn entries but must not silently drop
+    /// a log written by a wider address type.
+    pub fn parse(text: &str) -> Result<Self, LinkError> {
+        let invalid = || LinkError::InvalidFormat(format!("malformed transition entry '{text}'"));
         if text.is_empty() {
-            return None;
+            return Err(invalid());
         }
         let parts: Vec<&str> = text.split('|').collect();
-        if parts.len() < 7 {
-            return None;
+        if parts.len() < 7 || parts[0] != Self::SCHEMA_VERSION {
+            return Err(invalid());
         }
-        if parts[0] != Self::SCHEMA_VERSION {
-            return None;
-        }
-        let tx = u128::from_str_radix(parts[1], 16).ok()?;
-        let seq: i64 = parts[2].parse().ok()?;
-        let ms: i64 = parts[3].parse().ok()?;
-        let kind_value: u8 = parts[4].parse().ok()?;
-        let kind = TransitionKind::from_u8(kind_value)?;
-        let before = parse_doublet(parts[5])?;
-        let after = parse_doublet(parts[6])?;
-        Some(Self {
-            transaction_id: tx,
-            sequence: seq,
-            timestamp_ms: ms,
+        let transaction_id = u128::from_str_radix(parts[1], 16).map_err(|_| invalid())?;
+        let sequence: i64 = parts[2].parse().map_err(|_| invalid())?;
+        let timestamp_ms: i64 = parts[3].parse().map_err(|_| invalid())?;
+        let kind_value: u8 = parts[4].parse().map_err(|_| invalid())?;
+        let kind = TransitionKind::from_u8(kind_value).ok_or_else(invalid)?;
+        let before =
+            GenericDoubletLink::parse(parts[5]).map_err(|error| keep_range(error, &invalid))?;
+        let after =
+            GenericDoubletLink::parse(parts[6]).map_err(|error| keep_range(error, &invalid))?;
+        Ok(Self {
+            transaction_id,
+            sequence,
+            timestamp_ms,
             kind,
             before,
             after,
         })
     }
+
+    /// Lenient variant of [`GenericTransition::parse`].
+    pub fn try_parse(text: &str) -> Option<Self> {
+        Self::parse(text).ok()
+    }
 }
 
-fn parse_doublet(text: &str) -> Option<DoubletLink> {
-    let parts: Vec<&str> = text.split(',').collect();
-    if parts.len() != 3 {
-        return None;
+/// Keeps [`LinkError::AddressOutOfRange`] distinguishable while turning
+/// every other doublet parse failure into the caller's format error.
+fn keep_range(error: LinkError, invalid: &dyn Fn() -> LinkError) -> LinkError {
+    match error {
+        LinkError::AddressOutOfRange(value) => LinkError::AddressOutOfRange(value),
+        _ => invalid(),
     }
-    Some(DoubletLink {
-        index: parts[0].parse().ok()?,
-        source: parts[1].parse().ok()?,
-        target: parts[2].parse().ok()?,
-    })
+}
+
+/// Parses a decimal link address into any `doublets` address type.
+fn parse_address<T: LinkReference>(text: &str) -> Result<T, LinkError> {
+    let value: u128 = text
+        .parse()
+        .map_err(|_| LinkError::InvalidFormat(format!("invalid link address '{text}'")))?;
+    T::try_from(value).map_err(|_| LinkError::AddressOutOfRange(value))
 }
 
 /// Sidecar-store name prefixes used by the recovery protocol.

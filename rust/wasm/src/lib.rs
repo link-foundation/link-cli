@@ -246,7 +246,7 @@ impl NamedTypeLinks for BrowserStorage {
     }
 
     fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        let link = self.links.get_mut(&id).ok_or(LinkError::NotFound(id))?;
+        let link = self.links.get_mut(&id).ok_or(LinkError::not_found(id))?;
         let before = *link;
         link.source = source;
         link.target = target;
@@ -255,7 +255,9 @@ impl NamedTypeLinks for BrowserStorage {
 
     fn delete(&mut self, id: u32) -> Result<Link> {
         self.remove_name(id)?;
-        self.links.remove(&id).ok_or(LinkError::NotFound(id).into())
+        self.links
+            .remove(&id)
+            .ok_or(LinkError::not_found(id).into())
     }
 
     fn all_links(&mut self) -> Vec<Link> {

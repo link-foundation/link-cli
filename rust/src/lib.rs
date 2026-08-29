@@ -11,6 +11,7 @@
 //! - `lino_link` - LiNo link representation
 //! - `parser` - LiNo notation parser
 //! - `link_storage` - Persistent link storage
+//! - `storage` - Reusable storage traits and the doublets-backed store
 //! - `changes_simplifier` - Changes simplification
 //! - `query_processor` - LiNo query processing
 
@@ -33,6 +34,7 @@ mod query_processor;
 mod query_processor_substitution;
 mod query_types;
 pub mod sequences;
+pub mod storage;
 pub mod transactions;
 mod unicode_string_storage;
 pub mod version_control;
@@ -41,7 +43,7 @@ pub mod version_control;
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
 pub use hybrid_reference::{external_reference, external_reference_value, HybridReference};
-pub use link::{DoubletsLink, Link};
+pub use link::{DoubletsLink, GenericLink, Link};
 pub use link_storage::LinkStorage;
 pub use lino_database_input::{import_lino_file, import_lino_text};
 pub use lino_link::LinoLink;
@@ -52,9 +54,14 @@ pub use parser::Parser;
 pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
+pub use storage::{
+    lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, LinksStorage, LinksStorageRef,
+    LockMode, PersistentFileMapped, StorageRevision,
+};
 pub use transactions::{
-    CommitMode, DoubletLink, LogRetentionPolicy, TransactionHandle, TransactionsDecorator,
-    Transition, TransitionKind,
+    CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
+    GenericTransition, LogRetentionPolicy, TransactionHandle, TransactionsDecorator, Transition,
+    TransitionKind, TransitionLogStore,
 };
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};

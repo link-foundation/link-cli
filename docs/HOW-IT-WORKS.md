@@ -176,7 +176,8 @@ The trigger schema is link-backed, using named points such as `Always`, `Once`,
 Pass `--transactions` (or any flag in the family — `--transactions-file`,
 `--commit-mode`, `--retention`, `--log`) to wrap the storage in a
 `TransactionsDecorator`. Every Create / Update / Delete then writes a
-*reversible* transition into a sidecar doublets store. The default
+*reversible* transition into a sidecar links store — the log is itself a
+links database, so the same storage and tooling apply. The default
 sidecar is named like the database:
 
 ```text
@@ -210,10 +211,49 @@ Commit modes (`--commit-mode`):
 - `async` — durably persists the log first, then applies side-effects.
 
 Recovery: on open, every committed-but-not-applied transition is
-replayed against the underlying store.
+replayed against the underlying store, and every transition belonging to
+a transaction that was never committed is rolled back. Recovery is
+idempotent, so reopening a recovered store repeats no work.
 
 When no transaction flag is passed, behaviour is byte-identical to the
 bare CLI — no sidecar is written.
+
+## Embedding the Libraries
+
+Neither transactions layer is tied to the CLI's own store. Rust's
+`transactions::GenericTransactionsDecorator<T, S, L>` is generic over the
+doublets address type `T`, the wrapped store `S` (any
+`storage::LinksStorage<T>`), and the transitions log `L` (any
+`transactions::TransitionLogStore`); C#'s
+`TransactionsDecorator<TLinkAddress>` is generic over the address type. The
+`u32`/`uint` specialisations are what `clink` itself uses, so nothing about the
+CLI changed.
+
+Two storage backends ship in Rust:
+
+- `LinkStorage` and the decorators above it keep links in memory and rewrite
+  the whole database file on `flush()`. **`flush()` is required for
+  durability** — nothing reaches the disk before it. The rewrite truncates the
+  existing file in place instead of renaming a temporary over it, so the inode
+  is preserved.
+- `storage::DoubletsStorage` is a real memory-mapped `doublets::unit::Store`.
+  Writes go straight into the mapping, which *is* the page cache, so a
+  **process** crash cannot lose them; surviving a **machine** crash needs the
+  `fsync` that `flush()` performs, and a clean drop syncs too.
+
+Two transitions logs ship in Rust: the links-backed sidecar the CLI uses, and
+`transactions::FileTransitionLog`, a plain append-only text file that `fsync`s
+every append. Because appends are line-oriented and durable one at a time, a
+crash can only ever truncate the final line; reopening the log discards that
+torn tail, so at most the single in-flight transition is lost.
+
+Since a doublets store has no internal concurrency control, sharing one
+database between processes needs external serialisation. Both implementations
+lock a `<database>.lock` sidecar — shared for readers, exclusive for writers,
+with a blocking acquire and a non-blocking try-acquire — and expose a
+`StorageRevision` fingerprint (file length plus modification time) so a process
+can ask whether anyone else has written since it last looked without reparsing
+the database.
 
 ## Optional Version Control
 

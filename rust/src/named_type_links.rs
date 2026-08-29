@@ -119,7 +119,7 @@ pub trait NamedTypeLinks {
         id: u32,
         visited: &mut HashSet<u32>,
     ) -> Result<String> {
-        let link = self.get_link(id).ok_or(LinkError::NotFound(id))?;
+        let link = self.get_link(id).ok_or(LinkError::not_found(id))?;
         if !visited.insert(id) {
             return self.format_reference(id);
         }
@@ -267,6 +267,7 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
 
     fn ensure_created(&mut self, id: u32) -> u32 {
         crate::transactions::TransactionsDecorator::ensure_created(self, id)
+            .expect("TransactionsDecorator::ensure_created failed in NamedTypeLinks bridge")
     }
 
     fn get_link(&mut self, id: u32) -> Option<Link> {
@@ -278,11 +279,15 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        crate::transactions::TransactionsDecorator::update(self, id, source, target)
+        Ok(crate::transactions::TransactionsDecorator::update(
+            self, id, source, target,
+        )?)
     }
 
     fn delete(&mut self, id: u32) -> Result<Link> {
-        crate::transactions::TransactionsDecorator::delete(self, id)
+        Ok(crate::transactions::TransactionsDecorator::delete(
+            self, id,
+        )?)
     }
 
     fn all_links(&mut self) -> Vec<Link> {
@@ -315,7 +320,7 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn save(&mut self) -> Result<()> {
-        crate::transactions::TransactionsDecorator::save(self)
+        Ok(crate::transactions::TransactionsDecorator::save(self)?)
     }
 }
 

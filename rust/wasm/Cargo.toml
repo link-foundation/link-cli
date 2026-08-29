@@ -11,18 +11,18 @@ repository = "https://github.com/link-foundation/link-cli"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 link-cli = { path = ".." }
-wasm-bindgen = "0.2.120"
+wasm-bindgen = "0.2.127"
 console_error_panic_hook = { version = "0.1.7", optional = true }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.70"
+wasm-bindgen-test = "0.3.77"
 
 [dependencies.web-sys]
-version = "0.3.97"
+version = "0.3.104"
 features = [
   "console",
 ]

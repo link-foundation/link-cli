@@ -46,6 +46,8 @@ Key files:
 - `VersionControlDecorator.cs`: optional version-control layer that sits above
   the transactions decorator and provides branching, tagging, and time-travel
   checkout.
+- `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
+  `StorageRevision` fingerprint used to detect writes by other processes.
 
 Main C# dependencies:
 
@@ -70,15 +72,18 @@ Key files:
 - `rust/src/named_types.rs`: names sidecar storage.
 - `rust/src/lino_database_input.rs`: `.lino` import.
 - `rust/src/sequences/`: Unicode sequence conversion and related parity code.
+- `rust/src/storage/`: the `LinksStorage` trait the transactions layer is
+  written against, the doublets-backed `DoubletsStorage`, the
+  `PersistentFileMapped` backing memory, and the advisory-locking helpers.
 - `rust/src/transactions/`: optional transactions decorator and the
-  `TransitionLog`, retention-policy, and commit-mode types.
+  transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
   branching, tagging, and time-travel checkout.
 
 Main Rust dependencies:
 
-- `doublets = "0.3.0"` for links storage foundations.
-- `links-notation = "0.13.0"` for LiNo parsing.
+- `doublets = "0.4.0"` for links storage foundations.
+- `links-notation = "0.16.1"` for LiNo parsing.
 - `lino-arguments = "0.3.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
 
@@ -107,7 +112,7 @@ Runtime flow:
 4. The result includes formatted output plus a structured `links` snapshot.
 5. React renders the snapshot and mirrors it into `doublets-web` `UnitedLinks`.
 
-The committed lockfile currently pins `doublets-web` to `0.1.2`.
+The committed lockfile currently pins `doublets-web` to `0.1.3`.
 
 ## Data Files
 
@@ -121,6 +126,7 @@ the primary filename.
 | `<name>.triggers.links` | C# | Persistent trigger definitions when triggers are not embedded. |
 | `<name>.transitions.links` | C# and Rust | Optional transitions log (created when `--transactions` is requested). |
 | `<name>.versioncontrol.links` | C# and Rust | Optional version-control branches/tags store (created when `--vc` is requested). |
+| `<name>.links.lock` | C# and Rust | Advisory lock sidecar, created only when a caller opts into locking through the library. |
 
 For `graph.links`, the default names file is `graph.names.links`, and the
 default triggers file is `graph.triggers.links`.
@@ -144,8 +150,11 @@ The `TransactionsDecorator` (C#) and `transactions::TransactionsDecorator`
 (Rust) wrap a `NamedTypesDecorator` and record each Create / Update /
 Delete as a reversible `Transition` (before + after doublet state, plus a
 sequence number, transaction id, and timestamp). Transitions are serialized
-as names inside a *second* doublets store — the transitions log itself is
-also a links database, so the same storage, recovery, and tooling apply.
+as names inside a *second* links store — the transitions log is itself a
+links database, so the same storage, recovery, and tooling apply. In C#
+that second store is a `UnitedMemoryLinks` doublets store; in the Rust CLI
+it is the same text-backed `LinkStorage` the CLI uses for data, and the
+library also offers two alternatives (see *Embedding the Library* below).
 
 Composition: `LinkStorage → NamedTypesDecorator → TransactionsDecorator`.
 
@@ -173,6 +182,70 @@ When no transaction flag is passed at the CLI and the decorator is not
 instantiated through the library API, the existing `NamedTypesDecorator`
 behaviour is preserved exactly — no transitions file is written and no
 extra runtime cost is paid.
+
+## Embedding the Library
+
+Both packages are usable as libraries, not just as the backing code of a CLI
+(issue #98). The transactions layer is written against a storage abstraction
+rather than against one concrete store, so an embedding application can supply
+its own.
+
+Rust:
+
+- `storage::LinksStorage<T>` is the trait every backend implements. The CLI's
+  in-memory `LinkStorage`, `PinnedTypesDecorator`, and `NamedTypesDecorator`
+  implement it, and so does `storage::DoubletsStorage`.
+- `storage::DoubletsStorage` is the doublets-backed implementation.
+  `DoubletsStorage::open` (and the locking variants) create a file-mapped
+  `doublets::unit::Store` whose links are mutated **in place**, so the inode
+  never changes and other processes keep observing the same data.
+  `DoubletsStorage::wrap` adopts a store the caller already owns.
+- `transactions::GenericTransactionsDecorator<T, S, L>` is generic over the
+  doublets address type `T`, the wrapped store `S`, and the transitions log
+  `L`. `TransactionsDecorator` is the `u32` + `NamedTypesDecorator`
+  specialisation `clink` uses.
+- `transactions::FileTransitionLog` is an append-only, `fsync`-per-append text
+  log for consumers that do not want a second links database. A tail torn by a
+  crash is discarded when the log is reopened.
+- Public entry points take `AsRef<Path>` and return the typed `LinkError`.
+
+C#:
+
+- `TransactionsDecorator<TLinkAddress>` is generic over the doublets address
+  type (`IUnsignedNumber<TLinkAddress>`); the non-generic
+  `TransactionsDecorator` is the `uint` specialisation the CLI uses.
+- `LinksFileLock` and `StorageRevision` provide the same locking and
+  external-change primitives as the Rust `storage::lock` module.
+
+The transition wire format writes addresses in decimal, so it is identical
+across address types: a log written by a `u32`/`uint` store reads back
+unchanged in a `u64`/`ulong` one, and an address too wide for the target type
+is rejected rather than silently truncated.
+
+### Durability
+
+| Store | What survives a process crash | What is needed for a machine crash |
+|-------|-------------------------------|------------------------------------|
+| In-memory (`LinkStorage` and the CLI decorators) | Nothing that was not saved — `flush()`/`save()` is required. | Same. |
+| File-mapped (`DoubletsStorage`) | Every write: the mapping is the page cache, and the kernel writes dirty pages back. | `flush()`, which `fsync`s the mapping. A clean drop also syncs. |
+| `FileTransitionLog` | Every append (`fsync` per append by default); at most the in-flight entry is lost. | Same. |
+
+Transitions are appended to the log before the write they describe is reported
+as committed, so recovery on the next open can replay committed-but-unapplied
+transitions and roll back transitions that were never committed.
+
+### Multi-Process Access
+
+A doublets store has no internal concurrency control, so concurrent writers to
+one file corrupt it. Both implementations therefore expose advisory locking of
+a `<database>.lock` sidecar — shared for readers, exclusive for writers, with a
+blocking acquire and a non-blocking try-acquire — plus a cheap
+`StorageRevision` fingerprint (`has_external_changes()` in Rust,
+`StorageRevision.HasChanged` in C#) that answers "has anyone else written since
+I last looked?" without reparsing the database. Rust uses `std::fs::File::lock`
+(hence the 1.89 minimum supported Rust version); C# expresses the same
+semantics through `FileShare`, which the runtime maps onto `flock` on Unix and
+share modes on Windows.
 
 ## Optional Version-Control Layer
 

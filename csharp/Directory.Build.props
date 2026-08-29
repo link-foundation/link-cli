@@ -6,7 +6,7 @@
     reported success regardless (see issue #96).
   -->
   <PropertyGroup>
-    <TargetFramework>net8</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
