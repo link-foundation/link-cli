@@ -82,14 +82,14 @@ Key files:
 
 Main Rust dependencies:
 
-- `doublets = "0.4.0"` for links storage foundations.
+- `doublets = "0.5.0"` for links storage foundations.
 - `links-notation = "0.16.1"` for LiNo parsing.
 - `lino-arguments = "0.3.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
 
-The Rust CLI currently supports the core query, storage, import/export,
-structure, output, named-reference, and auto-create options. Persistent
-transformation trigger CLI options are implemented in C# only.
+The Rust CLI supports the same options as the C# one: query, storage,
+import/export, structure, output, named-reference, auto-create, persistent
+transformation trigger, transaction and version-control options.
 
 ## WebAssembly Workbench
 
