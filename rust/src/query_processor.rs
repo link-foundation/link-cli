@@ -780,24 +780,24 @@ impl QueryProcessor {
             let existing = storage
                 .get_link(definition.index)
                 .unwrap_or_else(|| Link::new(definition.index, 0, 0));
-            if existing.source != definition.source || existing.target != definition.target {
+            let source = Self::resolve_unspecified(definition.source, existing.source);
+            let target = Self::resolve_unspecified(definition.target, existing.target);
+            if existing.source != source || existing.target != target {
                 self.trace_msg(&format!(
-                    "[CreateOrUpdateLink] Updating link {}: {}->{}, {}->{}.",
-                    definition.index,
-                    existing.source,
-                    definition.source,
-                    existing.target,
-                    definition.target
+                    "[CreateOrUpdateLink] Updating link {}: {}->{source}, {}->{target}.",
+                    definition.index, existing.source, existing.target
                 ));
-                storage.update(definition.index, definition.source, definition.target)?;
+                storage.update(definition.index, source, target)?;
             } else {
                 self.trace_msg(&format!(
-                    "[CreateOrUpdateLink] Link {} is already S={}, T={} => no change.",
-                    definition.index, definition.source, definition.target
+                    "[CreateOrUpdateLink] Link {} is already S={source}, T={target} => no change.",
+                    definition.index
                 ));
             }
             (Some(existing), definition.index)
-        } else if let Some(existing_id) = storage.search(definition.source, definition.target) {
+        } else if let Some(existing_id) =
+            Self::search_unspecified(storage, definition.source, definition.target)
+        {
             self.trace_msg(&format!(
                 "[CreateOrUpdateLink] Link already found => ID={existing_id}, no changes."
             ));
@@ -806,11 +806,12 @@ impl QueryProcessor {
                 .unwrap_or_else(|| Link::new(existing_id, definition.source, definition.target));
             (Some(existing), existing_id)
         } else {
+            let source = Self::resolve_unspecified(definition.source, 0);
+            let target = Self::resolve_unspecified(definition.target, 0);
             self.trace_msg(&format!(
-                "[CreateOrUpdateLink] Creating new link => (S={},T={}).",
-                definition.source, definition.target
+                "[CreateOrUpdateLink] Creating new link => (S={source},T={target})."
             ));
-            (None, storage.create(definition.source, definition.target))
+            (None, storage.create(source, target))
         };
 
         if let Some(name) = &definition.name {
@@ -853,6 +854,54 @@ impl QueryProcessor {
 
     fn is_any(value: u32) -> bool {
         value == u32::MAX
+    }
+
+    /// Resolves a half a query left unspecified against the half already
+    /// stored, the way C# resolves its `any` constant on the way into the
+    /// store.
+    ///
+    /// The C# processor marks an unbound substitution variable — and a `*` — with
+    /// `links.Constants.Any`, which is a value the *store* understands:
+    /// `Update` leaves a half substituted with `any` exactly as it was, and a
+    /// link created from one gets `null` there. This processor marks the same
+    /// thing with [`u32::MAX`], which the store underneath does not recognise
+    /// (its `any` is `2147483644`, the hybrid-aware constant), so `() (($a $a))`
+    /// used to store the literal `4294967295` in both halves where C# stores
+    /// `(1: 0 0)`. Resolving at the write boundary keeps [`u32::MAX`] as this
+    /// crate's single internal marker while writing what C# writes.
+    fn resolve_unspecified(value: u32, existing: u32) -> u32 {
+        if Self::is_any(value) {
+            existing
+        } else {
+            value
+        }
+    }
+
+    /// Looks a doublet up with unspecified halves treated as wildcards, the way
+    /// C#'s `SearchOrDefault` does.
+    ///
+    /// `SearchOrDefault` runs through `Each`, which reads `any` in a query as
+    /// "every value" rather than as a literal address, so `() ((1 $a))` finds a
+    /// stored `(1: 1 1)` instead of creating a second link beside it.
+    /// [`NamedTypeLinks::search`] matches literally on purpose — it backs
+    /// uniqueness resolution — so the wildcard pass belongs here.
+    fn search_unspecified(
+        storage: &mut impl NamedTypeLinks,
+        source: u32,
+        target: u32,
+    ) -> Option<u32> {
+        if !Self::is_any(source) && !Self::is_any(target) {
+            return storage.search(source, target);
+        }
+        storage
+            .all_links()
+            .into_iter()
+            .filter(|link| {
+                (Self::is_any(source) || link.source == source)
+                    && (Self::is_any(target) || link.target == target)
+            })
+            .map(|link| link.index)
+            .min()
     }
 
     fn is_normal_index(value: u32) -> bool {
@@ -919,7 +968,10 @@ impl QueryProcessor {
                     if let Some(id_num) = existing {
                         self.ensure_indexed_link(storage, id_num, source_id, target_id, changes)?
                     } else {
-                        let new_id = storage.create(source_id, target_id);
+                        let new_id = storage.create(
+                            Self::resolve_unspecified(source_id, 0),
+                            Self::resolve_unspecified(target_id, 0),
+                        );
                         changes.push((None, storage.get_link(new_id)));
                         storage.set_name(new_id, id)?;
                         new_id
@@ -962,6 +1014,8 @@ impl QueryProcessor {
         let stored = storage
             .get_link(index)
             .unwrap_or_else(|| Link::new(index, 0, 0));
+        let source = Self::resolve_unspecified(source, stored.source);
+        let target = Self::resolve_unspecified(target, stored.target);
         if stored.source != source || stored.target != target {
             self.trace_msg(&format!(
                 "[EnsureLinkCreated] Updating link {index} => {}->{source}, {}->{target}.",
@@ -991,7 +1045,7 @@ impl QueryProcessor {
         target: u32,
         changes: &mut Vec<(Option<Link>, Option<Link>)>,
     ) -> u32 {
-        if let Some(existing_id) = storage.search(source, target) {
+        if let Some(existing_id) = Self::search_unspecified(storage, source, target) {
             self.trace_msg(&format!(
                 "[EnsureLinkCreated] Link already found => ID={existing_id} => no-op."
             ));
@@ -1001,6 +1055,8 @@ impl QueryProcessor {
             changes.push((Some(existing), Some(existing)));
             existing_id
         } else {
+            let source = Self::resolve_unspecified(source, 0);
+            let target = Self::resolve_unspecified(target, 0);
             self.trace_msg(&format!(
                 "[EnsureLinkCreated] Creating link for (S={source}, T={target})."
             ));

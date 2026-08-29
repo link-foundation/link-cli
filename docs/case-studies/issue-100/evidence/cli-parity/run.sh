@@ -157,6 +157,17 @@ scenario "reverse update chain"       '() ((1 1))' '() ((2 2))' '((1: 1 1)) ((1:
 scenario "point to non-point"         '() ((1 1))' '((1: 1 1)) ((1: 0 0))'
 scenario "delete self referencing"    '() ((1 1))' '() ((1 1) (1 1))' '((1: 1 1)) ()'
 
+# A substitution half that no restriction bound -- a never-bound variable, or a
+# `*` -- is *unspecified*, not an address. Creating from one writes null there,
+# looking one up treats it as a wildcard, and updating through one keeps the
+# half already stored.
+scenario "unbound variable point"      '() (($a $a))'
+scenario "unbound variable twice"      '() (($a $a))' '() (($a $a))'
+scenario "unbound variable at an index" '() ((5: $a $a))'
+scenario "unbound variable one half"   '() ((1 1))' '() ((1 $a))'
+scenario "star in a substitution"      '() ((* *))'
+scenario "unbound variable in an update" '() ((1 1))' '((1: 1 1)) ((1: $x $y))'
+
 # Which address a new link gets is observable, so the two stores have to hand
 # out addresses in the same order: a freed address is reused before the store
 # grows, the most recently freed one first, and freeing the last link shrinks

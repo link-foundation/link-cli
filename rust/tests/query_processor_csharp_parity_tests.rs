@@ -379,3 +379,79 @@ fn test_swap_one_link_keeps_its_address_matches_csharp() -> Result<()> {
         Ok(())
     })
 }
+
+/// A substitution variable that no restriction ever bound is *unspecified*, not
+/// a literal address: C# marks it with `links.Constants.Any` and the store turns
+/// that into null on the way in, so `() (($a $a))` creates the point `(1: 0 0)`.
+#[test]
+fn test_unbound_substitution_variable_creates_null_point_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() (($a $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// The same query twice finds the link it created the first time rather than
+/// creating a second one, because C#'s `SearchOrDefault` reads `any` in a lookup
+/// as a wildcard.
+#[test]
+fn test_unbound_substitution_variable_twice_is_idempotent_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() (($a $a))")?;
+        processor.process_query(storage, "() (($a $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// An explicit index pins the address; the unspecified halves still land as null.
+#[test]
+fn test_unbound_substitution_variable_at_an_index_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((5: $a $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(5, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// One specified half plus one unspecified half is a wildcard lookup, so it
+/// finds the existing `(1: 1 1)` instead of creating `(2: 1 null)` beside it.
+#[test]
+fn test_unbound_substitution_variable_one_half_finds_existing_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 1))")?;
+        processor.process_query(storage, "() ((1 $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
+
+/// `*` in a substitution is unspecified in exactly the same way a never-bound
+/// variable is.
+#[test]
+fn test_star_in_a_substitution_creates_null_point_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((* *))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// An unspecified half of an *update* keeps the half already stored, so
+/// rewriting `(1: 1 1)` through `(1: $x $y)` leaves it exactly as it was.
+#[test]
+fn test_unbound_substitution_variable_in_an_update_keeps_existing_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 1))")?;
+        processor.process_query(storage, "((1: 1 1)) ((1: $x $y))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
