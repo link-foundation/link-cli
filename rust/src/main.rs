@@ -7,9 +7,11 @@ use anyhow::{anyhow, bail, Result};
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::import_lino_file;
 use link_cli::{
-    CommitMode, LogRetentionPolicy, NamedTypeLinks, NamedTypesDecorator, QueryProcessor,
-    TransactionsDecorator, VersionControlDecorator,
+    make_triggers_database_filename, CommitMode, LogRetentionPolicy, NamedTypeLinks,
+    NamedTypesDecorator, PersistentTransformationDecorator, PersistentTransformationKind,
+    QueryProcessor, TransactionsDecorator, TriggerStore, VersionControlDecorator,
 };
+use std::path::PathBuf;
 
 fn main() -> Result<()> {
     let cli = match Cli::parse()? {
@@ -23,6 +25,10 @@ fn main() -> Result<()> {
             return Ok(());
         }
     };
+
+    if cli.trigger_command_count() > 1 {
+        bail!("Only one of --always, --once, or --never can be used at a time.");
+    }
 
     let vc_requested = cli.vc_requested();
     let transactions_requested = cli.transactions_requested();
@@ -57,10 +63,93 @@ fn parse_retention(raw: Option<&str>) -> Result<LogRetentionPolicy> {
 }
 
 fn run_bare(cli: &Cli) -> Result<()> {
-    let mut storage = NamedTypesDecorator::new(&cli.db, cli.trace)?;
-    run_query_pipeline(cli, &mut storage)?;
+    let storage = NamedTypesDecorator::new(&cli.db, cli.trace)?;
+    finish(cli, storage)
+}
+
+/// Resolved path of the trigger sidecar store: `--triggers-file` when given,
+/// `<db>.triggers.links` otherwise.
+fn triggers_path(cli: &Cli) -> PathBuf {
+    cli.triggers_file
+        .clone()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| make_triggers_database_filename(&cli.db))
+}
+
+/// Mirrors `persistentTransformationsEnabled` in the C# tool: any explicit flag
+/// turns the layer on, and so does an already existing trigger store, so that
+/// triggers stored by an earlier invocation keep firing without repeating
+/// `--triggers`.
+fn persistent_transformations_enabled(cli: &Cli) -> bool {
+    cli.persistent_transformations_requested() || triggers_path(cli).exists()
+}
+
+/// Runs the query pipeline over `storage`, wrapping it in a
+/// [`PersistentTransformationDecorator`] first when triggers are enabled.
+///
+/// The wrap happens here rather than in the three entry paths so that the
+/// decorator always sits *outermost* — above the transactions and
+/// version-control layers — exactly like in the C# tool, where every replayed
+/// substitution is journalled like any other write.
+fn finish<S>(cli: &Cli, storage: S) -> Result<()>
+where
+    S: NamedTypeLinks,
+{
+    if !persistent_transformations_enabled(cli) {
+        let mut storage = storage;
+        run_query_pipeline(cli, &mut storage)?;
+        storage.save()?;
+        return Ok(());
+    }
+
+    let trigger_store = if cli.embed_triggers {
+        TriggerStore::Embedded
+    } else {
+        TriggerStore::sidecar(triggers_path(cli), cli.trace)?
+    };
+    let mut storage = PersistentTransformationDecorator::new(storage, trigger_store, cli.trace)
+        .with_auto_create_missing_references(cli.auto_create_missing_references);
+
+    run_query_pipeline_with(cli, &mut storage, run_trigger_command)?;
     storage.save()?;
     Ok(())
+}
+
+/// Handles `--always`, `--once` and `--never`.
+///
+/// Returns `true` when the command was terminal, i.e. the query was consumed as
+/// a trigger definition and must not also be executed against the database.
+fn run_trigger_command<S>(
+    cli: &Cli,
+    storage: &mut PersistentTransformationDecorator<S>,
+    query: Option<&str>,
+) -> Result<bool>
+where
+    S: NamedTypeLinks,
+{
+    if cli.trigger_command_count() == 0 {
+        return Ok(false);
+    }
+
+    let query = query.filter(|query| !query.trim().is_empty());
+    let Some(query) = query else {
+        bail!("--always, --once, and --never require a query.");
+    };
+
+    if cli.always || cli.once {
+        let kind = if cli.always {
+            PersistentTransformationKind::Always
+        } else {
+            PersistentTransformationKind::Once
+        };
+        let root = storage.store_trigger(kind, query)?;
+        println!("{kind} persistent transformation trigger stored: {root}");
+    } else {
+        let removed = storage.remove_triggers(query)?;
+        println!("Persistent transformation triggers removed: {removed}");
+    }
+
+    Ok(true)
 }
 
 fn run_with_transactions(
@@ -103,9 +192,7 @@ fn run_with_transactions(
         return Ok(());
     }
 
-    run_query_pipeline(cli, &mut tx)?;
-    tx.save()?;
-    Ok(())
+    finish(cli, tx)
 }
 
 fn run_with_vc(
@@ -225,9 +312,7 @@ fn run_with_vc(
         return Ok(());
     }
 
-    run_query_pipeline(cli, &mut vc)?;
-    vc.save()?;
-    Ok(())
+    finish(cli, vc)
 }
 
 fn resolve_sequence(vc: &VersionControlDecorator, point: &str) -> Option<i64> {
@@ -244,6 +329,21 @@ fn resolve_sequence(vc: &VersionControlDecorator, point: &str) -> Option<i64> {
 fn run_query_pipeline<S>(cli: &Cli, storage: &mut S) -> Result<()>
 where
     S: NamedTypeLinks,
+{
+    run_query_pipeline_with(cli, storage, |_, _, _| Ok(false))
+}
+
+/// The query pipeline, with a hook that may consume the query before it reaches
+/// the [`QueryProcessor`].
+///
+/// `trigger_stage` runs where the C# tool runs its trigger commands: after
+/// `--structure`, so `clink --structure` keeps working unchanged, and before
+/// the query is processed, so `--always '…'` stores the query instead of
+/// applying it. Returning `true` ends the run after the LiNo output is written.
+fn run_query_pipeline_with<S, F>(cli: &Cli, storage: &mut S, trigger_stage: F) -> Result<()>
+where
+    S: NamedTypeLinks,
+    F: FnOnce(&Cli, &mut S, Option<&str>) -> Result<bool>,
 {
     if cli.before {
         storage.print_all_lino()?;
@@ -263,6 +363,13 @@ where
     }
 
     let effective_query = cli.query.as_deref().or(cli.query_arg.as_deref());
+
+    if trigger_stage(cli, storage, effective_query)? {
+        if let Some(output_path) = &cli.lino_output {
+            storage.write_lino_output(output_path)?;
+        }
+        return Ok(());
+    }
 
     let mut changes_list = Vec::new();
 
