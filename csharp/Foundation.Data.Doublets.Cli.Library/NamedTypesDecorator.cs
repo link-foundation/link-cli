@@ -15,7 +15,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public sealed class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
+    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -74,13 +74,25 @@ namespace Foundation.Data.Doublets.Cli
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the names database this decorator owns. Derived decorators
+        /// that own extra resources override this and call
+        /// <c>base.Dispose(disposing)</c>.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
             if (_disposed) return;
             _disposed = true;
+            if (!disposing) return;
             LinksFacadeDisposer.Dispose(_namedLinksFacade);
             LinksFacadeDisposer.Dispose(PinnedTypesDecorator);
         }
 
-        public IEnumerator<TLinkAddress> GetEnumerator()
+        public virtual IEnumerator<TLinkAddress> GetEnumerator()
         {
             return PinnedTypesDecorator.GetEnumerator();
         }
@@ -90,12 +102,12 @@ namespace Foundation.Data.Doublets.Cli
             return GetEnumerator();
         }
 
-        public void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3)
+        public virtual void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3)
         {
             PinnedTypesDecorator.Deconstruct(out type1, out type2, out type3);
         }
 
-        public string? GetName(TLinkAddress link)
+        public virtual string? GetName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetName called for link: {link}");
             var result = NamedLinks.GetNameByExternalReference(link);
@@ -103,7 +115,7 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
-        public TLinkAddress SetName(TLinkAddress link, string name)
+        public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
             var existingLinkWithName = NamedLinks.GetExternalReferenceByName(name);
@@ -117,7 +129,7 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
-        public TLinkAddress GetByName(string name)
+        public virtual TLinkAddress GetByName(string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName called for name: '{name}'");
             var result = NamedLinks.GetExternalReferenceByName(name);
@@ -125,7 +137,7 @@ namespace Foundation.Data.Doublets.Cli
             return result;
         }
 
-        public void RemoveName(TLinkAddress link)
+        public virtual void RemoveName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");
             NamedLinks.RemoveNameByExternalReference(link);

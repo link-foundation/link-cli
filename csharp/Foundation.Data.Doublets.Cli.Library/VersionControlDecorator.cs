@@ -38,7 +38,7 @@ public interface IVersionControlLinks : INamedTypesLinks<uint>
 /// (<see cref="Tag"/>) over the transitions log. Optional — when not
 /// instantiated the underlying transactions decorator behaves identically.
 /// </summary>
-public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
+public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
 {
     /// <summary>Default name of the initial branch (analogous to git's <c>main</c>).</summary>
     public const string DefaultBranchName = "main";
@@ -71,6 +71,18 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Rolls back and releases the open transaction. Derived decorators that
+    /// own extra resources override this and call
+    /// <c>base.Dispose(disposing)</c>.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing) return;
         VersionControlTransaction? active;
         lock (_lock)
         {
@@ -93,25 +105,25 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         EnsureDefaultBranch();
     }
 
-    public string CurrentBranch { get { lock (_lock) return _currentBranch; } }
-    public long CurrentSequence { get { lock (_lock) return _currentApplied; } }
+    public virtual string CurrentBranch { get { lock (_lock) return _currentBranch; } }
+    public virtual long CurrentSequence { get { lock (_lock) return _currentApplied; } }
 
-    public IReadOnlyList<BranchInfo> ListBranches()
+    public virtual IReadOnlyList<BranchInfo> ListBranches()
     {
         lock (_lock) return _branches.Values.OrderBy(b => b.Name, StringComparer.Ordinal).ToArray();
     }
 
-    public IReadOnlyDictionary<string, long> ListTags()
+    public virtual IReadOnlyDictionary<string, long> ListTags()
     {
         lock (_lock) return new Dictionary<string, long>(_tags, StringComparer.Ordinal);
     }
 
-    public bool TryGetTag(string name, out long sequence)
+    public virtual bool TryGetTag(string name, out long sequence)
     {
         lock (_lock) return _tags.TryGetValue(name, out sequence);
     }
 
-    public ITransaction<uint> BeginTransaction()
+    public virtual ITransaction<uint> BeginTransaction()
     {
         lock (_lock)
         {
@@ -128,7 +140,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         }
     }
 
-    public Task<ITransaction<uint>> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public virtual Task<ITransaction<uint>> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(BeginTransaction());
@@ -190,7 +202,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
 
     // -- Branching ---------------------------------------------------------
 
-    public void Branch(string name, long? from = null)
+    public virtual void Branch(string name, long? from = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -222,7 +234,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         }
     }
 
-    public void SwitchBranch(string name)
+    public virtual void SwitchBranch(string name)
     {
         lock (_lock)
         {
@@ -237,7 +249,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         }
     }
 
-    public void Checkout(long sequence)
+    public virtual void Checkout(long sequence)
     {
         lock (_lock)
         {
@@ -256,7 +268,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         }
     }
 
-    public void Tag(string name, long? sequence = null)
+    public virtual void Tag(string name, long? sequence = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -503,7 +515,7 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
         return true;
     }
 
-    public void Recover()
+    public virtual void Recover()
     {
         lock (_lock)
         {
@@ -578,10 +590,10 @@ public sealed class VersionControlDecorator : LinksDecoratorBase<uint>, IVersion
 
     // -- INamedTypes forwarding -------------------------------------------
 
-    public string? GetName(uint link) => _transactions.GetName(link);
-    public uint SetName(uint link, string name) => _transactions.SetName(link, name);
-    public uint GetByName(string name) => _transactions.GetByName(name);
-    public void RemoveName(uint link) => _transactions.RemoveName(link);
+    public virtual string? GetName(uint link) => _transactions.GetName(link);
+    public virtual uint SetName(uint link, string name) => _transactions.SetName(link, name);
+    public virtual uint GetByName(string name) => _transactions.GetByName(name);
+    public virtual void RemoveName(uint link) => _transactions.RemoveName(link);
 
     // -- Convenience ------------------------------------------------------
 

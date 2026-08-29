@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public sealed class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IDisposable
+    public class NamedLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -70,8 +70,20 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the databases this decorator owns. Derived decorators that
+        /// own extra resources override this and call
+        /// <c>base.Dispose(disposing)</c>.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
             if (_disposed) return;
             _disposed = true;
+            if (!disposing) return;
             LinksFacadeDisposer.Dispose(_namedLinksFacade);
             LinksFacadeDisposer.Dispose(_links);
         }
@@ -81,7 +93,7 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         /// <param name="link">The link address to get the name for.</param>
         /// <returns>The name associated with the link, or null if no name is set.</returns>
-        public string? GetName(TLinkAddress link)
+        public virtual string? GetName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetName called for link: {link}");
             var result = NamedLinks.GetNameByExternalReference(link);
@@ -95,7 +107,7 @@ namespace Foundation.Data.Doublets.Cli
         /// <param name="link">The link address to name.</param>
         /// <param name="name">The name to assign to the link.</param>
         /// <returns>The link address representing the name assignment.</returns>
-        public TLinkAddress SetName(TLinkAddress link, string name)
+        public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
             // Remove any existing name mapping before setting the new one
@@ -110,7 +122,7 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         /// <param name="name">The name to look up.</param>
         /// <returns>The link address associated with the name, or Null if not found.</returns>
-        public TLinkAddress GetByName(string name)
+        public virtual TLinkAddress GetByName(string name)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName called for name: '{name}'");
             var result = NamedLinks.GetExternalReferenceByName(name);
@@ -122,7 +134,7 @@ namespace Foundation.Data.Doublets.Cli
         /// Removes the name association for the specified link address.
         /// </summary>
         /// <param name="link">The link address whose name should be removed.</param>
-        public void RemoveName(TLinkAddress link)
+        public virtual void RemoveName(TLinkAddress link)
         {
             if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");
             NamedLinks.RemoveNameByExternalReference(link);

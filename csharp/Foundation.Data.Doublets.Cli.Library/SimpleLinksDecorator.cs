@@ -12,7 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public sealed class SimpleLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, IDisposable
+    public class SimpleLinksDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, IDisposable
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -68,8 +68,20 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the databases this decorator owns. Derived decorators that
+        /// own extra resources override this and call
+        /// <c>base.Dispose(disposing)</c>.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
             if (_disposed) return;
             _disposed = true;
+            if (!disposing) return;
             LinksFacadeDisposer.Dispose(_namedLinksFacade);
             LinksFacadeDisposer.Dispose(_links);
         }
