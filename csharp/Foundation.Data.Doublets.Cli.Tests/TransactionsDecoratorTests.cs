@@ -181,7 +181,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         [Fact]
         public void TransitionRoundTripsThroughSerialize()
         {
-            var t = new Transition(
+            var t = new Transition<uint>(
               Guid.NewGuid(),
               Sequence: 42,
               Timestamp: DateTimeOffset.FromUnixTimeMilliseconds(1234567890000),
@@ -189,7 +189,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
               Before: new DoubletLink(1, 2, 3),
               After: new DoubletLink(1, 4, 5));
 
-            Assert.True(Transition.TryParse(t.Serialize(), out var parsed));
+            Assert.True(Transition<uint>.TryParse(t.Serialize(), out var parsed));
             Assert.Equal(t, parsed);
         }
 
