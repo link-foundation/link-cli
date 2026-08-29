@@ -42,6 +42,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{anyhow, Result};
 
 use crate::link::Link;
+use crate::link_storage::ChangeObserver;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::{escape_lino_reference, NamedTypeLinks};
 use crate::named_types::NamedTypesDecorator;
@@ -573,9 +574,20 @@ impl<L: NamedTypeLinks> NamedTypeLinks for PersistentTransformationDecorator<L> 
         index
     }
 
+    /// Only a call that really allocates a link counts as a write.
+    ///
+    /// C# hooks the raw `ILinks.Create`, which `EnsureCreated` reaches only for
+    /// addresses the store does not have yet; an `EnsureCreated` for an existing
+    /// address performs no operation and therefore fires no trigger. Checking
+    /// [`exists`](NamedTypeLinks::exists) first reproduces that: without it a
+    /// no-op query such as `() ((1: 1 1))` over an already existing point would
+    /// replay every trigger in Rust and none in C#.
     fn ensure_created(&mut self, id: u32) -> u32 {
+        let existed = self.links.exists(id);
         let index = self.links.ensure_created(id);
-        self.after_write();
+        if !existed {
+            self.after_write();
+        }
         index
     }
 
@@ -601,6 +613,13 @@ impl<L: NamedTypeLinks> NamedTypeLinks for PersistentTransformationDecorator<L> 
         Ok(link)
     }
 
+    fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
+        let link = self.links.delete_observed(id, observer)?;
+        self.apply_triggers_after_operation()?;
+        self.take_pending_error()?;
+        Ok(link)
+    }
+
     fn all_links(&mut self) -> Vec<Link> {
         self.links.all_links()
     }
@@ -609,7 +628,12 @@ impl<L: NamedTypeLinks> NamedTypeLinks for PersistentTransformationDecorator<L> 
         self.links.search(source, target)
     }
 
+    /// Fires triggers only when the pair had to be created — see
+    /// [`ensure_created`](Self::ensure_created) for why.
     fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
+        if let Some(index) = self.links.search(source, target) {
+            return index;
+        }
         let index = self.links.get_or_create(source, target);
         self.after_write();
         index

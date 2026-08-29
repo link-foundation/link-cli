@@ -32,21 +32,31 @@ pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
         }
     }
 
-    // Gather all 'Before' links and all 'After' links from changed states
-    let before_links: HashSet<Link> = changed_states.iter().map(|(b, _)| *b).collect();
-    let after_links: HashSet<Link> = changed_states.iter().map(|(_, a)| *a).collect();
+    // Gather all 'Before' links and all 'After' links from changed states.
+    //
+    // C# builds these with `new HashSet<Link<uint>>(...)`, which enumerates in
+    // insertion order; a Rust `HashSet` enumerates in an order derived from a
+    // per-process random seed. Since the order of `initialStates` decides the
+    // order of the simplified results whenever the final sort ties, that
+    // difference would make `--changes` non-reproducible. Keeping the first
+    // occurrences in a `Vec` (and using the set only for lookups) restores the
+    // C# ordering.
+    let before_links = distinct(changed_states.iter().map(|(b, _)| *b));
+    let after_links = distinct(changed_states.iter().map(|(_, a)| *a));
+    let before_set: HashSet<Link> = before_links.iter().copied().collect();
+    let after_set: HashSet<Link> = after_links.iter().copied().collect();
 
     // Identify initial states: appear as Before but never as After
     let initial_states: Vec<Link> = before_links
         .iter()
-        .filter(|b| !after_links.contains(b))
+        .filter(|b| !after_set.contains(b))
         .copied()
         .collect();
 
     // Identify final states: appear as After but never as Before
     let final_states: HashSet<Link> = after_links
         .iter()
-        .filter(|a| !before_links.contains(a))
+        .filter(|a| !before_set.contains(a))
         .copied()
         .collect();
 
@@ -68,7 +78,8 @@ pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
     results.extend(unchanged_states);
 
     // Traverse each initial state with DFS
-    for initial in initial_states.iter() {
+    for initial in distinct(initial_states.iter().copied()) {
+        let initial = &initial;
         let mut stack = vec![*initial];
         let mut visited: HashSet<Link> = HashSet::new();
 
@@ -118,18 +129,27 @@ pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
 /// and one of them is to a "null" state (0: 0 0), we should prefer the non-null transition
 /// as it represents the actual final transformation.
 fn remove_duplicate_before_states(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
-    // Group changes by their before state
+    // Group changes by their before state, keeping the groups in the order
+    // their first member appeared. C# uses `GroupBy`, which is documented to
+    // preserve that order; iterating a `HashMap` instead would shuffle the
+    // reported changes differently on every process start.
+    let mut order: Vec<Link> = Vec::new();
     let mut grouped: HashMap<Link, Vec<(Link, Link)>> = HashMap::new();
     for change in changes {
-        grouped.entry(change.0).or_default().push(change);
+        let group = grouped.entry(change.0).or_insert_with(|| {
+            order.push(change.0);
+            Vec::new()
+        });
+        group.push(change);
     }
 
     let mut result = Vec::new();
 
-    for (_before, changes_for_this_before) in grouped {
+    for before in &order {
+        let changes_for_this_before = &grouped[before];
         if changes_for_this_before.len() == 1 {
             // No duplicates, keep as is
-            result.extend(changes_for_this_before);
+            result.extend(changes_for_this_before.iter().copied());
         } else {
             // Multiple changes from the same before state
             // Check if any of them is to a null state (0: 0 0)
@@ -150,10 +170,22 @@ fn remove_duplicate_before_states(changes: Vec<(Link, Link)>) -> Vec<(Link, Link
             } else {
                 // No null transitions involved, this is a legitimate multiple-branch scenario
                 // Keep all transitions
-                result.extend(changes_for_this_before);
+                result.extend(changes_for_this_before.iter().copied());
             }
         }
     }
 
     result
+}
+
+/// The distinct elements of `items`, in the order they first appear.
+///
+/// Stands in for enumerating a C# `HashSet`, which yields its elements in
+/// insertion order.
+fn distinct(items: impl IntoIterator<Item = Link>) -> Vec<Link> {
+    let mut seen = HashSet::new();
+    items
+        .into_iter()
+        .filter(|item| seen.insert(*item))
+        .collect()
 }

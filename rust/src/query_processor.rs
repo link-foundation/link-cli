@@ -42,8 +42,24 @@ impl QueryProcessor {
         self
     }
 
-    /// Processes a LiNo query and returns the list of changes
+    /// Processes a LiNo query and returns the list of changes.
+    ///
+    /// Every scenario is simplified on the way out, matching the C# CLI, which
+    /// collects the raw handler calls and runs `SimplifyChanges` over them once
+    /// in `Program.cs` regardless of which branch of the processor produced
+    /// them.
     pub fn process_query(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        query: &str,
+    ) -> Result<Vec<(Option<Link>, Option<Link>)>> {
+        let changes = self.process_query_raw(storage, query)?;
+        Ok(self.simplify_changes_list(&changes))
+    }
+
+    /// The processor proper: applies `query` and reports the raw
+    /// `(before, after)` states, in the order they happened.
+    fn process_query_raw(
         &self,
         storage: &mut impl NamedTypeLinks,
         query: &str,
@@ -110,18 +126,16 @@ impl QueryProcessor {
                 changes_list.extend(
                     self.validate_links_exist_or_will_be_created(storage, &[], values)?
                         .into_iter()
-                        .map(|link| (None, Some(link))),
+                        .map(|(before, after)| (Some(before), Some(after))),
                 );
 
                 for link_to_create in values {
-                    let created_id = self.ensure_link_created(storage, link_to_create)?;
+                    let created_id =
+                        self.ensure_link_created(storage, link_to_create, &mut changes_list)?;
                     self.trace_msg(&format!(
                         "[ProcessQuery] Created link ID #{} from substitution pattern.",
                         created_id
                     ));
-                    if let Some(link) = storage.get_link(created_id) {
-                        changes_list.push((None, Some(link)));
-                    }
                 }
             }
             storage.save()?;
@@ -137,7 +151,7 @@ impl QueryProcessor {
             changes_list.extend(
                 self.validate_links_exist_or_will_be_created(storage, restriction_values, &[])?
                     .into_iter()
-                    .map(|link| (None, Some(link))),
+                    .map(|(before, after)| (Some(before), Some(after))),
             );
 
             let restriction_patterns = self.patterns_from_lino(restriction_link);
@@ -150,8 +164,7 @@ impl QueryProcessor {
 
             for link in links_to_delete {
                 if storage.exists(link.index) {
-                    let before = storage.delete(link.index)?;
-                    changes_list.push((Some(before), None));
+                    self.delete_observed(storage, link.index, &mut changes_list)?;
                     self.trace_msg(&format!("[ProcessQuery] Deleted link ID #{}.", link.index));
                 }
             }
@@ -175,7 +188,7 @@ impl QueryProcessor {
                 substitution_values,
             )?
             .into_iter()
-            .map(|link| (None, Some(link))),
+            .map(|(before, after)| (Some(before), Some(after))),
         );
         let solutions = self.find_all_solutions(storage, &restriction_patterns)?;
 
@@ -233,10 +246,35 @@ impl QueryProcessor {
 
         storage.save()?;
 
-        // Simplify changes
-        let simplified = self.simplify_changes_list(&changes_list);
+        Ok(changes_list)
+    }
 
-        Ok(simplified)
+    /// Deletes `id` and appends every resulting change to `changes`.
+    ///
+    /// A delete cascades into the links that still used the deleted one, and
+    /// each of those removals is reported too. It is the direct analogue of
+    /// C#'s `RemoveLinks`, which passes the changes handler straight to the
+    /// store so the decorator stack reports the cascade:
+    ///
+    /// ```csharp
+    /// links.Delete(link, (before, after) =>
+    ///     options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
+    /// ```
+    fn delete_observed(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        id: u32,
+        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+    ) -> Result<Link> {
+        let mut observed = Vec::new();
+        let deleted = storage.delete_observed(id, &mut |before, after| {
+            observed.push((
+                (!before.is_null()).then_some(before),
+                (!after.is_null()).then_some(after),
+            ));
+        })?;
+        changes.append(&mut observed);
+        Ok(deleted)
     }
 
     fn validate_links_exist_or_will_be_created(
@@ -244,7 +282,7 @@ impl QueryProcessor {
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Vec<Link>> {
+    ) -> Result<Vec<(Link, Link)>> {
         LinkReferenceValidator::new(self.trace, self.auto_create_missing_references)
             .validate_links_exist_or_will_be_created(
                 storage,
@@ -605,14 +643,13 @@ impl QueryProcessor {
                 links.dedup_by_key(|link| link.index);
                 for link in links {
                     if storage.exists(link.index) {
-                        let deleted = storage.delete(link.index)?;
-                        changes.push((Some(deleted), None));
+                        self.delete_observed(storage, link.index, changes)?;
                     }
                 }
             }
             (None, Some(after)) => {
-                let created = self.create_or_update_resolved_link(storage, &after)?;
-                changes.push((None, Some(created)));
+                let (before, created) = self.create_or_update_resolved_link(storage, &after)?;
+                changes.push((before, Some(created)));
             }
             (Some(before), Some(after)) => {
                 if before.index == after.index && storage.exists(before.index) {
@@ -704,34 +741,86 @@ impl QueryProcessor {
             self.trace_msg(&format!(
                 "[RestoreUnexpectedLinkDeletions] Recreating link {index} => was unexpected deletion."
             ));
-            let restored = self.create_or_update_resolved_link(storage, intended)?;
-            changes.push((None, Some(restored)));
+            let (before, restored) = self.create_or_update_resolved_link(storage, intended)?;
+            changes.push((before, Some(restored)));
         }
         Ok(())
     }
 
+    /// Creates or updates the link a resolved definition asks for and reports
+    /// the states a `--changes` listener would see.
+    ///
+    /// The returned pair is `(before, after)`, where `before` is `None` only
+    /// when the link genuinely had to be allocated from nothing. Everything
+    /// else — an address that had to be filled in with
+    /// [`try_ensure_created`](NamedTypeLinks::try_ensure_created), a definition
+    /// that already matches its stored state, a duplicate of an existing
+    /// doublet — reports the state that was there before, mirroring
+    /// `CreateOrUpdateLink` in the C# processor:
+    ///
+    /// ```csharp
+    /// if (existingDoublet.Source != linkDefinition.Source || existingDoublet.Target != linkDefinition.Target)
+    /// { ... links.Update(...); }
+    /// else
+    /// { options.ChangesHandler?.Invoke(existingDoublet, existingDoublet); }
+    /// ```
+    ///
+    /// Skipping the update when nothing changes is not only a reporting
+    /// detail: a redundant write shows up in the transitions log and — far
+    /// worse — counts as a write for the persistent transformation decorator,
+    /// which would replay every stored trigger for a query that changed
+    /// nothing.
     fn create_or_update_resolved_link(
         &self,
         storage: &mut impl NamedTypeLinks,
         definition: &ResolvedLink,
-    ) -> Result<Link> {
-        let id = if Self::is_normal_index(definition.index) {
+    ) -> Result<(Option<Link>, Link)> {
+        let (before, id) = if Self::is_normal_index(definition.index) {
             storage.try_ensure_created(definition.index)?;
-            storage.update(definition.index, definition.source, definition.target)?;
-            definition.index
+            let existing = storage
+                .get_link(definition.index)
+                .unwrap_or_else(|| Link::new(definition.index, 0, 0));
+            if existing.source != definition.source || existing.target != definition.target {
+                self.trace_msg(&format!(
+                    "[CreateOrUpdateLink] Updating link {}: {}->{}, {}->{}.",
+                    definition.index,
+                    existing.source,
+                    definition.source,
+                    existing.target,
+                    definition.target
+                ));
+                storage.update(definition.index, definition.source, definition.target)?;
+            } else {
+                self.trace_msg(&format!(
+                    "[CreateOrUpdateLink] Link {} is already S={}, T={} => no change.",
+                    definition.index, definition.source, definition.target
+                ));
+            }
+            (Some(existing), definition.index)
         } else if let Some(existing_id) = storage.search(definition.source, definition.target) {
-            existing_id
+            self.trace_msg(&format!(
+                "[CreateOrUpdateLink] Link already found => ID={existing_id}, no changes."
+            ));
+            let existing = storage
+                .get_link(existing_id)
+                .unwrap_or_else(|| Link::new(existing_id, definition.source, definition.target));
+            (Some(existing), existing_id)
         } else {
-            storage.create(definition.source, definition.target)
+            self.trace_msg(&format!(
+                "[CreateOrUpdateLink] Creating new link => (S={},T={}).",
+                definition.source, definition.target
+            ));
+            (None, storage.create(definition.source, definition.target))
         };
 
         if let Some(name) = &definition.name {
             storage.set_name(id, name)?;
         }
 
-        Ok(storage
+        let after = storage
             .get_link(id)
-            .unwrap_or_else(|| Link::new(id, definition.source, definition.target)))
+            .unwrap_or_else(|| Link::new(id, definition.source, definition.target));
+        Ok((before, after))
     }
 
     fn links_matching_definition(
@@ -774,11 +863,19 @@ impl QueryProcessor {
         identifier == "*" || identifier.parse::<u32>().is_ok()
     }
 
-    /// Ensures a link is created from a LinoLink pattern
+    /// Ensures a link is created from a LiNo pattern, recursing into its parts.
+    ///
+    /// Port of `EnsureNestedLinkCreatedRecursively` in the C# processor. Every
+    /// doublet it touches — including the nested ones — appends its
+    /// `(before, after)` states to `changes`, exactly as the C# version reports
+    /// them through `options.ChangesHandler`, so `--changes` lists the same
+    /// records in both languages. Leaves report nothing: C#'s `ResolveLeaf`
+    /// passes the update handler that ignores the changes handler.
     fn ensure_link_created(
         &self,
         storage: &mut impl NamedTypeLinks,
         lino_link: &LinoLink,
+        changes: &mut Vec<(Option<Link>, Option<Link>)>,
     ) -> Result<u32> {
         // Handle leaf nodes (names or numbers)
         if !lino_link.has_values() {
@@ -803,33 +900,34 @@ impl QueryProcessor {
             let values = lino_link.values.as_ref().unwrap();
 
             // Recursively ensure source and target exist
-            let source_id = self.ensure_link_created(storage, &values[0])?;
-            let target_id = self.ensure_link_created(storage, &values[1])?;
+            let source_id = self.ensure_link_created(storage, &values[0], changes)?;
+            let target_id = self.ensure_link_created(storage, &values[1], changes)?;
 
             // Create or get the composite link
             let link_id = if let Some(ref id) = lino_link.id {
                 if let Ok(num) = id.parse::<u32>() {
-                    // Specific ID requested
-                    storage.try_ensure_created(num)?;
-                    storage.update(num, source_id, target_id)?;
-                    num
+                    // Specific ID requested.
+                    self.ensure_indexed_link(storage, num, source_id, target_id, changes)?
                 } else if id == "*" || Self::is_variable(id) {
-                    storage.get_or_create(source_id, target_id)
+                    self.ensure_doublet(storage, source_id, target_id, changes)
                 } else {
-                    // Named link
+                    // Named link: this repository resolves the address through
+                    // the name, where C# resolves it through `(source, target)`
+                    // and names the result afterwards. The reported states are
+                    // the same either way.
                     let existing = storage.get_by_name(id)?;
                     if let Some(id_num) = existing {
-                        storage.update(id_num, source_id, target_id)?;
-                        id_num
+                        self.ensure_indexed_link(storage, id_num, source_id, target_id, changes)?
                     } else {
                         let new_id = storage.create(source_id, target_id);
+                        changes.push((None, storage.get_link(new_id)));
                         storage.set_name(new_id, id)?;
                         new_id
                     }
                 }
             } else {
                 // Anonymous link
-                storage.get_or_create(source_id, target_id)
+                self.ensure_doublet(storage, source_id, target_id, changes)
             };
 
             return Ok(link_id);
@@ -838,34 +936,112 @@ impl QueryProcessor {
         Err(LinkError::InvalidFormat("Invalid link structure".to_string()).into())
     }
 
-    /// Simplifies the changes list
+    /// `EnsureLinkCreated` for a definition that names its own address.
+    ///
+    /// Fills the address in when the store does not have it yet, then writes
+    /// only if the stored doublet really differs — the `else` branch in C#
+    /// reports `(existing, existing)` without touching the store:
+    ///
+    /// ```csharp
+    /// TraceIfEnabled(options, $"[EnsureLinkCreated] Link #{link.Index} is already correct => no-op.");
+    /// options.ChangesHandler?.Invoke(storedD, storedD);
+    /// ```
+    ///
+    /// The redundant write this avoids is not merely noise: it lands in the
+    /// transitions log and, with `--always`/`--once` triggers in play, replays
+    /// every stored transformation for a query that changed nothing.
+    fn ensure_indexed_link(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        index: u32,
+        source: u32,
+        target: u32,
+        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+    ) -> Result<u32> {
+        storage.try_ensure_created(index)?;
+        let stored = storage
+            .get_link(index)
+            .unwrap_or_else(|| Link::new(index, 0, 0));
+        if stored.source != source || stored.target != target {
+            self.trace_msg(&format!(
+                "[EnsureLinkCreated] Updating link {index} => {}->{source}, {}->{target}.",
+                stored.source, stored.target
+            ));
+            storage.update(index, source, target)?;
+            let after = storage
+                .get_link(index)
+                .unwrap_or_else(|| Link::new(index, source, target));
+            changes.push((Some(stored), Some(after)));
+        } else {
+            self.trace_msg(&format!(
+                "[EnsureLinkCreated] Link {index} is already correct => no-op."
+            ));
+            changes.push((Some(stored), Some(stored)));
+        }
+        Ok(index)
+    }
+
+    /// `EnsureLinkCreated` for a definition with no address of its own: the
+    /// existing doublet is reused and reported as an unchanged pair, and only a
+    /// genuinely new one reports a creation.
+    fn ensure_doublet(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        source: u32,
+        target: u32,
+        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+    ) -> u32 {
+        if let Some(existing_id) = storage.search(source, target) {
+            self.trace_msg(&format!(
+                "[EnsureLinkCreated] Link already found => ID={existing_id} => no-op."
+            ));
+            let existing = storage
+                .get_link(existing_id)
+                .unwrap_or_else(|| Link::new(existing_id, source, target));
+            changes.push((Some(existing), Some(existing)));
+            existing_id
+        } else {
+            self.trace_msg(&format!(
+                "[EnsureLinkCreated] Creating link for (S={source}, T={target})."
+            ));
+            let created = storage.create(source, target);
+            changes.push((None, storage.get_link(created)));
+            created
+        }
+    }
+
+    /// Simplifies the changes list.
+    ///
+    /// A missing side — the state before a creation, or the state after a
+    /// deletion — becomes the null link `(0: 0 0)` on the way in and turns back
+    /// into `None` on the way out. C# has no option type here and feeds the
+    /// simplifier `default(Link<uint>)` for both, so routing the null states
+    /// around the simplifier (as this used to) both reported creations and
+    /// deletions in a different order than C# and hid them from the chain
+    /// collapsing that is the whole point of the pass.
     fn simplify_changes_list(
         &self,
         changes: &[(Option<Link>, Option<Link>)],
     ) -> Vec<(Option<Link>, Option<Link>)> {
-        // Convert to the format expected by simplify_changes
-        let mut to_simplify: Vec<(Link, Link)> = Vec::new();
-        let mut non_simplifiable: Vec<(Option<Link>, Option<Link>)> = Vec::new();
+        let to_simplify: Vec<(Link, Link)> = changes
+            .iter()
+            .map(|(before, after)| {
+                (
+                    before.unwrap_or_else(Link::null),
+                    after.unwrap_or_else(Link::null),
+                )
+            })
+            .collect();
 
-        for (before, after) in changes {
-            match (before, after) {
-                (Some(b), Some(a)) => {
-                    to_simplify.push((*b, *a));
-                }
-                _ => {
-                    non_simplifiable.push((*before, *after));
-                }
-            }
-        }
-
-        let simplified = simplify_changes(to_simplify);
-
-        let mut result: Vec<(Option<Link>, Option<Link>)> = non_simplifiable;
-        for (b, a) in simplified {
-            result.push((Some(b), Some(a)));
-        }
-
-        result
+        simplify_changes(to_simplify)
+            .into_iter()
+            .map(|(before, after)| {
+                (
+                    (!before.is_null()).then_some(before),
+                    (!after.is_null()).then_some(after),
+                )
+            })
+            .collect()
     }
 
     /// Logs a trace message if tracing is enabled

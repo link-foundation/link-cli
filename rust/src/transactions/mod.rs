@@ -359,13 +359,31 @@ where
     }
 
     pub fn delete(&mut self, id: T) -> Result<GenericLink<T>, LinkError> {
+        self.delete_observed(id, &mut |_, _| {})
+    }
+
+    /// [`Self::delete`], reporting every change the underlying store made.
+    ///
+    /// Deleting a link cascades into every link that still used it, and those
+    /// deletions are changes of their own: the C# CLI hands
+    /// `AdvancedMixedQueryProcessor.RemoveLinks` a handler that `links.Delete`
+    /// calls once per removed link, so `--changes` lists the usages too. The
+    /// observer is the same seam, threaded through the decorator stack.
+    pub fn delete_observed(
+        &mut self,
+        id: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
         if self.replaying {
-            return self.inner.delete_link(id);
+            let deleted = self.inner.delete_link(id)?;
+            observer(deleted, GenericLink::null());
+            return Ok(deleted);
         }
         let before = self.snapshot(id);
         let owns = self.ensure_open_transaction();
         let mut observed: Vec<ObservedChange<T>> = Vec::new();
         let outcome = self.inner.delete_link_observed(id, &mut |before, after| {
+            observer(before, after);
             record_observed(&mut observed, before, after)
         });
         let deleted = match outcome {

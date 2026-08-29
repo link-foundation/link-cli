@@ -63,7 +63,7 @@ impl LinkReferenceValidator {
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Vec<Link>> {
+    ) -> Result<Vec<(Link, Link)>> {
         self.trace_msg("[ValidateLinksExistOrWillBeCreated] Starting validation");
 
         let mut plan = self.build_link_reference_plan(storage, substitution_patterns);
@@ -307,11 +307,30 @@ impl LinkReferenceValidator {
         Ok(())
     }
 
+    /// Creates every missing reference and reports the `(before, after)` state
+    /// of each one.
+    ///
+    /// The before state is the placeholder the reference is turned into a point
+    /// link *from*, never `null`: both branches of the C# original create the
+    /// link silently — `EnsureCreated`, and `CreateAndUpdate(Null, Null)` with
+    /// no handler — and only pass the changes handler to the `Update` that
+    /// makes it a point link:
+    ///
+    /// ```csharp
+    /// links.Update(
+    ///   new DoubletLink(linkId, links.Constants.Null, links.Constants.Null),
+    ///   new DoubletLink(linkId, linkId, linkId),
+    ///   (beforeState, afterState) =>
+    ///       options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
+    /// );
+    /// ```
+    ///
+    /// So `--changes` shows `((2: 0 0)) ((2: 2 2))`, not `() ((2: 2 2))`.
     fn auto_create_missing_references(
         &self,
         storage: &mut impl NamedTypeLinks,
         plan: &LinkReferencePlan,
-    ) -> Result<Vec<Link>> {
+    ) -> Result<Vec<(Link, Link)>> {
         let missing_references = &plan.missing_references;
         let mut created = Vec::new();
         let mut numeric_references = missing_references
@@ -339,9 +358,12 @@ impl LinkReferenceValidator {
                 ));
                 continue;
             }
+            let before = storage
+                .get_link(link_id)
+                .unwrap_or_else(|| Link::new(link_id, 0, 0));
             storage.update(link_id, link_id, link_id)?;
-            if let Some(link) = storage.get_link(link_id) {
-                created.push(link);
+            if let Some(after) = storage.get_link(link_id) {
+                created.push((before, after));
             }
         }
 
@@ -362,8 +384,8 @@ impl LinkReferenceValidator {
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{name}' as point link."
             ));
             let link_id = storage.get_or_create_named(&name)?;
-            if let Some(link) = storage.get_link(link_id) {
-                created.push(link);
+            if let Some(after) = storage.get_link(link_id) {
+                created.push((Link::new(link_id, 0, 0), after));
             }
         }
 
