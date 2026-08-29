@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use crate::link::Link;
-use crate::link_storage::LinkStorage;
+use crate::link_storage::{ChangeObserver, LinkStorage};
 use crate::named_links::NamedLinks;
 use crate::pinned_types::{PinnedTypesAccess, PinnedTypesDecorator};
 
@@ -138,13 +138,75 @@ impl NamedTypesDecorator {
     }
 
     pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        self.pinned_types_decorator.update(id, source, target)
+        self.update_observed(id, source, target, &mut |_, _| {})
+    }
+
+    /// [`Self::update`], reporting every change the decorator stack made.
+    ///
+    /// Resolving a duplicate doublet deletes links, and a deleted link must not
+    /// keep its name. This mirrors the C# `NamedTypesDecorator.Update`, which
+    /// drops the name of every link the write handler reports as deleted:
+    ///
+    /// ```csharp
+    /// if (before != null && after == null)
+    /// {
+    ///     var deletedLinkIndex = _links.GetIndex(link: before);
+    ///     RemoveName(deletedLinkIndex);
+    /// }
+    /// ```
+    pub fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        let mut deleted = Vec::new();
+        let updated = self.pinned_types_decorator.update_observed(
+            id,
+            source,
+            target,
+            &mut |before, after| {
+                if after.is_null() && !before.is_null() {
+                    deleted.push(before.index);
+                }
+                observer(before, after);
+            },
+        )?;
+        self.remove_names(&deleted)?;
+        Ok(updated)
     }
 
     pub fn delete(&mut self, id: u32) -> Result<Link> {
-        let deleted = self.pinned_types_decorator.delete(id)?;
-        self.remove_name(id)?;
-        Ok(deleted)
+        self.delete_observed(id, &mut |_, _| {})
+    }
+
+    /// [`Self::delete`], reporting every change the decorator stack made.
+    ///
+    /// A cascading delete removes every link that still referenced `id`; each of
+    /// them loses its name too, exactly as C# `NamedTypesDecorator.Delete` does.
+    pub fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
+        let mut deleted = Vec::new();
+        let removed = self
+            .pinned_types_decorator
+            .delete_observed(id, &mut |before, after| {
+                if after.is_null() && !before.is_null() {
+                    deleted.push(before.index);
+                }
+                observer(before, after);
+            })?;
+        if !deleted.contains(&id) {
+            deleted.push(id);
+        }
+        self.remove_names(&deleted)?;
+        Ok(removed)
+    }
+
+    fn remove_names(&mut self, indexes: &[u32]) -> Result<()> {
+        for index in indexes {
+            self.remove_name(*index)?;
+        }
+        Ok(())
     }
 
     pub fn all(&self) -> Vec<&Link> {

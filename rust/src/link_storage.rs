@@ -3,6 +3,8 @@
 //! This module provides the LinkStorage struct for managing link persistence.
 
 use anyhow::{Context, Result};
+use doublets::decorators::DecoratorsExt;
+use doublets::Doublets;
 use std::collections::{HashMap, HashSet};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -11,6 +13,25 @@ use std::path::{Path, PathBuf};
 use crate::error::LinkError;
 use crate::link::Link;
 use crate::storage::StorageRevision;
+
+/// Callback invoked once per `(before, after)` change a write produced.
+///
+/// The upstream decorators turn a single write into a cascade of changes, so
+/// the layers above the storage — names, transactions, the query processor —
+/// only stay in sync if they can see all of them. This is the equivalent of the
+/// `WriteHandler` the C# implementation threads through every decorator. A
+/// change whose `after` [`is null`](Link::is_null) is a deletion.
+pub type ChangeObserver<'a> = &'a mut dyn FnMut(Link, Link);
+
+/// Adapts a [`ChangeObserver`] to the `doublets` write handler signature.
+fn observe(
+    observer: &mut dyn FnMut(Link, Link),
+    before: doublets::Link<u32>,
+    after: doublets::Link<u32>,
+) -> doublets::data::Flow {
+    observer(Link::from(before), Link::from(after));
+    doublets::data::Flow::Continue
+}
 
 /// LinkStorage provides persistent storage for links
 /// Corresponds to the storage functionality in NamedLinksDecorator in C#
@@ -240,8 +261,14 @@ impl LinkStorage {
         self.links.contains_key(&id)
     }
 
-    /// Updates a link's source and target
-    pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+    /// Updates a link's source and target **without** applying any policy.
+    ///
+    /// This is the raw store operation, the equivalent of writing straight to
+    /// `UnitedMemoryLinks` in the C# implementation. [`LinkStorage::update`]
+    /// wraps it with the upstream uniqueness/usages decorators; use this method
+    /// when you are supplying your own decorator stack (or deliberately want
+    /// none).
+    pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
         if let Some(link) = self.links.get_mut(&id) {
             let before = *link;
             if self.trace {
@@ -258,8 +285,12 @@ impl LinkStorage {
         }
     }
 
-    /// Deletes a link by ID
-    pub fn delete(&mut self, id: u32) -> Result<Link> {
+    /// Deletes a link by ID **without** applying any policy.
+    ///
+    /// The raw counterpart of [`LinkStorage::delete`]: it removes exactly the
+    /// requested link (and its name), leaving any link that referenced it
+    /// dangling.
+    pub fn delete_raw(&mut self, id: u32) -> Result<Link> {
         // Also remove the name mapping
         if let Some(name) = self.names.remove(&id) {
             self.name_to_id.remove(&name);
@@ -276,6 +307,85 @@ impl LinkStorage {
         } else {
             Err(LinkError::not_found(id).into())
         }
+    }
+
+    /// Updates a link's source and target through the upstream
+    /// `doublets` uniqueness and usages resolution stack.
+    ///
+    /// This mirrors the C# implementation, which always talks to a
+    /// `UnitedMemoryLinks` wrapped in
+    /// `DecorateWithAutomaticUniquenessAndUsagesResolution()`. Concretely: if
+    /// another link already holds `(source, target)`, every reference to `id`
+    /// is re-pointed at that link and `id` is deleted, instead of storing a
+    /// duplicate doublet.
+    ///
+    /// Returns the state the link was in before the operation. Use
+    /// [`LinkStorage::update_raw`] for the undecorated write.
+    pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        self.update_observed(id, source, target, &mut |_, _| {})
+    }
+
+    /// [`LinkStorage::update`], reporting every change the decorator stack made.
+    ///
+    /// Resolving a duplicate doublet re-points and deletes other links, so one
+    /// call can produce several changes. Layers above the storage need to see
+    /// all of them — the C# implementation gets them for free because its
+    /// decorators forward to a `WriteHandler`:
+    ///
+    /// ```csharp
+    /// var result = _links.Update(restriction, substitution, (before, after) => { ... });
+    /// ```
+    ///
+    /// `observer` is that handler. A change with a null `after` is a deletion.
+    pub fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        let before = *self
+            .links
+            .get(&id)
+            .ok_or_else(|| LinkError::not_found(id))?;
+        let mut resolved = (&mut *self).with_automatic_uniqueness_and_usages_resolution();
+        resolved
+            .update_by_with([id], [id, source, target], &mut |before, after| {
+                observe(observer, before, after)
+            })
+            .map_err(LinkError::from)?;
+        Ok(before)
+    }
+
+    /// Deletes a link through the upstream `doublets` uniqueness and usages
+    /// resolution stack, cascading to every link that references it.
+    ///
+    /// This mirrors the C# implementation's
+    /// `DecorateWithAutomaticUniquenessAndUsagesResolution()` behaviour: the
+    /// link is reset to `(null, null)`, everything that still references it is
+    /// deleted first, and only then is the link itself removed. Cycles
+    /// terminate rather than recursing forever.
+    ///
+    /// Returns the state the requested link was in before the operation. Use
+    /// [`LinkStorage::delete_raw`] for the undecorated removal.
+    pub fn delete(&mut self, id: u32) -> Result<Link> {
+        self.delete_observed(id, &mut |_, _| {})
+    }
+
+    /// [`LinkStorage::delete`], reporting every change the decorator stack made.
+    ///
+    /// A cascading delete removes every link that still referenced `id`, so one
+    /// call can produce several changes; see [`LinkStorage::update_observed`].
+    pub fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
+        let before = *self
+            .links
+            .get(&id)
+            .ok_or_else(|| LinkError::not_found(id))?;
+        let mut resolved = (&mut *self).with_automatic_uniqueness_and_usages_resolution();
+        resolved
+            .delete_by_with([id], &mut |before, after| observe(observer, before, after))
+            .map_err(LinkError::from)?;
+        Ok(before)
     }
 
     /// Returns all links
@@ -300,14 +410,16 @@ impl LinkStorage {
             .collect()
     }
 
-    /// Searches for a link with the given source and target
+    /// Searches for a link with the given source and target.
+    ///
+    /// When several links share the pair, the lowest address wins, so the
+    /// result never depends on hash map iteration order.
     pub fn search(&self, source: u32, target: u32) -> Option<u32> {
-        for link in self.links.values() {
-            if link.source == source && link.target == target {
-                return Some(link.index);
-            }
-        }
-        None
+        self.links
+            .values()
+            .filter(|link| link.source == source && link.target == target)
+            .map(|link| link.index)
+            .min()
     }
 
     /// Gets or creates a link with the given source and target

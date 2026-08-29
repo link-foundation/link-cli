@@ -15,6 +15,13 @@ pub(crate) struct LinkReferenceValidator {
 struct LinkReferencePlan {
     numeric_ids_to_be_created: HashSet<u32>,
     names_to_be_created: HashSet<String>,
+    /// `(source, target)` pairs the substitution itself defines.
+    ///
+    /// A missing numeric reference whose own point pair `(id, id)` appears
+    /// here is left as a `(id: 0 0)` placeholder instead of being turned into
+    /// a point link, so that the substitution which is about to write that
+    /// exact pair does not collide with it under uniqueness resolution.
+    composite_pairs_to_be_created: HashSet<(u32, u32)>,
     missing_references: Vec<MissingLinkReference>,
     missing_reference_keys: HashSet<String>,
 }
@@ -98,7 +105,7 @@ impl LinkReferenceValidator {
             .into());
         }
 
-        let created = self.auto_create_missing_references(storage, &plan.missing_references)?;
+        let created = self.auto_create_missing_references(storage, &plan)?;
         self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
         Ok(created)
     }
@@ -124,6 +131,10 @@ impl LinkReferenceValidator {
             );
         }
 
+        for pattern in substitution_patterns {
+            Self::collect_composite_pairs(pattern, &mut plan);
+        }
+
         plan
     }
 
@@ -147,6 +158,27 @@ impl LinkReferenceValidator {
         if let Some(values) = &pattern.values {
             for sub_pattern in values {
                 self.collect_explicit_definitions(sub_pattern, plan, reserved_numeric_ids);
+            }
+        }
+    }
+
+    fn collect_composite_pairs(pattern: &LinoLink, plan: &mut LinkReferencePlan) {
+        if Self::is_composite_lino(pattern)
+            && Self::concrete_identifier(pattern.id.as_deref()).is_some()
+        {
+            if let Some(values) = &pattern.values {
+                if let (Some(source), Some(target)) = (
+                    Self::concrete_numeric_identifier(values[0].id.as_deref()),
+                    Self::concrete_numeric_identifier(values[1].id.as_deref()),
+                ) {
+                    plan.composite_pairs_to_be_created.insert((source, target));
+                }
+            }
+        }
+
+        if let Some(values) = &pattern.values {
+            for sub_pattern in values {
+                Self::collect_composite_pairs(sub_pattern, plan);
             }
         }
     }
@@ -278,8 +310,9 @@ impl LinkReferenceValidator {
     fn auto_create_missing_references(
         &self,
         storage: &mut impl NamedTypeLinks,
-        missing_references: &[MissingLinkReference],
+        plan: &LinkReferencePlan,
     ) -> Result<Vec<Link>> {
+        let missing_references = &plan.missing_references;
         let mut created = Vec::new();
         let mut numeric_references = missing_references
             .iter()
@@ -294,9 +327,18 @@ impl LinkReferenceValidator {
             }
 
             self.trace_msg(&format!(
-                "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id} as point link."
+                "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id}."
             ));
             storage.try_ensure_created(link_id)?;
+            if plan
+                .composite_pairs_to_be_created
+                .contains(&(link_id, link_id))
+            {
+                self.trace_msg(&format!(
+                    "[ValidateLinksExistOrWillBeCreated] Link {link_id} exists as a placeholder because ({link_id}, {link_id}) is defined by the substitution."
+                ));
+                continue;
+            }
             storage.update(link_id, link_id, link_id)?;
             if let Some(link) = storage.get_link(link_id) {
                 created.push(link);
@@ -330,6 +372,10 @@ impl LinkReferenceValidator {
 
     fn is_composite_lino(lino_link: &LinoLink) -> bool {
         lino_link.values_count() == 2
+    }
+
+    fn concrete_numeric_identifier(id: Option<&str>) -> Option<u32> {
+        Self::concrete_identifier(id).and_then(|identifier| identifier.parse::<u32>().ok())
     }
 
     fn concrete_identifier(id: Option<&str>) -> Option<String> {

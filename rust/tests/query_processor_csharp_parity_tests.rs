@@ -291,3 +291,91 @@ fn test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp() -> Re
         Ok(())
     })
 }
+
+/// Deleting a link deletes the links that reference it, which is what the
+/// upstream cascade resolvers do and what the `cascade delete of usage`
+/// scenario in `docs/case-studies/issue-100/evidence/cli-parity/run.sh`
+/// compares against C#.
+#[test]
+fn test_delete_cascades_to_usages_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1)))")?;
+        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1 2)))")?;
+
+        processor.process_query(storage, "(((2: 2 2)) ())")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
+
+/// The cascade is transitive and leaves untouched links alone.
+#[test]
+fn test_delete_cascade_chain_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1)))")?;
+        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1 2)))")?;
+        processor.process_query(storage, "(() ((3 3)))")?;
+
+        processor.process_query(storage, "(((1: 1 1)) ())")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(2, 2, 2)]);
+        Ok(())
+    })
+}
+
+/// An update that would duplicate an existing link merges into it instead of
+/// creating a second copy, so the updated address disappears.
+#[test]
+fn test_update_into_existing_pair_merges_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1)))")?;
+        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1 2)))")?;
+        processor.process_query(storage, "(() ((2 1)))")?;
+
+        processor.process_query(storage, "(((4: 2 1)) ((4: 1 2)))")?;
+
+        assert_eq!(
+            sorted_links(storage),
+            vec![Link::new(1, 1, 1), Link::new(2, 2, 2), Link::new(3, 1, 2)]
+        );
+        Ok(())
+    })
+}
+
+/// Deleting a named link cascades through the links that use it, and the names
+/// of the survivors are untouched.
+#[test]
+fn test_named_delete_cascades_to_usages_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((a: a a)))")?;
+        processor.process_query(storage, "(() ((b: b b)))")?;
+        processor.process_query(storage, "(() ((a b)))")?;
+
+        processor.process_query(storage, "(((a: a a)) ())")?;
+
+        let b = name_id(storage, "b")?;
+        assert_eq!(sorted_links(storage), vec![Link::new(b, b, b)]);
+        Ok(())
+    })
+}
+
+/// A single-link swap that does not collide with an existing pair keeps its
+/// address, which is the plain-update path through the uniqueness resolver.
+#[test]
+fn test_swap_one_link_keeps_its_address_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1) (1 2)))")?;
+
+        processor.process_query(storage, "(((2: 1 2)) ((2: 2 1)))")?;
+
+        assert_eq!(
+            sorted_links(storage),
+            vec![Link::new(1, 1, 1), Link::new(2, 2, 1)]
+        );
+        Ok(())
+    })
+}

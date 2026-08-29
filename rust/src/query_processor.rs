@@ -213,16 +213,23 @@ impl QueryProcessor {
             return Ok(changes_list);
         }
 
+        let mut all_planned_operations = Vec::new();
         for solution in &solutions {
             let restriction_links =
                 self.resolve_patterns(storage, &restriction_patterns, solution, false)?;
             let substitution_links =
                 self.resolve_patterns(storage, &substitution_patterns, solution, true)?;
-            let operations = self.determine_operations(&restriction_links, &substitution_links);
-            for (before, after) in operations {
-                self.apply_operation(storage, before, after, &mut changes_list)?;
-            }
+            all_planned_operations
+                .extend(self.determine_operations(&restriction_links, &substitution_links));
         }
+
+        let intended_final_states = Self::intended_final_states(&all_planned_operations);
+
+        for (before, after) in all_planned_operations {
+            self.apply_operation(storage, before, after, &mut changes_list)?;
+        }
+
+        self.restore_unexpected_deletions(storage, &intended_final_states, &mut changes_list)?;
 
         storage.save()?;
 
@@ -616,7 +623,13 @@ impl QueryProcessor {
                     if let Some(name) = &after.name {
                         storage.set_name(before.index, name)?;
                     }
-                    let after_link = storage.get_link(before.index).unwrap();
+                    // The update can be resolved into a merge, which deletes
+                    // `before.index`; report the state the query asked for and
+                    // let `restore_unexpected_deletions` put the link back,
+                    // exactly as the C# processor does.
+                    let after_link = storage
+                        .get_link(before.index)
+                        .unwrap_or_else(|| Link::new(before.index, after.source, after.target));
                     changes.push((Some(before_link), Some(after_link)));
                 } else {
                     self.apply_operation(storage, Some(before), None, changes)?;
@@ -626,6 +639,74 @@ impl QueryProcessor {
             (None, None) => {}
         }
 
+        Ok(())
+    }
+
+    /// Final state every planned operation asks for, keyed by link address
+    /// and kept in the order the operations were planned.
+    ///
+    /// `None` marks a link the query deliberately deletes, so a cascade that
+    /// removes it is expected rather than a side effect. Mirrors the
+    /// `intendedFinalStates` dictionary the C# processor builds before
+    /// applying its planned operations.
+    fn intended_final_states(
+        operations: &[(Option<ResolvedLink>, Option<ResolvedLink>)],
+    ) -> Vec<(u32, Option<ResolvedLink>)> {
+        let mut states: Vec<(u32, Option<ResolvedLink>)> = Vec::new();
+        let mut set = |index: u32, state: Option<ResolvedLink>| match states
+            .iter_mut()
+            .find(|(existing, _)| *existing == index)
+        {
+            Some(entry) => entry.1 = state,
+            None => states.push((index, state)),
+        };
+        for (before, after) in operations {
+            match (before, after) {
+                (_, Some(after)) if Self::is_normal_index(after.index) => {
+                    set(after.index, Some(after.clone()))
+                }
+                (Some(before), None) if Self::is_normal_index(before.index) => {
+                    set(before.index, None)
+                }
+                _ => {}
+            }
+        }
+        states
+    }
+
+    /// Recreates links that a resolved write removed as a side effect.
+    ///
+    /// Mirrors `RestoreUnexpectedLinkDeletions` in the C# processor. The
+    /// uniqueness resolver merges a link into an existing duplicate by
+    /// deleting it, and the usages resolver cascades through the links that
+    /// reference it. When the query itself asked for such a link to exist,
+    /// the deletion is a side effect of the resolution order and has to be
+    /// undone — otherwise a query like
+    /// `((($index: $source $target)) (($index: $target $source)))` would lose
+    /// half of the links it swaps, because the first swap temporarily
+    /// duplicates a link that the second swap would have made unique again.
+    fn restore_unexpected_deletions(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        intended_final_states: &[(u32, Option<ResolvedLink>)],
+        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+    ) -> Result<()> {
+        for (index, intended) in intended_final_states {
+            let Some(intended) = intended else {
+                self.trace_msg(&format!(
+                    "[RestoreUnexpectedLinkDeletions] Link {index} was intended-deletion => skip restore."
+                ));
+                continue;
+            };
+            if storage.exists(*index) {
+                continue;
+            }
+            self.trace_msg(&format!(
+                "[RestoreUnexpectedLinkDeletions] Recreating link {index} => was unexpected deletion."
+            ));
+            let restored = self.create_or_update_resolved_link(storage, intended)?;
+            changes.push((None, Some(restored)));
+        }
         Ok(())
     }
 
@@ -648,7 +729,9 @@ impl QueryProcessor {
             storage.set_name(id, name)?;
         }
 
-        Ok(storage.get_link(id).unwrap())
+        Ok(storage
+            .get_link(id)
+            .unwrap_or_else(|| Link::new(id, definition.source, definition.target)))
     }
 
     fn links_matching_definition(

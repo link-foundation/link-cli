@@ -99,6 +99,45 @@ struct PendingTransaction<T> {
     started_ms: i64,
 }
 
+/// One link address and the `(before, after)` states a single logical
+/// write left it in, after collapsing repeated callbacks for that address.
+type ObservedChange<T> = (T, GenericDoubletLink<T>, GenericDoubletLink<T>);
+
+/// Folds one `(before, after)` callback into `observed`.
+///
+/// Mirrors the handler `TransactionsDecorator.RunWrite` installs in the C#
+/// implementation: repeated callbacks for the same address are collapsed into
+/// a single change that keeps the *first* `before` (the state the rollback has
+/// to restore) and the *last* `after` (the state the write ended at), and the
+/// first-seen order of addresses is preserved so the transitions replay in the
+/// order the storage produced them.
+fn record_observed<T: LinkReference>(
+    observed: &mut Vec<ObservedChange<T>>,
+    before: GenericLink<T>,
+    after: GenericLink<T>,
+) {
+    let zero = T::from_byte(0);
+    let key = if before.index != zero {
+        before.index
+    } else {
+        after.index
+    };
+    if key == zero {
+        return;
+    }
+    let before = GenericDoubletLink::from_link(&before);
+    let after = GenericDoubletLink::from_link(&after);
+    match observed.iter_mut().find(|(index, _, _)| *index == key) {
+        Some(entry) => {
+            if entry.1.index == zero {
+                entry.1 = before;
+            }
+            entry.2 = after;
+        }
+        None => observed.push((key, before, after)),
+    }
+}
+
 /// Snapshot of an open transaction (returned by [`GenericTransactionsDecorator::begin_transaction`]).
 #[derive(Debug, Clone)]
 pub struct TransactionHandle {
@@ -288,7 +327,13 @@ where
         }
         let before = self.snapshot(id);
         let owns = self.ensure_open_transaction();
-        let prev = match self.inner.update_link(id, source, target) {
+        let mut observed: Vec<ObservedChange<T>> = Vec::new();
+        let outcome = self
+            .inner
+            .update_link_observed(id, source, target, &mut |before, after| {
+                record_observed(&mut observed, before, after)
+            });
+        let prev = match outcome {
             Ok(prev) => prev,
             Err(err) => {
                 if owns {
@@ -297,12 +342,16 @@ where
                 return Err(err);
             }
         };
-        let after = self
-            .inner
-            .get_link(id)
-            .map(|link| GenericDoubletLink::from_link(&link))
-            .unwrap_or_else(|| GenericDoubletLink::new(id, source, target));
-        self.record_transition(TransitionKind::Update, before, after)?;
+        if observed.is_empty() {
+            let after = self
+                .inner
+                .get_link(id)
+                .map(|link| GenericDoubletLink::from_link(&link))
+                .unwrap_or_else(|| GenericDoubletLink::new(id, source, target));
+            self.record_transition(TransitionKind::Update, before, after)?;
+        } else {
+            self.record_observed_transitions(&observed)?;
+        }
         if owns {
             self.commit_current()?;
         }
@@ -315,7 +364,11 @@ where
         }
         let before = self.snapshot(id);
         let owns = self.ensure_open_transaction();
-        let deleted = match self.inner.delete_link(id) {
+        let mut observed: Vec<ObservedChange<T>> = Vec::new();
+        let outcome = self.inner.delete_link_observed(id, &mut |before, after| {
+            record_observed(&mut observed, before, after)
+        });
+        let deleted = match outcome {
             Ok(d) => d,
             Err(err) => {
                 if owns {
@@ -324,7 +377,11 @@ where
                 return Err(err);
             }
         };
-        self.record_transition(TransitionKind::Delete, before, GenericDoubletLink::empty())?;
+        if observed.is_empty() {
+            self.record_transition(TransitionKind::Delete, before, GenericDoubletLink::empty())?;
+        } else {
+            self.record_observed_transitions(&observed)?;
+        }
         if owns {
             self.commit_current()?;
         }
@@ -388,6 +445,36 @@ where
         } else {
             false
         }
+    }
+
+    /// Writes one transition per link a single logical write touched.
+    ///
+    /// A resolved write is not necessarily a single-link change: the
+    /// upstream uniqueness and usages decorators merge duplicates and
+    /// cascade through usages, so one `update`/`delete` call can rewrite
+    /// or remove several links. Each of them needs its own transition,
+    /// otherwise a rollback (or a version-control branch switch, which
+    /// replays the same transitions) cannot restore the links the
+    /// cascade touched.
+    ///
+    /// The kind is derived from the observed pair rather than taken from
+    /// the outer operation, because a cascade can delete a link during an
+    /// `update` — recording that as an `Update` would make the revert a
+    /// no-op, since the link no longer exists to be updated back.
+    fn record_observed_transitions(
+        &mut self,
+        observed: &[ObservedChange<T>],
+    ) -> Result<(), LinkError> {
+        let zero = T::from_byte(0);
+        for (_, before, after) in observed {
+            let kind = match (before.index != zero, after.index != zero) {
+                (false, true) => TransitionKind::Create,
+                (true, false) => TransitionKind::Delete,
+                _ => TransitionKind::Update,
+            };
+            self.record_transition(kind, *before, *after)?;
+        }
+        Ok(())
     }
 
     fn record_transition(
