@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [3.0.0] - 2026-08-29
+
+Refreshed every C# dependency to its latest release and retargeted the
+packages to `net10.0` (issue #98). `Link.Foundation.Links.Notation`
+moves 0.13.0 -> 0.16.1 so the C# and Rust implementations parse LiNo
+with the same version of the same grammar; that release only ships a
+`net10.0` assembly, so `Directory.Build.props` and all three projects
+now target `net10.0` and CI provisions the .NET 10 SDK. `System.CommandLine`
+moves 2.0.7 -> 2.0.11, and the test project picks up
+`Microsoft.NET.Test.Sdk` 18.9.0, `xunit.runner.visualstudio` 4.0.0 and
+`coverlet.collector` 10.0.1.
+
+This is a breaking change for consumers still on `net8.0`: upgrade to
+the .NET 10 SDK/runtime before taking this release.
+
+Made the C# transactions layer reusable from outside the CLI, matching
+what the Rust library now offers (issue #98).
+
+`TransactionsDecorator` is generic over the doublets address type:
+`TransactionsDecorator<TLinkAddress>` works over any
+`INamedTypesLinks<TLinkAddress>` whose address is an
+`IUnsignedNumber<TLinkAddress>`, so a consumer with a `ulong`-addressed
+store is a first-class user rather than being pinned to `uint`. The
+non-generic `TransactionsDecorator` remains as a `uint` specialisation,
+so existing code that constructs it keeps compiling. The transitions
+wire format is unchanged and address-type independent — addresses are
+written in decimal under the invariant culture, so a log written by a
+`uint`-addressed store reads back unchanged in a `ulong`-addressed one,
+and an address that does not fit the target type is rejected instead of
+being silently truncated.
+
+New `LinksFileLock` and `StorageRevision` cover multi-process access:
+advisory locking of a database's `.lock` sidecar (shared for readers,
+exclusive for writers, with a blocking `Acquire` and a non-blocking
+`TryAcquire`) and a cheap "has anyone else written since I last looked?"
+fingerprint. The lock file path and the shared/exclusive semantics match
+the Rust `storage::lock` module, so the two implementations can guard the
+same database.
+
+Source-breaking: `Transition`, `ITransaction` and `ITransactionsLinks`
+are now generic. Existing `uint` code should use `Transition<uint>`,
+`ITransaction<uint>` and `ITransactionsLinks<uint>`.
+
 ## [2.6.0] - 2026-08-18
 
 Added optional transactions and version-control layers (issue #94). The

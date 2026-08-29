@@ -12,7 +12,7 @@
     <Authors>link-foundation</Authors>
     <Description>Public library exposing the parser, query processors, decorators, named/pinned types, persistent transformation triggers, and LiNo I/O used by the clink CLI.</Description>
     <PackageId>Foundation.Data.Doublets.Cli</PackageId>
-    <Version>2.6.0</Version>
+    <Version>3.0.0</Version>
     <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/link-foundation/link-cli</RepositoryUrl>
