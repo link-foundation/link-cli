@@ -17,12 +17,12 @@ impl BalancedVariantConverter {
                 let mut layer = elements.to_vec();
                 while layer.len() > 2 {
                     let mut next = Vec::with_capacity(layer.len().div_ceil(2));
-                    let mut chunks = layer.chunks_exact(2);
-                    for pair in &mut chunks {
+                    let (pairs, remainder) = layer.as_chunks::<2>();
+                    for pair in pairs {
                         next.push(links.get_or_create(pair[0], pair[1]));
                     }
-                    if let Some(&remainder) = chunks.remainder().first() {
-                        next.push(remainder);
+                    if let Some(&odd_one_out) = remainder.first() {
+                        next.push(odd_one_out);
                     }
                     layer = next;
                 }

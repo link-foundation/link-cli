@@ -106,12 +106,18 @@ impl FileTransitionLog {
                 std::fs::create_dir_all(parent)?;
             }
         }
-        let file = OpenOptions::new()
+        // The torn tail is trimmed through a dedicated read/write handle:
+        // Windows grants an append-only handle `FILE_APPEND_DATA` without
+        // `FILE_WRITE_DATA`, so `set_len` on it fails with `ERROR_ACCESS_DENIED`.
+        let repair = OpenOptions::new()
             .read(true)
-            .append(true)
+            .write(true)
             .create(true)
+            .truncate(false)
             .open(&path)?;
-        truncate_torn_tail(&file)?;
+        truncate_torn_tail(&repair)?;
+        drop(repair);
+        let file = OpenOptions::new().read(true).append(true).open(&path)?;
         Ok(Self {
             path,
             file,
