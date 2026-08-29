@@ -6,10 +6,11 @@ use anyhow::{Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::error::LinkError;
 use crate::link::Link;
+use crate::storage::StorageRevision;
 
 /// LinkStorage provides persistent storage for links
 /// Corresponds to the storage functionality in NamedLinksDecorator in C#
@@ -18,34 +19,74 @@ pub struct LinkStorage {
     names: HashMap<u32, String>,
     name_to_id: HashMap<String, u32>,
     next_id: u32,
-    db_path: String,
+    db_path: PathBuf,
+    revision: StorageRevision,
     trace: bool,
 }
 
 impl LinkStorage {
     /// Creates a new LinkStorage instance
-    pub fn new(db_path: &str, trace: bool) -> Result<Self> {
+    ///
+    /// The database location is accepted as any [`AsRef<Path>`], so
+    /// embedding applications can pass a `PathBuf` (or an `OsStr` on
+    /// platforms with non-UTF-8 paths) instead of a `&str`.
+    pub fn new<P: AsRef<Path>>(db_path: P, trace: bool) -> Result<Self> {
+        let db_path = db_path.as_ref().to_path_buf();
+        let exists = db_path.exists();
         let mut storage = Self {
             links: HashMap::new(),
             names: HashMap::new(),
             name_to_id: HashMap::new(),
             next_id: 1,
-            db_path: db_path.to_string(),
+            db_path,
+            revision: StorageRevision::default(),
             trace,
         };
 
         // Load existing database if it exists
-        if Path::new(db_path).exists() {
+        if exists {
             storage.load()?;
         }
+        storage.revision = StorageRevision::of(&storage.db_path)?;
 
         Ok(storage)
+    }
+
+    /// The database file this storage reads from and writes to.
+    pub fn database_path(&self) -> &Path {
+        &self.db_path
+    }
+
+    /// The revision of the database file observed at the last load or save.
+    pub fn observed_revision(&self) -> StorageRevision {
+        self.revision
+    }
+
+    /// Re-reads the database file's revision fingerprint, marking the
+    /// current on-disk state as "seen" for
+    /// [`LinksStorage::has_external_changes`](crate::LinksStorage::has_external_changes).
+    pub fn refresh_observed_revision(&mut self) -> Result<(), LinkError> {
+        self.revision = StorageRevision::of(&self.db_path)?;
+        Ok(())
+    }
+
+    /// Discards in-memory state and re-reads the database file.
+    pub fn reload_from_disk(&mut self) -> Result<()> {
+        self.links.clear();
+        self.names.clear();
+        self.name_to_id.clear();
+        self.next_id = 1;
+        if self.db_path.exists() {
+            self.load()?;
+        }
+        self.revision = StorageRevision::of(&self.db_path)?;
+        Ok(())
     }
 
     /// Loads links from the database file
     fn load(&mut self) -> Result<()> {
         let file = File::open(&self.db_path)
-            .with_context(|| format!("Failed to open database: {}", self.db_path))?;
+            .with_context(|| format!("Failed to open database: {}", self.db_path.display()))?;
 
         let reader = BufReader::new(file);
 
@@ -74,7 +115,7 @@ impl LinkStorage {
             eprintln!(
                 "[TRACE] Loaded {} links from {}",
                 self.links.len(),
-                self.db_path
+                self.db_path.display()
             );
         }
 
@@ -109,7 +150,7 @@ impl LinkStorage {
             .create(true)
             .truncate(true)
             .open(&self.db_path)
-            .with_context(|| format!("Failed to create database: {}", self.db_path))?;
+            .with_context(|| format!("Failed to create database: {}", self.db_path.display()))?;
 
         let mut writer = BufWriter::new(file);
 
@@ -135,7 +176,7 @@ impl LinkStorage {
             eprintln!(
                 "[TRACE] Saved {} links to {}",
                 self.links.len(),
-                self.db_path
+                self.db_path.display()
             );
         }
 
@@ -213,7 +254,7 @@ impl LinkStorage {
             link.target = target;
             Ok(before)
         } else {
-            Err(LinkError::NotFound(id).into())
+            Err(LinkError::not_found(id).into())
         }
     }
 
@@ -233,7 +274,7 @@ impl LinkStorage {
             }
             Ok(link)
         } else {
-            Err(LinkError::NotFound(id).into())
+            Err(LinkError::not_found(id).into())
         }
     }
 
@@ -345,7 +386,7 @@ impl LinkStorage {
 
     /// Recursively formats a link structure
     fn format_structure_recursive(&self, id: u32, visited: &mut HashSet<u32>) -> Result<String> {
-        let link = self.get(id).ok_or(LinkError::NotFound(id))?;
+        let link = self.get(id).ok_or(LinkError::not_found(id))?;
         if !visited.insert(id) {
             return Ok(self.format_lino_reference(id));
         }

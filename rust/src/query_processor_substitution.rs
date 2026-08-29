@@ -25,7 +25,7 @@ impl QueryProcessor {
             return Ok(());
         }
 
-        let existing_link = storage.get_link(index).ok_or(LinkError::NotFound(index))?;
+        let existing_link = storage.get_link(index).ok_or(LinkError::not_found(index))?;
 
         if should_preserve_existing_part(pattern.source.as_deref(), solution)
             && can_preserve_existing_part(existing_link, existing_link.source, visited_indexes)

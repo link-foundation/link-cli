@@ -119,7 +119,7 @@ pub trait NamedTypeLinks {
         id: u32,
         visited: &mut HashSet<u32>,
     ) -> Result<String> {
-        let link = self.get_link(id).ok_or(LinkError::NotFound(id))?;
+        let link = self.get_link(id).ok_or(LinkError::not_found(id))?;
         if !visited.insert(id) {
             return self.format_reference(id);
         }
