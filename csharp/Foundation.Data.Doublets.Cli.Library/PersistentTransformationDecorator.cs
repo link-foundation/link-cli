@@ -25,9 +25,13 @@ public sealed record PersistentTransformation(
     public string Query => $"({Condition} {Substitution})";
 }
 
-public sealed class PersistentTransformationDecorator : LinksDecoratorBase<uint>, INamedTypesLinks<uint>
+public class PersistentTransformationDecorator : LinksDecoratorBase<uint>, INamedTypesLinks<uint>
 {
-    private const string InternalNamePrefix = "__persistent_transformation:";
+    /// <summary>
+    /// The prefix every name this decorator stores carries, so a custom
+    /// front end can recognise (and skip) the trigger schema.
+    /// </summary>
+    public const string InternalNamePrefix = "__persistent_transformation:";
 
     private readonly INamedTypesLinks<uint> _namedLinks;
     private readonly INamedTypesLinks<uint> _triggerLinks;
@@ -55,7 +59,7 @@ public sealed class PersistentTransformationDecorator : LinksDecoratorBase<uint>
         return Path.Combine(directory ?? string.Empty, $"{filenameWithoutExtension}.triggers.links");
     }
 
-    public uint StoreTrigger(PersistentTransformationKind kind, string query)
+    public virtual uint StoreTrigger(PersistentTransformationKind kind, string query)
     {
         var parsed = PersistentTransformationQuery.Parse(query);
         return WithoutTriggerApplication(() =>
@@ -73,7 +77,7 @@ public sealed class PersistentTransformationDecorator : LinksDecoratorBase<uint>
         });
     }
 
-    public int RemoveTriggers(string query)
+    public virtual int RemoveTriggers(string query)
     {
         var parsed = PersistentTransformationQuery.Parse(query);
         return WithoutTriggerApplication(() =>
@@ -91,7 +95,7 @@ public sealed class PersistentTransformationDecorator : LinksDecoratorBase<uint>
         });
     }
 
-    public IReadOnlyList<PersistentTransformation> GetTriggers()
+    public virtual IReadOnlyList<PersistentTransformation> GetTriggers()
     {
         if (!TryGetSchema(out var schema))
         {
@@ -155,22 +159,22 @@ public sealed class PersistentTransformationDecorator : LinksDecoratorBase<uint>
         return _links.Each(restriction, handler);
     }
 
-    public string? GetName(uint link)
+    public virtual string? GetName(uint link)
     {
         return _namedLinks.GetName(link);
     }
 
-    public uint SetName(uint link, string name)
+    public virtual uint SetName(uint link, string name)
     {
         return _namedLinks.SetName(link, name);
     }
 
-    public uint GetByName(string name)
+    public virtual uint GetByName(string name)
     {
         return _namedLinks.GetByName(name);
     }
 
-    public void RemoveName(uint link)
+    public virtual void RemoveName(uint link)
     {
         _namedLinks.RemoveName(link);
     }
@@ -340,7 +344,10 @@ public sealed class PersistentTransformationDecorator : LinksDecoratorBase<uint>
 
     private readonly record struct TriggerSchema(uint Type, uint Trigger, uint Once, uint Always, uint Condition, uint Substitution);
 
-    private sealed record PersistentTransformationQuery(string Condition, string Substitution)
+    /// <summary>
+    /// The two halves a trigger query parses into.
+    /// </summary>
+    public sealed record PersistentTransformationQuery(string Condition, string Substitution)
     {
         public string Query => $"({Condition} {Substitution})";
 

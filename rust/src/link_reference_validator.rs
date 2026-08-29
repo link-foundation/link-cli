@@ -1,3 +1,10 @@
+//! Checking that every link a query refers to exists, and creating the ones
+//! that do not when the caller asked for that.
+//!
+//! Ported from the C# `LinkReferenceValidator`, and public for the same reason
+//! the query processor is: a custom front end that resolves references its own
+//! way needs to be able to reuse, or replace, exactly this step.
+
 use anyhow::Result;
 use std::collections::HashSet;
 
@@ -6,7 +13,7 @@ use crate::link::Link;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
 
-pub(crate) struct LinkReferenceValidator {
+pub struct LinkReferenceValidator {
     trace: bool,
     auto_create_missing_references: bool,
 }
@@ -15,6 +22,13 @@ pub(crate) struct LinkReferenceValidator {
 struct LinkReferencePlan {
     numeric_ids_to_be_created: HashSet<u32>,
     names_to_be_created: HashSet<String>,
+    /// `(source, target)` pairs the substitution itself defines.
+    ///
+    /// A missing numeric reference whose own point pair `(id, id)` appears
+    /// here is left as a `(id: 0 0)` placeholder instead of being turned into
+    /// a point link, so that the substitution which is about to write that
+    /// exact pair does not collide with it under uniqueness resolution.
+    composite_pairs_to_be_created: HashSet<(u32, u32)>,
     missing_references: Vec<MissingLinkReference>,
     missing_reference_keys: HashSet<String>,
 }
@@ -44,19 +58,19 @@ impl MissingLinkReference {
 }
 
 impl LinkReferenceValidator {
-    pub(crate) fn new(trace: bool, auto_create_missing_references: bool) -> Self {
+    pub fn new(trace: bool, auto_create_missing_references: bool) -> Self {
         Self {
             trace,
             auto_create_missing_references,
         }
     }
 
-    pub(crate) fn validate_links_exist_or_will_be_created(
+    pub fn validate_links_exist_or_will_be_created(
         &self,
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Vec<Link>> {
+    ) -> Result<Vec<(Link, Link)>> {
         self.trace_msg("[ValidateLinksExistOrWillBeCreated] Starting validation");
 
         let mut plan = self.build_link_reference_plan(storage, substitution_patterns);
@@ -98,7 +112,7 @@ impl LinkReferenceValidator {
             .into());
         }
 
-        let created = self.auto_create_missing_references(storage, &plan.missing_references)?;
+        let created = self.auto_create_missing_references(storage, &plan)?;
         self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
         Ok(created)
     }
@@ -124,6 +138,10 @@ impl LinkReferenceValidator {
             );
         }
 
+        for pattern in substitution_patterns {
+            Self::collect_composite_pairs(pattern, &mut plan);
+        }
+
         plan
     }
 
@@ -147,6 +165,27 @@ impl LinkReferenceValidator {
         if let Some(values) = &pattern.values {
             for sub_pattern in values {
                 self.collect_explicit_definitions(sub_pattern, plan, reserved_numeric_ids);
+            }
+        }
+    }
+
+    fn collect_composite_pairs(pattern: &LinoLink, plan: &mut LinkReferencePlan) {
+        if Self::is_composite_lino(pattern)
+            && Self::concrete_identifier(pattern.id.as_deref()).is_some()
+        {
+            if let Some(values) = &pattern.values {
+                if let (Some(source), Some(target)) = (
+                    Self::concrete_numeric_identifier(values[0].id.as_deref()),
+                    Self::concrete_numeric_identifier(values[1].id.as_deref()),
+                ) {
+                    plan.composite_pairs_to_be_created.insert((source, target));
+                }
+            }
+        }
+
+        if let Some(values) = &pattern.values {
+            for sub_pattern in values {
+                Self::collect_composite_pairs(sub_pattern, plan);
             }
         }
     }
@@ -275,11 +314,31 @@ impl LinkReferenceValidator {
         Ok(())
     }
 
+    /// Creates every missing reference and reports the `(before, after)` state
+    /// of each one.
+    ///
+    /// The before state is the placeholder the reference is turned into a point
+    /// link *from*, never `null`: both branches of the C# original create the
+    /// link silently — `EnsureCreated`, and `CreateAndUpdate(Null, Null)` with
+    /// no handler — and only pass the changes handler to the `Update` that
+    /// makes it a point link:
+    ///
+    /// ```csharp
+    /// links.Update(
+    ///   new DoubletLink(linkId, links.Constants.Null, links.Constants.Null),
+    ///   new DoubletLink(linkId, linkId, linkId),
+    ///   (beforeState, afterState) =>
+    ///       options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
+    /// );
+    /// ```
+    ///
+    /// So `--changes` shows `((2: 0 0)) ((2: 2 2))`, not `() ((2: 2 2))`.
     fn auto_create_missing_references(
         &self,
         storage: &mut impl NamedTypeLinks,
-        missing_references: &[MissingLinkReference],
-    ) -> Result<Vec<Link>> {
+        plan: &LinkReferencePlan,
+    ) -> Result<Vec<(Link, Link)>> {
+        let missing_references = &plan.missing_references;
         let mut created = Vec::new();
         let mut numeric_references = missing_references
             .iter()
@@ -294,12 +353,24 @@ impl LinkReferenceValidator {
             }
 
             self.trace_msg(&format!(
-                "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id} as point link."
+                "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id}."
             ));
             storage.try_ensure_created(link_id)?;
+            if plan
+                .composite_pairs_to_be_created
+                .contains(&(link_id, link_id))
+            {
+                self.trace_msg(&format!(
+                    "[ValidateLinksExistOrWillBeCreated] Link {link_id} exists as a placeholder because ({link_id}, {link_id}) is defined by the substitution."
+                ));
+                continue;
+            }
+            let before = storage
+                .get_link(link_id)
+                .unwrap_or_else(|| Link::new(link_id, 0, 0));
             storage.update(link_id, link_id, link_id)?;
-            if let Some(link) = storage.get_link(link_id) {
-                created.push(link);
+            if let Some(after) = storage.get_link(link_id) {
+                created.push((before, after));
             }
         }
 
@@ -320,8 +391,8 @@ impl LinkReferenceValidator {
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{name}' as point link."
             ));
             let link_id = storage.get_or_create_named(&name)?;
-            if let Some(link) = storage.get_link(link_id) {
-                created.push(link);
+            if let Some(after) = storage.get_link(link_id) {
+                created.push((Link::new(link_id, 0, 0), after));
             }
         }
 
@@ -330,6 +401,10 @@ impl LinkReferenceValidator {
 
     fn is_composite_lino(lino_link: &LinoLink) -> bool {
         lino_link.values_count() == 2
+    }
+
+    fn concrete_numeric_identifier(id: Option<&str>) -> Option<u32> {
+        Self::concrete_identifier(id).and_then(|identifier| identifier.parse::<u32>().ok())
     }
 
     fn concrete_identifier(id: Option<&str>) -> Option<String> {

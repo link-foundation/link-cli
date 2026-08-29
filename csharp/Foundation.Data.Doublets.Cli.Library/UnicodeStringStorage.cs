@@ -95,25 +95,25 @@ namespace Foundation.Data.Doublets.Cli
             NamedLinks.SetName(NameType, "Name");
         }
 
-        public TLinkAddress CreateString(string content)
+        public virtual TLinkAddress CreateString(string content)
         {
             var stringSequence = GetStringSequence(content);
             return Links.GetOrCreate(StringType, stringSequence);
         }
 
-        public IList<IList<TLinkAddress>?> GetTypes()
+        public virtual IList<IList<TLinkAddress>?> GetTypes()
         {
             var any = Links.Constants.Any;
             var query = new Link<TLinkAddress>(any, Type, any);
             return Links.All(query);
         }
 
-        public bool IsType(TLinkAddress address)
+        public virtual bool IsType(TLinkAddress address)
         {
             return Links.GetSource(address) == Type;
         }
 
-        public TLinkAddress GetOrCreateType(string name)
+        public virtual TLinkAddress GetOrCreateType(string name)
         {
             var type = NamedLinks.GetByName(name);
             if (type == Links.Constants.Null)

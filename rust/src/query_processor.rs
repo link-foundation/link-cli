@@ -17,6 +17,8 @@ use crate::query_types::{Pattern, ResolvedLink};
 
 // Pattern matching lives in a submodule; see query_processor/matching.rs.
 mod matching;
+// Write-side operations live in a submodule; see query_processor/mutations.rs.
+mod mutations;
 
 /// QueryProcessor handles LiNo query parsing and execution
 /// Corresponds to AdvancedMixedQueryProcessor in C#
@@ -42,8 +44,24 @@ impl QueryProcessor {
         self
     }
 
-    /// Processes a LiNo query and returns the list of changes
+    /// Processes a LiNo query and returns the list of changes.
+    ///
+    /// Every scenario is simplified on the way out, matching the C# CLI, which
+    /// collects the raw handler calls and runs `SimplifyChanges` over them once
+    /// in `Program.cs` regardless of which branch of the processor produced
+    /// them.
     pub fn process_query(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        query: &str,
+    ) -> Result<Vec<(Option<Link>, Option<Link>)>> {
+        let changes = self.process_query_raw(storage, query)?;
+        Ok(self.simplify_changes_list(&changes))
+    }
+
+    /// The processor proper: applies `query` and reports the raw
+    /// `(before, after)` states, in the order they happened.
+    fn process_query_raw(
         &self,
         storage: &mut impl NamedTypeLinks,
         query: &str,
@@ -110,18 +128,16 @@ impl QueryProcessor {
                 changes_list.extend(
                     self.validate_links_exist_or_will_be_created(storage, &[], values)?
                         .into_iter()
-                        .map(|link| (None, Some(link))),
+                        .map(|(before, after)| (Some(before), Some(after))),
                 );
 
                 for link_to_create in values {
-                    let created_id = self.ensure_link_created(storage, link_to_create)?;
+                    let created_id =
+                        self.ensure_link_created(storage, link_to_create, &mut changes_list)?;
                     self.trace_msg(&format!(
                         "[ProcessQuery] Created link ID #{} from substitution pattern.",
                         created_id
                     ));
-                    if let Some(link) = storage.get_link(created_id) {
-                        changes_list.push((None, Some(link)));
-                    }
                 }
             }
             storage.save()?;
@@ -137,7 +153,7 @@ impl QueryProcessor {
             changes_list.extend(
                 self.validate_links_exist_or_will_be_created(storage, restriction_values, &[])?
                     .into_iter()
-                    .map(|link| (None, Some(link))),
+                    .map(|(before, after)| (Some(before), Some(after))),
             );
 
             let restriction_patterns = self.patterns_from_lino(restriction_link);
@@ -150,8 +166,7 @@ impl QueryProcessor {
 
             for link in links_to_delete {
                 if storage.exists(link.index) {
-                    let before = storage.delete(link.index)?;
-                    changes_list.push((Some(before), None));
+                    self.delete_observed(storage, link.index, &mut changes_list)?;
                     self.trace_msg(&format!("[ProcessQuery] Deleted link ID #{}.", link.index));
                 }
             }
@@ -175,7 +190,7 @@ impl QueryProcessor {
                 substitution_values,
             )?
             .into_iter()
-            .map(|link| (None, Some(link))),
+            .map(|(before, after)| (Some(before), Some(after))),
         );
         let solutions = self.find_all_solutions(storage, &restriction_patterns)?;
 
@@ -213,23 +228,27 @@ impl QueryProcessor {
             return Ok(changes_list);
         }
 
+        let mut all_planned_operations = Vec::new();
         for solution in &solutions {
             let restriction_links =
                 self.resolve_patterns(storage, &restriction_patterns, solution, false)?;
             let substitution_links =
                 self.resolve_patterns(storage, &substitution_patterns, solution, true)?;
-            let operations = self.determine_operations(&restriction_links, &substitution_links);
-            for (before, after) in operations {
-                self.apply_operation(storage, before, after, &mut changes_list)?;
-            }
+            all_planned_operations
+                .extend(self.determine_operations(&restriction_links, &substitution_links));
         }
+
+        let intended_final_states = Self::intended_final_states(&all_planned_operations);
+
+        for (before, after) in all_planned_operations {
+            self.apply_operation(storage, before, after, &mut changes_list)?;
+        }
+
+        self.restore_unexpected_deletions(storage, &intended_final_states, &mut changes_list)?;
 
         storage.save()?;
 
-        // Simplify changes
-        let simplified = self.simplify_changes_list(&changes_list);
-
-        Ok(simplified)
+        Ok(changes_list)
     }
 
     fn validate_links_exist_or_will_be_created(
@@ -237,7 +256,7 @@ impl QueryProcessor {
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Vec<Link>> {
+    ) -> Result<Vec<(Link, Link)>> {
         LinkReferenceValidator::new(self.trace, self.auto_create_missing_references)
             .validate_links_exist_or_will_be_created(
                 storage,
@@ -598,14 +617,13 @@ impl QueryProcessor {
                 links.dedup_by_key(|link| link.index);
                 for link in links {
                     if storage.exists(link.index) {
-                        let deleted = storage.delete(link.index)?;
-                        changes.push((Some(deleted), None));
+                        self.delete_observed(storage, link.index, changes)?;
                     }
                 }
             }
             (None, Some(after)) => {
-                let created = self.create_or_update_resolved_link(storage, &after)?;
-                changes.push((None, Some(created)));
+                let (before, created) = self.create_or_update_resolved_link(storage, &after)?;
+                changes.push((before, Some(created)));
             }
             (Some(before), Some(after)) => {
                 if before.index == after.index && storage.exists(before.index) {
@@ -616,7 +634,13 @@ impl QueryProcessor {
                     if let Some(name) = &after.name {
                         storage.set_name(before.index, name)?;
                     }
-                    let after_link = storage.get_link(before.index).unwrap();
+                    // The update can be resolved into a merge, which deletes
+                    // `before.index`; report the state the query asked for and
+                    // let `restore_unexpected_deletions` put the link back,
+                    // exactly as the C# processor does.
+                    let after_link = storage
+                        .get_link(before.index)
+                        .unwrap_or_else(|| Link::new(before.index, after.source, after.target));
                     changes.push((Some(before_link), Some(after_link)));
                 } else {
                     self.apply_operation(storage, Some(before), None, changes)?;
@@ -627,28 +651,6 @@ impl QueryProcessor {
         }
 
         Ok(())
-    }
-
-    fn create_or_update_resolved_link(
-        &self,
-        storage: &mut impl NamedTypeLinks,
-        definition: &ResolvedLink,
-    ) -> Result<Link> {
-        let id = if Self::is_normal_index(definition.index) {
-            storage.try_ensure_created(definition.index)?;
-            storage.update(definition.index, definition.source, definition.target)?;
-            definition.index
-        } else if let Some(existing_id) = storage.search(definition.source, definition.target) {
-            existing_id
-        } else {
-            storage.create(definition.source, definition.target)
-        };
-
-        if let Some(name) = &definition.name {
-            storage.set_name(id, name)?;
-        }
-
-        Ok(storage.get_link(id).unwrap())
     }
 
     fn links_matching_definition(
@@ -683,6 +685,54 @@ impl QueryProcessor {
         value == u32::MAX
     }
 
+    /// Resolves a half a query left unspecified against the half already
+    /// stored, the way C# resolves its `any` constant on the way into the
+    /// store.
+    ///
+    /// The C# processor marks an unbound substitution variable — and a `*` — with
+    /// `links.Constants.Any`, which is a value the *store* understands:
+    /// `Update` leaves a half substituted with `any` exactly as it was, and a
+    /// link created from one gets `null` there. This processor marks the same
+    /// thing with [`u32::MAX`], which the store underneath does not recognise
+    /// (its `any` is `2147483644`, the hybrid-aware constant), so `() (($a $a))`
+    /// used to store the literal `4294967295` in both halves where C# stores
+    /// `(1: 0 0)`. Resolving at the write boundary keeps [`u32::MAX`] as this
+    /// crate's single internal marker while writing what C# writes.
+    fn resolve_unspecified(value: u32, existing: u32) -> u32 {
+        if Self::is_any(value) {
+            existing
+        } else {
+            value
+        }
+    }
+
+    /// Looks a doublet up with unspecified halves treated as wildcards, the way
+    /// C#'s `SearchOrDefault` does.
+    ///
+    /// `SearchOrDefault` runs through `Each`, which reads `any` in a query as
+    /// "every value" rather than as a literal address, so `() ((1 $a))` finds a
+    /// stored `(1: 1 1)` instead of creating a second link beside it.
+    /// [`NamedTypeLinks::search`] matches literally on purpose — it backs
+    /// uniqueness resolution — so the wildcard pass belongs here.
+    fn search_unspecified(
+        storage: &mut impl NamedTypeLinks,
+        source: u32,
+        target: u32,
+    ) -> Option<u32> {
+        if !Self::is_any(source) && !Self::is_any(target) {
+            return storage.search(source, target);
+        }
+        storage
+            .all_links()
+            .into_iter()
+            .filter(|link| {
+                (Self::is_any(source) || link.source == source)
+                    && (Self::is_any(target) || link.target == target)
+            })
+            .map(|link| link.index)
+            .min()
+    }
+
     fn is_normal_index(value: u32) -> bool {
         value != 0 && !Self::is_any(value)
     }
@@ -691,98 +741,38 @@ impl QueryProcessor {
         identifier == "*" || identifier.parse::<u32>().is_ok()
     }
 
-    /// Ensures a link is created from a LinoLink pattern
-    fn ensure_link_created(
-        &self,
-        storage: &mut impl NamedTypeLinks,
-        lino_link: &LinoLink,
-    ) -> Result<u32> {
-        // Handle leaf nodes (names or numbers)
-        if !lino_link.has_values() {
-            if let Some(ref id) = lino_link.id {
-                if id == "*" || Self::is_variable(id) {
-                    return Ok(u32::MAX);
-                }
-
-                // Check if it's a number
-                if let Ok(num) = id.parse::<u32>() {
-                    return Ok(num);
-                }
-
-                // It's a name - get or create
-                return storage.get_or_create_named(id);
-            }
-            return Ok(0);
-        }
-
-        // Handle composite links with 2 values
-        if lino_link.values_count() == 2 {
-            let values = lino_link.values.as_ref().unwrap();
-
-            // Recursively ensure source and target exist
-            let source_id = self.ensure_link_created(storage, &values[0])?;
-            let target_id = self.ensure_link_created(storage, &values[1])?;
-
-            // Create or get the composite link
-            let link_id = if let Some(ref id) = lino_link.id {
-                if let Ok(num) = id.parse::<u32>() {
-                    // Specific ID requested
-                    storage.try_ensure_created(num)?;
-                    storage.update(num, source_id, target_id)?;
-                    num
-                } else if id == "*" || Self::is_variable(id) {
-                    storage.get_or_create(source_id, target_id)
-                } else {
-                    // Named link
-                    let existing = storage.get_by_name(id)?;
-                    if let Some(id_num) = existing {
-                        storage.update(id_num, source_id, target_id)?;
-                        id_num
-                    } else {
-                        let new_id = storage.create(source_id, target_id);
-                        storage.set_name(new_id, id)?;
-                        new_id
-                    }
-                }
-            } else {
-                // Anonymous link
-                storage.get_or_create(source_id, target_id)
-            };
-
-            return Ok(link_id);
-        }
-
-        Err(LinkError::InvalidFormat("Invalid link structure".to_string()).into())
-    }
-
-    /// Simplifies the changes list
+    /// Simplifies the changes list.
+    ///
+    /// A missing side — the state before a creation, or the state after a
+    /// deletion — becomes the null link `(0: 0 0)` on the way in and turns back
+    /// into `None` on the way out. C# has no option type here and feeds the
+    /// simplifier `default(Link<uint>)` for both, so routing the null states
+    /// around the simplifier (as this used to) both reported creations and
+    /// deletions in a different order than C# and hid them from the chain
+    /// collapsing that is the whole point of the pass.
     fn simplify_changes_list(
         &self,
         changes: &[(Option<Link>, Option<Link>)],
     ) -> Vec<(Option<Link>, Option<Link>)> {
-        // Convert to the format expected by simplify_changes
-        let mut to_simplify: Vec<(Link, Link)> = Vec::new();
-        let mut non_simplifiable: Vec<(Option<Link>, Option<Link>)> = Vec::new();
+        let to_simplify: Vec<(Link, Link)> = changes
+            .iter()
+            .map(|(before, after)| {
+                (
+                    before.unwrap_or_else(Link::null),
+                    after.unwrap_or_else(Link::null),
+                )
+            })
+            .collect();
 
-        for (before, after) in changes {
-            match (before, after) {
-                (Some(b), Some(a)) => {
-                    to_simplify.push((*b, *a));
-                }
-                _ => {
-                    non_simplifiable.push((*before, *after));
-                }
-            }
-        }
-
-        let simplified = simplify_changes(to_simplify);
-
-        let mut result: Vec<(Option<Link>, Option<Link>)> = non_simplifiable;
-        for (b, a) in simplified {
-            result.push((Some(b), Some(a)));
-        }
-
-        result
+        simplify_changes(to_simplify)
+            .into_iter()
+            .map(|(before, after)| {
+                (
+                    (!before.is_null()).then_some(before),
+                    (!after.is_null()).then_some(after),
+                )
+            })
+            .collect()
     }
 
     /// Logs a trace message if tracing is enabled

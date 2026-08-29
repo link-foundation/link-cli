@@ -22,7 +22,7 @@ namespace Foundation.Data.Doublets.Cli
             _links = links;
         }
 
-        public IEnumerator<TLinkAddress> GetEnumerator()
+        public virtual IEnumerator<TLinkAddress> GetEnumerator()
         {
             return new PinnedTypesEnumerator(_links);
         }
@@ -101,7 +101,7 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        public void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3)
+        public virtual void Deconstruct(out TLinkAddress type1, out TLinkAddress type2, out TLinkAddress type3)
         {
             using var enumerator = GetEnumerator();
 

@@ -80,6 +80,45 @@ pub trait LinksStorage<T: LinkReference> {
     /// Deletes `index`, returning the link that was removed.
     fn delete_link(&mut self, index: T) -> Result<GenericLink<T>, LinkError>;
 
+    /// [`Self::update_link`], reporting every `(before, after)` change it made.
+    ///
+    /// A store that resolves duplicate doublets turns one write into a cascade
+    /// of changes, and the transactions layer has to log each of them or a
+    /// rollback cannot restore what the write actually did. This is the
+    /// equivalent of the `WriteHandler` the C# decorators forward to.
+    ///
+    /// The default implementation reports the single change a store without any
+    /// policy of its own makes, so implementors only override it when they
+    /// really can cascade.
+    fn update_link_observed(
+        &mut self,
+        index: T,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
+        let previous = self.update_link(index, source, target)?;
+        let after = self
+            .get_link(index)
+            .unwrap_or_else(|| GenericLink::new(index, source, target));
+        observer(previous, after);
+        Ok(previous)
+    }
+
+    /// [`Self::delete_link`], reporting every `(before, after)` change it made.
+    ///
+    /// See [`Self::update_link_observed`]; a cascading delete removes every link
+    /// that still referenced `index`.
+    fn delete_link_observed(
+        &mut self,
+        index: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
+        let deleted = self.delete_link(index)?;
+        observer(deleted, GenericLink::null());
+        Ok(deleted)
+    }
+
     /// Returns every link in the store.
     fn all_links(&self) -> Vec<GenericLink<T>>;
 

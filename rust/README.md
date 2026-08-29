@@ -7,8 +7,9 @@
 
 This directory contains the Rust `link-cli` crate, which publishes both a
 reusable `[lib]` (`link_cli`) and the `clink` `[[bin]]` from the same
-package. It mirrors the core query processor, named references, LiNo
-import/export, and structure formatting used by the production C# tool.
+package. It mirrors the production C# tool: the query processor, named
+references, LiNo import/export, structure formatting, persistent
+transformation triggers, transactions and version control.
 The WebAssembly wrapper crate lives in `rust/wasm/` and depends on this
 package.
 

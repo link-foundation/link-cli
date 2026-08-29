@@ -1,3 +1,5 @@
+//! The options one query is processed with.
+
 /// Options for query processing
 pub struct QueryOptions {
     pub query: String,

@@ -155,3 +155,50 @@ fn decorator_can_be_built_from_existing_link_storages() -> Result<()> {
 
     Ok(())
 }
+
+/// `UnicodeStringStorage` names its own pinned types — `Type`, `Name`,
+/// `String`, `UnicodeSymbol`, `UnicodeSequence` and `EmptyString` — inside the
+/// names database, so a user link that takes one of those names shares its name
+/// link with a pinned type.
+///
+/// Resolving the name then has to pick the user link out of several holders.
+/// Before this was handled, `get_by_name` returned whichever holder the names
+/// hash map happened to yield first, and the lookup failed (or succeeded)
+/// depending on hash order.
+#[test]
+fn reserved_pinned_type_names_can_still_be_used_for_user_links() -> Result<()> {
+    let db_file = NamedTempFile::new()?;
+    let names_file = NamedTempFile::new()?;
+    let mut decorator = NamedTypesDecorator::with_names_database_path(
+        db_file.path().to_str().unwrap(),
+        names_file.path().to_str().unwrap(),
+        false,
+    )?;
+
+    let reserved = [
+        "Type",
+        "Name",
+        "String",
+        "UnicodeSymbol",
+        "UnicodeSequence",
+        "EmptyString",
+    ];
+    let mut created = Vec::new();
+    for name in reserved {
+        let link = decorator.create(0, 0);
+        decorator.set_name(link, name)?;
+        created.push((name, link));
+    }
+
+    // Every name still resolves after all the others were added.
+    for (name, link) in &created {
+        assert_eq!(
+            Some(*link),
+            decorator.get_by_name(name)?,
+            "the user link named {name} must win over the pinned type of the same name"
+        );
+        assert_eq!(Some((*name).to_string()), decorator.get_name(*link)?);
+    }
+
+    Ok(())
+}

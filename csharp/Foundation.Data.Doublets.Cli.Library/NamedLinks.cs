@@ -27,25 +27,25 @@ namespace Foundation.Data.Doublets.Cli
             _getString = getString;
         }
 
-        public TLinkAddress SetNameForExternalReference(TLinkAddress link, string name)
+        public virtual TLinkAddress SetNameForExternalReference(TLinkAddress link, string name)
         {
             var reference = new Hybrid<TLinkAddress>(link, isExternal: true);
             return SetName(reference, name);
         }
 
-        public TLinkAddress SetName(TLinkAddress link, string name)
+        public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
             var nameSequence = _createString(name);
             return _links.GetOrCreate(link, _links.GetOrCreate(_nameType, nameSequence));
         }
 
-        public string? GetNameByExternalReference(TLinkAddress link)
+        public virtual string? GetNameByExternalReference(TLinkAddress link)
         {
             var reference = new Hybrid<TLinkAddress>(link, isExternal: true);
             return GetName(reference);
         }
 
-        public string? GetName(TLinkAddress link)
+        public virtual string? GetName(TLinkAddress link)
         {
             var any = _links.Constants.Any;
             var query = new Link<TLinkAddress>(any, link, any);
@@ -62,7 +62,7 @@ namespace Foundation.Data.Doublets.Cli
             return null;
         }
 
-        public TLinkAddress GetByName(string name)
+        public virtual TLinkAddress GetByName(string name)
         {
             var nameSequence = _createString(name);
             var nameLink = _links.SearchOrDefault(_nameType, nameSequence);
@@ -80,7 +80,7 @@ namespace Foundation.Data.Doublets.Cli
             return _links.GetSource(link);
         }
 
-        public TLinkAddress GetExternalReferenceByName(string name)
+        public virtual TLinkAddress GetExternalReferenceByName(string name)
         {
             var nameSequence = _createString(name);
             var nameLink = _links.SearchOrDefault(_nameType, nameSequence);
@@ -103,7 +103,7 @@ namespace Foundation.Data.Doublets.Cli
             return _links.Constants.Null;
         }
 
-        public void RemoveName(TLinkAddress link)
+        public virtual void RemoveName(TLinkAddress link)
         {
             var any = _links.Constants.Any;
             var query = new Link<TLinkAddress>(any, link, any);
@@ -124,7 +124,7 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        public void RemoveNameByExternalReference(TLinkAddress externalReference)
+        public virtual void RemoveNameByExternalReference(TLinkAddress externalReference)
         {
             var reference = new Hybrid<TLinkAddress>(externalReference, isExternal: true);
             RemoveName(reference);

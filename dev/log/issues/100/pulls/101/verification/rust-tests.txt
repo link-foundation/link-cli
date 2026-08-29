@@ -1,0 +1,395 @@
+
+running 6 tests
+test version_control::tests::encode_round_trips_through_decode ... ok
+test transactions::tests::wide_transition_is_rejected_by_a_narrow_address_type ... ok
+test transactions::tests::retention_policy_parses_specs ... ok
+test version_control::tests::make_version_control_database_filename_returns_sibling_path ... ok
+test transactions::tests::transition_round_trips_through_serialize ... ok
+test version_control::tests::decode_branch_marker_rejects_invalid_input ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+test test_simplify_multiple_branches_from_same_initial ... ok
+test test_simplify_issue26_alternative_scenario ... ok
+test test_simplify_keeps_unchanged_states ... ok
+test test_simplify_chain ... ok
+test test_simplify_with_unchanged ... ok
+test test_simplify_specific_example_removes_intermediate_states ... ok
+test test_simplify_no_op ... ok
+test test_simplify_issue26_update_operation ... ok
+test test_simplify_empty ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 13 tests
+test parses_inline_export_alias_as_lino_output_path ... ok
+test defaults_have_no_transactions_or_vc_requested ... ok
+test parses_inline_version_control_flag_values ... ok
+test parses_transactions_flag_family ... ok
+test parses_version_control_flag_family ... ok
+test query_option_takes_precedence_over_positional_query ... ok
+test parses_inline_alias_values_and_boolean_values ... ok
+test rejects_extra_positional_queries ... ok
+test returns_help_and_version_commands ... ok
+test rejects_invalid_branch_from_value ... ok
+test parses_export_alias_as_lino_output_path ... ok
+test parses_inline_transactions_flag_values ... ok
+test parses_csharp_option_aliases_without_direct_clap_dependency ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 3 tests
+test export_alias_writes_numbered_references ... ok
+test export_alias_writes_named_references ... ok
+test structure_option_renders_left_branch_with_indexes ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 1 test
+test import_option_reads_numbered_lino_file ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 1 test
+test cli_stores_string_aliases_in_separate_names_database ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 10 tests
+test invalid_commit_mode_value_is_rejected ... ok
+test no_flags_does_not_create_transactions_sidecar ... ok
+test invalid_retention_value_is_rejected ... ok
+test explicit_transactions_file_is_honored ... ok
+test vc_flag_creates_version_control_sidecar ... ok
+test transactions_flag_creates_transitions_sidecar ... ok
+test transactions_log_flag_prints_recorded_transitions ... ok
+test vc_list_branches_shows_default_branch ... ok
+test vc_tag_then_list_tags_round_trip ... ok
+test vc_branch_then_switch_back_creates_new_branch ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+
+running 11 tests
+test a_trigger_command_needs_a_query ... ok
+test never_on_an_empty_trigger_store_removes_nothing ... ok
+test always_trigger_fires_on_a_later_write ... ok
+test only_one_trigger_command_at_a_time ... ok
+test an_existing_trigger_store_keeps_firing_without_repeating_the_flag ... ok
+test never_removes_a_stored_trigger ... ok
+test always_trigger_keeps_firing ... ok
+test once_trigger_fires_only_once ... ok
+test triggers_are_stored_in_the_sidecar_next_to_the_database ... ok
+test triggers_file_puts_the_store_where_it_is_asked_to ... ok
+test embedded_triggers_stay_in_the_main_database ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.44s
+
+
+running 2 tests
+test rust_manifest_declares_required_basis_crates ... ok
+test rust_manifest_uses_lino_arguments_without_direct_clap_dependency ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test map_store_accepts_any_upstream_decorator ... ok
+test resolved_storage_repoints_usages_of_the_redundant_link ... ok
+test resolved_storage_turns_duplicate_creation_into_get_or_create ... ok
+test resolved_storage_cascades_deletion_to_usages ... ok
+test undecorated_storage_still_allows_duplicate_pairs ... ok
+test map_store_preserves_the_backing_path_and_durability ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+
+
+running 2 tests
+test update_into_an_existing_pair_rebases_usages_onto_the_survivor ... ok
+test deleting_a_link_cascades_to_its_usages ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+
+running 15 tests
+test cross_process_lock_probe ... ignored, helper process spawned by exclusive_lock_is_honoured_across_processes
+test doublets_storage_creates_updates_and_deletes_links ... ok
+test doublets_storage_reserves_specific_addresses ... ok
+test doublets_storage_queries_by_pattern ... ok
+test doublets_storage_mutates_the_database_file_in_place ... ok
+test doublets_storage_detects_external_writes ... ok
+test doublets_storage_survives_reopen ... ok
+
+running 1 test
+
+running 1 test
+test doublets_storage_supports_u64_addresses ... ok
+test exclusive_lock_is_honoured_across_processes ... ok
+test shared_locks_allow_concurrent_readers_but_block_writers ... ok
+test persistent_file_mapped_preserves_existing_contents ... ok
+test doublets_storage_supports_usize_addresses ... ok
+test opened_storage_holds_its_lock_for_its_lifetime ... ok
+test exclusive_lock_excludes_other_holders ... ok
+test doublets_storage_wraps_an_externally_owned_store ... ok
+
+test result: ok. 14 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.25s
+
+
+running 4 tests
+test unsupported_any_reference_is_rejected_without_placeholder_creation ... ok
+test pinned_types_take_types_is_finite_and_deterministic ... ok
+test named_link_create_delete_recreate_clears_stale_name_mapping ... ok
+test explicit_numeric_id_update_can_be_reversed_with_another_update ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 21 tests
+test test_format_structure_renders_repeated_source_and_target_as_reference_on_right ... ok
+test test_ensure_created_frees_the_addresses_it_passed_over ... ok
+test test_format_structure_renders_left_branch_with_link_indexes ... ok
+test test_freed_addresses_are_reused_most_recently_freed_first ... ok
+test test_freed_address_is_reused_before_the_store_grows ... ok
+test get_or_create_matches_service_constants_literally ... ok
+test test_free_list_survives_a_reload ... ok
+test test_freeing_the_last_link_shrinks_the_store ... ok
+test test_lino_lines_escape_names_that_need_quoting ... ok
+test test_lino_lines_use_names_for_indexes_sources_and_targets ... ok
+test test_lino_lines_use_numbered_references_without_names ... ok
+test test_storage_delete ... ok
+test test_storage_create ... ok
+test test_lino_lines_select_quote_style_for_names_containing_quotes ... ok
+test test_missing_addresses_are_recovered_from_a_database_without_a_free_list ... ok
+test test_storage_search ... ok
+test test_storage_get_or_create ... ok
+test test_storage_update ... ok
+test test_storage_persistence ... ok
+test test_storage_named_links ... ok
+test test_write_lino_output_writes_complete_database ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 5 tests
+test test_link_creation ... ok
+test test_link_format ... ok
+test test_link_is_full_point ... ok
+test test_link_is_null ... ok
+test test_link_round_trips_through_doublets_link ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+test import_lino_text_creates_named_references_as_point_links ... ok
+test import_lino_text_reproduces_numbered_links_at_explicit_indexes ... ok
+test import_lino_text_treats_out_of_range_numbers_as_names ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 5 tests
+test test_lino_link_is_wildcard ... ok
+test test_lino_link_new ... ok
+test test_lino_link_is_variable ... ok
+test test_lino_link_is_numeric ... ok
+test test_lino_link_with_values ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 8 tests
+test default_names_database_path_matches_csharp_convention ... ok
+test decorator_includes_pinned_types_decorator ... ok
+test delete_removes_associated_name_from_names_database ... ok
+test decorator_can_be_built_from_existing_link_storages ... ok
+test decorator_exposes_link_storage_operations_and_named_types ... ok
+test reassigning_existing_name_moves_name_to_new_link ... ok
+test setting_second_name_replaces_first_name ... ok
+test reserved_pinned_type_names_can_still_be_used_for_user_links ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 8 tests
+test test_parse_empty ... ok
+test test_parse_link_with_id ... ok
+test test_parse_links_notation_backtick_unicode_identifier ... ok
+test test_parse_simple_link ... ok
+test test_parse_nested_link ... ok
+test test_parse_query_format ... ok
+test test_parse_wildcard ... ok
+test test_parse_variable ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+test query_parsing_accepts_the_wrapped_and_the_bare_form ... ok
+test query_parsing_rejects_an_incomplete_query ... ok
+test sidecar_store_keeps_the_main_database_free_of_trigger_bookkeeping ... ok
+test embedded_store_keeps_triggers_in_the_decorated_database ... ok
+test triggers_database_filename_follows_the_names_database_convention ... ok
+test never_removes_matching_stored_trigger ... ok
+test always_trigger_is_stored_in_links_and_applied_after_write ... ok
+test once_trigger_deletes_itself_after_first_match ... ok
+test always_trigger_keeps_firing ... ok
+test triggers_survive_a_reopen ... ok
+test storing_the_same_trigger_twice_is_idempotent ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+
+running 3 tests
+test decorator_supports_triplet_deconstruction_parity ... ok
+test decorator_rejects_unexpected_link_shape_at_reserved_address ... ok
+test decorator_exposes_link_storage_operations_and_pinned_types ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 26 tests
+test test_create_explicit_index_after_gap_matches_csharp ... ok
+test test_create_deep_nested_numeric_links_matches_csharp ... ok
+test test_delete_all_by_index_wildcard_matches_csharp ... ok
+test test_delete_by_wildcard_target_matches_csharp ... ok
+test test_delete_by_source_target_pattern_matches_csharp ... ok
+test test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp ... ok
+test test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp ... ok
+test test_delete_cascades_to_usages_matches_csharp ... ok
+test test_delete_cascade_chain_matches_csharp ... ok
+test test_no_op_variable_query_returns_matched_changes ... ok
+test test_star_in_a_substitution_creates_null_point_matches_csharp ... ok
+test test_delete_by_names_keeps_leaf_names_matches_csharp ... ok
+test test_swap_one_link_keeps_its_address_matches_csharp ... ok
+test test_swap_all_links_using_variables_matches_csharp ... ok
+test test_unbound_substitution_variable_at_an_index_matches_csharp ... ok
+test test_unbound_substitution_variable_creates_null_point_matches_csharp ... ok
+test test_unbound_substitution_variable_in_an_update_keeps_existing_matches_csharp ... ok
+test test_unbound_substitution_variable_one_half_finds_existing_matches_csharp ... ok
+test test_string_composite_left_child_does_not_create_extra_leaf ... ok
+test test_unwrapped_create_query_matches_csharp ... ok
+test test_unbound_substitution_variable_twice_is_idempotent_matches_csharp ... ok
+test test_named_delete_cascades_to_usages_matches_csharp ... ok
+test test_update_into_existing_pair_merges_matches_csharp ... ok
+test test_unknown_named_restriction_fails_without_auto_create ... ok
+test test_named_link_rename_matches_csharp ... ok
+test test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 15 tests
+test test_auto_create_missing_numeric_reference_creates_point_link ... ok
+test test_deduplicate_duplicate_pair_with_numeric_links ... ok
+test test_auto_create_missing_named_references_creates_point_links ... ok
+test test_auto_create_missing_numeric_reference_fills_existing_gap ... ok
+test test_deduplicate_mixed_named_and_numeric ... ok
+test test_deduplicate_duplicate_pair_with_named_links ... ok
+test test_missing_named_reference_fails_without_auto_create ... ok
+test test_deduplicate_nested_duplicates ... ok
+test test_future_numeric_references_succeed_without_auto_create ... ok
+test test_deduplicate_triple_duplicate_pair ... ok
+test test_deduplicate_with_different_pairs ... ok
+test test_query_processor_empty ... ok
+test test_missing_numeric_reference_fails_without_auto_create ... ok
+test test_query_processor_create ... ok
+test test_deduplicate_named_links_multiple_queries ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+
+running 6 tests
+test uncommitted_writes_are_rolled_back_after_a_crash ... ok
+test committed_writes_survive_a_crash_without_save ... ok
+test a_log_written_by_a_wider_address_type_is_rejected_not_dropped ... ok
+test committed_but_unapplied_transitions_are_reapplied ... ok
+test a_torn_final_log_entry_is_ignored_during_recovery ... ok
+test the_data_store_is_mutated_in_place_across_transactions ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s
+
+
+running 14 tests
+test make_transitions_database_filename_returns_sibling_path ... ok
+test no_behaviour_change_when_not_opted_in ... ok
+test nested_transactions_are_rejected ... ok
+test retention_policy_parses_specs ... ok
+test commit_persists_create ... ok
+test async_commit_marks_applied ... ok
+test auto_transaction_records_create_and_update ... ok
+test recovery_reapplies_committed_transitions ... ok
+test transition_round_trips_through_serialize ... ok
+test rollback_undoes_create ... ok
+test rollback_undoes_delete ... ok
+test rollback_undoes_update ... ok
+test chunked_retention_archives_oldest ... ok
+test sized_retention_drops_oldest_after_applied ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+
+
+running 5 tests
+test balanced_variant_and_right_sequence_walker_preserve_symbol_order ... ok
+test raw_number_converters_match_hybrid_external_reference_encoding ... ok
+test caching_converter_decorator_reuses_cached_values ... ok
+test target_and_char_symbol_converters_create_and_decode_symbols ... ok
+test string_and_unicode_sequence_converters_round_trip_utf16_text ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 11 tests
+test create_and_retrieve_empty_string ... ok
+test create_and_retrieve_simple_string ... ok
+test create_and_retrieve_unicode_string_as_utf16_sequence ... ok
+test create_and_retrieve_user_defined_type ... ok
+test create_and_retrieve_multiple_strings ... ok
+test deleting_non_named_link_does_not_affect_other_names ... ok
+test named_links_facade_matches_csharp_named_links_role ... ok
+test name_external_reference_matches_csharp_hybrid_encoding ... ok
+test name_is_removed_when_external_reference_is_deleted ... ok
+test pinned_types_are_created_and_named ... ok
+test name_is_removed_when_link_is_deleted ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 13 tests
+test default_branch_exists_on_first_open ... ok
+test duplicate_branch_throws ... ok
+test checkout_out_of_range_throws ... ok
+test branch_forks_from_current_head ... ok
+test new_transitions_are_attributed_to_current_branch ... ok
+test full_stack_acid_rollback_is_atomic_and_isolated ... ok
+test branch_from_explicit_seq_uses_given_point ... ok
+test checkout_and_forward_replay_restores_state ... ok
+test checkout_to_zero_rewinds_everything ... ok
+test recover_rebuilds_state_from_branches_store ... ok
+test tag_points_to_current_head ... ok
+test switch_branch_applies_and_rewinds_transitions ... ok
+test full_stack_acid_commit_is_consistent_and_durable_across_reopen ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+
+
+running 4 tests
+test src/link_storage_doublets.rs - link_storage_doublets::by_pattern (line 83) ... ignored
+test src/storage/doublets_storage.rs - storage::doublets_storage::DoubletsStorage<T,S>::map_store (line 167) - compile ... ok
+test src/storage/doublets_storage.rs - storage::doublets_storage::DoubletsStorage<T,S>::with_automatic_uniqueness_and_usages_resolution (line 199) - compile ... ok
+test src/transactions/mod.rs - transactions (line 28) - compile ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.19s
+

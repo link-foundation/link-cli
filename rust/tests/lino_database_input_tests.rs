@@ -63,7 +63,12 @@ fn import_lino_text_treats_out_of_range_numbers_as_names() -> Result<()> {
     let mut storage = LinkStorage::new(db_path, false)?;
     let out_of_range_number = u64::from(u32::MAX) + 1;
 
-    import_lino_text(&mut storage, &format!("(child: {out_of_range_number} 1)"))?;
+    // Target `2` rather than `1` for the same reason the C# counterpart
+    // (`LinoDatabaseInputTests.ImportText_TreatsOutOfRangeNumbersAsNames`)
+    // uses it: the out-of-range number becomes the point link `(1: 1 1)`,
+    // so `(child: <number> 1)` would ask for a second `(1, 1)` link and
+    // uniqueness resolution would merge `child` into it.
+    import_lino_text(&mut storage, &format!("(child: {out_of_range_number} 2)"))?;
 
     let numeric_name = storage
         .get_by_name(&out_of_range_number.to_string())

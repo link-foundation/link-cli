@@ -274,8 +274,19 @@ impl<'a> UnicodeStringStorage<'a> {
         self.get_name(external_reference(link))
     }
 
+    /// The external reference named `name`, if any.
+    ///
+    /// A name link can be shared by several holders, so this looks for the
+    /// external reference among *all* of them instead of only inspecting the
+    /// first: [`UnicodeStringStorage::new`] names the pinned types, so a user
+    /// link named `Type`, `Name`, `String`, `UnicodeSymbol`,
+    /// `UnicodeSequence` or `EmptyString` always shares its name link with a
+    /// pinned type.
     pub fn get_external_reference_by_name(&mut self, name: &str) -> Result<Option<u32>> {
-        Ok(self.get_by_name(name)?.and_then(external_reference_value))
+        Ok(self
+            .name_holders(name)?
+            .into_iter()
+            .find_map(external_reference_value))
     }
 
     pub fn remove_name_by_external_reference(&mut self, external_reference_id: u32) -> Result<()> {
@@ -288,9 +299,12 @@ impl<'a> UnicodeStringStorage<'a> {
         Ok(self.links.get_or_create(link, name_link))
     }
 
+    /// The name of `link`, or `None` when it has none.
+    ///
+    /// Name pairs are visited by address so that a link carrying more than one
+    /// name always reports the same one.
     pub fn get_name(&self, link: u32) -> Result<Option<String>> {
-        for name_pair in self.links.query(None, Some(link), None) {
-            let name_candidate = name_pair.target;
+        for (_, name_candidate) in self.name_pairs_of(link) {
             let Some(candidate) = self.links.get(name_candidate) else {
                 continue;
             };
@@ -301,26 +315,53 @@ impl<'a> UnicodeStringStorage<'a> {
         Ok(None)
     }
 
+    /// The lowest-addressed link named `name`, or `None` when the name is
+    /// unused. See [`Self::get_external_reference_by_name`] for the
+    /// external-reference variant.
     pub fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
+        Ok(self.name_holders(name)?.into_iter().next())
+    }
+
+    /// Every link that carries `name`, ordered by the address of the name pair
+    /// that binds it.
+    ///
+    /// Nothing stops two links from sharing one name link, and the pinned type
+    /// names created by [`UnicodeStringStorage::new`] make that the normal case
+    /// for a handful of reserved names. Reading only the first match out of
+    /// [`LinkStorage::query`] — which iterates a hash map — made the answer
+    /// depend on hash order; ordering by address makes it reproducible, exactly
+    /// like [`LinkStorage::search`] does for duplicate doublets.
+    fn name_holders(&mut self, name: &str) -> Result<Vec<u32>> {
         let name_sequence = self.create_string(name)?;
         let Some(name_link) = self.links.search(self.name_type, name_sequence) else {
-            return Ok(None);
+            return Ok(Vec::new());
         };
-        Ok(self
+
+        let mut holders = self
             .links
             .query(None, None, Some(name_link))
             .into_iter()
-            .map(|link| link.source)
-            .next())
+            .map(|link| (link.index, link.source))
+            .collect::<Vec<_>>();
+        holders.sort_unstable();
+        Ok(holders.into_iter().map(|(_, source)| source).collect())
     }
 
-    pub fn remove_name(&mut self, link: u32) -> Result<()> {
-        let name_pairs = self
+    /// The `(name pair address, name candidate)` pairs anchored at `link`,
+    /// ordered by address.
+    fn name_pairs_of(&self, link: u32) -> Vec<(u32, u32)> {
+        let mut pairs = self
             .links
             .query(None, Some(link), None)
             .into_iter()
-            .map(|link| (link.index, link.target))
+            .map(|pair| (pair.index, pair.target))
             .collect::<Vec<_>>();
+        pairs.sort_unstable();
+        pairs
+    }
+
+    pub fn remove_name(&mut self, link: u32) -> Result<()> {
+        let name_pairs = self.name_pairs_of(link);
 
         for (name_pair, name_candidate) in name_pairs {
             let Some(candidate) = self.links.get(name_candidate).copied() else {

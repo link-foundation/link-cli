@@ -62,6 +62,25 @@ macro_rules! impl_in_memory_links_storage {
                 self.delete(index).map_err(storage_error)
             }
 
+            fn update_link_observed(
+                &mut self,
+                index: u32,
+                source: u32,
+                target: u32,
+                observer: &mut dyn FnMut(GenericLink<u32>, GenericLink<u32>),
+            ) -> Result<GenericLink<u32>, LinkError> {
+                self.update_observed(index, source, target, observer)
+                    .map_err(storage_error)
+            }
+
+            fn delete_link_observed(
+                &mut self,
+                index: u32,
+                observer: &mut dyn FnMut(GenericLink<u32>, GenericLink<u32>),
+            ) -> Result<GenericLink<u32>, LinkError> {
+                self.delete_observed(index, observer).map_err(storage_error)
+            }
+
             fn all_links(&self) -> Vec<GenericLink<u32>> {
                 self.all().into_iter().copied().collect()
             }

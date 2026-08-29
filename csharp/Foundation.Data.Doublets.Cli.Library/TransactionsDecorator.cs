@@ -274,7 +274,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     public long AppliedSequence { get { lock (_lock) return _appliedSequence; } }
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
 
-    public ITransaction<TLinkAddress> BeginTransaction()
+    public virtual ITransaction<TLinkAddress> BeginTransaction()
     {
         lock (_lock)
         {
@@ -288,7 +288,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         }
     }
 
-    public Task<ITransaction<TLinkAddress>> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public virtual Task<ITransaction<TLinkAddress>> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(BeginTransaction());
@@ -428,14 +428,14 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 
     // INamedTypes forwarding ------------------------------------------------
 
-    public string? GetName(TLinkAddress link) => _inner.GetName(link);
-    public TLinkAddress SetName(TLinkAddress link, string name) => _inner.SetName(link, name);
-    public TLinkAddress GetByName(string name) => _inner.GetByName(name);
-    public void RemoveName(TLinkAddress link) => _inner.RemoveName(link);
+    public virtual string? GetName(TLinkAddress link) => _inner.GetName(link);
+    public virtual TLinkAddress SetName(TLinkAddress link, string name) => _inner.SetName(link, name);
+    public virtual TLinkAddress GetByName(string name) => _inner.GetByName(name);
+    public virtual void RemoveName(TLinkAddress link) => _inner.RemoveName(link);
 
     // Recovery --------------------------------------------------------------
 
-    public void Recover()
+    public virtual void Recover()
     {
         lock (_lock)
         {
@@ -561,7 +561,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     /// Stops the background worker. Kept as a named method for backwards
     /// compatibility; <see cref="Dispose()"/> delegates to it.
     /// </summary>
-    public void Shutdown()
+    public virtual void Shutdown()
     {
         if (_disposed) return;
         _disposed = true;
@@ -665,7 +665,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
-    public void RevertTransition(Transition<TLinkAddress> transition)
+    public virtual void RevertTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
@@ -687,7 +687,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
-    public void ApplyTransition(Transition<TLinkAddress> transition)
+    public virtual void ApplyTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
@@ -972,7 +972,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 /// <see cref="ulong"/> (or any other <see cref="IUnsignedNumber{TSelf}"/>)
 /// use the generic form directly.
 /// </remarks>
-public sealed class TransactionsDecorator : TransactionsDecorator<uint>
+public class TransactionsDecorator : TransactionsDecorator<uint>
 {
     /// <inheritdoc cref="TransactionsDecorator{TLinkAddress}(INamedTypesLinks{TLinkAddress}, INamedTypesLinks{TLinkAddress}, LogRetentionPolicy, CommitMode, bool)"/>
     public TransactionsDecorator(

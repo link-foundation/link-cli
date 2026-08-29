@@ -19,6 +19,12 @@ pub struct Cli {
     pub after: bool,
     pub lino_input: Option<String>,
     pub lino_output: Option<String>,
+    pub always: bool,
+    pub once: bool,
+    pub never: bool,
+    pub triggers: bool,
+    pub triggers_file: Option<String>,
+    pub embed_triggers: bool,
     pub transactions: bool,
     pub transactions_file: Option<String>,
     pub commit_mode: Option<String>,
@@ -48,6 +54,12 @@ impl Default for Cli {
             after: false,
             lino_input: None,
             lino_output: None,
+            always: false,
+            once: false,
+            never: false,
+            triggers: false,
+            triggers_file: None,
+            embed_triggers: false,
             transactions: false,
             transactions_file: None,
             commit_mode: None,
@@ -81,6 +93,26 @@ impl Cli {
             || self.retention.is_some()
             || self.show_log
             || self.vc_requested()
+    }
+
+    /// True when a trigger command — `--always`, `--once` or `--never` — was
+    /// passed. Exactly one of them may be used at a time.
+    pub fn trigger_command_count(&self) -> usize {
+        usize::from(self.always) + usize::from(self.once) + usize::from(self.never)
+    }
+
+    /// True when any flag in the persistent transformation family was passed.
+    ///
+    /// Mirrors `persistentTransformationsEnabled` in the C# tool, minus the
+    /// "the triggers file already exists" clause, which needs the resolved
+    /// path and therefore lives next to it in `main`.
+    pub fn persistent_transformations_requested(&self) -> bool {
+        self.always
+            || self.once
+            || self.never
+            || self.triggers
+            || self.embed_triggers
+            || self.triggers_file.is_some()
     }
 
     /// True when any flag in the version-control decorator family was passed.
@@ -153,6 +185,30 @@ impl Cli {
             }
             if let Some(value) = inline_value(&arg, &["--in", "--lino-input", "--import"]) {
                 cli.lino_input = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--always"]) {
+                cli.always = parse_bool("--always", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--once"]) {
+                cli.once = parse_bool("--once", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--never"]) {
+                cli.never = parse_bool("--never", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--triggers"]) {
+                cli.triggers = parse_bool("--triggers", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--triggers-file"]) {
+                cli.triggers_file = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--embed-triggers"]) {
+                cli.embed_triggers = parse_bool("--embed-triggers", value)?;
                 continue;
             }
             if let Some(value) = inline_value(&arg, &["--transactions"]) {
@@ -241,6 +297,24 @@ impl Cli {
                 }
                 "--in" | "--lino-input" | "--import" => {
                     cli.lino_input = Some(next_value(&mut args, &arg)?);
+                }
+                "--always" => {
+                    cli.always = next_bool_value(&mut args, true)?;
+                }
+                "--once" => {
+                    cli.once = next_bool_value(&mut args, true)?;
+                }
+                "--never" => {
+                    cli.never = next_bool_value(&mut args, true)?;
+                }
+                "--triggers" => {
+                    cli.triggers = next_bool_value(&mut args, true)?;
+                }
+                "--triggers-file" => {
+                    cli.triggers_file = Some(next_value(&mut args, &arg)?);
+                }
+                "--embed-triggers" => {
+                    cli.embed_triggers = next_bool_value(&mut args, true)?;
                 }
                 "--transactions" => {
                     cli.transactions = next_bool_value(&mut args, true)?;
@@ -331,6 +405,21 @@ impl Cli {
             "          Read and import a LiNo file into the database\n",
             "      --out <OUT>, --lino-output <OUT>, --export <OUT>\n",
             "          Write the complete database as a LiNo file\n",
+            "      --always\n",
+            "          Store the query as an always-on persistent transformation trigger\n",
+            "      --once\n",
+            "          Store the query as a persistent transformation trigger that deletes\n",
+            "          itself after it fires\n",
+            "      --never\n",
+            "          Remove stored persistent transformation triggers matching the query\n",
+            "      --triggers\n",
+            "          Enable persistent transformation triggers for this command\n",
+            "      --triggers-file <FILE>\n",
+            "          Path to the persistent transformation trigger links database\n",
+            "          (default: <db>.triggers.links)\n",
+            "      --embed-triggers\n",
+            "          Store persistent transformation triggers directly in the main links\n",
+            "          database\n",
             "      --transactions\n",
             "          Enable the transactions layer (default log path: <db>.transitions.links)\n",
             "      --transactions-file <FILE>\n",

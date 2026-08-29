@@ -90,7 +90,7 @@ The README should remain the quick-start document and show:
 - Equivalent named-reference examples.
 - Variables, wildcard/deep patterns, and deduplication behavior.
 - Import, export, structure formatting, output flags, and storage files.
-- Trigger options and their C#-only status.
+- Trigger options, which both implementations support.
 - Links to deeper architecture and behavior documentation.
 
 The deeper docs should explain:

@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use std::path::Path;
 
 use crate::link::Link;
-use crate::link_storage::LinkStorage;
+use crate::link_storage::{ChangeObserver, LinkStorage};
 
 pub trait PinnedTypesAccess {
     fn pinned_types(&mut self, count: usize) -> Result<Vec<u32>>;
@@ -122,8 +122,28 @@ impl PinnedTypesDecorator {
         self.links.update(id, source, target)
     }
 
+    /// [`Self::update`], reporting every change the decorator stack made.
+    ///
+    /// See [`LinkStorage::update_observed`](crate::LinkStorage::update_observed).
+    pub fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        self.links.update_observed(id, source, target, observer)
+    }
+
     pub fn delete(&mut self, id: u32) -> Result<Link> {
         self.links.delete(id)
+    }
+
+    /// [`Self::delete`], reporting every change the decorator stack made.
+    ///
+    /// See [`LinkStorage::delete_observed`](crate::LinkStorage::delete_observed).
+    pub fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
+        self.links.delete_observed(id, observer)
     }
 
     pub fn all(&self) -> Vec<&Link> {

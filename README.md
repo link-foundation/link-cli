@@ -83,11 +83,11 @@ cargo install link-cli
 cargo add link-cli
 ```
 
-The NuGet CLI tool is the C# implementation and exposes the complete production
-command surface, including persistent transformation triggers. The Rust crate
-mirrors the core query engine, named references, LiNo import/export, structure
-formatting, and the WebAssembly workbench API. Persistent transformation
-trigger CLI options currently exist only in the C# tool.
+Both implementations expose the same command surface, so a scenario written
+against one runs unchanged against the other: the query engine, named
+references, LiNo import/export, structure formatting, persistent
+transformation triggers, transactions and version control. The Rust crate adds
+the WebAssembly workbench API on top.
 
 This tool provides all CRUD operations for links using single [substitution operation](https://en.wikipedia.org/wiki/Markov_algorithm) ([ru](https://ru.wikipedia.org/wiki/Нормальный_алгоритм)) which is turing complete.
 
@@ -565,9 +565,7 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 
 ## All options and arguments
 
-The C# NuGet tool supports every option below. The Rust CLI currently supports
-the core query, storage, output, import/export, and structure options; trigger
-options are C#-only for now.
+Both the C# NuGet tool and the Rust CLI support every option below.
 
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
 |-------------------------|---------|----------------|-------------------------------------|----------------------------------------------------------------------------|

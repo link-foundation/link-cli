@@ -3,7 +3,7 @@
 //! Mirrors the C# `VersionControlDecorator` in
 //! `csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs`.
 //!
-//! Sits above the [`TransactionsDecorator`](crate::transactions::TransactionsDecorator)
+//! Sits above the [`TransactionsDecorator`]
 //! and adds *time travel* ([`checkout`](VersionControlDecorator::checkout)),
 //! *branching* ([`branch`](VersionControlDecorator::branch),
 //! [`switch_branch`](VersionControlDecorator::switch_branch)), and
@@ -17,6 +17,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Result};
 
 use crate::link::Link;
+use crate::link_storage::ChangeObserver;
 use crate::named_types::{NamedTypes, NamedTypesDecorator};
 use crate::transactions::{TransactionHandle, TransactionsDecorator, Transition};
 
@@ -211,8 +212,14 @@ impl VersionControlDecorator {
     }
 
     pub fn delete(&mut self, id: u32) -> Result<Link> {
+        self.delete_observed(id, &mut |_, _| {})
+    }
+
+    /// [`Self::delete`], reporting every change the decorator stack made —
+    /// cascaded deletions of usages included.
+    pub fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
         let before_seq = self.transactions.last_logged_sequence();
-        let result = self.transactions.delete(id)?;
+        let result = self.transactions.delete_observed(id, observer)?;
         if self.active_transaction.is_none() {
             let branch = self.current_branch.clone();
             self.attribute_new_transitions_for_branch(before_seq, &branch)?;

@@ -291,3 +291,167 @@ fn test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp() -> Re
         Ok(())
     })
 }
+
+/// Deleting a link deletes the links that reference it, which is what the
+/// upstream cascade resolvers do and what the `cascade delete of usage`
+/// scenario in `docs/case-studies/issue-100/evidence/cli-parity/run.sh`
+/// compares against C#.
+#[test]
+fn test_delete_cascades_to_usages_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1)))")?;
+        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1 2)))")?;
+
+        processor.process_query(storage, "(((2: 2 2)) ())")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
+
+/// The cascade is transitive and leaves untouched links alone.
+#[test]
+fn test_delete_cascade_chain_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1)))")?;
+        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1 2)))")?;
+        processor.process_query(storage, "(() ((3 3)))")?;
+
+        processor.process_query(storage, "(((1: 1 1)) ())")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(2, 2, 2)]);
+        Ok(())
+    })
+}
+
+/// An update that would duplicate an existing link merges into it instead of
+/// creating a second copy, so the updated address disappears.
+#[test]
+fn test_update_into_existing_pair_merges_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1)))")?;
+        processor.process_query(storage, "(() ((2 2)))")?;
+        processor.process_query(storage, "(() ((1 2)))")?;
+        processor.process_query(storage, "(() ((2 1)))")?;
+
+        processor.process_query(storage, "(((4: 2 1)) ((4: 1 2)))")?;
+
+        assert_eq!(
+            sorted_links(storage),
+            vec![Link::new(1, 1, 1), Link::new(2, 2, 2), Link::new(3, 1, 2)]
+        );
+        Ok(())
+    })
+}
+
+/// Deleting a named link cascades through the links that use it, and the names
+/// of the survivors are untouched.
+#[test]
+fn test_named_delete_cascades_to_usages_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((a: a a)))")?;
+        processor.process_query(storage, "(() ((b: b b)))")?;
+        processor.process_query(storage, "(() ((a b)))")?;
+
+        processor.process_query(storage, "(((a: a a)) ())")?;
+
+        let b = name_id(storage, "b")?;
+        assert_eq!(sorted_links(storage), vec![Link::new(b, b, b)]);
+        Ok(())
+    })
+}
+
+/// A single-link swap that does not collide with an existing pair keeps its
+/// address, which is the plain-update path through the uniqueness resolver.
+#[test]
+fn test_swap_one_link_keeps_its_address_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "(() ((1 1) (1 2)))")?;
+
+        processor.process_query(storage, "(((2: 1 2)) ((2: 2 1)))")?;
+
+        assert_eq!(
+            sorted_links(storage),
+            vec![Link::new(1, 1, 1), Link::new(2, 2, 1)]
+        );
+        Ok(())
+    })
+}
+
+/// A substitution variable that no restriction ever bound is *unspecified*, not
+/// a literal address: C# marks it with `links.Constants.Any` and the store turns
+/// that into null on the way in, so `() (($a $a))` creates the point `(1: 0 0)`.
+#[test]
+fn test_unbound_substitution_variable_creates_null_point_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() (($a $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// The same query twice finds the link it created the first time rather than
+/// creating a second one, because C#'s `SearchOrDefault` reads `any` in a lookup
+/// as a wildcard.
+#[test]
+fn test_unbound_substitution_variable_twice_is_idempotent_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() (($a $a))")?;
+        processor.process_query(storage, "() (($a $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// An explicit index pins the address; the unspecified halves still land as null.
+#[test]
+fn test_unbound_substitution_variable_at_an_index_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((5: $a $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(5, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// One specified half plus one unspecified half is a wildcard lookup, so it
+/// finds the existing `(1: 1 1)` instead of creating `(2: 1 null)` beside it.
+#[test]
+fn test_unbound_substitution_variable_one_half_finds_existing_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 1))")?;
+        processor.process_query(storage, "() ((1 $a))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
+
+/// `*` in a substitution is unspecified in exactly the same way a never-bound
+/// variable is.
+#[test]
+fn test_star_in_a_substitution_creates_null_point_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((* *))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 0, 0)]);
+        Ok(())
+    })
+}
+
+/// An unspecified half of an *update* keeps the half already stored, so
+/// rewriting `(1: 1 1)` through `(1: $x $y)` leaves it exactly as it was.
+#[test]
+fn test_unbound_substitution_variable_in_an_update_keeps_existing_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 1))")?;
+        processor.process_query(storage, "((1: 1 1)) ((1: $x $y))")?;
+
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
