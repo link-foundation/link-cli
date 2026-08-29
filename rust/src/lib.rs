@@ -14,6 +14,7 @@
 //! - `storage` - Reusable storage traits and the doublets-backed store
 //! - `changes_simplifier` - Changes simplification
 //! - `query_processor` - LiNo query processing
+//! - `persistent_transformations` - Persistent transformation triggers
 
 mod changes_simplifier;
 pub mod cli;
@@ -29,6 +30,7 @@ mod named_links;
 mod named_type_links;
 mod named_types;
 mod parser;
+pub mod persistent_transformations;
 mod pinned_types;
 mod query_options;
 mod query_processor;
@@ -59,6 +61,11 @@ pub use named_links::NamedLinks;
 pub use named_type_links::NamedTypeLinks;
 pub use named_types::{NamedTypes, NamedTypesDecorator};
 pub use parser::Parser;
+pub use persistent_transformations::{
+    make_triggers_database_filename, PersistentTransformation, PersistentTransformationDecorator,
+    PersistentTransformationKind, PersistentTransformationQuery, TriggerStore,
+    INTERNAL_NAME_PREFIX,
+};
 pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
