@@ -1,0 +1,50 @@
+PASS  create
+PASS  duplicate create
+PASS  update target
+PASS  delete point
+PASS  cascade delete of usage
+PASS  cascade delete chain
+PASS  uniqueness on update
+PASS  delete with contents
+PASS  named create
+PASS  named cascade delete
+PASS  swap one link
+PASS  swap all links
+PASS  no-op variable query
+PASS  delete by wildcard
+PASS  delete everything
+PASS  rename named link
+PASS  nested composite create
+PASS  explicit index after gap
+PASS  reverse update chain
+PASS  point to non-point
+PASS  delete self referencing
+PASS  unbound variable point
+PASS  unbound variable twice
+PASS  unbound variable at an index
+PASS  unbound variable one half
+PASS  star in a substitution
+PASS  unbound variable in an update
+PASS  reuse a freed address
+PASS  reuse after a shrink
+PASS  reuse the newest hole first
+PASS  auto-create frees the addresses it passed over
+PASS  auto-create leaves the new link the first address
+PASS  always trigger fires
+PASS  always trigger keeps firing
+PASS  once trigger fires only once
+PASS  never removes a stored trigger
+PASS  never on an empty trigger store
+PASS  trigger without a match stays dormant
+PASS  trigger embedded in the main database
+KNOWN update into duplicate
+      Platform.Data.Doublets 0.18.1 MergeUsages corrupts the usages it repoints (see ../csharp-merge-usages), so C# leaves (2: 2 0) where doublets-rs rebases the usage onto the surviving link and leaves (2: 2 2).
+      queries: () ((1 2) (2 1)) ((1: 1 2)) ((1: 2 1))
+      rust:
+        (1: 2 1)
+        (2: 2 2)
+      c#:
+        (1: 2 1)
+        (2: 2 0)
+
+All scenarios match, except the known upstream differences listed above.

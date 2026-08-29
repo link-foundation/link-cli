@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: buildGraph reflects create, delete, and recreate snapshots without stale nodes
+ok 1 - buildGraph reflects create, delete, and recreate snapshots without stale nodes
+  ---
+  duration_ms: 7.768293
+  ...
+# Subtest: language code package manifests and generated evidence stay out of the root folder
+ok 2 - language code package manifests and generated evidence stay out of the root folder
+  ---
+  duration_ms: 3.686759
+  ...
+# Subtest: JavaScript package scripts target the relocated WebAssembly crate and split script trees
+ok 3 - JavaScript package scripts target the relocated WebAssembly crate and split script trees
+  ---
+  duration_ms: 1.199465
+  ...
+# Subtest: WebAssembly workflow uses the JavaScript package lockfile from js
+ok 4 - WebAssembly workflow uses the JavaScript package lockfile from js
+  ---
+  duration_ms: 2.872743
+  ...
+# Subtest: the documentation workflow deploys GitHub Pages automatically on push to main
+ok 5 - the documentation workflow deploys GitHub Pages automatically on push to main
+  ---
+  duration_ms: 1.05715
+  ...
+# Subtest: CSharp release workflow attaches NuGet packages to GitHub Releases
+ok 6 - CSharp release workflow attaches NuGet packages to GitHub Releases
+  ---
+  duration_ms: 1.486218
+  ...
+# Subtest: CSharp release workflow includes self-healing release gates
+ok 7 - CSharp release workflow includes self-healing release gates
+  ---
+  duration_ms: 0.530488
+  ...
+# Subtest: CSharp and Rust release workflows are scheduled on every push to main
+ok 8 - CSharp and Rust release workflows are scheduled on every push to main
+  ---
+  duration_ms: 2.726308
+  ...
+# Subtest: GitHub workflows avoid Node 20 action major versions that are being retired
+ok 9 - GitHub workflows avoid Node 20 action major versions that are being retired
+  ---
+  duration_ms: 1.007937
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 194.87026
