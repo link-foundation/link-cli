@@ -2,6 +2,9 @@
 name = "link-cli"
 version = "0.1.0"
 edition = "2021"
+# `std::fs::File::lock` (used by the advisory locking in `storage::lock`)
+# was stabilised in Rust 1.89.
+rust-version = "1.89"
 description = "A CLI tool and reusable library for links manipulation backed by a LiNo-notation doublet storage engine."
 license = "Unlicense"
 repository = "https://github.com/link-foundation/link-cli"
