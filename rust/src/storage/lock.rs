@@ -26,7 +26,10 @@ pub enum LockMode {
 /// Conventional sidecar lock filename for a links database.
 pub fn lock_file_path<P: AsRef<Path>>(database_filename: P) -> PathBuf {
     let path = database_filename.as_ref();
-    let mut name = path.file_name().map(|n| n.to_os_string()).unwrap_or_default();
+    let mut name = path
+        .file_name()
+        .map(|n| n.to_os_string())
+        .unwrap_or_default();
     name.push(".lock");
     match path.parent() {
         Some(parent) if !parent.as_os_str().is_empty() => parent.join(name),

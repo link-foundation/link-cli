@@ -56,7 +56,7 @@ pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
 pub use storage::{
     lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, LinksStorage, LinksStorageRef,
-    LockMode, StorageRevision,
+    LockMode, PersistentFileMapped, StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, LogRetentionPolicy, TransactionHandle, TransactionsDecorator,

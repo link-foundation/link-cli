@@ -75,8 +75,7 @@ pub trait LinksStorage<T: LinkReference> {
     }
 
     /// Repoints `index` at `source`/`target`, returning the previous state.
-    fn update_link(&mut self, index: T, source: T, target: T)
-        -> Result<GenericLink<T>, LinkError>;
+    fn update_link(&mut self, index: T, source: T, target: T) -> Result<GenericLink<T>, LinkError>;
 
     /// Deletes `index`, returning the link that was removed.
     fn delete_link(&mut self, index: T) -> Result<GenericLink<T>, LinkError>;

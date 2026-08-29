@@ -7,9 +7,11 @@
 
 mod decorator_impls;
 mod doublets_storage;
+mod file_mem;
 pub mod lock;
 mod traits;
 
 pub use doublets_storage::{DoubletsStorage, FileMappedUnitStore};
+pub use file_mem::PersistentFileMapped;
 pub use lock::{lock_file_path, FileLock, LockMode};
 pub use traits::{LinksStorage, LinksStorageRef, StorageRevision};

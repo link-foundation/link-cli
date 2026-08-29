@@ -35,17 +35,17 @@ use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 
 use doublets::data::{Flow, LinkReference};
-use doublets::mem::FileMapped;
 use doublets::unit::{LinkPart, Store as UnitStore};
 use doublets::Doublets;
 
 use crate::error::LinkError;
 use crate::link::GenericLink;
+use crate::storage::file_mem::PersistentFileMapped;
 use crate::storage::lock::{lock_file_path, FileLock, LockMode};
 use crate::storage::traits::{LinksStorage, StorageRevision};
 
 /// The file-mapped `doublets` store used by [`DoubletsStorage::open`].
-pub type FileMappedUnitStore<T> = UnitStore<T, FileMapped<LinkPart<T>>>;
+pub type FileMappedUnitStore<T> = UnitStore<T, PersistentFileMapped<LinkPart<T>>>;
 
 /// A [`LinksStorage`] over any `doublets` store.
 pub struct DoubletsStorage<T: LinkReference, S: Doublets<T>> {
@@ -101,8 +101,8 @@ impl<T: LinkReference> DoubletsStorage<T, FileMappedUnitStore<T>> {
                 std::fs::create_dir_all(parent)?;
             }
         }
-        let mem = FileMapped::<LinkPart<T>>::from_path(path)?;
-        let store = UnitStore::<T, FileMapped<LinkPart<T>>>::new(mem)?;
+        let mem = PersistentFileMapped::<LinkPart<T>>::from_path(path)?;
+        let store = FileMappedUnitStore::<T>::new(mem)?;
         Ok(Self {
             store,
             path: Some(path.to_path_buf()),
@@ -211,11 +211,9 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
             match created.cmp(&index) {
                 std::cmp::Ordering::Equal => return Ok(index),
                 std::cmp::Ordering::Less => continue,
-                std::cmp::Ordering::Greater => {
-                    return Err(LinkError::StorageError(format!(
-                        "could not reserve link address {index}: the store allocated {created} instead"
-                    )))
-                }
+                std::cmp::Ordering::Greater => return Err(LinkError::StorageError(format!(
+                    "could not reserve link address {index}: the store allocated {created} instead"
+                ))),
             }
         }
     }
@@ -228,12 +226,7 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         Doublets::get_link(&self.store, index).is_some()
     }
 
-    fn update_link(
-        &mut self,
-        index: T,
-        source: T,
-        target: T,
-    ) -> Result<GenericLink<T>, LinkError> {
+    fn update_link(&mut self, index: T, source: T, target: T) -> Result<GenericLink<T>, LinkError> {
         let before = self
             .get_link(index)
             .ok_or_else(|| LinkError::not_found(index))?;
@@ -291,23 +284,34 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
     }
 
     /// `fsync`s the backing file so the mapped writes survive a machine
-    /// crash. A no-op for stores adopted without a known path.
+    /// crash, and publishes them to other processes by advancing the
+    /// file's modification time. A no-op for stores adopted without a
+    /// known path.
+    ///
+    /// Bumping the timestamp is deliberate: the kernel only refreshes
+    /// `mtime` when a *clean* page of a shared mapping is first written
+    /// to, so a long-lived writer that keeps touching already-dirty
+    /// pages would otherwise stay invisible to
+    /// [`LinksStorage::has_external_changes`].
     fn flush(&mut self) -> Result<(), LinkError> {
         if let Some(path) = self.path.clone() {
-            std::fs::File::open(&path)?.sync_all()?;
+            let file = std::fs::File::options().write(true).open(&path)?;
+            file.sync_all()?;
+            file.set_modified(std::time::SystemTime::now())?;
             self.refresh_revision()?;
         }
         Ok(())
     }
 
     /// Compares the database file's size and mtime against the values
-    /// observed at open/flush time.
+    /// observed when this storage was opened, reloaded or flushed.
     ///
-    /// This is a *hint*: a memory-mapped writer only updates the inode's
-    /// mtime when the kernel writes pages back, so a `true` answer always
-    /// means somebody wrote, while a `false` answer can lag behind an
-    /// in-flight writer that has not synced yet. Combine it with
-    /// [`DoubletsStorage::lock_shared`] when an exact answer is required.
+    /// The granularity is a **published** write: writers publish by
+    /// calling [`LinksStorage::flush`], which `fsync`s and advances the
+    /// file's modification time. Writes that a peer has made but not yet
+    /// flushed are already visible through the shared mapping, but are
+    /// not reported here — take [`DoubletsStorage::lock_shared`] when an
+    /// exact answer is required.
     fn has_external_changes(&self) -> Result<bool, LinkError> {
         match self.path.as_ref() {
             Some(path) => Ok(StorageRevision::of(path)? != self.known_revision),
