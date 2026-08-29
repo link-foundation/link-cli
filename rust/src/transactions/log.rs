@@ -21,7 +21,7 @@
 //! to its own caches.
 
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 use crate::error::LinkError;
@@ -83,9 +83,12 @@ impl TransitionLogStore for NamedTypesDecorator {
 /// the last [`flush_log`](TransitionLogStore::flush_log).
 ///
 /// A crash can therefore only ever truncate the file mid-line.
-/// [`read_log_entries`](TransitionLogStore::read_log_entries) drops a
-/// trailing entry that is not newline-terminated, so a torn write costs
-/// at most the single transition that was in flight.
+/// [`open`](FileTransitionLog::open) discards such a torn tail before
+/// the log is used again — otherwise the next append would be glued
+/// onto the fragment and lost with it — and
+/// [`read_log_entries`](TransitionLogStore::read_log_entries) ignores
+/// one defensively. A torn write costs at most the single transition
+/// that was in flight.
 #[derive(Debug)]
 pub struct FileTransitionLog {
     path: PathBuf,
@@ -94,7 +97,8 @@ pub struct FileTransitionLog {
 }
 
 impl FileTransitionLog {
-    /// Opens (creating if needed) the log at `path`.
+    /// Opens (creating if needed) the log at `path`, discarding a
+    /// trailing entry left half-written by a crash.
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, LinkError> {
         let path = path.as_ref().to_path_buf();
         if let Some(parent) = path.parent() {
@@ -107,6 +111,7 @@ impl FileTransitionLog {
             .append(true)
             .create(true)
             .open(&path)?;
+        truncate_torn_tail(&file)?;
         Ok(Self {
             path,
             file,
@@ -163,4 +168,40 @@ impl TransitionLogStore for FileTransitionLog {
         self.file.sync_data()?;
         Ok(())
     }
+}
+
+/// Shrinks `file` to its last complete (newline-terminated) line.
+///
+/// A crash can leave the log ending in a fragment of an entry. Appending
+/// after that fragment would concatenate the next entry onto it, turning
+/// one lost transition into two, so the fragment is dropped when the log
+/// is opened.
+fn truncate_torn_tail(file: &File) -> Result<(), LinkError> {
+    let len = file.metadata()?.len();
+    if len == 0 {
+        return Ok(());
+    }
+    let mut file = file;
+    let mut end = len;
+    let mut buffer = [0u8; 8192];
+    while end > 0 {
+        let chunk = std::cmp::min(end, buffer.len() as u64);
+        let start = end - chunk;
+        file.seek(SeekFrom::Start(start))?;
+        let slice = &mut buffer[..chunk as usize];
+        file.read_exact(slice)?;
+        if let Some(offset) = slice.iter().rposition(|byte| *byte == b'\n') {
+            let complete = start + offset as u64 + 1;
+            if complete != len {
+                file.set_len(complete)?;
+                file.sync_all()?;
+            }
+            return Ok(());
+        }
+        end = start;
+    }
+    // No newline anywhere: the whole file is one torn entry.
+    file.set_len(0)?;
+    file.sync_all()?;
+    Ok(())
 }
