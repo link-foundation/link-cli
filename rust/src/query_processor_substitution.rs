@@ -1,3 +1,6 @@
+//! The substitution half of [`QueryProcessor`]: turning a matched restriction
+//! plus a substitution pattern into the links to write.
+
 use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 
@@ -8,7 +11,7 @@ use crate::query_processor::QueryProcessor;
 use crate::query_types::Pattern;
 
 impl QueryProcessor {
-    pub(crate) fn preserve_existing_substitution_parts(
+    pub fn preserve_existing_substitution_parts(
         storage: &mut impl NamedTypeLinks,
         pattern: &Pattern,
         solution: &mut HashMap<String, u32>,

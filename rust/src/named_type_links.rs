@@ -1,3 +1,10 @@
+//! [`NamedTypeLinks`], the storage interface every layer of the CLI is written
+//! against, and its implementations for the plain store and for each decorator.
+//!
+//! A store that implements this trait can be dropped anywhere in the stack, so
+//! an application can add its own layer -- a cache, a permission check, a
+//! remote store -- without the query processor knowing about it.
+
 use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::fs::OpenOptions;
@@ -422,7 +429,7 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
     }
 }
 
-pub(crate) fn escape_lino_reference(reference: &str) -> String {
+pub fn escape_lino_reference(reference: &str) -> String {
     if reference.is_empty() || reference.trim().is_empty() {
         return String::new();
     }

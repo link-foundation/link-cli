@@ -1,3 +1,10 @@
+//! Checking that every link a query refers to exists, and creating the ones
+//! that do not when the caller asked for that.
+//!
+//! Ported from the C# `LinkReferenceValidator`, and public for the same reason
+//! the query processor is: a custom front end that resolves references its own
+//! way needs to be able to reuse, or replace, exactly this step.
+
 use anyhow::Result;
 use std::collections::HashSet;
 
@@ -6,7 +13,7 @@ use crate::link::Link;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
 
-pub(crate) struct LinkReferenceValidator {
+pub struct LinkReferenceValidator {
     trace: bool,
     auto_create_missing_references: bool,
 }
@@ -51,14 +58,14 @@ impl MissingLinkReference {
 }
 
 impl LinkReferenceValidator {
-    pub(crate) fn new(trace: bool, auto_create_missing_references: bool) -> Self {
+    pub fn new(trace: bool, auto_create_missing_references: bool) -> Self {
         Self {
             trace,
             auto_create_missing_references,
         }
     }
 
-    pub(crate) fn validate_links_exist_or_will_be_created(
+    pub fn validate_links_exist_or_will_be_created(
         &self,
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],

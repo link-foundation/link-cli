@@ -337,7 +337,7 @@ impl LinkStorage {
 
     /// Creates a new link and returns its ID
     ///
-    /// The address is the one [`LinkStorage::allocate`] hands out: a freed one
+    /// The address is the one `allocate` hands out: a freed one
     /// when the store has any, and only otherwise a fresh one past the end.
     pub fn create(&mut self, source: u32, target: u32) -> u32 {
         let id = self.allocate();

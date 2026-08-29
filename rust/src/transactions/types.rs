@@ -22,7 +22,7 @@ pub enum TransitionKind {
 }
 
 impl TransitionKind {
-    pub(crate) fn as_u8(self) -> u8 {
+    pub fn as_u8(self) -> u8 {
         match self {
             TransitionKind::Create => 0,
             TransitionKind::Update => 1,
@@ -30,7 +30,7 @@ impl TransitionKind {
         }
     }
 
-    pub(crate) fn from_u8(value: u8) -> Option<Self> {
+    pub fn from_u8(value: u8) -> Option<Self> {
         match value {
             0 => Some(TransitionKind::Create),
             1 => Some(TransitionKind::Update),
@@ -196,7 +196,7 @@ pub struct GenericTransition<T> {
 pub type Transition = GenericTransition<u32>;
 
 impl<T: LinkReference> GenericTransition<T> {
-    pub(crate) const SCHEMA_VERSION: &'static str = "v1";
+    pub const SCHEMA_VERSION: &'static str = "v1";
 
     /// Encodes the transition as a single line stored as one entry of
     /// the transitions log.
@@ -278,7 +278,7 @@ fn parse_address<T: LinkReference>(text: &str) -> Result<T, LinkError> {
 }
 
 /// Sidecar-store name prefixes used by the recovery protocol.
-pub(crate) const COMMIT_MARKER_PREFIX: &str = "__transactions:commit:";
-pub(crate) const ROLLBACK_MARKER_PREFIX: &str = "__transactions:rollback:";
-pub(crate) const APPLIED_MARKER_PREFIX: &str = "__transactions:applied:";
-pub(crate) const TRANSITION_NAME_PREFIX: &str = "__transactions:transition:";
+pub const COMMIT_MARKER_PREFIX: &str = "__transactions:commit:";
+pub const ROLLBACK_MARKER_PREFIX: &str = "__transactions:rollback:";
+pub const APPLIED_MARKER_PREFIX: &str = "__transactions:applied:";
+pub const TRANSITION_NAME_PREFIX: &str = "__transactions:transition:";

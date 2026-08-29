@@ -3,7 +3,7 @@
 //! Mirrors the C# `VersionControlDecorator` in
 //! `csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs`.
 //!
-//! Sits above the [`TransactionsDecorator`](crate::transactions::TransactionsDecorator)
+//! Sits above the [`TransactionsDecorator`]
 //! and adds *time travel* ([`checkout`](VersionControlDecorator::checkout)),
 //! *branching* ([`branch`](VersionControlDecorator::branch),
 //! [`switch_branch`](VersionControlDecorator::switch_branch)), and

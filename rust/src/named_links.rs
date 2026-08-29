@@ -14,7 +14,7 @@ impl<'a> NamedLinks<'a> {
         Ok(UnicodeStringStorage::new(links)?.into_named_links())
     }
 
-    pub(crate) fn from_storage(storage: UnicodeStringStorage<'a>) -> Self {
+    pub fn from_storage(storage: UnicodeStringStorage<'a>) -> Self {
         Self { storage }
     }
 

@@ -9,7 +9,7 @@
 //! crash recovery (R1-R7, R10).
 //!
 //! Optional — when not opted in, the bare
-//! [`NamedTypesDecorator`](crate::NamedTypesDecorator) behaves
+//! [`NamedTypesDecorator`] behaves
 //! identically (R8, R9, R17).
 //!
 //! # Reuse outside the CLI
