@@ -30,13 +30,26 @@ use crate::link_storage::LinkStorage;
 
 /// The [`LinksConstants`] every [`LinkStorage`] reports.
 ///
-/// [`LinkStorage`] addresses links with plain `u32` values and has no external
-/// reference range, so the default internal-only constants apply: `null` is
-/// `0`, and the service values (`any`, `itself`, ...) live just below
-/// [`u32::MAX`], outside the range the storage ever allocates.
+/// These are the *hybrid* constants, the direct analogue of C#'s
+/// `LinksConstants<TLinkAddress>` default for `Hybrid<uint>` addresses: `null`
+/// is `0`, internal addresses occupy the lower half of the `u32` range, and the
+/// upper half is reserved for external references.
+///
+/// The external half is not optional. A [`LinkStorage`] backing a names
+/// database stores exactly the values
+/// [`external_reference`](crate::hybrid_reference::external_reference)
+/// produces — `0 - value`, i.e. the top of the `u32` range — both for named
+/// links and for the raw character codes behind Unicode symbols. With the
+/// internal-only constants those values fall either inside `internal_range`,
+/// where
+/// [`ensure_inner_reference_exists`](doublets::decorators) would demand a
+/// stored link at that address, or exactly on a service constant: the external
+/// reference of link `4` is `0u32.wrapping_sub(4)`, which the internal-only
+/// constants define as `any`. Declaring the external range keeps every hybrid
+/// reference outside both.
 pub fn link_storage_constants() -> &'static LinksConstants<u32> {
     static CONSTANTS: OnceLock<LinksConstants<u32>> = OnceLock::new();
-    CONSTANTS.get_or_init(LinksConstants::new)
+    CONSTANTS.get_or_init(LinksConstants::external)
 }
 
 fn as_doublets_link(link: &Link) -> DoubletsLink<u32> {

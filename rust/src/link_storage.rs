@@ -422,12 +422,23 @@ impl LinkStorage {
             .min()
     }
 
-    /// Gets or creates a link with the given source and target
+    /// Gets or creates a link with the given source and target.
+    ///
+    /// The two calls are fully qualified on purpose. [`LinkStorage`] also
+    /// implements the upstream [`Doublets`] trait — including *for
+    /// `&mut LinkStorage`*, so that a borrowed store can be decorated — and
+    /// inside an inherent `&mut self` method the receiver's type is exactly
+    /// `&mut LinkStorage`. Method resolution reaches the trait impl on the
+    /// reference before it derefs to the inherent impl, so a bare
+    /// `self.search(..)` silently resolves to [`Doublets::search`], which
+    /// interprets [`LinksConstants::any`](doublets::data::LinksConstants) as a
+    /// wildcard instead of matching it literally. Naming the inherent methods
+    /// keeps the exact-match semantics this function documents.
     pub fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
-        if let Some(id) = self.search(source, target) {
+        if let Some(id) = Self::search(self, source, target) {
             id
         } else {
-            self.create(source, target)
+            Self::create(self, source, target)
         }
     }
 
@@ -539,8 +550,11 @@ impl LinkStorage {
             id
         } else {
             // Create a self-referential link for the name
-            let id = self.create(0, 0);
-            self.update(id, id, id).ok();
+            // Fully qualified for the same reason as in
+            // [`LinkStorage::get_or_create`]: the `Doublets` impl for
+            // `&mut LinkStorage` shadows the inherent `create`/`update`.
+            let id = Self::create(self, 0, 0);
+            Self::update(self, id, id, id).ok();
             self.names.insert(id, name.to_string());
             self.name_to_id.insert(name.to_string(), id);
             if self.trace {

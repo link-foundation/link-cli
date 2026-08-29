@@ -260,3 +260,46 @@ fn test_format_structure_renders_repeated_source_and_target_as_reference_on_righ
 
     Ok(())
 }
+
+/// `LinkStorage::get_or_create` must match `(source, target)` literally.
+///
+/// `LinkStorage` also implements the upstream `doublets` traits — including
+/// for `&mut LinkStorage`, so a borrowed store can be decorated — and inside an
+/// inherent `&mut self` method the receiver's type is exactly
+/// `&mut LinkStorage`. Method resolution reaches the trait impl on the
+/// reference before it derefs to the inherent impl, so a bare `self.search(..)`
+/// resolves to `Doublets::search`, which treats `LinksConstants::any` as a
+/// wildcard. That made `get_or_create(any, target)` hand back an unrelated
+/// existing link instead of creating a new one.
+#[test]
+fn get_or_create_matches_service_constants_literally() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+
+    let existing = storage.create(0, 0);
+    storage.update(existing, 7, 42)?;
+
+    // Every `doublets` service constant, plus the external references that
+    // encode to them, must be stored as an ordinary value.
+    for reserved in [
+        u32::MAX,
+        u32::MAX - 1,
+        u32::MAX - 2,
+        u32::MAX - 3,
+        u32::MAX - 4,
+    ] {
+        let created = storage.get_or_create(reserved, 42);
+        assert_ne!(
+            existing, created,
+            "source {reserved} must not be treated as a wildcard"
+        );
+        assert_eq!(
+            Some(&link_cli::Link::new(created, reserved, 42)),
+            storage.get(created)
+        );
+        // A second call has to find the link it just created.
+        assert_eq!(created, storage.get_or_create(reserved, 42));
+    }
+
+    Ok(())
+}
