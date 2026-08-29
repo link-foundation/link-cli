@@ -76,6 +76,44 @@ library API for explicit batches. End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and
 [`examples/version-control/`](../examples/version-control).
 
+### Use as a library
+
+`Foundation.Data.Doublets.Cli.Library` is usable as an embedded
+transactional store, not only as the code behind `clink`.
+
+```csharp
+// A `ulong`-addressed store; the CLI's own `uint` store is the
+// non-generic `TransactionsDecorator`.
+using var data = new NamedTypesDecorator<ulong>("db.links");
+using var log = new NamedTypesDecorator<ulong>("db.transitions.links");
+using var transactions = new TransactionsDecorator<ulong>(data, log);
+
+using (var transaction = transactions.BeginTransaction())
+{
+    transactions.CreateAndUpdate(transactions.Constants.Null, transactions.Constants.Null);
+    transaction.Commit();
+}
+```
+
+- **Any address type.** `TransactionsDecorator<TLinkAddress>` works over any
+  `INamedTypesLinks<TLinkAddress>` whose address is an
+  `IUnsignedNumber<TLinkAddress>`; the non-generic `TransactionsDecorator`
+  stays behind as the `uint` specialisation the CLI uses. The transitions wire
+  format writes addresses in decimal under the invariant culture, so it is
+  identical across address types, and an address that does not fit the target
+  type is rejected rather than silently truncated.
+- **Crash recovery.** Recovery runs when the decorator is constructed:
+  committed-but-unapplied transitions are replayed and transitions that were
+  never committed are rolled back, so an abandoned transaction leaves nothing
+  behind after a reopen.
+- **Multi-process access.** `LinksFileLock` locks a `<database>.lock` sidecar,
+  shared for readers and exclusive for writers, with a blocking `Acquire` and a
+  non-blocking `TryAcquire`. `StorageRevision.Of(path)` /
+  `revision.HasChanged(path)` answer "has anyone else written since I last
+  looked?" without reparsing the database. The lock file path and the
+  shared/exclusive semantics match the Rust `storage::lock` module, so both
+  implementations can guard the same database.
+
 ## Develop
 
 ```bash

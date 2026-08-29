@@ -38,7 +38,7 @@ clink '() ((1 1))' --changes --after
 
 Pass `--transactions` (or any flag in the family — `--transactions-file`,
 `--commit-mode`, `--retention`, `--log`) to record each Create/Update/Delete
-as a reversible transition in a sidecar doublets store. Pass `--vc`
+as a reversible transition in a sidecar links store. Pass `--vc`
 (or `--vc-file`, `--branch`, `--branch-from`, `--checkout`, `--tag`,
 `--list-branches`, `--list-tags`) to add a version-control layer over the
 recorded transitions log:
@@ -57,6 +57,66 @@ clink --db data.links --vc --list-branches
 End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and
 [`examples/version-control/`](../examples/version-control).
+
+## Use as a library
+
+`link_cli` is usable as an embedded, doublets-backed transactional store, not
+only as the code behind `clink`.
+
+```rust
+use link_cli::transactions::{
+    CommitMode, FileTransitionLog, GenericTransactionsDecorator, LogRetentionPolicy,
+};
+use link_cli::DoubletsStorage;
+
+fn main() -> Result<(), link_cli::LinkError> {
+    // A file-mapped `doublets::unit::Store<usize, _>`, locked for writing.
+    let store = DoubletsStorage::<usize, _>::open_exclusive("db.links")?;
+    let log = FileTransitionLog::open("db.transitions.log")?;
+    let mut tx = GenericTransactionsDecorator::new(
+        store,
+        log,
+        LogRetentionPolicy::default(),
+        CommitMode::default(),
+        false,
+    )?;
+
+    tx.begin_transaction()?;
+    let point = tx.create(0, 0)?;
+    tx.commit()?;
+    println!("created {point}");
+    Ok(())
+}
+```
+
+- **Any address type.** `GenericTransactionsDecorator<T, S, L>` is generic over
+  the doublets address type, the wrapped store, and the transitions log.
+  `TransactionsDecorator` is the `u32` + `NamedTypesDecorator` specialisation
+  `clink` uses. The transitions wire format writes addresses in decimal, so it
+  is identical across address types, and an address that does not fit the
+  target type is reported as `LinkError::AddressOutOfRange` rather than
+  truncated.
+- **Any store.** `storage::LinksStorage<T>` is the trait the transactions layer
+  is written against. `storage::DoubletsStorage::open` creates a file-mapped
+  `doublets::unit::Store`; `DoubletsStorage::wrap` adopts a store you already
+  own.
+- **In-place mutation.** A file-mapped store is written through its mapping, so
+  the inode never changes and other processes that mapped the same file keep
+  observing the same data. Nothing is replaced through a temporary file.
+- **Durability.** Writes to a file-mapped store survive a *process* crash
+  without any `save()` — the mapping is the page cache. Surviving a *machine*
+  crash needs the `fsync` that `LinksStorage::flush` performs (a clean drop also
+  syncs). In-memory stores keep everything in memory until `flush`/`save`.
+  Recovery runs when the decorator is created: committed-but-unapplied
+  transitions are replayed, uncommitted ones are rolled back.
+- **Multi-process access.** `storage::lock` locks a `<database>.lock` sidecar,
+  shared for readers and exclusive for writers, through
+  `DoubletsStorage::open_shared` / `open_exclusive` / `try_open_exclusive`.
+  `LinksStorage::has_external_changes` answers "has anyone else written since I
+  last looked?" from a `StorageRevision` fingerprint. This requires Rust 1.89,
+  the release that stabilised `std::fs::File::lock`.
+- **Typed errors and paths.** Public entry points take `AsRef<Path>` and return
+  `LinkError`, not `anyhow::Error`.
 
 ## Develop
 
