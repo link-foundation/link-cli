@@ -18,6 +18,6 @@ pub mod lock;
 mod traits;
 
 pub use doublets_storage::{DoubletsStorage, FileMappedUnitStore, ResolvedFileMappedUnitStore};
-pub use file_mem::PersistentFileMapped;
+pub use file_mem::{FileMappedValue, PersistentFileMapped};
 pub use lock::{lock_file_path, FileLock, LockMode};
 pub use traits::{LinksStorage, LinksStorageRef, StorageRevision};

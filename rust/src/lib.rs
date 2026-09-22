@@ -88,8 +88,9 @@ pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use query_options::QueryOptions;
 pub use query_processor::QueryProcessor;
 pub use storage::{
-    decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, LinksStorage,
-    LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore, StorageRevision,
+    decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
+    LinksStorage, LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore,
+    StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,

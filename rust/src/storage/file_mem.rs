@@ -24,6 +24,16 @@
 //! `RawMem::grow_filled_exact`, which fills only `uninit[inited..]` and
 //! therefore preserves whatever was already written to the file.
 //!
+//! # Reopening an existing mapping
+//!
+//! Upstream [`FileMapped::new`] starts with a logical capacity of zero even
+//! when its file already contains initialized elements. Use
+//! [`PersistentFileMapped::open_existing`] when the file's bytes are a complete
+//! persisted mapping and its capacity must be visible immediately. The safe
+//! API is available only for [`FileMappedValue`] types, whose representations
+//! this crate can soundly adopt without asking each caller for an `unsafe`
+//! block.
+//!
 //! # Durability
 //!
 //! Writes land in a `MAP_SHARED` mapping, which on Linux *is* the page
@@ -33,10 +43,44 @@
 //! [`LinksStorage::flush`](crate::LinksStorage::flush) `fsync`s on
 //! demand for durability across a machine crash.
 
-use std::mem::MaybeUninit;
+use std::fs::File;
+use std::io;
+use std::mem::{self, MaybeUninit};
 use std::path::Path;
 
+use doublets::data::LinkReference;
 use doublets::mem::{FileMapped, RawMem, Result as MemResult};
+use doublets::unit::LinkPart;
+
+/// A value whose representation can safely be adopted from existing file bytes.
+///
+/// This is the safety boundary used by
+/// [`PersistentFileMapped::open_existing`]. The crate implements it for the
+/// unsigned integer link-address types and for [`LinkPart`] values containing
+/// those addresses.
+///
+/// # Safety
+///
+/// Every initialized byte pattern of `Self` must represent a valid value, it
+/// must be safe to drop any such value, and `Self` must not be zero-sized.
+pub unsafe trait FileMappedValue {}
+
+macro_rules! impl_file_mapped_value_for_unsigned {
+    ($($ty:ty),+ $(,)?) => {
+        $(
+            // SAFETY: every bit pattern is valid for unsigned integers, they
+            // have no drop glue, and none of these types is zero-sized.
+            unsafe impl FileMappedValue for $ty {}
+        )+
+    };
+}
+
+impl_file_mapped_value_for_unsigned!(u8, u16, u32, u64, u128, usize);
+
+// SAFETY: `LinkPart<T>` is `repr(C)` and consists only of eight `T` fields.
+// When every bit pattern is valid for `T`, it is therefore valid for the
+// complete link part as well, and dropping it only drops those fields.
+unsafe impl<T: FileMappedValue + LinkReference> FileMappedValue for LinkPart<T> {}
 
 /// A [`FileMapped`] region that does **not** wipe pre-existing file
 /// contents when `doublets` grows it.
@@ -53,13 +97,62 @@ impl<T> PersistentFileMapped<T> {
     }
 
     /// Maps an already-opened file.
-    pub fn new(file: std::fs::File) -> std::io::Result<Self> {
+    pub fn new(file: File) -> io::Result<Self> {
         FileMapped::new(file).map(Self)
     }
 
     /// Borrows the wrapped [`FileMapped`].
     pub fn inner(&self) -> &FileMapped<T> {
         &self.0
+    }
+}
+
+impl<T: FileMappedValue> PersistentFileMapped<T> {
+    /// Maps `file` and adopts the capacity represented by its existing bytes.
+    ///
+    /// Unlike [`Self::new`], which starts with a logical capacity of zero, this
+    /// constructor makes every complete `T` already present in the file
+    /// immediately visible through [`RawMem::allocated`]. Any trailing bytes
+    /// that do not form a complete `T` are left untouched and ignored.
+    ///
+    /// ```no_run
+    /// #![deny(unsafe_code)]
+    /// use std::fs::File;
+    ///
+    /// use link_cli::doublets::unit::LinkPart;
+    /// use link_cli::PersistentFileMapped;
+    ///
+    /// # fn main() -> std::io::Result<()> {
+    /// let file = File::options().read(true).write(true).open("links.data")?;
+    /// let mapped = PersistentFileMapped::<LinkPart<usize>>::open_existing(file)?;
+    /// # let _ = mapped;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn open_existing(file: File) -> io::Result<Self> {
+        let metadata = file.try_clone()?;
+        let mut mapped = FileMapped::new(file)?;
+        let byte_len = metadata.metadata()?.len();
+        let item_size = mem::size_of::<T>() as u64;
+        debug_assert_ne!(item_size, 0, "FileMappedValue must not be zero-sized");
+        let capacity = usize::try_from(byte_len / item_size).map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "file capacity does not fit in usize",
+            )
+        })?;
+
+        // SAFETY: `FileMapped::new` guarantees the file contains `byte_len`
+        // initialized bytes, and `FileMappedValue` guarantees every byte
+        // pattern in each complete item is a valid, safely droppable `T`.
+        if capacity != 0 {
+            unsafe { mapped.grow_assumed(capacity) }.map_err(|error| match error {
+                doublets::mem::Error::System(error) => error,
+                error => io::Error::other(error),
+            })?;
+        }
+
+        Ok(Self(mapped))
     }
 }
 
