@@ -130,9 +130,11 @@ impl<T: FileMappedValue> PersistentFileMapped<T> {
     /// # }
     /// ```
     pub fn open_existing(file: File) -> io::Result<Self> {
-        let metadata = file.try_clone()?;
+        // Read this before `FileMapped::new`, which extends sub-page files to
+        // its minimum mapping size. That padding was not part of the persisted
+        // contents and must not become visible as logical items.
+        let byte_len = file.metadata()?.len();
         let mut mapped = FileMapped::new(file)?;
-        let byte_len = metadata.metadata()?.len();
         let item_size = mem::size_of::<T>() as u64;
         debug_assert_ne!(item_size, 0, "FileMappedValue must not be zero-sized");
         let capacity = usize::try_from(byte_len / item_size).map_err(|_| {
