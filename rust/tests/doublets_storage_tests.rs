@@ -349,3 +349,22 @@ fn persistent_file_mapped_preserves_existing_contents() -> Result<()> {
 
     Ok(())
 }
+
+/// Regression test for issue #102: opening existing storage must adopt the
+/// capacity represented by its bytes instead of starting at zero.
+#[test]
+fn persistent_file_mapped_adopts_existing_file_capacity() -> Result<()> {
+    use doublets::mem::RawMem;
+
+    // Keep the persisted data below FileMapped's minimum mapping size so the
+    // constructor's synthetic page padding is not mistaken for stored items.
+    const ITEMS: usize = 3;
+
+    let file = tempfile::tempfile()?;
+    file.set_len((ITEMS * std::mem::size_of::<LinkPart<usize>>()) as u64)?;
+
+    let mapped = PersistentFileMapped::<LinkPart<usize>>::open_existing(file)?;
+    assert_eq!(mapped.allocated().len(), ITEMS);
+
+    Ok(())
+}
