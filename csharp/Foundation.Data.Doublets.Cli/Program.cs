@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
+using Foundation.Data.Doublets.Cli.Protocol;
 using Platform.Data;
 using Platform.Data.Doublets;
 
@@ -176,6 +177,39 @@ var logOption = new Option<bool>("--log")
     DefaultValueFactory = _ => false
 };
 
+var serveOption = new Option<string?>("--serve")
+{
+    Description = "Serve the database over TCP at host:port (port 0 picks a free port)"
+};
+
+var connectOption = new Option<string?>("--connect")
+{
+    Description = "Send the query to a clink server at host:port and print the reply"
+};
+
+var protocolOption = new Option<string?>("--protocol")
+{
+    Description = "Wire protocol: 'text' or 'binary' with --connect (default: text), 'any', 'text' or 'binary' with --serve (default: any)"
+};
+
+var externalReferencesOption = new Option<bool>("--external-references")
+{
+    Description = "Binary protocol: send numbers as external references (implies --protocol binary)",
+    DefaultValueFactory = _ => false
+};
+
+var sequencesOption = new Option<bool>("--sequences")
+{
+    Description = "Binary protocol: send lists as a variable-length sequence section (implies --protocol binary)",
+    DefaultValueFactory = _ => false
+};
+
+var progressiveWidthsOption = new Option<bool>("--progressive-widths")
+{
+    Description = "Binary protocol: grow reference widths with the address (implies --protocol binary)",
+    DefaultValueFactory = _ => false
+};
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
 rootCommand.Options.Add(dbOption);
 rootCommand.Options.Add(queryOption);
@@ -207,6 +241,12 @@ rootCommand.Options.Add(tagOption);
 rootCommand.Options.Add(listBranchesOption);
 rootCommand.Options.Add(listTagsOption);
 rootCommand.Options.Add(logOption);
+rootCommand.Options.Add(serveOption);
+rootCommand.Options.Add(connectOption);
+rootCommand.Options.Add(protocolOption);
+rootCommand.Options.Add(externalReferencesOption);
+rootCommand.Options.Add(sequencesOption);
+rootCommand.Options.Add(progressiveWidthsOption);
 
 rootCommand.SetAction(
   parseResult =>
@@ -241,12 +281,31 @@ rootCommand.SetAction(
       var listBranches = parseResult.GetValue(listBranchesOption);
       var listTags = parseResult.GetValue(listTagsOption);
       var showLog = parseResult.GetValue(logOption);
+      var serveAddress = parseResult.GetValue(serveOption);
+      var connectAddress = parseResult.GetValue(connectOption);
+      var protocolName = parseResult.GetValue(protocolOption)?.Trim();
+      var binaryOptions = new BinaryLinoOptions(
+        parseResult.GetValue(externalReferencesOption),
+        parseResult.GetValue(sequencesOption),
+        parseResult.GetValue(progressiveWidthsOption));
 
       var triggerCommandCount = new[] { always, once, never }.Count(value => value);
       if (triggerCommandCount > 1)
       {
           Console.Error.WriteLine("Only one of --always, --once, or --never can be used at a time.");
           return 1;
+      }
+
+      if (serveAddress is not null && connectAddress is not null)
+      {
+          Console.Error.WriteLine("--serve and --connect cannot be used together.");
+          return 1;
+      }
+
+      if (connectAddress is not null)
+      {
+          var clientQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+          return RunClient(connectAddress, protocolName, binaryOptions, clientQuery);
       }
 
       var vcRequested = vc
@@ -484,7 +543,47 @@ rootCommand.SetAction(
               return 0;
           }
 
+          if (serveAddress is not null)
+          {
+              return RunServer();
+          }
+
           return RunQueryPipeline();
+      }
+
+      // `--serve`: serves decoratedLinks until the process is interrupted.
+      int RunServer()
+      {
+          if (!string.IsNullOrWhiteSpace(queryOptionValue) || !string.IsNullOrWhiteSpace(queryArgumentValue))
+          {
+              Console.Error.WriteLine("--serve does not take a query; send queries with --connect.");
+              return 1;
+          }
+          AcceptedProtocols accept;
+          switch (protocolName?.ToLowerInvariant())
+          {
+              case null or "any": accept = AcceptedProtocols.Any; break;
+              case "text": accept = AcceptedProtocols.Text; break;
+              case "binary": accept = AcceptedProtocols.Binary; break;
+              default:
+                  Console.Error.WriteLine($"Invalid --protocol value '{protocolName}'. Use 'any', 'text' or 'binary'.");
+                  return 1;
+          }
+          using var server = LinksServer.Bind(serveAddress, new LinksServerOptions
+          {
+              Trace = trace,
+              AutoCreateMissingReferences = autoCreateMissingReferences,
+              Accept = accept,
+          });
+          Console.CancelKeyPress += (_, eventArgs) =>
+          {
+              eventArgs.Cancel = true;
+              server.Shutdown();
+          };
+          Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
+          Console.Out.Flush();
+          server.Serve(decoratedLinks);
+          return 0;
       }
 
       bool TryResolveSequence(VersionControlDecorator vc, string point, out long sequence)
@@ -613,6 +712,46 @@ rootCommand.SetAction(
 );
 
 return rootCommand.Parse(args).Invoke();
+
+// `--connect`: sends the query to a server and prints the reply.
+// Any binary option implies `--protocol binary`.
+static int RunClient(string address, string? protocolName, BinaryLinoOptions binaryOptions, string query)
+{
+    ILinoProtocol protocol;
+    switch (protocolName?.ToLowerInvariant())
+    {
+        case null:
+            protocol = binaryOptions == default ? new TextLinoProtocol() : new BinaryLinoProtocol(binaryOptions);
+            break;
+        case "text" when binaryOptions != default:
+            Console.Error.WriteLine("Binary protocol options require --protocol binary.");
+            return 1;
+        case "text":
+            protocol = new TextLinoProtocol();
+            break;
+        case "binary":
+            protocol = new BinaryLinoProtocol(binaryOptions);
+            break;
+        default:
+            Console.Error.WriteLine($"Invalid --protocol value '{protocolName}'. Use 'text' or 'binary'.");
+            return 1;
+    }
+    try
+    {
+        using var client = LinksClient.Connect(address, protocol);
+        var reply = client.QueryText(query);
+        if (reply.Length > 0)
+        {
+            Console.WriteLine(reply);
+        }
+        return 0;
+    }
+    catch (Exception error) when (error is LinoProtocolException or System.Net.Sockets.SocketException or IOException or ArgumentException)
+    {
+        Console.Error.WriteLine($"Error: {error.Message}");
+        return 1;
+    }
+}
 
 static void PrintAllLinks(INamedTypesLinks<uint> links)
 {
