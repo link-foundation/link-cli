@@ -7,10 +7,11 @@
 //! same protocol, so text and binary clients can share one server.
 
 use super::error::{ProtocolError, ProtocolResult};
-use super::format::{format_document, parse_document};
+use super::format::format_document;
 use super::mapping::LinoDocument;
 use super::packet::DecodeLimits;
 use super::protocols::{read_any_document, MessageFormat};
+use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
 use crate::query_processor::QueryProcessor;
 use links_notation::LiNo;
@@ -271,25 +272,52 @@ fn try_execute_request<S: NamedTypeLinks>(
     processor: &QueryProcessor,
     document: &[LiNo<String>],
 ) -> anyhow::Result<LinoDocument> {
-    let lines = if document.is_empty() {
-        storage.lino_lines()?
-    } else {
-        let changes = processor.process_query(storage, &format_document(document))?;
-        if !changes.is_empty() {
-            storage.save()?;
-        }
-        changes
-            .iter()
-            .map(|(before, after)| {
-                let before = before.map(|link| storage.format_lino(&link)).transpose()?;
-                let after = after.map(|link| storage.format_lino(&link)).transpose()?;
-                Ok(format!(
-                    "({}) ({})",
-                    before.unwrap_or_default(),
-                    after.unwrap_or_default()
-                ))
+    if document.is_empty() {
+        let mut links = storage.all_links();
+        links.sort_by_key(|link| link.index);
+        return links.iter().map(|link| link_lino(storage, link)).collect();
+    }
+    let changes = processor.process_query(storage, &format_document(document))?;
+    if !changes.is_empty() {
+        storage.save()?;
+    }
+    changes
+        .iter()
+        .map(|(before, after)| {
+            Ok(LiNo::Link {
+                id: None,
+                values: vec![
+                    change_side(storage, before.as_ref())?,
+                    change_side(storage, after.as_ref())?,
+                ],
             })
-            .collect::<anyhow::Result<Vec<_>>>()?
+        })
+        .collect()
+}
+
+/// `(index: source target)`, naming every reference that has a name.
+fn link_lino<S: NamedTypeLinks>(storage: &mut S, link: &Link) -> anyhow::Result<LiNo<String>> {
+    Ok(LiNo::Link {
+        id: Some(reference_name(storage, link.index)?),
+        values: vec![
+            LiNo::Ref(reference_name(storage, link.source)?),
+            LiNo::Ref(reference_name(storage, link.target)?),
+        ],
+    })
+}
+
+/// `()` for a missing side of a change, `((index: source target))` otherwise.
+fn change_side<S: NamedTypeLinks>(
+    storage: &mut S,
+    link: Option<&Link>,
+) -> anyhow::Result<LiNo<String>> {
+    let values = match link {
+        Some(link) => vec![link_lino(storage, link)?],
+        None => Vec::new(),
     };
-    Ok(parse_document(&lines.join("\n"))?)
+    Ok(LiNo::Link { id: None, values })
+}
+
+fn reference_name<S: NamedTypeLinks>(storage: &mut S, id: u32) -> anyhow::Result<String> {
+    Ok(storage.get_name(id)?.unwrap_or_else(|| id.to_string()))
 }
