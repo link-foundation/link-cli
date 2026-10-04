@@ -148,3 +148,32 @@ fn test_simplify_keeps_unchanged_states() {
     assert!(result.contains(&(Link::new(1, 1, 2), Link::new(1, 2, 1))));
     assert!(result.contains(&(Link::new(2, 2, 2), Link::new(2, 2, 2))));
 }
+
+#[test]
+fn test_simplify_create_then_match_reports_only_the_create() {
+    let created = Link::new(1, 1, 1);
+    let changes = vec![(Link::null(), created), (created, created)];
+
+    assert_eq!(simplify_changes(changes), vec![(Link::null(), created)]);
+}
+
+#[test]
+fn test_simplify_match_then_update_reports_only_the_update() {
+    let before = Link::new(1, 1, 1);
+    let after = Link::new(1, 2, 2);
+    let changes = vec![(before, before), (before, after)];
+
+    assert_eq!(simplify_changes(changes), vec![(before, after)]);
+}
+
+#[test]
+fn test_simplify_keeps_unchanged_links_that_did_not_change_elsewhere() {
+    let unchanged = Link::new(2, 2, 2);
+    let created = Link::new(1, 1, 1);
+    let changes = vec![(unchanged, unchanged), (Link::null(), created)];
+
+    assert_eq!(
+        simplify_changes(changes),
+        vec![(Link::null(), created), (unchanged, unchanged)]
+    );
+}

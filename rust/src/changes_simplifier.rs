@@ -21,16 +21,20 @@ pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
     let changes = remove_duplicate_before_states(changes);
 
     // First, handle unchanged states directly
-    let mut unchanged_states = Vec::new();
-    let mut changed_states = Vec::new();
+    let (unchanged_states, changed_states): (Vec<_>, Vec<_>) =
+        changes.iter().partition(|(before, after)| before == after);
 
-    for (before, after) in changes.iter() {
-        if before == after {
-            unchanged_states.push((*before, *after));
-        } else {
-            changed_states.push((*before, *after));
-        }
-    }
+    // A link that really changed is described by its change alone: reading
+    // it unchanged on the way (a create followed by a match) is not news.
+    let changed_indices: HashSet<u32> = changed_states
+        .iter()
+        .flat_map(|(before, after)| [before.index, after.index])
+        .filter(|&index| index != 0)
+        .collect();
+    let unchanged_states: Vec<(Link, Link)> = unchanged_states
+        .into_iter()
+        .filter(|(link, _)| !changed_indices.contains(&link.index))
+        .collect();
 
     // Gather all 'Before' links and all 'After' links from changed states.
     //

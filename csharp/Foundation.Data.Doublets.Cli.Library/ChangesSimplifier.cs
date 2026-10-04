@@ -47,6 +47,14 @@ namespace Foundation.Data.Doublets.Cli
                 }
             }
 
+            // A link that really changed is described by its change alone: reading
+            // it unchanged on the way (a create followed by a match) is not news.
+            var changedIndices = changedStates
+                .SelectMany(c => new[] { c.Before.Index, c.After.Index })
+                .Where(index => index != 0)
+                .ToHashSet();
+            unchangedStates.RemoveAll(c => changedIndices.Contains(c.Before.Index));
+
             // Gather all 'Before' links and all 'After' links from changed states
             var beforeLinks = new HashSet<Link<uint>>(changedStates.Select(c => c.Before), LinkEqualityComparer.Instance);
             var afterLinks = new HashSet<Link<uint>>(changedStates.Select(c => c.After), LinkEqualityComparer.Instance);

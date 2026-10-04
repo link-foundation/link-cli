@@ -398,6 +398,37 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             // If the simplifier doesn't work, we'd see all 3 changes
         }
 
+        [Fact]
+        public void SimplifyChanges_CreateThenMatch_ReportsOnlyTheCreate()
+        {
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var created = new Link<uint>(index: 1, source: 1, target: 1);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (nothing, created), (created, created) };
+
+            AssertChangeSetEqual(new() { (nothing, created) }, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_MatchThenUpdate_ReportsOnlyTheUpdate()
+        {
+            var before = new Link<uint>(index: 1, source: 1, target: 1);
+            var after = new Link<uint>(index: 1, source: 2, target: 2);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (before, before), (before, after) };
+
+            AssertChangeSetEqual(new() { (before, after) }, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_KeepsUnchangedLinksThatDidNotChangeElsewhere()
+        {
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var unchanged = new Link<uint>(index: 2, source: 2, target: 2);
+            var created = new Link<uint>(index: 1, source: 1, target: 1);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (unchanged, unchanged), (nothing, created) };
+
+            AssertChangeSetEqual(new() { (nothing, created), (unchanged, unchanged) }, SimplifyChanges(changes).ToList());
+        }
+
         private static void AssertChangeSetEqual(
           List<(Link<uint> Before, Link<uint> After)> expectedSimplifiedChanges,
           List<(Link<uint> Before, Link<uint> After)> simplifiedChanges
