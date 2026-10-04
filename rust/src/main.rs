@@ -6,6 +6,10 @@
 use anyhow::{anyhow, bail, Result};
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::import_lino_file;
+use link_cli::protocol::{
+    AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer,
+    LinoProtocol, ServerOptions, TextLinoProtocol,
+};
 use link_cli::{
     make_triggers_database_filename, CommitMode, LogRetentionPolicy, NamedTypeLinks,
     NamedTypesDecorator, PersistentTransformationDecorator, PersistentTransformationKind,
@@ -28,6 +32,13 @@ fn main() -> Result<()> {
 
     if cli.trigger_command_count() > 1 {
         bail!("Only one of --always, --once, or --never can be used at a time.");
+    }
+
+    if cli.serve.is_some() && cli.connect.is_some() {
+        bail!("--serve and --connect cannot be used together.");
+    }
+    if let Some(address) = &cli.connect {
+        return run_client(&cli, address);
     }
 
     let vc_requested = cli.vc_requested();
@@ -97,6 +108,9 @@ where
 {
     if !persistent_transformations_enabled(cli) {
         let mut storage = storage;
+        if let Some(address) = &cli.serve {
+            return run_server(cli, address, &mut storage);
+        }
         run_query_pipeline(cli, &mut storage)?;
         storage.save()?;
         return Ok(());
@@ -110,6 +124,9 @@ where
     let mut storage = PersistentTransformationDecorator::new(storage, trigger_store, cli.trace)
         .with_auto_create_missing_references(cli.auto_create_missing_references);
 
+    if let Some(address) = &cli.serve {
+        return run_server(cli, address, &mut storage);
+    }
     run_query_pipeline_with(cli, &mut storage, run_trigger_command)?;
     storage.save()?;
     Ok(())
@@ -395,5 +412,73 @@ where
         storage.write_lino_output(output_path)?;
     }
 
+    Ok(())
+}
+
+/// The binary options selected by `--external-references`, `--sequences` and
+/// `--progressive-widths`.
+fn binary_options(cli: &Cli) -> BinaryLinoOptions {
+    BinaryLinoOptions::default()
+        .with_external_references(cli.external_references)
+        .with_sequences(cli.sequences)
+        .with_progressive_widths(cli.progressive_widths)
+}
+
+/// `--connect`: sends the query to a server and prints the reply.
+///
+/// Any binary option implies `--protocol binary`.
+fn run_client(cli: &Cli, address: &str) -> Result<()> {
+    let options = binary_options(cli);
+    let protocol: Box<dyn LinoProtocol> = match cli.protocol.as_deref().map(str::trim) {
+        None if options == BinaryLinoOptions::default() => Box::new(TextLinoProtocol::new()),
+        None => Box::new(BinaryLinoProtocol::with_options(options)),
+        Some(name) if name.eq_ignore_ascii_case("text") => {
+            if options != BinaryLinoOptions::default() {
+                bail!("Binary protocol options require --protocol binary.");
+            }
+            Box::new(TextLinoProtocol::new())
+        }
+        Some(name) if name.eq_ignore_ascii_case("binary") => {
+            Box::new(BinaryLinoProtocol::with_options(options))
+        }
+        Some(other) => bail!("Invalid --protocol value '{other}'. Use 'text' or 'binary'."),
+    };
+    let query = cli.query.as_deref().or(cli.query_arg.as_deref());
+    let mut client = LinksClient::connect(address, protocol)?;
+    let reply = client.query_text(query.unwrap_or_default())?;
+    if !reply.is_empty() {
+        println!("{reply}");
+    }
+    Ok(())
+}
+
+/// `--serve`: serves `storage` until the process is stopped.
+fn run_server<S>(cli: &Cli, address: &str, storage: &mut S) -> Result<()>
+where
+    S: NamedTypeLinks,
+{
+    if cli.query.is_some() || cli.query_arg.is_some() {
+        bail!("--serve does not take a query; send queries with --connect.");
+    }
+    let accept = match cli.protocol.as_deref().map(str::trim) {
+        None => AcceptedProtocols::Any,
+        Some(name) if name.eq_ignore_ascii_case("any") => AcceptedProtocols::Any,
+        Some(name) if name.eq_ignore_ascii_case("text") => AcceptedProtocols::Text,
+        Some(name) if name.eq_ignore_ascii_case("binary") => AcceptedProtocols::Binary,
+        Some(other) => {
+            bail!("Invalid --protocol value '{other}'. Use 'any', 'text' or 'binary'.")
+        }
+    };
+    let options = ServerOptions {
+        trace: cli.trace,
+        auto_create_missing_references: cli.auto_create_missing_references,
+        accept,
+        ..ServerOptions::default()
+    };
+    let server = LinksServer::bind(address, options)?;
+    println!("clink server listening on {}", server.local_addr()?);
+    std::io::Write::flush(&mut std::io::stdout())?;
+    server.serve(storage)?;
+    storage.save()?;
     Ok(())
 }

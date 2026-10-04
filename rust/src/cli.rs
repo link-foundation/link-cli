@@ -38,6 +38,12 @@ pub struct Cli {
     pub list_branches: bool,
     pub list_tags: bool,
     pub show_log: bool,
+    pub serve: Option<String>,
+    pub connect: Option<String>,
+    pub protocol: Option<String>,
+    pub external_references: bool,
+    pub sequences: bool,
+    pub progressive_widths: bool,
 }
 
 impl Default for Cli {
@@ -73,6 +79,12 @@ impl Default for Cli {
             list_branches: false,
             list_tags: false,
             show_log: false,
+            serve: None,
+            connect: None,
+            protocol: None,
+            external_references: false,
+            sequences: false,
+            progressive_widths: false,
         }
     }
 }
@@ -263,6 +275,30 @@ impl Cli {
                 cli.show_log = parse_bool("--log", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--serve"]) {
+                cli.serve = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--connect"]) {
+                cli.connect = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--protocol"]) {
+                cli.protocol = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--external-references"]) {
+                cli.external_references = parse_bool("--external-references", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--sequences"]) {
+                cli.sequences = parse_bool("--sequences", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--progressive-widths"]) {
+                cli.progressive_widths = parse_bool("--progressive-widths", value)?;
+                continue;
+            }
 
             match arg.as_str() {
                 "-h" | "--help" => return Ok(CliCommand::Help),
@@ -355,6 +391,24 @@ impl Cli {
                 }
                 "--log" => {
                     cli.show_log = next_bool_value(&mut args, true)?;
+                }
+                "--serve" => {
+                    cli.serve = Some(next_value(&mut args, &arg)?);
+                }
+                "--connect" => {
+                    cli.connect = Some(next_value(&mut args, &arg)?);
+                }
+                "--protocol" => {
+                    cli.protocol = Some(next_value(&mut args, &arg)?);
+                }
+                "--external-references" => {
+                    cli.external_references = next_bool_value(&mut args, true)?;
+                }
+                "--sequences" => {
+                    cli.sequences = next_bool_value(&mut args, true)?;
+                }
+                "--progressive-widths" => {
+                    cli.progressive_widths = next_bool_value(&mut args, true)?;
                 }
                 "--" => {
                     for value in args.by_ref() {
@@ -451,6 +505,21 @@ impl Cli {
             "          List version-control tags and exit\n",
             "      --log\n",
             "          Print the transitions log and exit (implies --transactions)\n",
+            "      --serve <ADDR>\n",
+            "          Serve the database over TCP (e.g. 127.0.0.1:7878) until stopped;\n",
+            "          each message may use the text or the binary LiNo protocol\n",
+            "      --connect <ADDR>\n",
+            "          Send the query to a clink server instead of opening a database;\n",
+            "          an empty query reads every link\n",
+            "      --protocol <PROTOCOL>\n",
+            "          'text' or 'binary' for --connect (default: text); 'text', 'binary'\n",
+            "          or 'any' for --serve (default: any)\n",
+            "      --external-references\n",
+            "          Binary protocol: send numbers and characters as external references\n",
+            "      --sequences\n",
+            "          Binary protocol: send lists in the variable-length sequence section\n",
+            "      --progressive-widths\n",
+            "          Binary protocol: widen references link by link instead of uniformly\n",
             "  -h, --help\n",
             "          Print help\n",
             "  -V, --version\n",
