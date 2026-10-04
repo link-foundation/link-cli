@@ -28,7 +28,8 @@ public sealed class LinksServerTests
                 {
                     _failure = error;
                 }
-            }) { IsBackground = true };
+            })
+            { IsBackground = true };
             _thread.Start();
         }
 
