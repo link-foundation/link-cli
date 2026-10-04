@@ -47,14 +47,19 @@ impl RunningServer {
     pub fn client(&self, protocol: impl LinoProtocol + 'static) -> LinksClient {
         LinksClient::connect(self.address, protocol).unwrap()
     }
-}
 
-impl Drop for RunningServer {
-    fn drop(&mut self) {
+    /// Stops the server and waits for it to finish.
+    pub fn stop(&mut self) {
         self.shutdown.shutdown();
         if let Some(thread) = self.thread.take() {
             thread.join().unwrap();
         }
+    }
+}
+
+impl Drop for RunningServer {
+    fn drop(&mut self) {
+        self.stop();
     }
 }
 

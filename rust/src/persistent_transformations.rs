@@ -599,15 +599,14 @@ impl<L: NamedTypeLinks> NamedTypeLinks for PersistentTransformationDecorator<L> 
         self.links.exists(id)
     }
 
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        let link = self.links.update(id, source, target)?;
-        self.apply_triggers_after_operation()?;
-        self.take_pending_error()?;
-        Ok(link)
-    }
-
-    fn delete(&mut self, id: u32) -> Result<Link> {
-        let link = self.links.delete(id)?;
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        let link = self.links.update_observed(id, source, target, observer)?;
         self.apply_triggers_after_operation()?;
         self.take_pending_error()?;
         Ok(link)

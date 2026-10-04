@@ -12,7 +12,7 @@
 //! | `(count: (index source target))` | `(count: N)`                           |
 //! | `(each: (index source target))`  | one `(index: source target)` per match |
 //! | `(create: (source target))`      | `() ((index: source target))`          |
-//! | `(update: (index source target))`| `((index: s t)) ((index: source target))` |
+//! | `(update: (index source target))`| `((index: s t)) ((index: source target))` per change |
 //! | `(delete: index)`                | `((index: source target)) ()` per removed link |
 //! | `(get-name: link)`               | `(name: 'text')`, or nothing           |
 //! | `(set-name: (link 'text'))`      | `(link: N)`                            |
@@ -46,7 +46,8 @@ pub enum LinksOperation {
     Each(Vec<Part>),
     /// Creates a link.
     Create { source: u32, target: u32 },
-    /// Points an existing link at a new source and target.
+    /// Points an existing link at a new source and target; an update that
+    /// would duplicate an existing link merges into it instead.
     Update {
         index: u32,
         source: u32,
@@ -162,12 +163,12 @@ impl LinksOperation {
                 source,
                 target,
             } => {
-                let before = storage.update(*index, *source, *target)?;
-                let after = storage
-                    .get_link(*index)
-                    .unwrap_or_else(|| Link::new(*index, *source, *target));
+                let mut changes = Vec::new();
+                storage.update_observed(*index, *source, *target, &mut |before, after| {
+                    changes.push((before, after))
+                })?;
                 storage.save()?;
-                changes_document(&[(before, after)])
+                changes_document(&changes)
             }
             Self::Delete(index) => {
                 let mut changes = Vec::new();

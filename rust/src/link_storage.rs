@@ -482,6 +482,12 @@ impl LinkStorage {
     /// ```
     ///
     /// `observer` is that handler. A change with a null `after` is a deletion.
+    ///
+    /// The upstream resolver also reports the duplicate a link is merged into
+    /// as an unchanged `(before, before)` pair — a documented deviation from
+    /// C#, whose `LinksUniquenessResolver` reports nothing for it. That pair
+    /// is not a change, so it is not passed on, and `--changes` lists the same
+    /// records in both languages.
     pub fn update_observed(
         &mut self,
         id: u32,
@@ -495,9 +501,17 @@ impl LinkStorage {
             .ok_or_else(|| LinkError::not_found(id))?;
         let mut resolved = (&mut *self).with_automatic_uniqueness_and_usages_resolution();
         resolved
-            .update_by_with([id], [id, source, target], &mut |before, after| {
-                observe(observer, before, after)
-            })
+            .update_by_with(
+                [id],
+                [id, source, target],
+                &mut |before: doublets::Link<u32>, after| {
+                    let merged_into = before == after && before.index != id;
+                    if !merged_into {
+                        observer(Link::from(before), Link::from(after));
+                    }
+                    doublets::data::Flow::Continue
+                },
+            )
             .map_err(LinkError::from)?;
         Ok(before)
     }

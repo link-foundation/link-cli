@@ -622,26 +622,28 @@ impl QueryProcessor {
                 }
             }
             (None, Some(after)) => {
-                let (before, created) = self.create_or_update_resolved_link(storage, &after)?;
-                changes.push((before, Some(created)));
+                self.create_or_update_resolved_link(storage, &after, changes)?;
             }
             (Some(before), Some(after)) => {
                 if before.index == after.index && storage.exists(before.index) {
-                    let before_link = storage.get_link(before.index).unwrap();
-                    if before_link.source != after.source || before_link.target != after.target {
-                        storage.update(before.index, after.source, after.target)?;
+                    let stored = storage.get_link(before.index).unwrap();
+                    if stored.source != after.source || stored.target != after.target {
+                        // A merge into a duplicate deletes `before.index`;
+                        // `restore_unexpected_deletions` puts it back when the
+                        // query asked for it, exactly as the C# processor does.
+                        self.update_observed(
+                            storage,
+                            before.index,
+                            after.source,
+                            after.target,
+                            changes,
+                        )?;
+                    } else {
+                        changes.push((Some(stored), Some(stored)));
                     }
                     if let Some(name) = &after.name {
                         storage.set_name(before.index, name)?;
                     }
-                    // The update can be resolved into a merge, which deletes
-                    // `before.index`; report the state the query asked for and
-                    // let `restore_unexpected_deletions` put the link back,
-                    // exactly as the C# processor does.
-                    let after_link = storage
-                        .get_link(before.index)
-                        .unwrap_or_else(|| Link::new(before.index, after.source, after.target));
-                    changes.push((Some(before_link), Some(after_link)));
                 } else {
                     self.apply_operation(storage, Some(before), None, changes)?;
                     self.apply_operation(storage, None, Some(after), changes)?;

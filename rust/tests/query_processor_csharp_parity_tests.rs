@@ -346,6 +346,22 @@ fn test_update_into_existing_pair_merges_matches_csharp() -> Result<()> {
     })
 }
 
+/// The merge is reported the way C# reports it: the updated link is gone and
+/// the link it merged into is not reported at all.
+#[test]
+fn test_update_into_existing_pair_reports_merge_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 1))")?;
+        processor.process_query(storage, "() ((2 2))")?;
+
+        let changes = processor.process_query(storage, "((2: 2 2)) ((2: 1 1))")?;
+
+        assert_eq!(changes, vec![(Some(Link::new(2, 2, 2)), None)]);
+        assert_eq!(sorted_links(storage), vec![Link::new(1, 1, 1)]);
+        Ok(())
+    })
+}
+
 /// Deleting a named link cascades through the links that use it, and the names
 /// of the survivors are untouched.
 #[test]

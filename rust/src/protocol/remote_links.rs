@@ -99,7 +99,18 @@ impl RemoteLinks {
             .ok_or_else(|| ProtocolError::malformed("the create reply holds no created link"))
     }
 
-    fn removed_link(changes: &[Change], index: u32) -> ProtocolResult<Link> {
+    /// Runs an `update` or `delete` of `index`, reports its changes to
+    /// `observer` and returns the state `index` was in before.
+    fn observed(
+        &self,
+        operation: &LinksOperation,
+        index: u32,
+        observer: ChangeObserver<'_>,
+    ) -> ProtocolResult<Link> {
+        let changes = self.changes(operation)?;
+        for (before, after) in &changes {
+            observer(*before, *after);
+        }
         changes
             .iter()
             .find(|(before, _)| before.index == index)
@@ -246,25 +257,23 @@ impl NamedTypeLinks for RemoteLinks {
         connected(self.link(id)).is_some()
     }
 
-    fn update(&mut self, id: u32, source: u32, target: u32) -> anyhow::Result<Link> {
-        let changes = self.changes(&LinksOperation::Update {
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> anyhow::Result<Link> {
+        let operation = LinksOperation::Update {
             index: id,
             source,
             target,
-        })?;
-        Ok(Self::removed_link(&changes, id)?)
-    }
-
-    fn delete(&mut self, id: u32) -> anyhow::Result<Link> {
-        self.delete_observed(id, &mut |_, _| {})
+        };
+        Ok(self.observed(&operation, id, observer)?)
     }
 
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> anyhow::Result<Link> {
-        let changes = self.changes(&LinksOperation::Delete(id))?;
-        for (before, after) in &changes {
-            observer(*before, *after);
-        }
-        Ok(Self::removed_link(&changes, id)?)
+        Ok(self.observed(&LinksOperation::Delete(id), id, observer)?)
     }
 
     fn all_links(&mut self) -> Vec<Link> {

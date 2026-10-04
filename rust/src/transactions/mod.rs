@@ -322,8 +322,25 @@ where
     }
 
     pub fn update(&mut self, id: T, source: T, target: T) -> Result<GenericLink<T>, LinkError> {
+        self.update_observed(id, source, target, &mut |_, _| {})
+    }
+
+    /// [`Self::update`], reporting every change the underlying store made.
+    ///
+    /// An update that would duplicate an existing doublet is resolved into a
+    /// merge that deletes the updated link, so one call can report several
+    /// changes, exactly like C#'s `links.Update(restriction, substitution, handler)`.
+    pub fn update_observed(
+        &mut self,
+        id: T,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
         if self.replaying {
-            return self.inner.update_link(id, source, target);
+            return self
+                .inner
+                .update_link_observed(id, source, target, observer);
         }
         let before = self.snapshot(id);
         let owns = self.ensure_open_transaction();
@@ -331,6 +348,7 @@ where
         let outcome = self
             .inner
             .update_link_observed(id, source, target, &mut |before, after| {
+                observer(before, after);
                 record_observed(&mut observed, before, after)
             });
         let prev = match outcome {
