@@ -8,6 +8,7 @@
 
 use super::error::{ProtocolError, ProtocolResult};
 use super::format::format_document;
+use super::links_operations::LinksOperation;
 use super::mapping::LinoDocument;
 use super::packet::DecodeLimits;
 use super::protocols::{read_any_document, MessageFormat};
@@ -272,6 +273,9 @@ fn try_execute_request<S: NamedTypeLinks>(
     processor: &QueryProcessor,
     document: &[LiNo<String>],
 ) -> anyhow::Result<LinoDocument> {
+    if let Some(operation) = LinksOperation::from_document(document)? {
+        return operation.execute(storage);
+    }
     if document.is_empty() {
         let mut links = storage.all_links();
         links.sort_by_key(|link| link.index);

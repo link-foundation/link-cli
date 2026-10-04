@@ -36,20 +36,24 @@
 mod client;
 mod error;
 mod format;
+pub mod links_operations;
 mod mapping;
 pub mod packet;
 mod protocols;
+mod remote_links;
 mod server;
 
 pub use client::LinksClient;
 pub use error::{ProtocolError, ProtocolResult};
 pub use format::{format_document, format_link, format_reference, parse_document};
+pub use links_operations::LinksOperation;
 pub use mapping::{decode_document, encode_document, BinaryLinoOptions, LinoDocument};
 pub use packet::{DecodeLimits, LinksPacket, Reference};
 pub use protocols::{
     is_binary_start, read_any_document, BinaryLinoProtocol, LinoConnection, LinoProtocol,
     MessageFormat, TextLinoProtocol,
 };
+pub use remote_links::RemoteLinks;
 pub use server::{
     error_document, error_message, execute_request, AcceptedProtocols, LinksServer, ServerOptions,
     ShutdownHandle,

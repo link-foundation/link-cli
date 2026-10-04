@@ -1,78 +1,16 @@
 //! LiNo substitution operations over TCP (issue #105).
 
+mod common;
+
+use common::{protocols, RunningServer};
 use link_cli::protocol::{
-    AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer,
-    LinoProtocol, ProtocolError, ServerOptions, TextLinoProtocol,
+    AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol, LinksClient, ProtocolError,
+    ServerOptions, TextLinoProtocol,
 };
-use link_cli::{LinkStorage, NamedTypesDecorator};
 use std::io::{BufRead, BufReader, Read, Write};
-use std::net::{SocketAddr, TcpStream};
-use std::thread::{self, JoinHandle};
+use std::net::TcpStream;
+use std::thread;
 use std::time::Duration;
-use tempfile::NamedTempFile;
-
-struct RunningServer {
-    address: SocketAddr,
-    shutdown: link_cli::protocol::ShutdownHandle,
-    thread: Option<JoinHandle<()>>,
-    _database: NamedTempFile,
-}
-
-impl RunningServer {
-    fn start(options: ServerOptions, named: bool) -> Self {
-        let database = NamedTempFile::new().unwrap();
-        let path = database.path().to_path_buf();
-        let server = LinksServer::bind("127.0.0.1:0", options).unwrap();
-        let address = server.local_addr().unwrap();
-        let shutdown = server.shutdown_handle().unwrap();
-        let thread = thread::spawn(move || {
-            if named {
-                let mut storage = NamedTypesDecorator::new(&path, false).unwrap();
-                server.serve(&mut storage).unwrap();
-            } else {
-                let mut storage = LinkStorage::new(&path, false).unwrap();
-                server.serve(&mut storage).unwrap();
-            }
-        });
-        Self {
-            address,
-            shutdown,
-            thread: Some(thread),
-            _database: database,
-        }
-    }
-
-    fn client(&self, protocol: impl LinoProtocol + 'static) -> LinksClient {
-        LinksClient::connect(self.address, protocol).unwrap()
-    }
-}
-
-impl Drop for RunningServer {
-    fn drop(&mut self) {
-        self.shutdown.shutdown();
-        if let Some(thread) = self.thread.take() {
-            thread.join().unwrap();
-        }
-    }
-}
-
-fn protocols() -> Vec<Box<dyn LinoProtocol>> {
-    let mut protocols: Vec<Box<dyn LinoProtocol>> = vec![Box::new(TextLinoProtocol::new())];
-    for external_references in [false, true] {
-        for sequences in [false, true] {
-            for progressive_widths in [false, true] {
-                protocols.push(Box::new(BinaryLinoProtocol::with_options(
-                    BinaryLinoOptions {
-                        external_references,
-                        sequences,
-                        progressive_widths,
-                    },
-                )));
-            }
-        }
-    }
-    protocols
-}
 
 #[test]
 fn crud_works_over_every_protocol() {
