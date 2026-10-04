@@ -46,6 +46,12 @@ Key files:
 - `VersionControlDecorator.cs`: optional version-control layer that sits above
   the transactions decorator and provides branching, tagging, and time-travel
   checkout.
+- `Protocol/`: LiNo over TCP (#105). This folder contains:
+  - `TextLinoProtocol` and `BinaryLinoProtocol` (`LinoProtocols.cs`)
+  - the binary `LinksPacket`
+  - `LinoMapping` (document ↔ packet)
+  - `LinoFormat` (canonical text)
+  - `LinksServer` and `LinksClient`
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
 
@@ -79,11 +85,19 @@ Key files:
   transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
   branching, tagging, and time-travel checkout.
+- `rust/src/protocol/`: LiNo over TCP (#105). The module mirrors the C#
+  `Protocol/` folder file for file:
+  - `protocols.rs`
+  - `packet.rs`
+  - `mapping.rs`
+  - `format.rs`
+  - `server.rs`
+  - `client.rs`
 
 Main Rust dependencies:
 
 - `doublets = "0.5.0"` for links storage foundations.
-- `links-notation = "0.16.1"` for LiNo parsing.
+- `links-notation = "0.22.0"` for LiNo parsing.
 - `lino-arguments = "0.3.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
 

@@ -43,6 +43,7 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
 - [docs/case-studies/issue-94/README.md](docs/case-studies/issue-94/README.md): evidence and analysis for the optional transactions and version-control layers.
 - [docs/case-studies/issue-98/README.md](docs/case-studies/issue-98/README.md): evidence and analysis for making the libraries reusable as a doublets-backed transactional store.
+- [docs/case-studies/issue-105/README.md](docs/case-studies/issue-105/README.md): requirements, prior art and the wire formats of the LiNo text and binary protocols over TCP.
 
 ### API references
 
@@ -416,6 +417,40 @@ See [rust/README.md](rust/README.md#use-as-a-library),
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#embedding-the-library) for the
 details.
 
+## Serve a database over TCP
+
+`--serve` exposes a database over TCP. `--connect` sends one query to a
+served database and prints the reply:
+
+```bash
+clink --db db.links --serve 127.0.0.1:7777          # terminal 1
+clink --connect 127.0.0.1:7777 '() ((1 1))'         # terminal 2
+() ((1: 1 1))
+clink --connect 127.0.0.1:7777                      # no query: list every link
+(1: 1 1)
+```
+
+A request is a substitution query, so it covers create, read, update and
+delete. The reply has one `(before) (after)` line per change, the same as
+`--changes`. A failed query gets `(error: 'message')` back.
+
+There are two interchangeable protocols:
+
+- **text**: UTF-8 LiNo. Each message ends with a line holding a single `.`,
+  so you can also talk to the server with `nc`.
+- **binary**: `--protocol binary`. Each packet carries its link count, and
+  references are 8, 16, 32 or 64 bits wide depending on that count. Three
+  optional decorators can each be switched on independently:
+  - `--external-references`: numbers and characters travel as Hybrid external
+    references.
+  - `--sequences`: a variable-length sequence section.
+  - `--progressive-widths`: the reference width grows with the address.
+
+The server detects the protocol of each message and replies in the same one.
+C# and Rust servers and clients work with each other: see
+[`examples/tcp/`](examples/tcp) and
+[docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.
@@ -586,6 +621,12 @@ Both the C# NuGet tool and the Rust CLI support every option below.
 | `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
 | `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
 | `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
+| `--serve`               | string  | _None_         | _None_                              | Serve the database over TCP at `host:port` (port `0` picks a free port)   |
+| `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server at `host:port` and print the reply |
+| `--protocol`            | string  | detected       | _None_                              | `text` or `binary` (with `--serve`, also `any`, which is the default)     |
+| `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
+| `--sequences`           | bool    | `false`        | _None_                              | Binary protocol: use the variable-length sequence section                 |
+| `--progressive-widths`  | bool    | `false`        | _None_                              | Binary protocol: grow the reference width with the address                |
 
 The query can be passed as the first positional argument or through `--query`,
 `--apply`, or `--do`. In the Rust CLI, `--query` takes precedence when both

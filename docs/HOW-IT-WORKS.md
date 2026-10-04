@@ -281,6 +281,33 @@ rewinds everything; checkout to a higher seq replays as needed.
 When no version-control flag is passed, no `versioncontrol.links`
 sidecar is created.
 
+## Serving Over TCP
+
+`clink --serve host:port` keeps a database open and answers LiNo requests
+over TCP. `clink --connect host:port [query]` sends one request and prints
+the reply.
+
+- A request is the same substitution expression the CLI takes. The reply is
+  the list of `(before) (after)` changes. An empty request lists every link.
+- Each connection has its own thread. Requests run one at a time under a
+  store lock.
+- The protocol is detected per message, and the reply uses the same one:
+  - **Text**: UTF-8 LiNo. A line holding a single `.` ends a message, and
+    leading dots are doubled.
+  - **Binary**: a packet whose first byte is `0x10 | flags`. It continues
+    with the number of fixed doublets and sequences, then the doublets
+    `source target` and the sequences `size ref…`. Addresses are implicit,
+    and a reference is 1, 2, 4 or 8 bytes wide, depending on the highest
+    address.
+- Numbers and strings are encoded as links by default: unary numbers and
+  code-point lists under marker points. Three options change the encoding:
+  - `--external-references` sends them as Hybrid external references instead.
+  - `--sequences` replaces cons chains with variable-length records.
+  - `--progressive-widths` lets early links use narrower references.
+
+The full wire format, golden vectors and design notes are in
+[case-studies/issue-105](case-studies/issue-105/README.md).
+
 ## Browser Runtime
 
 The WebAssembly workbench uses the Rust query processor in the browser.
