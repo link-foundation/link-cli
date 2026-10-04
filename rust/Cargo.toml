@@ -30,7 +30,7 @@ anyhow = "1.0.104"
 # Source: http://github.com/linksplatform/doublets-rs
 doublets = "0.5.0"
 # Source: http://github.com/link-foundation/links-notation
-links-notation = "0.16.1"
+links-notation = "0.22.0"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.3.0"
 

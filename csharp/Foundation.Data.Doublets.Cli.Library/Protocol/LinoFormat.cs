@@ -9,11 +9,11 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 /// </summary>
 /// <remarks>
 /// A document is the list of top-level links of a message. A reference is a
-/// <see cref="LinoLink"/> whose <c>Values</c> is null. The canonical model is
-/// the one the Rust links-notation parser produces, so documents decoded from
-/// the same bytes compare equal in both ports; the C# parser keeps one extra
-/// wrapper around single-reference groups, which <see cref="ParseDocument"/>
-/// removes. <c>ParseDocument(FormatDocument(document))</c> always equals
+/// <see cref="LinoLink"/> whose <c>Values</c> is null. links-notation keeps
+/// one extra wrapper around single-reference groups (<c>a</c> parses as
+/// <c>(a)</c>); <see cref="ParseDocument"/> removes it, exactly like the Rust
+/// port, so documents decoded from the same bytes compare equal in both
+/// ports. <c>ParseDocument(FormatDocument(document))</c> always equals
 /// <c>document</c>, which is what makes the text and binary protocols
 /// interchangeable.
 /// </remarks>

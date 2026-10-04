@@ -523,3 +523,24 @@ fn every_short_reference_over_delimiters_round_trips() {
         }
     }
 }
+
+#[test]
+fn deeply_nested_text_parses_in_linear_time() {
+    // links-notation before 0.21.3 took exponential time in the nesting depth
+    // (link-foundation/links-notation#314), so one short message could stall
+    // a server thread. Depth 40 took minutes there.
+    let nested = |depth: usize| format!("{}a{}", "(".repeat(depth), ")".repeat(depth));
+    let started = std::time::Instant::now();
+    let mut link = parse_document(&nested(40)).unwrap().remove(0);
+    let mut depth = 1;
+    while let links_notation::LiNo::Link { mut values, .. } = link {
+        link = values.remove(0);
+        depth += 1;
+    }
+    assert_eq!(depth, 40);
+    assert!(matches!(
+        parse_document(&nested(100_000)),
+        Err(ProtocolError::InvalidLino(_))
+    ));
+    assert!(started.elapsed() < std::time::Duration::from_secs(10));
+}
