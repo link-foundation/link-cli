@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [3.2.0] - 2026-10-05
+
+Fixed the `--changes` report of creations:
+
+- Every link a query creates is reported, named point links and leaves created on the way included. Each one is reported once, as `() ((name: name name))`, not as an empty link filled in later.
+- Creating a link under an existing name redefines that link in place, and a new name for an existing doublet names it instead of copying it.
+- Reference validation predicts the addresses new links get by asking the store. Stores reuse the address freed last first, so the lowest free address is not always next. A reference to a freed address the query does not refill is now reported missing instead of being dropped.
+- `EnsureCreated` no longer throws when the store hands out a freed address above the target before reaching it.
+
+A query that refers to a missing link or does not parse is reported in one `Error: Query error: ...` or `Error: Parse error: ...` line on stderr, as the Rust clink reports it, instead of an unhandled exception with its stack trace. `--trace` still prints the stack trace.
+
+Updated `System.CommandLine` to 2.0.12, and the test dependencies `Microsoft.NET.Test.Sdk` to 18.10.1 and `coverlet.collector` to 10.1.0. A new `Dependencies` workflow fails while any dependency is behind its latest release, and Dependabot opens the update pull requests.
+
+Added LiNo substitution operations over TCP (issue #105). There are two protocols, and either can replace the other:
+
+- `TextLinoProtocol`: dot-stuffed UTF-8 messages.
+- `BinaryLinoProtocol`: each packet is a list of sections of links that share one reference width (8, 16, 32 or 64 bits) and one arity range. The default is doublets with one uniform width. Options add external (Hybrid) references, any arity range such as `2..3` or `1..` (`ArityRange`), and packed per-section widths; packed output is never larger than uniform output. Shared golden vectors in `docs/protocol/binary-links-notation-vectors.txt` pin the format.
+
+`LinksServer` and `LinksClient` run create, read, update and delete queries over either protocol. The new `clink --serve` and `--connect` options do the same from the command line, together with `--protocol`, `--external-references`, `--arity` and `--packed-widths`. The wire format is byte-for-byte the same as the Rust port's, so C# and Rust servers and clients work with each other.
+
+Upgraded Link.Foundation.Links.Notation to 0.22.0. In earlier versions, parse time grew exponentially with nesting depth, so one short message could stall a server.
+
+An update into an existing doublet merges into it and now re-points every link that used the merged-away address at the surviving one, as the Rust port does. Before, the `MergeUsages` of Platform.Data.Doublets 0.18.1 ([Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)) blanked the half of the usage instead, so `() ((1 2) (2 1))` followed by `((1: 1 2)) ((1: 2 1))` left `(2: 2 0)` rather than `(2: 2 2)`. Stores are composed with the new `DecorateWithAutomaticUniquenessAndUsagesRepointing()`, whose top layer, `LinksUniquenessAndUsagesRepointingResolver`, replaces `LinksCascadeUniquenessAndUsagesResolver`.
+
+`LinksPacket.AddressTier` now throws an unencodable `LinoProtocolException` for an address beyond the internal range instead of silently returning width 8, and the unused `LinoFormat.IsReference` was removed. A server that is stopping now answers a request it already read with `(error: 'server is shutting down')` instead of hanging up, and its trace notes when a client hangs up. `LinksPacket.WidthFromCode` is total over two-bit codes, and the accept loop no longer keeps a separate branch for a client accepted while stopping (its worker closes it). Tests now cover every line of the protocol code, and each malformed-packet test asserts the exact error, which fixed three cases that passed for the wrong reason.
+
+Added `RemoteLinks`, an `INamedTypesLinks<uint>` whose links live behind a `LinksServer`. Code written against the links interface, the query processor included, switches from a local file to a server by swapping one value. `LinksServer` now also answers `LinksOperation` documents, one per interface call: `(count: …)`, `(each: …)`, `(create: …)`, `(update: …)`, `(delete: …)`, `(get-name: …)`, `(set-name: …)`, `(get-by-name: …)` and `(remove-name: …)`. These are the documents the Rust `RemoteLinks` sends, so either port's client works with either port's server. Both test suites replay the same recorded conversation, `docs/protocol/links-operations.txt`, to prove it. A write replies with the net change of every link it touched.
+
+Fixed a crash of a `LinksServer` shut down right after it accepted a connection: the connection thread set an option on the socket the shutdown had already disposed, and the `NullReferenceException` ended the process.
+
+Added `--export-binary <PATH>` (aliases `--binary-output`, `--binary-out`) and `--import-binary <PATH>` (aliases `--binary-input`, `--binary-in`), which write and read the whole store, names included, as a store archive in binary links notation: a links packet that keeps every address and hole, followed by a names packet. The library exposes the same as `StoreArchive.Export`, `StoreArchive.Import`, `StoreArchive.ExportToFile` and `StoreArchive.ImportFromFile`. A binary archive is imported before the `--in` LiNo file and exported wherever `--out` is written. The archive bytes match the Rust port.
+
 ## [3.1.0] - 2026-08-29
 
 Opened the library up for extension: every decorator (`NamedTypesDecorator`, `NamedLinksDecorator`, `SimpleLinksDecorator`, `PinnedTypesDecorator`, `TransactionsDecorator`, `VersionControlDecorator`, `PersistentTransformationDecorator`) is now unsealed with overridable members, disposable ones follow the `protected virtual void Dispose(bool)` pattern so a subclass can release resources of its own, and `PersistentTransformationDecorator.PersistentTransformationQuery` and `InternalNamePrefix` are public. A custom CLI can now subclass any layer of the stack instead of forking it.
