@@ -451,6 +451,37 @@ C# and Rust servers and clients work with each other: see
 [`examples/tcp/`](examples/tcp) and
 [docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
 
+### Use a served database as a store
+
+In both libraries, `RemoteLinks` is a links store whose links live behind a
+server. It implements the same interfaces as a local store: `INamedTypesLinks`
+in C#, and `Links`, `Doublets` and `NamedTypeLinks` in Rust. So code written
+against them, the query processor included, switches from a local file to a
+server by swapping one value:
+
+```csharp
+static void Run(INamedTypesLinks<uint> links) =>
+    AdvancedMixedQueryProcessor.ProcessQuery(links, new() { Query = "() ((1 1))" });
+
+using (var local = new NamedTypesDecorator<uint>("db.links")) Run(local);
+using (var remote = RemoteLinks.Connect("127.0.0.1:7777", new TextLinoProtocol())) Run(remote);
+```
+
+```rust
+fn run(store: &mut impl NamedTypeLinks) -> anyhow::Result<()> {
+    QueryProcessor::new(false).process_query(store, "() ((1 1))")?;
+    Ok(())
+}
+
+run(&mut NamedTypesDecorator::new("db.links", false)?)?;
+run(&mut RemoteLinks::connect("127.0.0.1:7777", TextLinoProtocol::new())?)?;
+```
+
+Each call is one request, such as `(count: (* 1))`, `(update: (1 2 2))` or
+`(set-name: (2 'a pair'))`. A write replies with the net change of every link
+it touched. [`docs/protocol/links-operations.txt`](docs/protocol/links-operations.txt)
+records one whole conversation, and both ports replay it in their tests.
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.

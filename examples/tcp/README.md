@@ -50,5 +50,17 @@ the server with `nc 127.0.0.1 7777`:
 .
 ```
 
+Besides queries, a server answers one request per call of the links
+interface, which is what `RemoteLinks` sends. After `() ((1 1) (2 2) (1 2))`,
+two links use `1`:
+
+```bash
+clink --connect 127.0.0.1:7777 '(count: (* 1))'
+(count: 2)
+```
+
+[`docs/protocol/links-operations.txt`](../../docs/protocol/links-operations.txt)
+lists every such request with its reply.
+
 The wire formats are described in
 [`docs/case-studies/issue-105`](../../docs/case-studies/issue-105/README.md).

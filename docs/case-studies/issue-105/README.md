@@ -28,7 +28,7 @@ decorator, in both the C# and the Rust port.
 
 | # | Requirement (from the issue text) | Where it is addressed |
 |---|---|---|
-| R1 | "lightweight protocols to transfer links notation representing substitution operations to allow all CRUD operations over TCP/IP" | `LinksServer` / `LinksClient` in both ports. A request is a substitution query and the empty request reads everything (§4.4). `clink --serve` / `--connect` (§4.5) |
+| R1 | "lightweight protocols to transfer links notation representing substitution operations to allow all CRUD operations over TCP/IP" | `LinksServer` / `LinksClient` in both ports. A request is a substitution query and the empty request reads everything (§4.4). `clink --serve` / `--connect` (§4.6). `RemoteLinks` serves the links interface itself (§4.5) |
 | R2 | "UTF-8 based text only links notation" | `TextLinoProtocol` (§4.1) |
 | R3 | "binary version of links notation, that will have number of links in a message/packet" | `BinaryLinoProtocol` and `LinksPacket`. The header carries N (doublets) and M (sequences) as LEB128 (§4.2) |
 | R4 | "0-256 links have 8 bit size. 257-65536 links have 16 bits size and so on" (8/16/32/64) | The width is the tier of the largest address: 1, 2, 4 or 8 bytes. `--progressive-widths` grows the width per address instead (§4.2.3) |
@@ -267,7 +267,42 @@ server to one protocol.
 Requests run one at a time under a store lock. Each connection has its own
 thread for parsing and formatting.
 
-### 4.5 Command line
+### 4.5 Remote stores
+
+A substitution query is one way to use a store; the links interface is the
+other. `RemoteLinks` implements that interface — `INamedTypesLinks<uint>` in
+C#, `Links`, `Doublets` and `NamedTypeLinks` in Rust — by sending one
+`LinksOperation` document per call. So a local store and a served one are
+swappable, the query processor included:
+
+| Request | Reply |
+|---|---|
+| `(count: (index source target))` | `(count: N)` |
+| `(each: (index source target))` | one `(index: source target)` per match |
+| `(create: (source target))` | `() ((index: source target))` |
+| `(update: (index source target))` | `((index: s t)) ((index: source target))` per changed link |
+| `(delete: index)` | `((index: source target)) ()` per removed link |
+| `(get-name: link)` | `(name: 'text')`, or nothing |
+| `(set-name: (link 'text'))` | `(link: N)`, the address of the name |
+| `(get-by-name: 'text')` | `(link: N)`, or nothing |
+| `(remove-name: link)` | nothing |
+
+A restriction holds up to three parts, and `*` matches anything. An operation
+holds exactly one value, and a substitution query needs a restriction *and* a
+substitution, so the two never collide on one server.
+
+A write replies with the **net change** of every link it touched, the way
+`clink --changes` reports a query, not with the steps the store took. The
+steps differ between the ports: a cascading delete in C# clears a usage to
+`(0 0)` before it removes it, while doublets-rs 0.5.0 removes it directly.
+The net changes are the same in both, so the replies are too.
+
+[`docs/protocol/links-operations.txt`](../../protocol/links-operations.txt)
+records one conversation with a fresh server, covering every operation, a
+cascade and the errors. Both test suites replay it over every protocol, so a
+client of either port is proven to understand a server of the other.
+
+### 4.6 Command line
 
 ```bash
 clink --db data.links --serve 127.0.0.1:7777 [--protocol text|binary] [--auto-create-missing-references] [--trace]
@@ -340,9 +375,11 @@ structure, not that it is smaller.
   - `rust/tests/protocol_packet_tests.rs`: codecs, the golden vectors, the corpus round trip under all 8 option sets, limits, malformed input, and deep nesting in linear time.
   - `rust/tests/protocol_tcp_tests.rs`: CRUD over every protocol, mixed clients, errors, CRLF, malformed input, protocol restriction, concurrency and shutdown.
   - `rust/tests/cli_tcp_tests.rs`: `clink --serve` / `--connect` end to end.
+  - `rust/tests/remote_links_tests.rs`: the same proof for the Rust `RemoteLinks`, including the shared conversation.
 - C#:
   - `LinoProtocolCodecTests` (34 tests): the same corpus and golden vectors.
-  - `LinksServerTests` (9 tests): CRUD over every protocol, identical text and binary replies, errors, CRLF, malformed input, protocol restriction, concurrent clients and shutdown.
+  - `LinksServerTests` (10 tests): CRUD over every protocol, identical text and binary replies, errors, CRLF, malformed input, protocol restriction, concurrent clients, shutdown, and shutdown racing a new connection.
+  - `RemoteLinksTests`: every `INamedTypesLinks` call, the query processor and the raw `ILinks` interface give the same answers on a local store and over every protocol. It also covers the shared conversation, malformed operations and replies, and lost connections.
   - `CliTcpIntegrationTests` (8 tests): `clink --serve` / `--connect` end to end.
 - Cross-language interop: [`examples/tcp/run-interop.sh`](../../../examples/tcp/run-interop.sh) runs a Rust server with a C# client, and a C# server with a Rust client. It covers text and every binary option, and both directions print identical results.
 
