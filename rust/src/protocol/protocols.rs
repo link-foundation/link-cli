@@ -8,7 +8,7 @@
 use super::error::{ProtocolError, ProtocolResult};
 use super::format::{format_document, parse_document};
 use super::mapping::{decode_document, encode_document, BinaryLinoOptions, LinoDocument};
-use super::packet::{address_tier, DecodeLimits, LinksPacket, BINARY_VERSION_1};
+use super::packet::{DecodeLimits, LinksPacket, BINARY_VERSION_1};
 use links_notation::LiNo;
 use std::fmt::Debug;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -235,14 +235,7 @@ pub fn read_any_document(
     let Some(packet) = LinksPacket::read_from(reader, limits)? else {
         return Ok(None);
     };
-    let progressive = packet
-        .last_address()
-        .is_some_and(|last| packet.min_width < address_tier(last, packet.external_references));
-    let options = BinaryLinoOptions {
-        external_references: packet.external_references,
-        sequences: packet.sequences_section,
-        progressive_widths: progressive,
-    };
+    let options = BinaryLinoOptions::of_packet(&packet);
     let document = decode_document(&packet, limits)?;
     Ok(Some((document, MessageFormat::Binary(options))))
 }

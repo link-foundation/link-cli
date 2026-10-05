@@ -1,10 +1,11 @@
-//! Prints the binary LiNo encoding of a document under every option set.
+//! Prints the binary LiNo encoding of a document under several option sets.
 //!
 //! ```text
 //! cargo run --example lino_binary_dump -- "() ((1 1))"
+//! VERBOSE=1 cargo run --example lino_binary_dump -- "(a b c)"
 //! ```
 
-use link_cli::protocol::{encode_document, parse_document, BinaryLinoOptions};
+use link_cli::protocol::{encode_document, parse_document, ArityRange, BinaryLinoOptions};
 
 fn main() {
     let text = std::env::args()
@@ -13,26 +14,36 @@ fn main() {
     let document = parse_document(&text).expect("valid LiNo");
     println!("document: {text}");
     for external_references in [false, true] {
-        for sequences in [false, true] {
-            let options = BinaryLinoOptions {
-                external_references,
-                sequences,
-                progressive_widths: false,
-            };
-            let packet = encode_document(&document, options).expect("encodable");
-            let bytes = packet.to_bytes().expect("serializable");
-            let hex = bytes
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect::<Vec<_>>()
-                .join(" ");
-            println!(
-                "external_references={external_references:<5} sequences={sequences:<5} {:>4} bytes: {hex}",
-                bytes.len()
-            );
-            if std::env::var_os("VERBOSE").is_some() {
-                println!("  doublets:  {:?}", packet.doublets);
-                println!("  sequences: {:?}", packet.sequences);
+        for arity in [
+            ArityRange::DOUBLETS,
+            ArityRange::between(2, 3),
+            ArityRange::at_least(1),
+        ] {
+            for packed_widths in [false, true] {
+                let options = BinaryLinoOptions {
+                    external_references,
+                    arity,
+                    packed_widths,
+                };
+                let packet = encode_document(&document, options).expect("encodable");
+                let bytes = packet.to_bytes().expect("serializable");
+                let hex = bytes
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                println!(
+                    "external={external_references:<5} arity={arity:<4} packed={packed_widths:<5} {:>4} bytes: {hex}",
+                    bytes.len()
+                );
+                if std::env::var_os("VERBOSE").is_some() {
+                    for section in &packet.sections {
+                        println!(
+                            "  gap {} arity {} width {}: {:?}",
+                            section.gap, section.arity, section.width, section.links
+                        );
+                    }
+                }
             }
         }
     }

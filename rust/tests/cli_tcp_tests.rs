@@ -1,6 +1,7 @@
 //! `clink --serve` and `clink --connect` end to end (issue #105).
 
 use link_cli::cli::{Cli, CliCommand};
+use link_cli::protocol::ArityRange;
 use std::io::{BufRead, BufReader};
 use std::process::{Child, Command, Output, Stdio};
 use tempfile::TempDir;
@@ -20,20 +21,24 @@ fn parses_tcp_options() {
         "127.0.0.1:7878",
         "--protocol=binary",
         "--external-references",
-        "--sequences",
-        "true",
-        "--progressive-widths=on",
+        "--arity",
+        "2..3",
+        "--packed-widths=on",
     ]);
     assert_eq!(cli.serve.as_deref(), Some("127.0.0.1:7878"));
     assert_eq!(cli.protocol.as_deref(), Some("binary"));
     assert!(cli.external_references);
-    assert!(cli.sequences);
-    assert!(cli.progressive_widths);
+    assert_eq!(cli.arity, ArityRange::between(2, 3));
+    assert!(cli.packed_widths);
+
+    let cli = parse_run(&["clink", "--connect=localhost:1", "--arity=1.."]);
+    assert_eq!(cli.arity, ArityRange::at_least(1));
 
     let cli = parse_run(&["clink", "--connect=localhost:1", "() ((1 1))"]);
     assert_eq!(cli.connect.as_deref(), Some("localhost:1"));
     assert_eq!(cli.query_arg.as_deref(), Some("() ((1 1))"));
-    assert!(!cli.external_references && !cli.sequences && !cli.progressive_widths);
+    assert!(!cli.external_references && !cli.packed_widths);
+    assert_eq!(cli.arity, ArityRange::DOUBLETS);
     assert!(Cli::help_text().contains("--serve <ADDR>"));
     assert!(Cli::help_text().contains("--connect <ADDR>"));
 }
@@ -106,7 +111,8 @@ fn clients_query_a_served_database_over_both_protocols() {
     assert_eq!(
         server.stdout(&[
             "--external-references",
-            "--sequences",
+            "--arity",
+            "1..",
             "((1: 1 1)) ((1: 1 2))"
         ]),
         "((1: 1 1)) ((1: 1 2))\n"
@@ -124,7 +130,7 @@ fn clients_query_a_served_database_over_both_protocols() {
     assert!(!failure.status.success());
     assert!(String::from_utf8_lossy(&failure.stderr).contains("server error"));
 
-    let conflicting = server.connect(&["--protocol", "text", "--sequences", ""]);
+    let conflicting = server.connect(&["--protocol", "text", "--arity", "2..3", ""]);
     assert!(!conflicting.status.success());
 }
 

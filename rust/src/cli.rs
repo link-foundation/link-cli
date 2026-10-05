@@ -1,5 +1,6 @@
 //! Command-line argument parsing for the `clink` binary.
 
+use crate::protocol::ArityRange;
 use anyhow::{bail, Result};
 use std::env;
 use std::ffi::OsString;
@@ -42,8 +43,8 @@ pub struct Cli {
     pub connect: Option<String>,
     pub protocol: Option<String>,
     pub external_references: bool,
-    pub sequences: bool,
-    pub progressive_widths: bool,
+    pub arity: ArityRange,
+    pub packed_widths: bool,
 }
 
 impl Default for Cli {
@@ -83,8 +84,8 @@ impl Default for Cli {
             connect: None,
             protocol: None,
             external_references: false,
-            sequences: false,
-            progressive_widths: false,
+            arity: ArityRange::DOUBLETS,
+            packed_widths: false,
         }
     }
 }
@@ -291,12 +292,12 @@ impl Cli {
                 cli.external_references = parse_bool("--external-references", value)?;
                 continue;
             }
-            if let Some(value) = inline_value(&arg, &["--sequences"]) {
-                cli.sequences = parse_bool("--sequences", value)?;
+            if let Some(value) = inline_value(&arg, &["--arity"]) {
+                cli.arity = parse_arity(value)?;
                 continue;
             }
-            if let Some(value) = inline_value(&arg, &["--progressive-widths"]) {
-                cli.progressive_widths = parse_bool("--progressive-widths", value)?;
+            if let Some(value) = inline_value(&arg, &["--packed-widths"]) {
+                cli.packed_widths = parse_bool("--packed-widths", value)?;
                 continue;
             }
 
@@ -404,11 +405,11 @@ impl Cli {
                 "--external-references" => {
                     cli.external_references = next_bool_value(&mut args, true)?;
                 }
-                "--sequences" => {
-                    cli.sequences = next_bool_value(&mut args, true)?;
+                "--arity" => {
+                    cli.arity = parse_arity(&next_value(&mut args, &arg)?)?;
                 }
-                "--progressive-widths" => {
-                    cli.progressive_widths = next_bool_value(&mut args, true)?;
+                "--packed-widths" => {
+                    cli.packed_widths = next_bool_value(&mut args, true)?;
                 }
                 "--" => {
                     for value in args.by_ref() {
@@ -516,10 +517,12 @@ impl Cli {
             "          or 'any' for --serve (default: any)\n",
             "      --external-references\n",
             "          Binary protocol: send numbers and characters as external references\n",
-            "      --sequences\n",
-            "          Binary protocol: send lists in the variable-length sequence section\n",
-            "      --progressive-widths\n",
-            "          Binary protocol: widen references link by link instead of uniformly\n",
+            "      --arity <RANGE>\n",
+            "          Binary protocol: link lengths to use, 'n', 'min..max' or 'min..'\n",
+            "          (default: 2, doublets only; e.g. 2..3 adds triplets, 1.. any length)\n",
+            "      --packed-widths\n",
+            "          Binary protocol: give each section of links the narrowest reference\n",
+            "          width it needs instead of one width for the whole packet\n",
             "  -h, --help\n",
             "          Print help\n",
             "  -V, --version\n",
@@ -530,6 +533,13 @@ impl Cli {
     pub fn version_text() -> String {
         format!("clink {}", env!("CARGO_PKG_VERSION"))
     }
+}
+
+fn parse_arity(value: &str) -> Result<ArityRange> {
+    value
+        .trim()
+        .parse()
+        .map_err(|error| anyhow::anyhow!("invalid value for '--arity': {error}"))
 }
 
 fn inline_value<'a>(arg: &'a str, names: &[&str]) -> Option<&'a str> {

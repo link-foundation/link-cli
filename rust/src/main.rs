@@ -415,13 +415,13 @@ where
     Ok(())
 }
 
-/// The binary options selected by `--external-references`, `--sequences` and
-/// `--progressive-widths`.
+/// The binary options selected by `--external-references`, `--arity` and
+/// `--packed-widths`.
 fn binary_options(cli: &Cli) -> BinaryLinoOptions {
     BinaryLinoOptions::default()
         .with_external_references(cli.external_references)
-        .with_sequences(cli.sequences)
-        .with_progressive_widths(cli.progressive_widths)
+        .with_arity(cli.arity)
+        .with_packed_widths(cli.packed_widths)
 }
 
 /// `--connect`: sends the query to a server and prints the reply.

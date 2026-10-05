@@ -5,13 +5,14 @@
 //!
 //! - [`TextLinoProtocol`]: UTF-8 LiNo text, each message ended by a line
 //!   holding only `.` (SMTP-style dot-stuffing keeps the framing unambiguous).
-//! - [`BinaryLinoProtocol`]: a self-delimiting [`LinksPacket`] whose header
-//!   carries the number of links and whose reference width grows with the
-//!   number of links (8, 16, 32 or 64 bits). Its optional features —
+//! - [`BinaryLinoProtocol`]: a self-delimiting [`LinksPacket`] made of
+//!   sections of links that share one reference width (1, 2, 4 or 8 bytes)
+//!   and one [arity range](ArityRange). By default every link is a doublet
+//!   and the whole packet uses the narrowest width that fits; the options
 //!   [external references](BinaryLinoOptions::external_references),
-//!   [the sequence section](BinaryLinoOptions::sequences) and
-//!   [progressive widths](BinaryLinoOptions::progressive_widths) — are all
-//!   off by default and can be switched on one by one.
+//!   [arity](BinaryLinoOptions::arity) (for example `2..3` or `1..`) and
+//!   [packed widths](BinaryLinoOptions::packed_widths) can be switched on
+//!   one by one.
 //!
 //! Both implement [`LinoProtocol`], so a [`LinoConnection`] or a
 //! [`LinksClient`] switches protocol by swapping one value. A
@@ -48,7 +49,7 @@ pub use error::{ProtocolError, ProtocolResult};
 pub use format::{format_document, format_link, format_reference, parse_document};
 pub use links_operations::LinksOperation;
 pub use mapping::{decode_document, encode_document, BinaryLinoOptions, LinoDocument};
-pub use packet::{DecodeLimits, LinksPacket, Reference};
+pub use packet::{ArityRange, DecodeLimits, LinksPacket, Reference, Section};
 pub use protocols::{
     is_binary_start, read_any_document, BinaryLinoProtocol, LinoConnection, LinoProtocol,
     MessageFormat, TextLinoProtocol,

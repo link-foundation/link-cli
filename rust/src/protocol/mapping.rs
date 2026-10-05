@@ -14,17 +14,21 @@
 //! - A link with an id is `(Identified id values…)`.
 //! - The document is a list of its top-level links, stored last (the root).
 //!
-//! Typed values and lists are encoded as a variable-length sequence
-//! `[marker, elements…]` when the sequence section is enabled, and as the
-//! doublet `(marker chain)` otherwise, where `chain` is the nil-terminated cons
-//! list `(e1 (e2 (… (en 0))))`. A plain list in sequence mode has no marker.
-//! Identical sub-links are emitted once and shared, because links are
-//! content-addressed.
+//! A link with two values is always a doublet. A list or typed value with
+//! any other number of values is a single link of that many references when
+//! [`BinaryLinoOptions::arity`] allows it (`[marker, elements…]` for typed
+//! values, the bare elements for lists), and otherwise the doublet
+//! `(marker chain)`, where `chain` is the nil-terminated cons list
+//! `(e1 (e2 (… (en 0))))`. Identical sub-links are emitted once and shared,
+//! because links are content-addressed.
+//!
+//! Links are numbered so that every link only refers to earlier ones:
+//! doublets of plain doublets first, then the rest in creation order.
 
 use super::error::{ProtocolError, ProtocolResult};
 use super::packet::{
-    external_capacity, DecodeLimits, LinksPacket, Reference, FIRST_LINK_ADDRESS, IDENTIFIED, LIST,
-    NULL, NUMBER, ONE, STRING,
+    external_capacity, ArityRange, DecodeLimits, LinksPacket, Reference, FIRST_LINK_ADDRESS,
+    IDENTIFIED, LIST, NULL, NUMBER, ONE, STRING,
 };
 use links_notation::LiNo;
 use std::collections::HashMap;
@@ -41,12 +45,13 @@ pub struct BinaryLinoOptions {
     /// Send numbers and code points as Hybrid external references instead of
     /// in-band unary links. Halves the internal address range of each width.
     pub external_references: bool,
-    /// Use the variable-length sequence section for lists, strings and links
-    /// with ids instead of cons chains of doublets.
-    pub sequences: bool,
-    /// Let the reference width grow with the address instead of using the
-    /// width of the largest address for every reference.
-    pub progressive_widths: bool,
+    /// The link lengths the encoder may use. The default, exactly 2, sends
+    /// only doublets; `2..3` adds triplets and `1..` any length. The range
+    /// must include 2.
+    pub arity: ArityRange,
+    /// Give every section of the packet the narrowest width its links need
+    /// instead of one width for the whole packet.
+    pub packed_widths: bool,
 }
 
 impl BinaryLinoOptions {
@@ -56,16 +61,34 @@ impl BinaryLinoOptions {
         self
     }
 
-    /// Enables or disables the sequence section.
-    pub fn with_sequences(mut self, enabled: bool) -> Self {
-        self.sequences = enabled;
+    /// Sets the link lengths the encoder may use.
+    pub fn with_arity(mut self, arity: ArityRange) -> Self {
+        self.arity = arity;
         self
     }
 
-    /// Enables or disables progressive reference widths.
-    pub fn with_progressive_widths(mut self, enabled: bool) -> Self {
-        self.progressive_widths = enabled;
+    /// Enables or disables packed widths.
+    pub fn with_packed_widths(mut self, enabled: bool) -> Self {
+        self.packed_widths = enabled;
         self
+    }
+
+    /// The options a peer most likely used to write `packet`, so a reply can
+    /// be written in the same style.
+    pub fn of_packet(packet: &LinksPacket) -> Self {
+        let (shortest, longest) = packet
+            .links()
+            .map(|(_, link)| link.len() as u64)
+            .fold((2, 2), |(shortest, longest), length| {
+                (shortest.min(length), longest.max(length))
+            });
+        let mut widths = packet.sections.iter().map(|section| section.width);
+        let first_width = widths.next();
+        Self {
+            external_references: packet.external_references,
+            arity: ArityRange::between(shortest, longest),
+            packed_widths: widths.any(|width| Some(width) != first_width),
+        }
     }
 }
 
@@ -74,18 +97,19 @@ pub fn encode_document(
     document: &[LiNo<String>],
     options: BinaryLinoOptions,
 ) -> ProtocolResult<LinksPacket> {
+    if !options.arity.contains(2) {
+        return Err(ProtocolError::Unencodable(format!(
+            "arity {} does not include doublets (2)",
+            options.arity
+        )));
+    }
     let mut encoder = Encoder::new(options);
     if !document.is_empty() {
         let items = document
             .iter()
             .map(|link| encoder.encode(link))
             .collect::<Vec<_>>();
-        if options.sequences {
-            encoder.sequences.push(items);
-        } else {
-            let chain = encoder.chain(&items);
-            encoder.doublets.push((Node::Internal(LIST), chain));
-        }
+        encoder.list(items);
     }
     encoder.finish()
 }
@@ -95,14 +119,14 @@ pub fn decode_document(
     packet: &LinksPacket,
     limits: &DecodeLimits,
 ) -> ProtocolResult<LinoDocument> {
-    let Some(root) = packet.last_address() else {
+    let decoder = Decoder::new(packet, limits)?;
+    let Some(root) = decoder.links.len().checked_sub(1) else {
         return Ok(Vec::new());
     };
-    let decoder = Decoder::new(packet, limits);
-    let root = Reference::Internal(root);
-    let items = match decoder.view(root)? {
-        View::Sequence(items) if !starts_with_marker(items) => items.to_vec(),
-        View::Doublet(Reference::Internal(LIST), chain) => decoder.chain(chain)?,
+    let root = Reference::Internal(FIRST_LINK_ADDRESS + root as u64);
+    let items = match decoder.view(root) {
+        View::Link(&[Reference::Internal(LIST), chain]) => decoder.chain(chain)?,
+        View::Link(items) if !starts_with_marker(items) => items.to_vec(),
         _ => return Err(ProtocolError::malformed("the root link is not a list")),
     };
     let mut budget = limits.max_nodes;
@@ -124,16 +148,17 @@ pub(crate) fn canonical_number(text: &str) -> Option<u64> {
 enum Node {
     Internal(u64),
     External(u64),
+    /// A doublet of plain doublets, markers and externals.
     Doublet(usize),
-    Sequence(usize),
+    /// Any other link; numbered after every [`Node::Doublet`].
+    Tuple(usize),
 }
 
 struct Encoder {
     options: BinaryLinoOptions,
-    doublets: Vec<(Node, Node)>,
-    sequences: Vec<Vec<Node>>,
-    doublet_index: HashMap<(Node, Node), usize>,
-    sequence_index: HashMap<Vec<Node>, usize>,
+    doublets: Vec<Vec<Node>>,
+    tuples: Vec<Vec<Node>>,
+    created: HashMap<Vec<Node>, Node>,
     powers: Vec<Node>,
 }
 
@@ -142,66 +167,70 @@ impl Encoder {
         Self {
             options,
             doublets: Vec::new(),
-            sequences: Vec::new(),
-            doublet_index: HashMap::new(),
-            sequence_index: HashMap::new(),
+            tuples: Vec::new(),
+            created: HashMap::new(),
             powers: vec![Node::Internal(ONE)],
         }
     }
 
-    fn doublet(&mut self, source: Node, target: Node) -> Node {
-        if let Some(&index) = self.doublet_index.get(&(source, target)) {
-            return Node::Doublet(index);
+    fn link(&mut self, items: Vec<Node>) -> Node {
+        if let Some(&node) = self.created.get(&items) {
+            return node;
         }
-        let index = self.doublets.len();
-        self.doublets.push((source, target));
-        self.doublet_index.insert((source, target), index);
-        Node::Doublet(index)
-    }
-
-    fn sequence(&mut self, items: Vec<Node>) -> Node {
-        if let Some(&index) = self.sequence_index.get(&items) {
-            return Node::Sequence(index);
-        }
-        let index = self.sequences.len();
-        self.sequences.push(items.clone());
-        self.sequence_index.insert(items, index);
-        Node::Sequence(index)
-    }
-
-    /// A two-element link. Fixed doublets may only refer to fixed doublets,
-    /// so a pair holding a sequence becomes a two-element sequence.
-    fn pair(&mut self, first: Node, second: Node) -> Node {
-        if matches!(first, Node::Sequence(_)) || matches!(second, Node::Sequence(_)) {
-            self.sequence(vec![first, second])
+        let refers_to_tuple = items.iter().any(|item| matches!(item, Node::Tuple(_)));
+        let node = if items.len() == 2 && !refers_to_tuple {
+            self.doublets.push(items.clone());
+            Node::Doublet(self.doublets.len() - 1)
         } else {
-            self.doublet(first, second)
-        }
+            self.tuples.push(items.clone());
+            Node::Tuple(self.tuples.len() - 1)
+        };
+        self.created.insert(items, node);
+        node
+    }
+
+    fn pair(&mut self, first: Node, second: Node) -> Node {
+        self.link(vec![first, second])
     }
 
     fn chain(&mut self, items: &[Node]) -> Node {
         items
             .iter()
             .rev()
-            .fold(Node::Internal(NULL), |tail, &head| self.doublet(head, tail))
+            .fold(Node::Internal(NULL), |tail, &head| self.pair(head, tail))
+    }
+
+    /// One link of `items` when the arity allows it, except that two items
+    /// are always a doublet.
+    fn fits_one_link(&self, items: usize) -> bool {
+        items != 2 && self.options.arity.contains(items as u64)
     }
 
     fn typed(&mut self, marker: u64, elements: Vec<Node>) -> Node {
-        if self.options.sequences {
+        if self.fits_one_link(elements.len() + 1) {
             let mut items = Vec::with_capacity(elements.len() + 1);
             items.push(Node::Internal(marker));
             items.extend(elements);
-            self.sequence(items)
+            self.link(items)
         } else {
             let chain = self.chain(&elements);
-            self.doublet(Node::Internal(marker), chain)
+            self.pair(Node::Internal(marker), chain)
+        }
+    }
+
+    fn list(&mut self, elements: Vec<Node>) -> Node {
+        match elements.as_slice() {
+            [] => Node::Internal(NULL),
+            &[first, second] => self.pair(first, second),
+            _ if self.fits_one_link(elements.len()) => self.link(elements),
+            _ => self.typed(LIST, elements),
         }
     }
 
     fn power(&mut self, exponent: usize) -> Node {
         while self.powers.len() <= exponent {
             let previous = *self.powers.last().expect("powers start with One");
-            let next = self.doublet(previous, previous);
+            let next = self.pair(previous, previous);
             self.powers.push(next);
         }
         self.powers[exponent]
@@ -215,7 +244,7 @@ impl Encoder {
         };
         rest.iter()
             .rev()
-            .fold(last, |sum, &power| self.doublet(power, sum))
+            .fold(last, |sum, &power| self.pair(power, sum))
     }
 
     fn scalar(&mut self, value: u64) -> Node {
@@ -232,7 +261,7 @@ impl Encoder {
                 return Node::External(value);
             }
             let unary = self.unary(value);
-            return self.doublet(Node::Internal(NUMBER), unary);
+            return self.pair(Node::Internal(NUMBER), unary);
         }
         let code_points = text
             .chars()
@@ -244,22 +273,10 @@ impl Encoder {
     fn encode(&mut self, link: &LiNo<String>) -> Node {
         match link {
             LiNo::Ref(text) => self.reference(text),
-            LiNo::Link { id: None, values } => match values.as_slice() {
-                [] => Node::Internal(NULL),
-                [first, second] => {
-                    let first = self.encode(first);
-                    let second = self.encode(second);
-                    self.pair(first, second)
-                }
-                values => {
-                    let elements = values.iter().map(|value| self.encode(value)).collect();
-                    if self.options.sequences {
-                        self.sequence(elements)
-                    } else {
-                        self.typed(LIST, elements)
-                    }
-                }
-            },
+            LiNo::Link { id: None, values } => {
+                let elements = values.iter().map(|value| self.encode(value)).collect();
+                self.list(elements)
+            }
             LiNo::Link {
                 id: Some(id),
                 values,
@@ -274,31 +291,31 @@ impl Encoder {
 
     fn finish(self) -> ProtocolResult<LinksPacket> {
         let doublet_count = self.doublets.len() as u64;
-        let resolve = |node: Node| match node {
+        let resolve = |node: &Node| match *node {
             Node::Internal(address) => Reference::Internal(address),
             Node::External(value) => Reference::External(value),
             Node::Doublet(index) => Reference::Internal(FIRST_LINK_ADDRESS + index as u64),
-            Node::Sequence(index) => {
+            Node::Tuple(index) => {
                 Reference::Internal(FIRST_LINK_ADDRESS + doublet_count + index as u64)
             }
         };
-        let mut packet = LinksPacket {
-            external_references: self.options.external_references,
-            sequences_section: self.options.sequences,
-            min_width: 1,
-            doublets: self
-                .doublets
-                .iter()
-                .map(|&(source, target)| (resolve(source), resolve(target)))
-                .collect(),
-            sequences: self
-                .sequences
-                .iter()
-                .map(|items| items.iter().map(|&item| resolve(item)).collect())
-                .collect(),
-        };
-        packet.min_width = packet.required_min_width(!self.options.progressive_widths)?;
-        Ok(packet)
+        let links: Vec<(u64, Vec<Reference>)> = self
+            .doublets
+            .iter()
+            .chain(&self.tuples)
+            .enumerate()
+            .map(|(index, items)| {
+                (
+                    FIRST_LINK_ADDRESS + index as u64,
+                    items.iter().map(resolve).collect(),
+                )
+            })
+            .collect();
+        LinksPacket::pack(
+            self.options.external_references,
+            &links,
+            self.options.packed_widths,
+        )
     }
 }
 
@@ -306,67 +323,78 @@ enum View<'a> {
     Null,
     Marker(u64),
     External(u64),
-    Doublet(Reference, Reference),
-    Sequence(&'a [Reference]),
+    Link(&'a [Reference]),
+}
+
+fn is_marker(reference: Reference) -> bool {
+    matches!(reference, Reference::Internal(address) if (ONE..FIRST_LINK_ADDRESS).contains(&address))
 }
 
 fn starts_with_marker(items: &[Reference]) -> bool {
-    matches!(items.first(), Some(Reference::Internal(address)) if (ONE..FIRST_LINK_ADDRESS).contains(address))
+    items.first().copied().is_some_and(is_marker)
 }
 
 struct Decoder<'a> {
-    packet: &'a LinksPacket,
     limits: &'a DecodeLimits,
-    /// `unary[i]` is the number doublet `i` denotes, if it is a unary number.
+    /// `links[i]` is the link at address `FIRST_LINK_ADDRESS + i`.
+    links: Vec<&'a [Reference]>,
+    /// `unary[i]` is the number link `i` denotes, if it is a unary number.
     unary: Vec<Option<u64>>,
 }
 
 impl<'a> Decoder<'a> {
-    fn new(packet: &'a LinksPacket, limits: &'a DecodeLimits) -> Self {
-        // Links only refer backwards, so one forward pass evaluates every
-        // unary number without recursion.
-        let mut unary: Vec<Option<u64>> = Vec::with_capacity(packet.doublets.len());
-        for &(source, target) in &packet.doublets {
+    fn new(packet: &'a LinksPacket, limits: &'a DecodeLimits) -> ProtocolResult<Self> {
+        let mut links: Vec<&'a [Reference]> = Vec::new();
+        let mut unary: Vec<Option<u64>> = Vec::new();
+        for (address, link) in packet.links() {
+            let expected = FIRST_LINK_ADDRESS + links.len() as u64;
+            if address != expected {
+                return Err(ProtocolError::malformed(format!(
+                    "a LiNo packet stores its links contiguously from address \
+                     {FIRST_LINK_ADDRESS}, found link {address} where {expected} belongs"
+                )));
+            }
+            if let Some(&target) = link.iter().find(
+                |&&reference| matches!(reference, Reference::Internal(target) if target >= address),
+            ) {
+                return Err(ProtocolError::malformed(format!(
+                    "link {address} refers to {target:?}, which is not an earlier link"
+                )));
+            }
+            // Links only refer backwards, so one forward pass evaluates every
+            // unary number without recursion.
             let value_of = |reference: Reference| match reference {
                 Reference::Internal(NULL) => Some(0),
                 Reference::Internal(ONE) => Some(1),
-                Reference::Internal(address) if address >= FIRST_LINK_ADDRESS => unary
-                    .get((address - FIRST_LINK_ADDRESS) as usize)
-                    .copied()
-                    .flatten(),
+                Reference::Internal(address) if address >= FIRST_LINK_ADDRESS => {
+                    unary[(address - FIRST_LINK_ADDRESS) as usize]
+                }
                 _ => None,
             };
-            let value = value_of(source)
-                .zip(value_of(target))
-                .and_then(|(source, target)| source.checked_add(target));
+            let value = match *link {
+                [source, target] => value_of(source)
+                    .zip(value_of(target))
+                    .and_then(|(source, target)| source.checked_add(target)),
+                _ => None,
+            };
             unary.push(value);
+            links.push(link);
         }
-        Self {
-            packet,
+        Ok(Self {
             limits,
+            links,
             unary,
-        }
+        })
     }
 
-    fn view(&self, reference: Reference) -> ProtocolResult<View<'a>> {
-        let address = match reference {
-            Reference::External(value) => return Ok(View::External(value)),
-            Reference::Internal(NULL) => return Ok(View::Null),
-            Reference::Internal(address) if address < FIRST_LINK_ADDRESS => {
-                return Ok(View::Marker(address))
+    fn view(&self, reference: Reference) -> View<'a> {
+        match reference {
+            Reference::External(value) => View::External(value),
+            Reference::Internal(NULL) => View::Null,
+            Reference::Internal(address) if address < FIRST_LINK_ADDRESS => View::Marker(address),
+            Reference::Internal(address) => {
+                View::Link(self.links[(address - FIRST_LINK_ADDRESS) as usize])
             }
-            Reference::Internal(address) => address - FIRST_LINK_ADDRESS,
-        };
-        let doublets = self.packet.doublets.len() as u64;
-        if address < doublets {
-            let (source, target) = self.packet.doublets[address as usize];
-            Ok(View::Doublet(source, target))
-        } else {
-            self.packet
-                .sequences
-                .get((address - doublets) as usize)
-                .map(|items| View::Sequence(items.as_slice()))
-                .ok_or_else(|| ProtocolError::malformed(format!("dangling reference {address}")))
         }
     }
 
@@ -375,33 +403,25 @@ impl<'a> Decoder<'a> {
             Reference::External(value) => Ok(value),
             Reference::Internal(NULL) => Ok(0),
             Reference::Internal(ONE) => Ok(1),
-            Reference::Internal(address) if address >= FIRST_LINK_ADDRESS => self
-                .unary
-                .get((address - FIRST_LINK_ADDRESS) as usize)
-                .copied()
-                .flatten()
+            Reference::Internal(address) if address >= FIRST_LINK_ADDRESS => self.unary
+                [(address - FIRST_LINK_ADDRESS) as usize]
                 .ok_or_else(|| ProtocolError::malformed("expected a unary number")),
             _ => Err(ProtocolError::malformed("expected a unary number")),
         }
     }
 
-    /// The elements of a typed value given in doublet form: a cons chain,
-    /// optionally ending in a sequence holding the remaining elements.
+    /// The elements of the cons list `(e1 (e2 (… (en 0))))`.
     fn chain(&self, mut tail: Reference) -> ProtocolResult<Vec<Reference>> {
         let mut elements = Vec::new();
         loop {
-            match self.view(tail)? {
+            match self.view(tail) {
                 View::Null => return Ok(elements),
-                View::Doublet(head, next) => {
+                View::Link(&[head, next]) => {
                     if elements.len() >= self.limits.max_nodes {
                         return Err(ProtocolError::LimitExceeded("chain too long".into()));
                     }
                     elements.push(head);
                     tail = next;
-                }
-                View::Sequence(items) => {
-                    elements.extend_from_slice(items);
-                    return Ok(elements);
                 }
                 _ => return Err(ProtocolError::malformed("broken element chain")),
             }
@@ -484,7 +504,7 @@ impl<'a> Decoder<'a> {
         *budget = budget
             .checked_sub(1)
             .ok_or_else(|| ProtocolError::LimitExceeded("too many LiNo nodes".into()))?;
-        match self.view(reference)? {
+        match self.view(reference) {
             View::Null => Ok(LiNo::Link {
                 id: None,
                 values: Vec::new(),
@@ -493,20 +513,17 @@ impl<'a> Decoder<'a> {
             View::Marker(marker) => Err(ProtocolError::malformed(format!(
                 "marker {marker} used as a value"
             ))),
-            View::Doublet(Reference::Internal(NUMBER), value) => {
+            View::Link(&[Reference::Internal(NUMBER), value]) => {
                 self.typed(NUMBER, &[value], depth, budget)
             }
-            View::Doublet(Reference::Internal(marker), chain)
-                if (ONE..FIRST_LINK_ADDRESS).contains(&marker) =>
+            View::Link(&[Reference::Internal(marker), chain])
+                if is_marker(Reference::Internal(marker)) =>
             {
                 let elements = self.chain(chain)?;
                 self.typed(marker, &elements, depth, budget)
             }
-            View::Doublet(source, target) => self.list(&[source, target], depth, budget),
-            View::Sequence(items) => match items.split_first() {
-                Some((&Reference::Internal(marker), elements))
-                    if (ONE..FIRST_LINK_ADDRESS).contains(&marker) =>
-                {
+            View::Link(items) => match items.split_first() {
+                Some((&Reference::Internal(marker), elements)) if starts_with_marker(items) => {
                     self.typed(marker, elements, depth, budget)
                 }
                 _ => self.list(items, depth, budget),

@@ -4,8 +4,8 @@ mod common;
 
 use common::{protocols, RunningServer};
 use link_cli::protocol::{
-    AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol, LinksClient, ProtocolError,
-    ServerOptions, TextLinoProtocol,
+    AcceptedProtocols, ArityRange, BinaryLinoOptions, BinaryLinoProtocol, LinksClient,
+    ProtocolError, ServerOptions, TextLinoProtocol,
 };
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
@@ -60,7 +60,7 @@ fn text_and_binary_replies_are_identical_documents() {
     let mut binary = server.client(BinaryLinoProtocol::with_options(
         BinaryLinoOptions::default()
             .with_external_references(true)
-            .with_sequences(true),
+            .with_arity(ArityRange::at_least(1)),
     ));
     text.query("() ((child: father mother))").unwrap();
     binary.query("() (('two words': 'it''s' \"x\"))").unwrap();

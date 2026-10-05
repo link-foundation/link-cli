@@ -1,29 +1,44 @@
-//! The binary links packet: the wire format of the binary LiNo protocol.
+//! Binary links notation: a self-delimiting packet of links.
+//!
+//! A packet stores links, each a tuple of one or more references, at
+//! implicit consecutive addresses. It knows nothing about LiNo; the LiNo
+//! protocol ([`crate::protocol::encode_document`]) and the store archive
+//! ([`crate::protocol::archive`]) are two uses of it.
 //!
 //! ```text
-//! byte 0      0x10 | flags        high nibble 1 = format version 1
-//!                                 bit 0  external references (Hybrid encoding)
-//!                                 bit 1  sequence section present
-//!                                 bits 2-3  log2 of the minimum width in bytes
-//! LEB128      N                   number of fixed doublets
-//! LEB128      M                   number of sequences (only when bit 1 is set)
-//! N times     source target       one fixed doublet, refs `width(a)` bytes each
-//! M times     size ref_1 … ref_n  one sequence, size and refs `width(a)` bytes each
+//! byte 0     0x10 | flags      high nibble 1 = format version 1
+//!                              bit 0     external references (Hybrid encoding)
+//!                              bit 1     explicit layout
+//!                              bits 2-3  log2 of the width (compact layout only)
+//!
+//! compact layout (bit 1 clear): one section of doublets right after the markers
+//! LEB128     N                 number of links, each `source target`
+//!
+//! explicit layout (bit 1 set):
+//! LEB128     S                 number of sections, then S section headers:
+//! LEB128     shape             bits 0-1  log2 of the reference width in bytes
+//!                              bit 2     a gap follows
+//!                              bit 3     variable arity (else every link
+//!                                        holds exactly min_arity references)
+//!                              bits 4+   min_arity, at least 1
+//! LEB128     gap               addresses skipped before the section (if bit 2)
+//! LEB128     extra_arity       0 = no maximum, else max - min (if bit 3)
+//! LEB128     count             number of links in the section
+//!
+//! links, section by section; a link in a variable-arity section starts
+//! with LEB128 (length - min_arity); every reference is `width` bytes,
+//! little-endian
 //! ```
 //!
-//! Addresses are implicit: `0` is null, `1..=5` are the reserved marker points
-//! (never transmitted), the fixed doublets occupy `6..6+N` and the sequences
-//! follow them, so the first sequence is "last fixed link + 1".
+//! Address `0` is null. The first section starts at `1 + gap` and every
+//! other section at `previous end + gap`, so gaps leave holes. The compact
+//! layout is exactly one section with gap 5 (the LiNo marker points
+//! `1..=5`), arity 2 and the header width.
 //!
-//! Every reference stored in the link at address `a` uses
-//! `width(a) = max(min_width, tier(a))` bytes, little-endian, where `tier(a)`
-//! is the smallest of 1, 2, 4 and 8 bytes able to hold `a`. Because a link may
-//! only refer to links *before* it, `tier(a)` always fits every internal
-//! reference it can contain. With `min_width` equal to the tier of the largest
-//! address the whole packet uses one uniform width (`0..256` addresses use
-//! 8-bit references, `256..65536` 16-bit, and so on); with a smaller
-//! `min_width` the width grows progressively with the address, the way LZW
-//! code widths grow with the dictionary.
+//! Each section has its own width: the narrowest of 1, 2, 4 and 8 bytes
+//! that holds every reference in it, so links that only refer to small
+//! addresses stay small wherever they live. [`LinksPacket::pack`] chooses
+//! the sections.
 //!
 //! With external references enabled the top bit of a reference marks it as
 //! external, exactly like `Platform.Data.Hybrid<T>`: value `v ≥ 1` is stored as
@@ -31,15 +46,23 @@
 //! That halves the internal range of every width (`0..128` for 8-bit, …).
 
 use super::error::{ProtocolError, ProtocolResult};
+use std::fmt;
 use std::io::{self, Read, Write};
+use std::str::FromStr;
 
 /// The high nibble of the header byte. Text messages never start with a byte
 /// in `0x10..=0x1F`, so the header doubles as a protocol detector.
 pub const BINARY_VERSION_1: u8 = 0x10;
 
 const FLAG_EXTERNAL_REFERENCES: u8 = 0b0001;
-const FLAG_SEQUENCES: u8 = 0b0010;
+const FLAG_EXPLICIT_LAYOUT: u8 = 0b0010;
 const WIDTH_SHIFT: u8 = 2;
+const WIDTH_BITS: u8 = 0b1100;
+
+const SHAPE_WIDTH_BITS: u64 = 0b0011;
+const SHAPE_HAS_GAP: u64 = 0b0100;
+const SHAPE_VARIABLE_ARITY: u64 = 0b1000;
+const SHAPE_MIN_ARITY_SHIFT: u32 = 4;
 
 /// Null link address.
 pub const NULL: u64 = 0;
@@ -53,8 +76,11 @@ pub const STRING: u64 = 3;
 pub const LIST: u64 = 4;
 /// Marker point `5`: `(Identified id values…)` is a link with an id.
 pub const IDENTIFIED: u64 = 5;
-/// Address of the first transmitted link.
+/// Address of the first link after the marker points.
 pub const FIRST_LINK_ADDRESS: u64 = 6;
+
+/// The addresses the compact layout skips: the marker points.
+const COMPACT_GAP: u64 = FIRST_LINK_ADDRESS - 1;
 
 /// The reference widths, in bytes, that a packet may use.
 pub const WIDTHS: [u8; 4] = [1, 2, 4, 8];
@@ -62,7 +88,7 @@ pub const WIDTHS: [u8; 4] = [1, 2, 4, 8];
 /// One reference inside a packet.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Reference {
-    /// An address inside the packet (`0` null, `1..=5` markers, then links).
+    /// A link address (`0` is null).
     Internal(u64),
     /// An external value, e.g. a number or a Unicode code point.
     External(u64),
@@ -73,13 +99,127 @@ impl Reference {
     pub const NULL: Reference = Reference::Internal(NULL);
 }
 
+/// How many references the links of a section hold: `min..=max`, where
+/// `max = None` means no upper bound.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ArityRange {
+    /// Fewest references in a link, at least 1.
+    pub min: u64,
+    /// Most references in a link, `None` for no limit.
+    pub max: Option<u64>,
+}
+
+impl ArityRange {
+    /// Links of exactly two references.
+    pub const DOUBLETS: ArityRange = ArityRange::exactly(2);
+
+    /// Links of exactly `arity` references.
+    pub const fn exactly(arity: u64) -> Self {
+        Self {
+            min: arity,
+            max: Some(arity),
+        }
+    }
+
+    /// Links of at least `min` references.
+    pub const fn at_least(min: u64) -> Self {
+        Self { min, max: None }
+    }
+
+    /// Links of `min..=max` references.
+    pub const fn between(min: u64, max: u64) -> Self {
+        Self {
+            min,
+            max: Some(max),
+        }
+    }
+
+    /// True when a link of `length` references fits the range.
+    pub fn contains(&self, length: u64) -> bool {
+        length >= self.min && self.max.is_none_or(|max| length <= max)
+    }
+
+    /// True when every link has the same number of references, so links
+    /// need no length prefix.
+    pub fn is_fixed(&self) -> bool {
+        self.max == Some(self.min)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        if self.min == 0 {
+            return Err("arity must be at least 1".into());
+        }
+        if self.min > u64::MAX >> SHAPE_MIN_ARITY_SHIFT {
+            return Err(format!("arity {} is too large", self.min));
+        }
+        if self.max.is_some_and(|max| max < self.min) {
+            return Err(format!("arity range {self} is empty"));
+        }
+        Ok(())
+    }
+
+    /// `0` for no maximum, otherwise `max - min`; only for variable arities.
+    fn extra(&self) -> u64 {
+        self.max.map_or(0, |max| max - self.min)
+    }
+
+    fn from_shape(min: u64, extra: Option<u64>) -> ProtocolResult<Self> {
+        let range = match extra {
+            None => Self::exactly(min),
+            Some(0) => Self::at_least(min),
+            Some(extra) => Self::between(
+                min,
+                min.checked_add(extra)
+                    .ok_or_else(|| ProtocolError::malformed("arity range overflows 64 bits"))?,
+            ),
+        };
+        range.validate().map_err(ProtocolError::malformed)?;
+        Ok(range)
+    }
+}
+
+impl Default for ArityRange {
+    fn default() -> Self {
+        Self::DOUBLETS
+    }
+}
+
+impl fmt::Display for ArityRange {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.max {
+            Some(max) if max == self.min => write!(formatter, "{max}"),
+            Some(max) => write!(formatter, "{}..{max}", self.min),
+            None => write!(formatter, "{}..", self.min),
+        }
+    }
+}
+
+impl FromStr for ArityRange {
+    type Err = String;
+
+    /// Parses `n`, `min..max` (inclusive) or `min..` (no maximum).
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        let number = |part: &str| {
+            part.parse::<u64>()
+                .map_err(|_| format!("invalid arity '{text}': expected n, min..max or min.."))
+        };
+        let range = match text.split_once("..") {
+            None => Self::exactly(number(text)?),
+            Some((min, "")) => Self::at_least(number(min)?),
+            Some((min, max)) => Self::between(number(min)?, number(max)?),
+        };
+        range.validate()?;
+        Ok(range)
+    }
+}
+
 /// Safety limits applied while decoding untrusted input.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DecodeLimits {
-    /// Maximum `N + M`.
+    /// Maximum number of links in a packet.
     pub max_links: u64,
-    /// Maximum total number of references inside all sequences.
-    pub max_sequence_items: u64,
+    /// Maximum number of references in all links of a packet.
+    pub max_references: u64,
     /// Maximum number of LiNo nodes a packet may expand to.
     pub max_nodes: usize,
     /// Maximum LiNo nesting depth.
@@ -92,7 +232,7 @@ impl Default for DecodeLimits {
     fn default() -> Self {
         Self {
             max_links: 1 << 22,
-            max_sequence_items: 1 << 24,
+            max_references: 1 << 24,
             max_nodes: 1 << 22,
             max_depth: 1024,
             max_text_bytes: 64 << 20,
@@ -100,19 +240,41 @@ impl Default for DecodeLimits {
     }
 }
 
+impl DecodeLimits {
+    /// Limits for trusted input such as a store archive: only the address
+    /// space bounds the packet.
+    pub fn unlimited() -> Self {
+        Self {
+            max_links: u64::MAX,
+            max_references: u64::MAX,
+            max_nodes: usize::MAX,
+            max_depth: usize::MAX,
+            max_text_bytes: usize::MAX,
+        }
+    }
+}
+
+/// A run of links at consecutive addresses sharing an arity range and a
+/// reference width.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Section {
+    /// Addresses skipped before the first link of the section.
+    pub gap: u64,
+    /// The number of references each link may hold.
+    pub arity: ArityRange,
+    /// Bytes per reference: 1, 2, 4 or 8.
+    pub width: u8,
+    /// The links, in address order.
+    pub links: Vec<Vec<Reference>>,
+}
+
 /// A decoded binary links packet.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct LinksPacket {
     /// Header bit 0: references may be external (Hybrid encoding).
     pub external_references: bool,
-    /// Header bit 1: the packet carries a sequence section (possibly empty).
-    pub sequences_section: bool,
-    /// Minimum reference width in bytes: 1, 2, 4 or 8.
-    pub min_width: u8,
-    /// Fixed doublets at addresses `6..6+N`.
-    pub doublets: Vec<(Reference, Reference)>,
-    /// Variable-length sequences at addresses `6+N..6+N+M`.
-    pub sequences: Vec<Vec<Reference>>,
+    /// The links, section by section.
+    pub sections: Vec<Section>,
 }
 
 /// Largest internal address that fits in `width` bytes.
@@ -128,11 +290,6 @@ pub fn internal_capacity(width: u8, external_references: bool) -> u64 {
 /// Largest external value that fits in `width` bytes.
 pub fn external_capacity(width: u8) -> u64 {
     (1u64 << (u32::from(width) * 8 - 1)) - 1
-}
-
-/// Largest unsigned value (a sequence size) that fits in `width` bytes.
-pub fn unsigned_capacity(width: u8) -> u64 {
-    internal_capacity(width, false)
 }
 
 /// The narrowest width able to hold the internal address `address`.
@@ -176,118 +333,207 @@ fn width_code(width: u8) -> ProtocolResult<u8> {
         .ok_or_else(|| ProtocolError::Unencodable(format!("invalid width {width}")))
 }
 
-impl LinksPacket {
-    /// Address of the fixed doublet with zero-based index `index`.
-    pub fn doublet_address(&self, index: usize) -> u64 {
-        FIRST_LINK_ADDRESS + index as u64
-    }
+fn width_from_code(code: u64) -> ProtocolResult<u8> {
+    usize::try_from(code)
+        .ok()
+        .and_then(|code| WIDTHS.get(code).copied())
+        .ok_or_else(|| ProtocolError::malformed(format!("invalid width code {code}")))
+}
 
-    /// Address of the sequence with zero-based index `index`.
-    pub fn sequence_address(&self, index: usize) -> u64 {
-        FIRST_LINK_ADDRESS + self.doublets.len() as u64 + index as u64
-    }
-
-    /// The highest address in the packet, or `None` for an empty packet.
-    pub fn last_address(&self) -> Option<u64> {
-        let count = self.doublets.len() + self.sequences.len();
-        (count > 0).then(|| FIRST_LINK_ADDRESS + count as u64 - 1)
-    }
-
-    /// Width used by every reference of the link at `address`.
-    pub fn width_at(&self, address: u64) -> u8 {
-        self.min_width
-            .max(address_tier(address, self.external_references))
-    }
-
-    /// The smallest `min_width` able to encode the packet.
-    ///
-    /// With `uniform` set, the result is at least the tier of the last
-    /// address, so every reference in the packet has the same width.
-    pub fn required_min_width(&self, uniform: bool) -> ProtocolResult<u8> {
-        let mut needed = 1u8;
-        let mut note = |address: u64, need: u8| {
-            if need > address_tier(address, self.external_references) {
-                needed = needed.max(need);
+/// The narrowest width able to hold `reference`.
+pub fn reference_width(reference: Reference, external_references: bool) -> ProtocolResult<u8> {
+    match reference {
+        Reference::Internal(address) => {
+            if address > internal_capacity(8, external_references) {
+                return Err(ProtocolError::Unencodable(format!(
+                    "address {address} exceeds the internal range"
+                )));
             }
-        };
-        for (index, &(source, target)) in self.doublets.iter().enumerate() {
-            let address = self.doublet_address(index);
-            note(
-                address,
-                self.reference_need(source)?
-                    .max(self.reference_need(target)?),
-            );
+            Ok(address_tier(address, external_references))
         }
-        for (index, items) in self.sequences.iter().enumerate() {
-            let address = self.sequence_address(index);
-            let size_need = WIDTHS
+        Reference::External(value) => {
+            if !external_references {
+                return Err(ProtocolError::Unencodable(
+                    "external reference in a packet without external references".into(),
+                ));
+            }
+            WIDTHS
                 .into_iter()
-                .find(|&width| unsigned_capacity(width) >= items.len() as u64)
-                .unwrap_or(8);
-            let mut need = size_need;
-            for &item in items {
-                need = need.max(self.reference_need(item)?);
-            }
-            note(address, need);
-        }
-        if uniform {
-            if let Some(last) = self.last_address() {
-                needed = needed.max(address_tier(last, self.external_references));
-            }
-        }
-        Ok(needed)
-    }
-
-    fn reference_need(&self, reference: Reference) -> ProtocolResult<u8> {
-        match reference {
-            Reference::Internal(_) => Ok(1),
-            Reference::External(value) => {
-                if !self.external_references {
-                    return Err(ProtocolError::Unencodable(
-                        "external reference in a packet without external references".into(),
-                    ));
-                }
-                WIDTHS
-                    .into_iter()
-                    .find(|&width| external_capacity(width) >= value)
-                    .ok_or_else(|| {
-                        ProtocolError::Unencodable(format!(
-                            "external value {value} exceeds 63 bits"
-                        ))
-                    })
-            }
+                .find(|&width| external_capacity(width) >= value)
+                .ok_or_else(|| {
+                    ProtocolError::Unencodable(format!("external value {value} exceeds 63 bits"))
+                })
         }
     }
+}
 
-    fn header_byte(&self) -> ProtocolResult<u8> {
-        let mut header = BINARY_VERSION_1 | (width_code(self.min_width)? << WIDTH_SHIFT);
-        if self.external_references {
-            header |= FLAG_EXTERNAL_REFERENCES;
+impl Section {
+    fn write_header(&self, out: &mut Vec<u8>) -> ProtocolResult<()> {
+        let mut shape =
+            u64::from(width_code(self.width)?) | (self.arity.min << SHAPE_MIN_ARITY_SHIFT);
+        if self.gap != 0 {
+            shape |= SHAPE_HAS_GAP;
         }
-        if self.sequences_section {
-            header |= FLAG_SEQUENCES;
+        if !self.arity.is_fixed() {
+            shape |= SHAPE_VARIABLE_ARITY;
         }
-        Ok(header)
+        write_leb128(out, shape);
+        if self.gap != 0 {
+            write_leb128(out, self.gap);
+        }
+        if !self.arity.is_fixed() {
+            write_leb128(out, self.arity.extra());
+        }
+        write_leb128(out, self.links.len() as u64);
+        Ok(())
     }
 
-    fn raw_reference(&self, reference: Reference, address: u64, width: u8) -> ProtocolResult<u64> {
-        match reference {
-            Reference::Internal(target) => {
-                if target >= address {
-                    return Err(ProtocolError::Unencodable(format!(
-                        "link {address} refers forward to {target}"
-                    )));
-                }
-                Ok(target)
+    /// Reads a section header, returning the still empty section and its
+    /// link count.
+    fn read_header(reader: &mut dyn Read) -> ProtocolResult<(Self, u64)> {
+        let shape = read_leb128(reader)?;
+        let width = width_from_code(shape & SHAPE_WIDTH_BITS)?;
+        let gap = if shape & SHAPE_HAS_GAP != 0 {
+            read_leb128(reader)?
+        } else {
+            0
+        };
+        let extra = if shape & SHAPE_VARIABLE_ARITY != 0 {
+            Some(read_leb128(reader)?)
+        } else {
+            None
+        };
+        let arity = ArityRange::from_shape(shape >> SHAPE_MIN_ARITY_SHIFT, extra)?;
+        let count = read_leb128(reader)?;
+        let section = Section {
+            gap,
+            arity,
+            width,
+            links: Vec::new(),
+        };
+        Ok((section, count))
+    }
+
+    fn validate(&self) -> ProtocolResult<()> {
+        width_code(self.width)?;
+        self.arity.validate().map_err(ProtocolError::Unencodable)?;
+        for link in &self.links {
+            if !self.arity.contains(link.len() as u64) {
+                return Err(ProtocolError::Unencodable(format!(
+                    "a link of {} references in a section of arity {}",
+                    link.len(),
+                    self.arity
+                )));
             }
-            Reference::External(value) => {
-                if !self.external_references || value > external_capacity(width) {
-                    return Err(ProtocolError::Unencodable(format!(
-                        "external value {value} does not fit {width} byte(s) at link {address}"
-                    )));
-                }
-                Ok(encode_external(value, width))
+        }
+        Ok(())
+    }
+}
+
+impl LinksPacket {
+    /// An empty packet.
+    pub fn new(external_references: bool) -> Self {
+        Self {
+            external_references,
+            sections: Vec::new(),
+        }
+    }
+
+    /// Lays out `links` — `(address, references)` in ascending address
+    /// order — in as few bytes as the format allows.
+    ///
+    /// Holes between addresses start new sections. Without `packed_widths`
+    /// every section uses the width of the widest reference, so all
+    /// references have the same size. With it each section gets the
+    /// narrowest width its links need and sections split wherever that saves
+    /// bytes; the result is never larger than the uniform one.
+    pub fn pack(
+        external_references: bool,
+        links: &[(u64, Vec<Reference>)],
+        packed_widths: bool,
+    ) -> ProtocolResult<Self> {
+        let planner = SectionPlanner::new(external_references, links)?;
+        let uniform_layout = planner.plan(false);
+        let uniform = Self::lay_out(external_references, links, &uniform_layout);
+        if !packed_widths {
+            return Ok(uniform);
+        }
+        let packed_layout = planner.plan(true);
+        if packed_layout == uniform_layout {
+            return Ok(uniform);
+        }
+        let packed = Self::lay_out(external_references, links, &packed_layout);
+        Ok(if packed.to_bytes()?.len() < uniform.to_bytes()?.len() {
+            packed
+        } else {
+            uniform
+        })
+    }
+
+    /// Splits `links` into sections of `(link count, width)`.
+    fn lay_out(
+        external_references: bool,
+        links: &[(u64, Vec<Reference>)],
+        layout: &[(usize, u8)],
+    ) -> Self {
+        let mut sections = Vec::with_capacity(layout.len());
+        let mut next_address = 1u64;
+        let mut remaining = links;
+        for &(count, width) in layout {
+            let (members, rest) = remaining.split_at(count);
+            remaining = rest;
+            let start = members[0].0;
+            let (shortest, longest) = members
+                .iter()
+                .map(|(_, link)| link.len() as u64)
+                .fold((u64::MAX, 0), |(shortest, longest), length| {
+                    (shortest.min(length), longest.max(length))
+                });
+            sections.push(Section {
+                gap: start - next_address,
+                arity: ArityRange::between(shortest, longest),
+                width,
+                links: members.iter().map(|(_, link)| link.clone()).collect(),
+            });
+            next_address = start + count as u64;
+        }
+        Self {
+            external_references,
+            sections,
+        }
+    }
+
+    /// Every link with its address, in address order.
+    pub fn links(&self) -> impl Iterator<Item = (u64, &[Reference])> + '_ {
+        let mut next_address = 1u64;
+        self.sections.iter().flat_map(move |section| {
+            let start = next_address.saturating_add(section.gap);
+            next_address = start.saturating_add(section.links.len() as u64);
+            section
+                .links
+                .iter()
+                .enumerate()
+                .map(move |(index, link)| (start + index as u64, link.as_slice()))
+        })
+    }
+
+    /// The number of links in the packet.
+    pub fn link_count(&self) -> u64 {
+        self.sections
+            .iter()
+            .map(|section| section.links.len() as u64)
+            .sum()
+    }
+
+    fn is_compact(&self) -> bool {
+        match self.sections.as_slice() {
+            [] => true,
+            [only] => {
+                only.gap == COMPACT_GAP
+                    && only.arity == ArityRange::DOUBLETS
+                    && !only.links.is_empty()
             }
+            _ => false,
         }
     }
 
@@ -300,38 +546,59 @@ impl LinksPacket {
 
     /// Writes the packet to `writer`.
     pub fn write_to(&self, writer: &mut dyn Write) -> ProtocolResult<()> {
-        if !self.sequences_section && !self.sequences.is_empty() {
-            return Err(ProtocolError::Unencodable(
-                "sequences in a packet without a sequence section".into(),
-            ));
+        let mut header = BINARY_VERSION_1;
+        if self.external_references {
+            header |= FLAG_EXTERNAL_REFERENCES;
         }
-        let mut out = vec![self.header_byte()?];
-        write_leb128(&mut out, self.doublets.len() as u64);
-        if self.sequences_section {
-            write_leb128(&mut out, self.sequences.len() as u64);
+        let mut out = Vec::new();
+        let mut next_address = 1u64;
+        for section in &self.sections {
+            section.validate()?;
+            next_address = next_address
+                .checked_add(section.gap)
+                .and_then(|start| start.checked_add(section.links.len() as u64))
+                .ok_or_else(|| ProtocolError::Unencodable("addresses overflow 64 bits".into()))?;
         }
-        for (index, &(source, target)) in self.doublets.iter().enumerate() {
-            let address = self.doublet_address(index);
-            let width = self.width_at(address);
-            write_raw(&mut out, self.raw_reference(source, address, width)?, width);
-            write_raw(&mut out, self.raw_reference(target, address, width)?, width);
-        }
-        for (index, items) in self.sequences.iter().enumerate() {
-            let address = self.sequence_address(index);
-            let width = self.width_at(address);
-            let size = items.len() as u64;
-            if size > unsigned_capacity(width) {
-                return Err(ProtocolError::Unencodable(format!(
-                    "sequence size {size} does not fit {width} byte(s) at link {address}"
-                )));
+        if self.is_compact() {
+            let width = self.sections.first().map_or(1, |section| section.width);
+            header |= width_code(width)? << WIDTH_SHIFT;
+            out.push(header);
+            write_leb128(&mut out, self.link_count());
+        } else {
+            out.push(header | FLAG_EXPLICIT_LAYOUT);
+            write_leb128(&mut out, self.sections.len() as u64);
+            for section in &self.sections {
+                section.write_header(&mut out)?;
             }
-            write_raw(&mut out, size, width);
-            for &item in items {
-                write_raw(&mut out, self.raw_reference(item, address, width)?, width);
+        }
+        for section in &self.sections {
+            for link in &section.links {
+                if !section.arity.is_fixed() {
+                    write_leb128(&mut out, link.len() as u64 - section.arity.min);
+                }
+                for &reference in link {
+                    write_raw(
+                        &mut out,
+                        self.raw_reference(reference, section.width)?,
+                        section.width,
+                    );
+                }
             }
         }
         writer.write_all(&out)?;
         Ok(())
+    }
+
+    fn raw_reference(&self, reference: Reference, width: u8) -> ProtocolResult<u64> {
+        if reference_width(reference, self.external_references)? > width {
+            return Err(ProtocolError::Unencodable(format!(
+                "{reference:?} does not fit {width} byte(s)"
+            )));
+        }
+        Ok(match reference {
+            Reference::Internal(address) => address,
+            Reference::External(value) => encode_external(value, width),
+        })
     }
 
     /// Parses a complete packet; trailing bytes are an error.
@@ -360,73 +627,205 @@ impl LinksPacket {
                 "unsupported binary header byte 0x{header:02X}"
             )));
         }
-        let mut packet = LinksPacket {
-            external_references: header & FLAG_EXTERNAL_REFERENCES != 0,
-            sequences_section: header & FLAG_SEQUENCES != 0,
-            min_width: WIDTHS[usize::from((header >> WIDTH_SHIFT) & 0b11)],
-            ..LinksPacket::default()
-        };
-        let doublet_count = read_leb128(reader)?;
-        let sequence_count = if packet.sequences_section {
-            read_leb128(reader)?
-        } else {
-            0
-        };
-        let total = doublet_count
-            .checked_add(sequence_count)
-            .filter(|&total| total <= limits.max_links)
-            .ok_or_else(|| {
-                ProtocolError::LimitExceeded(format!(
-                    "packet declares {doublet_count} + {sequence_count} links, limit is {}",
-                    limits.max_links
-                ))
-            })?;
-        packet.doublets.reserve(total.min(4096) as usize);
-        for index in 0..doublet_count as usize {
-            let address = packet.doublet_address(index);
-            let width = packet.width_at(address);
-            let source = packet.read_reference(reader, address, width)?;
-            let target = packet.read_reference(reader, address, width)?;
-            packet.doublets.push((source, target));
-        }
-        let mut items_left = limits.max_sequence_items;
-        for index in 0..sequence_count as usize {
-            let address = packet.sequence_address(index);
-            let width = packet.width_at(address);
-            let size = read_raw(reader, width)?;
-            items_left = items_left.checked_sub(size).ok_or_else(|| {
-                ProtocolError::LimitExceeded(format!(
-                    "sequence items exceed the limit of {}",
-                    limits.max_sequence_items
-                ))
-            })?;
-            let mut items = Vec::with_capacity(size.min(4096) as usize);
-            for _ in 0..size {
-                items.push(packet.read_reference(reader, address, width)?);
+        let mut packet = LinksPacket::new(header & FLAG_EXTERNAL_REFERENCES != 0);
+        let mut counts = Vec::new();
+        if header & FLAG_EXPLICIT_LAYOUT == 0 {
+            let width = width_from_code(u64::from((header & WIDTH_BITS) >> WIDTH_SHIFT))?;
+            let count = read_leb128(reader)?;
+            if count > 0 {
+                packet.sections.push(Section {
+                    gap: COMPACT_GAP,
+                    arity: ArityRange::DOUBLETS,
+                    width,
+                    links: Vec::new(),
+                });
+                counts.push(count);
             }
-            packet.sequences.push(items);
+        } else {
+            if header & WIDTH_BITS != 0 {
+                return Err(ProtocolError::malformed(
+                    "the explicit layout keeps the header width bits clear",
+                ));
+            }
+            let section_count = read_leb128(reader)?;
+            if section_count > limits.max_links {
+                return Err(Self::too_many_links(limits));
+            }
+            let mut next_address = 1u64;
+            for _ in 0..section_count {
+                let (section, count) = Section::read_header(reader)?;
+                next_address = next_address
+                    .checked_add(section.gap)
+                    .and_then(|start| start.checked_add(count))
+                    .ok_or_else(|| ProtocolError::malformed("addresses overflow 64 bits"))?;
+                packet.sections.push(section);
+                counts.push(count);
+            }
+        }
+        counts
+            .iter()
+            .try_fold(0u64, |total, &count| total.checked_add(count))
+            .filter(|&total| total <= limits.max_links)
+            .ok_or_else(|| Self::too_many_links(limits))?;
+        let mut references_left = limits.max_references;
+        let external_references = packet.external_references;
+        for (section, count) in packet.sections.iter_mut().zip(counts) {
+            section.links.reserve(count.min(4096) as usize);
+            for _ in 0..count {
+                let length = if section.arity.is_fixed() {
+                    section.arity.min
+                } else {
+                    let length = read_leb128(reader)?
+                        .checked_add(section.arity.min)
+                        .filter(|&length| section.arity.contains(length))
+                        .ok_or_else(|| {
+                            ProtocolError::malformed(format!(
+                                "link length outside the section arity {}",
+                                section.arity
+                            ))
+                        })?;
+                    length
+                };
+                references_left = references_left.checked_sub(length).ok_or_else(|| {
+                    ProtocolError::LimitExceeded(format!(
+                        "references exceed the limit of {}",
+                        limits.max_references
+                    ))
+                })?;
+                let mut link = Vec::with_capacity(length.min(4096) as usize);
+                for _ in 0..length {
+                    let raw = read_raw(reader, section.width)?;
+                    link.push(
+                        match decode_external(raw, section.width).filter(|_| external_references) {
+                            Some(value) => Reference::External(value),
+                            None => Reference::Internal(raw),
+                        },
+                    );
+                }
+                section.links.push(link);
+            }
         }
         Ok(Some(packet))
     }
 
-    fn read_reference(
-        &self,
-        reader: &mut dyn Read,
-        address: u64,
-        width: u8,
-    ) -> ProtocolResult<Reference> {
-        let raw = read_raw(reader, width)?;
-        if self.external_references {
-            if let Some(value) = decode_external(raw, width) {
-                return Ok(Reference::External(value));
+    fn too_many_links(limits: &DecodeLimits) -> ProtocolError {
+        ProtocolError::LimitExceeded(format!(
+            "packet declares more than {} links",
+            limits.max_links
+        ))
+    }
+}
+
+/// Estimated bytes of a section header (shape and count), used to weigh a split.
+const SECTION_HEADER_ESTIMATE: u64 = 2;
+/// Estimated extra bytes of a variable-arity section: its `extra_arity`
+/// header field, and the length prefix of each link.
+const VARIABLE_ARITY_ESTIMATE: u64 = 1;
+const UNREACHABLE: u64 = u64::MAX / 4;
+/// Planner states: a width code (0..4) times fixed (0) or variable (1) arity.
+const STATES: usize = WIDTHS.len() * 2;
+
+/// Splits links into sections with a linear dynamic program.
+///
+/// After link `k`, `cost[s]` is the fewest estimated bytes for links
+/// `0..=k` with link `k` in a section of state `s`. A link either continues
+/// the section of the previous link (same state, no hole between them and,
+/// for a fixed arity, the same length) or opens a new section after the
+/// cheapest previous state, paying for a section header.
+struct SectionPlanner<'a> {
+    links: &'a [(u64, Vec<Reference>)],
+    needs: Vec<u8>,
+}
+
+impl<'a> SectionPlanner<'a> {
+    fn new(external_references: bool, links: &'a [(u64, Vec<Reference>)]) -> ProtocolResult<Self> {
+        let mut needs = Vec::with_capacity(links.len());
+        let mut previous_address = 0u64;
+        for (address, link) in links {
+            if *address <= previous_address {
+                return Err(ProtocolError::Unencodable(format!(
+                    "link addresses must ascend from 1, got {address} after {previous_address}"
+                )));
+            }
+            if link.is_empty() {
+                return Err(ProtocolError::Unencodable(format!(
+                    "link {address} has no references"
+                )));
+            }
+            previous_address = *address;
+            let mut need = 1u8;
+            for &reference in link {
+                need = need.max(reference_width(reference, external_references)?);
+            }
+            needs.push(need);
+        }
+        Ok(Self { links, needs })
+    }
+
+    fn first_cheapest(costs: &[u64; STATES]) -> usize {
+        let mut best = 0;
+        for state in 1..STATES {
+            if costs[state] < costs[best] {
+                best = state;
             }
         }
-        if raw >= address {
-            return Err(ProtocolError::malformed(format!(
-                "link {address} refers to {raw}, which is not an earlier link"
-            )));
+        best
+    }
+
+    /// The sections as `(link count, width)` pairs; with `packed_widths`
+    /// every width may be used, otherwise only the widest one needed.
+    fn plan(&self, packed_widths: bool) -> Vec<(usize, u8)> {
+        if self.links.is_empty() {
+            return Vec::new();
         }
-        Ok(Reference::Internal(raw))
+        let widest = self.needs.iter().copied().max().unwrap_or(1);
+        let allowed_widths = WIDTHS.map(|width| packed_widths || width == widest);
+        let mut opens_section = vec![0u8; self.links.len()];
+        let mut previous_best = vec![0u8; self.links.len()];
+        let mut costs = [UNREACHABLE; STATES];
+        for (index, (address, link)) in self.links.iter().enumerate() {
+            let best = Self::first_cheapest(&costs);
+            previous_best[index] = best as u8;
+            let cheapest_before = if index == 0 { 0 } else { costs[best] };
+            let continues = index > 0 && self.links[index - 1].0 + 1 == *address;
+            let same_length = index > 0 && self.links[index - 1].1.len() == link.len();
+            let mut next = [UNREACHABLE; STATES];
+            for state in 0..STATES {
+                let width_index = state / 2;
+                let variable = state % 2 == 1;
+                let width = WIDTHS[width_index];
+                if !allowed_widths[width_index] || width < self.needs[index] {
+                    continue;
+                }
+                let variable_estimate = if variable { VARIABLE_ARITY_ESTIMATE } else { 0 };
+                let body = link.len() as u64 * u64::from(width) + variable_estimate;
+                let opening_cost = cheapest_before + SECTION_HEADER_ESTIMATE + variable_estimate;
+                let continuing_cost = if continues && (variable || same_length) {
+                    costs[state]
+                } else {
+                    UNREACHABLE
+                };
+                if continuing_cost <= opening_cost {
+                    next[state] = continuing_cost + body;
+                } else {
+                    next[state] = opening_cost + body;
+                    opens_section[index] |= 1 << state;
+                }
+            }
+            costs = next;
+        }
+        let mut sections = Vec::new();
+        let mut state = Self::first_cheapest(&costs);
+        let mut end = self.links.len();
+        for index in (0..self.links.len()).rev() {
+            if opens_section[index] & (1 << state) != 0 {
+                sections.push((end - index, WIDTHS[state / 2]));
+                end = index;
+                state = usize::from(previous_best[index]);
+            }
+        }
+        sections.reverse();
+        sections
     }
 }
 
