@@ -7,8 +7,8 @@ use anyhow::{anyhow, bail, Result};
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::import_lino_file;
 use link_cli::protocol::{
-    AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer,
-    LinoProtocol, ServerOptions, TextLinoProtocol,
+    export_store_file, import_store_file, AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol,
+    LinksClient, LinksServer, LinoProtocol, ServerOptions, TextLinoProtocol,
 };
 use link_cli::{
     make_triggers_database_filename, CommitMode, LogRetentionPolicy, NamedTypeLinks,
@@ -366,25 +366,19 @@ where
         storage.print_all_lino()?;
     }
 
-    if let Some(input_path) = &cli.lino_input {
-        import_lino_file(storage, input_path)?;
-    }
+    import_inputs(cli, storage)?;
 
     if let Some(link_id) = cli.structure {
         let structure_formatted = storage.format_structure(link_id)?;
         println!("{structure_formatted}");
-        if let Some(output_path) = &cli.lino_output {
-            storage.write_lino_output(output_path)?;
-        }
+        export_outputs(cli, storage)?;
         return Ok(());
     }
 
     let effective_query = cli.query.as_deref().or(cli.query_arg.as_deref());
 
     if trigger_stage(cli, storage, effective_query)? {
-        if let Some(output_path) = &cli.lino_output {
-            storage.write_lino_output(output_path)?;
-        }
+        export_outputs(cli, storage)?;
         return Ok(());
     }
 
@@ -408,10 +402,32 @@ where
         storage.print_all_lino()?;
     }
 
+    export_outputs(cli, storage)?;
+
+    Ok(())
+}
+
+/// Imports the store archive of `--import-binary`, then the LiNo file of
+/// `--in`.
+fn import_inputs<S: NamedTypeLinks>(cli: &Cli, storage: &mut S) -> Result<()> {
+    if let Some(input_path) = &cli.binary_input {
+        import_store_file(storage, input_path)?;
+    }
+    if let Some(input_path) = &cli.lino_input {
+        import_lino_file(storage, input_path)?;
+    }
+    Ok(())
+}
+
+/// Writes the whole store to the LiNo file of `--out` and the store archive
+/// of `--export-binary`.
+fn export_outputs<S: NamedTypeLinks>(cli: &Cli, storage: &mut S) -> Result<()> {
     if let Some(output_path) = &cli.lino_output {
         storage.write_lino_output(output_path)?;
     }
-
+    if let Some(output_path) = &cli.binary_output {
+        export_store_file(storage, output_path)?;
+    }
     Ok(())
 }
 

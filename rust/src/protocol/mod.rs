@@ -34,6 +34,7 @@
 //! assert_eq!(format_document(&document), "() ((1 1))");
 //! ```
 
+pub mod archive;
 mod client;
 mod error;
 mod format;
@@ -44,6 +45,7 @@ mod protocols;
 mod remote_links;
 mod server;
 
+pub use archive::{export_store, export_store_file, import_store, import_store_file};
 pub use client::LinksClient;
 pub use error::{ProtocolError, ProtocolResult};
 pub use format::{format_document, format_link, format_reference, parse_document};

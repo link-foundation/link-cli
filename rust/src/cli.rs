@@ -20,6 +20,8 @@ pub struct Cli {
     pub after: bool,
     pub lino_input: Option<String>,
     pub lino_output: Option<String>,
+    pub binary_input: Option<String>,
+    pub binary_output: Option<String>,
     pub always: bool,
     pub once: bool,
     pub never: bool,
@@ -61,6 +63,8 @@ impl Default for Cli {
             after: false,
             lino_input: None,
             lino_output: None,
+            binary_input: None,
+            binary_output: None,
             always: false,
             once: false,
             never: false,
@@ -200,6 +204,19 @@ impl Cli {
                 cli.lino_input = Some(value.to_string());
                 continue;
             }
+            if let Some(value) = inline_value(
+                &arg,
+                &["--export-binary", "--binary-output", "--binary-out"],
+            ) {
+                cli.binary_output = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) =
+                inline_value(&arg, &["--import-binary", "--binary-input", "--binary-in"])
+            {
+                cli.binary_input = Some(value.to_string());
+                continue;
+            }
             if let Some(value) = inline_value(&arg, &["--always"]) {
                 cli.always = parse_bool("--always", value)?;
                 continue;
@@ -335,6 +352,12 @@ impl Cli {
                 "--in" | "--lino-input" | "--import" => {
                     cli.lino_input = Some(next_value(&mut args, &arg)?);
                 }
+                "--export-binary" | "--binary-output" | "--binary-out" => {
+                    cli.binary_output = Some(next_value(&mut args, &arg)?);
+                }
+                "--import-binary" | "--binary-input" | "--binary-in" => {
+                    cli.binary_input = Some(next_value(&mut args, &arg)?);
+                }
                 "--always" => {
                     cli.always = next_bool_value(&mut args, true)?;
                 }
@@ -460,6 +483,11 @@ impl Cli {
             "          Read and import a LiNo file into the database\n",
             "      --out <OUT>, --lino-output <OUT>, --export <OUT>\n",
             "          Write the complete database as a LiNo file\n",
+            "      --import-binary <PATH>, --binary-input <PATH>, --binary-in <PATH>\n",
+            "          Read and import a store archive in binary links notation\n",
+            "      --export-binary <PATH>, --binary-output <PATH>, --binary-out <PATH>\n",
+            "          Write the complete database, names included, as a store archive in\n",
+            "          binary links notation\n",
             "      --always\n",
             "          Store the query as an always-on persistent transformation trigger\n",
             "      --once\n",

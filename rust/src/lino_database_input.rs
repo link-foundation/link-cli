@@ -104,7 +104,7 @@ where
     storage.get_or_create_named(identifier)
 }
 
-fn update_link<T>(storage: &mut T, index: u32, source: u32, target: u32) -> Result<()>
+pub(crate) fn update_link<T>(storage: &mut T, index: u32, source: u32, target: u32) -> Result<()>
 where
     T: NamedTypeLinks,
 {
