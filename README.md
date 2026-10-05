@@ -43,6 +43,7 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
 - [docs/case-studies/issue-94/README.md](docs/case-studies/issue-94/README.md): evidence and analysis for the optional transactions and version-control layers.
 - [docs/case-studies/issue-98/README.md](docs/case-studies/issue-98/README.md): evidence and analysis for making the libraries reusable as a doublets-backed transactional store.
+- [docs/case-studies/issue-105/README.md](docs/case-studies/issue-105/README.md): requirements, prior art and the wire formats of the LiNo text and binary protocols over TCP.
 
 ### API references
 
@@ -213,8 +214,8 @@ clink --db family.links --auto-create-missing-references '() ((child: father mot
 ```
 →
 ```
-((father: 0 0)) ((father: father father))
-((mother: 0 0)) ((mother: mother mother))
+() ((father: father father))
+() ((mother: mother mother))
 () ((child: father mother))
 (father: father father)
 (mother: mother mother)
@@ -350,6 +351,25 @@ When links do not have names, exported references are plain link numbers:
 (2: 1 2)
 ```
 
+## Export and import a binary store archive
+
+Use `--export-binary` (or `--binary-output`, `--binary-out`) to write the
+complete database, names included, as a store archive in
+[binary links notation](docs/protocol/binary-links-notation.md#10-store-archive).
+Every link keeps its address, holes included. `--import-binary` (or
+`--binary-input`, `--binary-in`) reads an archive back before `--in` and the
+query run:
+
+```bash
+clink --db family.links --export-binary family.bin
+clink --db copy.links --import-binary family.bin --after
+```
+
+For the family above the archive takes 36 bytes, against 71 bytes of LiNo.
+Both ports write and read the same bytes, so an archive written by the Rust
+CLI can be read by the C# CLI and the other way around
+([examples/archive](examples/archive/README.md)).
+
 ## Persistent transformation triggers
 
 Store a query as a trigger with `--always` to apply it after later write operations:
@@ -415,6 +435,76 @@ See [rust/README.md](rust/README.md#use-as-a-library),
 [csharp/README.md](csharp/README.md#use-as-a-library), and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#embedding-the-library) for the
 details.
+
+## Serve a database over TCP
+
+`--serve` exposes a database over TCP. `--connect` sends one query to a
+served database and prints the reply:
+
+```bash
+clink --db db.links --serve 127.0.0.1:7777          # terminal 1
+clink --connect 127.0.0.1:7777 '() ((1 1))'         # terminal 2
+() ((1: 1 1))
+clink --connect 127.0.0.1:7777                      # no query: list every link
+(1: 1 1)
+```
+
+A request is a substitution query, so it covers create, read, update and
+delete. The reply has one `(before) (after)` line per change, the same as
+`--changes`. A failed query gets `(error: 'message')` back.
+
+There are two interchangeable protocols:
+
+- **text**: UTF-8 LiNo. Each message ends with a line holding a single `.`,
+  so you can also talk to the server with `nc`.
+- **binary**: `--protocol binary`. Each packet is
+  [binary links notation](docs/protocol/binary-links-notation.md): it counts
+  its links first, and references are 8, 16, 32 or 64 bits wide depending on
+  the largest one. Three optional decorators can each be switched on
+  independently:
+  - `--external-references`: numbers and characters travel as Hybrid external
+    references.
+  - `--arity <RANGE>`: the link lengths the encoder may use. The default, `2`,
+    sends only doublets. `2..3` adds triplets, and `1..` allows links of any
+    length.
+  - `--packed-widths`: each section of the packet gets the narrowest width its
+    links need.
+
+The server detects the protocol of each message and replies in the same one.
+C# and Rust servers and clients work with each other: see
+[`examples/tcp/`](examples/tcp) and
+[docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
+
+### Use a served database as a store
+
+In both libraries, `RemoteLinks` is a links store whose links live behind a
+server. It implements the same interfaces as a local store: `INamedTypesLinks`
+in C#, and `Links`, `Doublets` and `NamedTypeLinks` in Rust. So code written
+against them, the query processor included, switches from a local file to a
+server by swapping one value:
+
+```csharp
+static void Run(INamedTypesLinks<uint> links) =>
+    AdvancedMixedQueryProcessor.ProcessQuery(links, new() { Query = "() ((1 1))" });
+
+using (var local = new NamedTypesDecorator<uint>("db.links")) Run(local);
+using (var remote = RemoteLinks.Connect("127.0.0.1:7777", new TextLinoProtocol())) Run(remote);
+```
+
+```rust
+fn run(store: &mut impl NamedTypeLinks) -> anyhow::Result<()> {
+    QueryProcessor::new(false).process_query(store, "() ((1 1))")?;
+    Ok(())
+}
+
+run(&mut NamedTypesDecorator::new("db.links", false)?)?;
+run(&mut RemoteLinks::connect("127.0.0.1:7777", TextLinoProtocol::new())?)?;
+```
+
+Each call is one request, such as `(count: (* 1))`, `(update: (1 2 2))` or
+`(set-name: (2 'a pair'))`. A write replies with the net change of every link
+it touched. [`docs/protocol/links-operations.txt`](docs/protocol/links-operations.txt)
+records one whole conversation, and both ports replay it in their tests.
 
 ## Update single link
 
@@ -580,12 +670,20 @@ Both the C# NuGet tool and the Rust CLI support every option below.
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
 | `--in`                  | string  | _None_         | `--import`, `--lino-input`          | Read and import a LiNo file before query execution                         |
 | `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
+| `--import-binary`       | string  | _None_         | `--binary-input`, `--binary-in`     | Read and import a store archive in binary links notation before `--in`    |
+| `--export-binary`       | string  | _None_         | `--binary-output`, `--binary-out`   | Write the complete database, names included, as a binary store archive    |
 | `--always`              | bool    | `false`        | _None_                              | Store the query as an always-on persistent transformation trigger          |
 | `--once`                | bool    | `false`        | _None_                              | Store the query as a one-shot persistent transformation trigger            |
 | `--never`               | bool    | `false`        | _None_                              | Remove stored persistent transformation triggers matching the query        |
 | `--triggers`            | bool    | `false`        | _None_                              | Enable persistent transformation triggers for the command                  |
 | `--triggers-file`       | string  | `<db>.triggers.links` | _None_                       | Path to the persistent transformation trigger links database               |
 | `--embed-triggers`      | bool    | `false`        | _None_                              | Store persistent transformation triggers in the main links database        |
+| `--serve`               | string  | _None_         | _None_                              | Serve the database over TCP at `host:port` (port `0` picks a free port)   |
+| `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server at `host:port` and print the reply |
+| `--protocol`            | string  | detected       | _None_                              | `text` or `binary` (with `--serve`, also `any`, which is the default)     |
+| `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
+| `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |
+| `--packed-widths`       | bool    | `false`        | _None_                              | Binary protocol: give each section the narrowest reference width          |
 
 The query can be passed as the first positional argument or through `--query`,
 `--apply`, or `--do`. In the Rust CLI, `--query` takes precedence when both

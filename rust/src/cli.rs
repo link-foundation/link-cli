@@ -1,5 +1,6 @@
 //! Command-line argument parsing for the `clink` binary.
 
+use crate::protocol::ArityRange;
 use anyhow::{bail, Result};
 use std::env;
 use std::ffi::OsString;
@@ -19,6 +20,8 @@ pub struct Cli {
     pub after: bool,
     pub lino_input: Option<String>,
     pub lino_output: Option<String>,
+    pub binary_input: Option<String>,
+    pub binary_output: Option<String>,
     pub always: bool,
     pub once: bool,
     pub never: bool,
@@ -38,6 +41,12 @@ pub struct Cli {
     pub list_branches: bool,
     pub list_tags: bool,
     pub show_log: bool,
+    pub serve: Option<String>,
+    pub connect: Option<String>,
+    pub protocol: Option<String>,
+    pub external_references: bool,
+    pub arity: ArityRange,
+    pub packed_widths: bool,
 }
 
 impl Default for Cli {
@@ -54,6 +63,8 @@ impl Default for Cli {
             after: false,
             lino_input: None,
             lino_output: None,
+            binary_input: None,
+            binary_output: None,
             always: false,
             once: false,
             never: false,
@@ -73,6 +84,12 @@ impl Default for Cli {
             list_branches: false,
             list_tags: false,
             show_log: false,
+            serve: None,
+            connect: None,
+            protocol: None,
+            external_references: false,
+            arity: ArityRange::DOUBLETS,
+            packed_widths: false,
         }
     }
 }
@@ -187,6 +204,19 @@ impl Cli {
                 cli.lino_input = Some(value.to_string());
                 continue;
             }
+            if let Some(value) = inline_value(
+                &arg,
+                &["--export-binary", "--binary-output", "--binary-out"],
+            ) {
+                cli.binary_output = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) =
+                inline_value(&arg, &["--import-binary", "--binary-input", "--binary-in"])
+            {
+                cli.binary_input = Some(value.to_string());
+                continue;
+            }
             if let Some(value) = inline_value(&arg, &["--always"]) {
                 cli.always = parse_bool("--always", value)?;
                 continue;
@@ -263,6 +293,30 @@ impl Cli {
                 cli.show_log = parse_bool("--log", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--serve"]) {
+                cli.serve = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--connect"]) {
+                cli.connect = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--protocol"]) {
+                cli.protocol = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--external-references"]) {
+                cli.external_references = parse_bool("--external-references", value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--arity"]) {
+                cli.arity = parse_arity(value)?;
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--packed-widths"]) {
+                cli.packed_widths = parse_bool("--packed-widths", value)?;
+                continue;
+            }
 
             match arg.as_str() {
                 "-h" | "--help" => return Ok(CliCommand::Help),
@@ -297,6 +351,12 @@ impl Cli {
                 }
                 "--in" | "--lino-input" | "--import" => {
                     cli.lino_input = Some(next_value(&mut args, &arg)?);
+                }
+                "--export-binary" | "--binary-output" | "--binary-out" => {
+                    cli.binary_output = Some(next_value(&mut args, &arg)?);
+                }
+                "--import-binary" | "--binary-input" | "--binary-in" => {
+                    cli.binary_input = Some(next_value(&mut args, &arg)?);
                 }
                 "--always" => {
                     cli.always = next_bool_value(&mut args, true)?;
@@ -356,6 +416,24 @@ impl Cli {
                 "--log" => {
                     cli.show_log = next_bool_value(&mut args, true)?;
                 }
+                "--serve" => {
+                    cli.serve = Some(next_value(&mut args, &arg)?);
+                }
+                "--connect" => {
+                    cli.connect = Some(next_value(&mut args, &arg)?);
+                }
+                "--protocol" => {
+                    cli.protocol = Some(next_value(&mut args, &arg)?);
+                }
+                "--external-references" => {
+                    cli.external_references = next_bool_value(&mut args, true)?;
+                }
+                "--arity" => {
+                    cli.arity = parse_arity(&next_value(&mut args, &arg)?)?;
+                }
+                "--packed-widths" => {
+                    cli.packed_widths = next_bool_value(&mut args, true)?;
+                }
                 "--" => {
                     for value in args.by_ref() {
                         set_positional_query(&mut cli, value)?;
@@ -405,6 +483,11 @@ impl Cli {
             "          Read and import a LiNo file into the database\n",
             "      --out <OUT>, --lino-output <OUT>, --export <OUT>\n",
             "          Write the complete database as a LiNo file\n",
+            "      --import-binary <PATH>, --binary-input <PATH>, --binary-in <PATH>\n",
+            "          Read and import a store archive in binary links notation\n",
+            "      --export-binary <PATH>, --binary-output <PATH>, --binary-out <PATH>\n",
+            "          Write the complete database, names included, as a store archive in\n",
+            "          binary links notation\n",
             "      --always\n",
             "          Store the query as an always-on persistent transformation trigger\n",
             "      --once\n",
@@ -451,6 +534,23 @@ impl Cli {
             "          List version-control tags and exit\n",
             "      --log\n",
             "          Print the transitions log and exit (implies --transactions)\n",
+            "      --serve <ADDR>\n",
+            "          Serve the database over TCP (e.g. 127.0.0.1:7878) until stopped;\n",
+            "          each message may use the text or the binary LiNo protocol\n",
+            "      --connect <ADDR>\n",
+            "          Send the query to a clink server instead of opening a database;\n",
+            "          an empty query reads every link\n",
+            "      --protocol <PROTOCOL>\n",
+            "          'text' or 'binary' for --connect (default: text); 'text', 'binary'\n",
+            "          or 'any' for --serve (default: any)\n",
+            "      --external-references\n",
+            "          Binary protocol: send numbers and characters as external references\n",
+            "      --arity <RANGE>\n",
+            "          Binary protocol: link lengths to use, 'n', 'min..max' or 'min..'\n",
+            "          (default: 2, doublets only; e.g. 2..3 adds triplets, 1.. any length)\n",
+            "      --packed-widths\n",
+            "          Binary protocol: give each section of links the narrowest reference\n",
+            "          width it needs instead of one width for the whole packet\n",
             "  -h, --help\n",
             "          Print help\n",
             "  -V, --version\n",
@@ -461,6 +561,13 @@ impl Cli {
     pub fn version_text() -> String {
         format!("clink {}", env!("CARGO_PKG_VERSION"))
     }
+}
+
+fn parse_arity(value: &str) -> Result<ArityRange> {
+    value
+        .trim()
+        .parse()
+        .map_err(|error| anyhow::anyhow!("invalid value for '--arity': {error}"))
 }
 
 fn inline_value<'a>(arg: &'a str, names: &[&str]) -> Option<&'a str> {

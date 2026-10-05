@@ -254,7 +254,8 @@ same matrix in-process on all three CI operating systems.
 
 - **Upstream `grow_filled` bug.** `PersistentFileMapped` is a local
   workaround for a data-loss bug in `platform-mem`'s default
-  `RawMem::grow_filled`. It should be reported upstream; until it is fixed,
+  `RawMem::grow_filled`. It is reported upstream as
+  [mem-rs#36](https://github.com/linksplatform/mem-rs/issues/36); until it is fixed,
   any consumer that constructs a `FileMapped`-backed `doublets` store *without*
   this wrapper will lose data on reopen. The reproduction lives in
   [`evidence/doublets_persistence.rs`](evidence/doublets_persistence.rs).

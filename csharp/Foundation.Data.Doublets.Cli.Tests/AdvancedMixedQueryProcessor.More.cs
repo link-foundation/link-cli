@@ -885,6 +885,40 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             });
         }
 
+        [Fact]
+        public void EnsureCreated_ReachesAnAddressBelowOneFreedAfterIt()
+        {
+            RunTestWithLinks(links =>
+            {
+                ProcessQueryStrict(links, "() ((1 1) (2 2) (3 3) (4 4))");
+                ProcessQueryStrict(links, "((2: 2 2)) ()");
+                ProcessQueryStrict(links, "((3: 3 3)) ()");
+
+                LinksExtensions.EnsureCreated(links, 2u);
+
+                Assert.True(links.Exists(2u));
+                Assert.False(links.Exists(3u));
+                Assert.Equal(3u, links.Create());
+            });
+        }
+
+        [Fact]
+        public void EnsureCreated_WithACreatorThatAppendsPastTheTarget_ShouldThrowControlledException()
+        {
+            RunTestWithLinks(links =>
+            {
+                uint SkipOne()
+                {
+                    links.Create();
+                    return links.Create();
+                }
+
+                var exception = Assert.Throws<InvalidOperationException>(() => LinksExtensions.EnsureCreated(links, SkipOne, 1u));
+
+                Assert.Contains("beyond requested target 1", exception.Message);
+            });
+        }
+
         // Helper methods
 
         /// <summary>

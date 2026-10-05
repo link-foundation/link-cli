@@ -20,6 +20,10 @@ mod matching;
 // Write-side operations live in a submodule; see query_processor/mutations.rs.
 mod mutations;
 
+/// The `(before, after)` states a query reports, where `None` is no link:
+/// `(None, Some(link))` is a creation and `(Some(link), None)` a deletion.
+pub type Changes = Vec<(Option<Link>, Option<Link>)>;
+
 /// QueryProcessor handles LiNo query parsing and execution
 /// Corresponds to AdvancedMixedQueryProcessor in C#
 pub struct QueryProcessor {
@@ -50,22 +54,14 @@ impl QueryProcessor {
     /// collects the raw handler calls and runs `SimplifyChanges` over them once
     /// in `Program.cs` regardless of which branch of the processor produced
     /// them.
-    pub fn process_query(
-        &self,
-        storage: &mut impl NamedTypeLinks,
-        query: &str,
-    ) -> Result<Vec<(Option<Link>, Option<Link>)>> {
+    pub fn process_query(&self, storage: &mut impl NamedTypeLinks, query: &str) -> Result<Changes> {
         let changes = self.process_query_raw(storage, query)?;
         Ok(self.simplify_changes_list(&changes))
     }
 
     /// The processor proper: applies `query` and reports the raw
     /// `(before, after)` states, in the order they happened.
-    fn process_query_raw(
-        &self,
-        storage: &mut impl NamedTypeLinks,
-        query: &str,
-    ) -> Result<Vec<(Option<Link>, Option<Link>)>> {
+    fn process_query_raw(&self, storage: &mut impl NamedTypeLinks, query: &str) -> Result<Changes> {
         self.trace_msg(&format!("[ProcessQuery] Query: \"{}\"", query));
 
         let query = query.trim();
@@ -125,11 +121,11 @@ impl QueryProcessor {
                 "[ProcessQuery] No restriction, but substitution is non-empty => creation scenario.",
             );
             if let Some(values) = &substitution_link.values {
-                changes_list.extend(
-                    self.validate_links_exist_or_will_be_created(storage, &[], values)?
-                        .into_iter()
-                        .map(|(before, after)| (Some(before), Some(after))),
-                );
+                changes_list.extend(self.validate_links_exist_or_will_be_created(
+                    storage,
+                    &[],
+                    values,
+                )?);
 
                 for link_to_create in values {
                     let created_id =
@@ -150,11 +146,11 @@ impl QueryProcessor {
                 "[ProcessQuery] Restriction non-empty, substitution empty => deletion scenario.",
             );
             let restriction_values = restriction_link.values.as_deref().unwrap_or(&[]);
-            changes_list.extend(
-                self.validate_links_exist_or_will_be_created(storage, restriction_values, &[])?
-                    .into_iter()
-                    .map(|(before, after)| (Some(before), Some(after))),
-            );
+            changes_list.extend(self.validate_links_exist_or_will_be_created(
+                storage,
+                restriction_values,
+                &[],
+            )?);
 
             let restriction_patterns = self.patterns_from_lino(restriction_link);
             let mut links_to_delete = Vec::new();
@@ -183,15 +179,11 @@ impl QueryProcessor {
         let substitution_patterns = self.patterns_from_lino(substitution_link);
         let restriction_values = restriction_link.values.as_deref().unwrap_or(&[]);
         let substitution_values = substitution_link.values.as_deref().unwrap_or(&[]);
-        changes_list.extend(
-            self.validate_links_exist_or_will_be_created(
-                storage,
-                restriction_values,
-                substitution_values,
-            )?
-            .into_iter()
-            .map(|(before, after)| (Some(before), Some(after))),
-        );
+        changes_list.extend(self.validate_links_exist_or_will_be_created(
+            storage,
+            restriction_values,
+            substitution_values,
+        )?);
         let solutions = self.find_all_solutions(storage, &restriction_patterns)?;
 
         if solutions.is_empty() {
@@ -230,10 +222,20 @@ impl QueryProcessor {
 
         let mut all_planned_operations = Vec::new();
         for solution in &solutions {
-            let restriction_links =
-                self.resolve_patterns(storage, &restriction_patterns, solution, false)?;
-            let substitution_links =
-                self.resolve_patterns(storage, &substitution_patterns, solution, true)?;
+            let restriction_links = self.resolve_patterns(
+                storage,
+                &restriction_patterns,
+                solution,
+                false,
+                &mut changes_list,
+            )?;
+            let substitution_links = self.resolve_patterns(
+                storage,
+                &substitution_patterns,
+                solution,
+                true,
+                &mut changes_list,
+            )?;
             all_planned_operations
                 .extend(self.determine_operations(&restriction_links, &substitution_links));
         }
@@ -256,7 +258,7 @@ impl QueryProcessor {
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Vec<(Link, Link)>> {
+    ) -> Result<Changes> {
         LinkReferenceValidator::new(self.trace, self.auto_create_missing_references)
             .validate_links_exist_or_will_be_created(
                 storage,
@@ -422,6 +424,7 @@ impl QueryProcessor {
         patterns: &[Pattern],
         solution: &HashMap<String, u32>,
         is_substitution: bool,
+        changes: &mut Changes,
     ) -> Result<Vec<ResolvedLink>> {
         let mut working_solution = solution.clone();
         let mut visited_indexes = HashSet::new();
@@ -433,6 +436,7 @@ impl QueryProcessor {
                 &mut working_solution,
                 is_substitution,
                 &mut visited_indexes,
+                changes,
             )?);
         }
         Ok(resolved)
@@ -445,6 +449,7 @@ impl QueryProcessor {
         solution: &mut HashMap<String, u32>,
         is_substitution: bool,
         visited_indexes: &mut HashSet<u32>,
+        changes: &mut Changes,
     ) -> Result<ResolvedLink> {
         if pattern.is_leaf() {
             let index = self.resolve_identifier(
@@ -453,6 +458,7 @@ impl QueryProcessor {
                 solution,
                 if is_substitution { 0 } else { u32::MAX },
                 is_substitution,
+                changes,
             )?;
             return Ok(ResolvedLink::new(index, u32::MAX, u32::MAX, None));
         }
@@ -464,6 +470,7 @@ impl QueryProcessor {
                 solution,
                 is_substitution,
                 visited_indexes,
+                changes,
             )?
             .index;
         let mut target = self
@@ -473,11 +480,18 @@ impl QueryProcessor {
                 solution,
                 is_substitution,
                 visited_indexes,
+                changes,
             )?
             .index;
         let default_index = if is_substitution { 0 } else { u32::MAX };
-        let mut index =
-            self.resolve_identifier(storage, &pattern.index, solution, default_index, false)?;
+        let mut index = self.resolve_identifier(
+            storage,
+            &pattern.index,
+            solution,
+            default_index,
+            false,
+            changes,
+        )?;
         let mut name = None;
 
         if is_substitution
@@ -515,6 +529,7 @@ impl QueryProcessor {
         solution: &HashMap<String, u32>,
         default_value: u32,
         create_named_leaf: bool,
+        changes: &mut Changes,
     ) -> Result<u32> {
         if identifier.is_empty() {
             return Ok(default_value);
@@ -531,13 +546,10 @@ impl QueryProcessor {
         if let Ok(parsed) = identifier.parse::<u32>() {
             return Ok(parsed);
         }
-        if let Some(named_id) = storage.get_by_name(identifier)? {
-            return Ok(named_id);
-        }
         if create_named_leaf {
-            return storage.get_or_create_named(identifier);
+            return self.ensure_named_point_link(storage, identifier, changes);
         }
-        Ok(default_value)
+        Ok(storage.get_by_name(identifier)?.unwrap_or(default_value))
     }
 
     fn determine_operations(
@@ -608,7 +620,7 @@ impl QueryProcessor {
         storage: &mut impl NamedTypeLinks,
         before: Option<ResolvedLink>,
         after: Option<ResolvedLink>,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<()> {
         match (before, after) {
             (Some(before), None) => {
@@ -622,26 +634,28 @@ impl QueryProcessor {
                 }
             }
             (None, Some(after)) => {
-                let (before, created) = self.create_or_update_resolved_link(storage, &after)?;
-                changes.push((before, Some(created)));
+                self.create_or_update_resolved_link(storage, &after, changes)?;
             }
             (Some(before), Some(after)) => {
                 if before.index == after.index && storage.exists(before.index) {
-                    let before_link = storage.get_link(before.index).unwrap();
-                    if before_link.source != after.source || before_link.target != after.target {
-                        storage.update(before.index, after.source, after.target)?;
+                    let stored = storage.get_link(before.index).unwrap();
+                    if stored.source != after.source || stored.target != after.target {
+                        // A merge into a duplicate deletes `before.index`;
+                        // `restore_unexpected_deletions` puts it back when the
+                        // query asked for it, exactly as the C# processor does.
+                        self.update_observed(
+                            storage,
+                            before.index,
+                            after.source,
+                            after.target,
+                            changes,
+                        )?;
+                    } else {
+                        changes.push((Some(stored), Some(stored)));
                     }
                     if let Some(name) = &after.name {
                         storage.set_name(before.index, name)?;
                     }
-                    // The update can be resolved into a merge, which deletes
-                    // `before.index`; report the state the query asked for and
-                    // let `restore_unexpected_deletions` put the link back,
-                    // exactly as the C# processor does.
-                    let after_link = storage
-                        .get_link(before.index)
-                        .unwrap_or_else(|| Link::new(before.index, after.source, after.target));
-                    changes.push((Some(before_link), Some(after_link)));
                 } else {
                     self.apply_operation(storage, Some(before), None, changes)?;
                     self.apply_operation(storage, None, Some(after), changes)?;
@@ -750,10 +764,7 @@ impl QueryProcessor {
     /// around the simplifier (as this used to) both reported creations and
     /// deletions in a different order than C# and hid them from the chain
     /// collapsing that is the whole point of the pass.
-    fn simplify_changes_list(
-        &self,
-        changes: &[(Option<Link>, Option<Link>)],
-    ) -> Vec<(Option<Link>, Option<Link>)> {
+    fn simplify_changes_list(&self, changes: &[(Option<Link>, Option<Link>)]) -> Changes {
         let to_simplify: Vec<(Link, Link)> = changes
             .iter()
             .map(|(before, after)| {

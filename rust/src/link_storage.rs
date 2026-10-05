@@ -91,7 +91,32 @@ impl LinkStorage {
         Ok(storage)
     }
 
-    /// The database file this storage reads from and writes to.
+    /// Creates a storage that lives only in memory: it never reads or writes
+    /// a file, and [`LinkStorage::save`] keeps nothing.
+    ///
+    /// This is the store of the browser workbench, where there is no file
+    /// system, so queries there merge, cascade and reuse addresses exactly as
+    /// they do in the CLI.
+    pub fn in_memory(trace: bool) -> Self {
+        Self {
+            links: HashMap::new(),
+            names: HashMap::new(),
+            name_to_id: HashMap::new(),
+            allocated: 0,
+            unused: Vec::new(),
+            db_path: PathBuf::new(),
+            revision: StorageRevision::default(),
+            trace,
+        }
+    }
+
+    /// Whether this storage was made by [`LinkStorage::in_memory`].
+    pub fn is_in_memory(&self) -> bool {
+        self.db_path.as_os_str().is_empty()
+    }
+
+    /// The database file this storage reads from and writes to, empty for an
+    /// [in-memory](LinkStorage::in_memory) storage.
     pub fn database_path(&self) -> &Path {
         &self.db_path
     }
@@ -105,6 +130,9 @@ impl LinkStorage {
     /// current on-disk state as "seen" for
     /// [`LinksStorage::has_external_changes`](crate::LinksStorage::has_external_changes).
     pub fn refresh_observed_revision(&mut self) -> Result<(), LinkError> {
+        if self.is_in_memory() {
+            return Ok(());
+        }
         self.revision = StorageRevision::of(&self.db_path)?;
         Ok(())
     }
@@ -116,6 +144,9 @@ impl LinkStorage {
         self.name_to_id.clear();
         self.allocated = 0;
         self.unused.clear();
+        if self.is_in_memory() {
+            return Ok(());
+        }
         if self.db_path.exists() {
             self.load()?;
         }
@@ -282,8 +313,11 @@ impl LinkStorage {
         }
     }
 
-    /// Saves all links to the database file
+    /// Saves all links to the database file; an in-memory storage has none.
     pub fn save(&self) -> Result<()> {
+        if self.is_in_memory() {
+            return Ok(());
+        }
         let file = OpenOptions::new()
             .write(true)
             .create(true)
@@ -482,6 +516,12 @@ impl LinkStorage {
     /// ```
     ///
     /// `observer` is that handler. A change with a null `after` is a deletion.
+    ///
+    /// The upstream resolver also reports the duplicate a link is merged into
+    /// as an unchanged `(before, before)` pair — a documented deviation from
+    /// C#, whose `LinksUniquenessResolver` reports nothing for it. That pair
+    /// is not a change, so it is not passed on, and `--changes` lists the same
+    /// records in both languages.
     pub fn update_observed(
         &mut self,
         id: u32,
@@ -495,9 +535,17 @@ impl LinkStorage {
             .ok_or_else(|| LinkError::not_found(id))?;
         let mut resolved = (&mut *self).with_automatic_uniqueness_and_usages_resolution();
         resolved
-            .update_by_with([id], [id, source, target], &mut |before, after| {
-                observe(observer, before, after)
-            })
+            .update_by_with(
+                [id],
+                [id, source, target],
+                &mut |before: doublets::Link<u32>, after| {
+                    let merged_into = before == after && before.index != id;
+                    if !merged_into {
+                        observer(Link::from(before), Link::from(after));
+                    }
+                    doublets::data::Flow::Continue
+                },
+            )
             .map_err(LinkError::from)?;
         Ok(before)
     }

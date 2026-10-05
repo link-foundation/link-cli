@@ -31,28 +31,41 @@ pub trait NamedTypeLinks {
     }
     fn get_link(&mut self, id: u32) -> Option<Link>;
     fn exists(&mut self, id: u32) -> bool;
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link>;
-    fn delete(&mut self, id: u32) -> Result<Link>;
+    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        self.update_observed(id, source, target, &mut |_, _| {})
+    }
+    /// [`Self::update`], reporting every change the update caused.
+    ///
+    /// An update that would duplicate an existing doublet is resolved into a
+    /// merge: the updated link is deleted and its usages are moved to the
+    /// duplicate, so one call can make several changes. The C# CLI sees them
+    /// because `AdvancedMixedQueryProcessor` hands a handler to the store:
+    ///
+    /// ```csharp
+    /// links.Update(before, after, (beforeState, afterState) =>
+    ///     options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
+    /// ```
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link>;
+    fn delete(&mut self, id: u32) -> Result<Link> {
+        self.delete_observed(id, &mut |_, _| {})
+    }
     /// [`Self::delete`], reporting every change the deletion caused.
     ///
     /// Deleting a link cascades into every link that still used it, and each of
-    /// those removals is a change in its own right. The C# CLI sees them
-    /// because `AdvancedMixedQueryProcessor.RemoveLinks` hands a handler to the
-    /// store:
+    /// those removals is a change in its own right, reported the way
+    /// `AdvancedMixedQueryProcessor.RemoveLinks` reports them in C#:
     ///
     /// ```csharp
     /// links.Delete(link, (before, after) =>
     ///     options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
     /// ```
-    ///
-    /// The default implementation reports only the link that was asked for,
-    /// which is correct for stores that cannot cascade; every decorator over a
-    /// cascading store overrides it.
-    fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
-        let before = self.delete(id)?;
-        observer(before, Link::null());
-        Ok(before)
-    }
+    fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link>;
     fn all_links(&mut self) -> Vec<Link>;
     fn search(&mut self, source: u32, target: u32) -> Option<u32>;
     fn get_or_create(&mut self, source: u32, target: u32) -> u32;
@@ -181,12 +194,14 @@ impl NamedTypeLinks for LinkStorage {
         LinkStorage::exists(self, id)
     }
 
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        LinkStorage::update(self, id, source, target)
-    }
-
-    fn delete(&mut self, id: u32) -> Result<Link> {
-        LinkStorage::delete(self, id)
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        LinkStorage::update_observed(self, id, source, target, observer)
     }
 
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
@@ -249,12 +264,14 @@ impl NamedTypeLinks for NamedTypesDecorator {
         NamedTypesDecorator::exists(self, id)
     }
 
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        NamedTypesDecorator::update(self, id, source, target)
-    }
-
-    fn delete(&mut self, id: u32) -> Result<Link> {
-        NamedTypesDecorator::delete(self, id)
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        NamedTypesDecorator::update_observed(self, id, source, target, observer)
     }
 
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
@@ -313,15 +330,15 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
         crate::transactions::TransactionsDecorator::exists(self, id)
     }
 
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        Ok(crate::transactions::TransactionsDecorator::update(
-            self, id, source, target,
-        )?)
-    }
-
-    fn delete(&mut self, id: u32) -> Result<Link> {
-        Ok(crate::transactions::TransactionsDecorator::delete(
-            self, id,
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        Ok(crate::transactions::TransactionsDecorator::update_observed(
+            self, id, source, target, observer,
         )?)
     }
 
@@ -383,12 +400,16 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
         crate::version_control::VersionControlDecorator::exists(self, id)
     }
 
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        crate::version_control::VersionControlDecorator::update(self, id, source, target)
-    }
-
-    fn delete(&mut self, id: u32) -> Result<Link> {
-        crate::version_control::VersionControlDecorator::delete(self, id)
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        crate::version_control::VersionControlDecorator::update_observed(
+            self, id, source, target, observer,
+        )
     }
 
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {

@@ -148,3 +148,77 @@ fn test_simplify_keeps_unchanged_states() {
     assert!(result.contains(&(Link::new(1, 1, 2), Link::new(1, 2, 1))));
     assert!(result.contains(&(Link::new(2, 2, 2), Link::new(2, 2, 2))));
 }
+
+#[test]
+fn test_simplify_create_then_match_reports_only_the_create() {
+    let created = Link::new(1, 1, 1);
+    let changes = vec![(Link::null(), created), (created, created)];
+
+    assert_eq!(simplify_changes(changes), vec![(Link::null(), created)]);
+}
+
+#[test]
+fn test_simplify_match_then_update_reports_only_the_update() {
+    let before = Link::new(1, 1, 1);
+    let after = Link::new(1, 2, 2);
+    let changes = vec![(before, before), (before, after)];
+
+    assert_eq!(simplify_changes(changes), vec![(before, after)]);
+}
+
+#[test]
+fn test_simplify_keeps_unchanged_links_that_did_not_change_elsewhere() {
+    let unchanged = Link::new(2, 2, 2);
+    let created = Link::new(1, 1, 1);
+    let changes = vec![(unchanged, unchanged), (Link::null(), created)];
+
+    assert_eq!(
+        simplify_changes(changes),
+        vec![(Link::null(), created), (unchanged, unchanged)]
+    );
+}
+
+#[test]
+fn test_simplify_recreating_an_address_reports_one_change() {
+    // The raw steps C# reports for `((1: 1 1)) ((3 3))`.
+    let changes = vec![
+        (Link::new(1, 1, 1), Link::new(1, 0, 0)),
+        (Link::new(1, 0, 0), Link::null()),
+        (Link::null(), Link::new(1, 0, 0)),
+        (Link::new(1, 0, 0), Link::new(1, 3, 3)),
+    ];
+
+    assert_eq!(
+        simplify_changes(changes),
+        vec![(Link::new(1, 1, 1), Link::new(1, 3, 3))]
+    );
+}
+
+#[test]
+fn test_simplify_does_not_chain_a_deletion_into_another_creation() {
+    let deleted = Link::new(3, 3, 3);
+    let created = Link::new(4, 4, 4);
+    let changes = vec![(deleted, Link::null()), (Link::null(), created)];
+
+    assert_eq!(
+        simplify_changes(changes),
+        vec![(deleted, Link::null()), (Link::null(), created)]
+    );
+}
+
+#[test]
+fn test_simplify_drops_a_link_created_and_deleted_again() {
+    let temporary = Link::new(3, 0, 0);
+    let changes = vec![(Link::null(), temporary), (temporary, Link::null())];
+
+    assert_eq!(simplify_changes(changes), vec![]);
+}
+
+#[test]
+fn test_simplify_reports_a_link_changed_back_as_unchanged() {
+    let original = Link::new(1, 1, 2);
+    let swapped = Link::new(1, 2, 1);
+    let changes = vec![(original, swapped), (swapped, original)];
+
+    assert_eq!(simplify_changes(changes), vec![(original, original)]);
+}

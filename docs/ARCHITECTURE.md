@@ -46,6 +46,12 @@ Key files:
 - `VersionControlDecorator.cs`: optional version-control layer that sits above
   the transactions decorator and provides branching, tagging, and time-travel
   checkout.
+- `Protocol/`: LiNo over TCP (#105). This folder contains:
+  - `TextLinoProtocol` and `BinaryLinoProtocol` (`LinoProtocols.cs`)
+  - the binary `LinksPacket`
+  - `LinoMapping` (document ↔ packet)
+  - `LinoFormat` (canonical text)
+  - `LinksServer` and `LinksClient`
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
 
@@ -79,11 +85,19 @@ Key files:
   transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
   branching, tagging, and time-travel checkout.
+- `rust/src/protocol/`: LiNo over TCP (#105). The module mirrors the C#
+  `Protocol/` folder file for file:
+  - `protocols.rs`
+  - `packet.rs`
+  - `mapping.rs`
+  - `format.rs`
+  - `server.rs`
+  - `client.rs`
 
 Main Rust dependencies:
 
 - `doublets = "0.5.0"` for links storage foundations.
-- `links-notation = "0.16.1"` for LiNo parsing.
+- `links-notation = "0.22.0"` for LiNo parsing.
 - `lino-arguments = "0.3.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
 
@@ -107,7 +121,8 @@ Key files:
 Runtime flow:
 
 1. Vite loads the generated `clink-wasm` package.
-2. `Clink` stores links in an in-memory `BrowserStorage`.
+2. `Clink` stores links in `LinkStorage::in_memory`, the CLI's store without a
+   file, so deletes cascade and updates merge exactly as in the CLI.
 3. Queries are passed into the Rust `QueryProcessor`.
 4. The result includes formatted output plus a structured `links` snapshot.
 5. React renders the snapshot and mirrors it into `doublets-web` `UnitedLinks`.
@@ -289,6 +304,7 @@ Trigger storage can be:
 | `.github/workflows/csharp.yml` | .NET restore, build, tests, package, and release. |
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
+| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version is behind its latest release. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
 
 Path filters keep most workflows focused on the parts of the repository they
 own.

@@ -360,42 +360,104 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
-        public void SimplifyChanges_Issue26_AlternativeScenario_NoSimplificationOccurs()
+        public void SimplifyChanges_Issue26_AlternativeScenario_LastAfterOfAnAddressWins()
         {
-            // Arrange - This tests a different scenario that might represent the actual issue
-            // Maybe the problem is that the changes are NOT being chained correctly
-            // Let's simulate what might happen if the simplifier doesn't work correctly
+            // Two reports start from the same state of link 1: a deletion and the update that follows it.
             var changes = new List<(Link<uint> Before, Link<uint> After)>
-      {
-        // Let's say we get these individual changes that don't form a proper chain
-        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 0, source: 0, target: 0)),  // delete
-        (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),  // direct update (this might be what's reported)
-        (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),  // direct update
-      };
-
-            // Act
-            var simplifiedChanges = SimplifyChanges(changes).ToList();
-
-            // Debug output
-            Console.WriteLine("=== Debug: Alternative Scenario ===");
-            Console.WriteLine("Input changes:");
-            for (int i = 0; i < changes.Count; i++)
             {
-                var (b, a) = changes[i];
-                Console.WriteLine($"  {i + 1}. ({b.Index}: {b.Source} {b.Target}) -> ({a.Index}: {a.Source} {a.Target})");
-            }
+                (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 0, source: 0, target: 0)),
+                (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),
+                (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),
+            };
 
-            Console.WriteLine("Actual simplified changes:");
-            for (int i = 0; i < simplifiedChanges.Count; i++)
+            var expectedSimplifiedChanges = new List<(Link<uint> Before, Link<uint> After)>
             {
-                var (b, a) = simplifiedChanges[i];
-                Console.WriteLine($"  {i + 1}. ({b.Index}: {b.Source} {b.Target}) -> ({a.Index}: {a.Source} {a.Target})");
-            }
-            Console.WriteLine($"Count: {simplifiedChanges.Count}");
-            Console.WriteLine("=== End Debug ===");
+                (new Link<uint>(index: 1, source: 1, target: 2), new Link<uint>(index: 1, source: 2, target: 1)),
+                (new Link<uint>(index: 2, source: 2, target: 1), new Link<uint>(index: 2, source: 1, target: 2)),
+            };
 
-            // The issue might be that we get 3 changes instead of 2
-            // If the simplifier doesn't work, we'd see all 3 changes
+            AssertChangeSetEqual(expectedSimplifiedChanges, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_CreateThenMatch_ReportsOnlyTheCreate()
+        {
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var created = new Link<uint>(index: 1, source: 1, target: 1);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (nothing, created), (created, created) };
+
+            AssertChangeSetEqual(new() { (nothing, created) }, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_MatchThenUpdate_ReportsOnlyTheUpdate()
+        {
+            var before = new Link<uint>(index: 1, source: 1, target: 1);
+            var after = new Link<uint>(index: 1, source: 2, target: 2);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (before, before), (before, after) };
+
+            AssertChangeSetEqual(new() { (before, after) }, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_KeepsUnchangedLinksThatDidNotChangeElsewhere()
+        {
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var unchanged = new Link<uint>(index: 2, source: 2, target: 2);
+            var created = new Link<uint>(index: 1, source: 1, target: 1);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (unchanged, unchanged), (nothing, created) };
+
+            AssertChangeSetEqual(new() { (nothing, created), (unchanged, unchanged) }, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_RecreatingAnAddress_ReportsOneChange()
+        {
+            // The raw steps reported for `((1: 1 1)) ((3 3))`.
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var emptied = new Link<uint>(index: 1, source: 0, target: 0);
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(index: 1, source: 1, target: 1), emptied),
+                (emptied, nothing),
+                (nothing, emptied),
+                (emptied, new Link<uint>(index: 1, source: 3, target: 3)),
+            };
+
+            AssertChangeSetEqual(
+                new() { (new Link<uint>(index: 1, source: 1, target: 1), new Link<uint>(index: 1, source: 3, target: 3)) },
+                SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_DoesNotChainADeletionIntoAnotherCreation()
+        {
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var deleted = new Link<uint>(index: 3, source: 3, target: 3);
+            var created = new Link<uint>(index: 4, source: 4, target: 4);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (deleted, nothing), (nothing, created) };
+
+            AssertChangeSetEqual(new() { (deleted, nothing), (nothing, created) }, SimplifyChanges(changes).ToList());
+        }
+
+        [Fact]
+        public void SimplifyChanges_DropsALinkCreatedAndDeletedAgain()
+        {
+            var nothing = new Link<uint>(index: 0, source: 0, target: 0);
+            var temporary = new Link<uint>(index: 3, source: 0, target: 0);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (nothing, temporary), (temporary, nothing) };
+
+            Assert.Empty(SimplifyChanges(changes));
+        }
+
+        [Fact]
+        public void SimplifyChanges_ReportsALinkChangedBackAsUnchanged()
+        {
+            var original = new Link<uint>(index: 1, source: 1, target: 2);
+            var swapped = new Link<uint>(index: 1, source: 2, target: 1);
+            var changes = new List<(Link<uint> Before, Link<uint> After)> { (original, swapped), (swapped, original) };
+
+            AssertChangeSetEqual(new() { (original, original) }, SimplifyChanges(changes).ToList());
         }
 
         private static void AssertChangeSetEqual(
@@ -419,214 +481,212 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             }
         }
 
-        // [Fact]
-        // public void SimplifyChanges_NoChanges_ReturnsEmpty()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>();
+        [Fact]
+        public void SimplifyChanges_NoChanges_ReturnsEmpty()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>();
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes);
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes);
 
-        //     // Assert
-        //     Assert.Empty(simplified);
-        // }
+            // Assert
+            Assert.Empty(simplified);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_SingleChange_ReturnsSameChange()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5))
-        //     };
+        [Fact]
+        public void SimplifyChanges_SingleChange_ReturnsSameChange()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5))
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Single(simplified);
-        //     Assert.Equal(1u, simplified[0].Before.Index);
-        //     Assert.Equal(0u, simplified[0].Before.Source); // Assuming default values for other fields
-        //     Assert.Equal(0u, simplified[0].Before.Target);
-        //     Assert.Equal(new Link<uint>(1, 4, 5), simplified[0].After);
-        // }
+            // Assert
+            Assert.Single(simplified);
+            Assert.Equal(new Link<uint>(1, 2, 3), simplified[0].Before);
+            Assert.Equal(new Link<uint>(1, 4, 5), simplified[0].After);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_MultipleNonOverlappingChanges_ReturnsAllChanges()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
-        //         (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
-        //         (new Link<uint>(3, 4, 5), new Link<uint>(3, 6, 7))
-        //     };
+        [Fact]
+        public void SimplifyChanges_MultipleNonOverlappingChanges_ReturnsAllChanges()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
+                (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
+                (new Link<uint>(3, 4, 5), new Link<uint>(3, 6, 7))
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Equal(3, simplified.Count);
+            // Assert
+            Assert.Equal(3, simplified.Count);
 
-        //     Assert.Contains(simplified, c => c.Before.Index == 1 && c.After.Index == 1 && c.After.Source == 4 && c.After.Target == 5);
-        //     Assert.Contains(simplified, c => c.Before.Index == 2 && c.After.Index == 2 && c.After.Source == 5 && c.After.Target == 6);
-        //     Assert.Contains(simplified, c => c.Before.Index == 3 && c.After.Index == 3 && c.After.Source == 6 && c.After.Target == 7);
-        // }
+            Assert.Contains(simplified, c => c.Before.Index == 1 && c.After.Index == 1 && c.After.Source == 4 && c.After.Target == 5);
+            Assert.Contains(simplified, c => c.Before.Index == 2 && c.After.Index == 2 && c.After.Source == 5 && c.After.Target == 6);
+            Assert.Contains(simplified, c => c.Before.Index == 3 && c.After.Index == 3 && c.After.Source == 6 && c.After.Target == 7);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_MultipleOverlappingChanges_ReturnsInitialToFinal()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
-        //         (new Link<uint>(1, 4, 5), new Link<uint>(1, 6, 7)),
-        //         (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
-        //         (new Link<uint>(2, 5, 6), new Link<uint>(2, 0, 0)),
-        //         (new Link<uint>(3, 4, 5), new Link<uint>(3, 6, 7))
-        //     };
+        [Fact]
+        public void SimplifyChanges_MultipleOverlappingChanges_ReturnsInitialToFinal()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
+                (new Link<uint>(1, 4, 5), new Link<uint>(1, 6, 7)),
+                (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
+                (new Link<uint>(2, 5, 6), new Link<uint>(2, 0, 0)),
+                (new Link<uint>(3, 4, 5), new Link<uint>(3, 6, 7))
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Equal(3, simplified.Count);
+            // Assert
+            Assert.Equal(3, simplified.Count);
 
-        //     // Link 1: from (1,2,3) to (1,6,7)
-        //     var link1 = simplified.FirstOrDefault(c => c.Before.Index == 1);
-        //     Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
-        //     Assert.Equal(new Link<uint>(1, 6, 7), link1.After);
+            // Link 1: from (1,2,3) to (1,6,7)
+            var link1 = simplified.FirstOrDefault(c => c.Before.Index == 1);
+            Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
+            Assert.Equal(new Link<uint>(1, 6, 7), link1.After);
 
-        //     // Link 2: from (2,3,4) to (2,0,0)
-        //     var link2 = simplified.FirstOrDefault(c => c.Before.Index == 2);
-        //     Assert.Equal(new Link<uint>(2, 3, 4), link2.Before);
-        //     Assert.Equal(new Link<uint>(2, 0, 0), link2.After);
+            // Link 2: from (2,3,4) to (2,0,0)
+            var link2 = simplified.FirstOrDefault(c => c.Before.Index == 2);
+            Assert.Equal(new Link<uint>(2, 3, 4), link2.Before);
+            Assert.Equal(new Link<uint>(2, 0, 0), link2.After);
 
-        //     // Link 3: from (3,4,5) to (3,6,7)
-        //     var link3 = simplified.FirstOrDefault(c => c.Before.Index == 3);
-        //     Assert.Equal(new Link<uint>(3, 4, 5), link3.Before);
-        //     Assert.Equal(new Link<uint>(3, 6, 7), link3.After);
-        // }
+            // Link 3: from (3,4,5) to (3,6,7)
+            var link3 = simplified.FirstOrDefault(c => c.Before.Index == 3);
+            Assert.Equal(new Link<uint>(3, 4, 5), link3.Before);
+            Assert.Equal(new Link<uint>(3, 6, 7), link3.After);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_ComplexScenario_MixedChanges()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         // Link 1: Multiple changes
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
-        //         (new Link<uint>(1, 4, 5), new Link<uint>(1, 6, 7)),
-        //         (new Link<uint>(1, 6, 7), new Link<uint>(1, 8, 9)),
+        [Fact]
+        public void SimplifyChanges_ComplexScenario_MixedChanges()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                // Link 1: Multiple changes
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
+                (new Link<uint>(1, 4, 5), new Link<uint>(1, 6, 7)),
+                (new Link<uint>(1, 6, 7), new Link<uint>(1, 8, 9)),
 
-        //         // Link 2: Single change
-        //         (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
+                // Link 2: Single change
+                (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
 
-        //         // Link 3: Multiple changes
-        //         (new Link<uint>(3, 4, 5), new Link<uint>(3, 6, 7)),
-        //         (new Link<uint>(3, 6, 7), new Link<uint>(3, 0, 0)),
+                // Link 3: Multiple changes
+                (new Link<uint>(3, 4, 5), new Link<uint>(3, 6, 7)),
+                (new Link<uint>(3, 6, 7), new Link<uint>(3, 0, 0)),
 
-        //         // Link 4: No changes
-        //     };
+                // Link 4: No changes
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Equal(3, simplified.Count);
+            // Assert
+            Assert.Equal(3, simplified.Count);
 
-        //     // Link 1: from (1,2,3) to (1,8,9)
-        //     var link1 = simplified.FirstOrDefault(c => c.Before.Index == 1);
-        //     Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
-        //     Assert.Equal(new Link<uint>(1, 8, 9), link1.After);
+            // Link 1: from (1,2,3) to (1,8,9)
+            var link1 = simplified.FirstOrDefault(c => c.Before.Index == 1);
+            Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
+            Assert.Equal(new Link<uint>(1, 8, 9), link1.After);
 
-        //     // Link 2: from (2,3,4) to (2,5,6)
-        //     var link2 = simplified.FirstOrDefault(c => c.Before.Index == 2);
-        //     Assert.Equal(new Link<uint>(2, 3, 4), link2.Before);
-        //     Assert.Equal(new Link<uint>(2, 5, 6), link2.After);
+            // Link 2: from (2,3,4) to (2,5,6)
+            var link2 = simplified.FirstOrDefault(c => c.Before.Index == 2);
+            Assert.Equal(new Link<uint>(2, 3, 4), link2.Before);
+            Assert.Equal(new Link<uint>(2, 5, 6), link2.After);
 
-        //     // Link 3: from (3,4,5) to (3,0,0)
-        //     var link3 = simplified.FirstOrDefault(c => c.Before.Index == 3);
-        //     Assert.Equal(new Link<uint>(3, 4, 5), link3.Before);
-        //     Assert.Equal(new Link<uint>(3, 0, 0), link3.After);
-        // }
+            // Link 3: from (3,4,5) to (3,0,0)
+            var link3 = simplified.FirstOrDefault(c => c.Before.Index == 3);
+            Assert.Equal(new Link<uint>(3, 4, 5), link3.Before);
+            Assert.Equal(new Link<uint>(3, 0, 0), link3.After);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_SameAfterMultipleChanges_ReturnsLastChange()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
-        //         (new Link<uint>(1, 4, 5), new Link<uint>(1, 6, 7)),
-        //         (new Link<uint>(1, 6, 7), new Link<uint>(1, 4, 5)) // Reverting back
-        //     };
+        [Fact]
+        public void SimplifyChanges_SameAfterMultipleChanges_ReturnsLastChange()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
+                (new Link<uint>(1, 4, 5), new Link<uint>(1, 6, 7)),
+                (new Link<uint>(1, 6, 7), new Link<uint>(1, 4, 5)) // Reverting back
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Single(simplified);
+            // Assert
+            Assert.Single(simplified);
 
-        //     // Link 1: from (1,2,3) to (1,4,5)
-        //     var link1 = simplified.First();
-        //     Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
-        //     Assert.Equal(new Link<uint>(1, 4, 5), link1.After);
-        // }
+            // Link 1: from (1,2,3) to (1,4,5)
+            var link1 = simplified.First();
+            Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
+            Assert.Equal(new Link<uint>(1, 4, 5), link1.After);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_DuplicateChanges_IgnoresDuplicates()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)), // Duplicate
-        //         (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
-        //         (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6))  // Duplicate
-        //     };
+        [Fact]
+        public void SimplifyChanges_DuplicateChanges_IgnoresDuplicates()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)), // Duplicate
+                (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6)),
+                (new Link<uint>(2, 3, 4), new Link<uint>(2, 5, 6))  // Duplicate
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Equal(2, simplified.Count);
+            // Assert
+            Assert.Equal(2, simplified.Count);
 
-        //     Assert.Contains(simplified, c => c.Before.Index == 1 && c.After.Index == 1 && c.After.Source == 4 && c.After.Target == 5);
-        //     Assert.Contains(simplified, c => c.Before.Index == 2 && c.After.Index == 2 && c.After.Source == 5 && c.After.Target == 6);
-        // }
+            Assert.Contains(simplified, c => c.Before.Index == 1 && c.After.Index == 1 && c.After.Source == 4 && c.After.Target == 5);
+            Assert.Contains(simplified, c => c.Before.Index == 2 && c.After.Index == 2 && c.After.Source == 5 && c.After.Target == 6);
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_NullChanges_ThrowsException()
-        // {
-        //     // Arrange
-        //     List<(Link<uint> Before, Link<uint> After)> changes = null;
+        [Fact]
+        public void SimplifyChanges_NullChanges_ThrowsException()
+        {
+            // Arrange
+            List<(Link<uint> Before, Link<uint> After)> changes = null!;
 
-        //     // Act & Assert
-        //     Assert.Throws<System.ArgumentNullException>(() => ChangesSimplifier.SimplifyChanges(changes).ToList());
-        // }
+            // Act & Assert
+            Assert.Throws<System.ArgumentNullException>(() => ChangesSimplifier.SimplifyChanges(changes).ToList());
+        }
 
-        // [Fact]
-        // public void SimplifyChanges_ChangesWithSameBeforeDifferentAfter_LastAfterIsRetained()
-        // {
-        //     // Arrange
-        //     var changes = new List<(Link<uint> Before, Link<uint> After)>
-        //     {
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 6, 7)),
-        //         (new Link<uint>(1, 2, 3), new Link<uint>(1, 8, 9))
-        //     };
+        [Fact]
+        public void SimplifyChanges_ChangesWithSameBeforeDifferentAfter_LastAfterIsRetained()
+        {
+            // Arrange
+            var changes = new List<(Link<uint> Before, Link<uint> After)>
+            {
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 4, 5)),
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 6, 7)),
+                (new Link<uint>(1, 2, 3), new Link<uint>(1, 8, 9))
+            };
 
-        //     // Act
-        //     var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
+            // Act
+            var simplified = ChangesSimplifier.SimplifyChanges(changes).ToList();
 
-        //     // Assert
-        //     Assert.Single(simplified);
+            // Assert
+            Assert.Single(simplified);
 
-        //     var link1 = simplified.First();
-        //     Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
-        //     Assert.Equal(new Link<uint>(1, 8, 9), link1.After); // Last change is retained
-        // }
+            var link1 = simplified.First();
+            Assert.Equal(new Link<uint>(1, 2, 3), link1.Before);
+            Assert.Equal(new Link<uint>(1, 8, 9), link1.After); // Last change is retained
+        }
     }
 }

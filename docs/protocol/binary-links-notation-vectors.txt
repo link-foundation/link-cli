@@ -1,0 +1,112 @@
+# Golden vectors of binary links notation, version 1.
+#
+# Both ports check them in their test suites (csharp: BinaryLinksNotationTests,
+# rust: protocol_packet_tests), so they write and read exactly these bytes.
+# Fields are separated by tabs; bytes are hexadecimal.
+#
+# document <text> <references> <arity> <widths> <bytes>
+#   A LiNo document (`\n` is a line break) encoded with the binary LiNo
+#   options: plain or external references, the arity range of links, and
+#   uniform or packed reference widths.
+#
+# links <links> <references> <widths> <bytes>
+#   A packet of raw links laid out by `pack`, written as
+#   `address:reference reference…` separated by `;`, where `#v` is the
+#   external value `v` and a bare number is a link address.
+
+document		plain	2	uniform	10 00
+document		plain	2	packed	10 00
+document		plain	2..3	uniform	10 00
+document		plain	2..3	packed	10 00
+document		plain	1..	uniform	10 00
+document		plain	1..	packed	10 00
+document		external	2	uniform	11 00
+document		external	2	packed	11 00
+document		external	2..3	uniform	11 00
+document		external	2..3	packed	11 00
+document		external	1..	uniform	11 00
+document		external	1..	packed	11 00
+document	() ((1 1))	plain	2	uniform	10 07 02 01 06 06 07 00 04 08 00 09 0a 00 04 0b
+document	() ((1 1))	plain	2	packed	10 07 02 01 06 06 07 00 04 08 00 09 0a 00 04 0b
+document	() ((1 1))	plain	2..3	uniform	10 07 02 01 06 06 07 00 04 08 00 09 0a 00 04 0b
+document	() ((1 1))	plain	2..3	packed	10 07 02 01 06 06 07 00 04 08 00 09 0a 00 04 0b
+document	() ((1 1))	plain	1..	uniform	12 04 24 05 02 10 01 20 01 10 01 02 01 06 06 07 00 08 09
+document	() ((1 1))	plain	1..	packed	12 04 24 05 02 10 01 20 01 10 01 02 01 06 06 07 00 08 09
+document	() ((1 1))	external	2	uniform	11 06 ff ff 06 00 04 07 00 08 09 00 04 0a
+document	() ((1 1))	external	2	packed	11 06 ff ff 06 00 04 07 00 08 09 00 04 0a
+document	() ((1 1))	external	2..3	uniform	11 06 ff ff 06 00 04 07 00 08 09 00 04 0a
+document	() ((1 1))	external	2..3	packed	11 06 ff ff 06 00 04 07 00 08 09 00 04 0a
+document	() ((1 1))	external	1..	uniform	13 01 1c 05 01 04 01 ff ff 00 06 01 00 07 00 08
+document	() ((1 1))	external	1..	packed	13 01 1c 05 01 04 01 ff ff 00 06 01 00 07 00 08
+document	((1: 1 1)) ((1: 1 2))	plain	2	uniform	10 12 02 01 06 00 06 07 06 08 05 09 0a 00 04 0b 01 01 02 0d 0e 00 06 0f 06 10 05 11 12 00 04 13 0c 14 15 00 04 16
+document	((1: 1 1)) ((1: 1 2))	plain	2	packed	10 12 02 01 06 00 06 07 06 08 05 09 0a 00 04 0b 01 01 02 0d 0e 00 06 0f 06 10 05 11 12 00 04 13 0c 14 15 00 04 16
+document	((1: 1 1)) ((1: 1 2))	plain	2..3	uniform	10 12 02 01 06 00 06 07 06 08 05 09 0a 00 04 0b 01 01 02 0d 0e 00 06 0f 06 10 05 11 12 00 04 13 0c 14 15 00 04 16
+document	((1: 1 1)) ((1: 1 2))	plain	2..3	packed	10 12 02 01 06 00 06 07 06 08 05 09 0a 00 04 0b 01 01 02 0d 0e 00 06 0f 06 10 05 11 12 00 04 13 0c 14 15 00 04 16
+document	((1: 1 1)) ((1: 1 2))	plain	1..	uniform	12 02 24 05 03 18 03 06 02 01 01 01 02 07 03 05 06 06 06 00 09 03 05 06 06 08 00 0b 01 0a 0c 00 0d
+document	((1: 1 1)) ((1: 1 2))	plain	1..	packed	12 02 24 05 03 18 03 06 02 01 01 01 02 07 03 05 06 06 06 00 09 03 05 06 06 08 00 0b 01 0a 0c 00 0d
+document	((1: 1 1)) ((1: 1 2))	external	2	uniform	11 0f ff 00 ff 06 ff 07 05 08 09 00 04 0a fe 00 ff 0c ff 0d 05 0e 0f 00 04 10 0b 11 12 00 04 13
+document	((1: 1 1)) ((1: 1 2))	external	2	packed	11 0f ff 00 ff 06 ff 07 05 08 09 00 04 0a fe 00 ff 0c ff 0d 05 0e 0f 00 04 10 0b 11 12 00 04 13
+document	((1: 1 1)) ((1: 1 2))	external	2..3	uniform	11 0f ff 00 ff 06 ff 07 05 08 09 00 04 0a fe 00 ff 0c ff 0d 05 0e 0f 00 04 10 0b 11 12 00 04 13
+document	((1: 1 1)) ((1: 1 2))	external	2..3	packed	11 0f ff 00 ff 06 ff 07 05 08 09 00 04 0a fe 00 ff 0c ff 0d 05 0e 0f 00 04 10 0b 11 12 00 04 13
+document	((1: 1 1)) ((1: 1 2))	external	1..	uniform	13 01 1c 05 03 06 03 05 ff ff ff 00 06 03 05 ff ff fe 00 08 01 07 09 00 0a
+document	((1: 1 1)) ((1: 1 2))	external	1..	packed	13 01 1c 05 03 06 03 05 ff ff ff 00 06 03 05 ff ff fe 00 08 01 07 09 00 0a
+document	hi	plain	2	uniform	10 10 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 08 0b 0c 08 01 0a 0e 0b 0f 10 00 0d 11 03 12 13 00 04 14
+document	hi	plain	2	packed	10 10 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 08 0b 0c 08 01 0a 0e 0b 0f 10 00 0d 11 03 12 13 00 04 14
+document	hi	plain	2..3	uniform	12 03 24 05 0b 30 01 20 02 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 08 0b 0c 08 01 0a 0e 0b 0f 03 0d 10 11 00 04 12
+document	hi	plain	2..3	packed	12 03 24 05 0b 30 01 20 02 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 08 0b 0c 08 01 0a 0e 0b 0f 03 0d 10 11 00 04 12
+document	hi	plain	1..	uniform	12 03 24 05 0b 30 01 10 01 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 08 0b 0c 08 01 0a 0e 0b 0f 03 0d 10 11
+document	hi	plain	1..	packed	12 03 24 05 0b 30 01 10 01 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 08 0b 0c 08 01 0a 0e 0b 0f 03 0d 10 11
+document	hi	external	2	uniform	11 05 97 00 98 06 03 07 08 00 04 09
+document	hi	external	2	packed	11 05 97 00 98 06 03 07 08 00 04 09
+document	hi	external	2..3	uniform	13 02 34 05 01 20 02 03 98 97 06 00 04 07
+document	hi	external	2..3	packed	13 02 34 05 01 20 02 03 98 97 06 00 04 07
+document	hi	external	1..	uniform	13 02 34 05 01 10 01 03 98 97 06
+document	hi	external	1..	packed	13 02 34 05 01 10 01 03 98 97 06
+document	(a b c)	plain	2	uniform	10 19 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 01 0b 0c 0d 00 03 0e 0a 06 0b 10 11 00 03 12 06 01 0a 14 0b 15 16 00 03 17 18 00 13 19 0f 1a 04 1b 1c 00 04 1d
+document	(a b c)	plain	2	packed	10 19 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 01 0b 0c 0d 00 03 0e 0a 06 0b 10 11 00 03 12 06 01 0a 14 0b 15 16 00 03 17 18 00 13 19 0f 1a 04 1b 1c 00 04 1d
+document	(a b c)	plain	2..3	uniform	12 03 24 05 13 30 01 20 02 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 01 0b 0c 0d 00 03 0e 0a 06 0b 10 11 00 03 12 06 01 0a 14 0b 15 16 00 03 17 0f 13 18 19 00 04 1a
+document	(a b c)	plain	2..3	packed	12 03 24 05 13 30 01 20 02 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 01 0b 0c 0d 00 03 0e 0a 06 0b 10 11 00 03 12 06 01 0a 14 0b 15 16 00 03 17 0f 13 18 19 00 04 1a
+document	(a b c)	plain	1..	uniform	12 03 24 05 13 30 01 10 01 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 01 0b 0c 0d 00 03 0e 0a 06 0b 10 11 00 03 12 06 01 0a 14 0b 15 16 00 03 17 0f 13 18 19
+document	(a b c)	plain	1..	packed	12 03 24 05 13 30 01 10 01 01 01 06 06 07 07 08 08 09 09 0a 0a 0a 01 0b 0c 0d 00 03 0e 0a 06 0b 10 11 00 03 12 06 01 0a 14 0b 15 16 00 03 17 0f 13 18 19
+document	(a b c)	external	2	uniform	11 0c 9f 00 03 06 9e 00 03 08 9d 00 03 0a 0b 00 09 0c 07 0d 04 0e 0f 00 04 10
+document	(a b c)	external	2	packed	11 0c 9f 00 03 06 9e 00 03 08 9d 00 03 0a 0b 00 09 0c 07 0d 04 0e 0f 00 04 10
+document	(a b c)	external	2..3	uniform	13 03 24 05 06 30 01 20 02 9f 00 03 06 9e 00 03 08 9d 00 03 0a 07 09 0b 0c 00 04 0d
+document	(a b c)	external	2..3	packed	13 03 24 05 06 30 01 20 02 9f 00 03 06 9e 00 03 08 9d 00 03 0a 07 09 0b 0c 00 04 0d
+document	(a b c)	external	1..	uniform	13 03 24 05 06 30 01 10 01 9f 00 03 06 9e 00 03 08 9d 00 03 0a 07 09 0b 0c
+document	(a b c)	external	1..	packed	13 03 24 05 06 30 01 10 01 9f 00 03 06 9e 00 03 08 9d 00 03 0a 07 09 0b 0c
+document	(1000 1)	plain	2	uniform	10 13 01 01 06 06 07 07 08 08 09 09 0a 0a 0b 0b 0c 0c 0d 0d 0a 08 0b 0f 0c 10 0d 11 0e 12 02 13 02 01 14 15 16 00 04 17
+document	(1000 1)	plain	2	packed	10 13 01 01 06 06 07 07 08 08 09 09 0a 0a 0b 0b 0c 0c 0d 0d 0a 08 0b 0f 0c 10 0d 11 0e 12 02 13 02 01 14 15 16 00 04 17
+document	(1000 1)	plain	2..3	uniform	10 13 01 01 06 06 07 07 08 08 09 09 0a 0a 0b 0b 0c 0c 0d 0d 0a 08 0b 0f 0c 10 0d 11 0e 12 02 13 02 01 14 15 16 00 04 17
+document	(1000 1)	plain	2..3	packed	10 13 01 01 06 06 07 07 08 08 09 09 0a 0a 0b 0b 0c 0c 0d 0d 0a 08 0b 0f 0c 10 0d 11 0e 12 02 13 02 01 14 15 16 00 04 17
+document	(1000 1)	plain	1..	uniform	12 02 24 05 11 10 01 01 01 06 06 07 07 08 08 09 09 0a 0a 0b 0b 0c 0c 0d 0d 0a 08 0b 0f 0c 10 0d 11 0e 12 02 13 02 01 14 15 16
+document	(1000 1)	plain	1..	packed	12 02 24 05 11 10 01 01 01 06 06 07 07 08 08 09 09 0a 0a 0b 0b 0c 0c 0d 0d 0a 08 0b 0f 0c 10 0d 11 0e 12 02 13 02 01 14 15 16
+document	(1000 1)	external	2	uniform	15 03 18 fc ff ff 06 00 00 00 04 00 07 00
+document	(1000 1)	external	2	packed	15 03 18 fc ff ff 06 00 00 00 04 00 07 00
+document	(1000 1)	external	2..3	uniform	15 03 18 fc ff ff 06 00 00 00 04 00 07 00
+document	(1000 1)	external	2..3	packed	15 03 18 fc ff ff 06 00 00 00 04 00 07 00
+document	(1000 1)	external	1..	uniform	13 02 25 05 01 11 01 18 fc ff ff 06 00
+document	(1000 1)	external	1..	packed	13 02 25 05 01 10 01 18 fc ff ff 06
+document	1\n2	plain	2	uniform	10 04 02 01 01 01 02 07 06 08
+document	1\n2	plain	2	packed	10 04 02 01 01 01 02 07 06 08
+document	1\n2	plain	2..3	uniform	10 04 02 01 01 01 02 07 06 08
+document	1\n2	plain	2..3	packed	10 04 02 01 01 01 02 07 06 08
+document	1\n2	plain	1..	uniform	10 04 02 01 01 01 02 07 06 08
+document	1\n2	plain	1..	packed	10 04 02 01 01 01 02 07 06 08
+document	1\n2	external	2	uniform	11 01 ff fe
+document	1\n2	external	2	packed	11 01 ff fe
+document	1\n2	external	2..3	uniform	11 01 ff fe
+document	1\n2	external	2..3	packed	11 01 ff fe
+document	1\n2	external	1..	uniform	11 01 ff fe
+document	1\n2	external	1..	packed	11 01 ff fe
+links	1:1 1;2:1 2 3;3:2 2 2;10:3 9	plain	uniform	12 03 20 01 30 02 24 06 01 01 01 01 02 03 02 02 02 03 09
+links	1:1 1;2:1 2 3;3:2 2 2;10:3 9	plain	packed	12 03 20 01 30 02 24 06 01 01 01 01 02 03 02 02 02 03 09
+links	1:1 1;2:1 2;3:2 3;4:3 4;5:4 5;6:5 6;7:70000 1	plain	uniform	12 01 22 07 01 00 00 00 01 00 00 00 01 00 00 00 02 00 00 00 02 00 00 00 03 00 00 00 03 00 00 00 04 00 00 00 04 00 00 00 05 00 00 00 05 00 00 00 06 00 00 00 70 11 01 00 01 00 00 00
+links	1:1 1;2:1 2;3:2 3;4:3 4;5:4 5;6:5 6;7:70000 1	plain	packed	12 02 20 06 22 01 01 01 01 02 02 03 03 04 04 05 05 06 70 11 01 00 01 00 00 00
+links	1:#65;2:1 #66 #67;3:2	external	uniform	13 03 10 01 30 01 10 01 bf 01 be bd 02
+links	1:#65;2:1 #66 #67;3:2	external	packed	13 03 10 01 30 01 10 01 bf 01 be bd 02
+links	6:1 1;7:#1000 6	external	uniform	15 02 01 00 01 00 18 fc 06 00
+links	6:1 1;7:#1000 6	external	packed	15 02 01 00 01 00 18 fc 06 00
+links	1:1;2:1 1;3:1 1 1;4:1 1 1 1	plain	uniform	12 01 18 03 04 00 01 01 01 01 02 01 01 01 03 01 01 01 01
+links	1:1;2:1 1;3:1 1 1;4:1 1 1 1	plain	packed	12 01 18 03 04 00 01 01 01 01 02 01 01 01 03 01 01 01 01
+links	1:0 0;300:1 1;301:300 #5	external	uniform	13 02 21 01 25 aa 02 02 00 00 00 00 01 00 01 00 2c 01 fb ff
+links	1:0 0;300:1 1;301:300 #5	external	packed	13 02 20 01 25 aa 02 02 00 00 01 00 01 00 2c 01 fb ff

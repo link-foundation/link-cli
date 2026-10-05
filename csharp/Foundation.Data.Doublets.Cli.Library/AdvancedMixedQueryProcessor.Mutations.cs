@@ -42,11 +42,7 @@ namespace Foundation.Data.Doublets.Cli
             if (linkDefinition.Index != nullConstant)
             {
                 // update existing link
-                if (!links.Exists(linkDefinition.Index))
-                {
-                    TraceIfEnabled(options, $"[CreateOrUpdateLink] Link #{linkDefinition.Index} doesn't exist => ensuring creation.");
-                    LinksExtensions.EnsureCreated(links, linkDefinition.Index);
-                }
+                EnsureAddress(links, linkDefinition.Index, options);
                 var existingLinkRecord = links.GetLink(linkDefinition.Index);
                 var existingDoublet = new DoubletLink(existingLinkRecord);
 
@@ -54,7 +50,6 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     TraceIfEnabled(options,
                         $"[CreateOrUpdateLink] Updating link #{linkDefinition.Index}: {existingDoublet.Source}->{linkDefinition.Source}, {existingDoublet.Target}->{linkDefinition.Target}.");
-                    LinksExtensions.EnsureCreated(links, linkDefinition.Index);
                     links.Update(
                         new DoubletLink(linkDefinition.Index, anyConstant, anyConstant),
                         linkDefinition,
@@ -261,11 +256,7 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 // We have an index => ensure created or updated
-                if (!links.Exists(link.Index))
-                {
-                    TraceIfEnabled(options, $"[EnsureLinkCreated] Link #{link.Index} doesn't exist => ensuring creation.");
-                    LinksExtensions.EnsureCreated(links, link.Index);
-                }
+                EnsureAddress(links, link.Index, options);
                 var stored = links.GetLink(link.Index);
                 var storedD = new DoubletLink(stored);
                 if (storedD.Source != link.Source || storedD.Target != link.Target)
@@ -303,29 +294,64 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        // Consolidates getting or creating a named link (leaf) without setting its relationships
-        private static uint EnsureNamedLeafLink(INamedTypesLinks<uint> links, string name, Options options)
+        /// <summary>
+        /// Fills <paramref name="index"/> in when the store lacks it and reports the empty
+        /// <c>(index: 0 0)</c> link that creates.
+        /// </summary>
+        private static void EnsureAddress(INamedTypesLinks<uint> links, uint index, Options options)
         {
-            var existing = links.GetByName(name);
-            if (existing != links.Constants.Null) return existing;
-            var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created named leaf '{name}' => ID={newId}");
-            links.SetName(newId, name);
-            return newId;
+            if (links.Exists(index))
+            {
+                return;
+            }
+            TraceIfEnabled(options, $"[EnsureAddress] Link #{index} doesn't exist => ensuring creation.");
+            LinksExtensions.EnsureCreated(links, index);
+            ReportCreatedEmpty(links, index, options);
         }
 
-        // Applies a single structural update to an existing link: sets its source and target
+        private static void ReportCreatedEmpty(INamedTypesLinks<uint> links, uint index, Options options)
+        {
+            var nothing = links.Constants.Null;
+            options.ChangesHandler?.Invoke(new DoubletLink(nothing, nothing, nothing), new DoubletLink(index, nothing, nothing));
+        }
+
+        /// <summary>
+        /// The link called <paramref name="name"/>, created and reported as the point link
+        /// <c>(name: name name)</c> when there is none yet.
+        /// </summary>
+        private static uint EnsureNamedPointLink(INamedTypesLinks<uint> links, string name, Options options)
+        {
+            var existing = links.GetByName(name);
+            if (existing != links.Constants.Null)
+            {
+                return existing;
+            }
+            var created = links.Create();
+            ReportCreatedEmpty(links, created, options);
+            links.SetName(created, name);
+            ApplyCompositeUpdate(links, created, created, created, options);
+            TraceIfEnabled(options, $"[EnsureNamedPointLink] Created point link '{name}' => ID={created}");
+            return created;
+        }
+
+        /// <summary>
+        /// Points the existing link <paramref name="id"/> at <paramref name="source"/> and
+        /// <paramref name="target"/>; a link that already does is reported unchanged and not rewritten.
+        /// </summary>
         private static void ApplyCompositeUpdate(INamedTypesLinks<uint> links, uint id, uint source, uint target, Options options)
         {
-            var restriction = new DoubletLink(id, links.Constants.Null, links.Constants.Null);
-            var substitution = new DoubletLink(id, source, target);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link ID={id} => Source={source}, Target={target}");
-            links.Update(restriction, substitution, (before, after) =>
+            var stored = new DoubletLink(links.GetLink(id));
+            if (stored.Source == source && stored.Target == target)
             {
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={before}, after={after}");
-                return links.Constants.Continue;
-            });
+                options.ChangesHandler?.Invoke(stored, stored);
+                return;
+            }
+            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link ID={id} => Source={source}, Target={target}");
+            links.Update(new DoubletLink(id, links.Constants.Any, links.Constants.Any), new DoubletLink(id, source, target), ReportChanges(links, options));
         }
+
+        private static WriteHandler<uint> ReportChanges(INamedTypesLinks<uint> links, Options options) =>
+            (before, after) => options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue;
 
         /// <summary>
         /// Detects a two-child composite pattern where at least one child matches the composite identifier.
@@ -366,7 +392,7 @@ namespace Foundation.Data.Doublets.Cli
 
         private static uint HandleStringComposite(string name, LinoLink left, LinoLink right, INamedTypesLinks<uint> links, Options options)
         {
-            var id = EnsureNamedLeafLink(links, name, options);
+            var id = EnsureNamedPointLink(links, name, options);
             var caseType = ClassifyCompositeCase(name, left, right);
             switch (caseType)
             {
@@ -418,25 +444,7 @@ namespace Foundation.Data.Doublets.Cli
                 TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Leaf parse => returning {parsedNumber}.");
                 return parsedNumber;
             }
-            var existingId = links.GetByName(pattern.Id);
-            if (existingId != links.Constants.Null)
-            {
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Found existing named leaf '{pattern.Id}' => ID={existingId}");
-                return existingId;
-            }
-            var newLeafId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] SetName({newLeafId}, '{pattern.Id}')");
-            links.SetName(newLeafId, pattern.Id);
-            var restriction = new DoubletLink(newLeafId, links.Constants.Null, links.Constants.Null);
-            var substitution = new DoubletLink(newLeafId, newLeafId, newLeafId);
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Updating link {newLeafId} to be self-referential");
-            links.Update(restriction, substitution, (beforeState, afterState) =>
-            {
-                TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Update handler: before={beforeState}, after={afterState}");
-                return links.Constants.Continue;
-            });
-            TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created new self-referential named leaf '{pattern.Id}' => ID={newLeafId}");
-            return newLeafId;
+            return EnsureNamedPointLink(links, pattern.Id, options);
         }
 
         /// <summary>
@@ -467,14 +475,23 @@ namespace Foundation.Data.Doublets.Cli
                     }
                 }
             }
+            var isName = !string.IsNullOrEmpty(literalIdentifier) && !IsNumericOrStar(literalIdentifier) && !literalIdentifier.StartsWith("$");
+            if (isName)
+            {
+                // A name is an address too: the link it already names is updated in place.
+                var named = links.GetByName(literalIdentifier!);
+                if (named != links.Constants.Null)
+                {
+                    compositeIndex = named;
+                }
+            }
             // Build the composite link structure and ensure it exists
             var compositeLinkDefinition = new DoubletLink(compositeIndex, sourceLinkId, targetLinkId);
             var compositeLinkId = EnsureLinkCreated(links, compositeLinkDefinition, options);
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index={compositeIndex}, Source={sourceLinkId}, Target={targetLinkId} => Actual ID={compositeLinkId}");
-            // Assign the name for non-numeric identifiers
-            if (!string.IsNullOrEmpty(literalIdentifier) && !IsNumericOrStar(literalIdentifier) && !literalIdentifier.StartsWith("$"))
+            if (isName)
             {
-                links.SetName(compositeLinkId, literalIdentifier);
+                links.SetName(compositeLinkId, literalIdentifier!);
             }
             return compositeLinkId;
         }

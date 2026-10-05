@@ -1,5 +1,7 @@
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
+using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation;
 using Platform.Data;
 using Platform.Data.Doublets;
 
@@ -106,6 +108,16 @@ var inputOption = new Option<string?>("--in", "--lino-input", "--import")
     Description = "Path to read and import a LiNo file into the database"
 };
 
+var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
+{
+    Description = "Path to read and import a store archive in binary links notation"
+};
+
+var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output", "--binary-out")
+{
+    Description = "Path to write the complete database, names included, as a store archive in binary links notation"
+};
+
 var transactionsOption = new Option<bool>("--transactions")
 {
     Description = "Enable the transactions layer (default log path: <db>.transitions.links)",
@@ -176,6 +188,38 @@ var logOption = new Option<bool>("--log")
     DefaultValueFactory = _ => false
 };
 
+var serveOption = new Option<string?>("--serve")
+{
+    Description = "Serve the database over TCP at host:port (port 0 picks a free port)"
+};
+
+var connectOption = new Option<string?>("--connect")
+{
+    Description = "Send the query to a clink server at host:port and print the reply"
+};
+
+var protocolOption = new Option<string?>("--protocol")
+{
+    Description = "Wire protocol: 'text' or 'binary' with --connect (default: text), 'any', 'text' or 'binary' with --serve (default: any)"
+};
+
+var externalReferencesOption = new Option<bool>("--external-references")
+{
+    Description = "Binary protocol: send numbers as external references (implies --protocol binary)",
+    DefaultValueFactory = _ => false
+};
+
+var arityOption = new Option<string?>("--arity")
+{
+    Description = "Binary protocol: link lengths to use, 'n', 'min..max' or 'min..' (default: 2, doublets only; e.g. 2..3 adds triplets, 1.. any length; implies --protocol binary)"
+};
+
+var packedWidthsOption = new Option<bool>("--packed-widths")
+{
+    Description = "Binary protocol: give each section of links the narrowest reference width it needs instead of one width for the whole packet (implies --protocol binary)",
+    DefaultValueFactory = _ => false
+};
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
 rootCommand.Options.Add(dbOption);
 rootCommand.Options.Add(queryOption);
@@ -194,6 +238,8 @@ rootCommand.Options.Add(triggersFileOption);
 rootCommand.Options.Add(embedTriggersOption);
 rootCommand.Options.Add(inputOption);
 rootCommand.Options.Add(outputOption);
+rootCommand.Options.Add(binaryInputOption);
+rootCommand.Options.Add(binaryOutputOption);
 rootCommand.Options.Add(transactionsOption);
 rootCommand.Options.Add(transactionsFileOption);
 rootCommand.Options.Add(commitModeOption);
@@ -207,6 +253,12 @@ rootCommand.Options.Add(tagOption);
 rootCommand.Options.Add(listBranchesOption);
 rootCommand.Options.Add(listTagsOption);
 rootCommand.Options.Add(logOption);
+rootCommand.Options.Add(serveOption);
+rootCommand.Options.Add(connectOption);
+rootCommand.Options.Add(protocolOption);
+rootCommand.Options.Add(externalReferencesOption);
+rootCommand.Options.Add(arityOption);
+rootCommand.Options.Add(packedWidthsOption);
 
 rootCommand.SetAction(
   parseResult =>
@@ -228,6 +280,8 @@ rootCommand.SetAction(
       var embedTriggers = parseResult.GetValue(embedTriggersOption);
       var inputPath = parseResult.GetValue(inputOption);
       var outputPath = parseResult.GetValue(outputOption);
+      var binaryInputPath = parseResult.GetValue(binaryInputOption);
+      var binaryOutputPath = parseResult.GetValue(binaryOutputOption);
       var transactionsFlag = parseResult.GetValue(transactionsOption);
       var transactionsPathRaw = parseResult.GetValue(transactionsFileOption);
       var commitModeRaw = parseResult.GetValue(commitModeOption);
@@ -241,12 +295,40 @@ rootCommand.SetAction(
       var listBranches = parseResult.GetValue(listBranchesOption);
       var listTags = parseResult.GetValue(listTagsOption);
       var showLog = parseResult.GetValue(logOption);
+      var serveAddress = parseResult.GetValue(serveOption);
+      var connectAddress = parseResult.GetValue(connectOption);
+      var protocolName = parseResult.GetValue(protocolOption)?.Trim();
+      var arity = ArityRange.Doublets;
+      if (parseResult.GetValue(arityOption) is { } arityText
+          && !ArityRange.TryParse(arityText.Trim(), out arity, out var arityError))
+      {
+          Console.Error.WriteLine($"invalid value for '--arity': {arityError}");
+          return 1;
+      }
+      var binaryOptions = new BinaryLinoOptions
+      {
+          ExternalReferences = parseResult.GetValue(externalReferencesOption),
+          Arity = arity,
+          PackedWidths = parseResult.GetValue(packedWidthsOption),
+      };
 
       var triggerCommandCount = new[] { always, once, never }.Count(value => value);
       if (triggerCommandCount > 1)
       {
           Console.Error.WriteLine("Only one of --always, --once, or --never can be used at a time.");
           return 1;
+      }
+
+      if (serveAddress is not null && connectAddress is not null)
+      {
+          Console.Error.WriteLine("--serve and --connect cannot be used together.");
+          return 1;
+      }
+
+      if (connectAddress is not null)
+      {
+          var clientQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
+          return RunClient(connectAddress, protocolName, binaryOptions, clientQuery);
       }
 
       var vcRequested = vc
@@ -484,7 +566,47 @@ rootCommand.SetAction(
               return 0;
           }
 
+          if (serveAddress is not null)
+          {
+              return RunServer();
+          }
+
           return RunQueryPipeline();
+      }
+
+      // `--serve`: serves decoratedLinks until the process is interrupted.
+      int RunServer()
+      {
+          if (!string.IsNullOrWhiteSpace(queryOptionValue) || !string.IsNullOrWhiteSpace(queryArgumentValue))
+          {
+              Console.Error.WriteLine("--serve does not take a query; send queries with --connect.");
+              return 1;
+          }
+          AcceptedProtocols accept;
+          switch (protocolName?.ToLowerInvariant())
+          {
+              case null or "any": accept = AcceptedProtocols.Any; break;
+              case "text": accept = AcceptedProtocols.Text; break;
+              case "binary": accept = AcceptedProtocols.Binary; break;
+              default:
+                  Console.Error.WriteLine($"Invalid --protocol value '{protocolName}'. Use 'any', 'text' or 'binary'.");
+                  return 1;
+          }
+          using var server = LinksServer.Bind(serveAddress, new LinksServerOptions
+          {
+              Trace = trace,
+              AutoCreateMissingReferences = autoCreateMissingReferences,
+              Accept = accept,
+          });
+          Console.CancelKeyPress += (_, eventArgs) =>
+          {
+              eventArgs.Cancel = true;
+              server.Shutdown();
+          };
+          Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
+          Console.Out.Flush();
+          server.Serve(decoratedLinks);
+          return 0;
       }
 
       bool TryResolveSequence(VersionControlDecorator vc, string point, out long sequence)
@@ -512,7 +634,7 @@ rootCommand.SetAction(
               PrintAllLinks(decoratedLinks);
           }
 
-          if (!TryReadLinoInput(decoratedLinks, inputPath))
+          if (!TryReadBinaryInput(decoratedLinks, binaryInputPath) || !TryReadLinoInput(decoratedLinks, inputPath))
           {
               return 1;
           }
@@ -531,7 +653,7 @@ rootCommand.SetAction(
                   return 1;
               }
 
-              return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+              return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
           }
 
           var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
@@ -547,14 +669,14 @@ rootCommand.SetAction(
               var kind = always ? PersistentTransformationKind.Always : PersistentTransformationKind.Once;
               var trigger = persistentLinks.StoreTrigger(kind, effectiveQuery);
               Console.WriteLine($"{kind} persistent transformation trigger stored: {trigger}");
-              return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+              return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
           }
 
           if (persistentLinks is not null && never)
           {
               var removed = persistentLinks.RemoveTriggers(effectiveQuery);
               Console.WriteLine($"Persistent transformation triggers removed: {removed}");
-              return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+              return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
           }
 
           var changesList = new List<(DoubletLink Before, DoubletLink After)>();
@@ -573,7 +695,20 @@ rootCommand.SetAction(
                   }
               };
 
-              QueryProcessor.ProcessQuery(decoratedLinks, options);
+              try
+              {
+                  QueryProcessor.ProcessQuery(decoratedLinks, options);
+              }
+              catch (Exception error) when (error is ParseException or InvalidOperationException)
+              {
+                  var kind = error is ParseException ? "Parse error" : "Query error";
+                  Console.Error.WriteLine($"Error: {kind}: {error.Message}");
+                  if (trace)
+                  {
+                      Console.Error.WriteLine(error);
+                  }
+                  return 1;
+              }
           }
 
           if (changes && changesList.Any())
@@ -607,12 +742,52 @@ rootCommand.SetAction(
               PrintAllLinks(decoratedLinks);
           }
 
-          return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+          return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
       }
   }
 );
 
 return rootCommand.Parse(args).Invoke();
+
+// `--connect`: sends the query to a server and prints the reply.
+// Any binary option implies `--protocol binary`.
+static int RunClient(string address, string? protocolName, BinaryLinoOptions binaryOptions, string query)
+{
+    ILinoProtocol protocol;
+    switch (protocolName?.ToLowerInvariant())
+    {
+        case null:
+            protocol = binaryOptions == default ? new TextLinoProtocol() : new BinaryLinoProtocol(binaryOptions);
+            break;
+        case "text" when binaryOptions != default:
+            Console.Error.WriteLine("Binary protocol options require --protocol binary.");
+            return 1;
+        case "text":
+            protocol = new TextLinoProtocol();
+            break;
+        case "binary":
+            protocol = new BinaryLinoProtocol(binaryOptions);
+            break;
+        default:
+            Console.Error.WriteLine($"Invalid --protocol value '{protocolName}'. Use 'text' or 'binary'.");
+            return 1;
+    }
+    try
+    {
+        using var client = LinksClient.Connect(address, protocol);
+        var reply = client.QueryText(query);
+        if (reply.Length > 0)
+        {
+            Console.WriteLine(reply);
+        }
+        return 0;
+    }
+    catch (Exception error) when (error is LinoProtocolException or System.Net.Sockets.SocketException or IOException or ArgumentException)
+    {
+        Console.Error.WriteLine($"Error: {error.Message}");
+        return 1;
+    }
+}
 
 static void PrintAllLinks(INamedTypesLinks<uint> links)
 {
@@ -622,6 +797,49 @@ static void PrintAllLinks(INamedTypesLinks<uint> links)
 static void PrintChange(INamedTypesLinks<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
 {
     Console.WriteLine(LinoDatabaseOutput.FormatChange(links, linkBefore, linkAfter));
+}
+
+static bool TryWriteOutputs(INamedTypesLinks<uint> links, string? outputPath, string? binaryOutputPath)
+{
+    return TryWriteLinoOutput(links, outputPath) && TryWriteBinaryOutput(links, binaryOutputPath);
+}
+
+static bool TryWriteBinaryOutput(INamedTypesLinks<uint> links, string? outputPath)
+{
+    if (string.IsNullOrWhiteSpace(outputPath))
+    {
+        return true;
+    }
+
+    try
+    {
+        StoreArchive.ExportToFile(links, outputPath);
+        return true;
+    }
+    catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is LinoProtocolException)
+    {
+        Console.Error.WriteLine($"Error writing binary store archive '{outputPath}': {ex.Message}");
+        return false;
+    }
+}
+
+static bool TryReadBinaryInput(INamedTypesLinks<uint> links, string? inputPath)
+{
+    if (string.IsNullOrWhiteSpace(inputPath))
+    {
+        return true;
+    }
+
+    try
+    {
+        StoreArchive.ImportFromFile(links, inputPath);
+        return true;
+    }
+    catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is LinoProtocolException || ex is InvalidOperationException)
+    {
+        Console.Error.WriteLine($"Error reading binary store archive '{inputPath}': {ex.Message}");
+        return false;
+    }
 }
 
 static bool TryWriteLinoOutput(INamedTypesLinks<uint> links, string? outputPath)

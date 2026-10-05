@@ -50,6 +50,16 @@ Delete:
 
 The substitution side is empty, so matched links are deleted.
 
+Deleting a link also deletes every link that uses it, transitively, so a link
+never refers to an address that no longer exists. After
+`() ((1 1) (2 2) (1 2))`, the query `((2: 2 2)) ()` deletes `(3: 1 2)` too,
+and `--changes` reports both:
+
+```text
+((2: 2 2)) ()
+((3: 1 2)) ()
+```
+
 ## Pattern Elements
 
 Patterns can contain:
@@ -143,6 +153,16 @@ Unnamed links are exported with numeric references:
 (1: 1 1)
 (2: 1 2)
 ```
+
+## Binary Store Archive
+
+`--export-binary` writes the complete database wherever `--out` would be
+written, and `--import-binary` reads one back before `--in`. An archive is two
+[binary links notation](protocol/binary-links-notation.md#10-store-archive)
+packets: the links, each at its own address with unused addresses left as
+holes, and then the names as code points. Import validates the whole archive
+before it writes, then recreates every address, link and name, so exporting
+the imported store gives the same bytes again.
 
 ## Structure Formatting
 
@@ -281,13 +301,46 @@ rewinds everything; checkout to a higher seq replays as needed.
 When no version-control flag is passed, no `versioncontrol.links`
 sidecar is created.
 
+## Serving Over TCP
+
+`clink --serve host:port` keeps a database open and answers LiNo requests
+over TCP. `clink --connect host:port [query]` sends one request and prints
+the reply.
+
+- A request is the same substitution expression the CLI takes. The reply is
+  the list of `(before) (after)` changes. An empty request lists every link.
+- Each connection has its own thread. Requests run one at a time under a
+  store lock.
+- The protocol is detected per message, and the reply uses the same one:
+  - **Text**: UTF-8 LiNo. A line holding a single `.` ends a message, and
+    leading dots are doubled.
+  - **Binary**: a packet of
+    [binary links notation](protocol/binary-links-notation.md) whose first
+    byte is `0x10 | flags`. It continues with the number of links, or with
+    section headers, and then the links themselves. Addresses are implicit,
+    and a reference is 1, 2, 4 or 8 bytes wide, depending on the largest
+    one.
+- Numbers and strings are encoded as links by default: unary numbers and
+  code-point lists under marker points. Three options change the encoding:
+  - `--external-references` sends them as Hybrid external references instead.
+  - `--arity 2..3` or `--arity 1..` turns lists into single links of three or
+    any number of references, instead of cons chains of doublets.
+  - `--packed-widths` lets each section of a packet use the narrowest
+    references its links need.
+
+The wire format and its golden vectors are specified in
+[protocol/binary-links-notation.md](protocol/binary-links-notation.md). The
+design notes are in [case-studies/issue-105](case-studies/issue-105/README.md).
+
 ## Browser Runtime
 
 The WebAssembly workbench uses the Rust query processor in the browser.
 
 1. The `rust/wasm` `clink-wasm` crate compiles with `wasm-pack`.
 2. `Clink#execute(query, optionsJson)` parses JSON options.
-3. Browser storage keeps links and names in memory for the page session.
+3. `LinkStorage::in_memory` keeps links and names in memory for the page
+   session; it is the CLI's store without a file, so the browser and the CLI
+   give the same results.
 4. The Rust query processor applies the LiNo query.
 5. The result returns formatted output and a structured `links` array.
 6. React renders the output and graph.
@@ -317,4 +370,5 @@ Common failures include:
 - Missing references without `--auto-create-missing-references`.
 - `--structure` requested for a link that does not exist.
 - Import lines that are not two-value link definitions.
+- Store archives that are cut short or are not doublets of link addresses.
 - Multiple trigger commands such as `--always` and `--once` in one C# command.

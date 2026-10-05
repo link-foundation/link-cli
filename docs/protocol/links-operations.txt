@@ -1,0 +1,49 @@
+# One conversation with a fresh links server, in the text protocol.
+#
+# Both ports replay it against their own server in their test suites
+# (csharp: RemoteLinksTests, rust: remote_links_tests), so a client of either
+# port is proven to understand a server of the other.
+#
+# `> request` is a request document; the lines up to the next request are its
+# reply, and `! message` is an error reply carrying that message.
+
+> (create: (0 0))
+() ((1: 0 0))
+> (create: (1 1))
+() ((2: 1 1))
+> (update: (1 2 2))
+((1: 0 0)) ((1: 2 2))
+> (count: ())
+(count: 2)
+> (count: (* 1))
+(count: 1)
+> (count: (2))
+(count: 1)
+> (each: (* * *))
+(1: 2 2)
+(2: 1 1)
+> (each: (* 2))
+(1: 2 2)
+# set-name answers where the names store keeps the name, as INamedTypes does.
+> (set-name: (2 'a pair'))
+(link: 102)
+> (get-name: 2)
+(name: 'a pair')
+> (get-by-name: 'a pair')
+(link: 2)
+> (remove-name: 2)
+> (get-name: 2)
+> (get-by-name: 'a pair')
+> (update: (2 1 2))
+((2: 1 1)) ((2: 1 2))
+# Deleting 1 deletes 2, which uses it; every change is the net change of a
+# link, whatever steps the store took to get there.
+> (delete: 1)
+((1: 2 2)) ()
+((2: 1 2)) ()
+> (count: ())
+(count: 0)
+> (update: (7 1 1))
+! Link not found: 7
+> (delete: 7)
+! Link not found: 7

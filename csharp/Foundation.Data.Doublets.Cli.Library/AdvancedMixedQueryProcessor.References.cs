@@ -19,16 +19,15 @@ namespace Foundation.Data.Doublets.Cli
         {
             TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Starting validation");
 
-            var plan = BuildLinkReferencePlan(links, substitutionPatterns);
-
-            TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {string.Join(", ", plan.NumericIdsToBeCreated.OrderBy(id => id))}");
-            TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Named links to be created: {string.Join(", ", plan.NamesToBeCreated.OrderBy(name => name, StringComparer.Ordinal))}");
-
-            CollectMissingReferences(restrictionPatterns, links, plan, false, "restriction", options);
-            CollectMissingReferences(substitutionPatterns, links, plan, true, "substitution", options);
-
-            if (plan.MissingReferences.Count > 0)
+            while (true)
             {
+                var plan = PlanReferences(links, restrictionPatterns, substitutionPatterns, options);
+                if (plan.MissingReferences.Count == 0)
+                {
+                    TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
+                    return;
+                }
+
                 if (!options.AutoCreateMissingReferences)
                 {
                     var missing = plan.MissingReferences[0];
@@ -39,10 +38,26 @@ namespace Foundation.Data.Doublets.Cli
                     );
                 }
 
+                // Creating a reference frees addresses on the way, which changes the ones the query's
+                // new links get, so the plan is made again until every reference is accounted for.
                 AutoCreateMissingReferences(links, plan, options);
             }
+        }
 
-            TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
+        private static LinkReferencePlan PlanReferences(
+            INamedTypesLinks<uint> links,
+            IList<LinoLink> restrictionPatterns,
+            IList<LinoLink> substitutionPatterns,
+            Options options)
+        {
+            var plan = BuildLinkReferencePlan(links, substitutionPatterns);
+
+            TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {string.Join(", ", plan.NumericIdsToBeCreated.OrderBy(id => id))}");
+            TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Named links to be created: {string.Join(", ", plan.NamesToBeCreated.OrderBy(name => name, StringComparer.Ordinal))}");
+
+            CollectMissingReferences(restrictionPatterns, links, plan, false, "restriction", options);
+            CollectMissingReferences(substitutionPatterns, links, plan, true, "substitution", options);
+            return plan;
         }
 
         private sealed class LinkReferencePlan
@@ -73,100 +88,66 @@ namespace Foundation.Data.Doublets.Cli
         private static LinkReferencePlan BuildLinkReferencePlan(INamedTypesLinks<uint> links, IList<LinoLink> substitutionPatterns)
         {
             var plan = new LinkReferencePlan();
-            var reservedNumericIds = new HashSet<uint>();
-
+            var anonymousLinks = 0;
             foreach (var pattern in substitutionPatterns)
             {
-                CollectExplicitDefinitions(pattern, plan, reservedNumericIds);
+                CollectDefinitions(pattern, plan, ref anonymousLinks);
             }
-
-            foreach (var pattern in substitutionPatterns)
-            {
-                CollectImplicitDefinitions(pattern, links, plan, reservedNumericIds);
-            }
-
-            foreach (var pattern in substitutionPatterns)
-            {
-                CollectCompositePairs(pattern, plan);
-            }
-
+            plan.NumericIdsToBeCreated.UnionWith(NextCreatedAddresses(links, anonymousLinks));
             return plan;
         }
 
-        private static void CollectExplicitDefinitions(LinoLink pattern, LinkReferencePlan plan, HashSet<uint> reservedNumericIds)
+        /// <summary>
+        /// Collects the ids and names the substitution defines, the (source, target) pairs it writes
+        /// under them, and how many links it writes without an id.
+        /// </summary>
+        private static void CollectDefinitions(LinoLink pattern, LinkReferencePlan plan, ref int anonymousLinks)
         {
-            if (IsComposite(pattern) && TryGetConcreteIdentifier(pattern.Id, out var identifier))
-            {
-                if (uint.TryParse(identifier, out var linkId))
-                {
-                    plan.NumericIdsToBeCreated.Add(linkId);
-                    reservedNumericIds.Add(linkId);
-                }
-                else
-                {
-                    plan.NamesToBeCreated.Add(identifier);
-                }
-            }
-
             if (pattern.Values != null)
             {
                 foreach (var subPattern in pattern.Values)
                 {
-                    CollectExplicitDefinitions(subPattern, plan, reservedNumericIds);
+                    CollectDefinitions(subPattern, plan, ref anonymousLinks);
                 }
             }
-        }
-
-        private static void CollectCompositePairs(LinoLink pattern, LinkReferencePlan plan)
-        {
-            if (IsComposite(pattern) &&
-                TryGetConcreteIdentifier(pattern.Id, out var _ignoredIdentifier) &&
-                pattern.Values != null &&
-                TryGetConcreteNumericIdentifier(pattern.Values[0].Id, out var source) &&
+            if (!IsComposite(pattern))
+            {
+                return;
+            }
+            if (!TryGetConcreteIdentifier(pattern.Id, out var identifier))
+            {
+                anonymousLinks++;
+                return;
+            }
+            if (uint.TryParse(identifier, out var linkId))
+            {
+                plan.NumericIdsToBeCreated.Add(linkId);
+            }
+            else
+            {
+                plan.NamesToBeCreated.Add(identifier);
+            }
+            if (TryGetConcreteNumericIdentifier(pattern.Values![0].Id, out var source) &&
                 TryGetConcreteNumericIdentifier(pattern.Values[1].Id, out var target))
             {
                 plan.CompositePairsToBeCreated.Add((source, target));
             }
-
-            if (pattern.Values != null)
-            {
-                foreach (var subPattern in pattern.Values)
-                {
-                    CollectCompositePairs(subPattern, plan);
-                }
-            }
         }
 
-        private static void CollectImplicitDefinitions(
-            LinoLink pattern,
-            INamedTypesLinks<uint> links,
-            LinkReferencePlan plan,
-            HashSet<uint> reservedNumericIds)
+        /// <summary>The addresses the next <paramref name="count"/> links created in <paramref name="links"/> get.</summary>
+        /// <remarks>
+        /// A store reuses the address freed last first, so the lowest free one is not necessarily next.
+        /// Creating the links and deleting them again in reverse leaves the store exactly as it was,
+        /// and is the one way to ask any store, a remote one included.
+        /// </remarks>
+        private static List<uint> NextCreatedAddresses(INamedTypesLinks<uint> links, int count)
         {
-            if (pattern.Values != null)
+            var addresses = Enumerable.Range(0, count).Select(_ => links.Create()).ToList();
+            for (var i = addresses.Count - 1; i >= 0; i--)
             {
-                foreach (var subPattern in pattern.Values)
-                {
-                    CollectImplicitDefinitions(subPattern, links, plan, reservedNumericIds);
-                }
+                links.Delete(addresses[i]);
             }
-
-            if (IsComposite(pattern) && !TryGetConcreteIdentifier(pattern.Id, out var _ignoredIdentifier))
-            {
-                var nextId = GetNextAvailableLinkId(links, reservedNumericIds);
-                reservedNumericIds.Add(nextId);
-                plan.NumericIdsToBeCreated.Add(nextId);
-            }
-        }
-
-        private static uint GetNextAvailableLinkId(INamedTypesLinks<uint> links, HashSet<uint> reservedNumericIds)
-        {
-            uint nextId = 1;
-            while (links.Exists(nextId) || reservedNumericIds.Contains(nextId))
-            {
-                nextId++;
-            }
-            return nextId;
+            return addresses;
         }
 
         private static void CollectMissingReferences(
@@ -258,7 +239,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
 
                 TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {linkId}.");
-                LinksExtensions.EnsureCreated(links, linkId);
+                EnsureAddress(links, linkId, options);
                 if (plan.CompositePairsToBeCreated.Contains((linkId, linkId)))
                 {
                     TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Link {linkId} exists as a placeholder because ({linkId}, {linkId}) is defined by the substitution.");
@@ -282,23 +263,6 @@ namespace Foundation.Data.Doublets.Cli
                 TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{missing.Identifier}' as point link.");
                 EnsureNamedPointLink(links, missing.Identifier, options);
             }
-        }
-
-        private static void EnsureNamedPointLink(INamedTypesLinks<uint> links, string name, Options options)
-        {
-            if (links.GetByName(name) != links.Constants.Null)
-            {
-                return;
-            }
-
-            var newId = links.CreateAndUpdate(links.Constants.Null, links.Constants.Null);
-            links.SetName(newId, name);
-            links.Update(
-              new DoubletLink(newId, links.Constants.Null, links.Constants.Null),
-              new DoubletLink(newId, newId, newId),
-              (beforeState, afterState) =>
-                  options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
-            );
         }
 
         private static bool IsComposite(LinoLink pattern) => pattern.Values?.Count == 2;

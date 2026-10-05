@@ -76,6 +76,19 @@ library API for explicit batches. End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and
 [`examples/version-control/`](../examples/version-control).
 
+### Serve Over TCP
+
+```bash
+clink --db data.links --serve 127.0.0.1:7777                 # serve a database
+clink --connect 127.0.0.1:7777 '() ((1 1))'                  # text protocol
+clink --connect 127.0.0.1:7777 --protocol binary --arity 1.. # binary protocol, list all links
+```
+
+In the library, `LinksServer` serves any `INamedTypesLinks<uint>`, and
+`LinksClient` queries a server through either `TextLinoProtocol` or
+`BinaryLinoProtocol`. The wire formats are described in
+[docs/case-studies/issue-105](../docs/case-studies/issue-105/README.md).
+
 ### Use as a library
 
 `Foundation.Data.Doublets.Cli.Library` is usable as an embedded

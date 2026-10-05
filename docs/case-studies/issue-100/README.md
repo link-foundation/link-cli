@@ -189,6 +189,12 @@ code involved. Filed as
 [Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)
 and recorded in the parity harness as its single `known_difference`.
 
+**Update (issue #105):** the C# library no longer uses `MergeUsages`. Its
+stores are composed with `DecorateWithAutomaticUniquenessAndUsagesRepointing()`,
+whose `LinksUniquenessAndUsagesRepointingResolver` re-points usages itself, so
+this scenario now agrees and the harness has no exemption left (see
+[the issue #105 case study, §6.3](../issue-105/README.md#63-behaviour-differences-between-the-ports-query-processors)).
+
 ### 5.6 The constants differ, and it is unreachable in practice
 
 `doublets` 0.5.0 re-exports `platform-data` 2.0.0's `LinksConstants`.
@@ -345,7 +351,7 @@ trigger scenarios including the embedded store.
 
 ## 10. Risks and follow-ups
 
-- **The `MergeUsages` exemption.** Until
+- **The `MergeUsages` exemption** (worked around in issue #105, §5.5). Until
   [Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)
   is released, `update into duplicate` produces a corrupt link in C#. The
   harness will turn red the moment the languages agree, which is the signal to

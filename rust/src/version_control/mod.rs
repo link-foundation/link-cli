@@ -202,8 +202,22 @@ impl VersionControlDecorator {
     }
 
     pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+        self.update_observed(id, source, target, &mut |_, _| {})
+    }
+
+    /// [`Self::update`], reporting every change the decorator stack made —
+    /// the deletion of a link merged into its duplicate included.
+    pub fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
         let before_seq = self.transactions.last_logged_sequence();
-        let result = self.transactions.update(id, source, target)?;
+        let result = self
+            .transactions
+            .update_observed(id, source, target, observer)?;
         if self.active_transaction.is_none() {
             let branch = self.current_branch.clone();
             self.attribute_new_transitions_for_branch(before_seq, &branch)?;

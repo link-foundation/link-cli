@@ -430,3 +430,37 @@ fn test_ensure_created_frees_the_addresses_it_passed_over() -> Result<()> {
 
     Ok(())
 }
+
+/// The browser workbench has no file system, so an in-memory storage must work
+/// without one: writing to its empty path would fail, so `save` and `flush`
+/// succeed only because they write nothing.
+#[test]
+fn in_memory_storage_never_touches_a_file() -> Result<()> {
+    use link_cli::LinksStorage;
+
+    let mut storage = LinkStorage::in_memory(false);
+    assert!(storage.is_in_memory());
+    assert_eq!(storage.database_path(), std::path::Path::new(""));
+
+    let point = storage.create(0, 0);
+    storage.update(point, point, point)?;
+    storage.set_name(point, "point");
+    storage.save()?;
+    LinksStorage::<u32>::flush(&mut storage)?;
+    assert!(!LinksStorage::<u32>::has_external_changes(&storage)?);
+    assert_eq!(storage.lino_lines(), ["(point: point point)"]);
+
+    // Reloading an in-memory storage has nothing to read, so it empties it.
+    LinksStorage::<u32>::reload(&mut storage)?;
+    assert!(storage.all().is_empty());
+    assert_eq!(storage.get_by_name("point"), None);
+    Ok(())
+}
+
+#[test]
+fn file_storage_is_not_in_memory() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let storage = LinkStorage::new(temp_file.path(), false)?;
+    assert!(!storage.is_in_memory());
+    Ok(())
+}
