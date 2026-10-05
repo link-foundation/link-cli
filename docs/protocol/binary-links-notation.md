@@ -9,8 +9,8 @@ holds golden vectors. Both test suites check them, so both ports write and
 read exactly these bytes.
 
 The packet layer knows nothing about LiNo. The binary LiNo protocol (§7) is
-one user of it. Any other links data can use it as well, for example a dump
-of a links store.
+one user of it, and the store archive (§10), a dump of a whole links store,
+is another.
 
 ## 1. Conventions
 
@@ -298,3 +298,55 @@ references, a wider arity and packed widths are the options that make a
 packet small. Packed widths matter when a few large values would otherwise
 widen every reference: in `() ((1000 70000))`, only the link holding 70 000
 needs 4 bytes.
+
+## 10. Store archive
+
+A store archive holds a whole doublets store, names included, as two packets
+written one after the other:
+
+1. **Links**, without external references and with packed widths. The store
+   link `(a: s t)` is the doublet `s t` at address `a`. Addresses the store
+   does not use are holes (section gaps), so every link keeps its address.
+2. **Names**, with external references and with packed widths. One link per
+   named store link, in address order and from address 1, holds the external
+   values `address code-point…`. An empty name is a link of arity 1.
+
+An empty store is `10 00 11 00`.
+
+Importing reads both packets without decode limits and rejects:
+
+- an archive that is cut short or has bytes after its second packet;
+- a link that is not a doublet of internal references;
+- an address that does not fit a 32-bit store;
+- a name that holds an internal reference or an invalid code point.
+
+Only then does it touch the store: it creates every missing address, writes
+each link at its own address, and sets every name. So exporting the imported
+store gives the same bytes again.
+
+The golden archive of `rust/tests/store_archive_tests.rs` and
+`StoreArchiveTests.cs` holds `(a: a a)`, `(é: é é)` at address 3 and
+`(ab: a é)` at address 4, with a hole at 2. It is
+`12 02 20 01 24 01 02 01 01 03 03 01 03 13 02 21 02 30 01 ff ff 9f ff fd ff 17 ff fc 9f 9e`:
+
+| Bytes | Meaning |
+|---|---|
+| `12 02` | links packet: explicit layout, two sections |
+| `20 01` | min 2, 1-byte references; 1 link (address 1) |
+| `24 01 02` | min 2, gap 1, 1 byte; 2 links (addresses 3 and 4) |
+| `01 01` `03 03` `01 03` | links 1, 3 and 4 |
+| `13 02` | names packet: explicit layout, external references, two sections |
+| `21 02` | min 2, 2-byte references; 2 links |
+| `30 01` | min 3, 1-byte references; 1 link |
+| `ff ff` `9f ff` | `#1 #97`: link 1 is `a` |
+| `fd ff` `17 ff` | `#3 #233`: link 3 is `é` |
+| `fc 9f 9e` | `#4 #97 #98`: link 4 is `ab` |
+
+The CLI writes an archive with `--export-binary` (or `--binary-output`,
+`--binary-out`) wherever it writes `--out`, and reads one with
+`--import-binary` (or `--binary-input`, `--binary-in`) before `--in` and the
+query. The libraries expose the same operations as `export_store`,
+`export_store_file`, `import_store` and `import_store_file` in Rust and
+`StoreArchive.Export`, `ExportToFile`, `Import` and `ImportFromFile` in C#.
+[`examples/archive`](../../examples/archive/README.md) copies a store from one
+port to the other through an archive.

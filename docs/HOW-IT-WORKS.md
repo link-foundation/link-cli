@@ -154,6 +154,16 @@ Unnamed links are exported with numeric references:
 (2: 1 2)
 ```
 
+## Binary Store Archive
+
+`--export-binary` writes the complete database wherever `--out` would be
+written, and `--import-binary` reads one back before `--in`. An archive is two
+[binary links notation](protocol/binary-links-notation.md#10-store-archive)
+packets: the links, each at its own address with unused addresses left as
+holes, and then the names as code points. Import validates the whole archive
+before it writes, then recreates every address, link and name, so exporting
+the imported store gives the same bytes again.
+
 ## Structure Formatting
 
 `--structure <id>` formats one link by recursively expanding the left branch.
@@ -358,4 +368,5 @@ Common failures include:
 - Missing references without `--auto-create-missing-references`.
 - `--structure` requested for a link that does not exist.
 - Import lines that are not two-value link definitions.
+- Store archives that are cut short or are not doublets of link addresses.
 - Multiple trigger commands such as `--always` and `--once` in one C# command.

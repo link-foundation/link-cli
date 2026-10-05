@@ -268,6 +268,25 @@ On the client, any binary option implies `--protocol binary`, and
 `--protocol text` together with a binary option is an error. Using `--serve`
 and `--connect` together is also an error.
 
+### 4.7 Store archive
+
+The review of PR #106 asked for a full import and export of a store in
+binary links notation. A store archive is two packets: the links, each at its
+own address with holes for unused ones, and then the names as external code
+points. Both use packed widths, so a store of small addresses costs about two
+bytes per link
+([specification](../../protocol/binary-links-notation.md#10-store-archive)).
+
+```bash
+clink --db family.links --export-binary family.bin     # also --binary-output, --binary-out
+clink --db copy.links --import-binary family.bin       # also --binary-input, --binary-in
+```
+
+The archive works on the links interface only, so it exports and imports a
+remote store (`RemoteLinks`) as well as a local one. Import validates the
+whole archive before it writes, then recreates every address, link and name.
+Exporting the imported store gives the same bytes again.
+
 ## 5. Verification
 
 ### Golden vectors
@@ -318,13 +337,16 @@ parsing and has a fixed structure, not that it is smaller.
   - `rust/tests/protocol_tcp_tests.rs`: CRUD over every protocol, mixed clients, errors, CRLF, malformed input, protocol restriction, concurrency and shutdown.
   - `rust/tests/cli_tcp_tests.rs`: `clink --serve` / `--connect` end to end.
   - `rust/tests/remote_links_tests.rs`: the same proof for the Rust `RemoteLinks`, including the shared conversation.
+  - `rust/tests/store_archive_tests.rs`: the golden archive, a round trip of links, holes and names, a remote store, malformed archives, and the CLI options.
 - C#:
   - `BinaryLinksNotationTests`: a port of `protocol_packet_tests.rs`, checked against the same golden vectors.
   - `LinoProtocolCodecTests`: the same corpus under all 12 option sets, and the text framing.
   - `LinksServerTests`: CRUD over every protocol, identical text and binary replies, errors, CRLF, malformed input, protocol restriction, concurrent clients, shutdown, and shutdown racing a new connection.
   - `RemoteLinksTests`: every `INamedTypesLinks` call, the query processor and the raw `ILinks` interface give the same answers on a local store and over every protocol. It also covers the shared conversation, malformed operations and replies, and lost connections.
   - `CliTcpIntegrationTests`: `clink --serve` / `--connect` end to end, including option validation.
+  - `StoreArchiveTests` and `CliStoreArchiveTests`: ports of `store_archive_tests.rs`, checked against the same golden archive.
 - Cross-language interop: [`examples/tcp/run-interop.sh`](../../../examples/tcp/run-interop.sh) runs a Rust server with a C# client, and a C# server with a Rust client. It covers text and every binary option, and both directions print identical results.
+- Store archive interop: [`examples/archive/run-interop.sh`](../../../examples/archive/run-interop.sh) exports a store with one port and imports it with the other, in both directions, and checks that the stores are equal.
 
 ## 6. Findings along the way
 

@@ -351,6 +351,25 @@ When links do not have names, exported references are plain link numbers:
 (2: 1 2)
 ```
 
+## Export and import a binary store archive
+
+Use `--export-binary` (or `--binary-output`, `--binary-out`) to write the
+complete database, names included, as a store archive in
+[binary links notation](docs/protocol/binary-links-notation.md#10-store-archive).
+Every link keeps its address, holes included. `--import-binary` (or
+`--binary-input`, `--binary-in`) reads an archive back before `--in` and the
+query run:
+
+```bash
+clink --db family.links --export-binary family.bin
+clink --db copy.links --import-binary family.bin --after
+```
+
+For the family above the archive takes 36 bytes, against 71 bytes of LiNo.
+Both ports write and read the same bytes, so an archive written by the Rust
+CLI can be read by the C# CLI and the other way around
+([examples/archive](examples/archive/README.md)).
+
 ## Persistent transformation triggers
 
 Store a query as a trigger with `--always` to apply it after later write operations:
@@ -651,6 +670,8 @@ Both the C# NuGet tool and the Rust CLI support every option below.
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
 | `--in`                  | string  | _None_         | `--import`, `--lino-input`          | Read and import a LiNo file before query execution                         |
 | `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
+| `--import-binary`       | string  | _None_         | `--binary-input`, `--binary-in`     | Read and import a store archive in binary links notation before `--in`    |
+| `--export-binary`       | string  | _None_         | `--binary-output`, `--binary-out`   | Write the complete database, names included, as a binary store archive    |
 | `--always`              | bool    | `false`        | _None_                              | Store the query as an always-on persistent transformation trigger          |
 | `--once`                | bool    | `false`        | _None_                              | Store the query as a one-shot persistent transformation trigger            |
 | `--never`               | bool    | `false`        | _None_                              | Remove stored persistent transformation triggers matching the query        |
