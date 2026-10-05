@@ -35,7 +35,7 @@ namespace Foundation.Data.Doublets.Cli
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
-            return links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            return links.DecorateWithAutomaticUniquenessAndUsagesRepointing();
         }
 
         public static string MakeNamesDatabaseFilename(string databaseFilename)
@@ -61,7 +61,7 @@ namespace Foundation.Data.Doublets.Cli
             var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
             var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
-            var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesResolution();
+            var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing();
             _namedLinksFacade = decoratedNamesLinks;
             NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
             NamedLinksDatabaseFileName = namesDatabaseFilename;

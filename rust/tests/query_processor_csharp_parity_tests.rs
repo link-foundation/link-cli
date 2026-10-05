@@ -362,6 +362,57 @@ fn test_update_into_existing_pair_reports_merge_matches_csharp() -> Result<()> {
     })
 }
 
+/// A link that used the merged-away address is re-pointed at the surviving one
+/// rather than losing that half, as C# does since it stopped relying on the
+/// `MergeUsages` of Platform.Data.Doublets 0.18.1
+/// (<https://github.com/linksplatform/Data.Doublets/issues/515>).
+#[test]
+fn test_update_into_existing_pair_repoints_usages_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 2) (2 1))")?;
+
+        let changes = processor.process_query(storage, "((1: 1 2)) ((1: 2 1))")?;
+
+        assert_eq!(
+            changes,
+            vec![
+                (Some(Link::new(1, 1, 2)), Some(Link::new(1, 2, 1))),
+                (Some(Link::new(2, 2, 1)), Some(Link::new(2, 2, 2))),
+            ]
+        );
+        assert_eq!(
+            sorted_links(storage),
+            vec![Link::new(1, 2, 1), Link::new(2, 2, 2)]
+        );
+        Ok(())
+    })
+}
+
+/// The link being merged away can be used by the very link it duplicates: the
+/// usage is re-pointed at the survivor, and the query then writes its own link.
+#[test]
+fn test_update_into_a_pair_that_uses_it_repoints_the_usage_matches_csharp() -> Result<()> {
+    with_storage(|storage, processor| {
+        processor.process_query(storage, "() ((1 1) (2 2))")?;
+        processor.process_query(storage, "((1: 1 1)) ((1: 1 2))")?;
+
+        let changes = processor.process_query(storage, "((2: 2 2)) ((2: 1 2))")?;
+
+        assert_eq!(
+            changes,
+            vec![
+                (Some(Link::new(1, 1, 2)), Some(Link::new(1, 1, 1))),
+                (Some(Link::new(2, 2, 2)), Some(Link::new(2, 1, 2))),
+            ]
+        );
+        assert_eq!(
+            sorted_links(storage),
+            vec![Link::new(1, 1, 1), Link::new(2, 1, 2)]
+        );
+        Ok(())
+    })
+}
+
 /// Deleting a named link cascades through the links that use it, and the names
 /// of the survivors are untouched.
 #[test]

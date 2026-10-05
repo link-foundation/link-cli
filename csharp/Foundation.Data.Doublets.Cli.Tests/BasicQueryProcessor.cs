@@ -156,7 +156,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
             try
             {
                 using var links = new UnitedMemoryLinks<uint>(tempDbFile);
-                var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesResolution();
+                var decoratedLinks = links.DecorateWithAutomaticUniquenessAndUsagesRepointing();
                 testAction(decoratedLinks);
             }
             finally

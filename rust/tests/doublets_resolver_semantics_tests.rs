@@ -27,11 +27,11 @@ fn dump(links: &impl Doublets<u32>) -> Vec<(u32, u32, u32)> {
 /// two, and every usage of the merged-away link is **rebased onto the
 /// survivor** rather than blanked.
 ///
-/// This is the behaviour the `update into duplicate` scenario in
-/// `docs/case-studies/issue-100/evidence/cli-parity/run.sh` records as
-/// diverging from C#: `Platform.Data.Doublets` 0.18.1 corrupts the usage
-/// instead (see `../csharp-merge-usages` in the same folder). If this test
-/// ever fails, doublets-rs has moved and the exemption needs revisiting.
+/// `Platform.Data.Doublets` 0.18.1 blanks the usage instead
+/// (<https://github.com/linksplatform/Data.Doublets/issues/515>), so the C#
+/// port composes its own `LinksUniquenessAndUsagesRepointingResolver` to get
+/// this behaviour. If this test ever fails, doublets-rs has moved and the two
+/// ports need comparing again.
 #[test]
 fn update_into_an_existing_pair_rebases_usages_onto_the_survivor() {
     let mut links = Store::<u32, _>::new(Global::new())

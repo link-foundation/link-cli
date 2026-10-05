@@ -113,28 +113,6 @@ scenario() {
   fi
 }
 
-# known_difference <name> <reason> <query>...
-#
-# A scenario the two CLIs are *expected* to answer differently because of a
-# defect in a dependency rather than in this repository. It does not count as a
-# failure, but agreement does: the day the upstream fix lands, this turns red so
-# the exemption gets removed instead of quietly outliving its reason.
-known_difference() {
-  local name="$1" reason="$2"; shift 2
-  run_both "$@"
-  EXTRA=(); TRIGGER_SETUP=()
-
-  if agree; then
-    failures=$((failures + 1))
-    echo "FAIL  $name (the languages now agree -- drop the exemption)"
-    echo "      reason on record: $reason"
-  else
-    echo "KNOWN $name"
-    echo "      $reason"
-    report_divergence "$@"
-  fi
-}
-
 scenario "create"                     '() ((1 1))'
 scenario "duplicate create"           '() ((1 1))' '() ((1 1))'
 scenario "update target"              '() ((1 1))' '() ((2 2))' '((1: 1 1)) ((1: 1 2))'
@@ -219,13 +197,16 @@ EXTRA=(--embed-triggers)
 trigger_scenario "trigger embedded in the main database" \
   --always '(((1: 1 1)) ((1: 1 2)))' -- '() ((1: 1 1))'
 
-known_difference "update into duplicate" \
-  "Platform.Data.Doublets 0.18.1 MergeUsages corrupts the usages it repoints (see ../csharp-merge-usages), so C# leaves (2: 2 0) where doublets-rs rebases the usage onto the surviving link and leaves (2: 2 2)." \
-  '() ((1 2) (2 1))' '((1: 1 2)) ((1: 2 1))'
+# An update into an existing pair merges into it and re-points every usage of
+# the merged-away link. C# used to blank the usage instead, through the
+# MergeUsages of Platform.Data.Doublets 0.18.1 (see ../csharp-merge-usages,
+# Data.Doublets#515); it now composes a resolver of its own (issue 105).
+scenario "update into duplicate"      '() ((1 2) (2 1))' '((1: 1 2)) ((1: 2 1))'
+scenario "update into the pair using it" '() ((1 1) (2 2))' '((1: 1 1)) ((1: 1 2))' '((2: 2 2)) ((2: 1 2))'
 
 echo
 if [ "$failures" -eq 0 ]; then
-  echo "All scenarios match, except the known upstream differences listed above."
+  echo "All scenarios match."
 else
   echo "$failures scenario(s) diverge."
 fi

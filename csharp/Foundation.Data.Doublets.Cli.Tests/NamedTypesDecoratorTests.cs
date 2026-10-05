@@ -36,7 +36,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             {
                 using var memory = new FileMappedResizableDirectMemory(tempFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep);
                 using var unitedMemoryLinks = new UnitedMemoryLinks<uint>(memory);
-                var linksDecoratedWithAutomaticUniquenessResolution = unitedMemoryLinks.DecorateWithAutomaticUniquenessAndUsagesResolution();
+                var linksDecoratedWithAutomaticUniquenessResolution = unitedMemoryLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing();
                 testAction(linksDecoratedWithAutomaticUniquenessResolution);
             }
             finally

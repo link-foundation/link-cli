@@ -375,19 +375,51 @@ prints the raw parser output, which was used to confirm this.
 
 ### 6.3 Behaviour differences between the ports' query processors
 
-These are pre-existing behaviours, not introduced by the protocols. The
-protocols carry whatever the processors return.
+A server replies with whatever its query processor reports, so every
+difference between the processors became a difference between a C# and a Rust
+server. Comparing the two `--changes` reports query by query
+(`experiments/compare-cli-changes.sh`, and the parity harness in
+[`../issue-100/evidence/cli-parity/run.sh`](../issue-100/evidence/cli-parity/run.sh),
+now 41 scenarios that all agree) found these, all fixed here:
 
-- The C# `AdvancedMixedQueryProcessor` does not report the creation of a
-  *named* composite link as a change. As a result:
-  - `() ((a: a a))` gets an empty reply from a C# server.
-  - The same query gets `() ((a: a a))` from a Rust server.
-  - The link is created in both cases, and the listing shows it.
-- Rust reports a failing query as `Query error: <message>`, while C# reports
-  `<message>`.
-- Deleting a link also deletes the links that refer to it, in both ports. For
-  example, `((2: 2 2)) ()` with `(1: 1 2)` present replies with two
-  deletions.
+- **Creations were not all reported.** The C# processor did not report a
+  named composite link it created, so `() ((a: a a))` got an empty reply from
+  a C# server and `() ((a: a a))` from a Rust one. Both now report every link
+  a query creates, once, as the creation of its final value.
+- **New addresses were predicted wrongly.** Reference validation assumed a new
+  link gets the lowest free address, but both stores reuse the address freed
+  last first. Both now ask the store: create the links, note their addresses,
+  delete them again in reverse.
+- **Errors were worded differently.** C# printed an unhandled exception with
+  its stack trace; it now prints one `Error: Query error: ...` or
+  `Error: Parse error: ...` line, as Rust does, and keeps the stack trace for
+  `--trace`.
+- **A merge blanked usages in C#.** An update that turns a link into a
+  duplicate of another merges it into that other link, re-pointing whatever
+  used the merged-away address. After `() ((1 1) (2 2))` and
+  `((1: 1 1)) ((1: 1 2))`, the query `((2: 2 2)) ((2: 1 2))` merges 2 into 1:
+
+  | | link 1 | link 2 |
+  |---|---|---|
+  | Rust (doublets-rs) | `(1: 1 1)`, its target re-pointed from 2 to 1 | `(2: 1 2)`, written by the query |
+  | C# before | `(1: 1 0)`, its target blanked | `(2: 1 2)` |
+
+  The cause is upstream: `MergeUsages` in Platform.Data.Doublets 0.18.1 builds
+  `new Link<T>(a, b)`, which binds to the `params` constructor and means
+  `(index: a, source: b, target: 0)`, not `(source: a, target: b)`. It was
+  already reported as
+  [Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)
+  during issue #100 and kept as the harness's one known difference. It is
+  still not released, so the C# library now composes its stores with
+  `DecorateWithAutomaticUniquenessAndUsagesRepointing()`: the same three
+  layers as `DecorateWithAutomaticUniquenessAndUsagesResolution()`, with
+  `LinksUniquenessAndUsagesRepointingResolver` on top, which replaces the
+  merged-away address in both halves of each usage in one update.
+  `LinksUniquenessAndUsagesRepointingResolverTests` fails on four of five
+  tests against the upstream resolver and passes against this one.
+
+Deleting a link also deletes the links that refer to it, in both ports. For
+example, `((2: 2 2)) ()` with `(1: 1 2)` present replies with two deletions.
 
 ## 7. Risks and remaining limits
 

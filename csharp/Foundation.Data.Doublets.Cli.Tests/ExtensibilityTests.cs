@@ -112,6 +112,7 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         [InlineData(typeof(NamedLinks<uint>))]
         [InlineData(typeof(PinnedTypes<uint>))]
         [InlineData(typeof(UnicodeStringStorage<uint>))]
+        [InlineData(typeof(LinksUniquenessAndUsagesRepointingResolver<uint>))]
         public void PublicTypesStayOpenForExtension(Type type)
         {
             Assert.True(type.IsPublic, $"{type.Name} must be public.");
