@@ -108,6 +108,16 @@ var inputOption = new Option<string?>("--in", "--lino-input", "--import")
     Description = "Path to read and import a LiNo file into the database"
 };
 
+var binaryInputOption = new Option<string?>("--import-binary", "--binary-input", "--binary-in")
+{
+    Description = "Path to read and import a store archive in binary links notation"
+};
+
+var binaryOutputOption = new Option<string?>("--export-binary", "--binary-output", "--binary-out")
+{
+    Description = "Path to write the complete database, names included, as a store archive in binary links notation"
+};
+
 var transactionsOption = new Option<bool>("--transactions")
 {
     Description = "Enable the transactions layer (default log path: <db>.transitions.links)",
@@ -228,6 +238,8 @@ rootCommand.Options.Add(triggersFileOption);
 rootCommand.Options.Add(embedTriggersOption);
 rootCommand.Options.Add(inputOption);
 rootCommand.Options.Add(outputOption);
+rootCommand.Options.Add(binaryInputOption);
+rootCommand.Options.Add(binaryOutputOption);
 rootCommand.Options.Add(transactionsOption);
 rootCommand.Options.Add(transactionsFileOption);
 rootCommand.Options.Add(commitModeOption);
@@ -268,6 +280,8 @@ rootCommand.SetAction(
       var embedTriggers = parseResult.GetValue(embedTriggersOption);
       var inputPath = parseResult.GetValue(inputOption);
       var outputPath = parseResult.GetValue(outputOption);
+      var binaryInputPath = parseResult.GetValue(binaryInputOption);
+      var binaryOutputPath = parseResult.GetValue(binaryOutputOption);
       var transactionsFlag = parseResult.GetValue(transactionsOption);
       var transactionsPathRaw = parseResult.GetValue(transactionsFileOption);
       var commitModeRaw = parseResult.GetValue(commitModeOption);
@@ -620,7 +634,7 @@ rootCommand.SetAction(
               PrintAllLinks(decoratedLinks);
           }
 
-          if (!TryReadLinoInput(decoratedLinks, inputPath))
+          if (!TryReadBinaryInput(decoratedLinks, binaryInputPath) || !TryReadLinoInput(decoratedLinks, inputPath))
           {
               return 1;
           }
@@ -639,7 +653,7 @@ rootCommand.SetAction(
                   return 1;
               }
 
-              return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+              return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
           }
 
           var effectiveQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
@@ -655,14 +669,14 @@ rootCommand.SetAction(
               var kind = always ? PersistentTransformationKind.Always : PersistentTransformationKind.Once;
               var trigger = persistentLinks.StoreTrigger(kind, effectiveQuery);
               Console.WriteLine($"{kind} persistent transformation trigger stored: {trigger}");
-              return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+              return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
           }
 
           if (persistentLinks is not null && never)
           {
               var removed = persistentLinks.RemoveTriggers(effectiveQuery);
               Console.WriteLine($"Persistent transformation triggers removed: {removed}");
-              return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+              return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
           }
 
           var changesList = new List<(DoubletLink Before, DoubletLink After)>();
@@ -728,7 +742,7 @@ rootCommand.SetAction(
               PrintAllLinks(decoratedLinks);
           }
 
-          return TryWriteLinoOutput(decoratedLinks, outputPath) ? 0 : 1;
+          return TryWriteOutputs(decoratedLinks, outputPath, binaryOutputPath) ? 0 : 1;
       }
   }
 );
@@ -783,6 +797,49 @@ static void PrintAllLinks(INamedTypesLinks<uint> links)
 static void PrintChange(INamedTypesLinks<uint> links, DoubletLink linkBefore, DoubletLink linkAfter)
 {
     Console.WriteLine(LinoDatabaseOutput.FormatChange(links, linkBefore, linkAfter));
+}
+
+static bool TryWriteOutputs(INamedTypesLinks<uint> links, string? outputPath, string? binaryOutputPath)
+{
+    return TryWriteLinoOutput(links, outputPath) && TryWriteBinaryOutput(links, binaryOutputPath);
+}
+
+static bool TryWriteBinaryOutput(INamedTypesLinks<uint> links, string? outputPath)
+{
+    if (string.IsNullOrWhiteSpace(outputPath))
+    {
+        return true;
+    }
+
+    try
+    {
+        StoreArchive.ExportToFile(links, outputPath);
+        return true;
+    }
+    catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is LinoProtocolException)
+    {
+        Console.Error.WriteLine($"Error writing binary store archive '{outputPath}': {ex.Message}");
+        return false;
+    }
+}
+
+static bool TryReadBinaryInput(INamedTypesLinks<uint> links, string? inputPath)
+{
+    if (string.IsNullOrWhiteSpace(inputPath))
+    {
+        return true;
+    }
+
+    try
+    {
+        StoreArchive.ImportFromFile(links, inputPath);
+        return true;
+    }
+    catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is LinoProtocolException || ex is InvalidOperationException)
+    {
+        Console.Error.WriteLine($"Error reading binary store archive '{inputPath}': {ex.Message}");
+        return false;
+    }
 }
 
 static bool TryWriteLinoOutput(INamedTypesLinks<uint> links, string? outputPath)

@@ -58,7 +58,7 @@ public static class LinoDatabaseInput
         return EnsureNamedPointLink(links, context, identifier);
     }
 
-    private static void UpdateLink(INamedTypesLinks<uint> links, uint index, uint source, uint target)
+    internal static void UpdateLink(INamedTypesLinks<uint> links, uint index, uint source, uint target)
     {
         if (!links.Exists(index))
         {
