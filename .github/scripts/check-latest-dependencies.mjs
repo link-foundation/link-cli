@@ -165,7 +165,7 @@ const registries = {
   crate: async (name) => (await fetchJson(`https://crates.io/api/v1/crates/${name}`)).crate.max_stable_version,
   nuget: async (name) =>
     latestStable((await fetchJson(`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/index.json`)).versions),
-  npm: async (name) => (await fetchJson(`https://registry.npmjs.org/${name.replace('/', '%2F')}/latest`)).version,
+  npm: async (name) => (await fetchJson(`https://registry.npmjs.org/${name.replaceAll('/', '%2F')}/latest`)).version,
   action: async (name) => {
     const tags = execFileSync('git', ['ls-remote', '--tags', `https://github.com/${name}`], { encoding: 'utf8' })
       .split('\n')
