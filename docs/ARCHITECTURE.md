@@ -121,7 +121,8 @@ Key files:
 Runtime flow:
 
 1. Vite loads the generated `clink-wasm` package.
-2. `Clink` stores links in an in-memory `BrowserStorage`.
+2. `Clink` stores links in `LinkStorage::in_memory`, the CLI's store without a
+   file, so deletes cascade and updates merge exactly as in the CLI.
 3. Queries are passed into the Rust `QueryProcessor`.
 4. The result includes formatted output plus a structured `links` snapshot.
 5. React renders the snapshot and mirrors it into `doublets-web` `UnitedLinks`.

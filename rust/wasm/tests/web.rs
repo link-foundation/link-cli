@@ -69,6 +69,18 @@ fn javascript_wasm_api_round_trips_create_update_delete_and_recreate() {
     assert_link(&recreated, 1, 1, 1);
 }
 
+#[wasm_bindgen_test]
+fn deleting_a_link_deletes_its_usages_as_the_cli_does() {
+    let mut clink = Clink::new();
+    execute_json(&mut clink, "() ((1 1) (2 2) (1 2))");
+
+    let deleted = execute_json(&mut clink, "((2: 2 2)) ()");
+    assert_eq!(deleted["success"], true);
+    assert_eq!(deleted["output"], "((2: 2 2)) ()\n((3: 1 2)) ()\n(1: 1 1)");
+    assert_link(&deleted, 1, 1, 1);
+    assert_link_missing(&deleted, 3);
+}
+
 fn execute_json(clink: &mut Clink, query: &str) -> Value {
     let raw = clink.execute(
         query,

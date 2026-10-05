@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
-use link_cli::{Link, LinkError, NamedTypeLinks, QueryProcessor};
+use link_cli::{Link, LinkStorage, QueryProcessor};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -47,7 +45,8 @@ pub struct WebLink {
 
 #[wasm_bindgen]
 pub struct Clink {
-    storage: BrowserStorage,
+    /// The same store as the CLI's, kept in memory: the browser has no files.
+    storage: LinkStorage,
 }
 
 #[wasm_bindgen]
@@ -56,7 +55,7 @@ impl Clink {
     pub fn new() -> Clink {
         set_panic_hook();
         Clink {
-            storage: BrowserStorage::new(),
+            storage: LinkStorage::in_memory(false),
         }
     }
 
@@ -68,7 +67,7 @@ impl Clink {
                 success: false,
                 output: String::new(),
                 error: Some(error.to_string()),
-                links: self.storage.snapshot(),
+                links: snapshot(&self.storage),
             },
         })
     }
@@ -77,15 +76,15 @@ impl Clink {
     pub fn snapshot(&mut self) -> String {
         to_json(&ClinkResult {
             success: true,
-            output: self.storage.lino_lines().unwrap_or_default().join("\n"),
+            output: self.storage.lino_lines().join("\n"),
             error: None,
-            links: self.storage.snapshot(),
+            links: snapshot(&self.storage),
         })
     }
 
     #[wasm_bindgen]
     pub fn reset(&mut self) -> String {
-        self.storage = BrowserStorage::new();
+        self.storage = LinkStorage::in_memory(false);
         self.snapshot()
     }
 
@@ -122,7 +121,7 @@ impl Clink {
         }
 
         if options.before {
-            output.extend(self.storage.lino_lines()?);
+            output.extend(self.storage.lino_lines());
         }
 
         if !query.trim().is_empty() {
@@ -131,13 +130,13 @@ impl Clink {
             let changes = processor.process_query(&mut self.storage, query)?;
             if options.changes {
                 for (before, after) in &changes {
-                    output.push(self.storage.format_change(before, after)?);
+                    output.push(format_change(&self.storage, before, after));
                 }
             }
         }
 
         if options.after {
-            output.extend(self.storage.lino_lines()?);
+            output.extend(self.storage.lino_lines());
         }
 
         Ok(self.result(output, true, None))
@@ -148,7 +147,7 @@ impl Clink {
             success,
             output: output.join("\n"),
             error,
-            links: self.storage.snapshot(),
+            links: snapshot(&self.storage),
         }
     }
 }
@@ -175,138 +174,27 @@ fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-#[derive(Default)]
-struct BrowserStorage {
-    links: HashMap<u32, Link>,
-    names: HashMap<u32, String>,
-    name_to_id: HashMap<String, u32>,
-    next_id: u32,
+/// The links of `storage` with their names, ordered by address.
+fn snapshot(storage: &LinkStorage) -> Vec<WebLink> {
+    storage
+        .all()
+        .into_iter()
+        .map(|link| WebLink {
+            id: link.index,
+            source: link.source,
+            target: link.target,
+            name: storage.get_name(link.index).cloned(),
+        })
+        .collect()
 }
 
-impl BrowserStorage {
-    fn new() -> Self {
-        Self {
-            next_id: 1,
-            ..Self::default()
-        }
-    }
-
-    fn snapshot(&self) -> Vec<WebLink> {
-        let mut links: Vec<_> = self
-            .links
-            .values()
-            .map(|link| WebLink {
-                id: link.index,
-                source: link.source,
-                target: link.target,
-                name: self.names.get(&link.index).cloned(),
-            })
-            .collect();
-        links.sort_by_key(|link| link.id);
-        links
-    }
-
-    fn format_change(&mut self, before: &Option<Link>, after: &Option<Link>) -> Result<String> {
-        let before_text = before
-            .map(|link| self.format_lino(&link))
-            .transpose()?
-            .unwrap_or_default();
-        let after_text = after
-            .map(|link| self.format_lino(&link))
-            .transpose()?
-            .unwrap_or_default();
-        Ok(format!("({before_text}) ({after_text})"))
-    }
-}
-
-impl NamedTypeLinks for BrowserStorage {
-    fn create(&mut self, source: u32, target: u32) -> u32 {
-        let id = self.next_id.max(1);
-        self.next_id = id + 1;
-        self.links.insert(id, Link::new(id, source, target));
-        id
-    }
-
-    fn ensure_created(&mut self, id: u32) -> u32 {
-        if id == 0 || self.links.contains_key(&id) {
-            return id;
-        }
-
-        self.next_id = self.next_id.max(id + 1);
-        self.links.insert(id, Link::new(id, 0, 0));
-        id
-    }
-
-    fn get_link(&mut self, id: u32) -> Option<Link> {
-        self.links.get(&id).copied()
-    }
-
-    fn exists(&mut self, id: u32) -> bool {
-        self.links.contains_key(&id)
-    }
-
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        let link = self.links.get_mut(&id).ok_or(LinkError::not_found(id))?;
-        let before = *link;
-        link.source = source;
-        link.target = target;
-        Ok(before)
-    }
-
-    fn delete(&mut self, id: u32) -> Result<Link> {
-        self.remove_name(id)?;
-        self.links
-            .remove(&id)
-            .ok_or(LinkError::not_found(id).into())
-    }
-
-    fn all_links(&mut self) -> Vec<Link> {
-        self.links.values().copied().collect()
-    }
-
-    fn search(&mut self, source: u32, target: u32) -> Option<u32> {
-        self.links
-            .values()
-            .find(|link| link.source == source && link.target == target)
-            .map(|link| link.index)
-    }
-
-    fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
-        self.search(source, target)
-            .unwrap_or_else(|| self.create(source, target))
-    }
-
-    fn get_name(&mut self, id: u32) -> Result<Option<String>> {
-        Ok(self.names.get(&id).cloned())
-    }
-
-    fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
-        if let Some(previous_name) = self.names.remove(&id) {
-            self.name_to_id.remove(&previous_name);
-        }
-        if let Some(previous_id) = self.name_to_id.insert(name.to_string(), id) {
-            if previous_id != id {
-                self.names.remove(&previous_id);
-            }
-        }
-        self.names.insert(id, name.to_string());
-        Ok(id)
-    }
-
-    fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
-        Ok(self.name_to_id.get(name).copied())
-    }
-
-    fn remove_name(&mut self, id: u32) -> Result<()> {
-        if let Some(name) = self.names.remove(&id) {
-            self.name_to_id.remove(&name);
-        }
-        Ok(())
-    }
-
-    fn save(&mut self) -> Result<()> {
-        Ok(())
-    }
+/// A change as `(before) (after)`, each side in LiNo, empty when absent.
+fn format_change(storage: &LinkStorage, before: &Option<Link>, after: &Option<Link>) -> String {
+    let format = |link: &Option<Link>| {
+        link.map(|link| storage.format_lino(&link))
+            .unwrap_or_default()
+    };
+    format!("({}) ({})", format(before), format(after))
 }
 
 #[cfg(test)]
@@ -326,6 +214,47 @@ mod tests {
         assert_eq!(parsed["success"], true);
         assert!(parsed["output"].as_str().unwrap().contains("child"));
         assert_eq!(parsed["links"].as_array().unwrap().len(), 3);
+    }
+
+    fn run(clink: &mut Clink, query: &str) -> String {
+        let raw = clink.execute(query, r#"{"changes":true,"after":true}"#);
+        let parsed: Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(parsed["success"], true, "{raw}");
+        parsed["output"].as_str().unwrap().to_string()
+    }
+
+    #[test]
+    fn deleting_a_link_deletes_its_usages_as_the_cli_does() {
+        let mut clink = Clink::new();
+        run(&mut clink, "() ((1 1) (2 2) (1 2))");
+
+        assert_eq!(
+            run(&mut clink, "((2: 2 2)) ()"),
+            "((2: 2 2)) ()\n((3: 1 2)) ()\n(1: 1 1)"
+        );
+    }
+
+    #[test]
+    fn updating_a_link_into_an_existing_pair_merges_them_as_the_cli_does() {
+        let mut clink = Clink::new();
+        run(&mut clink, "() ((1 1) (2 2) (1 2) (2 1))");
+
+        assert_eq!(
+            run(&mut clink, "(((4: 2 1)) ((4: 1 2)))"),
+            "((4: 2 1)) ()\n(1: 1 1)\n(2: 2 2)\n(3: 1 2)"
+        );
+    }
+
+    #[test]
+    fn reset_empties_the_store() {
+        let mut clink = Clink::new();
+        run(&mut clink, "() ((named: named named))");
+        let parsed: Value = serde_json::from_str(&clink.snapshot()).unwrap();
+        assert_eq!(parsed["links"][0]["name"], "named");
+
+        let parsed: Value = serde_json::from_str(&clink.reset()).unwrap();
+        assert_eq!(parsed["links"].as_array().unwrap().len(), 0);
+        assert_eq!(parsed["output"], "");
     }
 
     #[test]

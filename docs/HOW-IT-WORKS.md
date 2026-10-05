@@ -338,7 +338,9 @@ The WebAssembly workbench uses the Rust query processor in the browser.
 
 1. The `rust/wasm` `clink-wasm` crate compiles with `wasm-pack`.
 2. `Clink#execute(query, optionsJson)` parses JSON options.
-3. Browser storage keeps links and names in memory for the page session.
+3. `LinkStorage::in_memory` keeps links and names in memory for the page
+   session; it is the CLI's store without a file, so the browser and the CLI
+   give the same results.
 4. The Rust query processor applies the LiNo query.
 5. The result returns formatted output and a structured `links` array.
 6. React renders the output and graph.
