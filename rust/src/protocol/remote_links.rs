@@ -19,10 +19,12 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
-//! Every call is one [`LinksOperation`] round trip. The methods of the
-//! upstream and CLI traits that cannot return an error panic when the
-//! connection fails, the way a local store panics when its file does; the
-//! inherent methods return every failure as a [`ProtocolError`].
+//! Every call is one [`LinksOperation`] round trip. An observer of a write
+//! sees the net change of every link it touched, not the steps the store
+//! behind the server took. The methods of the upstream and CLI traits that
+//! cannot return an error panic when the connection fails, the way a local
+//! store panics when its file does; the inherent methods return every failure
+//! as a [`ProtocolError`].
 
 use super::client::LinksClient;
 use super::error::{ProtocolError, ProtocolResult};

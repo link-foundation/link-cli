@@ -10,7 +10,7 @@ use link_cli::protocol::{
     links_operations::matches, parse_document, LinksOperation, LinoProtocol, RemoteLinks,
     ServerOptions, TextLinoProtocol,
 };
-use link_cli::{Link, NamedTypeLinks, NamedTypesDecorator, QueryProcessor};
+use link_cli::{simplify_changes, Link, NamedTypeLinks, NamedTypesDecorator, QueryProcessor};
 use std::panic::{self, AssertUnwindSafe};
 use tempfile::NamedTempFile;
 
@@ -116,12 +116,10 @@ impl<S: NamedTypeLinks> NamedTypeLinksCalls for S {
             .update_observed(5, 1, 1, &mut |before, after| changes.push((before, after)))
             .unwrap();
         assert_eq!(merged, Link::new(5, 2, 2));
+        // A server replies with the net change of every link it touched.
         assert_eq!(
-            changes,
-            vec![
-                (Link::new(5, 2, 2), Link::new(5, 0, 0)),
-                (Link::new(5, 0, 0), Link::null())
-            ]
+            simplify_changes(changes),
+            vec![(Link::new(5, 2, 2), Link::null())]
         );
         assert!(!self.exists(5));
 
@@ -322,5 +320,46 @@ fn restrictions_match_like_the_raw_links_interface() {
     ];
     for (restriction, expected) in shapes {
         assert_eq!(matches(&link, restriction), *expected, "{restriction:?}");
+    }
+}
+
+/// The requests and replies of `docs/protocol/links-operations.txt`, which
+/// the C# tests replay against the C# server too.
+fn conversation() -> Vec<(&'static str, String)> {
+    let lines: Vec<&str> = include_str!("../../docs/protocol/links-operations.txt")
+        .lines()
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .collect();
+    let mut exchanges = Vec::new();
+    let mut start = 0;
+    while start < lines.len() {
+        let end = (start + 1..lines.len())
+            .find(|&line| lines[line].starts_with("> "))
+            .unwrap_or(lines.len());
+        exchanges.push((&lines[start][2..], lines[start + 1..end].join("\n")));
+        start = end;
+    }
+    exchanges
+}
+
+#[test]
+fn servers_answer_the_shared_conversation_over_every_protocol() {
+    let conversation = conversation();
+    assert_eq!(conversation.len(), 19);
+    for protocol in protocols() {
+        let server = RunningServer::start(ServerOptions::default(), true);
+        let mut client = server.client(protocol);
+        for (request, reply) in &conversation {
+            match reply.strip_prefix("! ") {
+                Some(message) => {
+                    let error = client.query_text(request).unwrap_err().to_string();
+                    assert!(error.ends_with(message), "{request}: {error}");
+                }
+                None => assert_eq!(
+                    (*request, client.query_text(request).unwrap()),
+                    (*request, reply.clone())
+                ),
+            }
+        }
     }
 }

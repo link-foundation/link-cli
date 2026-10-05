@@ -12,7 +12,7 @@
 //! | `(count: (index source target))` | `(count: N)`                           |
 //! | `(each: (index source target))`  | one `(index: source target)` per match |
 //! | `(create: (source target))`      | `() ((index: source target))`          |
-//! | `(update: (index source target))`| `((index: s t)) ((index: source target))` per change |
+//! | `(update: (index source target))`| `((index: s t)) ((index: source target))` per changed link |
 //! | `(delete: index)`                | `((index: source target)) ()` per removed link |
 //! | `(get-name: link)`               | `(name: 'text')`, or nothing           |
 //! | `(set-name: (link 'text'))`      | `(link: N)`                            |
@@ -24,9 +24,16 @@
 //! `(index value)` links of that index whose source or target is `value`,
 //! and `(index source target)` matches part by part. `*` matches anything.
 //! Every reference in a reply is a number; failures are `(error: 'message')`.
+//!
+//! The changes of a `create`, `update` or `delete` are the net change of every
+//! link it touched, the way `clink --changes` reports a query: a cascading
+//! delete is one `((index: source target)) ()` per removed link, without the
+//! intermediate steps by which the store behind the server got there, which
+//! differ between the C# and the Rust stores.
 
 use super::error::{ProtocolError, ProtocolResult};
 use super::mapping::LinoDocument;
+use crate::changes_simplifier::simplify_changes;
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
 use links_notation::LiNo;
@@ -168,14 +175,14 @@ impl LinksOperation {
                     changes.push((before, after))
                 })?;
                 storage.save()?;
-                changes_document(&changes)
+                changes_document(&simplify_changes(changes))
             }
             Self::Delete(index) => {
                 let mut changes = Vec::new();
                 storage
                     .delete_observed(*index, &mut |before, after| changes.push((before, after)))?;
                 storage.save()?;
-                changes_document(&changes)
+                changes_document(&simplify_changes(changes))
             }
             Self::GetName(index) => match storage.get_name(*index)? {
                 Some(name) => vec![named("name", vec![LiNo::Ref(name)])],
