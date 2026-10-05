@@ -12,6 +12,7 @@ use crate::error::LinkError;
 use crate::link::Link;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
+use crate::query_processor::Changes;
 
 pub struct LinkReferenceValidator {
     trace: bool,
@@ -70,10 +71,41 @@ impl LinkReferenceValidator {
         storage: &mut impl NamedTypeLinks,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Vec<(Link, Link)>> {
+    ) -> Result<Changes> {
         self.trace_msg("[ValidateLinksExistOrWillBeCreated] Starting validation");
 
-        let mut plan = self.build_link_reference_plan(storage, substitution_patterns);
+        let mut created = Vec::new();
+        loop {
+            let plan =
+                self.plan_references(storage, restriction_patterns, substitution_patterns)?;
+            if plan.missing_references.is_empty() {
+                self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
+                return Ok(created);
+            }
+
+            if !self.auto_create_missing_references {
+                let missing = &plan.missing_references[0];
+                return Err(LinkError::QueryError(format!(
+                    "Invalid reference to non-existent link '{}' in {} pattern. Link '{}' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.",
+                    missing.identifier, missing.pattern_type, missing.identifier
+                ))
+                .into());
+            }
+
+            // Creating a reference frees addresses on the way, which changes
+            // the ones the query's new links get, so the plan is made again
+            // until every reference is accounted for.
+            created.extend(self.auto_create_missing_references(storage, &plan)?);
+        }
+    }
+
+    fn plan_references(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        restriction_patterns: &[LinoLink],
+        substitution_patterns: &[LinoLink],
+    ) -> Result<LinkReferencePlan> {
+        let mut plan = self.build_link_reference_plan(storage, substitution_patterns)?;
         self.trace_msg(&format!(
             "[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {:?}",
             plan.numeric_ids_to_be_created
@@ -97,130 +129,69 @@ impl LinkReferenceValidator {
             true,
             "substitution",
         )?;
-
-        if plan.missing_references.is_empty() {
-            self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
-            return Ok(vec![]);
-        }
-
-        if !self.auto_create_missing_references {
-            let missing = &plan.missing_references[0];
-            return Err(LinkError::QueryError(format!(
-                "Invalid reference to non-existent link '{}' in {} pattern. Link '{}' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.",
-                missing.identifier, missing.pattern_type, missing.identifier
-            ))
-            .into());
-        }
-
-        let created = self.auto_create_missing_references(storage, &plan)?;
-        self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
-        Ok(created)
+        Ok(plan)
     }
 
     fn build_link_reference_plan(
         &self,
         storage: &mut impl NamedTypeLinks,
         substitution_patterns: &[LinoLink],
-    ) -> LinkReferencePlan {
+    ) -> Result<LinkReferencePlan> {
         let mut plan = LinkReferencePlan::default();
-        let mut reserved_numeric_ids = HashSet::new();
-
+        let mut anonymous_links = 0;
         for pattern in substitution_patterns {
-            self.collect_explicit_definitions(pattern, &mut plan, &mut reserved_numeric_ids);
+            Self::collect_definitions(pattern, &mut plan, &mut anonymous_links);
         }
-
-        for pattern in substitution_patterns {
-            self.collect_implicit_definitions(
-                storage,
-                pattern,
-                &mut plan,
-                &mut reserved_numeric_ids,
-            );
-        }
-
-        for pattern in substitution_patterns {
-            Self::collect_composite_pairs(pattern, &mut plan);
-        }
-
-        plan
+        plan.numeric_ids_to_be_created
+            .extend(Self::next_created_addresses(storage, anonymous_links)?);
+        Ok(plan)
     }
 
-    fn collect_explicit_definitions(
-        &self,
+    /// Collects the ids and names the substitution defines, the `(source,
+    /// target)` pairs it writes under them, and how many links it writes
+    /// without an id.
+    fn collect_definitions(
         pattern: &LinoLink,
         plan: &mut LinkReferencePlan,
-        reserved_numeric_ids: &mut HashSet<u32>,
-    ) {
-        if Self::is_composite_lino(pattern) {
-            if let Some(identifier) = Self::concrete_identifier(pattern.id.as_deref()) {
-                if let Ok(link_id) = identifier.parse::<u32>() {
-                    plan.numeric_ids_to_be_created.insert(link_id);
-                    reserved_numeric_ids.insert(link_id);
-                } else {
-                    plan.names_to_be_created.insert(identifier);
-                }
-            }
-        }
-
-        if let Some(values) = &pattern.values {
-            for sub_pattern in values {
-                self.collect_explicit_definitions(sub_pattern, plan, reserved_numeric_ids);
-            }
-        }
-    }
-
-    fn collect_composite_pairs(pattern: &LinoLink, plan: &mut LinkReferencePlan) {
-        if Self::is_composite_lino(pattern)
-            && Self::concrete_identifier(pattern.id.as_deref()).is_some()
-        {
-            if let Some(values) = &pattern.values {
-                if let (Some(source), Some(target)) = (
-                    Self::concrete_numeric_identifier(values[0].id.as_deref()),
-                    Self::concrete_numeric_identifier(values[1].id.as_deref()),
-                ) {
-                    plan.composite_pairs_to_be_created.insert((source, target));
-                }
-            }
-        }
-
-        if let Some(values) = &pattern.values {
-            for sub_pattern in values {
-                Self::collect_composite_pairs(sub_pattern, plan);
-            }
-        }
-    }
-
-    fn collect_implicit_definitions(
-        &self,
-        storage: &mut impl NamedTypeLinks,
-        pattern: &LinoLink,
-        plan: &mut LinkReferencePlan,
-        reserved_numeric_ids: &mut HashSet<u32>,
+        anonymous_links: &mut usize,
     ) {
         if let Some(values) = &pattern.values {
             for sub_pattern in values {
-                self.collect_implicit_definitions(storage, sub_pattern, plan, reserved_numeric_ids);
+                Self::collect_definitions(sub_pattern, plan, anonymous_links);
             }
         }
-
-        if Self::is_composite_lino(pattern)
-            && Self::concrete_identifier(pattern.id.as_deref()).is_none()
-        {
-            let next_id = Self::next_available_link_id(storage, reserved_numeric_ids);
-            reserved_numeric_ids.insert(next_id);
-            plan.numeric_ids_to_be_created.insert(next_id);
+        if !Self::is_composite_lino(pattern) {
+            return;
+        }
+        let Some(identifier) = Self::concrete_identifier(pattern.id.as_deref()) else {
+            *anonymous_links += 1;
+            return;
+        };
+        match identifier.parse::<u32>() {
+            Ok(link_id) => plan.numeric_ids_to_be_created.insert(link_id),
+            Err(_) => plan.names_to_be_created.insert(identifier),
+        };
+        let values = pattern.values.as_deref().unwrap_or_default();
+        if let (Some(source), Some(target)) = (
+            Self::concrete_numeric_identifier(values[0].id.as_deref()),
+            Self::concrete_numeric_identifier(values[1].id.as_deref()),
+        ) {
+            plan.composite_pairs_to_be_created.insert((source, target));
         }
     }
 
-    fn next_available_link_id(
-        storage: &mut impl NamedTypeLinks,
-        reserved_numeric_ids: &HashSet<u32>,
-    ) -> u32 {
-        let mut next_id = 1;
-        while storage.exists(next_id) || reserved_numeric_ids.contains(&next_id) {
-            next_id += 1;
+    /// The addresses the next `count` links created in `storage` get.
+    ///
+    /// A store reuses the address freed last first, so the lowest free one is
+    /// not necessarily next. Creating the links and deleting them again in
+    /// reverse leaves the store exactly as it was, and is the one way to ask
+    /// any store, a remote one included.
+    fn next_created_addresses(storage: &mut impl NamedTypeLinks, count: usize) -> Result<Vec<u32>> {
+        let addresses: Vec<u32> = (0..count).map(|_| storage.create(0, 0)).collect();
+        for &address in addresses.iter().rev() {
+            storage.delete(address)?;
         }
-        next_id
+        Ok(addresses)
     }
 
     fn collect_missing_references(
@@ -314,30 +285,19 @@ impl LinkReferenceValidator {
         Ok(())
     }
 
-    /// Creates every missing reference and reports the `(before, after)` state
-    /// of each one.
+    /// Creates every missing reference as a point link and reports each
+    /// creation the way it happens: a numeric reference is first filled in as
+    /// the empty `(id: 0 0)` and then pointed at itself, a named one is created
+    /// as `(name: name name)` directly. The simplified `--changes` report of
+    /// both is the creation of the point link, `() ((2: 2 2))`.
     ///
-    /// The before state is the placeholder the reference is turned into a point
-    /// link *from*, never `null`: both branches of the C# original create the
-    /// link silently — `EnsureCreated`, and `CreateAndUpdate(Null, Null)` with
-    /// no handler — and only pass the changes handler to the `Update` that
-    /// makes it a point link:
-    ///
-    /// ```csharp
-    /// links.Update(
-    ///   new DoubletLink(linkId, links.Constants.Null, links.Constants.Null),
-    ///   new DoubletLink(linkId, linkId, linkId),
-    ///   (beforeState, afterState) =>
-    ///       options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
-    /// );
-    /// ```
-    ///
-    /// So `--changes` shows `((2: 0 0)) ((2: 2 2))`, not `() ((2: 2 2))`.
+    /// A numeric reference the substitution defines as `(id: id id)` itself
+    /// is only filled in: the query writes the point link.
     fn auto_create_missing_references(
         &self,
         storage: &mut impl NamedTypeLinks,
         plan: &LinkReferencePlan,
-    ) -> Result<Vec<(Link, Link)>> {
+    ) -> Result<Changes> {
         let missing_references = &plan.missing_references;
         let mut created = Vec::new();
         let mut numeric_references = missing_references
@@ -356,6 +316,8 @@ impl LinkReferenceValidator {
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id}."
             ));
             storage.try_ensure_created(link_id)?;
+            let placeholder = Link::new(link_id, 0, 0);
+            created.push((None, Some(placeholder)));
             if plan
                 .composite_pairs_to_be_created
                 .contains(&(link_id, link_id))
@@ -365,13 +327,8 @@ impl LinkReferenceValidator {
                 ));
                 continue;
             }
-            let before = storage
-                .get_link(link_id)
-                .unwrap_or_else(|| Link::new(link_id, 0, 0));
             storage.update(link_id, link_id, link_id)?;
-            if let Some(after) = storage.get_link(link_id) {
-                created.push((before, after));
-            }
+            created.push((Some(placeholder), storage.get_link(link_id)));
         }
 
         let mut named_references = missing_references
@@ -391,9 +348,7 @@ impl LinkReferenceValidator {
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{name}' as point link."
             ));
             let link_id = storage.get_or_create_named(&name)?;
-            if let Some(after) = storage.get_link(link_id) {
-                created.push((Link::new(link_id, 0, 0), after));
-            }
+            created.push((None, storage.get_link(link_id)));
         }
 
         Ok(created)

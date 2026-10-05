@@ -15,7 +15,7 @@ use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
 use crate::query_types::ResolvedLink;
 
-use super::QueryProcessor;
+use super::{Changes, QueryProcessor};
 
 /// A store change as `--changes` reports it: a null link is no link at all.
 fn change(before: Link, after: Link) -> (Option<Link>, Option<Link>) {
@@ -41,7 +41,7 @@ impl QueryProcessor {
         &self,
         storage: &mut impl NamedTypeLinks,
         id: u32,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<Link> {
         storage.delete_observed(id, &mut |before, after| changes.push(change(before, after)))
     }
@@ -57,7 +57,7 @@ impl QueryProcessor {
         id: u32,
         source: u32,
         target: u32,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<Link> {
         storage.update_observed(id, source, target, &mut |before, after| {
             changes.push(change(before, after))
@@ -111,7 +111,7 @@ impl QueryProcessor {
         &self,
         storage: &mut impl NamedTypeLinks,
         intended_final_states: &[(u32, Option<ResolvedLink>)],
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<()> {
         for (index, intended) in intended_final_states {
             let Some(intended) = intended else {
@@ -134,12 +134,10 @@ impl QueryProcessor {
     /// Creates or updates the link a resolved definition asks for and appends
     /// the changes a `--changes` listener would see.
     ///
-    /// Only a link that genuinely had to be allocated from nothing is reported
-    /// as a creation. An address filled in with
-    /// [`try_ensure_created`](NamedTypeLinks::try_ensure_created) reports the
-    /// update from its empty state, and a definition that already matches its
-    /// stored state — or a duplicate of an existing doublet — reports that
-    /// state unchanged, mirroring `CreateOrUpdateLink` in the C# processor:
+    /// An address the store lacks is reported as created empty and then
+    /// updated, and a definition that already matches its stored state — or a
+    /// duplicate of an existing doublet — reports that state unchanged,
+    /// mirroring `CreateOrUpdateLink` in the C# processor:
     ///
     /// ```csharp
     /// if (existingDoublet.Source != linkDefinition.Source || existingDoublet.Target != linkDefinition.Target)
@@ -157,10 +155,10 @@ impl QueryProcessor {
         &self,
         storage: &mut impl NamedTypeLinks,
         definition: &ResolvedLink,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<u32> {
         let id = if Self::is_normal_index(definition.index) {
-            storage.try_ensure_created(definition.index)?;
+            self.ensure_address(storage, definition.index, changes)?;
             let existing = storage
                 .get_link(definition.index)
                 .unwrap_or_else(|| Link::new(definition.index, 0, 0));
@@ -214,13 +212,13 @@ impl QueryProcessor {
     /// doublet it touches — including the nested ones — appends its
     /// `(before, after)` states to `changes`, exactly as the C# version reports
     /// them through `options.ChangesHandler`, so `--changes` lists the same
-    /// records in both languages. Leaves report nothing: C#'s `ResolveLeaf`
-    /// passes the update handler that ignores the changes handler.
+    /// records in both languages. A named leaf created on the way is reported
+    /// as created too.
     pub(super) fn ensure_link_created(
         &self,
         storage: &mut impl NamedTypeLinks,
         lino_link: &LinoLink,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<u32> {
         // Handle leaf nodes (names or numbers)
         if !lino_link.has_values() {
@@ -234,8 +232,7 @@ impl QueryProcessor {
                     return Ok(num);
                 }
 
-                // It's a name - get or create
-                return storage.get_or_create_named(id);
+                return self.ensure_named_point_link(storage, id, changes);
             }
             return Ok(0);
         }
@@ -255,23 +252,14 @@ impl QueryProcessor {
                     self.ensure_indexed_link(storage, num, source_id, target_id, changes)?
                 } else if id == "*" || Self::is_variable(id) {
                     self.ensure_doublet(storage, source_id, target_id, changes)
+                } else if let Some(named) = storage.get_by_name(id)? {
+                    self.ensure_indexed_link(storage, named, source_id, target_id, changes)?
                 } else {
-                    // Named link: this repository resolves the address through
-                    // the name, where C# resolves it through `(source, target)`
-                    // and names the result afterwards. The reported states are
-                    // the same either way.
-                    let existing = storage.get_by_name(id)?;
-                    if let Some(id_num) = existing {
-                        self.ensure_indexed_link(storage, id_num, source_id, target_id, changes)?
-                    } else {
-                        let new_id = storage.create(
-                            Self::resolve_unspecified(source_id, 0),
-                            Self::resolve_unspecified(target_id, 0),
-                        );
-                        changes.push((None, storage.get_link(new_id)));
-                        storage.set_name(new_id, id)?;
-                        new_id
-                    }
+                    // A doublet is unique, so a new name for an existing
+                    // `(source, target)` names that link instead of copying it.
+                    let named = self.ensure_doublet(storage, source_id, target_id, changes);
+                    storage.set_name(named, id)?;
+                    named
                 }
             } else {
                 // Anonymous link
@@ -304,9 +292,9 @@ impl QueryProcessor {
         index: u32,
         source: u32,
         target: u32,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> Result<u32> {
-        storage.try_ensure_created(index)?;
+        self.ensure_address(storage, index, changes)?;
         let stored = storage
             .get_link(index)
             .unwrap_or_else(|| Link::new(index, 0, 0));
@@ -335,7 +323,7 @@ impl QueryProcessor {
         storage: &mut impl NamedTypeLinks,
         source: u32,
         target: u32,
-        changes: &mut Vec<(Option<Link>, Option<Link>)>,
+        changes: &mut Changes,
     ) -> u32 {
         if let Some(existing_id) = Self::search_unspecified(storage, source, target) {
             self.trace_msg(&format!(
@@ -356,5 +344,36 @@ impl QueryProcessor {
             changes.push((None, storage.get_link(created)));
             created
         }
+    }
+
+    /// Fills `index` in when the store lacks it, reporting the empty
+    /// `(index: 0 0)` link that creates.
+    fn ensure_address(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        index: u32,
+        changes: &mut Changes,
+    ) -> Result<()> {
+        if !storage.exists(index) {
+            storage.try_ensure_created(index)?;
+            changes.push((None, Some(Link::new(index, 0, 0))));
+        }
+        Ok(())
+    }
+
+    /// The link called `name`, created and reported as the point link
+    /// `(name: name name)` when there is none yet.
+    pub(super) fn ensure_named_point_link(
+        &self,
+        storage: &mut impl NamedTypeLinks,
+        name: &str,
+        changes: &mut Changes,
+    ) -> Result<u32> {
+        if let Some(named) = storage.get_by_name(name)? {
+            return Ok(named);
+        }
+        let created = storage.get_or_create_named(name)?;
+        changes.push((None, storage.get_link(created)));
+        Ok(created)
     }
 }

@@ -90,7 +90,7 @@ pub use protocol::{
     BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer, LinoProtocol, TextLinoProtocol,
 };
 pub use query_options::QueryOptions;
-pub use query_processor::QueryProcessor;
+pub use query_processor::{Changes, QueryProcessor};
 pub use storage::{
     decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
     LinksStorage, LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore,

@@ -452,10 +452,7 @@ namespace Foundation.Data.Doublets.Cli
                         if (before.Index == after.Index)
                         {
                             TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Updating link in-place => ID={before.Index}");
-                            if (!links.Exists(after.Index))
-                            {
-                                LinksExtensions.EnsureCreated(links, after.Index);
-                            }
+                            EnsureAddress(links, after.Index, options);
                             links.Update(before, after, (beforeState, afterState) =>
                                 options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue);
                         }

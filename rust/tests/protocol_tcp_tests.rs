@@ -157,7 +157,7 @@ fn concurrent_clients_share_one_store() {
                     let name = format!("w{worker}i{item}");
                     let reply = client.query_text(&format!("() (({name}: {name} {name}))"));
                     let link = format!("({name}: {name} {name})");
-                    assert_eq!(reply.unwrap(), format!("({link}) ({link})"));
+                    assert_eq!(reply.unwrap(), format!("() ({link})"));
                 }
             })
         })

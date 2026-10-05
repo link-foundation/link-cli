@@ -37,7 +37,9 @@ namespace Foundation.Data.Doublets.Cli
                         throw new InvalidOperationException($"Link creation returned address {createdLink} more than once before reaching target {max}.");
                     }
 
-                    if (Comparer<TLinkAddress>.Default.Compare(createdLink, max) > 0)
+                    // A store hands out the address freed last first, which can lie beyond the target. An
+                    // address beyond every link the store held is appended instead, and so is every one after it.
+                    if (Comparer<TLinkAddress>.Default.Compare(createdLink, max) > 0 && !IsBelowAStoredLink(links, createdLink, seenCreatedLinks))
                     {
                         throw new InvalidOperationException($"Link creation produced address {createdLink} beyond requested target {max}.");
                     }
@@ -54,6 +56,19 @@ namespace Foundation.Data.Doublets.Cli
                     }
                 }
             }
+        }
+
+        private static bool IsBelowAStoredLink<TLinkAddress>(ILinks<TLinkAddress> links, TLinkAddress address, ISet<TLinkAddress> createdLinks) where TLinkAddress : IUnsignedNumber<TLinkAddress>
+        {
+            var constants = links.Constants;
+            var found = false;
+            links.Each([constants.Any], link =>
+            {
+                var index = link![constants.IndexPart];
+                found = Comparer<TLinkAddress>.Default.Compare(index, address) > 0 && !createdLinks.Contains(index);
+                return found ? constants.Break : constants.Continue;
+            });
+            return found;
         }
 
         private static void EnsureSupportedInternalReference<TLinkAddress>(ILinks<TLinkAddress> links, TLinkAddress address) where TLinkAddress : IUnsignedNumber<TLinkAddress>

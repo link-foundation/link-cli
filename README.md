@@ -214,8 +214,8 @@ clink --db family.links --auto-create-missing-references '() ((child: father mot
 ```
 →
 ```
-((father: 0 0)) ((father: father father))
-((mother: 0 0)) ((mother: mother mother))
+() ((father: father father))
+() ((mother: mother mother))
 () ((child: father mother))
 (father: father father)
 (mother: mother mother)

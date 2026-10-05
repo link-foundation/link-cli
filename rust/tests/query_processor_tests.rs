@@ -1,7 +1,7 @@
 //! Tests for the QueryProcessor module
 
 use anyhow::Result;
-use link_cli::{LinkStorage, QueryProcessor};
+use link_cli::{Link, LinkStorage, QueryProcessor};
 use tempfile::NamedTempFile;
 
 fn auto_processor() -> QueryProcessor {
@@ -120,6 +120,60 @@ fn test_auto_create_missing_numeric_reference_fills_existing_gap() -> Result<()>
     assert_eq!(link.source, 1);
     assert_eq!(link.target, 4);
 
+    Ok(())
+}
+
+/// Links 1 to 4, with 2 and then 3 deleted: the store hands out 3, the
+/// address freed last, before 2.
+fn store_with_2_and_3_freed(storage: &mut LinkStorage) -> Result<()> {
+    let processor = QueryProcessor::new(false);
+    processor.process_query(storage, "() ((1 1) (2 2) (3 3) (4 4))")?;
+    processor.process_query(storage, "((2: 2 2)) ()")?;
+    processor.process_query(storage, "((3: 3 3)) ()")?;
+    Ok(())
+}
+
+#[test]
+fn test_reference_to_a_freed_address_the_new_link_does_not_get_fails() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    store_with_2_and_3_freed(&mut storage)?;
+
+    let error = QueryProcessor::new(false)
+        .process_query(&mut storage, "() ((2 2))")
+        .expect_err("the new link gets 3, so nothing creates 2");
+
+    assert!(error.to_string().contains("'2'"), "{error}");
+    assert_eq!(storage.all().len(), 2);
+    Ok(())
+}
+
+#[test]
+fn test_auto_create_a_reference_to_a_freed_address_the_new_link_does_not_get() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    store_with_2_and_3_freed(&mut storage)?;
+
+    auto_processor().process_query(&mut storage, "() ((2 2))")?;
+
+    assert_eq!(storage.get(2), Some(&Link::new(2, 2, 2)));
+    assert_eq!(storage.all().len(), 3);
+    Ok(())
+}
+
+#[test]
+fn test_auto_create_a_reference_the_new_link_would_have_got_before() -> Result<()> {
+    let temp_file = NamedTempFile::new()?;
+    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    QueryProcessor::new(false).process_query(&mut storage, "() ((1 1) (2 2) (3 3) (4 4))")?;
+
+    // Creating 7 frees 5 and 6 on the way, so `(5 7)` gets 6, not 5.
+    auto_processor().process_query(&mut storage, "() ((5 7))")?;
+
+    assert_eq!(storage.get(5), Some(&Link::new(5, 5, 5)));
+    assert_eq!(storage.get(6), Some(&Link::new(6, 5, 7)));
+    assert_eq!(storage.get(7), Some(&Link::new(7, 7, 7)));
+    assert_eq!(storage.all().len(), 7);
     Ok(())
 }
 
