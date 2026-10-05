@@ -116,6 +116,8 @@ public sealed class LinksServer : IDisposable
                     client.Dispose();
                     break;
                 }
+                // Here, where Shutdown cannot have disposed the client: the socket of a disposed client is null.
+                TryDisableNagle(client);
                 _clients.Add(client);
             }
             var worker = new Thread(() => HandleConnection(client, links)) { IsBackground = true };
@@ -152,7 +154,6 @@ public sealed class LinksServer : IDisposable
     {
         try
         {
-            client.NoDelay = true;
             using var stream = client.GetStream();
             var reader = new LinoStreamReader(stream);
             while (!_stopping)
@@ -193,6 +194,19 @@ public sealed class LinksServer : IDisposable
                 _clients.Remove(client);
             }
             client.Dispose();
+        }
+    }
+
+    /// <summary>Sends every reply at once; a connection that refuses still works, only slower, as in the Rust server.</summary>
+    private void TryDisableNagle(TcpClient client)
+    {
+        try
+        {
+            client.NoDelay = true;
+        }
+        catch (SocketException error)
+        {
+            Trace($"could not disable Nagle's algorithm: {error.Message}");
         }
     }
 

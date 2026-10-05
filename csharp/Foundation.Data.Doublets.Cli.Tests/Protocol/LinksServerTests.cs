@@ -186,6 +186,18 @@ public sealed class LinksServerTests
     }
 
     [Fact]
+    public void ShuttingDownRightAfterAConnectionArrivesIsClean()
+    {
+        // A connection the server has accepted but not started handling yet is
+        // closed by the shutdown; handling it must not crash the process.
+        for (var attempt = 0; attempt < 200; attempt++)
+        {
+            using var server = new RunningServer();
+            using var client = server.Client(new TextLinoProtocol());
+        }
+    }
+
+    [Fact]
     public void EndPointsAreParsed()
     {
         Assert.Equal(("127.0.0.1", 8080), LinksServer.ParseEndPoint("127.0.0.1:8080"));
