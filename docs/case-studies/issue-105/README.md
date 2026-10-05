@@ -471,6 +471,21 @@ This repository steers around them:
 - `--changes` collapses each link's chain of changes (`changes_simplifier.rs`), so the `(0 0)` steps that doublets-rs#67 skips never appear in its report;
 - `PersistentFileMapped` works around mem-rs#36.
 
+### Coverage
+
+The tests run every line of the protocol code in both ports: `rust/src/protocol/`
+and `csharp/Foundation.Data.Doublets.Cli.Library/Protocol/`. That covers each
+client and server under each protocol and each CRUD call. A malformed-input
+test asserts the exact error, not just that some error occurred, because a
+substring match let a few tests pass on the wrong error. Code that no test
+could reach was removed rather than excluded: dead fallbacks, impossible
+width codes and an accept-loop branch for a race. To reproduce:
+
+```bash
+cd rust && cargo llvm-cov --summary-only            # protocol/*.rs: 100% lines
+cd csharp && dotnet test Foundation.Data.Doublets.Cli.Tests --collect:"XPlat Code Coverage"
+```
+
 ## 7. Risks and remaining limits
 
 - **No authentication or encryption.** The server is meant for trusted
