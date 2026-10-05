@@ -27,9 +27,6 @@ public static class LinoFormat
     /// <summary>A link with an optional id and the given values.</summary>
     public static LinoLink Link(string? id, IList<LinoLink> values) => new(id!, values);
 
-    /// <summary>True when <paramref name="link"/> is a reference.</summary>
-    public static bool IsReference(LinoLink link) => link.Values is null;
-
     /// <summary>Parses LiNo text into a canonical document. Blank input is the empty document.</summary>
     public static IReadOnlyList<LinoLink> ParseDocument(string text)
     {

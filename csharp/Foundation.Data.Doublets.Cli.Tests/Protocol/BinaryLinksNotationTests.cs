@@ -113,6 +113,9 @@ public sealed class BinaryLinksNotationTests
         Assert.Equal(2, LinksPacket.AddressTier(128, true));
         Assert.Equal(2, LinksPacket.AddressTier(32_767, true));
         Assert.Equal(4, LinksPacket.AddressTier(32_768, true));
+        Assert.Equal(8, LinksPacket.AddressTier(ulong.MaxValue, false));
+        // No width holds an internal address in the external half.
+        Assert.Equal(LinoProtocolErrorKind.Unencodable, Assert.Throws<LinoProtocolException>(() => LinksPacket.AddressTier(1UL << 63, true)).Kind);
         Assert.Equal(ulong.MaxValue, LinksPacket.InternalCapacity(8, false));
         Assert.Equal((ulong)long.MaxValue, LinksPacket.InternalCapacity(8, true));
         Assert.Equal(127UL, LinksPacket.ExternalCapacity(1));
@@ -354,33 +357,43 @@ public sealed class BinaryLinksNotationTests
         Unencodable(DoubletSection(ulong.MaxValue, ArityRange.Doublets, 1, (1, 1)));
     }
 
-    private static LinoProtocolErrorKind DecodeError(byte[] bytes, DecodeLimits? limits = null)
+    private static LinoProtocolException DecodeError(byte[] bytes, DecodeLimits? limits = null)
     {
         var protocol = new BinaryLinoProtocol { Limits = limits ?? DecodeLimits.Default };
-        return Assert.Throws<LinoProtocolException>(() => protocol.Decode(bytes)).Kind;
+        return Assert.Throws<LinoProtocolException>(() => protocol.Decode(bytes));
     }
 
+    /// <summary>Each packet breaks exactly one rule, the one its detail names.</summary>
     [Theory]
-    [InlineData("")]
-    [InlineData("20 00")] // unknown version nibble
-    [InlineData("10 01 06 00")] // refers to itself
-    [InlineData("10 01 07 00")] // refers forward
-    [InlineData("10 02 00")] // truncated
-    [InlineData("10 00 00")] // trailing byte
-    [InlineData("10 ff ff ff ff ff ff ff ff ff 7f")] // LEB128 overflow
-    [InlineData("10 01 01 01")] // root is not a list
-    [InlineData("10 02 00 02 04 06")] // marker 2 used as a value
-    [InlineData("10 01 04 02")] // a bare marker in a list chain
-    [InlineData("16 00")] // the explicit layout keeps the width bits clear
-    [InlineData("12 01 04 05 00")] // arity 0
-    [InlineData("12 01 18 01 01 05 00")] // length 6 in arity 1..2
-    [InlineData("12 01 f8 ff ff ff ff ff ff ff ff 0f ff ff ff ff ff ff ff ff ff 01 00")] // arity overflows
-    [InlineData("12 02 04 ff ff ff ff ff ff ff ff ff 01 01 20 01")] // addresses overflow
-    [InlineData("12 01 24 06 01 01 01")] // LiNo links start at 6, not 7
-    [InlineData("12 02 24 05 01 24 01 01 01 01 04 06")] // a hole
-    public void MalformedPacketsAreRejected(string hex)
+    [InlineData("", "empty input")]
+    [InlineData("20 00", "unsupported binary header byte 0x20")]
+    [InlineData("10 01 06 00", "link 6 refers to Internal(6)")]
+    [InlineData("10 01 07 00", "link 6 refers to Internal(7)")]
+    [InlineData("10 02 00", "unexpected end of packet")]
+    [InlineData("10 00 00", "trailing bytes after the packet")]
+    [InlineData("10 ff ff ff ff ff ff ff ff ff 7f", "LEB128 value overflows 64 bits")] // a tenth byte above 1
+    [InlineData("10 80 80 80 80 80 80 80 80 80 81", "LEB128 value overflows 64 bits")] // an eleventh byte
+    [InlineData("10 01 01 01", "the root link is not a list")]
+    [InlineData("10 02 00 02 04 06", "broken element chain")] // the chain ends in marker 2, not null
+    [InlineData("10 01 04 02", "broken element chain")]
+    [InlineData("10 02 02 00 04 06", "marker 2 used as a value")]
+    [InlineData("10 03 01 00 06 00 04 07", "marker 1 cannot start a typed value")]
+    [InlineData("12 02 14 05 01 20 02 02 06 00 04 07", "a number needs exactly one value")] // (Number) alone
+    [InlineData("10 03 05 00 06 00 04 07", "an identified link needs an id")]
+    [InlineData("10 04 00 00 05 06 07 00 04 08", "a link id must be a reference")] // the id is ()
+    [InlineData("16 00", "the explicit layout keeps the header width bits clear")]
+    [InlineData("12 01 04 05 00", "arity must be at least 1")]
+    [InlineData("12 01 18 01 01 05 00", "link length outside the section arity 1..2")] // a link of 6
+    [InlineData("12 01 f8 ff ff ff ff ff ff ff ff 01 ff ff ff ff ff ff ff ff ff 01 00", "arity range overflows 64 bits")]
+    [InlineData("12 01 24 ff ff ff ff ff ff ff ff ff 01 01", "addresses overflow 64 bits")] // the gap
+    [InlineData("12 01 20 ff ff ff ff ff ff ff ff ff 01", "addresses overflow 64 bits")] // the count
+    [InlineData("12 01 24 06 01 01 01", "from address 6, found link 7 where 6 belongs")]
+    [InlineData("12 02 24 05 01 24 01 01 01 01 04 06", "found link 8 where 7 belongs")] // a hole
+    public void MalformedPacketsAreRejected(string hex, string detail)
     {
-        Assert.Equal(LinoProtocolErrorKind.Malformed, DecodeError(Unhex(hex)));
+        var error = DecodeError(Unhex(hex));
+        Assert.Equal(LinoProtocolErrorKind.Malformed, error.Kind);
+        Assert.Contains(detail, error.Detail, StringComparison.Ordinal);
     }
 
     private static List<(ulong Address, PacketReference[] References)> FromAddress6(params PacketReference[][] links) =>
@@ -395,14 +408,14 @@ public sealed class BinaryLinksNotationTests
             Internals(3, 6),
             new[] { PacketReference.Internal(7), PacketReference.Null },
             Internals(4, 8));
-        Assert.Equal(LinoProtocolErrorKind.Malformed, DecodeError(LinksPacket.Pack(true, links, false).ToBytes()));
+        Assert.Equal("invalid code point 1114112", DecodeError(LinksPacket.Pack(true, links, false).ToBytes()).Detail);
     }
 
     [Fact]
     public void HostilePacketsHitLimits()
     {
         void Limited(string hex, DecodeLimits limits) =>
-            Assert.True(LinoProtocolErrorKind.LimitExceeded == DecodeError(Unhex(hex), limits), hex);
+            Assert.True(LinoProtocolErrorKind.LimitExceeded == DecodeError(Unhex(hex), limits).Kind, hex);
         var fewLinks = new DecodeLimits { MaxLinks = 8 };
         Limited("10 09", fewLinks);
         Limited("12 09", fewLinks); // more sections than links allowed
@@ -421,11 +434,14 @@ public sealed class BinaryLinksNotationTests
         chain.Add(new[] { PacketReference.Internal(last), PacketReference.Null });
         chain.Add(Internals(4, last + 1));
         var bomb = LinksPacket.Pack(false, FromAddress6(chain.ToArray()), false);
-        Assert.Equal(LinoProtocolErrorKind.LimitExceeded, DecodeError(bomb.ToBytes(), new DecodeLimits { MaxNodes = 1 << 12 }));
+        Assert.Equal("limit exceeded: too many LiNo nodes", DecodeError(bomb.ToBytes(), new DecodeLimits { MaxNodes = 1 << 12 }).Message);
 
         var deep = string.Concat(Enumerable.Repeat("(y ", 40)) + "x" + new string(')', 40);
         var bytes = new BinaryLinoProtocol().Encode(Parse(deep));
-        Assert.Equal(LinoProtocolErrorKind.LimitExceeded, DecodeError(bytes, new DecodeLimits { MaxDepth = 10 }));
+        Assert.Equal("limit exceeded: nesting deeper than 10", DecodeError(bytes, new DecodeLimits { MaxDepth = 10 }).Message);
+
+        var threeLinks = new BinaryLinoProtocol().Encode(Parse("a b c"));
+        Assert.Equal("limit exceeded: chain too long", DecodeError(threeLinks, new DecodeLimits { MaxNodes = 2 }).Message);
         Assert.Equal(ulong.MaxValue, DecodeLimits.Unlimited.MaxLinks);
     }
 }

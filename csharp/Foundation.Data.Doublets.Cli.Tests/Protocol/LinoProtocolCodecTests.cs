@@ -173,9 +173,12 @@ public sealed class LinoProtocolCodecTests
 
         Assert.Empty(new TextLinoProtocol().ReadDocument(LinoStreamReader.FromBytes(".\n"u8.ToArray()))!);
 
-        var truncated = LinoStreamReader.FromBytes("() ((1 1))\n"u8.ToArray());
-        var error = Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(truncated));
-        Assert.Equal(LinoProtocolErrorKind.Malformed, error.Kind);
+        foreach (var truncatedText in new[] { "() ((1 1))\n", "() ((1 1))" })
+        {
+            var truncated = LinoStreamReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(truncatedText));
+            var error = Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(truncated));
+            Assert.Equal("stream ended before the '.' terminator line", error.Detail);
+        }
 
         var tiny = new TextLinoProtocol { Limits = new DecodeLimits { MaxTextBytes = 8 } };
         var longMessage = LinoStreamReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(new string('a', 100) + "\n.\n"));
@@ -183,6 +186,31 @@ public sealed class LinoProtocolCodecTests
 
         var invalidUtf8 = LinoStreamReader.FromBytes(new byte[] { 0xC3, 0x28, (byte)'\n', (byte)'.', (byte)'\n' });
         Assert.Equal(LinoProtocolErrorKind.Malformed, Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(invalidUtf8)).Kind);
+    }
+
+    [Fact]
+    public void AClosedStreamIsAnIoError()
+    {
+        var stream = new MemoryStream("() ()\n.\n"u8.ToArray());
+        var reader = new LinoStreamReader(stream);
+        stream.Dispose();
+
+        var error = Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(reader));
+        Assert.Equal(LinoProtocolErrorKind.Io, error.Kind);
+        Assert.IsType<ObjectDisposedException>(error.InnerException);
+    }
+
+    [Fact]
+    public void ProtocolErrorsNameTheirKind()
+    {
+        Assert.Equal("malformed message: unknown protocol error", new LinoProtocolException().Message);
+        Assert.Equal(LinoProtocolErrorKind.Malformed, new LinoProtocolException("bad").Kind);
+        var inner = new IOException("reset");
+        var io = new LinoProtocolException("reset", inner);
+        Assert.Equal((LinoProtocolErrorKind.Io, "I/O error: reset", inner), (io.Kind, io.Message, io.InnerException));
+        Assert.Equal("invalid LiNo: x", new LinoProtocolException(LinoProtocolErrorKind.InvalidLino, "x").Message);
+        Assert.Equal("server error: x", new LinoProtocolException(LinoProtocolErrorKind.Remote, "x").Message);
+        Assert.Equal("42: x", new LinoProtocolException((LinoProtocolErrorKind)42, "x").Message);
     }
 
     [Fact]

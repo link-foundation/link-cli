@@ -227,7 +227,7 @@ public sealed class LinksPacket
                 return width;
             }
         }
-        return 8;
+        throw LinoProtocolException.Unencodable($"address {address} exceeds the internal range");
     }
 
     private static ulong WidthMask(byte width) => InternalCapacity(width, false);
@@ -269,10 +269,6 @@ public sealed class LinksPacket
     {
         if (!reference.IsExternal)
         {
-            if (reference.Value > InternalCapacity(8, externalReferences))
-            {
-                throw LinoProtocolException.Unencodable($"address {reference.Value} exceeds the internal range");
-            }
             return AddressTier(reference.Value, externalReferences);
         }
         if (!externalReferences)

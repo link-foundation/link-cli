@@ -202,11 +202,9 @@ public static class LinoProtocols
                 ? (text, MessageFormat.Text)
                 : null;
         }
-        if (LinksPacket.ReadFrom(input, limits) is not { } packet)
-        {
-            return null;
-        }
-        return (LinoMapping.DecodeDocument(packet, limits), MessageFormat.Binary(BinaryLinoOptions.OfPacket(packet)));
+        return LinksPacket.ReadFrom(input, limits) is { } packet
+            ? (LinoMapping.DecodeDocument(packet, limits), MessageFormat.Binary(BinaryLinoOptions.OfPacket(packet)))
+            : null;
     }
 }
 

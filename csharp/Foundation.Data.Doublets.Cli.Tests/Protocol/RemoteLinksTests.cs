@@ -280,6 +280,17 @@ public sealed class RemoteLinksTests
     }
 
     [Fact]
+    public void RemoteStoresConnectByEndPoint()
+    {
+        using var server = new RunningServer();
+        var protocol = new BinaryLinoProtocol();
+        using var remote = RemoteLinks.Connect($"127.0.0.1:{server.Port}", protocol);
+
+        Assert.Equal(1u, remote.Create());
+        Assert.Equal(1u, remote.Count(null));
+    }
+
+    [Fact]
     public void ALostConnectionThrows()
     {
         using var server = new RunningServer();
@@ -357,6 +368,8 @@ public sealed class RemoteLinksTests
         var document = LinoFormat.ParseDocument(reply);
         Assert.Throws<LinoProtocolException>(() => LinksOperation.ParseCount(document));
         Assert.Throws<LinoProtocolException>(() => LinksOperation.ParseChanges(document));
+        Assert.Throws<LinoProtocolException>(() => LinksOperation.ParseName(document));
+        Assert.Throws<LinoProtocolException>(() => LinksOperation.ParseLinkReply(document));
     }
 
     [Fact]
@@ -369,6 +382,10 @@ public sealed class RemoteLinksTests
         Assert.Equal(
             new[] { (default(DoubletLink), new DoubletLink(1, 0, 0)), (new DoubletLink(1, 0, 0), default) },
             LinksOperation.ParseChanges(LinoFormat.ParseDocument("() ((1: 0 0))\n((1: 0 0)) ()")));
+        // A side that is a single named link may lose its wrapper.
+        Assert.Equal(
+            new[] { (new DoubletLink(1, 1, 1), new DoubletLink(1, 1, 2)) },
+            LinksOperation.ParseChanges(LinoFormat.ParseDocument("(1: 1 1) (1: 1 2)")));
         Assert.Equal("a name", LinksOperation.ParseName(LinoFormat.ParseDocument("(name: 'a name')")));
         Assert.Null(LinksOperation.ParseName(Array.Empty<Link.Foundation.Links.Notation.Link<string>>()));
         Assert.Equal(5u, LinksOperation.ParseLinkReply(LinoFormat.ParseDocument("(link: 5)")));

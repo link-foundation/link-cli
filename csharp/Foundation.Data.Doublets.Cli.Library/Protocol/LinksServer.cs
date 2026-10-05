@@ -172,14 +172,11 @@ public sealed class LinksServer : IDisposable
                 }
                 if (message is not { } received)
                 {
+                    Trace("client hung up");
                     return;
                 }
                 var (document, format) = received;
                 var reply = Accepts(format) ? Execute(links, document) : ErrorDocument("this server does not accept this protocol");
-                if (reply is null)
-                {
-                    return;
-                }
                 format.Protocol(_options.Limits).WriteDocument(stream, reply);
             }
         }
@@ -198,7 +195,7 @@ public sealed class LinksServer : IDisposable
     }
 
     /// <summary>Sends every reply at once; a connection that refuses still works, only slower, as in the Rust server.</summary>
-    private void TryDisableNagle(TcpClient client)
+    internal void TryDisableNagle(TcpClient client)
     {
         try
         {
@@ -217,14 +214,14 @@ public sealed class LinksServer : IDisposable
         _ => true,
     };
 
-    private IReadOnlyList<LinoLink>? Execute(INamedTypesLinks<uint> links, IReadOnlyList<LinoLink> document)
+    internal IReadOnlyList<LinoLink> Execute(INamedTypesLinks<uint> links, IReadOnlyList<LinoLink> document)
     {
         lock (_storeLock)
         {
             // No request may touch the store once Serve is returning.
             if (_stopping)
             {
-                return null;
+                return ErrorDocument("server is shutting down");
             }
             Trace($"request: {LinoFormat.FormatDocument(document)}");
             var reply = ExecuteRequest(links, document, _options.AutoCreateMissingReferences);
