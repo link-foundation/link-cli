@@ -86,6 +86,9 @@ public sealed class LinoProtocolCodecTests
         }
         Assert.Equal("() ((1 1))", LinoFormat.FormatDocument(Parse("(()((1 1)))")));
         Assert.Equal("((1: 1 1)) ((1: 1 2))", LinoFormat.FormatDocument(Parse("((1: 1 1)) ((1: 1 2))")));
+        // Only a binary message carries an id without values; links-notation reads its text back as the reference.
+        Assert.Equal("(a:)", LinoFormat.FormatDocument(new[] { LinoFormat.Link("a", new List<LinoLink>()) }));
+        Assert.True(Parse("(a:)").SequenceEqual(new[] { LinoFormat.Reference("a") }));
     }
 
     [Fact]
@@ -182,10 +185,10 @@ public sealed class LinoProtocolCodecTests
 
         var tiny = new TextLinoProtocol { Limits = new DecodeLimits { MaxTextBytes = 8 } };
         var longMessage = LinoStreamReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(new string('a', 100) + "\n.\n"));
-        Assert.Equal(LinoProtocolErrorKind.LimitExceeded, Assert.Throws<LinoProtocolException>(() => tiny.ReadDocument(longMessage)).Kind);
+        Assert.Equal("limit exceeded: text message longer than 8 bytes", Assert.Throws<LinoProtocolException>(() => tiny.ReadDocument(longMessage)).Message);
 
         var invalidUtf8 = LinoStreamReader.FromBytes(new byte[] { 0xC3, 0x28, (byte)'\n', (byte)'.', (byte)'\n' });
-        Assert.Equal(LinoProtocolErrorKind.Malformed, Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(invalidUtf8)).Kind);
+        Assert.Equal("malformed message: text message is not valid UTF-8", Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(invalidUtf8)).Message);
     }
 
     [Fact]

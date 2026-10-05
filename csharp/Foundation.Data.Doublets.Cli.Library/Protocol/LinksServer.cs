@@ -111,12 +111,8 @@ public sealed class LinksServer : IDisposable
             }
             lock (_clients)
             {
-                if (_stopping)
-                {
-                    client.Dispose();
-                    break;
-                }
-                // Here, where Shutdown cannot have disposed the client: the socket of a disposed client is null.
+                // Shutdown disposes only listed clients, so this one still has its socket.
+                // Accepted while stopping, it closes in its worker, which sees _stopping.
                 TryDisableNagle(client);
                 _clients.Add(client);
             }

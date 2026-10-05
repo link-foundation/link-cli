@@ -259,10 +259,8 @@ public sealed class LinksPacket
         return code >= 0 ? (ulong)code : throw LinoProtocolException.Unencodable($"invalid width {width}");
     }
 
-    internal static byte WidthFromCode(ulong code) =>
-        code < (ulong)WidthValues.Length
-            ? WidthValues[code]
-            : throw LinoProtocolException.Malformed($"invalid width code {code}");
+    /// <summary>The width of a two-bit width code; every code names a width.</summary>
+    internal static byte WidthFromCode(ulong code) => WidthValues[code & 0b11];
 
     /// <summary>The narrowest width able to hold <paramref name="reference"/>.</summary>
     public static byte ReferenceWidth(PacketReference reference, bool externalReferences)

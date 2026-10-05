@@ -367,8 +367,8 @@ public sealed class BinaryLinksNotationTests
     [Theory]
     [InlineData("", "empty input")]
     [InlineData("20 00", "unsupported binary header byte 0x20")]
-    [InlineData("10 01 06 00", "link 6 refers to Internal(6)")]
-    [InlineData("10 01 07 00", "link 6 refers to Internal(7)")]
+    [InlineData("10 01 06 00", "link 6 refers to Internal(6), which is not an earlier link")]
+    [InlineData("10 01 07 00", "link 6 refers to Internal(7), which is not an earlier link")]
     [InlineData("10 02 00", "unexpected end of packet")]
     [InlineData("10 00 00", "trailing bytes after the packet")]
     [InlineData("10 ff ff ff ff ff ff ff ff ff 7f", "LEB128 value overflows 64 bits")] // a tenth byte above 1
@@ -380,6 +380,8 @@ public sealed class BinaryLinksNotationTests
     [InlineData("10 03 01 00 06 00 04 07", "marker 1 cannot start a typed value")]
     [InlineData("12 02 14 05 01 20 02 02 06 00 04 07", "a number needs exactly one value")] // (Number) alone
     [InlineData("10 03 05 00 06 00 04 07", "an identified link needs an id")]
+    [InlineData("10 03 02 03 06 00 04 07", "expected a unary number")] // (Number 3): marker 3 is no number
+    [InlineData("10 05 05 05 06 00 02 07 08 00 04 09", "expected a unary number")] // (Number 6) where link 6 is (5 5)
     [InlineData("10 04 00 00 05 06 07 00 04 08", "a link id must be a reference")] // the id is ()
     [InlineData("16 00", "the explicit layout keeps the header width bits clear")]
     [InlineData("12 01 04 05 00", "arity must be at least 1")]
@@ -387,13 +389,13 @@ public sealed class BinaryLinksNotationTests
     [InlineData("12 01 f8 ff ff ff ff ff ff ff ff 01 ff ff ff ff ff ff ff ff ff 01 00", "arity range overflows 64 bits")]
     [InlineData("12 01 24 ff ff ff ff ff ff ff ff ff 01 01", "addresses overflow 64 bits")] // the gap
     [InlineData("12 01 20 ff ff ff ff ff ff ff ff ff 01", "addresses overflow 64 bits")] // the count
-    [InlineData("12 01 24 06 01 01 01", "from address 6, found link 7 where 6 belongs")]
-    [InlineData("12 02 24 05 01 24 01 01 01 01 04 06", "found link 8 where 7 belongs")] // a hole
+    [InlineData("12 01 24 06 01 01 01", "a LiNo packet stores its links contiguously from address 6, found link 7 where 6 belongs")]
+    [InlineData("12 02 24 05 01 24 01 01 01 01 04 06", "a LiNo packet stores its links contiguously from address 6, found link 8 where 7 belongs")] // a hole
     public void MalformedPacketsAreRejected(string hex, string detail)
     {
         var error = DecodeError(Unhex(hex));
         Assert.Equal(LinoProtocolErrorKind.Malformed, error.Kind);
-        Assert.Contains(detail, error.Detail, StringComparison.Ordinal);
+        Assert.Equal(detail, error.Detail);
     }
 
     private static List<(ulong Address, PacketReference[] References)> FromAddress6(params PacketReference[][] links) =>
