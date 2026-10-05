@@ -83,10 +83,12 @@ Full notes with quotes and file paths are in [`research-notes.md`](research-note
 | [link-foundation/lino-rest-api](https://github.com/link-foundation/lino-rest-api) | HTTP REST with `text/lino-line` and RFC 9457 problem details written in LiNo | The `(error: 'message')` reply, a minimal form of the same idea |
 | [linksplatform/IdDistributorServer](https://github.com/linksplatform/IdDistributorServer), IdClient | A C TCP ping-pong benchmark with fixed 32-byte messages and `TCP_NODELAY` | Only the low-latency stance: `NoDelay` is set on every connection |
 | [linksplatform/Protocols](https://github.com/linksplatform/Protocols) | UDP string sender and receiver (`Platform.Protocols.Udp`) | Nothing reusable for TCP framing |
+| [link-foundation/links-queue](https://github.com/link-foundation/links-queue) | A "Binary Links Notation" codec (`docs/BINARY-NOTATION-SPEC.md`, JS and Rust): an 11-byte frame (`LNKQ` magic, version, flags, big-endian length), then a type byte per link, LEB128 ids and typed inline literals (strings, integers, floats, nested links). Its TCP server frames JSON queue operations with a 4-byte length | Nothing directly. Its links are self-describing trees of values; a store needs implicit addresses and fixed-width references, so the layouts differ (notes §8) |
 | [link-foundation/links-notation](https://github.com/link-foundation/links-notation) | The LiNo parser and formatter (Rust crate and NuGet package) | Used directly. Upgraded 0.16.1 → 0.22.0 (§6.1) |
 
-No project in these organisations defined a raw TCP protocol for LiNo, so the
-framing and the binary layout are new. Where possible they reuse the
+No project in these organisations defined a raw TCP protocol for LiNo, and
+the one binary notation found (links-queue's) encodes value trees rather than
+address-ordered links, so the framing and the binary layout are new. Where possible they reuse the
 encodings above.
 
 ### Public protocols

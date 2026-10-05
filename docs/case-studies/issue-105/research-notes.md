@@ -285,3 +285,53 @@ sequence section became sections of any arity.
 - Text mode: one LiNo query per line (`text/lino-line` style) or length-prefixed UTF-8. Responses use linksql's QueryReport encoded via
   lino-objects-codec (`((operation ...) (matched ...) (created ...) (updated ...) (deleted ...))`). Errors use
   linksql error names or the RFC 9457-in-LiNo shape.
+
+## 8. links-queue Binary Links Notation (`link-foundation/links-queue` at `bdc7631`)
+
+Found after the design, while looking for a binary notation to share with
+[links-notation](https://github.com/link-foundation/links-notation). It came
+from links-queue#27 and PR #49. The files are `docs/BINARY-NOTATION-SPEC.md`,
+`docs/BINARY-NOTATION-MIGRATION.md`, `js/src/protocol/binary-notation.js` and
+`rust/src/backends/binary_notation.rs`.
+
+- **Frame**: 11 bytes: the magic `LNKQ`, a 2-byte version, a flags byte
+  (compression, checksum, streaming) and a 4-byte big-endian payload length.
+  Then come a LEB128 link count and the links.
+- **Link**: a type byte (`SOURCE_IS_ID`, `TARGET_IS_ID`, `SELF_REF`,
+  `HAS_ID`, `HAS_VALUES`, id size), an optional LEB128 id, then the source and
+  the target. Each is a LEB128 id or a typed literal: null, booleans,
+  integers, a float, strings, binary data or an inline link.
+- **Transport**: the links-queue TCP server (`rust/src/main.rs`) frames JSON
+  queue requests with a 4-byte length. The binary notation is a codec, and the
+  JS side offers it in protocol negotiation.
+
+How it compares with [binary links notation](../../protocol/binary-links-notation.md):
+
+| | links-queue | link-cli |
+|---|---|---|
+| Header | 11 bytes | 1 byte, plus section headers |
+| Address of a link | written per link, optional | implicit, from the section; gaps leave holes |
+| Reference | LEB128, or a literal | 1, 2, 4 or 8 bytes, fixed per section |
+| Numbers and strings | typed literals inside the link | links, or Hybrid external references (§5) |
+| Links of other arities | a values array after source and target | sections of any arity range |
+| Random access to link *n* | no: every link has a variable size | yes, inside a fixed-arity section |
+
+Sizes of the same stores, measured with
+[`evidence/links-queue-sizes/run.sh`](evidence/links-queue-sizes/run.sh)
+(the store archive packs both packets with packed widths):
+
+| Store | LiNo | links-queue | store archive |
+|---|---|---|---|
+| 10 points | 93 | 42 | 26 |
+| 1000 points | 14679 | 4759 | 3500 |
+| 1000 doublets | 14104 | 6068 | 3414 |
+
+The spec and its implementation disagree on self-references. The spec's
+example encodes `(5: 5 5)` as `0F 05` ("source == target, only encode once",
+with the id standing for both), but both encoders write `0F 05 05`: the id
+once and the shared source and target once more.
+
+Nothing of the layout was reused: a store needs addresses that map one to one
+onto the links it holds and fixed-width references, and links-queue's links
+are self-describing trees of values. A shared notation would have to cover
+both, which is why it is proposed to links-notation rather than adopted here.
