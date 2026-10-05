@@ -303,6 +303,7 @@ Trigger storage can be:
 | `.github/workflows/csharp.yml` | .NET restore, build, tests, package, and release. |
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
+| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version is behind its latest release. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
 
 Path filters keep most workflows focused on the parts of the repository they
 own.
