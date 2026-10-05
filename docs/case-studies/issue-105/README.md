@@ -429,6 +429,18 @@ present replies with two deletions. The behaviour is documented in
 [HOW-IT-WORKS](../../HOW-IT-WORKS.md) and proven by the
 `DeleteCascades*` tests in C# and the `*cascade*` tests in Rust.
 
+### 6.4 A second binary links notation in links-queue
+
+links-queue already had a "Binary Links Notation" codec with a different
+layout: per-link type bytes, LEB128 ids and typed literals. The comparison is
+in [research-notes.md §8](research-notes.md#8-links-queue-binary-links-notation-link-foundationlinks-queue-at-bdc7631).
+On the same stores it takes 1.36 to 1.78 times the bytes of the store archive.
+Its spec says a self-referencing link takes 2 bytes, while both of its
+encoders write 3. That is reported as
+[links-queue#51](https://github.com/link-foundation/links-queue/issues/51).
+To avoid a third format, a shared spec in links-notation is proposed in
+[links-notation#325](https://github.com/link-foundation/links-notation/issues/325).
+
 ## 7. Risks and remaining limits
 
 - **No authentication or encryption.** The server is meant for trusted
