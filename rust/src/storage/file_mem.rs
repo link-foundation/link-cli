@@ -19,6 +19,8 @@
 //! existing file-mapped `doublets` database zeroes it: every link is
 //! lost. `docs/case-studies/issue-98/evidence/doublets_persistence.rs`
 //! reproduces this against upstream `doublets` directly.
+//! The bug is reported upstream as
+//! <https://github.com/linksplatform/mem-rs/issues/36>.
 //!
 //! [`PersistentFileMapped`] fixes this by forwarding to
 //! `RawMem::grow_filled_exact`, which fills only `uninit[inited..]` and

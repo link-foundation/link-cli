@@ -441,6 +441,36 @@ encoders write 3. That is reported as
 To avoid a third format, a shared spec in links-notation is proposed in
 [links-notation#325](https://github.com/link-foundation/links-notation/issues/325).
 
+### 6.5 Bugs in the doublets libraries
+
+Proving every CRUD operation end to end meant also checking the stores
+underneath. Small repro programs against doublets-rs 0.5.0, platform-mem 0.3.0
+and Platform.Data.Doublets 0.18.1 found these bugs, each confirmed on the
+latest commit and reported upstream:
+
+| Library | Issue | Bug |
+|---|---|---|
+| doublets-rs | [#62](https://github.com/linksplatform/doublets-rs/issues/62) | `rebase_with` leaves `(4: 3 3)` as `(4: 3 5)`, not `(4: 5 5)` |
+| doublets-rs | [#63](https://github.com/linksplatform/doublets-rs/issues/63) | `usages` lists `(v: v v)`-style usages twice; `delete_usages` and `delete_query_with` then fail with `NotExists` |
+| doublets-rs | [#64](https://github.com/linksplatform/doublets-rs/issues/64) | `delete`, `delete_by` and `rebase_and_delete` return `0` |
+| doublets-rs | [#65](https://github.com/linksplatform/doublets-rs/issues/65) | `delete_all` fails on a store with holes |
+| doublets-rs | [#66](https://github.com/linksplatform/doublets-rs/issues/66) | the resolved `update` of a missing link returns `Ok` when the new pair exists |
+| doublets-rs | [#67](https://github.com/linksplatform/doublets-rs/issues/67) | cascaded deletes skip the `(0 0)` reset that C# reports |
+| mem-rs | [#36](https://github.com/linksplatform/mem-rs/issues/36) | `grow_filled` overwrites a `FileMapped` file, so a reopened store is empty (found in issue #98) |
+| Data.Doublets | [#517](https://github.com/linksplatform/Data.Doublets/issues/517) | `Update` of a missing or deleted address reports success and corrupts the indexes |
+| Data.Doublets | [#518](https://github.com/linksplatform/Data.Doublets/issues/518) | `Delete` of a missing address double-frees, or throws `NullReferenceException` when decorated |
+| Data.Doublets | [#519](https://github.com/linksplatform/Data.Doublets/issues/519) | `CreateAndUpdate` returns a deleted address when the pair already exists |
+| Data.Doublets | [#520](https://github.com/linksplatform/Data.Doublets/issues/520) | `Count` and `Each` with `[Any, v]` see `(v: v v)` twice |
+| Data.Doublets | [#521](https://github.com/linksplatform/Data.Doublets/issues/521) | `Count(null)` and `Each(null)` throw `NullReferenceException` |
+| Data.Doublets | [#338](https://github.com/linksplatform/Data.Doublets/issues/338#issuecomment-5987416982) | a full `Each` scan returns `Break` (existing issue, repro added) |
+
+This repository steers around them:
+- the Rust storage never calls the affected rebase, usages or `delete_all` helpers;
+- `LinkStorage::update_observed` and `delete_observed` check that the link exists before calling the resolved stack;
+- the C# query processors call `SearchOrDefault` before `CreateAndUpdate`, so they never create an existing pair;
+- `--changes` collapses each link's chain of changes (`changes_simplifier.rs`), so the `(0 0)` steps that doublets-rs#67 skips never appear in its report;
+- `PersistentFileMapped` works around mem-rs#36.
+
 ## 7. Risks and remaining limits
 
 - **No authentication or encryption.** The server is meant for trusted
