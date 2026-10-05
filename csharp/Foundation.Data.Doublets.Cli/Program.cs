@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
 using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation;
 using Platform.Data;
 using Platform.Data.Doublets;
 
@@ -672,7 +673,20 @@ rootCommand.SetAction(
                   }
               };
 
-              QueryProcessor.ProcessQuery(decoratedLinks, options);
+              try
+              {
+                  QueryProcessor.ProcessQuery(decoratedLinks, options);
+              }
+              catch (Exception error) when (error is ParseException or InvalidOperationException)
+              {
+                  var kind = error is ParseException ? "Parse error" : "Query error";
+                  Console.Error.WriteLine($"Error: {kind}: {error.Message}");
+                  if (trace)
+                  {
+                      Console.Error.WriteLine(error);
+                  }
+                  return 1;
+              }
           }
 
           if (changes && changesList.Any())
