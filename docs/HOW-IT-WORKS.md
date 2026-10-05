@@ -50,6 +50,16 @@ Delete:
 
 The substitution side is empty, so matched links are deleted.
 
+Deleting a link also deletes every link that uses it, transitively, so a link
+never refers to an address that no longer exists. After
+`() ((1 1) (2 2) (1 2))`, the query `((2: 2 2)) ()` deletes `(3: 1 2)` too,
+and `--changes` reports both:
+
+```text
+((2: 2 2)) ()
+((3: 1 2)) ()
+```
+
 ## Pattern Elements
 
 Patterns can contain:

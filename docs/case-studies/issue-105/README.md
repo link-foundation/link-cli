@@ -455,8 +455,12 @@ now 41 scenarios that all agree) found these, all fixed here:
   `LinksUniquenessAndUsagesRepointingResolverTests` fails on four of five
   tests against the upstream resolver and passes against this one.
 
-Deleting a link also deletes the links that refer to it, in both ports. For
-example, `((2: 2 2)) ()` with `(1: 1 2)` present replies with two deletions.
+Deleting a link also deletes the links that refer to it, transitively, in
+both ports. This is by design, not a difference: a link never refers to an
+address that no longer exists. For example, `((2: 2 2)) ()` with `(3: 1 2)`
+present replies with two deletions. The behaviour is documented in
+[HOW-IT-WORKS](../../HOW-IT-WORKS.md) and proven by the
+`DeleteCascades*` tests in C# and the `*cascade*` tests in Rust.
 
 ## 7. Risks and remaining limits
 

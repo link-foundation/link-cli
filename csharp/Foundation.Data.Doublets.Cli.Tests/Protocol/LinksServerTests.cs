@@ -112,10 +112,8 @@ public sealed class LinksServerTests
             using var client = server.Client(worker % 2 == 0 ? new TextLinoProtocol() : new BinaryLinoProtocol());
             for (var item = 0; item < 5; item++)
             {
-                // The C# query processor does not report named creations as
-                // changes (unlike the Rust one), so only success is checked here.
                 var name = $"w{worker}i{item}";
-                client.Query($"() (({name}: {name} {name}))");
+                Assert.Equal($"() (({name}: {name} {name}))", client.QueryText($"() (({name}: {name} {name}))"));
             }
         })).ToArray();
         await Task.WhenAll(workers);
