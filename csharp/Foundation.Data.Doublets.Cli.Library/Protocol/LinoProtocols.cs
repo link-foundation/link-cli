@@ -206,10 +206,7 @@ public static class LinoProtocols
         {
             return null;
         }
-        var progressive = packet.LastAddress is { } last
-            && packet.MinWidth < LinksPacket.AddressTier(last, packet.ExternalReferences);
-        var options = new BinaryLinoOptions(packet.ExternalReferences, packet.SequencesSection, progressive);
-        return (LinoMapping.DecodeDocument(packet, limits), MessageFormat.Binary(options));
+        return (LinoMapping.DecodeDocument(packet, limits), MessageFormat.Binary(BinaryLinoOptions.OfPacket(packet)));
     }
 }
 

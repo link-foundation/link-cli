@@ -60,11 +60,11 @@ public sealed class CliTcpIntegrationTests : IDisposable
         Assert.Equal("() ((2: 2 2))\n", await server.StdoutAsync("--protocol", "binary", "() ((2 2))"));
         Assert.Equal(
             "((1: 1 1)) ((1: 1 2))\n",
-            await server.StdoutAsync("--external-references", "--sequences", "((1: 1 1)) ((1: 1 2))"));
+            await server.StdoutAsync("--external-references", "--arity", "1..", "((1: 1 1)) ((1: 1 2))"));
         Assert.Equal("(1: 1 2)\n(2: 2 2)\n", await server.StdoutAsync());
         Assert.Equal(
             "((1: 1 2)) ((1: 1 2))\n",
-            await server.StdoutAsync("--progressive-widths", "--query", "((1: 1 2)) ((1: 1 2))"));
+            await server.StdoutAsync("--packed-widths", "--arity", " 2..3 ", "--query", "((1: 1 2)) ((1: 1 2))"));
         // Deleting 2 also deletes 1, which refers to it, exactly like the Rust port.
         Assert.Equal("((2: 2 2)) ()\n((1: 1 2)) ()\n", await server.StdoutAsync("--protocol", "binary", "((2: 2 2)) ()"));
         Assert.Equal("", await server.StdoutAsync("--protocol", "text"));
@@ -89,7 +89,10 @@ public sealed class CliTcpIntegrationTests : IDisposable
 
     [Theory]
     [InlineData("--serve", "127.0.0.1:0", "--connect", "127.0.0.1:1")]
-    [InlineData("--connect", "127.0.0.1:1", "--protocol", "text", "--sequences")]
+    [InlineData("--connect", "127.0.0.1:1", "--protocol", "text", "--arity", "2..3")]
+    [InlineData("--connect", "127.0.0.1:1", "--protocol", "text", "--packed-widths")]
+    [InlineData("--connect", "127.0.0.1:1", "--arity", "0")]
+    [InlineData("--connect", "127.0.0.1:1", "--arity", "3..2")]
     [InlineData("--connect", "127.0.0.1:1", "--protocol", "udp")]
     [InlineData("--serve", "127.0.0.1:0", "--protocol", "udp")]
     [InlineData("--serve", "127.0.0.1:0", "() ((1 1))")]
@@ -101,10 +104,18 @@ public sealed class CliTcpIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task InvalidAritiesAreExplained()
+    {
+        var (exitCode, _, stderr) = await Clink.RunAsync("--connect", "127.0.0.1:1", "--arity", "2..x", "()");
+        Assert.NotEqual(0, exitCode);
+        Assert.Contains("invalid value for '--arity': invalid arity '2..x': expected n, min..max or min..", stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task HelpListsTheTcpOptions()
     {
         var (_, stdout, _) = await Clink.RunAsync("--help");
-        foreach (var option in new[] { "--serve", "--connect", "--protocol", "--external-references", "--sequences", "--progressive-widths" })
+        foreach (var option in new[] { "--serve", "--connect", "--protocol", "--external-references", "--arity", "--packed-widths" })
         {
             Assert.Contains(option, stdout, StringComparison.Ordinal);
         }

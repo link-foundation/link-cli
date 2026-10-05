@@ -22,11 +22,11 @@ public readonly record struct PacketReference(bool IsExternal, ulong Value)
 /// <summary>Safety limits applied while decoding untrusted input.</summary>
 public sealed record DecodeLimits
 {
-    /// <summary>Maximum N + M.</summary>
+    /// <summary>Maximum number of links in a packet.</summary>
     public ulong MaxLinks { get; init; } = 1UL << 22;
 
-    /// <summary>Maximum total number of references inside all sequences.</summary>
-    public ulong MaxSequenceItems { get; init; } = 1UL << 24;
+    /// <summary>Maximum number of references in all links of a packet.</summary>
+    public ulong MaxReferences { get; init; } = 1UL << 24;
 
     /// <summary>Maximum number of LiNo nodes a packet may expand to.</summary>
     public long MaxNodes { get; init; } = 1L << 22;
@@ -39,28 +39,124 @@ public sealed record DecodeLimits
 
     /// <summary>The default limits.</summary>
     public static DecodeLimits Default { get; } = new();
+
+    /// <summary>Limits for trusted input such as a store archive: only the address space bounds the packet.</summary>
+    public static DecodeLimits Unlimited { get; } = new()
+    {
+        MaxLinks = ulong.MaxValue,
+        MaxReferences = ulong.MaxValue,
+        MaxNodes = long.MaxValue,
+        MaxDepth = int.MaxValue,
+        MaxTextBytes = long.MaxValue,
+    };
+}
+
+/// <summary>A run of links at consecutive addresses sharing an arity range and a reference width.</summary>
+public sealed class Section
+{
+    /// <summary>Addresses skipped before the first link of the section.</summary>
+    public ulong Gap { get; set; }
+
+    /// <summary>The number of references each link may hold.</summary>
+    public ArityRange Arity { get; set; } = ArityRange.Doublets;
+
+    /// <summary>Bytes per reference: 1, 2, 4 or 8.</summary>
+    public byte Width { get; set; } = 1;
+
+    /// <summary>The links, in address order.</summary>
+    public List<PacketReference[]> Links { get; } = new();
+
+    internal void WriteHeader(List<byte> output)
+    {
+        var shape = LinksPacket.WidthCode(Width) | (Arity.Min << LinksPacket.ShapeMinArityShift);
+        if (Gap != 0)
+        {
+            shape |= LinksPacket.ShapeHasGap;
+        }
+        if (!Arity.IsFixed)
+        {
+            shape |= LinksPacket.ShapeVariableArity;
+        }
+        LinksPacket.WriteLeb128(output, shape);
+        if (Gap != 0)
+        {
+            LinksPacket.WriteLeb128(output, Gap);
+        }
+        if (!Arity.IsFixed)
+        {
+            LinksPacket.WriteLeb128(output, Arity.Extra);
+        }
+        LinksPacket.WriteLeb128(output, (ulong)Links.Count);
+    }
+
+    /// <summary>Reads a section header, returning the still empty section and its link count.</summary>
+    internal static (Section Section, ulong Count) ReadHeader(LinoStreamReader reader)
+    {
+        var shape = LinksPacket.ReadLeb128(reader);
+        var width = LinksPacket.WidthFromCode(shape & LinksPacket.ShapeWidthBits);
+        var gap = (shape & LinksPacket.ShapeHasGap) != 0 ? LinksPacket.ReadLeb128(reader) : 0;
+        ulong? extra = (shape & LinksPacket.ShapeVariableArity) != 0 ? LinksPacket.ReadLeb128(reader) : null;
+        var arity = ArityRange.FromShape(shape >> LinksPacket.ShapeMinArityShift, extra);
+        var count = LinksPacket.ReadLeb128(reader);
+        return (new Section { Gap = gap, Arity = arity, Width = width }, count);
+    }
+
+    internal void Validate()
+    {
+        LinksPacket.WidthCode(Width);
+        if (Arity.Problem() is { } problem)
+        {
+            throw LinoProtocolException.Unencodable(problem);
+        }
+        foreach (var link in Links)
+        {
+            if (!Arity.Contains((ulong)link.Length))
+            {
+                throw LinoProtocolException.Unencodable(
+                    $"a link of {link.Length} references in a section of arity {Arity}");
+            }
+        }
+    }
 }
 
 /// <summary>
-/// The binary links packet: the wire format of the binary LiNo protocol.
+/// Binary links notation: a self-delimiting packet of links.
 /// </summary>
 /// <remarks>
+/// A packet stores links, each a tuple of one or more references, at
+/// implicit consecutive addresses. It knows nothing about LiNo; the LiNo
+/// protocol (<see cref="LinoMapping"/>) is one use of it.
 /// <code>
-/// byte 0      0x10 | flags        high nibble 1 = format version 1
-///                                 bit 0  external references (Hybrid encoding)
-///                                 bit 1  sequence section present
-///                                 bits 2-3  log2 of the minimum width in bytes
-/// LEB128      N                   number of fixed doublets
-/// LEB128      M                   number of sequences (only when bit 1 is set)
-/// N times     source target       one fixed doublet, refs width(a) bytes each
-/// M times     size ref_1 … ref_n  one sequence, size and refs width(a) bytes each
+/// byte 0     0x10 | flags      high nibble 1 = format version 1
+///                              bit 0     external references (Hybrid encoding)
+///                              bit 1     explicit layout
+///                              bits 2-3  log2 of the width (compact layout only)
+///
+/// compact layout (bit 1 clear): one section of doublets right after the markers
+/// LEB128     N                 number of links, each `source target`
+///
+/// explicit layout (bit 1 set):
+/// LEB128     S                 number of sections, then S section headers:
+/// LEB128     shape             bits 0-1  log2 of the reference width in bytes
+///                              bit 2     a gap follows
+///                              bit 3     variable arity (else every link
+///                                        holds exactly min_arity references)
+///                              bits 4+   min_arity, at least 1
+/// LEB128     gap               addresses skipped before the section (if bit 2)
+/// LEB128     extra_arity       0 = no maximum, else max - min (if bit 3)
+/// LEB128     count             number of links in the section
+///
+/// links, section by section; a link in a variable-arity section starts
+/// with LEB128 (length - min_arity); every reference is `width` bytes,
+/// little-endian
 /// </code>
-/// Addresses are implicit: 0 is null, 1..5 are the reserved marker points
-/// (never transmitted), the fixed doublets occupy 6..6+N and the sequences
-/// follow them. Every reference of the link at address a uses
-/// width(a) = max(min_width, tier(a)) bytes, little-endian, where tier(a) is
-/// the smallest of 1, 2, 4 and 8 bytes able to hold a. With external
-/// references enabled the top bit marks a reference as external, exactly like
+/// Address 0 is null. The first section starts at <c>1 + gap</c> and every
+/// other section at <c>previous end + gap</c>, so gaps leave holes. The
+/// compact layout is exactly one section with gap 5 (the LiNo marker points
+/// 1..5), arity 2 and the header width. Each section has its own width: the
+/// narrowest of 1, 2, 4 and 8 bytes that holds every reference in it;
+/// <see cref="Pack"/> chooses the sections. With external references
+/// enabled the top bit of a reference marks it as external, exactly like
 /// <c>Platform.Data.Hybrid&lt;T&gt;</c>, which halves every internal range.
 /// The byte layout is identical to the Rust <c>link_cli::protocol::LinksPacket</c>.
 /// </remarks>
@@ -81,30 +177,35 @@ public sealed class LinksPacket
     public const ulong List = 4;
     /// <summary>Marker 5: (Identified id values…) is a link with an id.</summary>
     public const ulong Identified = 5;
-    /// <summary>Address of the first transmitted link.</summary>
+    /// <summary>Address of the first link after the marker points.</summary>
     public const ulong FirstLinkAddress = 6;
 
     private const byte FlagExternalReferences = 0b0001;
-    private const byte FlagSequences = 0b0010;
+    private const byte FlagExplicitLayout = 0b0010;
     private const int WidthShift = 2;
+    private const byte WidthBits = 0b1100;
+
+    internal const ulong ShapeWidthBits = 0b0011;
+    internal const ulong ShapeHasGap = 0b0100;
+    internal const ulong ShapeVariableArity = 0b1000;
+    internal const int ShapeMinArityShift = 4;
+
+    /// <summary>The addresses the compact layout skips: the marker points.</summary>
+    private const ulong CompactGap = FirstLinkAddress - 1;
+
+    private static readonly byte[] WidthValues = { 1, 2, 4, 8 };
 
     /// <summary>The reference widths, in bytes, that a packet may use.</summary>
-    public static IReadOnlyList<byte> Widths { get; } = new byte[] { 1, 2, 4, 8 };
+    public static IReadOnlyList<byte> Widths => WidthValues;
+
+    /// <summary>An empty packet.</summary>
+    public LinksPacket(bool externalReferences = false) => ExternalReferences = externalReferences;
 
     /// <summary>Header bit 0: references may be external (Hybrid encoding).</summary>
     public bool ExternalReferences { get; set; }
 
-    /// <summary>Header bit 1: the packet carries a sequence section (possibly empty).</summary>
-    public bool SequencesSection { get; set; }
-
-    /// <summary>Minimum reference width in bytes: 1, 2, 4 or 8.</summary>
-    public byte MinWidth { get; set; } = 1;
-
-    /// <summary>Fixed doublets at addresses 6..6+N.</summary>
-    public List<(PacketReference Source, PacketReference Target)> Doublets { get; } = new();
-
-    /// <summary>Variable-length sequences at addresses 6+N..6+N+M.</summary>
-    public List<List<PacketReference>> Sequences { get; } = new();
+    /// <summary>The links, section by section.</summary>
+    public List<Section> Sections { get; } = new();
 
     /// <summary>Largest internal address that fits in <paramref name="width"/> bytes.</summary>
     public static ulong InternalCapacity(byte width, bool externalReferences)
@@ -116,13 +217,10 @@ public sealed class LinksPacket
     /// <summary>Largest external value that fits in <paramref name="width"/> bytes.</summary>
     public static ulong ExternalCapacity(byte width) => (1UL << (width * 8 - 1)) - 1;
 
-    /// <summary>Largest unsigned value (a sequence size) that fits in <paramref name="width"/> bytes.</summary>
-    public static ulong UnsignedCapacity(byte width) => InternalCapacity(width, false);
-
     /// <summary>The narrowest width able to hold the internal address.</summary>
     public static byte AddressTier(ulong address, bool externalReferences)
     {
-        foreach (var width in Widths)
+        foreach (var width in WidthValues)
         {
             if (InternalCapacity(width, externalReferences) >= address)
             {
@@ -132,9 +230,11 @@ public sealed class LinksPacket
         return 8;
     }
 
+    private static ulong WidthMask(byte width) => InternalCapacity(width, false);
+
     /// <summary>Encodes an external value at <paramref name="width"/> the way Hybrid&lt;T&gt; does.</summary>
     public static ulong EncodeExternal(ulong value, byte width) =>
-        value == 0 ? 1UL << (width * 8 - 1) : (0UL - value) & UnsignedCapacity(width);
+        value == 0 ? 1UL << (width * 8 - 1) : (0UL - value) & WidthMask(width);
 
     /// <summary>Decodes a raw value; returns true and the value for externals.</summary>
     public static bool TryDecodeExternal(ulong raw, byte width, out ulong value)
@@ -147,78 +247,39 @@ public sealed class LinksPacket
         }
         if (raw > externalZero)
         {
-            value = (0UL - raw) & UnsignedCapacity(width);
+            value = (0UL - raw) & WidthMask(width);
             return true;
         }
         return false;
     }
 
-    /// <summary>Address of the fixed doublet with zero-based index.</summary>
-    public ulong DoubletAddress(int index) => FirstLinkAddress + (ulong)index;
-
-    /// <summary>Address of the sequence with zero-based index.</summary>
-    public ulong SequenceAddress(int index) => FirstLinkAddress + (ulong)Doublets.Count + (ulong)index;
-
-    /// <summary>The highest address in the packet, or null for an empty packet.</summary>
-    public ulong? LastAddress
+    internal static ulong WidthCode(byte width)
     {
-        get
-        {
-            var count = Doublets.Count + Sequences.Count;
-            return count > 0 ? FirstLinkAddress + (ulong)count - 1 : null;
-        }
+        var code = Array.IndexOf(WidthValues, width);
+        return code >= 0 ? (ulong)code : throw LinoProtocolException.Unencodable($"invalid width {width}");
     }
 
-    /// <summary>Width used by every reference of the link at <paramref name="address"/>.</summary>
-    public byte WidthAt(ulong address) => Math.Max(MinWidth, AddressTier(address, ExternalReferences));
+    internal static byte WidthFromCode(ulong code) =>
+        code < (ulong)WidthValues.Length
+            ? WidthValues[code]
+            : throw LinoProtocolException.Malformed($"invalid width code {code}");
 
-    /// <summary>
-    /// The smallest min_width able to encode the packet; with <paramref name="uniform"/>
-    /// at least the tier of the last address, so every reference has the same width.
-    /// </summary>
-    public byte RequiredMinWidth(bool uniform)
-    {
-        byte needed = 1;
-        void Note(ulong address, byte need)
-        {
-            if (need > AddressTier(address, ExternalReferences))
-            {
-                needed = Math.Max(needed, need);
-            }
-        }
-        for (var index = 0; index < Doublets.Count; index++)
-        {
-            var (source, target) = Doublets[index];
-            Note(DoubletAddress(index), Math.Max(ReferenceNeed(source), ReferenceNeed(target)));
-        }
-        for (var index = 0; index < Sequences.Count; index++)
-        {
-            var items = Sequences[index];
-            var need = Widths.FirstOrDefault(width => UnsignedCapacity(width) >= (ulong)items.Count, (byte)8);
-            foreach (var item in items)
-            {
-                need = Math.Max(need, ReferenceNeed(item));
-            }
-            Note(SequenceAddress(index), need);
-        }
-        if (uniform && LastAddress is { } last)
-        {
-            needed = Math.Max(needed, AddressTier(last, ExternalReferences));
-        }
-        return needed;
-    }
-
-    private byte ReferenceNeed(PacketReference reference)
+    /// <summary>The narrowest width able to hold <paramref name="reference"/>.</summary>
+    public static byte ReferenceWidth(PacketReference reference, bool externalReferences)
     {
         if (!reference.IsExternal)
         {
-            return 1;
+            if (reference.Value > InternalCapacity(8, externalReferences))
+            {
+                throw LinoProtocolException.Unencodable($"address {reference.Value} exceeds the internal range");
+            }
+            return AddressTier(reference.Value, externalReferences);
         }
-        if (!ExternalReferences)
+        if (!externalReferences)
         {
             throw LinoProtocolException.Unencodable("external reference in a packet without external references");
         }
-        foreach (var width in Widths)
+        foreach (var width in WidthValues)
         {
             if (ExternalCapacity(width) >= reference.Value)
             {
@@ -228,82 +289,156 @@ public sealed class LinksPacket
         throw LinoProtocolException.Unencodable($"external value {reference.Value} exceeds 63 bits");
     }
 
-    private byte HeaderByte()
+    /// <summary>
+    /// Lays out <paramref name="links"/> — addresses with their references, in
+    /// ascending address order — in as few bytes as the format allows.
+    /// </summary>
+    /// <remarks>
+    /// Holes between addresses start new sections. Without
+    /// <paramref name="packedWidths"/> every section uses the width of the
+    /// widest reference, so all references have the same size. With it each
+    /// section gets the narrowest width its links need and sections split
+    /// wherever that saves bytes; the result is never larger than the uniform one.
+    /// </remarks>
+    public static LinksPacket Pack(
+        bool externalReferences,
+        IReadOnlyList<(ulong Address, PacketReference[] References)> links,
+        bool packedWidths)
     {
-        var code = Widths.ToList().IndexOf(MinWidth);
-        if (code < 0)
+        ArgumentNullException.ThrowIfNull(links);
+        var planner = new SectionPlanner(externalReferences, links);
+        var uniformLayout = planner.Plan(false);
+        var uniform = LayOut(externalReferences, links, uniformLayout);
+        if (!packedWidths)
         {
-            throw LinoProtocolException.Unencodable($"invalid width {MinWidth}");
+            return uniform;
         }
-        var header = (byte)(BinaryVersion1 | (code << WidthShift));
-        if (ExternalReferences)
+        var packedLayout = planner.Plan(true);
+        if (packedLayout.SequenceEqual(uniformLayout))
         {
-            header |= FlagExternalReferences;
+            return uniform;
         }
-        if (SequencesSection)
-        {
-            header |= FlagSequences;
-        }
-        return header;
+        var packed = LayOut(externalReferences, links, packedLayout);
+        return packed.ToBytes().Length < uniform.ToBytes().Length ? packed : uniform;
     }
 
-    private ulong RawReference(PacketReference reference, ulong address, byte width)
+    /// <summary>Splits <paramref name="links"/> into sections of <c>(link count, width)</c>.</summary>
+    private static LinksPacket LayOut(
+        bool externalReferences,
+        IReadOnlyList<(ulong Address, PacketReference[] References)> links,
+        IReadOnlyList<(int Count, byte Width)> layout)
     {
-        if (!reference.IsExternal)
+        var packet = new LinksPacket(externalReferences);
+        var nextAddress = 1UL;
+        var first = 0;
+        foreach (var (count, width) in layout)
         {
-            if (reference.Value >= address)
+            var start = links[first].Address;
+            var shortest = ulong.MaxValue;
+            var longest = 0UL;
+            var section = new Section { Gap = start - nextAddress, Width = width };
+            for (var index = first; index < first + count; index++)
             {
-                throw LinoProtocolException.Unencodable($"link {address} refers forward to {reference.Value}");
+                var length = (ulong)links[index].References.Length;
+                shortest = Math.Min(shortest, length);
+                longest = Math.Max(longest, length);
+                section.Links.Add(links[index].References);
             }
-            return reference.Value;
+            section.Arity = ArityRange.Between(shortest, longest);
+            packet.Sections.Add(section);
+            nextAddress = start + (ulong)count;
+            first += count;
         }
-        if (!ExternalReferences || reference.Value > ExternalCapacity(width))
-        {
-            throw LinoProtocolException.Unencodable(
-                $"external value {reference.Value} does not fit {width} byte(s) at link {address}");
-        }
-        return EncodeExternal(reference.Value, width);
+        return packet;
     }
+
+    /// <summary>Every link with its address, in address order.</summary>
+    public IEnumerable<(ulong Address, PacketReference[] References)> Links()
+    {
+        var nextAddress = 1UL;
+        foreach (var section in Sections)
+        {
+            var start = SaturatingAdd(nextAddress, section.Gap);
+            nextAddress = SaturatingAdd(start, (ulong)section.Links.Count);
+            for (var index = 0; index < section.Links.Count; index++)
+            {
+                yield return (start + (ulong)index, section.Links[index]);
+            }
+        }
+    }
+
+    private static ulong SaturatingAdd(ulong left, ulong right) =>
+        left > ulong.MaxValue - right ? ulong.MaxValue : left + right;
+
+    /// <summary>The number of links in the packet.</summary>
+    public ulong LinkCount => Sections.Aggregate(0UL, (total, section) => total + (ulong)section.Links.Count);
+
+    private bool IsCompact => Sections.Count switch
+    {
+        0 => true,
+        1 => Sections[0].Gap == CompactGap && Sections[0].Arity == ArityRange.Doublets && Sections[0].Links.Count > 0,
+        _ => false,
+    };
 
     /// <summary>Serializes the packet.</summary>
     public byte[] ToBytes()
     {
-        if (!SequencesSection && Sequences.Count > 0)
+        var header = BinaryVersion1;
+        if (ExternalReferences)
         {
-            throw LinoProtocolException.Unencodable("sequences in a packet without a sequence section");
+            header |= FlagExternalReferences;
         }
-        var output = new List<byte> { HeaderByte() };
-        WriteLeb128(output, (ulong)Doublets.Count);
-        if (SequencesSection)
+        var nextAddress = 1UL;
+        foreach (var section in Sections)
         {
-            WriteLeb128(output, (ulong)Sequences.Count);
-        }
-        for (var index = 0; index < Doublets.Count; index++)
-        {
-            var address = DoubletAddress(index);
-            var width = WidthAt(address);
-            var (source, target) = Doublets[index];
-            WriteRaw(output, RawReference(source, address, width), width);
-            WriteRaw(output, RawReference(target, address, width), width);
-        }
-        for (var index = 0; index < Sequences.Count; index++)
-        {
-            var address = SequenceAddress(index);
-            var width = WidthAt(address);
-            var items = Sequences[index];
-            var size = (ulong)items.Count;
-            if (size > UnsignedCapacity(width))
+            section.Validate();
+            var count = (ulong)section.Links.Count;
+            if (section.Gap > ulong.MaxValue - nextAddress || count > ulong.MaxValue - nextAddress - section.Gap)
             {
-                throw LinoProtocolException.Unencodable(
-                    $"sequence size {size} does not fit {width} byte(s) at link {address}");
+                throw LinoProtocolException.Unencodable("addresses overflow 64 bits");
             }
-            WriteRaw(output, size, width);
-            foreach (var item in items)
+            nextAddress += section.Gap + count;
+        }
+        var output = new List<byte>();
+        if (IsCompact)
+        {
+            var width = Sections.Count > 0 ? Sections[0].Width : (byte)1;
+            output.Add((byte)(header | (WidthCode(width) << WidthShift)));
+            WriteLeb128(output, LinkCount);
+        }
+        else
+        {
+            output.Add((byte)(header | FlagExplicitLayout));
+            WriteLeb128(output, (ulong)Sections.Count);
+            foreach (var section in Sections)
             {
-                WriteRaw(output, RawReference(item, address, width), width);
+                section.WriteHeader(output);
+            }
+        }
+        foreach (var section in Sections)
+        {
+            foreach (var link in section.Links)
+            {
+                if (!section.Arity.IsFixed)
+                {
+                    WriteLeb128(output, (ulong)link.Length - section.Arity.Min);
+                }
+                foreach (var reference in link)
+                {
+                    WriteRaw(output, RawReference(reference, section.Width), section.Width);
+                }
             }
         }
         return output.ToArray();
+    }
+
+    private ulong RawReference(PacketReference reference, byte width)
+    {
+        if (ReferenceWidth(reference, ExternalReferences) > width)
+        {
+            throw LinoProtocolException.Unencodable($"{reference} does not fit {width} byte(s)");
+        }
+        return reference.IsExternal ? EncodeExternal(reference.Value, width) : reference.Value;
     }
 
     /// <summary>Parses a complete packet; trailing bytes are an error.</summary>
@@ -333,61 +468,89 @@ public sealed class LinksPacket
         {
             throw LinoProtocolException.Malformed($"unsupported binary header byte 0x{header:X2}");
         }
-        var packet = new LinksPacket
+        var packet = new LinksPacket((header & FlagExternalReferences) != 0);
+        var counts = new List<ulong>();
+        if ((header & FlagExplicitLayout) == 0)
         {
-            ExternalReferences = (header & FlagExternalReferences) != 0,
-            SequencesSection = (header & FlagSequences) != 0,
-            MinWidth = Widths[(header >> WidthShift) & 0b11],
-        };
-        var doubletCount = ReadLeb128(reader);
-        var sequenceCount = packet.SequencesSection ? ReadLeb128(reader) : 0;
-        if (doubletCount > limits.MaxLinks || sequenceCount > limits.MaxLinks - doubletCount)
-        {
-            throw LinoProtocolException.Limit(
-                $"packet declares {doubletCount} + {sequenceCount} links, limit is {limits.MaxLinks}");
-        }
-        for (var index = 0; index < (int)doubletCount; index++)
-        {
-            var address = packet.DoubletAddress(index);
-            var width = packet.WidthAt(address);
-            var source = packet.ReadReference(reader, address, width);
-            var target = packet.ReadReference(reader, address, width);
-            packet.Doublets.Add((source, target));
-        }
-        var itemsLeft = limits.MaxSequenceItems;
-        for (var index = 0; index < (int)sequenceCount; index++)
-        {
-            var address = packet.SequenceAddress(index);
-            var width = packet.WidthAt(address);
-            var size = ReadRaw(reader, width);
-            if (size > itemsLeft)
+            var width = WidthFromCode((ulong)((header & WidthBits) >> WidthShift));
+            var count = ReadLeb128(reader);
+            if (count > 0)
             {
-                throw LinoProtocolException.Limit($"sequence items exceed the limit of {limits.MaxSequenceItems}");
+                packet.Sections.Add(new Section { Gap = CompactGap, Arity = ArityRange.Doublets, Width = width });
+                counts.Add(count);
             }
-            itemsLeft -= size;
-            var items = new List<PacketReference>((int)Math.Min(size, 4096));
-            for (ulong item = 0; item < size; item++)
+        }
+        else
+        {
+            if ((header & WidthBits) != 0)
             {
-                items.Add(packet.ReadReference(reader, address, width));
+                throw LinoProtocolException.Malformed("the explicit layout keeps the header width bits clear");
             }
-            packet.Sequences.Add(items);
+            var sectionCount = ReadLeb128(reader);
+            if (sectionCount > limits.MaxLinks)
+            {
+                throw TooManyLinks(limits);
+            }
+            var nextAddress = 1UL;
+            for (ulong index = 0; index < sectionCount; index++)
+            {
+                var (section, count) = Section.ReadHeader(reader);
+                if (section.Gap > ulong.MaxValue - nextAddress || count > ulong.MaxValue - nextAddress - section.Gap)
+                {
+                    throw LinoProtocolException.Malformed("addresses overflow 64 bits");
+                }
+                nextAddress += section.Gap + count;
+                packet.Sections.Add(section);
+                counts.Add(count);
+            }
+        }
+        var total = 0UL;
+        foreach (var count in counts)
+        {
+            if (count > limits.MaxLinks - total)
+            {
+                throw TooManyLinks(limits);
+            }
+            total += count;
+        }
+        var referencesLeft = limits.MaxReferences;
+        for (var index = 0; index < packet.Sections.Count; index++)
+        {
+            var section = packet.Sections[index];
+            section.Links.Capacity = (int)Math.Min(counts[index], 4096);
+            for (ulong link = 0; link < counts[index]; link++)
+            {
+                var length = section.Arity.Min;
+                if (!section.Arity.IsFixed)
+                {
+                    var extra = ReadLeb128(reader);
+                    if (extra > ulong.MaxValue - length || !section.Arity.Contains(extra + length))
+                    {
+                        throw LinoProtocolException.Malformed($"link length outside the section arity {section.Arity}");
+                    }
+                    length += extra;
+                }
+                if (length > referencesLeft)
+                {
+                    throw LinoProtocolException.Limit($"references exceed the limit of {limits.MaxReferences}");
+                }
+                referencesLeft -= length;
+                var references = new List<PacketReference>((int)Math.Min(length, 4096));
+                for (ulong item = 0; item < length; item++)
+                {
+                    var raw = ReadRaw(reader, section.Width);
+                    references.Add(packet.ExternalReferences && TryDecodeExternal(raw, section.Width, out var value)
+                        ? PacketReference.External(value)
+                        : PacketReference.Internal(raw));
+                }
+                section.Links.Add(references.ToArray());
+            }
         }
         return packet;
     }
 
-    private PacketReference ReadReference(LinoStreamReader reader, ulong address, byte width)
-    {
-        var raw = ReadRaw(reader, width);
-        if (ExternalReferences && TryDecodeExternal(raw, width, out var value))
-        {
-            return PacketReference.External(value);
-        }
-        if (raw >= address)
-        {
-            throw LinoProtocolException.Malformed($"link {address} refers to {raw}, which is not an earlier link");
-        }
-        return PacketReference.Internal(raw);
-    }
+    private static LinoProtocolException TooManyLinks(DecodeLimits limits) =>
+        LinoProtocolException.Limit($"packet declares more than {limits.MaxLinks} links");
 
     private static void WriteRaw(List<byte> output, ulong value, byte width)
     {

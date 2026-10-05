@@ -199,15 +199,14 @@ var externalReferencesOption = new Option<bool>("--external-references")
     DefaultValueFactory = _ => false
 };
 
-var sequencesOption = new Option<bool>("--sequences")
+var arityOption = new Option<string?>("--arity")
 {
-    Description = "Binary protocol: send lists as a variable-length sequence section (implies --protocol binary)",
-    DefaultValueFactory = _ => false
+    Description = "Binary protocol: link lengths to use, 'n', 'min..max' or 'min..' (default: 2, doublets only; e.g. 2..3 adds triplets, 1.. any length; implies --protocol binary)"
 };
 
-var progressiveWidthsOption = new Option<bool>("--progressive-widths")
+var packedWidthsOption = new Option<bool>("--packed-widths")
 {
-    Description = "Binary protocol: grow reference widths with the address (implies --protocol binary)",
+    Description = "Binary protocol: give each section of links the narrowest reference width it needs instead of one width for the whole packet (implies --protocol binary)",
     DefaultValueFactory = _ => false
 };
 
@@ -246,8 +245,8 @@ rootCommand.Options.Add(serveOption);
 rootCommand.Options.Add(connectOption);
 rootCommand.Options.Add(protocolOption);
 rootCommand.Options.Add(externalReferencesOption);
-rootCommand.Options.Add(sequencesOption);
-rootCommand.Options.Add(progressiveWidthsOption);
+rootCommand.Options.Add(arityOption);
+rootCommand.Options.Add(packedWidthsOption);
 
 rootCommand.SetAction(
   parseResult =>
@@ -285,10 +284,19 @@ rootCommand.SetAction(
       var serveAddress = parseResult.GetValue(serveOption);
       var connectAddress = parseResult.GetValue(connectOption);
       var protocolName = parseResult.GetValue(protocolOption)?.Trim();
-      var binaryOptions = new BinaryLinoOptions(
-        parseResult.GetValue(externalReferencesOption),
-        parseResult.GetValue(sequencesOption),
-        parseResult.GetValue(progressiveWidthsOption));
+      var arity = ArityRange.Doublets;
+      if (parseResult.GetValue(arityOption) is { } arityText
+          && !ArityRange.TryParse(arityText.Trim(), out arity, out var arityError))
+      {
+          Console.Error.WriteLine($"invalid value for '--arity': {arityError}");
+          return 1;
+      }
+      var binaryOptions = new BinaryLinoOptions
+      {
+          ExternalReferences = parseResult.GetValue(externalReferencesOption),
+          Arity = arity,
+          PackedWidths = parseResult.GetValue(packedWidthsOption),
+      };
 
       var triggerCommandCount = new[] { always, once, never }.Count(value => value);
       if (triggerCommandCount > 1)

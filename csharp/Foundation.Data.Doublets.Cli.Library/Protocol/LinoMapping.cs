@@ -9,31 +9,65 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 /// Optional features of the binary LiNo protocol. Every feature is off by
 /// default; each one can be switched on independently, like stacking a decorator.
 /// </summary>
-/// <param name="ExternalReferences">
-/// Send numbers and code points as Hybrid external references instead of
-/// in-band unary links. Halves the internal address range of each width.
-/// </param>
-/// <param name="Sequences">
-/// Use the variable-length sequence section for lists, strings and links with
-/// ids instead of cons chains of doublets.
-/// </param>
-/// <param name="ProgressiveWidths">
-/// Let the reference width grow with the address instead of using the width of
-/// the largest address for every reference.
-/// </param>
-public readonly record struct BinaryLinoOptions(
-    bool ExternalReferences = false,
-    bool Sequences = false,
-    bool ProgressiveWidths = false)
+public readonly record struct BinaryLinoOptions
 {
+    // Doublets are stored as null so that default(BinaryLinoOptions) means doublets.
+    private readonly ArityRange? _arity;
+
+    /// <summary>
+    /// Send numbers and code points as Hybrid external references instead of
+    /// in-band unary links. Halves the internal address range of each width.
+    /// </summary>
+    public bool ExternalReferences { get; init; }
+
+    /// <summary>
+    /// The link lengths the encoder may use. The default, exactly 2, sends
+    /// only doublets; <c>2..3</c> adds triplets and <c>1..</c> any length.
+    /// The range must include 2.
+    /// </summary>
+    public ArityRange Arity
+    {
+        get => _arity ?? ArityRange.Doublets;
+        init => _arity = value == ArityRange.Doublets ? null : value;
+    }
+
+    /// <summary>
+    /// Give every section of the packet the narrowest width its links need
+    /// instead of one width for the whole packet.
+    /// </summary>
+    public bool PackedWidths { get; init; }
+
     /// <summary>Enables or disables external references.</summary>
     public BinaryLinoOptions WithExternalReferences(bool enabled = true) => this with { ExternalReferences = enabled };
 
-    /// <summary>Enables or disables the sequence section.</summary>
-    public BinaryLinoOptions WithSequences(bool enabled = true) => this with { Sequences = enabled };
+    /// <summary>Sets the link lengths the encoder may use.</summary>
+    public BinaryLinoOptions WithArity(ArityRange arity) => this with { Arity = arity };
 
-    /// <summary>Enables or disables progressive reference widths.</summary>
-    public BinaryLinoOptions WithProgressiveWidths(bool enabled = true) => this with { ProgressiveWidths = enabled };
+    /// <summary>Enables or disables packed widths.</summary>
+    public BinaryLinoOptions WithPackedWidths(bool enabled = true) => this with { PackedWidths = enabled };
+
+    /// <summary>The options a peer most likely used to write <paramref name="packet"/>, so a reply can be written in the same style.</summary>
+    public static BinaryLinoOptions OfPacket(LinksPacket packet)
+    {
+        ArgumentNullException.ThrowIfNull(packet);
+        ulong shortest = 2;
+        ulong longest = 2;
+        foreach (var (_, link) in packet.Links())
+        {
+            shortest = Math.Min(shortest, (ulong)link.Length);
+            longest = Math.Max(longest, (ulong)link.Length);
+        }
+        return new BinaryLinoOptions
+        {
+            ExternalReferences = packet.ExternalReferences,
+            Arity = ArityRange.Between(shortest, longest),
+            PackedWidths = packet.Sections.Select(section => section.Width).Distinct().Skip(1).Any(),
+        };
+    }
+
+    /// <summary>Lists every option, for test and error messages.</summary>
+    public override string ToString() =>
+        $"BinaryLinoOptions {{ ExternalReferences = {ExternalReferences}, Arity = {Arity}, PackedWidths = {PackedWidths} }}";
 }
 
 /// <summary>
@@ -50,10 +84,14 @@ public readonly record struct BinaryLinoOptions(
 /// <item>A link with an id is <c>(Identified id values…)</c>.</item>
 /// <item>The document is a list of its top-level links, stored last (the root).</item>
 /// </list>
-/// Typed values and lists are a sequence <c>[marker, elements…]</c> when the
-/// sequence section is enabled and the doublet <c>(marker chain)</c> otherwise,
-/// where chain is the nil-terminated cons list <c>(e1 (e2 (… (en 0))))</c>.
-/// Identical sub-links are emitted once and shared.
+/// A list or typed value with any number of values other than two is a
+/// single link of that many references when <see cref="BinaryLinoOptions.Arity"/>
+/// allows it (<c>[marker, elements…]</c> for typed values, the bare elements
+/// for lists), and otherwise the doublet <c>(marker chain)</c>, where chain is
+/// the nil-terminated cons list <c>(e1 (e2 (… (en 0))))</c>. Identical
+/// sub-links are emitted once and shared. Links are numbered so that every
+/// link only refers to earlier ones: doublets of plain doublets first, then
+/// the rest in creation order.
 /// </remarks>
 public static class LinoMapping
 {
@@ -61,19 +99,14 @@ public static class LinoMapping
     public static LinksPacket EncodeDocument(IReadOnlyList<LinoLink> document, BinaryLinoOptions options = default)
     {
         ArgumentNullException.ThrowIfNull(document);
+        if (!options.Arity.Contains(2))
+        {
+            throw LinoProtocolException.Unencodable($"arity {options.Arity} does not include doublets (2)");
+        }
         var encoder = new Encoder(options);
         if (document.Count > 0)
         {
-            var items = document.Select(encoder.Encode).ToList();
-            if (options.Sequences)
-            {
-                encoder.Sequences.Add(items);
-            }
-            else
-            {
-                var chain = encoder.Chain(items);
-                encoder.Doublets.Add((Node.Internal(LinksPacket.List), chain));
-            }
+            encoder.List(document.Select(encoder.Encode).ToList());
         }
         return encoder.Finish();
     }
@@ -83,16 +116,16 @@ public static class LinoMapping
     {
         ArgumentNullException.ThrowIfNull(packet);
         limits ??= DecodeLimits.Default;
-        if (packet.LastAddress is not { } root)
+        var decoder = new Decoder(packet, limits);
+        if (decoder.LinkCount == 0)
         {
             return Array.Empty<LinoLink>();
         }
-        var decoder = new Decoder(packet, limits);
-        var view = decoder.View(PacketReference.Internal(root));
-        IReadOnlyList<PacketReference> items = view switch
+        var root = decoder.View(PacketReference.Internal(LinksPacket.FirstLinkAddress + (ulong)decoder.LinkCount - 1));
+        IReadOnlyList<PacketReference> items = root switch
         {
-            { Kind: ViewKind.Sequence } when !StartsWithMarker(view.Items!) => view.Items!,
-            { Kind: ViewKind.Doublet, Source: { IsExternal: false, Value: LinksPacket.List } } => decoder.Chain(view.Target),
+            { Kind: ViewKind.Link, Items: [{ IsExternal: false, Value: LinksPacket.List }, var chain] } => decoder.Chain(chain),
+            { Kind: ViewKind.Link } when !StartsWithMarker(root.Items!) => root.Items!,
             _ => throw LinoProtocolException.Malformed("the root link is not a list"),
         };
         var budget = limits.MaxNodes;
@@ -109,17 +142,19 @@ public static class LinoMapping
         return canonical && ulong.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value);
     }
 
-    private static bool IsMarker(ulong address) => address is >= LinksPacket.One and < LinksPacket.FirstLinkAddress;
+    private static bool IsMarker(PacketReference reference) =>
+        !reference.IsExternal && reference.Value is >= LinksPacket.One and < LinksPacket.FirstLinkAddress;
 
-    private static bool StartsWithMarker(IReadOnlyList<PacketReference> items) =>
-        items.Count > 0 && !items[0].IsExternal && IsMarker(items[0].Value);
+    private static bool StartsWithMarker(IReadOnlyList<PacketReference> items) => items.Count > 0 && IsMarker(items[0]);
 
     private enum NodeKind
     {
         Internal,
         External,
+        /// <summary>A doublet of plain doublets, markers and externals.</summary>
         Doublet,
-        Sequence,
+        /// <summary>Any other link; numbered after every doublet.</summary>
+        Tuple,
     }
 
     private readonly record struct Node(NodeKind Kind, ulong Value)
@@ -150,73 +185,74 @@ public static class LinoMapping
     private sealed class Encoder
     {
         private readonly BinaryLinoOptions _options;
-        private readonly Dictionary<(Node, Node), int> _doubletIndex = new();
-        private readonly Dictionary<List<Node>, int> _sequenceIndex = new(NodeListComparer.Instance);
+        private readonly List<List<Node>> _doublets = new();
+        private readonly List<List<Node>> _tuples = new();
+        private readonly Dictionary<List<Node>, Node> _created = new(NodeListComparer.Instance);
         private readonly List<Node> _powers = new() { Node.Internal(LinksPacket.One) };
 
         public Encoder(BinaryLinoOptions options) => _options = options;
 
-        public List<(Node Source, Node Target)> Doublets { get; } = new();
-
-        public List<List<Node>> Sequences { get; } = new();
-
-        private Node Doublet(Node source, Node target)
+        private Node Link(List<Node> items)
         {
-            if (_doubletIndex.TryGetValue((source, target), out var existing))
+            if (_created.TryGetValue(items, out var existing))
             {
-                return new Node(NodeKind.Doublet, (ulong)existing);
+                return existing;
             }
-            var index = Doublets.Count;
-            Doublets.Add((source, target));
-            _doubletIndex[(source, target)] = index;
-            return new Node(NodeKind.Doublet, (ulong)index);
+            Node node;
+            if (items.Count == 2 && items.All(item => item.Kind != NodeKind.Tuple))
+            {
+                _doublets.Add(items);
+                node = new Node(NodeKind.Doublet, (ulong)_doublets.Count - 1);
+            }
+            else
+            {
+                _tuples.Add(items);
+                node = new Node(NodeKind.Tuple, (ulong)_tuples.Count - 1);
+            }
+            _created[items] = node;
+            return node;
         }
 
-        private Node Sequence(List<Node> items)
-        {
-            if (_sequenceIndex.TryGetValue(items, out var existing))
-            {
-                return new Node(NodeKind.Sequence, (ulong)existing);
-            }
-            var index = Sequences.Count;
-            Sequences.Add(items);
-            _sequenceIndex[items] = index;
-            return new Node(NodeKind.Sequence, (ulong)index);
-        }
+        private Node Pair(Node first, Node second) => Link(new List<Node> { first, second });
 
-        // Fixed doublets may only refer to fixed doublets, so a pair holding
-        // a sequence becomes a two-element sequence.
-        private Node Pair(Node first, Node second) =>
-            first.Kind == NodeKind.Sequence || second.Kind == NodeKind.Sequence
-                ? Sequence(new List<Node> { first, second })
-                : Doublet(first, second);
-
-        public Node Chain(IReadOnlyList<Node> items)
+        private Node Chain(IReadOnlyList<Node> items)
         {
             var tail = Node.Internal(LinksPacket.NullAddress);
             for (var index = items.Count - 1; index >= 0; index--)
             {
-                tail = Doublet(items[index], tail);
+                tail = Pair(items[index], tail);
             }
             return tail;
         }
 
+        // One link of `items` when the arity allows it, except that two items
+        // are always a doublet.
+        private bool FitsOneLink(int items) => items != 2 && _options.Arity.Contains((ulong)items);
+
         private Node Typed(ulong marker, List<Node> elements)
         {
-            if (_options.Sequences)
+            if (FitsOneLink(elements.Count + 1))
             {
                 elements.Insert(0, Node.Internal(marker));
-                return Sequence(elements);
+                return Link(elements);
             }
-            return Doublet(Node.Internal(marker), Chain(elements));
+            return Pair(Node.Internal(marker), Chain(elements));
         }
+
+        public Node List(List<Node> elements) => elements.Count switch
+        {
+            0 => Node.Internal(LinksPacket.NullAddress),
+            2 => Pair(elements[0], elements[1]),
+            _ when FitsOneLink(elements.Count) => Link(elements),
+            _ => Typed(LinksPacket.List, elements),
+        };
 
         private Node Power(int exponent)
         {
             while (_powers.Count <= exponent)
             {
                 var previous = _powers[^1];
-                _powers.Add(Doublet(previous, previous));
+                _powers.Add(Pair(previous, previous));
             }
             return _powers[exponent];
         }
@@ -238,24 +274,20 @@ public static class LinoMapping
             var sum = powers[^1];
             for (var index = powers.Count - 2; index >= 0; index--)
             {
-                sum = Doublet(powers[index], sum);
+                sum = Pair(powers[index], sum);
             }
             return sum;
         }
 
-        private Node Scalar(ulong value) =>
-            _options.ExternalReferences && value <= LinksPacket.ExternalCapacity(8) ? Node.External(value) : Unary(value);
+        private bool IsExternal(ulong value) => _options.ExternalReferences && value <= LinksPacket.ExternalCapacity(8);
+
+        private Node Scalar(ulong value) => IsExternal(value) ? Node.External(value) : Unary(value);
 
         private Node Reference(string text)
         {
             if (TryParseCanonicalNumber(text, out var value))
             {
-                if (_options.ExternalReferences && value <= LinksPacket.ExternalCapacity(8))
-                {
-                    return Node.External(value);
-                }
-                var unary = Unary(value);
-                return Doublet(Node.Internal(LinksPacket.Number), unary);
+                return IsExternal(value) ? Node.External(value) : Pair(Node.Internal(LinksPacket.Number), Unary(value));
             }
             var codePoints = text.EnumerateRunes().Select(rune => Scalar((ulong)rune.Value)).ToList();
             return Typed(LinksPacket.String, codePoints);
@@ -273,23 +305,12 @@ public static class LinoMapping
                 elements.AddRange(values.Select(Encode));
                 return Typed(LinksPacket.Identified, elements);
             }
-            switch (values.Count)
-            {
-                case 0:
-                    return Node.Internal(LinksPacket.NullAddress);
-                case 2:
-                    var first = Encode(values[0]);
-                    var second = Encode(values[1]);
-                    return Pair(first, second);
-                default:
-                    var items = values.Select(Encode).ToList();
-                    return _options.Sequences ? Sequence(items) : Typed(LinksPacket.List, items);
-            }
+            return List(values.Select(Encode).ToList());
         }
 
         public LinksPacket Finish()
         {
-            var doubletCount = (ulong)Doublets.Count;
+            var doubletCount = (ulong)_doublets.Count;
             PacketReference Resolve(Node node) => node.Kind switch
             {
                 NodeKind.Internal => PacketReference.Internal(node.Value),
@@ -297,15 +318,11 @@ public static class LinoMapping
                 NodeKind.Doublet => PacketReference.Internal(LinksPacket.FirstLinkAddress + node.Value),
                 _ => PacketReference.Internal(LinksPacket.FirstLinkAddress + doubletCount + node.Value),
             };
-            var packet = new LinksPacket
-            {
-                ExternalReferences = _options.ExternalReferences,
-                SequencesSection = _options.Sequences,
-            };
-            packet.Doublets.AddRange(Doublets.Select(doublet => (Resolve(doublet.Source), Resolve(doublet.Target))));
-            packet.Sequences.AddRange(Sequences.Select(items => items.Select(Resolve).ToList()));
-            packet.MinWidth = packet.RequiredMinWidth(!_options.ProgressiveWidths);
-            return packet;
+            var links = _doublets
+                .Concat(_tuples)
+                .Select((items, index) => (LinksPacket.FirstLinkAddress + (ulong)index, items.Select(Resolve).ToArray()))
+                .ToList();
+            return LinksPacket.Pack(_options.ExternalReferences, links, _options.PackedWidths);
         }
     }
 
@@ -314,119 +331,97 @@ public static class LinoMapping
         Null,
         Marker,
         External,
-        Doublet,
-        Sequence,
+        Link,
     }
 
-    private readonly record struct View(
-        ViewKind Kind,
-        ulong Value = 0,
-        PacketReference Source = default,
-        PacketReference Target = default,
-        IReadOnlyList<PacketReference>? Items = null);
+    private readonly record struct View(ViewKind Kind, ulong Value = 0, PacketReference[]? Items = null);
 
     private sealed class Decoder
     {
-        private readonly LinksPacket _packet;
         private readonly DecodeLimits _limits;
-        // _unary[i] is the number doublet i denotes, if it is a unary number.
-        private readonly ulong?[] _unary;
+        // _links[i] is the link at address FirstLinkAddress + i.
+        private readonly List<PacketReference[]> _links = new();
+        // _unary[i] is the number link i denotes, if it is a unary number.
+        private readonly List<ulong?> _unary = new();
 
         public Decoder(LinksPacket packet, DecodeLimits limits)
         {
-            _packet = packet;
             _limits = limits;
-            // Links only refer backwards, so one forward pass evaluates every
-            // unary number without recursion.
-            _unary = new ulong?[packet.Doublets.Count];
-            for (var index = 0; index < packet.Doublets.Count; index++)
+            foreach (var (address, link) in packet.Links())
             {
-                var (source, target) = packet.Doublets[index];
-                if (UnaryValue(source) is { } sourceValue
-                    && UnaryValue(target) is { } targetValue
-                    && sourceValue <= ulong.MaxValue - targetValue)
+                var expected = LinksPacket.FirstLinkAddress + (ulong)_links.Count;
+                if (address != expected)
                 {
-                    _unary[index] = sourceValue + targetValue;
+                    throw LinoProtocolException.Malformed(
+                        $"a LiNo packet stores its links contiguously from address {LinksPacket.FirstLinkAddress}, " +
+                        $"found link {address} where {expected} belongs");
                 }
+                foreach (var reference in link)
+                {
+                    if (!reference.IsExternal && reference.Value >= address)
+                    {
+                        throw LinoProtocolException.Malformed(
+                            $"link {address} refers to {reference}, which is not an earlier link");
+                    }
+                }
+                // Links only refer backwards, so one forward pass evaluates every
+                // unary number without recursion.
+                ulong? value = null;
+                if (link.Length == 2
+                    && UnaryValue(link[0]) is { } source
+                    && UnaryValue(link[1]) is { } target
+                    && source <= ulong.MaxValue - target)
+                {
+                    value = source + target;
+                }
+                _unary.Add(value);
+                _links.Add(link);
             }
         }
 
-        private ulong? UnaryValue(PacketReference reference)
+        public int LinkCount => _links.Count;
+
+        private ulong? UnaryValue(PacketReference reference) => reference switch
         {
-            if (reference.IsExternal)
-            {
-                return null;
-            }
-            return reference.Value switch
-            {
-                LinksPacket.NullAddress => 0,
-                LinksPacket.One => 1,
-                >= LinksPacket.FirstLinkAddress when reference.Value - LinksPacket.FirstLinkAddress < (ulong)_unary.Length
-                    => _unary[reference.Value - LinksPacket.FirstLinkAddress],
-                _ => null,
-            };
-        }
+            { IsExternal: true } => null,
+            { Value: LinksPacket.NullAddress } => 0,
+            { Value: LinksPacket.One } => 1,
+            { Value: >= LinksPacket.FirstLinkAddress } => _unary[(int)(reference.Value - LinksPacket.FirstLinkAddress)],
+            _ => null,
+        };
 
-        public View View(PacketReference reference)
+        public View View(PacketReference reference) => reference switch
         {
-            if (reference.IsExternal)
-            {
-                return new View(ViewKind.External, reference.Value);
-            }
-            if (reference.Value == LinksPacket.NullAddress)
-            {
-                return new View(ViewKind.Null);
-            }
-            if (reference.Value < LinksPacket.FirstLinkAddress)
-            {
-                return new View(ViewKind.Marker, reference.Value);
-            }
-            var address = reference.Value - LinksPacket.FirstLinkAddress;
-            var doublets = (ulong)_packet.Doublets.Count;
-            if (address < doublets)
-            {
-                var (source, target) = _packet.Doublets[(int)address];
-                return new View(ViewKind.Doublet, Source: source, Target: target);
-            }
-            if (address - doublets < (ulong)_packet.Sequences.Count)
-            {
-                return new View(ViewKind.Sequence, Items: _packet.Sequences[(int)(address - doublets)]);
-            }
-            throw LinoProtocolException.Malformed($"dangling reference {address}");
-        }
+            { IsExternal: true } => new View(ViewKind.External, reference.Value),
+            { Value: LinksPacket.NullAddress } => new View(ViewKind.Null),
+            { Value: < LinksPacket.FirstLinkAddress } => new View(ViewKind.Marker, reference.Value),
+            _ => new View(ViewKind.Link, Items: _links[(int)(reference.Value - LinksPacket.FirstLinkAddress)]),
+        };
 
-        private ulong Number(PacketReference reference)
-        {
-            if (reference.IsExternal)
-            {
-                return reference.Value;
-            }
-            return UnaryValue(reference) ?? throw LinoProtocolException.Malformed("expected a unary number");
-        }
+        private ulong Number(PacketReference reference) =>
+            reference.IsExternal
+                ? reference.Value
+                : UnaryValue(reference) ?? throw LinoProtocolException.Malformed("expected a unary number");
 
-        // The elements of a typed value given in doublet form: a cons chain,
-        // optionally ending in a sequence holding the remaining elements.
+        /// <summary>The elements of the cons list <c>(e1 (e2 (… (en 0))))</c>.</summary>
         public List<PacketReference> Chain(PacketReference tail)
         {
             var elements = new List<PacketReference>();
             while (true)
             {
                 var view = View(tail);
-                switch (view.Kind)
+                switch (view)
                 {
-                    case ViewKind.Null:
+                    case { Kind: ViewKind.Null }:
                         return elements;
-                    case ViewKind.Doublet:
+                    case { Kind: ViewKind.Link, Items: [var head, var next] }:
                         if (elements.Count >= _limits.MaxNodes)
                         {
                             throw LinoProtocolException.Limit("chain too long");
                         }
-                        elements.Add(view.Source);
-                        tail = view.Target;
+                        elements.Add(head);
+                        tail = next;
                         break;
-                    case ViewKind.Sequence:
-                        elements.AddRange(view.Items!);
-                        return elements;
                     default:
                         throw LinoProtocolException.Malformed("broken element chain");
                 }
@@ -496,24 +491,22 @@ public static class LinoMapping
             }
             budget--;
             var view = View(reference);
-            switch (view.Kind)
+            switch (view)
             {
-                case ViewKind.Null:
+                case { Kind: ViewKind.Null }:
                     return LinoFormat.Link(null, new List<LinoLink>());
-                case ViewKind.External:
+                case { Kind: ViewKind.External }:
                     return LinoFormat.Reference(view.Value.ToString(CultureInfo.InvariantCulture));
-                case ViewKind.Marker:
+                case { Kind: ViewKind.Marker }:
                     throw LinoProtocolException.Malformed($"marker {view.Value} used as a value");
-                case ViewKind.Doublet when !view.Source.IsExternal && view.Source.Value == LinksPacket.Number:
-                    return Typed(LinksPacket.Number, new[] { view.Target }, depth, ref budget);
-                case ViewKind.Doublet when !view.Source.IsExternal && IsMarker(view.Source.Value):
-                    return Typed(view.Source.Value, Chain(view.Target), depth, ref budget);
-                case ViewKind.Doublet:
-                    return List(new[] { view.Source, view.Target }, 0, depth, ref budget);
+                case { Items: [{ IsExternal: false, Value: LinksPacket.Number }, var value] }:
+                    return Typed(LinksPacket.Number, new[] { value }, depth, ref budget);
+                case { Items: [var marker, var chain] } when IsMarker(marker):
+                    return Typed(marker.Value, Chain(chain), depth, ref budget);
                 default:
                     var items = view.Items!;
                     return StartsWithMarker(items)
-                        ? Typed(items[0].Value, items.Skip(1).ToList(), depth, ref budget)
+                        ? Typed(items[0].Value, items[1..], depth, ref budget)
                         : List(items, 0, depth, ref budget);
             }
         }

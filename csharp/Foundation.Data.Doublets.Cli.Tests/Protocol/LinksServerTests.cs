@@ -39,7 +39,7 @@ public sealed class LinksServerTests
     {
         using var server = new RunningServer(new LinksServerOptions { AutoCreateMissingReferences = true });
         using var text = server.Client(new TextLinoProtocol());
-        using var binary = server.Client(new BinaryLinoProtocol(new BinaryLinoOptions().WithExternalReferences().WithSequences()));
+        using var binary = server.Client(new BinaryLinoProtocol(new BinaryLinoOptions().WithExternalReferences().WithArity(ArityRange.AtLeast(1))));
         text.Query("() ((child: father mother))");
         binary.Query("() (('two words': 'it''s' \"x\"))");
         Assert.Equal(text.Query(""), binary.Query(""));

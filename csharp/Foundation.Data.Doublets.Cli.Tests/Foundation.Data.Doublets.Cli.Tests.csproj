@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <None Include="..\..\docs\protocol\links-operations.txt" Link="Protocol\links-operations.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\protocol\binary-links-notation-vectors.txt" Link="Protocol\binary-links-notation-vectors.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
