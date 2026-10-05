@@ -150,7 +150,8 @@ impl_in_memory_links_storage!(
         storage.refresh_observed_revision()
     },
     |storage: &LinkStorage| {
-        Ok(StorageRevision::of(storage.database_path())? != storage.observed_revision())
+        Ok(!storage.is_in_memory()
+            && StorageRevision::of(storage.database_path())? != storage.observed_revision())
     },
     |storage: &mut LinkStorage| storage.reload_from_disk().map_err(storage_error)
 );
