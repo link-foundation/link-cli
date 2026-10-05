@@ -30,12 +30,12 @@ decorator, in both the C# and the Rust port.
 |---|---|---|
 | R1 | "lightweight protocols to transfer links notation representing substitution operations to allow all CRUD operations over TCP/IP" | `LinksServer` / `LinksClient` in both ports. A request is a substitution query and the empty request reads everything (§4.4). `clink --serve` / `--connect` (§4.6). `RemoteLinks` serves the links interface itself (§4.5) |
 | R2 | "UTF-8 based text only links notation" | `TextLinoProtocol` (§4.1) |
-| R3 | "binary version of links notation, that will have number of links in a message/packet" | `BinaryLinoProtocol` and `LinksPacket`. The header carries N (doublets) and M (sequences) as LEB128 (§4.2) |
-| R4 | "0-256 links have 8 bit size. 257-65536 links have 16 bits size and so on" (8/16/32/64) | The width is the tier of the largest address: 1, 2, 4 or 8 bytes. `--progressive-widths` grows the width per address instead (§4.2.3) |
+| R3 | "binary version of links notation, that will have number of links in a message/packet" | `BinaryLinoProtocol` and `LinksPacket`. The header counts links (compact layout) or sections, each with its own count, as LEB128 (§4.2) |
+| R4 | "0-256 links have 8 bit size. 257-65536 links have 16 bits size and so on" (8/16/32/64) | The width is the tier of the largest reference: 1, 2, 4 or 8 bytes. `--packed-widths` gives each section the narrowest width it needs instead (§4.2) |
 | R5 | The binary protocol is "implemented as another decorator, for both C# and Rust" and can be "used in the same manner as unicode version … easily switchable" | Both protocols implement `LinoProtocol` (Rust trait) / `ILinoProtocol` (C# interface). `LinoConnection` decorates any byte stream with either one, so switching means swapping one value. The server detects the protocol of each message and answers in kind (§4.3) |
-| R6 | "representation of numbers as defined in links themselves (see how we define numbers in our linksplatform projects)" | Default mapping: a number is `(Number unary(n))`, built from powers of two as in `Platform.Data.Doublets.Numbers.Unary` (§4.2.4) |
-| R7 | "Or … use external references to directly support encoding of unicode sequences": "0-128 links have 8 bit size. 128-32768 … 16 bits" | `--external-references` / `BinaryLinoOptions.ExternalReferences`. Numbers and code points become `Platform.Data.Hybrid<T>` external references, and the internal range per width is halved (§4.2.5) |
-| R8 | "at the end we can have improved format for storing variable length sequences … size, reference_1, reference_2 … Each variable link sequences is addressable itself by last link + 1" | `--sequences` / `BinaryLinoOptions.Sequences`. A section of `size ref…` records follows the fixed doublets, and sequence *k* has address `6 + N + k` (§4.2.6) |
+| R6 | "representation of numbers as defined in links themselves (see how we define numbers in our linksplatform projects)" | Default mapping: a number is `(Number unary(n))`, built from powers of two as in `Platform.Data.Doublets.Numbers.Unary` (§4.2) |
+| R7 | "Or … use external references to directly support encoding of unicode sequences": "0-128 links have 8 bit size. 128-32768 … 16 bits" | `--external-references` / `BinaryLinoOptions.ExternalReferences`. Numbers and code points become `Platform.Data.Hybrid<T>` external references, and the internal range per width is halved (§4.2) |
+| R8 | "at the end we can have improved format for storing variable length sequences … size, reference_1, reference_2 … Each variable link sequences is addressable itself by last link + 1" | `--arity` / `BinaryLinoOptions.Arity`, an `ArityRange` such as `2..3` or `1..`. A list of any allowed length is one link. A variable-arity section prefixes each link with its length, and every link keeps the address after the previous one (§4.2) |
 | R9 | "all these protocols options are optional, and come as decorators" | Every option is off by default and can be switched on independently, with `With…` builders. `AcceptedProtocols` lets a server restrict the protocol (§4.3) |
 | R10 | "Reuse all the best experience … from other repositories of link-assistant, link-foundation, and linksplatform" | §3 and `research-notes.md`. Hybrid encoding, unary numbers, the linksql CRUD table and the RFC 9457-like error shape were reused |
 | R11 | "collect data … to `./docs/case-studies/issue-{id}` … search online … list of each and all requirements … propose possible solutions and solution plans … check known existing components/libraries" | This folder |
@@ -48,17 +48,24 @@ decorator, in both the C# and the Rust port.
   Hybrid top bit, 8-bit internal references reach `0..=127`. The issue's
   boundaries are each off by one. We follow the arithmetic, which is also what
   `Platform.Data.Hybrid<T>` does.
-- **"number of links in a message".** The header stores the number of fixed
-  doublets N and, when the sequence section is on, the number of sequences M.
-  The width follows from the largest address, `5 + N + M`, not from N alone.
-  Addresses `1..=5` are reserved marker points (§4.2.2), so a packet always
-  knows its own maximum width before it reads any reference.
+- **"number of links in a message".** The compact layout stores the number
+  of links N. The explicit layout stores the number of sections and a count
+  for each. Either way, every count and width comes before the first
+  reference, so a reader knows each width before it reads a reference. The
+  widths follow from the largest reference in a section, not from N.
+  Addresses `1..=5` are reserved marker points (§4.2).
+- **"variable length sequences".** The issue puts sequences after the
+  doublets, as a separate kind of record. We generalised that: any section
+  may hold links of a fixed arity or of a variable one, so doublets,
+  triplets and longer links mix freely. The default arity stays `2`, the
+  doublets of linksplatform. The format accepts any arity from 1 up, and
+  `1..` sets no maximum.
 - **"decorator".** In C#, `NamedTypesDecorator`, `PinnedTypesDecorator` and the
   others wrap an `ILinks<T>`. A protocol here wraps a byte stream
-  (`LinoConnection`), and each binary option is one flag on an options value
-  that changes the encoder. Neither option needs the other. This keeps the
+  (`LinoConnection`), and each binary option is one setting on an options
+  value that changes the encoder. No option needs another. This keeps the
   options composable without a separate wrapper type for every combination of
-  three flags. A reader still accepts every combination, because the header
+  three options. A reader still accepts every combination, because the header
   announces the options in use.
 
 ## 3. Prior art
@@ -88,11 +95,11 @@ encodings above.
 |---|---|---|
 | CBOR, [RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html) | Integer arguments inline, or in 1/2/4/8 following bytes | The 1/2/4/8-byte tiers, chosen once per link rather than once per value |
 | MessagePack, PackStream (Bolt) | Width escalation through marker bytes (`0xcc..0xcf`, `INT_8..INT_64`) | Same as above |
-| LEB128 / protobuf varints | 7 bits per byte, little-endian groups | Header counts N and M |
+| LEB128 / protobuf varints | 7 bits per byte, little-endian groups | Counts, section headers and link lengths |
 | [PostgreSQL](https://www.postgresql.org/docs/current/protocol-overview.html), [MySQL](https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_packets.html) | Self-delimiting messages on a TCP stream | Every binary packet is self-delimiting: counts first, then fixed-size or size-prefixed records |
 | SMTP (RFC 5321 §4.5.2) | Messages end with a line holding a single `.`, and leading dots are doubled | Text framing. It can be typed by hand in `nc` or `telnet` |
 | Redis RESP | A text protocol that humans can type, where the first byte tells the type | Protocol detection by the first byte (§4.3) |
-| LZW | Code width grows as the dictionary grows | `--progressive-widths` |
+| LZW | Code width grows as the dictionary grows | `--packed-widths`: the width follows the references of each section |
 
 ### Libraries considered
 
@@ -129,123 +136,69 @@ A session in `nc`:
 
 ### 4.2 Binary protocol
 
-#### 4.2.1 Packet layout
+The binary protocol writes each document as one packet of
+[binary links notation](../../protocol/binary-links-notation.md). That document is the normative specification. It covers the
+header, the sections, the widths, external references, packing and the LiNo
+mapping. This section explains how the design meets the issue.
 
-```text
-byte 0      0x10 | flags        high nibble 1 = format version 1
-                                bit 0     external references (Hybrid encoding)
-                                bit 1     sequence section present
-                                bits 2-3  log2 of the minimum width in bytes
-LEB128      N                   number of fixed doublets
-LEB128      M                   number of sequences (only when bit 1 is set)
-N times     source target       one fixed doublet, refs width(a) bytes each
-M times     size ref_1 … ref_n  one sequence, size and refs width(a) bytes each
-```
-
-All references are little-endian. A packet is self-delimiting, so it needs no
-length prefix.
-
-#### 4.2.2 Addresses
-
-| Address | Meaning |
-|---|---|
-| `0` | null, the empty link `()` |
-| `1` | `One`, the unary 1 |
-| `2` | `Number` marker |
-| `3` | `String` marker |
-| `4` | `List` marker |
-| `5` | `Identified` marker (a link with an id) |
-| `6 … 5+N` | fixed doublets |
-| `6+N … 5+N+M` | sequences ("last link + 1", R8) |
-
-Markers are never transmitted. A link may only refer to links before it, so a
-decoder resolves everything in one pass. The last link is the document root.
-
-#### 4.2.3 Width tiers (R4)
-
-`tier(a)` is the smallest of 1, 2, 4 and 8 bytes that can hold address `a`.
-Every reference of the link at address `a` uses
-`width(a) = max(min_width, tier(a))` bytes.
-
-- **Default (uniform).** `min_width` is the tier of the highest address, so
-  one width is used for the whole packet:
-
-  | Highest address | Plain | With external references |
-  |---|---|---|
-  | up to 255 / 127 | 8-bit | 8-bit |
-  | up to 65 535 / 32 767 | 16-bit | 16-bit |
-  | up to 2³²−1 / 2³¹−1 | 32-bit | 32-bit |
-  | larger | 64-bit | 64-bit |
-
-  The first column gives the limit for plain references, the second for references with external references on.
-
-- **`--progressive-widths`.** `min_width` is 1, so the first links use 8-bit
-  references even in a large packet. The width only grows when the address
-  grows. Since a link at address `a` can only refer to addresses below `a`,
-  `tier(a)` always fits.
-
-#### 4.2.4 Numbers as links (R6, the default)
-
-| LiNo | Links |
-|---|---|
-| `()` | `0` |
-| number `n` | `(Number unary(n))`. `unary(0) = 0`, `2^0 = One`, `2^k = (2^(k-1) 2^(k-1))`, and other values are right-nested sums of powers of two from the highest bit down |
-| other reference | `(String code-point…)`, with each code point a unary number |
-| link of two values, no id | a plain doublet |
-| link of any other arity, no id | `(List e…)` |
-| link with an id | `(Identified id value…)` |
-| document | `(List top-level-link…)`, the root |
-
-Identical sub-links are emitted once, because links are content-addressed.
-
-#### 4.2.5 External references (R7, `--external-references`)
-
-Numbers and code points travel as Hybrid external references instead of
-unary links. At width `w` bits:
-
-- value `v ≥ 1` is sent as `2^w − v`
-- `0` is sent as `2^(w−1)`
-
-This is exactly `Platform.Data.Hybrid<T>`. The top bit marks a reference as
-external, so internal addresses lose one bit: 8-bit references reach `0..127`.
-
-#### 4.2.6 Sequence section (R8, `--sequences`)
-
-Without this option, lists, strings and identified links are cons chains of
-doublets: `(marker (e1 (e2 (… (en 0)))))`. With it, they become one
-variable-length record `size marker e1 … en`, and a plain list has no marker.
-
-Fixed doublets may only refer to earlier fixed doublets. So a two-value link
-that holds a sequence becomes a two-element sequence.
-
-#### 4.2.7 Decoding untrusted input
-
-`DecodeLimits` caps the following:
-
-- the number of links: 2²²
-- the total sequence items: 2²⁴
-- the expanded LiNo nodes
-- the nesting depth
-- the text message size: 64 MiB
-
-The decoder also rejects:
-
-- a forward reference or a reference to itself
-- an unsupported header byte, meaning an unknown version
-- a width too small for an address
-- a truncated packet
+- **Count first (R3).** A packet starts with one header byte. Next comes a
+  LEB128 count of links in the compact layout, or a count of sections and
+  their headers in the explicit layout. After that come the links. So a
+  packet is self-delimiting, and a reader knows every width before it reads a
+  reference.
+- **Sections.** A section is a run of consecutive addresses. It has a gap
+  before it, an arity range (how many references each of its links holds)
+  and a width. The common case is a document made of doublets, which is one
+  section at address 6. It is written in the compact layout, so the header
+  costs two bytes.
+- **Width tiers (R4).** A width is the narrowest of 1, 2, 4 and 8 bytes that
+  holds every reference of a section. By default every section uses the
+  widest width in the packet, so all references have one size, as in the
+  issue. `--packed-widths` gives each section its own width and splits
+  sections where that saves bytes. A linear dynamic program chooses the
+  split, and the result is never larger than the uniform layout.
+- **Numbers as links (R6, the default).** Addresses `1` to `5` are the marker
+  points `One`, `Number`, `String`, `List` and `Identified`, and they are
+  never sent. A number is `(Number unary(n))`, built from powers of two as in
+  `Platform.Data.Doublets.Numbers.Unary`. A string is `(String code-point…)`.
+  The document is the list of its top-level links, stored last.
+- **External references (R7, `--external-references`).** Numbers and code
+  points become `Platform.Data.Hybrid<T>` values: `v ≥ 1` is `2^w − v` and `0`
+  is `2^(w−1)`. The top bit marks a value as external, so internal addresses
+  lose one bit: 8-bit references reach `0..=127`.
+- **Variable-length links (R8, `--arity`).** The arity range is the set of
+  link lengths the encoder may use. The default, `2`, writes only doublets,
+  so a list becomes the cons chain `(marker (e1 (e2 (… (en 0)))))`. With
+  `--arity 2..3`, a list of three elements becomes one triplet. With
+  `--arity 1..`, any list becomes one link. A variable-arity section prefixes
+  each link with its length minus the section minimum. That is the issue's
+  `size, reference_1, reference_2 …` record. Every link keeps its own
+  address, one after the previous link, as the issue asks.
+- **Untrusted input.** `DecodeLimits` caps links (2²²), references (2²⁴),
+  expanded LiNo nodes, nesting depth (1024) and the text message size
+  (64 MiB). The decoder rejects:
+  - unknown header versions;
+  - LEB128 overflow;
+  - lengths outside a section's arity;
+  - forward references;
+  - misplaced markers;
+  - invalid code points;
+  - truncated packets;
+  - trailing bytes.
 
 ### 4.3 Decorators and switching (R5, R9)
 
 ```rust
 let mut connection = LinoConnection::new(stream, BinaryLinoProtocol::with_options(
-    BinaryLinoOptions::default().with_external_references(true).with_sequences(true)));
+    BinaryLinoOptions::default()
+        .with_external_references(true)
+        .with_arity(ArityRange::at_least(1))));
 // …or TextLinoProtocol::new(); the rest of the code is unchanged.
 ```
 
 ```csharp
 using var client = LinksClient.Connect("127.0.0.1", 7777,
-    new BinaryLinoProtocol(new BinaryLinoOptions().WithExternalReferences().WithSequences()));
+    new BinaryLinoProtocol(new BinaryLinoOptions().WithExternalReferences().WithArity(ArityRange.AtLeast(1))));
 var reply = client.QueryText("() ((1 1))");
 ```
 
@@ -308,7 +261,7 @@ client of either port is proven to understand a server of the other.
 clink --db data.links --serve 127.0.0.1:7777 [--protocol text|binary] [--auto-create-missing-references] [--trace]
 clink --connect 127.0.0.1:7777 '() ((1 1))'                      # text
 clink --connect 127.0.0.1:7777 --protocol binary                 # list all links over binary
-clink --connect 127.0.0.1:7777 --external-references --sequences --progressive-widths '((1: 1 1)) ((1: 1 2))'
+clink --connect 127.0.0.1:7777 --external-references --arity 1.. --packed-widths '((1: 1 1)) ((1: 1 2))'
 ```
 
 On the client, any binary option implies `--protocol binary`, and
@@ -319,68 +272,58 @@ and `--connect` together is also an error.
 
 ### Golden vectors
 
-The Rust and C# tests both assert these bytes. The vectors use the uniform
-width.
+[`docs/protocol/binary-links-notation-vectors.txt`](../../protocol/binary-links-notation-vectors.txt)
+holds 84 documents and 12 raw packets. Every document is encoded under all
+12 option sets: plain or external references, arity `2`, `2..3` or `1..`, and
+uniform or packed widths. The Rust and C# tests both assert every byte, in
+both directions. A few of the vectors:
 
-| Document | ext | seq | Bytes |
+| Document | ext | arity | Bytes |
 |---|---|---|---|
-| `() ((1 1))` | – | – | `10 07 02 01 06 06 07 00 04 08 00 09 0a 00 04 0b` |
-| `() ((1 1))` | – | ✓ | `12 02 03 02 01 06 06 01 07 02 00 08 01 09` |
-| `() ((1 1))` | ✓ | – | `11 06 ff ff 06 00 04 07 00 08 09 00 04 0a` |
-| `() ((1 1))` | ✓ | ✓ | `13 01 03 ff ff 01 06 02 00 07 01 08` |
-| `hi` | ✓ | – | `11 05 97 00 98 06 03 07 08 00 04 09` |
-| `hi` | ✓ | ✓ | `13 00 02 03 03 98 97 01 06` |
-| (empty) | – | – | `10 00` |
-| (empty) | ✓ | ✓ | `13 00 00` |
+| (empty) | – | any | `10 00` |
+| `() ((1 1))` | – | `2` | `10 07 02 01 06 06 07 00 04 08 00 09 0a 00 04 0b` |
+| `() ((1 1))` | – | `1..` | `12 04 24 05 02 10 01 20 01 10 01 02 01 06 06 07 00 08 09` |
+| `() ((1 1))` | ✓ | `2` | `11 06 ff ff 06 00 04 07 00 08 09 00 04 0a` |
+| `() ((1 1))` | ✓ | `1..` | `13 01 1c 05 01 04 01 ff ff 00 06 01 00 07 00 08` |
+| `hi` | ✓ | `2` | `11 05 97 00 98 06 03 07 08 00 04 09` |
+| `hi` | ✓ | `1..` | `13 02 34 05 01 10 01 03 98 97 06` |
 
-How the first vector decodes:
-
-- header `0x10`, N = 7
-- `6 = (Number One)` = 1
-- `7 = (6 6)` = `(1 1)`
-- `8 = (7 0)`
-- `9 = (List 8)` = `((1 1))`
-- `10 = (0 9)` = `() ((1 1))`
-- `11 = (10 0)`
-- `12 = (List 11)`, the document
+[The specification](../../protocol/binary-links-notation.md#72-example)
+decodes the first two of these byte by byte.
 
 ### Sizes
 
-Output of `cargo run --example lino_binary_dump -- '<doc>'`, in bytes. The
-text size includes the `\n.\n` terminator.
+The [sizes table](../../protocol/binary-links-notation.md#9-sizes) of the
+specification compares text with every option set. In short:
 
-| Document | text | plain | seq | ext | ext+seq |
+| Document | text | plain | ext | ext, `1..` | ext, `1..`, packed |
 |---|---|---|---|---|---|
-| `() ((1 1))` | 13 | 16 | 14 | 14 | 12 |
-| `((1: 1 1)) ((1: 1 2))` | 24 | 38 | 28 | 32 | 22 |
-| `() ((child: father mother))` | 30 | 132 | 118 | 52 | 38 |
-| `() ((1000 70000))` | 20 | 70 | 68 | 50 | 39 |
+| `() ((1 1))` | 13 | 16 | 14 | 16 | 16 |
+| `((1: 1 1)) ((1: 1 2))` | 24 | 38 | 32 | 25 | 25 |
+| `() ((child: father mother))` | 30 | 132 | 52 | 41 | 41 |
+| `() ((1000 70000))` | 20 | 70 | 50 | 34 | 23 |
 
 The pure-links mapping (R6) is not meant to be smaller than text. It
 transmits a document as nothing but links, which a links store can import
-without any parser. External references and sequences are the options that
-make the packet compact, and with both on, the binary form is the smallest
-for numeric links. Text stays smaller for documents made of names or large
-numbers, because:
-
-- each name costs a sequence with a marker and one reference per code point;
-- each number needs a whole external reference at the packet's width.
-
-The binary protocol's advantage is that it needs no parsing and has a fixed
-structure, not that it is smaller.
+without any parser. The options that make a packet compact are external
+references, a wider arity and packed widths. Text stays smaller for documents
+made of names, because each name costs a string link with a marker and one
+reference per code point. The binary protocol's advantage is that it needs no
+parsing and has a fixed structure, not that it is smaller.
 
 ### Automated tests
 
 - Rust:
-  - `rust/tests/protocol_packet_tests.rs`: codecs, the golden vectors, the corpus round trip under all 8 option sets, limits, malformed input, and deep nesting in linear time.
+  - `rust/tests/protocol_packet_tests.rs`: both codecs. For the binary links notation it covers the golden vectors, the corpus round trip under all 12 option sets, width tiers and Hybrid values. It also covers packing (packed widths are never larger than uniform ones), arity ranges, hand-built packets, malformed input and limits. For text it covers framing, protocol detection, and deep nesting in linear time.
   - `rust/tests/protocol_tcp_tests.rs`: CRUD over every protocol, mixed clients, errors, CRLF, malformed input, protocol restriction, concurrency and shutdown.
   - `rust/tests/cli_tcp_tests.rs`: `clink --serve` / `--connect` end to end.
   - `rust/tests/remote_links_tests.rs`: the same proof for the Rust `RemoteLinks`, including the shared conversation.
 - C#:
-  - `LinoProtocolCodecTests` (34 tests): the same corpus and golden vectors.
-  - `LinksServerTests` (10 tests): CRUD over every protocol, identical text and binary replies, errors, CRLF, malformed input, protocol restriction, concurrent clients, shutdown, and shutdown racing a new connection.
+  - `BinaryLinksNotationTests`: a port of `protocol_packet_tests.rs`, checked against the same golden vectors.
+  - `LinoProtocolCodecTests`: the same corpus under all 12 option sets, and the text framing.
+  - `LinksServerTests`: CRUD over every protocol, identical text and binary replies, errors, CRLF, malformed input, protocol restriction, concurrent clients, shutdown, and shutdown racing a new connection.
   - `RemoteLinksTests`: every `INamedTypesLinks` call, the query processor and the raw `ILinks` interface give the same answers on a local store and over every protocol. It also covers the shared conversation, malformed operations and replies, and lost connections.
-  - `CliTcpIntegrationTests` (8 tests): `clink --serve` / `--connect` end to end.
+  - `CliTcpIntegrationTests`: `clink --serve` / `--connect` end to end, including option validation.
 - Cross-language interop: [`examples/tcp/run-interop.sh`](../../../examples/tcp/run-interop.sh) runs a Rust server with a C# client, and a C# server with a Rust client. It covers text and every binary option, and both directions print identical results.
 
 ## 6. Findings along the way

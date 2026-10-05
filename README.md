@@ -438,13 +438,18 @@ There are two interchangeable protocols:
 
 - **text**: UTF-8 LiNo. Each message ends with a line holding a single `.`,
   so you can also talk to the server with `nc`.
-- **binary**: `--protocol binary`. Each packet carries its link count, and
-  references are 8, 16, 32 or 64 bits wide depending on that count. Three
-  optional decorators can each be switched on independently:
+- **binary**: `--protocol binary`. Each packet is
+  [binary links notation](docs/protocol/binary-links-notation.md): it counts
+  its links first, and references are 8, 16, 32 or 64 bits wide depending on
+  the largest one. Three optional decorators can each be switched on
+  independently:
   - `--external-references`: numbers and characters travel as Hybrid external
     references.
-  - `--sequences`: a variable-length sequence section.
-  - `--progressive-widths`: the reference width grows with the address.
+  - `--arity <RANGE>`: the link lengths the encoder may use. The default, `2`,
+    sends only doublets. `2..3` adds triplets, and `1..` allows links of any
+    length.
+  - `--packed-widths`: each section of the packet gets the narrowest width its
+    links need.
 
 The server detects the protocol of each message and replies in the same one.
 C# and Rust servers and clients work with each other: see
@@ -656,8 +661,8 @@ Both the C# NuGet tool and the Rust CLI support every option below.
 | `--connect`             | string  | _None_         | _None_                              | Send the query to a `clink --serve` server at `host:port` and print the reply |
 | `--protocol`            | string  | detected       | _None_                              | `text` or `binary` (with `--serve`, also `any`, which is the default)     |
 | `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
-| `--sequences`           | bool    | `false`        | _None_                              | Binary protocol: use the variable-length sequence section                 |
-| `--progressive-widths`  | bool    | `false`        | _None_                              | Binary protocol: grow the reference width with the address                |
+| `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |
+| `--packed-widths`       | bool    | `false`        | _None_                              | Binary protocol: give each section the narrowest reference width          |
 
 The query can be passed as the first positional argument or through `--query`,
 `--apply`, or `--do`. In the Rust CLI, `--query` takes precedence when both

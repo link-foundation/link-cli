@@ -1,6 +1,6 @@
 # Golden vectors of binary links notation, version 1.
 #
-# Both ports check them in their test suites (csharp: LinoProtocolCodecTests,
+# Both ports check them in their test suites (csharp: BinaryLinksNotationTests,
 # rust: protocol_packet_tests), so they write and read exactly these bytes.
 # Fields are separated by tabs; bytes are hexadecimal.
 #

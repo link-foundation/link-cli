@@ -22,9 +22,10 @@ server: clink server listening on 127.0.0.1:40123
 [text] () ((1: 1 1))
 [--protocol binary] () ((2: 2 2))
 [--external-references] () ((3: 3 3))
-[--sequences] () ((4: 4 4))
-[--progressive-widths] () ((5: 5 5))
-[--external-references --sequences --progressive-widths] () ((6: 6 6))
+[--arity 2..3] () ((4: 4 4))
+[--arity 1..] () ((5: 5 5))
+[--packed-widths] () ((6: 6 6))
+[--external-references --arity 1.. --packed-widths] () ((7: 7 7))
 listing:
 (1: 1 1)
 (2: 2 2)
@@ -32,6 +33,7 @@ listing:
 (4: 4 4)
 (5: 5 5)
 (6: 6 6)
+(7: 7 7)
 ```
 
 ## Doing it by hand

@@ -38,11 +38,11 @@ address="$(sed -n 's/^clink server listening on //p' "$work_dir/banner")"
 echo "server: $(head -n 1 "$work_dir/banner")"
 
 index=0
-for flags in "" "--protocol binary" "--external-references" "--sequences" \
-    "--progressive-widths" "--external-references --sequences --progressive-widths"; do
+for flags in "" "--protocol binary" "--external-references" "--arity 2..3" \
+    "--arity 1.." "--packed-widths" "--external-references --arity 1.. --packed-widths"; do
     index=$((index + 1))
     # shellcheck disable=SC2086 # flags are meant to split
     echo "[${flags:-text}] $("${client[@]}" --connect "$address" $flags "() (($index $index))")"
 done
 echo "listing:"
-"${client[@]}" --connect "$address" --protocol binary --sequences
+"${client[@]}" --connect "$address" --protocol binary --arity 1..

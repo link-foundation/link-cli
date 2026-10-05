@@ -304,19 +304,23 @@ the reply.
 - The protocol is detected per message, and the reply uses the same one:
   - **Text**: UTF-8 LiNo. A line holding a single `.` ends a message, and
     leading dots are doubled.
-  - **Binary**: a packet whose first byte is `0x10 | flags`. It continues
-    with the number of fixed doublets and sequences, then the doublets
-    `source target` and the sequences `size ref…`. Addresses are implicit,
-    and a reference is 1, 2, 4 or 8 bytes wide, depending on the highest
-    address.
+  - **Binary**: a packet of
+    [binary links notation](protocol/binary-links-notation.md) whose first
+    byte is `0x10 | flags`. It continues with the number of links, or with
+    section headers, and then the links themselves. Addresses are implicit,
+    and a reference is 1, 2, 4 or 8 bytes wide, depending on the largest
+    one.
 - Numbers and strings are encoded as links by default: unary numbers and
   code-point lists under marker points. Three options change the encoding:
   - `--external-references` sends them as Hybrid external references instead.
-  - `--sequences` replaces cons chains with variable-length records.
-  - `--progressive-widths` lets early links use narrower references.
+  - `--arity 2..3` or `--arity 1..` turns lists into single links of three or
+    any number of references, instead of cons chains of doublets.
+  - `--packed-widths` lets each section of a packet use the narrowest
+    references its links need.
 
-The full wire format, golden vectors and design notes are in
-[case-studies/issue-105](case-studies/issue-105/README.md).
+The wire format and its golden vectors are specified in
+[protocol/binary-links-notation.md](protocol/binary-links-notation.md). The
+design notes are in [case-studies/issue-105](case-studies/issue-105/README.md).
 
 ## Browser Runtime
 

@@ -272,6 +272,11 @@ pub fn is_internal(&self) -> bool { self.value < Self::half() }
   PackStream integers use `TINY_INT` inline (-16..127), then markers `0xC8/0xC9/0xCA/0xCB` for INT_8/16/32/64. This is again width escalation by a marker.
 
 ### Design hints derived from the above
+
+These hints came before the design. The format that was built is specified in
+[binary links notation](../../protocol/binary-links-notation.md): the separate
+sequence section became sections of any arity.
+
 - Binary frame idea: a magic/version handshake (Bolt), then per message `type byte + length` (PostgreSQL) or a varint length.
 - The header can carry `linkCount`, and the reference width follows from it: `count ≤ 2^(w-1)-1` (hybrid) or `≤ 2^w-1` (plain).
   This is equivalent to choosing a CBOR-like 1/2/4/8-byte argument once per message instead of once per value.

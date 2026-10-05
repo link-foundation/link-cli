@@ -64,7 +64,7 @@ End-to-end demo scripts live in
 ```bash
 clink --db data.links --serve 127.0.0.1:7777                 # serve a database
 clink --connect 127.0.0.1:7777 '() ((1 1))'                  # text protocol
-clink --connect 127.0.0.1:7777 --protocol binary --sequences # binary protocol, list all links
+clink --connect 127.0.0.1:7777 --protocol binary --arity 1.. # binary protocol, list all links
 ```
 
 In the library, `link_cli::protocol::LinksServer` serves any `NamedTypeLinks` store, and
