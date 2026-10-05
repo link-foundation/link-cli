@@ -32,6 +32,7 @@
 //! differ between the C# and the Rust stores.
 
 use super::error::{ProtocolError, ProtocolResult};
+use super::format::{format_document, format_link};
 use super::mapping::LinoDocument;
 use crate::changes_simplifier::simplify_changes;
 use crate::link::Link;
@@ -158,10 +159,8 @@ impl LinksOperation {
                 .map(link_lino)
                 .collect(),
             Self::Create { source, target } => {
-                let index = storage.create(*source, *target);
-                let created = storage
-                    .get_link(index)
-                    .unwrap_or_else(|| Link::new(index, *source, *target));
+                // `create` makes exactly `(index: source target)`.
+                let created = Link::new(storage.create(*source, *target), *source, *target);
                 storage.save()?;
                 changes_document(&[(Link::null(), created)])
             }
@@ -327,7 +326,8 @@ fn parse_change_side(side: &LiNo<String>) -> ProtocolResult<Link> {
         // single named link itself.
         link @ LiNo::Link { id: Some(_), .. } => parse_link(link),
         _ => Err(ProtocolError::malformed(format!(
-            "expected a change side, found {side:?}"
+            "expected a change side, found {}",
+            format_link(side)
         ))),
     }
 }
@@ -344,11 +344,13 @@ fn parse_link(link: &LiNo<String>) -> ProtocolResult<Link> {
                 parse_number(target)?,
             )),
             _ => Err(ProtocolError::malformed(format!(
-                "expected (index: source target), found {link:?}"
+                "expected (index: source target), found {}",
+                format_link(link)
             ))),
         },
         _ => Err(ProtocolError::malformed(format!(
-            "expected (index: source target), found {link:?}"
+            "expected (index: source target), found {}",
+            format_link(link)
         ))),
     }
 }
@@ -403,7 +405,8 @@ fn parse_number(value: &LiNo<String>) -> ProtocolResult<u32> {
     match value {
         LiNo::Ref(text) => parse_text_number(text),
         _ => Err(ProtocolError::malformed(format!(
-            "expected a number, found {value:?}"
+            "expected a number, found {}",
+            format_link(value)
         ))),
     }
 }
@@ -429,9 +432,15 @@ fn group(values: Vec<LiNo<String>>) -> LiNo<String> {
 }
 
 fn malformed_argument(expected: &str, argument: &LiNo<String>) -> ProtocolError {
-    ProtocolError::malformed(format!("expected {expected}, found {argument:?}"))
+    ProtocolError::malformed(format!(
+        "expected {expected}, found {}",
+        format_link(argument)
+    ))
 }
 
 fn malformed_reply(expected: &str, document: &[LiNo<String>]) -> ProtocolError {
-    ProtocolError::malformed(format!("expected a {expected} reply, found {document:?}"))
+    ProtocolError::malformed(format!(
+        "expected a {expected} reply, found {}",
+        format_document(document)
+    ))
 }

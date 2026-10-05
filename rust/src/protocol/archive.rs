@@ -154,10 +154,8 @@ fn decode_name(references: &[Reference]) -> ProtocolResult<(u32, String)> {
             )),
         })
         .collect::<ProtocolResult<Vec<_>>>()?;
-    let (&address, code_points) = values
-        .split_first()
-        .ok_or_else(|| ProtocolError::malformed("an archive name needs a link address"))?;
-    let name = code_points
+    // A packet link holds at least one reference: arity 0 is malformed.
+    let name = values[1..]
         .iter()
         .map(|&code_point| {
             u32::try_from(code_point)
@@ -166,5 +164,5 @@ fn decode_name(references: &[Reference]) -> ProtocolResult<(u32, String)> {
                 .ok_or_else(|| ProtocolError::malformed(format!("invalid code point {code_point}")))
         })
         .collect::<ProtocolResult<String>>()?;
-    Ok((store_address(address)?, name))
+    Ok((store_address(values[0])?, name))
 }

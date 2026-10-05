@@ -293,11 +293,13 @@ pub fn external_capacity(width: u8) -> u64 {
 }
 
 /// The narrowest width able to hold the internal address `address`.
-pub fn address_tier(address: u64, external_references: bool) -> u8 {
+pub fn address_tier(address: u64, external_references: bool) -> ProtocolResult<u8> {
     WIDTHS
         .into_iter()
         .find(|&width| internal_capacity(width, external_references) >= address)
-        .unwrap_or(8)
+        .ok_or_else(|| {
+            ProtocolError::Unencodable(format!("address {address} exceeds the internal range"))
+        })
 }
 
 fn width_mask(width: u8) -> u64 {
@@ -333,24 +335,15 @@ fn width_code(width: u8) -> ProtocolResult<u8> {
         .ok_or_else(|| ProtocolError::Unencodable(format!("invalid width {width}")))
 }
 
-fn width_from_code(code: u64) -> ProtocolResult<u8> {
-    usize::try_from(code)
-        .ok()
-        .and_then(|code| WIDTHS.get(code).copied())
-        .ok_or_else(|| ProtocolError::malformed(format!("invalid width code {code}")))
+/// The width of a two-bit width code; every code names a width.
+fn width_from_code(code: u64) -> u8 {
+    WIDTHS[(code & 0b11) as usize]
 }
 
 /// The narrowest width able to hold `reference`.
 pub fn reference_width(reference: Reference, external_references: bool) -> ProtocolResult<u8> {
     match reference {
-        Reference::Internal(address) => {
-            if address > internal_capacity(8, external_references) {
-                return Err(ProtocolError::Unencodable(format!(
-                    "address {address} exceeds the internal range"
-                )));
-            }
-            Ok(address_tier(address, external_references))
-        }
+        Reference::Internal(address) => address_tier(address, external_references),
         Reference::External(value) => {
             if !external_references {
                 return Err(ProtocolError::Unencodable(
@@ -392,7 +385,7 @@ impl Section {
     /// link count.
     fn read_header(reader: &mut dyn Read) -> ProtocolResult<(Self, u64)> {
         let shape = read_leb128(reader)?;
-        let width = width_from_code(shape & SHAPE_WIDTH_BITS)?;
+        let width = width_from_code(shape & SHAPE_WIDTH_BITS);
         let gap = if shape & SHAPE_HAS_GAP != 0 {
             read_leb128(reader)?
         } else {
@@ -607,21 +600,16 @@ impl LinksPacket {
         let packet = Self::read_from(&mut cursor, limits)?
             .ok_or_else(|| ProtocolError::malformed("empty input"))?;
         if !cursor.is_empty() {
-            return Err(ProtocolError::malformed(format!(
-                "{} trailing byte(s) after the packet",
-                cursor.len()
-            )));
+            return Err(ProtocolError::malformed("trailing bytes after the packet"));
         }
         Ok(packet)
     }
 
     /// Reads one packet from `reader`; `Ok(None)` on a clean end of stream.
     pub fn read_from(reader: &mut dyn Read, limits: &DecodeLimits) -> ProtocolResult<Option<Self>> {
-        let mut header = [0u8; 1];
-        if read_exact_or_eof(reader, &mut header)? {
+        let Some(header) = read_byte_or_eof(reader)? else {
             return Ok(None);
-        }
-        let header = header[0];
+        };
         if header & 0xF0 != BINARY_VERSION_1 {
             return Err(ProtocolError::malformed(format!(
                 "unsupported binary header byte 0x{header:02X}"
@@ -630,7 +618,7 @@ impl LinksPacket {
         let mut packet = LinksPacket::new(header & FLAG_EXTERNAL_REFERENCES != 0);
         let mut counts = Vec::new();
         if header & FLAG_EXPLICIT_LAYOUT == 0 {
-            let width = width_from_code(u64::from((header & WIDTH_BITS) >> WIDTH_SHIFT))?;
+            let width = width_from_code(u64::from((header & WIDTH_BITS) >> WIDTH_SHIFT));
             let count = read_leb128(reader)?;
             if count > 0 {
                 packet.sections.push(Section {
@@ -880,16 +868,15 @@ fn read_exact(reader: &mut dyn Read, buffer: &mut [u8]) -> ProtocolResult<()> {
     })
 }
 
-/// Fills `buffer`, returning `true` if the stream ended before the first byte.
-fn read_exact_or_eof(reader: &mut dyn Read, buffer: &mut [u8]) -> ProtocolResult<bool> {
+/// The next byte of `reader`, or `None` at a clean end of stream.
+fn read_byte_or_eof(reader: &mut dyn Read) -> ProtocolResult<Option<u8>> {
+    let mut byte = [0u8; 1];
     loop {
-        match reader.read(&mut buffer[..1]) {
-            Ok(0) => return Ok(true),
-            Ok(_) => break,
-            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+        match reader.read(&mut byte) {
+            Ok(0) => return Ok(None),
+            Ok(_) => return Ok(Some(byte[0])),
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
             Err(error) => return Err(error.into()),
         }
     }
-    read_exact(reader, &mut buffer[1..])?;
-    Ok(false)
 }

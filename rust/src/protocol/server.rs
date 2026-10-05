@@ -6,7 +6,7 @@
 //! nor locking. The protocol is detected per message and the reply uses the
 //! same protocol, so text and binary clients can share one server.
 
-use super::error::{ProtocolError, ProtocolResult};
+use super::error::ProtocolResult;
 use super::format::format_document;
 use super::links_operations::LinksOperation;
 use super::mapping::LinoDocument;
@@ -73,15 +73,6 @@ pub struct ShutdownHandle {
     jobs: Sender<Job>,
     stopping: Arc<AtomicBool>,
     address: SocketAddr,
-}
-
-impl std::fmt::Debug for Job {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Job::Request { document, .. } => write!(formatter, "Request({document:?})"),
-            Job::Shutdown => write!(formatter, "Shutdown"),
-        }
-    }
 }
 
 impl ShutdownHandle {
@@ -202,7 +193,12 @@ fn handle_connection(
     loop {
         let (document, format) = match read_any_document(&mut reader, &options.limits) {
             Ok(Some(message)) => message,
-            Ok(None) => return Ok(()),
+            Ok(None) => {
+                if options.trace {
+                    eprintln!("[server] client hung up");
+                }
+                return Ok(());
+            }
             Err(error) => {
                 // The stream may be out of sync; answer in text and hang up.
                 let reply = error_document(&error.to_string());
@@ -214,11 +210,11 @@ fn handle_connection(
         };
         let response = if options.accept.accepts(format) {
             let (reply, response) = mpsc::channel();
+            // Once `serve` returns, no request may touch the store.
             jobs.send(Job::Request { document, reply })
-                .map_err(|_| ProtocolError::malformed("server is shutting down"))?;
-            response
-                .recv()
-                .map_err(|_| ProtocolError::malformed("server is shutting down"))?
+                .ok()
+                .and_then(|()| response.recv().ok())
+                .unwrap_or_else(|| error_document("server is shutting down"))
         } else {
             error_document("this server does not accept this protocol")
         };

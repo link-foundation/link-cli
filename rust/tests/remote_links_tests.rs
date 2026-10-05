@@ -6,12 +6,17 @@ mod common;
 use common::{protocols, RunningServer};
 use doublets::data::Flow;
 use doublets::{Doublets, Error, Link as DoubletsLink, Links};
+use link_cli::protocol::links_operations::{
+    matches, parse_changes, parse_count, parse_link_reply, parse_links, parse_name,
+};
 use link_cli::protocol::{
-    links_operations::matches, parse_document, LinksOperation, LinoProtocol, RemoteLinks,
-    ServerOptions, TextLinoProtocol,
+    parse_document, LinksOperation, LinoProtocol, ProtocolError, RemoteLinks, ServerOptions,
+    TextLinoProtocol,
 };
 use link_cli::{simplify_changes, Link, NamedTypeLinks, NamedTypesDecorator, QueryProcessor};
+use std::net::TcpListener;
 use std::panic::{self, AssertUnwindSafe};
+use std::thread;
 use tempfile::NamedTempFile;
 
 /// Changes as the query processor reports them.
@@ -296,11 +301,180 @@ fn only_operation_shaped_documents_are_operations() {
         "(create: (1))",
         "(update: (1 2))",
         "(delete: x)",
+        "(delete: -1)",
+        "(get-name: (1 2))",
         "(set-name: (1))",
+        "(set-name: (1 (a b)))",
         "(get-by-name: (a b))",
+        "(remove-name: 4294967296)",
     ] {
-        assert!(parse(malformed).is_err(), "{malformed}");
+        assert!(
+            matches!(parse(malformed), Err(ProtocolError::Malformed(_))),
+            "{malformed}"
+        );
     }
+}
+
+#[test]
+fn replies_parse_back_to_what_they_carry() {
+    let parse = |text: &str| parse_document(text).unwrap();
+
+    assert_eq!(parse_count(&parse("(count: 3)")).unwrap(), 3);
+    assert_eq!(
+        parse_links(&parse("(1: 2 3)")).unwrap(),
+        vec![Link::new(1, 2, 3)]
+    );
+    assert_eq!(
+        parse_changes(&parse("() ((1: 0 0))\n((1: 0 0)) ()")).unwrap(),
+        vec![
+            (Link::null(), Link::new(1, 0, 0)),
+            (Link::new(1, 0, 0), Link::null())
+        ]
+    );
+    // A side that is a single named link may lose its wrapper.
+    assert_eq!(
+        parse_changes(&parse("(1: 1 1) (1: 1 2)")).unwrap(),
+        vec![(Link::new(1, 1, 1), Link::new(1, 1, 2))]
+    );
+    assert_eq!(
+        parse_name(&parse("(name: 'a name')")).unwrap().as_deref(),
+        Some("a name")
+    );
+    assert_eq!(parse_name(&[]).unwrap(), None);
+    assert_eq!(parse_link_reply(&parse("(link: 5)")).unwrap(), Some(5));
+    assert_eq!(parse_link_reply(&[]).unwrap(), None);
+}
+
+#[test]
+fn malformed_replies_are_rejected() {
+    for reply in [
+        "(count: 1 2)",
+        "(count: x)",
+        "(name: a b)",
+        "(link: 1 2)",
+        "(1 2)",
+        "((1 2) x)",
+    ] {
+        let document = parse_document(reply).unwrap();
+        for result in [
+            parse_count(&document).map(|_| ()),
+            parse_links(&document).map(|_| ()),
+            parse_changes(&document).map(|_| ()),
+            parse_name(&document).map(|_| ()),
+            parse_link_reply(&document).map(|_| ()),
+        ] {
+            assert!(
+                matches!(result, Err(ProtocolError::Malformed(_))),
+                "{reply}: {result:?}"
+            );
+        }
+    }
+    // Each kind of misshapen change side and link.
+    for (reply, detail) in [
+        ("(1 2) ()", "expected a change side, found (1 2)"),
+        ("((1 2)) ()", "expected (index: source target), found (1 2)"),
+        (
+            "((1: 2)) ()",
+            "expected (index: source target), found (1: 2)",
+        ),
+        ("((x: 1 2)) ()", "expected a number, found 'x'"),
+        ("((1: (2 3) 4)) ()", "expected a number, found (2 3)"),
+    ] {
+        match parse_changes(&parse_document(reply).unwrap()) {
+            Err(ProtocolError::Malformed(message)) => {
+                assert!(message.contains(detail), "{reply}: {message}")
+            }
+            other => panic!("{reply}: {other:?}"),
+        }
+    }
+}
+
+/// A server that answers every request with `reply`, whatever it asks.
+fn scripted_server(reply: &'static str) -> RemoteLinks {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    thread::spawn(move || {
+        let (stream, _) = listener.accept().unwrap();
+        let mut reader = std::io::BufReader::new(stream.try_clone().unwrap());
+        let mut writer = stream;
+        let protocol = TextLinoProtocol::new();
+        let reply = parse_document(reply).unwrap();
+        while let Ok(Some(_)) = protocol.read_document(&mut reader) {
+            if protocol.write_document(&mut writer, &reply).is_err() {
+                return;
+            }
+        }
+    });
+    RemoteLinks::connect(address, TextLinoProtocol::new()).unwrap()
+}
+
+#[test]
+fn replies_that_miss_the_requested_change_are_errors() {
+    // An empty reply is a valid document that reports no change at all.
+    let mut remote = scripted_server("");
+    let error = |result: anyhow::Result<Link>| result.unwrap_err().to_string();
+    assert_eq!(
+        error(remote.update_observed(1, 1, 1, &mut |_, _| {})),
+        "malformed message: the reply holds no change of 1"
+    );
+    assert_eq!(
+        error(remote.delete_observed(2, &mut |_, _| {})),
+        "malformed message: the reply holds no change of 2"
+    );
+    assert_eq!(
+        NamedTypeLinks::set_name(&mut remote, 1, "x")
+            .unwrap_err()
+            .to_string(),
+        "the set-name reply holds no link"
+    );
+    assert_eq!(NamedTypeLinks::get_by_name(&mut remote, "x").unwrap(), None);
+    let panic = panic::catch_unwind(AssertUnwindSafe(|| {
+        NamedTypeLinks::create(&mut remote, 1, 1)
+    }))
+    .expect_err("a create must create a link");
+    let message = panic.downcast_ref::<String>().unwrap();
+    assert!(
+        message.ends_with("the create reply holds no created link"),
+        "{message}"
+    );
+}
+
+#[test]
+fn reads_stop_where_the_handler_breaks() {
+    let server = RunningServer::start(ServerOptions::default(), false);
+    let mut remote = RemoteLinks::connect(server.address, TextLinoProtocol::new()).unwrap();
+    NamedTypeLinks::create(&mut remote, 1, 1);
+    NamedTypeLinks::create(&mut remote, 2, 2);
+    let mut visited = 0;
+    let flow = remote.each_links(&[], &mut |_| {
+        visited += 1;
+        Flow::Break
+    });
+    assert_eq!((flow, visited), (Flow::Break, 1));
+    let mut visited = 0;
+    let flow = remote.each_links(&[], &mut |_| {
+        visited += 1;
+        Flow::Continue
+    });
+    assert_eq!((flow, visited), (Flow::Continue, 2));
+    assert_eq!(remote.count_links(&[]), 2);
+}
+
+#[test]
+fn misshapen_name_replies_are_errors() {
+    let mut remote = scripted_server("(count: 1)");
+    assert_eq!(
+        NamedTypeLinks::get_name(&mut remote, 1)
+            .unwrap_err()
+            .to_string(),
+        "malformed message: expected a name reply, found (count: 1)"
+    );
+    assert_eq!(
+        NamedTypeLinks::get_by_name(&mut remote, "x")
+            .unwrap_err()
+            .to_string(),
+        "malformed message: expected a link reply, found (count: 1)"
+    );
 }
 
 #[test]

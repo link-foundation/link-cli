@@ -4,8 +4,8 @@
 
 use link_cli::cli::{Cli, CliCommand};
 use link_cli::protocol::{
-    export_store, import_store, LinksPacket, Reference, RemoteLinks, ServerOptions,
-    TextLinoProtocol,
+    export_store, export_store_file, import_store, import_store_file, LinksPacket, Reference,
+    RemoteLinks, ServerOptions, TextLinoProtocol,
 };
 use link_cli::{Link, NamedTypeLinks, NamedTypesDecorator};
 use std::fs;
@@ -361,4 +361,23 @@ fn the_cli_reports_a_missing_archive() {
 
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("Failed to read the store archive"));
+}
+
+#[test]
+fn archive_file_failures_name_the_file() {
+    let directory = tempdir().unwrap();
+    let mut source = store(&directory, "source");
+    let missing = directory.path().join("missing").join("store.bin");
+    assert_eq!(
+        export_store_file(&mut source, &missing)
+            .unwrap_err()
+            .to_string(),
+        format!("Failed to write the store archive: {}", missing.display())
+    );
+    assert_eq!(
+        import_store_file(&mut source, &missing)
+            .unwrap_err()
+            .to_string(),
+        format!("Failed to read the store archive: {}", missing.display())
+    );
 }

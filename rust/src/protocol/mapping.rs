@@ -462,12 +462,9 @@ impl<'a> Decoder<'a> {
                 let LiNo::Ref(id) = self.decode(id, depth + 1, budget)? else {
                     return Err(ProtocolError::malformed("a link id must be a reference"));
                 };
-                let LiNo::Link { values, .. } = self.list(values, depth, budget)? else {
-                    unreachable!("list always returns a link");
-                };
                 Ok(LiNo::Link {
                     id: Some(id),
-                    values,
+                    values: self.values(values, depth, budget)?,
                 })
             }
             _ => Err(ProtocolError::malformed(format!(
@@ -482,11 +479,22 @@ impl<'a> Decoder<'a> {
         depth: usize,
         budget: &mut usize,
     ) -> ProtocolResult<LiNo<String>> {
-        let values = elements
+        Ok(LiNo::Link {
+            id: None,
+            values: self.values(elements, depth, budget)?,
+        })
+    }
+
+    fn values(
+        &self,
+        elements: &[Reference],
+        depth: usize,
+        budget: &mut usize,
+    ) -> ProtocolResult<Vec<LiNo<String>>> {
+        elements
             .iter()
             .map(|&element| self.decode(element, depth + 1, budget))
-            .collect::<ProtocolResult<Vec<_>>>()?;
-        Ok(LiNo::Link { id: None, values })
+            .collect()
     }
 
     fn decode(

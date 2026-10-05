@@ -10,9 +10,10 @@ use link_cli::protocol::packet::{
 use link_cli::protocol::{
     decode_document, encode_document, format_document, format_reference, parse_document,
     read_any_document, ArityRange, BinaryLinoOptions, BinaryLinoProtocol, DecodeLimits,
-    LinksPacket, LinoProtocol, MessageFormat, ProtocolError, Reference, Section, TextLinoProtocol,
+    LinksPacket, LinoConnection, LinoProtocol, MessageFormat, ProtocolError, Reference, Section,
+    TextLinoProtocol,
 };
-use std::io::Cursor;
+use std::io::{self, Cursor, Read};
 
 const CORPUS: &[&str] = &[
     "() ((1 1))",
@@ -186,6 +187,16 @@ fn canonical_text_round_trips_the_corpus() {
         format_document(&parse_document("((1: 1 1)) ((1: 1 2))").unwrap()),
         "((1: 1 1)) ((1: 1 2))"
     );
+    let empty_named_link = links_notation::LiNo::Link {
+        id: Some("a".to_string()),
+        values: vec![],
+    };
+    // Only a binary message carries an id without values; links-notation reads its text back as the reference.
+    assert_eq!(format_document(&[empty_named_link]), "(a:)");
+    assert_eq!(
+        parse_document("(a:)").unwrap(),
+        vec![links_notation::LiNo::Ref("a".to_string())]
+    );
 }
 
 #[test]
@@ -228,18 +239,24 @@ fn references_are_quoted_only_when_needed() {
 
 #[test]
 fn width_tiers_follow_the_number_of_links() {
-    assert_eq!(address_tier(0, false), 1);
-    assert_eq!(address_tier(255, false), 1);
-    assert_eq!(address_tier(256, false), 2);
-    assert_eq!(address_tier(65_535, false), 2);
-    assert_eq!(address_tier(65_536, false), 4);
-    assert_eq!(address_tier(u64::from(u32::MAX), false), 4);
-    assert_eq!(address_tier(u64::from(u32::MAX) + 1, false), 8);
+    assert_eq!(address_tier(0, false).unwrap(), 1);
+    assert_eq!(address_tier(255, false).unwrap(), 1);
+    assert_eq!(address_tier(256, false).unwrap(), 2);
+    assert_eq!(address_tier(65_535, false).unwrap(), 2);
+    assert_eq!(address_tier(65_536, false).unwrap(), 4);
+    assert_eq!(address_tier(u64::from(u32::MAX), false).unwrap(), 4);
+    assert_eq!(address_tier(u64::from(u32::MAX) + 1, false).unwrap(), 8);
     // External references take the top bit, halving every range.
-    assert_eq!(address_tier(127, true), 1);
-    assert_eq!(address_tier(128, true), 2);
-    assert_eq!(address_tier(32_767, true), 2);
-    assert_eq!(address_tier(32_768, true), 4);
+    assert_eq!(address_tier(127, true).unwrap(), 1);
+    assert_eq!(address_tier(128, true).unwrap(), 2);
+    assert_eq!(address_tier(32_767, true).unwrap(), 2);
+    assert_eq!(address_tier(32_768, true).unwrap(), 4);
+    assert_eq!(address_tier(u64::MAX, false).unwrap(), 8);
+    // No width holds an internal address in the external half.
+    assert!(matches!(
+        address_tier(1 << 63, true),
+        Err(ProtocolError::Unencodable(_))
+    ));
     assert_eq!(internal_capacity(8, false), u64::MAX);
     assert_eq!(internal_capacity(8, true), i64::MAX as u64);
     assert_eq!(external_capacity(1), 127);
@@ -573,44 +590,102 @@ fn expect_error(bytes: &[u8], limits: DecodeLimits) -> ProtocolError {
     protocol.decode(bytes).expect_err("must be rejected")
 }
 
+/// Asserts that `bytes` is rejected as malformed because of `detail`.
+fn assert_malformed(bytes: &[u8], detail: &str) {
+    match expect_error(bytes, DecodeLimits::default()) {
+        ProtocolError::Malformed(message) => {
+            assert_eq!(message, detail, "{}", hex(bytes))
+        }
+        other => panic!("{}: {other}", hex(bytes)),
+    }
+}
+
 #[test]
 fn malformed_packets_are_rejected() {
-    let limits = DecodeLimits::default();
-    let malformed = |bytes: &[u8]| {
-        assert!(
-            matches!(expect_error(bytes, limits), ProtocolError::Malformed(_)),
-            "{}",
-            hex(bytes)
-        );
-    };
-    malformed(&[]);
-    malformed(&[0x20, 0x00]); // unknown version nibble
-    malformed(&[0x10, 0x01, 0x06, 0x00]); // refers to itself
-    malformed(&[0x10, 0x01, 0x07, 0x00]); // refers forward
-    malformed(&[0x10, 0x02, 0x00]); // truncated
-    malformed(&[0x10, 0x00, 0x00]); // trailing byte
-    malformed(&[
-        0x10, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
-    ]); // LEB128 overflow
-    malformed(&[0x10, 0x01, 0x01, 0x01]); // root is not a list
-    malformed(&[0x10, 0x02, 0x00, 0x02, 0x04, 0x06]); // marker 2 used as a value
-    malformed(&[0x10, 0x01, 0x04, 0x02]); // a bare marker in a list chain
-    malformed(&[0x16, 0x00]); // the explicit layout keeps the width bits clear
-    malformed(&[0x12, 0x01, 0x04, 0x05, 0x00]); // arity 0
-    malformed(&[0x12, 0x01, 0x18, 0x01, 0x01, 0x05, 0x00]); // length 6 in arity 1..2
-    malformed(&[
-        0x12, 0x01, 0xf8, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x0f, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00,
-    ]); // arity overflows
-    malformed(&[
-        0x12, 0x02, 0x04, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x01, 0x20,
-        0x01,
-    ]); // addresses overflow
-    malformed(&[0x12, 0x01, 0x24, 0x06, 0x01, 0x01, 0x01]); // LiNo links start at 6, not 7
-    malformed(&[
-        0x12, 0x02, 0x24, 0x05, 0x01, 0x24, 0x01, 0x01, 0x01, 0x01, 0x04, 0x06,
-    ]); // a hole
-        // (String (0x110000)) is not a valid code point.
+    // Each case names the exact problem, so none passes for another reason.
+    for (bytes, detail) in [
+        ("", "empty input"),
+        ("20 00", "unsupported binary header byte 0x20"),
+        ("10 01 06 00", "link 6 refers to Internal(6), which is not an earlier link"),
+        ("10 01 07 00", "link 6 refers to Internal(7), which is not an earlier link"),
+        ("10 02 00", "unexpected end of packet"),
+        ("10 00 00", "trailing bytes after the packet"),
+        // A tenth byte above 1, then an eleventh byte.
+        (
+            "10 ff ff ff ff ff ff ff ff ff 7f",
+            "LEB128 value overflows 64 bits",
+        ),
+        (
+            "10 80 80 80 80 80 80 80 80 80 81",
+            "LEB128 value overflows 64 bits",
+        ),
+        ("10 01 01 01", "the root link is not a list"),
+        // The chain ends in marker 2, not null.
+        ("10 02 00 02 04 06", "broken element chain"),
+        ("10 01 04 02", "broken element chain"),
+        ("10 02 02 00 04 06", "marker 2 used as a value"),
+        (
+            "10 03 01 00 06 00 04 07",
+            "marker 1 cannot start a typed value",
+        ),
+        // (Number) alone.
+        (
+            "12 02 14 05 01 20 02 02 06 00 04 07",
+            "a number needs exactly one value",
+        ),
+        ("10 03 05 00 06 00 04 07", "an identified link needs an id"),
+        // (Number 3): marker 3 is no number.
+        ("10 03 02 03 06 00 04 07", "expected a unary number"),
+        // (Number 6) where link 6 is (5 5), not a unary number.
+        (
+            "10 05 05 05 06 00 02 07 08 00 04 09",
+            "expected a unary number",
+        ),
+        // The id is ().
+        (
+            "10 04 00 00 05 06 07 00 04 08",
+            "a link id must be a reference",
+        ),
+        (
+            "16 00",
+            "the explicit layout keeps the header width bits clear",
+        ),
+        ("12 01 04 05 00", "arity must be at least 1"),
+        // A link of 6 in a section of arity 1..2.
+        (
+            "12 01 18 01 01 05 00",
+            "link length outside the section arity 1..2",
+        ),
+        (
+            "12 01 f8 ff ff ff ff ff ff ff ff 01 ff ff ff ff ff ff ff ff ff 01 00",
+            "arity range overflows 64 bits",
+        ),
+        // The gap, then the count.
+        (
+            "12 01 24 ff ff ff ff ff ff ff ff ff 01 01",
+            "addresses overflow 64 bits",
+        ),
+        (
+            "12 01 20 ff ff ff ff ff ff ff ff ff 01",
+            "addresses overflow 64 bits",
+        ),
+        (
+            "12 01 24 06 01 01 01",
+            "a LiNo packet stores its links contiguously from address 6, found link 7 where 6 belongs",
+        ),
+        // A hole.
+        (
+            "12 02 24 05 01 24 01 01 01 01 04 06",
+            "a LiNo packet stores its links contiguously from address 6, found link 8 where 7 belongs",
+        ),
+    ] {
+        assert_malformed(&unhex(bytes), detail);
+    }
+}
+
+#[test]
+fn invalid_code_points_are_rejected() {
+    // (String (0x110000)) is not a valid code point.
     let links = [
         vec![Reference::External(0x11_0000), Reference::NULL],
         vec![Reference::Internal(3), Reference::Internal(6)],
@@ -618,11 +693,12 @@ fn malformed_packets_are_rejected() {
         vec![Reference::Internal(4), Reference::Internal(8)],
     ];
     let links = (6..).zip(links).collect::<Vec<_>>();
-    malformed(
+    assert_malformed(
         &LinksPacket::pack(true, &links, false)
             .unwrap()
             .to_bytes()
             .unwrap(),
+        "invalid code point 1114112",
     );
 }
 
@@ -666,7 +742,11 @@ fn hostile_packets_hit_limits() {
         max_nodes: 1 << 12,
         ..DecodeLimits::default()
     };
-    limited(&bomb.to_bytes().unwrap(), small_budget);
+    let limit = |bytes: &[u8], limits| expect_error(bytes, limits).to_string();
+    assert_eq!(
+        limit(&bomb.to_bytes().unwrap(), small_budget),
+        "limit exceeded: too many LiNo nodes"
+    );
 
     let deep = format!("{}x{}", "(y ".repeat(40), ")".repeat(40));
     let bytes = BinaryLinoProtocol::new()
@@ -676,7 +756,22 @@ fn hostile_packets_hit_limits() {
         max_depth: 10,
         ..DecodeLimits::default()
     };
-    limited(&bytes, shallow);
+    assert_eq!(
+        limit(&bytes, shallow),
+        "limit exceeded: nesting deeper than 10"
+    );
+
+    let three_links = BinaryLinoProtocol::new()
+        .encode(&parse_document("a b c").unwrap())
+        .unwrap();
+    let two_nodes = DecodeLimits {
+        max_nodes: 2,
+        ..DecodeLimits::default()
+    };
+    assert_eq!(
+        limit(&three_links, two_nodes),
+        "limit exceeded: chain too long"
+    );
     assert!(DecodeLimits::unlimited().max_links == u64::MAX);
 }
 
@@ -701,6 +796,62 @@ fn text_messages_are_dot_stuffed() {
         .is_none());
 }
 
+/// Fails once with `kind`, then reads `bytes`.
+struct Hiccup {
+    kind: Option<io::ErrorKind>,
+    bytes: Cursor<&'static [u8]>,
+}
+
+impl Hiccup {
+    fn new(kind: io::ErrorKind, bytes: &'static [u8]) -> Self {
+        Self {
+            kind: Some(kind),
+            bytes: Cursor::new(bytes),
+        }
+    }
+}
+
+impl Read for Hiccup {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        match self.kind.take() {
+            Some(kind) => Err(kind.into()),
+            None => self.bytes.read(buffer),
+        }
+    }
+}
+
+#[test]
+fn stream_failures_are_io_errors_and_interruptions_are_retried() {
+    let limits = DecodeLimits::default();
+    let read = |reader: &mut dyn Read| LinksPacket::read_from(reader, &limits);
+
+    let packet = read(&mut Hiccup::new(io::ErrorKind::Interrupted, &[0x10, 0x00]));
+    assert_eq!(packet.unwrap().unwrap().links().count(), 0);
+    // Before the header, then inside the packet.
+    let reset = io::ErrorKind::ConnectionReset;
+    assert!(matches!(
+        read(&mut Hiccup::new(reset, &[])),
+        Err(ProtocolError::Io(_))
+    ));
+    assert!(matches!(
+        read(&mut [0x10u8].chain(Hiccup::new(reset, &[]))),
+        Err(ProtocolError::Io(_))
+    ));
+}
+
+#[test]
+fn connections_decorate_any_byte_stream() {
+    let document = parse_document("() ((1 1))").unwrap();
+    let mut connection = LinoConnection::new(Cursor::new(Vec::new()), TextLinoProtocol::new());
+    assert_eq!(connection.protocol().limits, DecodeLimits::default());
+    // The cursor sits after what was sent, so no reply follows.
+    assert_eq!(
+        connection.request(&document).unwrap_err().to_string(),
+        "malformed message: connection closed before the reply"
+    );
+    assert_eq!(connection.into_inner().into_inner(), b"() ((1 1))\n.\n");
+}
+
 #[test]
 fn text_messages_accept_crlf_and_reject_truncation() {
     let mut reader = Cursor::new(b"() ((1 1))\r\n.\r\n".to_vec());
@@ -716,11 +867,17 @@ fn text_messages_accept_crlf_and_reject_truncation() {
         Some(Vec::new())
     );
 
-    let mut truncated = Cursor::new(b"() ((1 1))\n".to_vec());
-    assert!(matches!(
-        TextLinoProtocol::new().read_document(&mut truncated),
-        Err(ProtocolError::Malformed(_))
-    ));
+    // Without the terminator line, with or without the last newline.
+    for truncated in ["() ((1 1))\n", "() ((1 1))"] {
+        let mut truncated = Cursor::new(truncated.as_bytes());
+        assert_eq!(
+            TextLinoProtocol::new()
+                .read_document(&mut truncated)
+                .unwrap_err()
+                .to_string(),
+            "malformed message: stream ended before the '.' terminator line"
+        );
+    }
 
     let tiny = TextLinoProtocol {
         limits: DecodeLimits {
@@ -729,10 +886,19 @@ fn text_messages_accept_crlf_and_reject_truncation() {
         },
     };
     let mut long = Cursor::new(format!("{}\n.\n", "a".repeat(100)).into_bytes());
-    assert!(matches!(
-        tiny.read_document(&mut long),
-        Err(ProtocolError::LimitExceeded(_))
-    ));
+    assert_eq!(
+        tiny.read_document(&mut long).unwrap_err().to_string(),
+        "limit exceeded: text message longer than 8 bytes"
+    );
+
+    let mut invalid_utf8 = Cursor::new(vec![0xC3, 0x28, b'\n', b'.', b'\n']);
+    assert_eq!(
+        TextLinoProtocol::new()
+            .read_document(&mut invalid_utf8)
+            .unwrap_err()
+            .to_string(),
+        "malformed message: text message is not valid UTF-8"
+    );
 }
 
 #[test]

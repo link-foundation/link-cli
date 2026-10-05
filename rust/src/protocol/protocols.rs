@@ -232,12 +232,15 @@ pub fn read_any_document(
             .read_document(reader)?
             .map(|document| (document, MessageFormat::Text)));
     }
-    let Some(packet) = LinksPacket::read_from(reader, limits)? else {
-        return Ok(None);
-    };
-    let options = BinaryLinoOptions::of_packet(&packet);
-    let document = decode_document(&packet, limits)?;
-    Ok(Some((document, MessageFormat::Binary(options))))
+    LinksPacket::read_from(reader, limits)?
+        .map(|packet| {
+            let document = decode_document(&packet, limits)?;
+            Ok((
+                document,
+                MessageFormat::Binary(BinaryLinoOptions::of_packet(&packet)),
+            ))
+        })
+        .transpose()
 }
 
 /// A byte stream decorated with a [`LinoProtocol`].
