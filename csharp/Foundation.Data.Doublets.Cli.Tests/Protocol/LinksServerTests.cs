@@ -7,56 +7,6 @@ namespace Foundation.Data.Doublets.Cli.Tests.Protocol;
 /// <summary>LiNo substitution operations over TCP (issue #105).</summary>
 public sealed class LinksServerTests
 {
-    private sealed class RunningServer : IDisposable
-    {
-        private readonly string _databaseFilename = Path.GetTempFileName();
-        private readonly LinksServer _server;
-        private readonly Thread _thread;
-        private Exception? _failure;
-
-        public RunningServer(LinksServerOptions? options = null)
-        {
-            _server = LinksServer.Bind("127.0.0.1", 0, options);
-            _thread = new Thread(() =>
-            {
-                try
-                {
-                    using var links = new NamedTypesDecorator<uint>(_databaseFilename);
-                    _server.Serve(links);
-                }
-                catch (Exception error)
-                {
-                    _failure = error;
-                }
-            })
-            { IsBackground = true };
-            _thread.Start();
-        }
-
-        public int Port => _server.LocalEndPoint.Port;
-
-        public LinksClient Client(ILinoProtocol protocol) => LinksClient.Connect("127.0.0.1", Port, protocol);
-
-        public void Stop()
-        {
-            _server.Shutdown();
-            Assert.True(_thread.Join(TimeSpan.FromSeconds(30)), "the server did not stop");
-            Assert.Null(_failure);
-        }
-
-        public void Dispose()
-        {
-            Stop();
-            File.Delete(_databaseFilename);
-            File.Delete(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(_databaseFilename));
-        }
-    }
-
-    private static IEnumerable<ILinoProtocol> Protocols() =>
-        LinoProtocolCodecTests.AllOptions()
-            .Select(options => (ILinoProtocol)new BinaryLinoProtocol(options))
-            .Prepend(new TextLinoProtocol());
-
     private static TcpClient RawConnection(RunningServer server)
     {
         return new TcpClient("127.0.0.1", server.Port) { ReceiveTimeout = 10_000 };
@@ -65,7 +15,7 @@ public sealed class LinksServerTests
     [Fact]
     public void CrudWorksOverEveryProtocol()
     {
-        foreach (var protocol in Protocols())
+        foreach (var protocol in RunningServer.Protocols())
         {
             using var server = new RunningServer();
             using var client = server.Client(protocol);
@@ -102,7 +52,7 @@ public sealed class LinksServerTests
     public void QueryErrorsComeBackAsRemoteErrors()
     {
         using var server = new RunningServer();
-        foreach (var protocol in Protocols())
+        foreach (var protocol in RunningServer.Protocols())
         {
             using var client = server.Client(protocol);
             var error = Assert.Throws<LinoProtocolException>(() => client.Query("((99: 1 1)) ()"));

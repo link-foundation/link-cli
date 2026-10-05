@@ -256,10 +256,11 @@ public sealed class LinksServer : IDisposable
     /// Executes one request against <paramref name="links"/>.
     /// </summary>
     /// <remarks>
-    /// A non-empty document is a substitution query; the reply holds one
-    /// <c>(before) (after)</c> line per change, exactly like <c>clink --changes</c>.
-    /// The empty document asks for every link, one <c>(index: source target)</c>
-    /// per line. Failures produce an <see cref="ErrorDocument"/>.
+    /// A <see cref="LinksOperation"/> is one call of the links interface, made by
+    /// <see cref="RemoteLinks"/>. Any other non-empty document is a substitution
+    /// query; the reply holds one <c>(before) (after)</c> line per change, exactly
+    /// like <c>clink --changes</c>. The empty document asks for every link, one
+    /// <c>(index: source target)</c> per line. Failures produce an <see cref="ErrorDocument"/>.
     /// </remarks>
     public static IReadOnlyList<LinoLink> ExecuteRequest(
         INamedTypesLinks<uint> links,
@@ -270,6 +271,10 @@ public sealed class LinksServer : IDisposable
         ArgumentNullException.ThrowIfNull(document);
         try
         {
+            if (LinksOperation.FromDocument(document) is { } operation)
+            {
+                return operation.Execute(links);
+            }
             if (document.Count == 0)
             {
                 var any = links.Constants.Any;
@@ -291,11 +296,7 @@ public sealed class LinksServer : IDisposable
                 },
             });
             return ChangesSimplifier.SimplifyChanges(changes)
-                .Select(change => LinoFormat.Link(null, new List<LinoLink>
-                {
-                    ChangeSide(links, change.Before),
-                    ChangeSide(links, change.After),
-                }))
+                .Select(change => LinksOperation.ChangeLino(change.Before, change.After, link => LinkLino(links, link)))
                 .ToList();
         }
         catch (Exception error) when (error is not OutOfMemoryException)
@@ -311,10 +312,6 @@ public sealed class LinksServer : IDisposable
             LinoFormat.Reference(ReferenceName(links, link.Source)),
             LinoFormat.Reference(ReferenceName(links, link.Target)),
         });
-
-    // `()` for a missing side of a change, `((index: source target))` otherwise.
-    private static LinoLink ChangeSide(INamedTypesLinks<uint> links, DoubletLink link) =>
-        LinoFormat.Link(null, link.IsNull() ? new List<LinoLink>() : new List<LinoLink> { LinkLino(links, link) });
 
     private static string ReferenceName(INamedTypesLinks<uint> links, uint id) =>
         links.GetName(id) ?? id.ToString(System.Globalization.CultureInfo.InvariantCulture);
