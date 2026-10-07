@@ -5,7 +5,8 @@
 //!
 //! - [`TextLinoProtocol`]: UTF-8 LiNo text, each message ended by a line
 //!   holding only `.` (SMTP-style dot-stuffing keeps the framing unambiguous).
-//! - [`BinaryLinoProtocol`]: a self-delimiting [`LinksPacket`] made of
+//! - [`BinaryLinoProtocol`]: a self-delimiting [`LinksPacket`] of binary links
+//!   notation, made of
 //!   sections of links that share one reference width (1, 2, 4 or 8 bytes)
 //!   and one [arity range](ArityRange). By default every link is a doublet
 //!   and the whole packet uses the narrowest width that fits; the options
@@ -13,6 +14,11 @@
 //!   [arity](BinaryLinoOptions::arity) (for example `2..3` or `1..`) and
 //!   [packed widths](BinaryLinoOptions::packed_widths) can be switched on
 //!   one by one.
+//!
+//! The binary links notation itself (packets, the LiNo mapping, the canonical
+//! text form) comes from [`links_notation::binary`]; this module re-exports
+//! it and adds the transport: message framing, the server, the client and the
+//! store archive.
 //!
 //! Both implement [`LinoProtocol`], so a [`LinoConnection`] or a
 //! [`LinksClient`] switches protocol by swapping one value. A
@@ -37,10 +43,7 @@
 pub mod archive;
 mod client;
 mod error;
-mod format;
 pub mod links_operations;
-mod mapping;
-pub mod packet;
 mod protocols;
 mod remote_links;
 mod server;
@@ -48,13 +51,16 @@ mod server;
 pub use archive::{export_store, export_store_file, import_store, import_store_file};
 pub use client::LinksClient;
 pub use error::{ProtocolError, ProtocolResult};
-pub use format::{format_document, format_link, format_reference, parse_document};
+pub use links_notation::binary::packet;
+pub use links_notation::binary::{
+    decode_document, encode_document, encode_document_with_limits, format_document, format_link,
+    format_reference, parse_document, ArityRange, BinaryError, BinaryLinoOptions, DecodeLimits,
+    LinksPacket, LinoDocument, Reference, Section,
+};
 pub use links_operations::LinksOperation;
-pub use mapping::{decode_document, encode_document, BinaryLinoOptions, LinoDocument};
-pub use packet::{ArityRange, DecodeLimits, LinksPacket, Reference, Section};
 pub use protocols::{
     is_binary_start, read_any_document, BinaryLinoProtocol, LinoConnection, LinoProtocol,
-    MessageFormat, TextLinoProtocol,
+    MessageFormat, ProtocolLimits, TextLinoProtocol, DEFAULT_MAX_TEXT_BYTES,
 };
 pub use remote_links::RemoteLinks;
 pub use server::{

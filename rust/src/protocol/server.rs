@@ -7,14 +7,12 @@
 //! same protocol, so text and binary clients can share one server.
 
 use super::error::ProtocolResult;
-use super::format::format_document;
 use super::links_operations::LinksOperation;
-use super::mapping::LinoDocument;
-use super::packet::DecodeLimits;
-use super::protocols::{read_any_document, MessageFormat};
+use super::protocols::{read_any_document, MessageFormat, ProtocolLimits};
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
 use crate::query_processor::QueryProcessor;
+use links_notation::binary::{format_document, LinoDocument};
 use links_notation::LiNo;
 use std::io::{BufReader, BufWriter, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
@@ -56,7 +54,7 @@ pub struct ServerOptions {
     /// Protocols the server answers.
     pub accept: AcceptedProtocols,
     /// Limits applied to incoming messages.
-    pub limits: DecodeLimits,
+    pub limits: ProtocolLimits,
 }
 
 enum Job {

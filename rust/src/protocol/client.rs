@@ -1,10 +1,9 @@
 //! A TCP client for [`LinksServer`](super::LinksServer).
 
 use super::error::{ProtocolError, ProtocolResult};
-use super::format::{format_document, parse_document};
-use super::mapping::LinoDocument;
 use super::protocols::{LinoConnection, LinoProtocol};
 use super::server::error_message;
+use links_notation::binary::{format_document, parse_document, LinoDocument};
 use std::net::{TcpStream, ToSocketAddrs};
 
 /// Sends substitution queries to a LiNo server over any [`LinoProtocol`].

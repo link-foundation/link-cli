@@ -15,10 +15,10 @@
 //! the same bytes again.
 
 use super::error::{ProtocolError, ProtocolResult};
-use super::packet::{DecodeLimits, LinksPacket, Reference};
 use crate::lino_database_input::update_link;
 use crate::named_type_links::NamedTypeLinks;
 use anyhow::{Context, Result};
+use links_notation::binary::{DecodeLimits, LinksPacket, Reference};
 use std::fs;
 use std::io::{Read, Write};
 use std::path::Path;
