@@ -1,9 +1,12 @@
 # Binary links notation, version 1
 
 Binary links notation stores **links**, each a tuple of one or more
-references, in a self-delimiting packet. Both ports implement it the same way:
-`LinksPacket` in Rust is in `rust/src/protocol/packet.rs`, and `LinksPacket`
-in C# is in `csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksPacket.cs`.
+references, in a self-delimiting packet. Both ports use the implementation
+that [links-notation](https://github.com/link-foundation/links-notation) 0.23.0
+ships: `links_notation::binary` in Rust and
+`Link.Foundation.Links.Notation.Binary` in C# (issue #104). link-cli adds only
+the transport around it: text framing, protocol detection (§2), the server,
+the client and the store archive (§10).
 [`binary-links-notation-vectors.txt`](binary-links-notation-vectors.txt)
 holds golden vectors. Both test suites check them, so both ports write and
 read exactly these bytes.
@@ -257,15 +260,21 @@ are an error. The decoder rejects:
 - a link length outside its section's arity;
 - addresses that overflow 64 bits.
 
-`DecodeLimits` bounds the work a peer can cause:
+`DecodeLimits` bounds the work a peer can cause, and the encoder checks the
+same limits, so a protocol never writes a packet its peer would reject:
 
 | Limit | Default |
 |---|---|
 | links in a packet | 2²² |
 | references in all links | 2²⁴ |
 | LiNo nodes a packet expands to | 2²² |
-| LiNo nesting depth | 1024 |
-| text message size | 64 MiB |
+| bytes of all strings a packet expands to | 64 MiB |
+| LiNo nesting depth | 64 |
+
+The text protocol has its own limit, 64 MiB per message
+(`TextLinoProtocol::max_text_bytes` in Rust, `TextLinoProtocol.MaxTextBytes`
+in C#). `ProtocolLimits` carries both budgets for the server and for
+protocol detection.
 
 The LiNo mapping also requires that:
 

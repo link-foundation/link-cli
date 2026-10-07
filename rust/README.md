@@ -71,6 +71,10 @@ In the library, `link_cli::protocol::LinksServer` serves any `NamedTypeLinks` st
 `LinksClient` queries a server through either `TextLinoProtocol` or
 `BinaryLinoProtocol`. The wire formats are described in
 [docs/case-studies/issue-105](../docs/case-studies/issue-105/README.md).
+The binary links notation codec itself (`LinksPacket`, `encode_document`,
+`decode_document`, `ArityRange`, `DecodeLimits`) comes from
+`links_notation::binary`, which `link_cli::protocol` re-exports;
+`ProtocolLimits` bounds messages of both protocols.
 
 ## Use as a library
 
