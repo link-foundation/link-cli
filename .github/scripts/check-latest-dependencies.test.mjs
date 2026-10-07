@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  blockerOf,
   compareVersions,
   isOutdated,
   latestStable,
@@ -15,6 +16,7 @@ import {
   parsePackageLock,
   parseWorkflowActions,
   parseWorkflowTools,
+  verdict,
   versionParts,
 } from './check-latest-dependencies.mjs';
 
@@ -163,4 +165,73 @@ warning: aborting update due to dry run
     { name: 'autocfg', version: '1.5.0', latest: '1.5.1' },
     { name: 'thiserror', version: '2.0.20', latest: '2.0.21' },
   ]);
+});
+
+const issue = 'https://github.com/link-foundation/link-cli/issues/104';
+
+test('a manifest comment links the issue that holds a dependency back', () => {
+  assert.equal(blockerOf(`held back: ${issue}, see there`), issue);
+  assert.equal(blockerOf('https://github.com/link-foundation/link-cli/pull/107'), undefined);
+  assert.equal(blockerOf('just a comment'), undefined);
+  assert.equal(blockerOf(undefined), undefined);
+});
+
+test('Cargo comments hold back the dependency on their line only', () => {
+  const manifest = `
+[dependencies]
+doublets = "0.5.0" # held back: ${issue}
+url = "2.5.0" # "#" in a comment
+quoted = { version = "1.0.0", features = ["a#b"] } # ${issue}
+plain = "1.0.0"
+
+[dependencies.web-sys]
+version = "0.3.106" # ${issue}
+`;
+  assert.deepEqual(parseCargoManifest(manifest), [
+    { name: 'doublets', version: '0.5.0', blocker: issue },
+    { name: 'url', version: '2.5.0' },
+    { name: 'quoted', version: '1.0.0', blocker: issue },
+    { name: 'plain', version: '1.0.0' },
+    { name: 'web-sys', version: '0.3.106', blocker: issue },
+  ]);
+});
+
+test('csproj comments hold back the package reference on their line', () => {
+  const project = `<ItemGroup>
+    <PackageReference Include="Platform.Data.Doublets" Version="0.18.1" /> <!-- held back: ${issue} -->
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <!-- ${issue} -->
+  </ItemGroup>`;
+  assert.deepEqual(parseCsproj(project), [
+    { name: 'Platform.Data.Doublets', version: '0.18.1', blocker: issue },
+    { name: 'xunit', version: '2.9.3' },
+  ]);
+});
+
+test('workflow comments hold back actions, runtimes and tools', () => {
+  const workflow = `
+      - uses: actions/checkout@v6 # ${issue}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.x' # ${issue}
+          dotnet-version: '10.0.x'
+          tool: cargo-audit@0.22.1 # ${issue}
+`;
+  assert.deepEqual(parseWorkflowActions(workflow), [
+    { name: 'actions/checkout', version: 'v6', blocker: issue },
+    { name: 'actions/setup-node', version: 'v7' },
+  ]);
+  assert.deepEqual(parseWorkflowTools(workflow), [
+    { kind: 'node', name: 'Node.js', version: '22.x', blocker: issue },
+    { kind: 'dotnet', name: '.NET', version: '10.0.x' },
+    { kind: 'crate', name: 'cargo-audit', version: '0.22.1', blocker: issue },
+  ]);
+});
+
+test('only an open issue holds an outdated dependency back', () => {
+  const behind = { version: '0.16.1', latest: '0.23.0' };
+  assert.equal(verdict({ version: '0.23.0', latest: '0.23.0' }, undefined), 'current');
+  assert.equal(verdict(behind, undefined), 'outdated');
+  assert.equal(verdict(behind, 'open'), 'held');
+  assert.equal(verdict(behind, 'closed'), 'outdated');
 });

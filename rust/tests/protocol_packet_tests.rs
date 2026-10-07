@@ -1,4 +1,8 @@
-//! Binary and text LiNo protocol codecs (issue #105).
+//! The binary links notation as link-cli uses it (issues #104 and #105).
+//!
+//! The binary links notation comes from links-notation (issue #104); these
+//! tests pin the behavior link-cli relies on, so an upgrade that changes it
+//! fails here.
 
 mod common;
 
@@ -9,9 +13,8 @@ use link_cli::protocol::packet::{
 };
 use link_cli::protocol::{
     decode_document, encode_document, format_document, format_reference, parse_document,
-    read_any_document, ArityRange, BinaryLinoOptions, BinaryLinoProtocol, DecodeLimits,
-    LinksPacket, LinoConnection, LinoProtocol, MessageFormat, ProtocolError, Reference, Section,
-    TextLinoProtocol,
+    ArityRange, BinaryError, BinaryLinoOptions, BinaryLinoProtocol, DecodeLimits, LinksPacket,
+    ProtocolError, Reference, Section,
 };
 use std::io::{self, Cursor, Read};
 
@@ -255,7 +258,7 @@ fn width_tiers_follow_the_number_of_links() {
     // No width holds an internal address in the external half.
     assert!(matches!(
         address_tier(1 << 63, true),
-        Err(ProtocolError::Unencodable(_))
+        Err(BinaryError::Unencodable(_))
     ));
     assert_eq!(internal_capacity(8, false), u64::MAX);
     assert_eq!(internal_capacity(8, true), i64::MAX as u64);
@@ -442,7 +445,7 @@ fn arities_without_doublets_are_unencodable() {
                 &parse_document("(a b)").unwrap(),
                 BinaryLinoOptions::default().with_arity(arity)
             ),
-            Err(ProtocolError::Unencodable(_))
+            Err(BinaryError::Unencodable(_))
         ));
     }
 }
@@ -527,7 +530,7 @@ fn packing_rejects_links_it_cannot_lay_out() {
         assert!(
             matches!(
                 LinksPacket::pack(external_references, links, true),
-                Err(ProtocolError::Unencodable(_))
+                Err(BinaryError::Unencodable(_))
             ),
             "{links:?}"
         );
@@ -562,7 +565,7 @@ fn writing_rejects_sections_that_do_not_hold_their_links() {
     };
     let unencodable = |packet: LinksPacket| {
         assert!(
-            matches!(packet.to_bytes(), Err(ProtocolError::Unencodable(_))),
+            matches!(packet.to_bytes(), Err(BinaryError::Unencodable(_))),
             "{packet:?}"
         );
     };
@@ -775,27 +778,6 @@ fn hostile_packets_hit_limits() {
     assert!(DecodeLimits::unlimited().max_links == u64::MAX);
 }
 
-#[test]
-fn text_messages_are_dot_stuffed() {
-    let document = parse_document(".dot\n'first\n.second'\n(a b)").unwrap();
-    let mut wire = Vec::new();
-    TextLinoProtocol::new()
-        .write_document(&mut wire, &document)
-        .unwrap();
-    let wire_text = String::from_utf8(wire.clone()).unwrap();
-    assert_eq!(wire_text, "..dot\n'first\n..second'\na b\n.\n");
-    let mut reader = Cursor::new(wire);
-    let received = TextLinoProtocol::new()
-        .read_document(&mut reader)
-        .unwrap()
-        .unwrap();
-    assert_eq!(received, document);
-    assert!(TextLinoProtocol::new()
-        .read_document(&mut reader)
-        .unwrap()
-        .is_none());
-}
-
 /// Fails once with `kind`, then reads `bytes`.
 struct Hiccup {
     kind: Option<io::ErrorKind>,
@@ -831,107 +813,12 @@ fn stream_failures_are_io_errors_and_interruptions_are_retried() {
     let reset = io::ErrorKind::ConnectionReset;
     assert!(matches!(
         read(&mut Hiccup::new(reset, &[])),
-        Err(ProtocolError::Io(_))
+        Err(BinaryError::Io(_))
     ));
     assert!(matches!(
         read(&mut [0x10u8].chain(Hiccup::new(reset, &[]))),
-        Err(ProtocolError::Io(_))
+        Err(BinaryError::Io(_))
     ));
-}
-
-#[test]
-fn connections_decorate_any_byte_stream() {
-    let document = parse_document("() ((1 1))").unwrap();
-    let mut connection = LinoConnection::new(Cursor::new(Vec::new()), TextLinoProtocol::new());
-    assert_eq!(connection.protocol().limits, DecodeLimits::default());
-    // The cursor sits after what was sent, so no reply follows.
-    assert_eq!(
-        connection.request(&document).unwrap_err().to_string(),
-        "malformed message: connection closed before the reply"
-    );
-    assert_eq!(connection.into_inner().into_inner(), b"() ((1 1))\n.\n");
-}
-
-#[test]
-fn text_messages_accept_crlf_and_reject_truncation() {
-    let mut reader = Cursor::new(b"() ((1 1))\r\n.\r\n".to_vec());
-    let document = TextLinoProtocol::new()
-        .read_document(&mut reader)
-        .unwrap()
-        .unwrap();
-    assert_eq!(format_document(&document), "() ((1 1))");
-
-    let mut empty = Cursor::new(b".\n".to_vec());
-    assert_eq!(
-        TextLinoProtocol::new().read_document(&mut empty).unwrap(),
-        Some(Vec::new())
-    );
-
-    // Without the terminator line, with or without the last newline.
-    for truncated in ["() ((1 1))\n", "() ((1 1))"] {
-        let mut truncated = Cursor::new(truncated.as_bytes());
-        assert_eq!(
-            TextLinoProtocol::new()
-                .read_document(&mut truncated)
-                .unwrap_err()
-                .to_string(),
-            "malformed message: stream ended before the '.' terminator line"
-        );
-    }
-
-    let tiny = TextLinoProtocol {
-        limits: DecodeLimits {
-            max_text_bytes: 8,
-            ..DecodeLimits::default()
-        },
-    };
-    let mut long = Cursor::new(format!("{}\n.\n", "a".repeat(100)).into_bytes());
-    assert_eq!(
-        tiny.read_document(&mut long).unwrap_err().to_string(),
-        "limit exceeded: text message longer than 8 bytes"
-    );
-
-    let mut invalid_utf8 = Cursor::new(vec![0xC3, 0x28, b'\n', b'.', b'\n']);
-    assert_eq!(
-        TextLinoProtocol::new()
-            .read_document(&mut invalid_utf8)
-            .unwrap_err()
-            .to_string(),
-        "malformed message: text message is not valid UTF-8"
-    );
-}
-
-#[test]
-fn protocols_are_detected_per_message() {
-    let document = parse_document("() ((1 1))").unwrap();
-    let options = BinaryLinoOptions::default().with_external_references(true);
-    let mut wire = Vec::new();
-    TextLinoProtocol::new()
-        .write_document(&mut wire, &document)
-        .unwrap();
-    BinaryLinoProtocol::with_options(options)
-        .write_document(&mut wire, &document)
-        .unwrap();
-    TextLinoProtocol::new()
-        .write_document(&mut wire, &document)
-        .unwrap();
-
-    let limits = DecodeLimits::default();
-    let mut reader = Cursor::new(wire);
-    let formats = std::iter::from_fn(|| read_any_document(&mut reader, &limits).unwrap())
-        .map(|(received, format)| {
-            assert_eq!(received, document);
-            format
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(
-        formats,
-        vec![
-            MessageFormat::Text,
-            MessageFormat::Binary(options),
-            MessageFormat::Text
-        ]
-    );
 }
 
 #[test]
@@ -973,7 +860,7 @@ fn deeply_nested_text_parses_in_linear_time() {
     assert_eq!(depth, 40);
     assert!(matches!(
         parse_document(&nested(100_000)),
-        Err(ProtocolError::InvalidLino(_))
+        Err(BinaryError::InvalidLino(_))
     ));
     assert!(started.elapsed() < std::time::Duration::from_secs(10));
 }

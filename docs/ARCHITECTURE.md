@@ -46,12 +46,14 @@ Key files:
 - `VersionControlDecorator.cs`: optional version-control layer that sits above
   the transactions decorator and provides branching, tagging, and time-travel
   checkout.
-- `Protocol/`: LiNo over TCP (#105). This folder contains:
+- `Protocol/`: LiNo over TCP (#105). The binary links notation itself
+  (`LinksPacket`, `LinoMapping`, `LinoFormat`, `PacketReader`) comes from
+  `Link.Foundation.Links.Notation.Binary` (#104). This folder contains the
+  transport around it:
   - `TextLinoProtocol` and `BinaryLinoProtocol` (`LinoProtocols.cs`)
-  - the binary `LinksPacket`
-  - `LinoMapping` (document ↔ packet)
-  - `LinoFormat` (canonical text)
   - `LinksServer` and `LinksClient`
+  - `RemoteLinks` and `LinksOperation`
+  - `StoreArchive`
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
 
@@ -85,19 +87,20 @@ Key files:
   transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
   branching, tagging, and time-travel checkout.
-- `rust/src/protocol/`: LiNo over TCP (#105). The module mirrors the C#
-  `Protocol/` folder file for file:
+- `rust/src/protocol/`: LiNo over TCP (#105). The binary links notation
+  itself comes from `links_notation::binary` (#104); the module adds the
+  transport around it and mirrors the C# `Protocol/` folder file for file:
   - `protocols.rs`
-  - `packet.rs`
-  - `mapping.rs`
-  - `format.rs`
   - `server.rs`
   - `client.rs`
+  - `remote_links.rs`
+  - `links_operations.rs`
+  - `archive.rs`
 
 Main Rust dependencies:
 
 - `doublets = "0.5.0"` for links storage foundations.
-- `links-notation = "0.22.0"` for LiNo parsing.
+- `links-notation = "0.23.0"` for LiNo parsing and binary links notation.
 - `lino-arguments = "0.3.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
 
@@ -304,7 +307,7 @@ Trigger storage can be:
 | `.github/workflows/csharp.yml` | .NET restore, build, tests, package, and release. |
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
-| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version is behind its latest release. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
+| `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version declared in any tracked manifest is behind its latest release, unless a comment on its manifest line links an open issue that blocks the update. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
 
 Path filters keep most workflows focused on the parts of the repository they
 own.
@@ -314,6 +317,6 @@ own.
 - NuGet `clink`: https://www.nuget.org/packages/clink
 - crates.io `link-cli`: https://crates.io/crates/link-cli
 - Rust `doublets`: https://docs.rs/doublets/latest/doublets/
-- Rust `links-notation`: https://docs.rs/crate/links-notation/0.13.0
+- Rust `links-notation`: https://docs.rs/crate/links-notation/0.23.0
 - npm `doublets-web`: https://www.npmjs.com/package/doublets-web
 - WebAssembly local docs and implementation notes: [../js/README.md](../js/README.md)

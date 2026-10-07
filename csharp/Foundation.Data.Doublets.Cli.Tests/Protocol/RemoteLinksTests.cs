@@ -1,4 +1,5 @@
 using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 using Platform.Delegates;
@@ -323,7 +324,7 @@ public sealed class RemoteLinksTests
             {
                 using var wire = new MemoryStream();
                 protocol.WriteDocument(wire, operation.ToDocument());
-                var document = protocol.ReadDocument(LinoStreamReader.FromBytes(wire.ToArray()))!;
+                var document = protocol.ReadDocument(PacketReader.FromBytes(wire.ToArray()))!;
 
                 Assert.Equal(operation, LinksOperation.FromDocument(document));
             }

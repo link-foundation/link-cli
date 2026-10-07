@@ -32,11 +32,10 @@
 //! differ between the C# and the Rust stores.
 
 use super::error::{ProtocolError, ProtocolResult};
-use super::format::{format_document, format_link};
-use super::mapping::LinoDocument;
 use crate::changes_simplifier::simplify_changes;
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
+use links_notation::binary::{format_document, format_link, LinoDocument};
 use links_notation::LiNo;
 
 /// The wire spelling of "any value" in a restriction.

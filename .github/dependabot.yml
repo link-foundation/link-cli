@@ -1,16 +1,24 @@
 # Opens the pull requests that keep every dependency on its latest release.
-# .github/workflows/dependencies.yml fails while anything is still behind.
+# .github/workflows/dependencies.yml fails while anything is still behind, in
+# every manifest git tracks, so every directory with one is listed here.
 version: 2
 updates:
   - package-ecosystem: cargo
-    directories: ['/rust', '/rust/wasm']
+    directories:
+      - /rust
+      - /rust/wasm
+      - /docs/case-studies/issue-100/evidence/external-range/rust
     schedule:
       interval: daily
     groups:
       cargo:
         patterns: ['*']
   - package-ecosystem: nuget
-    directory: /csharp
+    directories:
+      - /csharp
+      - /examples/lino-structure-probe
+      - /docs/case-studies/issue-100/evidence/csharp-merge-usages
+      - /docs/case-studies/issue-100/evidence/external-range/csharp
     schedule:
       interval: daily
     groups:

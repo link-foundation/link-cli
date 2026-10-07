@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using Link.Foundation.Links.Notation.Binary;
 
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 
@@ -59,7 +60,8 @@ public sealed class LinksClient : IDisposable
     }
 
     /// <summary>Runs a LiNo substitution query; the empty query reads every link.</summary>
-    public IReadOnlyList<LinoLink> Query(string query) => Request(LinoFormat.ParseDocument(query));
+    public IReadOnlyList<LinoLink> Query(string query) =>
+        Request(LinoProtocolException.Wrap(() => LinoFormat.ParseDocument(query)));
 
     /// <summary>Like <see cref="Query"/>, returning the reply as canonical text.</summary>
     public string QueryText(string query) => LinoFormat.FormatDocument(Query(query));

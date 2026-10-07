@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 
@@ -31,8 +32,8 @@ public sealed record LinksServerOptions
     /// <summary>Protocols the server answers.</summary>
     public AcceptedProtocols Accept { get; init; } = AcceptedProtocols.Any;
 
-    /// <summary>Limits applied to incoming messages.</summary>
-    public DecodeLimits Limits { get; init; } = DecodeLimits.Default;
+    /// <summary>Limits applied to messages of either protocol.</summary>
+    public ProtocolLimits Limits { get; init; } = ProtocolLimits.Default;
 }
 
 /// <summary>
@@ -151,7 +152,7 @@ public sealed class LinksServer : IDisposable
         try
         {
             using var stream = client.GetStream();
-            var reader = new LinoStreamReader(stream);
+            var reader = new PacketReader(stream);
             while (!_stopping)
             {
                 (IReadOnlyList<LinoLink> Document, MessageFormat Format)? message;

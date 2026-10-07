@@ -1,4 +1,5 @@
 using System.Text;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 
@@ -54,8 +55,8 @@ public static class StoreArchive
                 names.Add(((ulong)names.Count + 1, references.ToArray()));
             }
         }
-        output.Write(LinksPacket.Pack(false, doublets, true).ToBytes());
-        output.Write(LinksPacket.Pack(true, names, true).ToBytes());
+        output.Write(LinoProtocolException.Wrap(() => LinksPacket.Pack(false, doublets, true).ToBytes()));
+        output.Write(LinoProtocolException.Wrap(() => LinksPacket.Pack(true, names, true).ToBytes()));
     }
 
     /// <summary>Writes the archive of <paramref name="links"/> to the file at <paramref name="path"/>.</summary>
@@ -74,10 +75,10 @@ public static class StoreArchive
     {
         ArgumentNullException.ThrowIfNull(links);
         ArgumentNullException.ThrowIfNull(input);
-        var reader = new LinoStreamReader(input);
+        var reader = new PacketReader(input);
         var linksPacket = ReadPacket(reader, "links");
         var namesPacket = ReadPacket(reader, "names");
-        if (!reader.AtEnd)
+        if (!LinoProtocolException.Wrap(() => reader.AtEnd))
         {
             throw LinoProtocolException.Malformed("trailing bytes after the store archive");
         }
@@ -108,8 +109,8 @@ public static class StoreArchive
         Import(links, input);
     }
 
-    private static LinksPacket ReadPacket(LinoStreamReader reader, string part) =>
-        LinksPacket.ReadFrom(reader, DecodeLimits.Unlimited)
+    private static LinksPacket ReadPacket(PacketReader reader, string part) =>
+        LinoProtocolException.Wrap(() => LinksPacket.ReadFrom(reader, DecodeLimits.Unlimited))
         ?? throw LinoProtocolException.Malformed($"the store archive ends before its {part}");
 
     private static (uint Index, uint Source, uint Target) DecodeDoublet(ulong address, PacketReference[] references)

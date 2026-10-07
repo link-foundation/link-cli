@@ -1,4 +1,5 @@
 using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
@@ -115,7 +116,7 @@ public sealed class BinaryLinksNotationTests
         Assert.Equal(4, LinksPacket.AddressTier(32_768, true));
         Assert.Equal(8, LinksPacket.AddressTier(ulong.MaxValue, false));
         // No width holds an internal address in the external half.
-        Assert.Equal(LinoProtocolErrorKind.Unencodable, Assert.Throws<LinoProtocolException>(() => LinksPacket.AddressTier(1UL << 63, true)).Kind);
+        Assert.Equal(BinaryErrorKind.Unencodable, Assert.Throws<BinaryNotationException>(() => LinksPacket.AddressTier(1UL << 63, true)).Kind);
         Assert.Equal(ulong.MaxValue, LinksPacket.InternalCapacity(8, false));
         Assert.Equal((ulong)long.MaxValue, LinksPacket.InternalCapacity(8, true));
         Assert.Equal(127UL, LinksPacket.ExternalCapacity(1));
@@ -236,7 +237,7 @@ public sealed class BinaryLinksNotationTests
         foreach (var arity in new[] { ArityRange.Exactly(3), ArityRange.Exactly(1), ArityRange.AtLeast(3) })
         {
             var error = Assert.Throws<LinoProtocolException>(
-                () => LinoMapping.EncodeDocument(Parse("(a b)"), new BinaryLinoOptions().WithArity(arity)));
+                () => new BinaryLinoProtocol(new BinaryLinoOptions().WithArity(arity)).Encode(Parse("(a b)")));
             Assert.Equal(LinoProtocolErrorKind.Unencodable, error.Kind);
         }
     }
@@ -325,8 +326,8 @@ public sealed class BinaryLinksNotationTests
     {
         void Unencodable(bool externalReferences, params (ulong, PacketReference[])[] links)
         {
-            var error = Assert.Throws<LinoProtocolException>(() => LinksPacket.Pack(externalReferences, links, true));
-            Assert.Equal(LinoProtocolErrorKind.Unencodable, error.Kind);
+            var error = Assert.Throws<BinaryNotationException>(() => LinksPacket.Pack(externalReferences, links, true));
+            Assert.Equal(BinaryErrorKind.Unencodable, error.Kind);
         }
         Unencodable(false, (0, Internals(1))); // address 0 is null
         Unencodable(false, (2, Internals(1)), (1, Internals(1))); // descending
@@ -345,8 +346,8 @@ public sealed class BinaryLinksNotationTests
         {
             var packet = new LinksPacket();
             packet.Sections.Add(section);
-            var error = Assert.Throws<LinoProtocolException>(() => packet.ToBytes());
-            Assert.Equal(LinoProtocolErrorKind.Unencodable, error.Kind);
+            var error = Assert.Throws<BinaryNotationException>(() => packet.ToBytes());
+            Assert.Equal(BinaryErrorKind.Unencodable, error.Kind);
         }
         Unencodable(DoubletSection(0, ArityRange.Exactly(3), 1, (1, 1)));
         Unencodable(DoubletSection(0, ArityRange.Exactly(0), 1));

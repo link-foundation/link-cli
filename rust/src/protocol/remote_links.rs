@@ -32,7 +32,6 @@ use super::links_operations::{
     parse_changes, parse_count, parse_link_reply, parse_links, parse_name, Change, LinksOperation,
     Part,
 };
-use super::mapping::LinoDocument;
 use super::protocols::LinoProtocol;
 use crate::link::Link;
 use crate::link_storage::ChangeObserver;
@@ -40,6 +39,7 @@ use crate::link_storage_doublets::link_storage_constants;
 use crate::named_type_links::NamedTypeLinks;
 use doublets::data::{Flow, LinksConstants, ReadHandler, WriteHandler};
 use doublets::{Doublets, Error, Link as DoubletsLink, Links};
+use links_notation::binary::LinoDocument;
 use std::net::ToSocketAddrs;
 use std::sync::{Mutex, PoisonError};
 

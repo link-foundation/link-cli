@@ -6,9 +6,11 @@
 //! `TcpStream`, a pipe, an in-memory buffer) with a protocol.
 
 use super::error::{ProtocolError, ProtocolResult};
-use super::format::{format_document, parse_document};
-use super::mapping::{decode_document, encode_document, BinaryLinoOptions, LinoDocument};
-use super::packet::{DecodeLimits, LinksPacket, BINARY_VERSION_1};
+use links_notation::binary::packet::BINARY_VERSION_1;
+use links_notation::binary::{
+    decode_document, encode_document_with_limits, format_document, parse_document,
+    BinaryLinoOptions, DecodeLimits, LinksPacket, LinoDocument,
+};
 use links_notation::LiNo;
 use std::fmt::Debug;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -40,16 +42,59 @@ impl<P: LinoProtocol + ?Sized> LinoProtocol for Box<P> {
     }
 }
 
+/// The default limit of a text message: 64 MiB.
+pub const DEFAULT_MAX_TEXT_BYTES: usize = 64 << 20;
+
+/// Limits applied to incoming messages of either protocol.
+///
+/// The binary limits belong to links-notation; the text limit is link-cli's
+/// own, because framing text messages is part of the transport, not of the
+/// notation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ProtocolLimits {
+    /// Limits of [`BinaryLinoProtocol`] messages.
+    pub binary: DecodeLimits,
+    /// Maximum size of a [`TextLinoProtocol`] message in bytes.
+    pub max_text_bytes: usize,
+}
+
+impl Default for ProtocolLimits {
+    fn default() -> Self {
+        Self {
+            binary: DecodeLimits::default(),
+            max_text_bytes: DEFAULT_MAX_TEXT_BYTES,
+        }
+    }
+}
+
+impl ProtocolLimits {
+    /// Limits for trusted input: only the address space bounds a message.
+    pub fn unlimited() -> Self {
+        Self {
+            binary: DecodeLimits::unlimited(),
+            max_text_bytes: usize::MAX,
+        }
+    }
+}
+
 /// UTF-8 LiNo text, one message per block of lines ended by a line holding
 /// only `.`. Lines starting with `.` get one extra `.` (SMTP dot-stuffing).
 ///
 /// Lines may end with `\n` or `\r\n`; a carriage return right before a line
 /// feed is dropped, so a quoted reference holding `\r\n` arrives as `\n`
 /// (use [`BinaryLinoProtocol`] to carry such references exactly).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TextLinoProtocol {
-    /// Limits applied when reading.
-    pub limits: DecodeLimits,
+    /// Maximum size of a message read, in bytes.
+    pub max_text_bytes: usize,
+}
+
+impl Default for TextLinoProtocol {
+    fn default() -> Self {
+        Self {
+            max_text_bytes: DEFAULT_MAX_TEXT_BYTES,
+        }
+    }
 }
 
 impl TextLinoProtocol {
@@ -83,7 +128,7 @@ impl TextLinoProtocol {
         let mut first = true;
         loop {
             line.clear();
-            let budget = self.limits.max_text_bytes.saturating_sub(text.len()) as u64 + 2;
+            let budget = self.max_text_bytes.saturating_sub(text.len()) as u64 + 2;
             let read = reader.take(budget).read_until(b'\n', &mut line)?;
             if read == 0 {
                 if first {
@@ -97,7 +142,7 @@ impl TextLinoProtocol {
                 if read as u64 >= budget {
                     return Err(ProtocolError::LimitExceeded(format!(
                         "text message longer than {} bytes",
-                        self.limits.max_text_bytes
+                        self.max_text_bytes
                     )));
                 }
                 return Err(ProtocolError::malformed(
@@ -136,18 +181,18 @@ impl LinoProtocol for TextLinoProtocol {
 
     fn read_document(&self, reader: &mut dyn BufRead) -> ProtocolResult<Option<LinoDocument>> {
         self.read_text(reader)?
-            .map(|text| parse_document(&text))
+            .map(|text| parse_document(&text).map_err(ProtocolError::from))
             .transpose()
     }
 }
 
-/// Binary links packets (see [`crate::protocol::packet`]); every message is
+/// Binary links packets of [`links_notation::binary`]; every message is
 /// self-delimiting, so no extra framing is needed.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct BinaryLinoProtocol {
     /// Optional features used when writing.
     pub options: BinaryLinoOptions,
-    /// Limits applied when reading.
+    /// Limits applied when reading, and checked when writing.
     pub limits: DecodeLimits,
 }
 
@@ -167,12 +212,13 @@ impl BinaryLinoProtocol {
 
     /// Encodes a document into packet bytes.
     pub fn encode(&self, document: &[LiNo<String>]) -> ProtocolResult<Vec<u8>> {
-        encode_document(document, self.options)?.to_bytes()
+        Ok(encode_document_with_limits(document, self.options, &self.limits)?.to_bytes()?)
     }
 
     /// Decodes packet bytes into a document.
     pub fn decode(&self, bytes: &[u8]) -> ProtocolResult<LinoDocument> {
-        decode_document(&LinksPacket::from_bytes(bytes, &self.limits)?, &self.limits)
+        let packet = LinksPacket::from_bytes(bytes, &self.limits)?;
+        Ok(decode_document(&packet, &self.limits)?)
     }
 }
 
@@ -189,7 +235,7 @@ impl LinoProtocol for BinaryLinoProtocol {
 
     fn read_document(&self, reader: &mut dyn BufRead) -> ProtocolResult<Option<LinoDocument>> {
         LinksPacket::read_from(reader, &self.limits)?
-            .map(|packet| decode_document(&packet, &self.limits))
+            .map(|packet| Ok(decode_document(&packet, &self.limits)?))
             .transpose()
     }
 }
@@ -205,10 +251,15 @@ pub enum MessageFormat {
 
 impl MessageFormat {
     /// A protocol that writes messages in this format.
-    pub fn protocol(self, limits: DecodeLimits) -> Box<dyn LinoProtocol> {
+    pub fn protocol(self, limits: ProtocolLimits) -> Box<dyn LinoProtocol> {
         match self {
-            MessageFormat::Text => Box::new(TextLinoProtocol { limits }),
-            MessageFormat::Binary(options) => Box::new(BinaryLinoProtocol { options, limits }),
+            MessageFormat::Text => Box::new(TextLinoProtocol {
+                max_text_bytes: limits.max_text_bytes,
+            }),
+            MessageFormat::Binary(options) => Box::new(BinaryLinoProtocol {
+                options,
+                limits: limits.binary,
+            }),
         }
     }
 }
@@ -221,20 +272,22 @@ pub fn is_binary_start(byte: u8) -> bool {
 /// Reads one message in whichever protocol the peer used.
 pub fn read_any_document(
     reader: &mut dyn BufRead,
-    limits: &DecodeLimits,
+    limits: &ProtocolLimits,
 ) -> ProtocolResult<Option<(LinoDocument, MessageFormat)>> {
     let Some(&first) = reader.fill_buf()?.first() else {
         return Ok(None);
     };
     if !is_binary_start(first) {
-        let text = TextLinoProtocol { limits: *limits };
+        let text = TextLinoProtocol {
+            max_text_bytes: limits.max_text_bytes,
+        };
         return Ok(text
             .read_document(reader)?
             .map(|document| (document, MessageFormat::Text)));
     }
-    LinksPacket::read_from(reader, limits)?
+    LinksPacket::read_from(reader, &limits.binary)?
         .map(|packet| {
-            let document = decode_document(&packet, limits)?;
+            let document = decode_document(&packet, &limits.binary)?;
             Ok((
                 document,
                 MessageFormat::Binary(BinaryLinoOptions::of_packet(&packet)),

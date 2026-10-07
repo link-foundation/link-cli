@@ -1,5 +1,6 @@
 //! Errors raised by the LiNo network protocols.
 
+use links_notation::binary::BinaryError;
 use std::io;
 use thiserror::Error;
 
@@ -19,7 +20,7 @@ pub enum ProtocolError {
     #[error("invalid LiNo: {0}")]
     InvalidLino(String),
 
-    /// The message exceeds one of the configured [`DecodeLimits`](super::DecodeLimits).
+    /// The message exceeds one of the configured [`ProtocolLimits`](super::ProtocolLimits).
     #[error("limit exceeded: {0}")]
     LimitExceeded(String),
 
@@ -35,6 +36,20 @@ pub enum ProtocolError {
 impl ProtocolError {
     pub(crate) fn malformed(message: impl Into<String>) -> Self {
         Self::Malformed(message.into())
+    }
+}
+
+/// Each [`BinaryError`] of links-notation becomes the variant of the same name,
+/// with the same message.
+impl From<BinaryError> for ProtocolError {
+    fn from(error: BinaryError) -> Self {
+        match error {
+            BinaryError::Io(error) => Self::Io(error),
+            BinaryError::Malformed(detail) => Self::Malformed(detail),
+            BinaryError::InvalidLino(detail) => Self::InvalidLino(detail),
+            BinaryError::LimitExceeded(detail) => Self::LimitExceeded(detail),
+            BinaryError::Unencodable(detail) => Self::Unencodable(detail),
+        }
     }
 }
 

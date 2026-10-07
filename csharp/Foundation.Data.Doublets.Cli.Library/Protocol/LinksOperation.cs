@@ -1,4 +1,5 @@
 using System.Globalization;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Delegates;
 using Platform.Data.Doublets;

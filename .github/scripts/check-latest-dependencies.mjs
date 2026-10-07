@@ -3,17 +3,30 @@
 /**
  * Fail when any dependency of the repository is behind its latest release.
  *
- * Checked, each against its own registry:
- * - Cargo dependencies of rust/ and rust/wasm/ (crates.io), plus every
- *   package in their Cargo.lock files (`cargo update --dry-run`);
- * - NuGet packages of every csharp/ project (nuget.org);
- * - npm dependencies of js/, declared and locked (registry.npmjs.org);
+ * Checked, each against its own registry, in every manifest git tracks
+ * (the projects, the examples and the case-study reproductions alike):
+ * - Cargo dependencies (crates.io), plus every package in the Cargo.lock
+ *   files (`cargo update --dry-run`);
+ * - NuGet packages of every .csproj (nuget.org);
+ * - npm dependencies, declared and locked (registry.npmjs.org);
  * - GitHub Actions used by the workflows (major tags of the action's repo);
  * - Node.js and .NET versions set up by the workflows (latest LTS) and tools
  *   installed with taiki-e/install-action (crates.io).
  *
  * A declared version is compared only as far as it is written: `v7` matches
  * any 7.x release, `24.x` any 24.x, and `2.0.21` exactly 2.0.21.
+ *
+ * A dependency that cannot be updated yet is held back by a comment on its
+ * manifest line that links the open issue explaining the blocker:
+ *
+ *   foo = "1.2.0" # held back: https://github.com/owner/repo/issues/12
+ *   <PackageReference Include="Foo" Version="1.2.0" /> <!-- https://github.com/owner/repo/issues/12 -->
+ *   - uses: owner/action@v3 # https://github.com/owner/repo/issues/12
+ *
+ * The issue is looked up (with GITHUB_TOKEN when set): while it is open the
+ * dependency is reported as held back; once it is closed the dependency is
+ * outdated again. JSON has no comments, so npm dependencies cannot be held
+ * back this way.
  *
  * Usage:
  *   node .github/scripts/check-latest-dependencies.mjs [--skip-lockfiles]
@@ -24,7 +37,7 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { appendFileSync, readFileSync, readdirSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -66,12 +79,41 @@ export function latestStable(versions) {
     .reduce((best, version) => (best === undefined || compareVersions(version, best) > 0 ? version : best), undefined);
 }
 
+/** The URL of the GitHub issue a manifest comment links, if any. */
+export function blockerOf(comment) {
+  return /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/\d+/.exec(comment ?? '')?.[0];
+}
+
+/** `entry`, plus the issue its comment links as `blocker`. */
+function withBlocker(entry, comment) {
+  const blocker = blockerOf(comment);
+  return blocker ? { ...entry, blocker } : entry;
+}
+
+/** Splits a TOML line into its code and its `#` comment, minding quoted strings. */
+function splitTomlComment(line) {
+  let quote = null;
+  for (let i = 0; i < line.length; i++) {
+    const character = line[i];
+    if (quote) {
+      if (character === '\\' && quote === '"') i++;
+      else if (character === quote) quote = null;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === '#') {
+      return [line.slice(0, i), line.slice(i + 1)];
+    }
+  }
+  return [line, ''];
+}
+
 /** Registry dependencies of a Cargo.toml; path-only dependencies are skipped. */
 export function parseCargoManifest(text) {
   const dependencies = [];
   let table = null; // 'list' inside [dependencies], or the name of [dependencies.NAME]
   for (const raw of text.split('\n')) {
-    const line = raw.replace(/#.*$/, '').trim();
+    const [code, comment] = splitTomlComment(raw);
+    const line = code.trim();
     if (line === '') continue;
     const header = /^\[(.+)\]$/.exec(line);
     if (header) {
@@ -85,14 +127,14 @@ export function parseCargoManifest(text) {
       const plain = /^([A-Za-z0-9_-]+)\s*=\s*"([^"]+)"$/.exec(line);
       const detailed = /^([A-Za-z0-9_-]+)\s*=\s*\{(.*)\}$/.exec(line);
       if (plain) {
-        dependencies.push({ name: plain[1], version: plain[2] });
+        dependencies.push(withBlocker({ name: plain[1], version: plain[2] }, comment));
       } else if (detailed) {
         const version = /\bversion\s*=\s*"([^"]+)"/.exec(detailed[2]);
-        if (version) dependencies.push({ name: detailed[1], version: version[1] });
+        if (version) dependencies.push(withBlocker({ name: detailed[1], version: version[1] }, comment));
       }
     } else if (table) {
       const version = /^version\s*=\s*"([^"]+)"$/.exec(line);
-      if (version) dependencies.push({ name: table, version: version[1] });
+      if (version) dependencies.push(withBlocker({ name: table, version: version[1] }, comment));
     }
   }
   return dependencies;
@@ -100,9 +142,12 @@ export function parseCargoManifest(text) {
 
 /** `<PackageReference Include="…" Version="…" />` entries of a project file. */
 export function parseCsproj(text) {
-  return [...text.matchAll(/<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"/g)].map(
-    ([, name, version]) => ({ name, version }),
-  );
+  return [...text.matchAll(/<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"/g)].map((match) => {
+    const end = match.index + match[0].length;
+    const lineEnd = text.indexOf('\n', end);
+    // The rest of the line holds the `<!-- … -->` comment, if any.
+    return withBlocker({ name: match[1], version: match[2] }, text.slice(end, lineEnd === -1 ? undefined : lineEnd));
+  });
 }
 
 /** Dependencies and devDependencies of a package.json, without range operators. */
@@ -125,22 +170,27 @@ export function parsePackageLock(text, names) {
 /** Actions pinned to a major tag (`owner/repo[/path]@vN`), keyed by repository. */
 export function parseWorkflowActions(text) {
   const actions = new Map();
-  for (const [, repository, version] of text.matchAll(/uses:\s*([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@(v\d+)\s*$/gm)) {
-    actions.set(repository, version);
+  for (const [, repository, version, comment] of text.matchAll(
+    /uses:\s*([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@(v\d+)\s*(?:#(.*))?$/gm,
+  )) {
+    const blocker = actions.get(repository)?.blocker;
+    actions.set(repository, withBlocker({ name: repository, version }, blocker ?? comment));
   }
-  return [...actions].map(([name, version]) => ({ name, version }));
+  return [...actions.values()];
 }
 
 /** Runtimes and tools a workflow installs: node-version, dotnet-version, `tool: name@version`. */
 export function parseWorkflowTools(text) {
   const tools = [];
-  for (const [, kind, version] of text.matchAll(/^\s*(node|dotnet)-version:\s*['"]?([\w.]+)['"]?\s*$/gm)) {
-    tools.push({ kind, name: kind === 'node' ? 'Node.js' : '.NET', version });
+  for (const [, kind, version, comment] of text.matchAll(
+    /^\s*(node|dotnet)-version:\s*['"]?([\w.]+)['"]?\s*(?:#(.*))?$/gm,
+  )) {
+    tools.push(withBlocker({ kind, name: kind === 'node' ? 'Node.js' : '.NET', version }, comment));
   }
-  for (const [, list] of text.matchAll(/^\s*tool:\s*(.+)$/gm)) {
+  for (const [, list, comment] of text.matchAll(/^\s*tool:\s*([^#\n]+?)\s*(?:#(.*))?$/gm)) {
     for (const entry of list.split(',')) {
       const pinned = /^\s*([\w-]+)@([\d.]+)\s*$/.exec(entry);
-      if (pinned) tools.push({ kind: 'crate', name: pinned[1], version: pinned[2] });
+      if (pinned) tools.push(withBlocker({ kind: 'crate', name: pinned[1], version: pinned[2] }, comment));
     }
   }
   return tools;
@@ -155,8 +205,18 @@ export function parseCargoUpdates(output) {
   }));
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json' } });
+/**
+ * What to do with a dependency: `current` when it is on its latest version,
+ * `held` when it is behind but an open issue holds it back, `outdated`
+ * otherwise. `blockerState` is the state of the linked issue, if any.
+ */
+export function verdict({ version, latest }, blockerState) {
+  if (!isOutdated(version, latest)) return 'current';
+  return blockerState === 'open' ? 'held' : 'outdated';
+}
+
+async function fetchJson(url, headers = {}) {
+  const response = await fetch(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers } });
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response.json();
 }
@@ -184,30 +244,42 @@ const registries = {
     ),
 };
 
+/** The state (`open` or `closed`) of a GitHub issue given by its URL. */
+export async function issueState(url) {
+  const [, owner, repository, number] = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/.exec(url);
+  const token = process.env.GITHUB_TOKEN;
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  return (await fetchJson(`https://api.github.com/repos/${owner}/${repository}/issues/${number}`, headers)).state;
+}
+
 function read(path) {
   return readFileSync(join(repoRoot, path), 'utf8');
 }
 
-function findFiles(directory, suffix) {
-  return readdirSync(join(repoRoot, directory), { recursive: true })
-    .filter((name) => name.endsWith(suffix) && !/(^|[\\/])(bin|obj|node_modules|target)[\\/]/.test(name))
-    .map((name) => join(directory, name));
+/** Files git tracks, relative to the repository root. */
+function trackedFiles() {
+  return execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0').filter(Boolean);
 }
 
-/** Everything to check, as `{ registry, name, version, source }`. */
-function collectDependencies() {
+/** Everything to check, as `{ registry, name, version, source[, blocker] }`. */
+function collectDependencies(files) {
   const entries = [];
-  for (const manifest of ['rust/Cargo.toml', 'rust/wasm/Cargo.toml']) {
+  const named = (name) => files.filter((file) => file === name || file.endsWith(`/${name}`));
+  for (const manifest of named('Cargo.toml')) {
     for (const dependency of parseCargoManifest(read(manifest))) entries.push({ registry: 'crate', source: manifest, ...dependency });
   }
-  for (const project of findFiles('csharp', '.csproj')) {
+  for (const project of files.filter((file) => file.endsWith('.csproj'))) {
     for (const dependency of parseCsproj(read(project))) entries.push({ registry: 'nuget', source: project, ...dependency });
   }
-  const packageJson = parsePackageJson(read('js/package.json'));
-  for (const dependency of packageJson) entries.push({ registry: 'npm', source: 'js/package.json', ...dependency });
-  const locked = parsePackageLock(read('js/package-lock.json'), packageJson.map(({ name }) => name));
-  for (const dependency of locked) entries.push({ registry: 'npm', source: 'js/package-lock.json', ...dependency });
-  for (const workflow of findFiles('.github/workflows', '.yml')) {
+  for (const manifest of named('package.json')) {
+    const packageJson = parsePackageJson(read(manifest));
+    for (const dependency of packageJson) entries.push({ registry: 'npm', source: manifest, ...dependency });
+    const lockFile = join(dirname(manifest), 'package-lock.json');
+    if (!files.includes(lockFile)) continue;
+    const locked = parsePackageLock(read(lockFile), packageJson.map(({ name }) => name));
+    for (const dependency of locked) entries.push({ registry: 'npm', source: lockFile, ...dependency });
+  }
+  for (const workflow of files.filter((file) => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(file))) {
     const text = read(workflow);
     for (const action of parseWorkflowActions(text)) entries.push({ registry: 'action', source: workflow, ...action });
     for (const { kind, ...tool } of parseWorkflowTools(text)) entries.push({ registry: kind, source: workflow, ...tool });
@@ -219,9 +291,9 @@ function collectDependencies() {
   });
 }
 
-function checkLockfiles() {
+function checkLockfiles(files) {
   const outdated = [];
-  for (const directory of ['rust', 'rust/wasm']) {
+  for (const directory of files.filter((file) => /(^|\/)Cargo\.lock$/.test(file)).map(dirname)) {
     // cargo reports the updates on stderr.
     const { stderr } = spawnSync('cargo', ['update', '--dry-run'], { cwd: join(repoRoot, directory), encoding: 'utf8' });
     for (const update of parseCargoUpdates(stderr ?? '')) outdated.push({ source: `${directory}/Cargo.lock`, ...update });
@@ -229,39 +301,63 @@ function checkLockfiles() {
   return outdated;
 }
 
+/** A Markdown table of dependencies, the `blocker` column only when asked for. */
+function table(entries, withBlockers) {
+  const header = withBlockers
+    ? ['| File | Dependency | Used | Latest | Held back by |', '|---|---|---|---|---|']
+    : ['| File | Dependency | Used | Latest |', '|---|---|---|---|'];
+  const rows = entries
+    .sort((a, b) => a.source.localeCompare(b.source) || a.name.localeCompare(b.name))
+    .map(({ source, name, version, latest, blocker }) => {
+      const cells = [relative(repoRoot, join(repoRoot, source)), name, version, latest];
+      if (withBlockers) cells.push(blocker);
+      return `| ${cells.join(' | ')} |`;
+    });
+  return [...header, ...rows].join('\n');
+}
+
+function report(title, text) {
+  console.log(`\n${title}:\n\n${text}`);
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## ${title}\n\n${text}\n`);
+}
+
 async function main() {
-  const entries = collectDependencies();
+  const files = trackedFiles();
+  const entries = collectDependencies(files);
   const cache = new Map();
-  const latest = (registry, name) => {
-    const key = `${registry}:${name}`;
-    if (!cache.has(key)) cache.set(key, registries[registry](name));
+  const cached = (key, lookup) => {
+    if (!cache.has(key)) cache.set(key, lookup());
     return cache.get(key);
   };
   const outdated = [];
+  const held = [];
   const failures = [];
   await Promise.all(
     entries.map(async (entry) => {
       try {
-        entry.latest = await latest(entry.registry, entry.name);
-        if (isOutdated(entry.version, entry.latest)) outdated.push(entry);
+        entry.latest = await cached(`${entry.registry}:${entry.name}`, () => registries[entry.registry](entry.name));
+        // The issue is looked up only for a dependency that is behind.
+        const state =
+          entry.blocker && isOutdated(entry.version, entry.latest)
+            ? await cached(entry.blocker, () => issueState(entry.blocker))
+            : undefined;
+        const result = verdict(entry, state);
+        if (result === 'held') held.push(entry);
+        if (result === 'outdated') outdated.push(entry);
       } catch (error) {
         failures.push(`${entry.source}: ${entry.name}: ${error.message}`);
       }
     }),
   );
-  if (!process.argv.includes('--skip-lockfiles')) outdated.push(...checkLockfiles());
+  if (!process.argv.includes('--skip-lockfiles')) outdated.push(...checkLockfiles(files));
 
   console.log(`Checked ${entries.length} declared versions${process.argv.includes('--skip-lockfiles') ? '' : ' and the Cargo.lock files'}.`);
-  const lines = outdated
-    .sort((a, b) => a.source.localeCompare(b.source) || a.name.localeCompare(b.name))
-    .map(({ source, name, version, latest: newest }) => `| ${relative(repoRoot, join(repoRoot, source))} | ${name} | ${version} | ${newest} |`);
-  if (lines.length > 0) {
-    const table = ['| File | Dependency | Used | Latest |', '|---|---|---|---|', ...lines].join('\n');
-    console.log(`\n${lines.length} dependencies are behind their latest release:\n\n${table}`);
-    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Outdated dependencies\n\n${table}\n`);
-  }
+  if (held.length > 0) report(`${held.length} dependencies are held back by open issues`, table(held, true));
+  const closed = outdated.filter(({ blocker }) => blocker);
+  if (closed.length > 0) report(`${closed.length} dependencies were held back by issues that are closed now, so they must be updated`, table(closed, true));
+  if (outdated.length > 0) report(`${outdated.length} dependencies are behind their latest release`, table(outdated, false));
   for (const failure of failures) console.error(`Could not check ${failure}`);
-  process.exitCode = lines.length > 0 || failures.length > 0 ? 1 : 0;
+  process.exitCode = outdated.length > 0 || failures.length > 0 ? 1 : 0;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
