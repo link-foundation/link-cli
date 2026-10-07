@@ -6,6 +6,7 @@
 // actually present in this repository at some point.
 
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -252,5 +253,34 @@ test('the Rust and C# pipelines simulate a fresh merge on pull requests', () => 
       /simulate-fresh-merge\.sh/,
       `${name} does not run .github/scripts/simulate-fresh-merge.sh`,
     );
+  }
+});
+
+// The dependency check reads every manifest git tracks (issue #104), so
+// Dependabot must watch each of their directories, or nothing proposes the
+// update the check asks for.
+test('Dependabot watches every directory the dependency check reads', () => {
+  const config = readFileSync(join(repoRoot, '.github', 'dependabot.yml'), 'utf8');
+  const watched = (ecosystem) => {
+    const block = config.split(/\n(?=  - package-ecosystem:)/).find((part) => part.includes(`package-ecosystem: ${ecosystem}\n`));
+    return [...block.matchAll(/^\s+(?:- |directory: )(\/[\w./-]*)\s*$/gm)].map(([, directory]) => directory);
+  };
+  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0');
+  const directoriesOf = (pattern, needs) =>
+    tracked
+      .filter((file) => pattern.test(file) && needs.test(readFileSync(join(repoRoot, file), 'utf8')))
+      .map((file) => `/${dirname(file)}`.replace(/\/\.$/, ''));
+  const expectations = {
+    cargo: directoriesOf(/(^|\/)Cargo\.toml$/, /^\[(?:.*\.)?(?:dev-|build-)?dependencies/m),
+    nuget: directoriesOf(/\.csproj$/, /<PackageReference /),
+    npm: directoriesOf(/(^|\/)package\.json$/, /"(?:dev)?[dD]ependencies"/),
+  };
+  for (const [ecosystem, directories] of Object.entries(expectations)) {
+    for (const directory of directories) {
+      assert.ok(
+        watched(ecosystem).some((root) => directory === root || directory.startsWith(`${root}/`)),
+        `${ecosystem} manifest in ${directory} is not watched by Dependabot`,
+      );
+    }
   }
 });

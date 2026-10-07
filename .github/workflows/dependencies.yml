@@ -5,7 +5,9 @@ name: Dependencies
 # Node.js and .NET versions the workflows set up. Dependabot
 # (.github/dependabot.yml) opens the pull requests that bump them; this check
 # fails while anything is still behind, on every pull request and daily on
-# main, so a new upstream release is noticed within a day.
+# main, so a new upstream release is noticed within a day. A dependency that
+# cannot be updated yet carries a comment linking the open issue that blocks
+# it (issue #104); see the header of check-latest-dependencies.mjs.
 
 on:
   push:
@@ -18,6 +20,9 @@ on:
 
 permissions:
   contents: read
+  # A dependency held back by a manifest comment links an issue; the check
+  # reads that issue to make sure it is still open.
+  issues: read
 
 concurrency:
   group: dependencies-${{ github.ref }}
@@ -39,4 +44,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Compare every dependency with its registry
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/check-latest-dependencies.mjs
