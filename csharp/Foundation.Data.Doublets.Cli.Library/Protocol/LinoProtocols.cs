@@ -1,4 +1,5 @@
 using System.Text;
+using Link.Foundation.Links.Notation.Binary;
 
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 
@@ -15,7 +16,27 @@ public interface ILinoProtocol
     void WriteDocument(Stream output, IReadOnlyList<LinoLink> document);
 
     /// <summary>Reads one message; <c>null</c> when the stream ended cleanly.</summary>
-    IReadOnlyList<LinoLink>? ReadDocument(LinoStreamReader input);
+    IReadOnlyList<LinoLink>? ReadDocument(PacketReader input);
+}
+
+/// <summary>Limits applied when reading messages of either protocol.</summary>
+public sealed record ProtocolLimits
+{
+    /// <summary>Limits applied to binary packets, see <see cref="BinaryLinoProtocol.Limits"/>.</summary>
+    public DecodeLimits Binary { get; init; } = DecodeLimits.Default;
+
+    /// <summary>Maximum size of a text message in bytes, see <see cref="TextLinoProtocol.MaxTextBytes"/>.</summary>
+    public long MaxTextBytes { get; init; } = 64L << 20;
+
+    /// <summary>Bounds every message so a hostile peer cannot exhaust memory or time.</summary>
+    public static ProtocolLimits Default { get; } = new();
+
+    /// <summary>No limits, for trusted input such as a store archive.</summary>
+    public static ProtocolLimits Unlimited { get; } = new()
+    {
+        Binary = DecodeLimits.Unlimited,
+        MaxTextBytes = long.MaxValue,
+    };
 }
 
 /// <summary>
@@ -31,8 +52,8 @@ public sealed record TextLinoProtocol : ILinoProtocol
 {
     private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
-    /// <summary>Limits applied when reading.</summary>
-    public DecodeLimits Limits { get; init; } = DecodeLimits.Default;
+    /// <summary>Maximum size of a text message in bytes, applied when reading.</summary>
+    public long MaxTextBytes { get; init; } = 64L << 20;
 
     /// <summary>Frames already formatted LiNo text as one message.</summary>
     public static void WriteText(Stream output, string text)
@@ -58,17 +79,23 @@ public sealed record TextLinoProtocol : ILinoProtocol
     }
 
     /// <summary>Reads one framed message as raw text, without parsing it.</summary>
-    public string? ReadText(LinoStreamReader input)
+    public string? ReadText(PacketReader input)
     {
         ArgumentNullException.ThrowIfNull(input);
+        return LinoProtocolException.Wrap(() => ReadFramedText(input));
+    }
+
+    private string? ReadFramedText(PacketReader input)
+    {
         var text = new List<byte>();
         var line = new List<byte>();
         var first = true;
         while (true)
         {
             line.Clear();
-            var budget = Math.Max(0, Limits.MaxTextBytes - text.Count) + 2;
-            var read = input.ReadLine(line, budget);
+            // Room for the line ending; capped so an unlimited budget cannot overflow.
+            var budget = Math.Min(Math.Max(0, MaxTextBytes - text.Count), long.MaxValue - 2) + 2;
+            var read = ReadLine(input, line, budget);
             if (read == 0)
             {
                 if (first)
@@ -81,7 +108,7 @@ public sealed record TextLinoProtocol : ILinoProtocol
             {
                 if (read >= budget)
                 {
-                    throw LinoProtocolException.Limit($"text message longer than {Limits.MaxTextBytes} bytes");
+                    throw LinoProtocolException.Limit($"text message longer than {MaxTextBytes} bytes");
                 }
                 throw LinoProtocolException.Malformed("stream ended before the '.' terminator line");
             }
@@ -113,13 +140,32 @@ public sealed record TextLinoProtocol : ILinoProtocol
         }
     }
 
+    /// <summary>
+    /// Appends bytes up to and including the next <c>\n</c> to <paramref name="line"/>,
+    /// reading at most <paramref name="maxBytes"/>. Returns the number of bytes read.
+    /// </summary>
+    private static long ReadLine(PacketReader input, List<byte> line, long maxBytes)
+    {
+        long read = 0;
+        while (read < maxBytes && input.ReadByte() is var value and >= 0)
+        {
+            line.Add((byte)value);
+            read++;
+            if (value == '\n')
+            {
+                break;
+            }
+        }
+        return read;
+    }
+
     /// <inheritdoc/>
     public void WriteDocument(Stream output, IReadOnlyList<LinoLink> document) =>
         WriteText(output, LinoFormat.FormatDocument(document));
 
     /// <inheritdoc/>
-    public IReadOnlyList<LinoLink>? ReadDocument(LinoStreamReader input) =>
-        ReadText(input) is { } text ? LinoFormat.ParseDocument(text) : null;
+    public IReadOnlyList<LinoLink>? ReadDocument(PacketReader input) =>
+        ReadText(input) is { } text ? LinoProtocolException.Wrap(() => LinoFormat.ParseDocument(text)) : null;
 }
 
 /// <summary>
@@ -139,15 +185,16 @@ public sealed record BinaryLinoProtocol : ILinoProtocol
     /// <summary>Optional features used when writing.</summary>
     public BinaryLinoOptions Options { get; init; }
 
-    /// <summary>Limits applied when reading.</summary>
+    /// <summary>Limits applied when reading and writing.</summary>
     public DecodeLimits Limits { get; init; } = DecodeLimits.Default;
 
     /// <summary>Encodes a document into packet bytes.</summary>
-    public byte[] Encode(IReadOnlyList<LinoLink> document) => LinoMapping.EncodeDocument(document, Options).ToBytes();
+    public byte[] Encode(IReadOnlyList<LinoLink> document) =>
+        LinoProtocolException.Wrap(() => LinoMapping.EncodeDocument(document, Options, Limits).ToBytes());
 
     /// <summary>Decodes packet bytes into a document.</summary>
     public IReadOnlyList<LinoLink> Decode(byte[] bytes) =>
-        LinoMapping.DecodeDocument(LinksPacket.FromBytes(bytes, Limits), Limits);
+        LinoProtocolException.Wrap(() => LinoMapping.DecodeDocument(LinksPacket.FromBytes(bytes, Limits), Limits));
 
     /// <inheritdoc/>
     public void WriteDocument(Stream output, IReadOnlyList<LinoLink> document)
@@ -158,8 +205,8 @@ public sealed record BinaryLinoProtocol : ILinoProtocol
     }
 
     /// <inheritdoc/>
-    public IReadOnlyList<LinoLink>? ReadDocument(LinoStreamReader input) =>
-        LinksPacket.ReadFrom(input, Limits) is { } packet ? LinoMapping.DecodeDocument(packet, Limits) : null;
+    public IReadOnlyList<LinoLink>? ReadDocument(PacketReader input) => LinoProtocolException.Wrap(() =>
+        LinksPacket.ReadFrom(input, Limits) is { } packet ? LinoMapping.DecodeDocument(packet, Limits) : null);
 }
 
 /// <summary>The wire format a message arrived in, so a reply can use the same one.</summary>
@@ -174,8 +221,13 @@ public readonly record struct MessageFormat(bool IsBinary, BinaryLinoOptions Opt
     public static MessageFormat Binary(BinaryLinoOptions options) => new(true, options);
 
     /// <summary>A protocol that writes messages in this format.</summary>
-    public ILinoProtocol Protocol(DecodeLimits limits) =>
-        IsBinary ? new BinaryLinoProtocol(Options) { Limits = limits } : new TextLinoProtocol { Limits = limits };
+    public ILinoProtocol Protocol(ProtocolLimits limits)
+    {
+        ArgumentNullException.ThrowIfNull(limits);
+        return IsBinary
+            ? new BinaryLinoProtocol(Options) { Limits = limits.Binary }
+            : new TextLinoProtocol { MaxTextBytes = limits.MaxTextBytes };
+    }
 }
 
 /// <summary>Detects which protocol a peer used.</summary>
@@ -186,25 +238,26 @@ public static class LinoProtocols
 
     /// <summary>Reads one message in whichever protocol the peer used; <c>null</c> at the end of the stream.</summary>
     public static (IReadOnlyList<LinoLink> Document, MessageFormat Format)? ReadAnyDocument(
-        LinoStreamReader input,
-        DecodeLimits? limits = null)
+        PacketReader input,
+        ProtocolLimits? limits = null)
     {
         ArgumentNullException.ThrowIfNull(input);
-        limits ??= DecodeLimits.Default;
-        var first = input.PeekByte();
+        limits ??= ProtocolLimits.Default;
+        var first = LinoProtocolException.Wrap(input.PeekByte);
         if (first < 0)
         {
             return null;
         }
         if (!IsBinaryStart((byte)first))
         {
-            return new TextLinoProtocol { Limits = limits }.ReadDocument(input) is { } text
+            return new TextLinoProtocol { MaxTextBytes = limits.MaxTextBytes }.ReadDocument(input) is { } text
                 ? (text, MessageFormat.Text)
                 : null;
         }
-        return LinksPacket.ReadFrom(input, limits) is { } packet
-            ? (LinoMapping.DecodeDocument(packet, limits), MessageFormat.Binary(BinaryLinoOptions.OfPacket(packet)))
-            : null;
+        var binary = limits.Binary;
+        return LinoProtocolException.Wrap(() => LinksPacket.ReadFrom(input, binary) is { } packet
+            ? (LinoMapping.DecodeDocument(packet, binary), MessageFormat.Binary(BinaryLinoOptions.OfPacket(packet)))
+            : ((IReadOnlyList<LinoLink>, MessageFormat)?)null);
     }
 }
 
@@ -212,7 +265,7 @@ public static class LinoProtocols
 public sealed class LinoConnection : IDisposable
 {
     private readonly Stream _stream;
-    private readonly LinoStreamReader _reader;
+    private readonly PacketReader _reader;
 
     /// <summary>Wraps <paramref name="stream"/>; disposing the connection disposes the stream.</summary>
     public LinoConnection(Stream stream, ILinoProtocol protocol)
@@ -220,7 +273,7 @@ public sealed class LinoConnection : IDisposable
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(protocol);
         _stream = stream;
-        _reader = new LinoStreamReader(stream);
+        _reader = new PacketReader(stream);
         Protocol = protocol;
     }
 
@@ -244,7 +297,7 @@ public sealed class LinoConnection : IDisposable
     }
 
     /// <summary>Receives one document; <c>null</c> when the peer closed the stream.</summary>
-    public IReadOnlyList<LinoLink>? Receive() => Protocol.ReadDocument(_reader);
+    public IReadOnlyList<LinoLink>? Receive() => LinoProtocolException.Wrap(() => Protocol.ReadDocument(_reader));
 
     /// <summary>Sends <paramref name="document"/> and waits for the reply.</summary>
     public IReadOnlyList<LinoLink> Request(IReadOnlyList<LinoLink> document)

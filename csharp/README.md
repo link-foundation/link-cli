@@ -88,6 +88,11 @@ In the library, `LinksServer` serves any `INamedTypesLinks<uint>`, and
 `LinksClient` queries a server through either `TextLinoProtocol` or
 `BinaryLinoProtocol`. The wire formats are described in
 [docs/case-studies/issue-105](../docs/case-studies/issue-105/README.md).
+The binary links notation codec itself (`LinksPacket`, `LinoMapping`,
+`LinoFormat`, `ArityRange`, `DecodeLimits`, `PacketReader`) comes from the
+`Link.Foundation.Links.Notation.Binary` namespace of the
+`Link.Foundation.Links.Notation` package; `ProtocolLimits` bounds messages of
+both protocols.
 
 ### Use as a library
 

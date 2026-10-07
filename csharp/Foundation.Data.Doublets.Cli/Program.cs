@@ -2,6 +2,7 @@ using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
 using Foundation.Data.Doublets.Cli.Protocol;
 using Link.Foundation.Links.Notation;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 

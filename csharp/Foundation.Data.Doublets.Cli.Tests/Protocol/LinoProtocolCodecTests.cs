@@ -1,4 +1,5 @@
 using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation.Binary;
 
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 
@@ -163,7 +164,7 @@ public sealed class LinoProtocolCodecTests
         using var wire = new MemoryStream();
         new TextLinoProtocol().WriteDocument(wire, document);
         Assert.Equal("..dot\n'first\n..second'\na b\n.\n", System.Text.Encoding.UTF8.GetString(wire.ToArray()));
-        var reader = LinoStreamReader.FromBytes(wire.ToArray());
+        var reader = PacketReader.FromBytes(wire.ToArray());
         Assert.Equal(document, new TextLinoProtocol().ReadDocument(reader));
         Assert.Null(new TextLinoProtocol().ReadDocument(reader));
     }
@@ -171,23 +172,26 @@ public sealed class LinoProtocolCodecTests
     [Fact]
     public void TextMessagesAcceptCrlfAndRejectTruncation()
     {
-        var crlf = LinoStreamReader.FromBytes("() ((1 1))\r\n.\r\n"u8.ToArray());
+        var crlf = PacketReader.FromBytes("() ((1 1))\r\n.\r\n"u8.ToArray());
         Assert.Equal("() ((1 1))", LinoFormat.FormatDocument(new TextLinoProtocol().ReadDocument(crlf)!));
 
-        Assert.Empty(new TextLinoProtocol().ReadDocument(LinoStreamReader.FromBytes(".\n"u8.ToArray()))!);
+        Assert.Empty(new TextLinoProtocol().ReadDocument(PacketReader.FromBytes(".\n"u8.ToArray()))!);
 
         foreach (var truncatedText in new[] { "() ((1 1))\n", "() ((1 1))" })
         {
-            var truncated = LinoStreamReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(truncatedText));
+            var truncated = PacketReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(truncatedText));
             var error = Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(truncated));
             Assert.Equal("stream ended before the '.' terminator line", error.Detail);
         }
 
-        var tiny = new TextLinoProtocol { Limits = new DecodeLimits { MaxTextBytes = 8 } };
-        var longMessage = LinoStreamReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(new string('a', 100) + "\n.\n"));
+        var tiny = new TextLinoProtocol { MaxTextBytes = 8 };
+        var longMessage = PacketReader.FromBytes(System.Text.Encoding.UTF8.GetBytes(new string('a', 100) + "\n.\n"));
         Assert.Equal("limit exceeded: text message longer than 8 bytes", Assert.Throws<LinoProtocolException>(() => tiny.ReadDocument(longMessage)).Message);
 
-        var invalidUtf8 = LinoStreamReader.FromBytes(new byte[] { 0xC3, 0x28, (byte)'\n', (byte)'.', (byte)'\n' });
+        var unlimited = new TextLinoProtocol { MaxTextBytes = ProtocolLimits.Unlimited.MaxTextBytes };
+        Assert.Equal("a b", LinoFormat.FormatDocument(unlimited.ReadDocument(PacketReader.FromBytes("a b\n.\n"u8.ToArray()))!));
+
+        var invalidUtf8 = PacketReader.FromBytes(new byte[] { 0xC3, 0x28, (byte)'\n', (byte)'.', (byte)'\n' });
         Assert.Equal("malformed message: text message is not valid UTF-8", Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(invalidUtf8)).Message);
     }
 
@@ -195,12 +199,13 @@ public sealed class LinoProtocolCodecTests
     public void AClosedStreamIsAnIoError()
     {
         var stream = new MemoryStream("() ()\n.\n"u8.ToArray());
-        var reader = new LinoStreamReader(stream);
+        var reader = new PacketReader(stream);
         stream.Dispose();
 
         var error = Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(reader));
         Assert.Equal(LinoProtocolErrorKind.Io, error.Kind);
-        Assert.IsType<ObjectDisposedException>(error.InnerException);
+        // The codec error the reader raised is kept, holding the stream's own error.
+        Assert.IsType<ObjectDisposedException>(Assert.IsType<BinaryNotationException>(error.InnerException).InnerException);
     }
 
     [Fact]
@@ -216,6 +221,51 @@ public sealed class LinoProtocolCodecTests
         Assert.Equal("42: x", new LinoProtocolException((LinoProtocolErrorKind)42, "x").Message);
     }
 
+    [Theory]
+    [InlineData(BinaryErrorKind.Io, LinoProtocolErrorKind.Io, "I/O error: x")]
+    [InlineData(BinaryErrorKind.Malformed, LinoProtocolErrorKind.Malformed, "malformed message: x")]
+    [InlineData(BinaryErrorKind.InvalidLino, LinoProtocolErrorKind.InvalidLino, "invalid LiNo: x")]
+    [InlineData(BinaryErrorKind.LimitExceeded, LinoProtocolErrorKind.LimitExceeded, "limit exceeded: x")]
+    [InlineData(BinaryErrorKind.Unencodable, LinoProtocolErrorKind.Unencodable, "cannot encode: x")]
+    [InlineData((BinaryErrorKind)42, LinoProtocolErrorKind.Malformed, "malformed message: x")]
+    public void CodecErrorsKeepTheirKindAndDetail(BinaryErrorKind kind, LinoProtocolErrorKind expected, string message)
+    {
+        var codecError = new BinaryNotationException(kind, "x");
+        var error = LinoProtocolException.From(codecError);
+        Assert.Equal((expected, "x", message), (error.Kind, error.Detail, error.Message));
+        Assert.Same(codecError, error.InnerException);
+    }
+
+    [Fact]
+    public void ProtocolsRaiseOnlyLinoProtocolErrors()
+    {
+        var invalid = PacketReader.FromBytes("(a\n.\n"u8.ToArray());
+        var error = Assert.Throws<LinoProtocolException>(() => new TextLinoProtocol().ReadDocument(invalid));
+        Assert.Equal(LinoProtocolErrorKind.InvalidLino, error.Kind);
+        Assert.IsType<BinaryNotationException>(error.InnerException);
+
+        var tooDeep = new BinaryLinoProtocol { Limits = new DecodeLimits { MaxDepth = 1 } };
+        var unencodable = Assert.Throws<LinoProtocolException>(() => tooDeep.Encode(Parse("((a))")));
+        Assert.Equal("cannot encode: nesting deeper than 1", unencodable.Message);
+
+        var limits = new ProtocolLimits { Binary = new DecodeLimits { MaxLinks = 1 }, MaxTextBytes = 4 };
+        var binary = new BinaryLinoProtocol().Encode(Parse("a"));
+        var limited = Assert.Throws<LinoProtocolException>(() => LinoProtocols.ReadAnyDocument(PacketReader.FromBytes(binary), limits));
+        Assert.Equal("limit exceeded: packet declares more than 1 links", limited.Message);
+        var longText = PacketReader.FromBytes("abcdef\n.\n"u8.ToArray());
+        Assert.Equal(LinoProtocolErrorKind.LimitExceeded, Assert.Throws<LinoProtocolException>(() => LinoProtocols.ReadAnyDocument(longText, limits)).Kind);
+        Assert.Equal(new TextLinoProtocol { MaxTextBytes = 4 }, MessageFormat.Text.Protocol(limits));
+        Assert.Equal(new BinaryLinoProtocol { Limits = limits.Binary }, MessageFormat.Binary(default).Protocol(limits));
+        Assert.Equal((DecodeLimits.Unlimited, long.MaxValue), (ProtocolLimits.Unlimited.Binary, ProtocolLimits.Unlimited.MaxTextBytes));
+        Assert.Equal(new ProtocolLimits(), ProtocolLimits.Default);
+
+        var stream = new MemoryStream(binary);
+        var closed = new PacketReader(stream);
+        stream.Dispose();
+        Assert.Equal(LinoProtocolErrorKind.Io, Assert.Throws<LinoProtocolException>(() => LinoProtocols.ReadAnyDocument(closed)).Kind);
+        Assert.Equal(LinoProtocolErrorKind.Io, Assert.Throws<LinoProtocolException>(() => new BinaryLinoProtocol().ReadDocument(closed)).Kind);
+    }
+
     [Fact]
     public void ProtocolsAreDetectedPerMessage()
     {
@@ -226,7 +276,7 @@ public sealed class LinoProtocolCodecTests
         new BinaryLinoProtocol(options).WriteDocument(wire, document);
         new TextLinoProtocol().WriteDocument(wire, document);
 
-        var reader = LinoStreamReader.FromBytes(wire.ToArray());
+        var reader = PacketReader.FromBytes(wire.ToArray());
         var formats = new List<MessageFormat>();
         while (LinoProtocols.ReadAnyDocument(reader) is { } message)
         {
@@ -252,8 +302,8 @@ public sealed class LinoProtocolCodecTests
             depth++;
         }
         Assert.Equal(40, depth);
-        var error = Assert.Throws<LinoProtocolException>(() => LinoFormat.ParseDocument(Nested(100_000)));
-        Assert.Equal(LinoProtocolErrorKind.InvalidLino, error.Kind);
+        var error = Assert.Throws<BinaryNotationException>(() => LinoFormat.ParseDocument(Nested(100_000)));
+        Assert.Equal(BinaryErrorKind.InvalidLino, error.Kind);
         Assert.True(started.Elapsed < TimeSpan.FromSeconds(10), started.Elapsed.ToString());
     }
 }

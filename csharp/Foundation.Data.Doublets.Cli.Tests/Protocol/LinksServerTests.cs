@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation.Binary;
 
 namespace Foundation.Data.Doublets.Cli.Tests.Protocol;
 

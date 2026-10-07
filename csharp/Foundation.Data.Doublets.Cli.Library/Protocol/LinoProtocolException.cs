@@ -1,3 +1,5 @@
+using Link.Foundation.Links.Notation.Binary;
+
 namespace Foundation.Data.Doublets.Cli.Protocol;
 
 /// <summary>What went wrong while encoding, decoding or exchanging a LiNo message.</summary>
@@ -9,7 +11,7 @@ public enum LinoProtocolErrorKind
     Malformed,
     /// <summary>The message text is not valid LiNo.</summary>
     InvalidLino,
-    /// <summary>The message exceeds one of the configured <see cref="DecodeLimits"/>.</summary>
+    /// <summary>The message exceeds one of the configured <see cref="ProtocolLimits"/>.</summary>
     LimitExceeded,
     /// <summary>The document cannot be represented with the chosen options.</summary>
     Unencodable,
@@ -18,6 +20,11 @@ public enum LinoProtocolErrorKind
 }
 
 /// <summary>Raised by the LiNo network protocols (issue #105).</summary>
+/// <remarks>
+/// The codecs of <c>Link.Foundation.Links.Notation.Binary</c> raise a <see cref="BinaryNotationException"/>;
+/// every protocol, server, client and archive entry point converts it into this exception
+/// with the same kind and detail, keeping the original as <see cref="Exception.InnerException"/>.
+/// </remarks>
 public sealed class LinoProtocolException : Exception
 {
     public LinoProtocolException()
@@ -47,6 +54,35 @@ public sealed class LinoProtocolException : Exception
 
     /// <summary>The message without the category prefix.</summary>
     public string Detail { get; }
+
+    /// <summary>The same failure as <paramref name="error"/>, raised by the links-notation codecs.</summary>
+    public static LinoProtocolException From(BinaryNotationException error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        var kind = error.Kind switch
+        {
+            BinaryErrorKind.Io => LinoProtocolErrorKind.Io,
+            BinaryErrorKind.Malformed => LinoProtocolErrorKind.Malformed,
+            BinaryErrorKind.InvalidLino => LinoProtocolErrorKind.InvalidLino,
+            BinaryErrorKind.LimitExceeded => LinoProtocolErrorKind.LimitExceeded,
+            BinaryErrorKind.Unencodable => LinoProtocolErrorKind.Unencodable,
+            _ => LinoProtocolErrorKind.Malformed,
+        };
+        return new LinoProtocolException(kind, error.Detail, error);
+    }
+
+    /// <summary>Runs <paramref name="action"/>, converting a <see cref="BinaryNotationException"/> with <see cref="From"/>.</summary>
+    internal static T Wrap<T>(Func<T> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (BinaryNotationException error)
+        {
+            throw From(error);
+        }
+    }
 
     internal static LinoProtocolException Malformed(string detail) => new(LinoProtocolErrorKind.Malformed, detail);
 

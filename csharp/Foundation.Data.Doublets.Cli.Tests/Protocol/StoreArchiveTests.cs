@@ -1,4 +1,5 @@
 using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 
