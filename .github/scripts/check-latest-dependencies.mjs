@@ -145,8 +145,8 @@ export function parseCsproj(text) {
   return [...text.matchAll(/<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"/g)].map((match) => {
     const end = match.index + match[0].length;
     const lineEnd = text.indexOf('\n', end);
-    const comments = text.slice(end, lineEnd === -1 ? undefined : lineEnd).match(/<!--.*?-->/g);
-    return withBlocker({ name: match[1], version: match[2] }, comments?.join(' '));
+    // The rest of the line holds the `<!-- … -->` comment, if any.
+    return withBlocker({ name: match[1], version: match[2] }, text.slice(end, lineEnd === -1 ? undefined : lineEnd));
   });
 }
 
