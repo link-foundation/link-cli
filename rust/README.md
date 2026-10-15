@@ -54,8 +54,8 @@ version control and a local TCP server; remote clients enable it on the server.
 
 The default remains the original scan algorithm; omit the flag or pass
 `--indexed-lookups=false` to compare it. On the issue-110 Linux release fixture,
-10,000 69-character named self-links imported in about 1.2 seconds with indexes;
-1,000 took about 10.2 seconds without them. These are measurements, not a
+10,000 69-character named self-links imported in about 1.3 seconds with indexes;
+1,000 took about 11.2 seconds without them. These are measurements, not a
 portable latency guarantee. Numeric imports also benefit. See the
 [bounded benchmark](../examples/named-import/README.md) and
 [investigation](../docs/case-studies/issue-110/README.md).

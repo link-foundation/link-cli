@@ -103,9 +103,9 @@ Key files:
 
 Main Rust dependencies:
 
-- `doublets = "0.5.0"` for links storage foundations.
-- `links-notation = "0.23.0"` for LiNo parsing and binary links notation.
-- `lino-arguments = "0.3.0"` for argument initialization compatibility.
+- `doublets = "0.8.0"` for links storage foundations.
+- `links-notation = "0.26.0"` for LiNo parsing and binary links notation.
+- `lino-arguments = "0.5.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
 
 The Rust CLI supports the same options as the C# one: query, storage,
@@ -321,6 +321,6 @@ own.
 - NuGet `clink`: https://www.nuget.org/packages/clink
 - crates.io `link-cli`: https://crates.io/crates/link-cli
 - Rust `doublets`: https://docs.rs/doublets/latest/doublets/
-- Rust `links-notation`: https://docs.rs/crate/links-notation/0.23.0
+- Rust `links-notation`: https://docs.rs/crate/links-notation/0.26.0
 - npm `doublets-web`: https://www.npmjs.com/package/doublets-web
 - WebAssembly local docs and implementation notes: [../js/README.md](../js/README.md)

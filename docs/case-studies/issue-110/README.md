@@ -36,24 +36,27 @@ the indexes, including after a partially failed load.
 
 ## Measurements
 
-Linux x86_64, Rust 1.99.0, release build, one compiler job. Independent parser
-and import measurements have normal scheduling variance. Milliseconds:
+Linux x86_64, Rust 1.99.0, release build, one compiler job. Final measurements
+use doublets 0.8.0, links-notation 0.26.0 and lino-arguments 0.5.0, inherited
+from current main. Independent parser and import measurements have normal
+scheduling variance. Milliseconds:
 
-| Mode | Links | Parser (scan run) | Import with scans | Import with indexes |
+| Mode | Links | Parser (indexed run) | Import with scans | Import with indexes |
 |---|---:|---:|---:|---:|
-| Numeric | 100 | 0.446 | 0.923 | 0.501 |
-| Numeric | 1,000 | 7.099 | 17.917 | 3.920 |
-| Numeric | 10,000 | 68.476 | 1,440.385 | 63.202 |
-| Named | 100 | 0.511 | 147.067 | 8.712 |
-| Named | 1,000 | 6.762 | 10,154.913 | 97.300 |
-| Named | 10,000 | — | exceeded 30s CPU cap | 1,204.611 |
+| Numeric | 100 | 0.620 | 0.539 | 0.658 |
+| Numeric | 1,000 | 13.957 | 14.456 | 4.854 |
+| Numeric | 10,000 | 63.694 | 1,425.246 | 75.116 |
+| Named | 100 | 1.080 | 121.241 | 15.202 |
+| Named | 1,000 | 7.836 | 11,211.748 | 121.363 |
+| Named | 10,000 | 82.174 | exceeded 25s deadline | 1,272.974 |
 
-For indexed 10,000-name import the independent parser probe took 73.549 ms,
-and saving both stores took 21.212 ms. The benchmark counts a trailing newline,
+For indexed 10,000-name import, saving both stores took 20.402 ms.
+The benchmark counts a trailing newline,
 so input byte sizes are one byte larger than the issue's strings.
 
-Raw observations: [baseline](evidence/baseline.jsonl),
-[indexed](evidence/indexed.jsonl).
+Raw final observations: [current dependencies](evidence/current-dependencies.txt).
+The initial [baseline](evidence/baseline.jsonl) and [indexed](evidence/indexed.jsonl)
+observations used doublets 0.5.0 and links-notation 0.23.0, before merging main.
 
 Run the [bounded benchmark](../../../examples/named-import/README.md) to
 regenerate the fixtures and compare both algorithms on your machine.
@@ -73,4 +76,18 @@ They do not cache a stale name-to-address result. The per-call Unicode facade
 construction remains, unconstrained queries still enumerate the map, and
 save rewrites the files. Large inputs are still parsed in memory. The plain
 scan algorithm remains slow for large named inputs; opt in for those workloads.
-The CLI flag is Rust-specific; C# and browser behavior is unchanged.
+The optimization and CLI flag are Rust-specific.
+
+## Dependency CI maintenance
+
+The initial CI run failed the repository's latest-dependency gate on 18
+declarations, including case-study manifests. Merging current `main` brings in
+PR #120's updates and lockfiles. Rust now uses doublets 0.8.0,
+links-notation 0.26.0 and lino-arguments 0.5.0; C# uses the matching notation release.
+
+The notation update changes canonical text for empty references and control
+characters to lossless `~1{hex}` literals. Legacy quoted input remains accepted;
+compatibility and CRLF transport tests cover both ports. Older text peers need
+a compatible parser for these literals.
+The binary version 1 golden vectors remain unchanged. See the
+[protocol notes](../../protocol/binary-links-notation.md).

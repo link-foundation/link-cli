@@ -36,6 +36,21 @@ fn text_messages_are_dot_stuffed() {
 }
 
 #[test]
+fn text_messages_preserve_crlf_inside_lossless_reference_literals() {
+    let document = vec![links_notation::LiNo::Ref("first\r\n.second".to_string())];
+    let mut wire = Vec::new();
+    TextLinoProtocol::new()
+        .write_document(&mut wire, &document)
+        .unwrap();
+    assert_eq!(
+        TextLinoProtocol::new()
+            .read_document(&mut Cursor::new(wire))
+            .unwrap(),
+        Some(document)
+    );
+}
+
+#[test]
 fn connections_decorate_any_byte_stream() {
     let document = parse_document("() ((1 1))").unwrap();
     let mut connection = LinoConnection::new(Cursor::new(Vec::new()), TextLinoProtocol::new());

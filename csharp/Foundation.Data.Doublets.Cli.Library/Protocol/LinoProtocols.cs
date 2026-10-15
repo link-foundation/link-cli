@@ -45,8 +45,8 @@ public sealed record ProtocolLimits
 /// </summary>
 /// <remarks>
 /// Lines may end with <c>\n</c> or <c>\r\n</c>; a carriage return right before
-/// a line feed is dropped, so a quoted reference holding <c>\r\n</c> arrives as
-/// <c>\n</c> (use <see cref="BinaryLinoProtocol"/> to carry such references exactly).
+/// a line feed is dropped in legacy quoted input. The formatter uses lossless
+/// <c>~1{hex}</c> literals for control characters, preserving <c>\r\n</c> inside references.
 /// </remarks>
 public sealed record TextLinoProtocol : ILinoProtocol
 {
