@@ -1,0 +1,199 @@
+name: JS client CI
+
+# @link-foundation/link-cli-client (js/client, issue #108): unit tests and
+# type checks, the conformance runner on Node.js, Bun and Deno against the
+# Rust and C# `clink --serve` and the WebAssembly `Clink`, a smoke run of the
+# synthetic consumer, and the npm release of the package.
+on:
+  # Only main on push: PR branches are covered by the pull_request trigger
+  # (issue #96).
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/js-client.yml'
+      - 'js/client/**'
+      - 'rust/**'
+      - 'csharp/**'
+      - 'docs/protocol/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/js-client.yml'
+      - 'js/client/**'
+      - 'rust/**'
+      - 'csharp/**'
+      - 'docs/protocol/**'
+  workflow_dispatch:
+
+# Never cancel a run on main: its release job may already have published.
+concurrency:
+  group: js-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default; the release job opts into more below.
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Unit tests and types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: js/client
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          cache: npm
+          cache-dependency-path: js/client/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test -- --test-timeout=30000
+
+      - name: Type declarations
+        run: npm run typecheck
+
+  conformance:
+    name: Conformance on Node.js, Bun and Deno
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+      CLINK_CSHARP: ${{ github.workspace }}/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
+      CLINK_WASM: ${{ github.workspace }}/js/pkg
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.14.0 --locked
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Cache cargo registry
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+            rust/wasm/target
+          key: ${{ runner.os }}-js-client-cargo-${{ hashFiles('rust/wasm/Cargo.lock', 'rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-js-client-cargo-
+
+      - name: Build the Rust server
+        run: cargo build --release --manifest-path rust/Cargo.toml --bin clink
+
+      - name: Build the C# server
+        run: dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
+
+      - name: Build the WebAssembly store
+        run: wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
+
+      - name: Conformance on Node.js
+        working-directory: js/client
+        run: node test/conformance/run.mjs
+
+      - name: Conformance on Bun
+        working-directory: js/client
+        run: bun test/conformance/run.mjs
+
+      - name: Conformance on Deno
+        working-directory: js/client
+        run: deno run --allow-all test/conformance/run.mjs
+
+      # A small run of the acceptance benchmark: it exits non-zero unless a
+      # fresh client reads back exactly what was written. Full-size numbers
+      # live in docs/case-studies/issue-108.
+      - name: Synthetic consumer smoke run
+        working-directory: js/client
+        run: |
+          node examples/synthetic-consumer.mjs --backend rust --records 40
+          bun examples/synthetic-consumer.mjs --backend csharp --records 40
+          deno run --allow-all examples/synthetic-consumer.mjs --backend wasm --records 40
+
+  release:
+    name: Release to npm
+    needs: [unit, conformance]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      # npm provenance attests the build with a GitHub OIDC token.
+      id-token: write
+    defaults:
+      run:
+        working-directory: js/client
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check whether this version is published
+        id: check
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already on npm."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$name@$version is not on npm yet."
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # Pull requests check what would be published, without a token.
+      - name: Dry-run the release
+        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+        run: npm publish --dry-run --access public
+
+      # On main a missing token is an error, never a silent skip: the release
+      # would otherwise never happen while CI stays green.
+      - name: Publish to npm
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outputs.published == 'false'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error title=NPM_TOKEN is missing::@link-foundation/link-cli-client ${{ steps.check.outputs.version }} is not on npm and cannot be published. Add an npm automation token with publish access to the @link-foundation scope as the NPM_TOKEN repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
+          fi
+          npm publish --access public --provenance
