@@ -293,6 +293,36 @@ const scenarios = [
     },
   },
   {
+    // Stopping the Rust server during a save used to leave a truncated
+    // database: every link was gone, the acknowledged ones included (#108).
+    name: 'a server stopped mid-write keeps every acknowledged write',
+    processOnly: true,
+    async run(store) {
+      const create = (from, length) => Array.from({ length }, (_, i) => ({ op: 'create', source: BigInt(from + i), target: BigInt(from + i) }));
+      let acknowledged = 0;
+      for (let round = 0; round < 4; round += 1) {
+        const server = await store.start();
+        const client = await connectTcp(server.address);
+        // A bigger store makes each save long enough to be interrupted.
+        if (round === 0) acknowledged += (await client.batch(create(1, 300), { window: 32 })).ok;
+        const controller = new AbortController();
+        const pending = client.batch(create(1000 * (round + 1), 200), { window: 8, signal: controller.signal });
+        setTimeout(() => {
+          controller.abort();
+          server.close();
+        }, 10 * (round + 1));
+        const result = await pending;
+        await client.close();
+        await server.exited;
+        acknowledged += result.ok;
+        await using(store, async (reader) => {
+          const count = await reader.count();
+          assert.ok(count >= BigInt(acknowledged), `round ${round}: ${count} links after ${acknowledged} acknowledged writes`);
+        });
+      }
+    },
+  },
+  {
     name: 'Unicode and LiNo fidelity of names, read back by a fresh client',
     async run(store) {
       const names = [
