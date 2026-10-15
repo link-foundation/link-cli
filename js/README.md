@@ -17,6 +17,11 @@ The browser workbench combines three runtimes:
 `js/pkg/` for the app build and GitHub Pages deployment. The reusable native
 Rust CLI/library is published separately as `link-cli`.
 
+This workbench is not a client library. Programs that use a links store from
+JavaScript or TypeScript, on a server or in a browser, use
+[`@link-foundation/link-cli-client`](client/README.md) in `js/client/`. It has
+no dependencies and does not need React or a browser.
+
 ## Architecture
 
 ```text

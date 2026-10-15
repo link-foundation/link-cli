@@ -3,6 +3,7 @@
 [![C# CI/CD Pipeline](https://github.com/link-foundation/link-cli/actions/workflows/csharp.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/csharp.yml)
 [![Rust CI/CD Pipeline](https://github.com/link-foundation/link-cli/actions/workflows/rust.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/rust.yml)
 [![WebAssembly CI](https://github.com/link-foundation/link-cli/actions/workflows/wasm.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/wasm.yml)
+[![JS client CI](https://github.com/link-foundation/link-cli/actions/workflows/js-client.yml/badge.svg)](https://github.com/link-foundation/link-cli/actions/workflows/js-client.yml)
 [![NuGet (clink)](https://img.shields.io/nuget/v/clink?logo=nuget&label=clink)](https://www.nuget.org/packages/clink)
 [![NuGet (library)](https://img.shields.io/nuget/v/Foundation.Data.Doublets.Cli?logo=nuget&label=Foundation.Data.Doublets.Cli)](https://www.nuget.org/packages/Foundation.Data.Doublets.Cli)
 [![Crates.io](https://img.shields.io/crates/v/link-cli?logo=rust&label=Crates.io)](https://crates.io/crates/link-cli)
@@ -44,6 +45,7 @@ package built from `doublets-rs`.
 - [docs/case-studies/issue-94/README.md](docs/case-studies/issue-94/README.md): evidence and analysis for the optional transactions and version-control layers.
 - [docs/case-studies/issue-98/README.md](docs/case-studies/issue-98/README.md): evidence and analysis for making the libraries reusable as a doublets-backed transactional store.
 - [docs/case-studies/issue-105/README.md](docs/case-studies/issue-105/README.md): requirements, prior art and the wire formats of the LiNo text and binary protocols over TCP.
+- [docs/case-studies/issue-108/README.md](docs/case-studies/issue-108/README.md): the JS/TS client, the guarantees of each backend, what conformance found and the synthetic consumer benchmark.
 
 ### API references
 
@@ -516,6 +518,24 @@ Each call is one request, such as `(count: (* 1))`, `(update: (1 2 2))` or
 `(set-name: (2 'a pair'))`. A write replies with the net change of every link
 it touched. [`docs/protocol/links-operations.txt`](docs/protocol/links-operations.txt)
 records one whole conversation, and both ports replay it in their tests.
+
+### Use a served database from JavaScript or TypeScript
+
+[`@link-foundation/link-cli-client`](js/client/README.md) is the JS/TS
+counterpart of `RemoteLinks`. It speaks the same protocol to `clink --serve`
+from Node.js, Bun and Deno, can start and stop a server process of its own,
+and serves the in-process WebAssembly store (browsers included) behind the
+same contract. Addresses are `BigInt`, and every backend states its
+guarantees in `client.capabilities` instead of emulating missing ones:
+
+```js
+import { connectTcp } from '@link-foundation/link-cli-client/tcp';
+
+const links = await connectTcp('127.0.0.1:7777');
+const link = await links.create(1n, 1n);
+await links.setName(link.index, 'a pair');
+await links.close();
+```
 
 ## Update single link
 
