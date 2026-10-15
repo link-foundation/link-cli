@@ -12,6 +12,11 @@ The browser workbench combines three runtimes:
 - `doublets-web` for a live WebAssembly `UnitedLinks` mirror built from the
   current query result. The committed lockfile currently pins `0.1.2`.
 
+`clink-wasm` is an internal wrapper for this browser app and has
+`publish = false` in its Cargo manifest. `wasm-pack` builds it locally into
+`js/pkg/` for the app build and GitHub Pages deployment. The reusable native
+Rust CLI/library is published separately as `link-cli`.
+
 ## Architecture
 
 ```text

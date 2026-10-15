@@ -1,6 +1,8 @@
 [package]
 name = "clink-wasm"
 version = "2.3.0"
+# Built by wasm-pack for the browser workbench; not distributed on crates.io.
+publish = false
 authors = ["link-foundation"]
 edition = "2021"
 description = "Browser WebAssembly wrapper for the Rust link-cli core"
