@@ -113,7 +113,8 @@ public static class LinoDatabaseOutput
 
         var hasSingleQuote = reference.Contains('\'');
         var hasDoubleQuote = reference.Contains('"');
-        var needsQuoting = reference.Contains(':')
+        var needsQuoting = uint.TryParse(reference, out _)
+            || reference.Contains(':')
             || reference.Contains('(')
             || reference.Contains(')')
             || reference.Contains(' ')

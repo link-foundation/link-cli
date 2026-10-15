@@ -147,7 +147,7 @@ public sealed class LinksServer : IDisposable
     /// <inheritdoc/>
     public void Dispose() => Shutdown();
 
-    private void HandleConnection(TcpClient client, INamedTypesLinks<uint> links)
+    internal void HandleConnection(TcpClient client, INamedTypesLinks<uint> links)
     {
         try
         {
@@ -176,6 +176,11 @@ public sealed class LinksServer : IDisposable
                 var reply = Accepts(format) ? Execute(links, document) : ErrorDocument("this server does not accept this protocol");
                 format.Protocol(_options.Limits).WriteDocument(stream, reply);
             }
+        }
+        catch (InvalidOperationException error) when (!client.Connected)
+        {
+            // Shutdown can disconnect the socket before this worker gets its stream.
+            Trace($"connection closed: {error.Message}");
         }
         catch (Exception error) when (error is IOException or ObjectDisposedException or SocketException or LinoProtocolException)
         {
