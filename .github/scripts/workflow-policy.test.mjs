@@ -53,6 +53,30 @@ function readJobs(text) {
   return jobs.map((job) => ({ name: job.name, body: job.body.join('\n') }));
 }
 
+const trustedPublishingAuth = /^\s*uses:\s*rust-lang\/crates-io-auth-action@/m;
+
+/** Splits a workflow into `{ first, last, text }` entries, one per job step. */
+function readSteps(text) {
+  const steps = [];
+  let current = null;
+  text.split('\n').forEach((line, index) => {
+    const start = /^(\s*)- (?:name|uses|id|run|if):/.exec(line);
+    if (start && (!current || start[1].length <= current.indent)) {
+      current = { indent: start[1].length, first: index + 1, lines: [line] };
+      steps.push(current);
+    } else if (current && line.trim() !== '' && line.length - line.trimStart().length <= current.indent) {
+      current = null; // left the steps list
+    } else if (current) {
+      current.lines.push(line);
+    }
+  });
+  return steps.map((step) => ({
+    first: step.first,
+    last: step.first + step.lines.length - 1,
+    text: step.lines.join('\n'),
+  }));
+}
+
 /** Reads the `options:` of a `workflow_dispatch` choice input. */
 function readChoiceOptions(text, inputName) {
   const lines = text.split('\n');
@@ -161,11 +185,31 @@ for (const workflow of workflows) {
 
   // `continue-on-error` turns a real failure into a green run - the exact
   // false negative that hid the Windows test failures reported in issue #96.
+  // The one exception is the crates.io trusted publishing exchange: when it
+  // fails, the publish step falls back to the token secret, and it still fails
+  // when neither credential works, so nothing is masked.
   test(`${workflow.name}: does not mask failures with continue-on-error`, () => {
-    assert.ok(
-      !/continue-on-error/.test(workflow.text),
-      `${workflow.name} uses continue-on-error, which masks real failures`,
-    );
+    const steps = readSteps(workflow.text);
+    workflow.text.split('\n').forEach((line, index) => {
+      if (!/continue-on-error/.test(line)) return;
+      const number = index + 1;
+      const step = steps.find(({ first, last }) => first <= number && number <= last);
+      assert.ok(
+        step && trustedPublishingAuth.test(step.text),
+        `${workflow.name}:${number} uses continue-on-error, which masks real failures`,
+      );
+      const id = /^\s*id:\s*(\S+)\s*$/m.exec(step.text)?.[1];
+      assert.ok(id, `${workflow.name}:${number}: the trusted publishing step needs an id`);
+      const consumers = workflow.text.split('\n').filter((other) => other.includes(`steps.${id}.outputs.token`));
+      assert.ok(consumers.length > 0, `${workflow.name}: nothing reads steps.${id}.outputs.token`);
+      for (const consumer of consumers) {
+        assert.match(
+          consumer,
+          new RegExp(`steps\\.${id}\\.outputs\\.token \\|\\| secrets\\.`),
+          `${workflow.name}: "${consumer.trim()}" has no token secret fallback for a failed exchange`,
+        );
+      }
+    });
   });
 
   // In YAML a leading `!` starts a tag, so `if: !cancelled() && ...` is a
