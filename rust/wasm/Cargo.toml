@@ -1,6 +1,6 @@
 [package]
 name = "clink-wasm"
-version = "2.3.0"
+version = "2.4.0"
 # Built by wasm-pack for the browser workbench; not distributed on crates.io.
 publish = false
 authors = ["link-foundation"]

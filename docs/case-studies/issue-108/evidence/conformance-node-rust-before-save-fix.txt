@@ -1,0 +1,28 @@
+# link-cli-client conformance on node 26.11.1: rust
+ok - rust: golden conversation (docs/protocol/links-operations.txt) (41 ms)
+ok - rust: addresses: the whole u32 range as BigInt, nothing beyond it (20 ms)
+ok - rust: duplicates: as the backend states in capabilities.duplicateLinks (42 ms)
+ok - rust: holes: deletion cascades, frees addresses, and misses are errors (34 ms)
+ok - rust: append and restart: a fresh server process reads back every write (157 ms)
+not ok - rust: aborted batch: every write reported ok is there, nothing reported not-sent is
+  # AssertionError [ERR_ASSERTION]: 0 links after 32 ok, 8 unknown
+  #     at file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:287:16
+  #     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+  #     at async using (file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:124:12)
+  #     at async Object.run (file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:283:7)
+  #     at async main (file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:463:9)
+  #     at async file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:479:1
+not ok - rust: a server stopped mid-write keeps every acknowledged write
+  # AssertionError [ERR_ASSERTION]: round 1: 0 links after 332 acknowledged writes
+  #     at file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:320:18
+  #     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+  #     at async using (file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:124:12)
+  #     at async Object.run (file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:318:9)
+  #     at async main (file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:463:9)
+  #     at async file:///tmp/gh-issue-solver-1792051678452/js/client/test/conformance/run.mjs:479:1
+ok - rust: Unicode and LiNo fidelity of names, read back by a fresh client (110 ms)
+ok - rust: empty names, renaming and moving names (33 ms)
+ok - rust: limits: oversized requests are refused before sending (11 ms)
+ok - rust: incompatible protocol: a binary-only server is refused up front (12 ms)
+ok - rust: ownership: a client stops only the server process it started (40 ms)
+# 10 passed, 2 failed, 0 skipped

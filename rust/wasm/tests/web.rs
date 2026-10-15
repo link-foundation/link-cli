@@ -13,7 +13,7 @@ fn creates_a_clink_instance() {
 
 #[wasm_bindgen_test]
 fn exposes_versions() {
-    assert_eq!(Clink::version(), "2.3.0");
+    assert_eq!(Clink::version(), "2.4.0");
     assert!(Clink::rust_core_version().starts_with("clink "));
 }
 

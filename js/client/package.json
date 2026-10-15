@@ -1,0 +1,63 @@
+{
+  "name": "@link-foundation/link-cli-client",
+  "version": "0.1.0",
+  "description": "Minimal universal JS/TS client for link-cli stores: the clink --serve TCP protocol (Node.js, Bun, Deno), a subprocess adapter and the in-process WebAssembly backend, behind one contract with explicit capabilities",
+  "type": "module",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/link-foundation/link-cli.git",
+    "directory": "js/client"
+  },
+  "homepage": "https://github.com/link-foundation/link-cli/tree/main/js/client#readme",
+  "bugs": "https://github.com/link-foundation/link-cli/issues",
+  "keywords": [
+    "links",
+    "doublets",
+    "lino",
+    "links-notation",
+    "link-cli",
+    "clink",
+    "client",
+    "wasm"
+  ],
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./tcp": {
+      "types": "./types/tcp.d.ts",
+      "default": "./src/tcp.js"
+    },
+    "./process": {
+      "types": "./types/process.d.ts",
+      "default": "./src/process.js"
+    },
+    "./lino": {
+      "types": "./types/lino.d.ts",
+      "default": "./src/lino.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "types",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:conformance": "node test/conformance/run.mjs",
+    "benchmark": "node examples/synthetic-consumer.mjs",
+    "typecheck": "tsc --noEmit --strict --lib esnext,dom --target esnext --module nodenext types/*.d.ts test/types.ts"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

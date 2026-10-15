@@ -1,0 +1,144 @@
+synthetic consumer on node, backend wasm: 300 records, window 64
+  write: 496.2 ms, 5137 requests (10352/s); request p50 3.4 ms, p95 11.5 ms, p99 16.2 ms, max 20.3 ms
+    atoms          1009 requests  176.2 ms
+    names          1009 requests  107.3 ms
+    fields          403 requests  23.6 ms
+    records         300 requests  13.5 ms
+    addresses        10 requests  0.6 ms
+    members        1653 requests  98.3 ms
+    traces          753 requests  46.1 ms
+  read: 90.9 ms, 1010 requests (11115/s); request p50 1.7 ms, p95 7.6 ms, p99 10.0 ms, max 10.2 ms
+    read links        1 requests  28.3 ms
+    read names     1009 requests  52.5 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +8839 KiB, client RSS 86512 KiB, server peak RSS n/a
+  disk: n/a (in memory)
+  readback by a fresh client: identical
+synthetic consumer on node, backend csharp: 300 records, window 64
+  write: 5603.9 ms, 5137 requests (917/s); request p50 22.8 ms, p95 221.7 ms, p99 479.3 ms, max 637.5 ms
+    atoms          1009 requests  2425.4 ms
+    names          1009 requests  1409.8 ms
+    fields          403 requests  257.9 ms
+    records         300 requests  339.8 ms
+    addresses        10 requests  2.0 ms
+    members        1653 requests  708.8 ms
+    traces          753 requests  190.8 ms
+  read: 943.5 ms, 1010 requests (1070/s); request p50 38.7 ms, p95 59.9 ms, p99 63.0 ms, max 124.3 ms
+    read links        1 requests  173.8 ms
+    read names     1009 requests  644.1 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +6634 KiB, client RSS 82276 KiB, server peak RSS 62128 KiB
+  disk: 345 KiB in consumer db.links (129 KiB), consumer db.names.links (216 KiB)
+  readback by a fresh client: identical
+synthetic consumer on node, backend rust: 300 records, window 64
+  write: 22445.5 ms, 5137 requests (229/s); request p50 239.7 ms, p95 608.0 ms, p99 981.4 ms, max 1087.0 ms
+    atoms          1009 requests  1577.2 ms
+    names          1009 requests  7870.7 ms
+    fields          403 requests  1433.2 ms
+    records         300 requests  1290.5 ms
+    addresses        10 requests  29.9 ms
+    members        1653 requests  6796.6 ms
+    traces          753 requests  3425.6 ms
+  read: 2711.9 ms, 1010 requests (372/s); request p50 165.9 ms, p95 194.9 ms, p99 206.9 ms, max 210.3 ms
+    read links        1 requests  27.4 ms
+    read names     1009 requests  2673.9 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +10958 KiB, client RSS 82452 KiB, server peak RSS 3840 KiB
+  disk: 183 KiB in consumer db.links (76 KiB), consumer db.names.links (107 KiB)
+  readback by a fresh client: identical
+synthetic consumer on bun, backend wasm: 300 records, window 64
+  write: 328.5 ms, 5137 requests (15638/s); request p50 1.8 ms, p95 9.1 ms, p99 12.9 ms, max 22.9 ms
+    atoms          1009 requests  144.1 ms
+    names          1009 requests  59.1 ms
+    fields          403 requests  14.1 ms
+    records         300 requests  10.0 ms
+    addresses        10 requests  0.4 ms
+    members        1653 requests  44.8 ms
+    traces          753 requests  37.5 ms
+  read: 62.8 ms, 1010 requests (16089/s); request p50 1.2 ms, p95 6.0 ms, p99 6.9 ms, max 10.2 ms
+    read links        1 requests  25.3 ms
+    read names     1009 requests  27.8 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +5247 KiB, client RSS 76632 KiB, server peak RSS n/a
+  disk: n/a (in memory)
+  readback by a fresh client: identical
+synthetic consumer on bun, backend csharp: 300 records, window 64
+  write: 1812.2 ms, 5137 requests (2835/s); request p50 12.1 ms, p95 47.9 ms, p99 57.3 ms, max 80.6 ms
+    atoms          1009 requests  422.7 ms
+    names          1009 requests  752.0 ms
+    fields          403 requests  143.2 ms
+    records         300 requests  68.3 ms
+    addresses        10 requests  2.2 ms
+    members        1653 requests  240.9 ms
+    traces          753 requests  105.5 ms
+  read: 530.8 ms, 1010 requests (1903/s); request p50 21.9 ms, p95 37.4 ms, p99 55.0 ms, max 83.8 ms
+    read links        1 requests  90.6 ms
+    read names     1009 requests  389.3 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +7310 KiB, client RSS 59140 KiB, server peak RSS 61864 KiB
+  disk: 345 KiB in consumer db.names.links (216 KiB), consumer db.links (129 KiB)
+  readback by a fresh client: identical
+synthetic consumer on bun, backend rust: 300 records, window 64
+  write: 18346.4 ms, 5137 requests (280/s); request p50 209.8 ms, p95 566.4 ms, p99 597.4 ms, max 667.3 ms
+    atoms          1009 requests  991.3 ms
+    names          1009 requests  6599.4 ms
+    fields          403 requests  1292.0 ms
+    records         300 requests  956.3 ms
+    addresses        10 requests  31.8 ms
+    members        1653 requests  5627.1 ms
+    traces          753 requests  2821.2 ms
+  read: 3863.2 ms, 1010 requests (261/s); request p50 217.5 ms, p95 470.0 ms, p99 496.8 ms, max 500.5 ms
+    read links        1 requests  17.8 ms
+    read names     1009 requests  3818.1 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +3226 KiB, client RSS 50076 KiB, server peak RSS 3900 KiB
+  disk: 183 KiB in consumer db.names.links (107 KiB), consumer db.links (76 KiB)
+  readback by a fresh client: identical
+synthetic consumer on deno, backend wasm: 300 records, window 64
+  write: 385.3 ms, 5137 requests (13332/s); request p50 3.3 ms, p95 8.5 ms, p99 21.9 ms, max 27.5 ms
+    atoms          1009 requests  105.4 ms
+    names          1009 requests  68.8 ms
+    fields          403 requests  16.7 ms
+    records         300 requests  14.1 ms
+    addresses        10 requests  0.5 ms
+    members        1653 requests  116.6 ms
+    traces          753 requests  48.2 ms
+  read: 128.6 ms, 1010 requests (7854/s); request p50 3.6 ms, p95 6.7 ms, p99 8.3 ms, max 9.1 ms
+    read links        1 requests  33.3 ms
+    read names     1009 requests  71.7 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +8874 KiB, client RSS 83164 KiB, server peak RSS n/a
+  disk: n/a (in memory)
+  readback by a fresh client: identical
+synthetic consumer on deno, backend csharp: 300 records, window 64
+  write: 1748.9 ms, 5137 requests (2937/s); request p50 13.3 ms, p95 50.5 ms, p99 69.3 ms, max 78.8 ms
+    atoms          1009 requests  403.6 ms
+    names          1009 requests  749.1 ms
+    fields          403 requests  121.0 ms
+    records         300 requests  60.3 ms
+    addresses        10 requests  2.3 ms
+    members        1653 requests  272.2 ms
+    traces          753 requests  84.0 ms
+  read: 660.3 ms, 1010 requests (1530/s); request p50 27.8 ms, p95 41.9 ms, p99 45.6 ms, max 100.5 ms
+    read links        1 requests  122.5 ms
+    read names     1009 requests  458.1 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +6097 KiB, client RSS 78072 KiB, server peak RSS 62372 KiB
+  disk: 345 KiB in consumer db.links (129 KiB), consumer db.names.links (216 KiB)
+  readback by a fresh client: identical
+synthetic consumer on deno, backend rust: 300 records, window 64
+  write: 18522.8 ms, 5137 requests (277/s); request p50 213.8 ms, p95 542.3 ms, p99 664.4 ms, max 703.3 ms
+    atoms          1009 requests  961.1 ms
+    names          1009 requests  6680.2 ms
+    fields          403 requests  1403.1 ms
+    records         300 requests  899.8 ms
+    addresses        10 requests  24.7 ms
+    members        1653 requests  5745.5 ms
+    traces          753 requests  2781.2 ms
+  read: 2402.6 ms, 1010 requests (420/s); request p50 148.2 ms, p95 166.6 ms, p99 169.7 ms, max 171.7 ms
+    read links        1 requests  27.5 ms
+    read names     1009 requests  2362.1 ms
+  links: 4128 written, 4128 read back; 84 duplicate offers dropped
+  memory: client heap +5787 KiB, client RSS 76680 KiB, server peak RSS 3820 KiB
+  disk: 183 KiB in consumer db.links (76 KiB), consumer db.names.links (107 KiB)
+  readback by a fresh client: identical
