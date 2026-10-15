@@ -142,6 +142,16 @@ public sealed class LinksServerTests
     }
 
     [Fact]
+    public void ADisconnectedSocketBeforeTheWorkerStartsIsClean()
+    {
+        using var server = LinksServer.Bind("127.0.0.1", 0);
+        using var client = new TcpClient();
+        // Reproduce the state seen when shutdown disconnects an accepted socket
+        // before the worker obtains its stream, without scheduling a race.
+        server.HandleConnection(client, null!);
+    }
+
+    [Fact]
     public void ShuttingDownRightAfterAConnectionArrivesIsClean()
     {
         // A connection the server has accepted but not started handling yet is

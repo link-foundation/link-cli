@@ -148,6 +148,39 @@ public class CliExportIntegrationTests
         }
     }
 
+    [Theory]
+    [InlineData("1")]
+    [InlineData("0")]
+    [InlineData("42")]
+    public async Task TextExport_RoundTripsNumericNamesThroughImport(string name)
+    {
+        var tempDirectory = CreateTempDirectory();
+        try
+        {
+            var sourcePath = Path.Combine(tempDirectory, "source.links");
+            using (var links = new Foundation.Data.Doublets.Cli.NamedTypesDecorator<uint>(sourcePath, false))
+            {
+                Foundation.Data.Doublets.Cli.LinoDatabaseInput.ImportText(links, "(1: 1 1)\n(2: 2 2)\n(3: 1 2)");
+                links.SetName(2, name);
+            }
+
+            var textPath = Path.Combine(tempDirectory, "export.lino");
+            var beforePath = Path.Combine(tempDirectory, "before.bin");
+            var afterPath = Path.Combine(tempDirectory, "after.bin");
+            Clink.AssertSucceeded(await Clink.RunAsync(
+                "--db", sourcePath, "--out", textPath, "--export-binary", beforePath));
+            Clink.AssertSucceeded(await Clink.RunAsync(
+                "--db", Path.Combine(tempDirectory, "target.links"),
+                "--import", textPath, "--export-binary", afterPath));
+
+            Assert.Equal(File.ReadAllBytes(beforePath), File.ReadAllBytes(afterPath));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static string CreateTempDirectory()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"clink-export-{Guid.NewGuid():N}");

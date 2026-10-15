@@ -65,8 +65,9 @@ facade and its conversion caches are still reconstructed per name operation.
 The index removes the growing scans but does not eliminate that fixed cost.
 Unconstrained queries still enumerate the full graph, save rewrites the whole
 file, and import parses the input into memory. C# and the browser do not expose
-this CLI flag; library consumers opt in explicitly. Existing numeric-name
-text-export ambiguity is tracked separately in [issue #112](https://github.com/link-foundation/link-cli/issues/112).
+this CLI flag; library consumers opt in explicitly. Numeric-only names remain
+ambiguous in Rust text export; [issue #112](https://github.com/link-foundation/link-cli/issues/112)
+documents the separate C# fix.
 
 ### Optional Transactions and Version Control
 
