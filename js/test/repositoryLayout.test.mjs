@@ -64,6 +64,13 @@ test('language code package manifests and generated evidence stay out of the roo
   }
 });
 
+test('the browser-only WebAssembly wrapper opts out of crates.io publishing', () => {
+  const manifest = readFileSync(join(repoRoot, 'rust/wasm/Cargo.toml'), 'utf8');
+  const packageSection = manifest.split(/^\[package\]\s*$/m)[1]?.split(/^\[/m)[0];
+
+  assert.match(packageSection, /^publish\s*=\s*false\s*$/m);
+});
+
 test('JavaScript package scripts target the relocated WebAssembly crate and split script trees', () => {
   const packageJson = JSON.parse(
     readFileSync(join(repoRoot, 'js/package.json'), 'utf8')
