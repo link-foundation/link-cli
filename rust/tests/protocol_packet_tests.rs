@@ -206,7 +206,7 @@ fn canonical_text_round_trips_the_corpus() {
 fn references_are_quoted_only_when_needed() {
     assert_eq!(format_reference("plain"), "plain");
     assert_eq!(format_reference("$x"), "$x");
-    assert_eq!(format_reference(""), "''");
+    assert_eq!(format_reference(""), "~1{}");
     assert_eq!(format_reference("a b"), "'a b'");
     assert_eq!(format_reference("it's"), "\"it's\"");
     assert_eq!(format_reference("'\""), "`'\"`");

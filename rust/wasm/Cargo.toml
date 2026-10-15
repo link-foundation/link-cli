@@ -16,7 +16,7 @@ link-cli = { path = ".." }
 wasm-bindgen = "0.2.129"
 console_error_panic_hook = { version = "0.1.7", optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
+serde_json = "1.0.154"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.79"

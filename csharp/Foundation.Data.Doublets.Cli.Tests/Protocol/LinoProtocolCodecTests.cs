@@ -113,7 +113,7 @@ public sealed class LinoProtocolCodecTests
     {
         Assert.Equal("plain", LinoFormat.FormatReference("plain"));
         Assert.Equal("$x", LinoFormat.FormatReference("$x"));
-        Assert.Equal("''", LinoFormat.FormatReference(""));
+        Assert.Equal("~1{}", LinoFormat.FormatReference(""));
         Assert.Equal("'a b'", LinoFormat.FormatReference("a b"));
         Assert.Equal("\"it's\"", LinoFormat.FormatReference("it's"));
         Assert.Equal("`'\"`", LinoFormat.FormatReference("'\""));
@@ -163,10 +163,13 @@ public sealed class LinoProtocolCodecTests
         var document = Parse(".dot\n'first\n.second'\n(a b)");
         using var wire = new MemoryStream();
         new TextLinoProtocol().WriteDocument(wire, document);
-        Assert.Equal("..dot\n'first\n..second'\na b\n.\n", System.Text.Encoding.UTF8.GetString(wire.ToArray()));
+        Assert.Equal("..dot\n~1{66697273740a2e7365636f6e64}\na b\n.\n", System.Text.Encoding.UTF8.GetString(wire.ToArray()));
         var reader = PacketReader.FromBytes(wire.ToArray());
         Assert.Equal(document, new TextLinoProtocol().ReadDocument(reader));
         Assert.Null(new TextLinoProtocol().ReadDocument(reader));
+        // Older peers still send quoted multiline references with dot stuffing.
+        var legacy = PacketReader.FromBytes("..dot\n'first\n..second'\na b\n.\n"u8.ToArray());
+        Assert.Equal(document, new TextLinoProtocol().ReadDocument(legacy));
     }
 
     [Fact]
