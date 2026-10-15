@@ -144,8 +144,8 @@ rather than letting a batch look atomic.
 | `protocol` | `links-text/1` | `links-text/1` | `links-text/1` |
 | `addressBits` / `maxAddress` | 32 / 2^32 - 1 | 32 / 2^32 - 1 | 32 / 2^32 - 1 |
 | `atomicTransactions`, `rollback` | no: one write per request | no | no |
-| `persistent` | yes: the file is rewritten after every write | yes: memory-mapped file | no: memory only |
-| `crashConsistency` | no: the rewrite truncates first, so a crash mid-write can lose the file | no: no flush ordering | no |
+| `persistent` | yes: the whole file is replaced after every write | yes: memory-mapped file | no: memory only |
+| `crashConsistency` | no: a stopped server keeps its last complete save (written aside, then renamed), but the links and names files are saved one after the other, without `fsync` | no: no flush ordering | no |
 | `durableFlush` | no `fsync` | no flush | no |
 | `pagination` | no: `each`/`exportLinks` return every match in one reply | no | no |
 | `bulk` | `pipelined-non-atomic` | `pipelined-non-atomic` | `sequential-non-atomic` |
@@ -192,9 +192,9 @@ npm run benchmark -- --backend rust --records 300
 The conformance runner replays `docs/protocol/links-operations.txt`, the
 golden conversation that the Rust and C# test suites also replay. It covers
 u32 addresses, duplicates, holes and reuse, append and restart through a fresh
-server process, aborted batches read back by a fresh client, Unicode and LiNo
-quoting of names, size limits, a server that refuses the text protocol, and
-process ownership. The benchmark (`examples/synthetic-consumer.mjs`) writes
+server process, aborted batches read back by a fresh client, a server stopped
+in the middle of a write, Unicode and LiNo quoting of names, size limits, a
+server that refuses the text protocol, and process ownership. The benchmark (`examples/synthetic-consumer.mjs`) writes
 multilingual nested records with trace references and duplicate offers in
 bulk batches. It then reads them back with a fresh client and reports latency,
 requests, memory and disk use.

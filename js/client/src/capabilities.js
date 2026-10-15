@@ -29,10 +29,11 @@ export function tcpServerCapabilities(overrides = {}) {
     addressBits: 32,
     maxAddress: MAX_U32_ADDRESS,
     persistent: true,
-    // The Rust server rewrites its file after every write without fsync, the
+    // The Rust server replaces its file after every write without fsync, the
     // C# server writes through a memory-mapped file without flushing: a write
-    // that was answered survives the server process, not a power loss, and a
-    // crash in the middle of a write may leave a torn file.
+    // that was answered survives the server process, not a power loss. The
+    // links and the names live in two files written one after the other, and
+    // no write is atomic across both.
     crashConsistency: false,
     durableFlush: false,
     // Creating a link equal to an existing one: the Rust server stores a
