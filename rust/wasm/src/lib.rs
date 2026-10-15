@@ -1,4 +1,7 @@
 use anyhow::Result;
+use link_cli::protocol::{
+    error_document, execute_request, format_document, parse_document, ProtocolError,
+};
 use link_cli::{Link, LinkStorage, QueryProcessor};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -70,6 +73,23 @@ impl Clink {
                 links: snapshot(&self.storage),
             },
         })
+    }
+
+    /// Answers one request document of the links protocol with its reply
+    /// document, exactly as `clink --serve` answers a text message: the
+    /// `LinksOperation` documents (`(count: ...)`, `(create: ...)`, ...), a
+    /// substitution query, or the empty document for every link. A failure is
+    /// the `(error: 'message')` reply, so JS clients of a server and of this
+    /// in-memory store share one implementation.
+    #[wasm_bindgen]
+    pub fn request(&mut self, text: &str) -> String {
+        let reply = match parse_document(text) {
+            Ok(document) => {
+                execute_request(&mut self.storage, &QueryProcessor::new(false), &document)
+            }
+            Err(error) => error_document(&ProtocolError::from(error).to_string()),
+        };
+        format_document(&reply)
     }
 
     #[wasm_bindgen]
@@ -255,6 +275,26 @@ mod tests {
         let parsed: Value = serde_json::from_str(&clink.reset()).unwrap();
         assert_eq!(parsed["links"].as_array().unwrap().len(), 0);
         assert_eq!(parsed["output"], "");
+    }
+
+    #[test]
+    fn answers_links_protocol_requests_like_the_server() {
+        let mut clink = Clink::new();
+        assert_eq!(clink.request("(create: (1 1))"), "() ((1: 1 1))");
+        assert_eq!(clink.request("(create: (1 2))"), "() ((2: 1 2))");
+        assert_eq!(clink.request("(count: (* 1))"), "(count: 2)");
+        assert_eq!(clink.request("(each: (* * 2))"), "(2: 1 2)");
+        // The in-memory store keeps a name on the link itself.
+        assert_eq!(clink.request("(set-name: (2 'a pair'))"), "(link: 2)");
+        assert_eq!(clink.request("(get-by-name: 'a pair')"), "(link: 2)");
+        assert_eq!(clink.request("(get-name: 2)"), "(name: 'a pair')");
+        assert_eq!(clink.request("(delete: 1)"), "((1: 1 1)) ()\n((2: 1 2)) ()");
+        assert_eq!(clink.request(""), "");
+        assert_eq!(clink.request("(delete: 7)"), "(error: 'Link not found: 7')");
+        assert!(clink
+            .request("(create: (4294967296 1))")
+            .starts_with("(error: \"malformed message: expected a number"));
+        assert!(clink.request("garbage((").starts_with("(error: "));
     }
 
     #[test]
