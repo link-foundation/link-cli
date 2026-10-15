@@ -57,9 +57,11 @@ transactional library (#94, #98) or a new benchmark issue (#31, #35).
 
 - **"published".** The package is set up to be published: an npm release
   job runs on `main` and publishes each version that npm does not have yet.
-  Publishing needs an `NPM_TOKEN` repository secret. Without it the job
-  fails on `main` with a message that says what to add, instead of passing
-  silently. Pull requests run `npm publish --dry-run`.
+  It publishes through npm trusted publishing (OIDC) once the package trusts
+  the workflow, and otherwise with an `NPM_TOKEN` repository secret, the same
+  order main uses for crates.io. When neither works the job fails on `main`
+  with a message that says what to add, instead of passing silently. Pull
+  requests run `npm publish --dry-run`.
 - **"full-width addresses".** Both servers and the WebAssembly store use
   `u32` addresses. The client is not limited to 32 bits: addresses are
   `bigint`, and the range comes from `capabilities.maxAddress`. The > 2^53
@@ -171,8 +173,9 @@ back. The conformance runner and the benchmark both do that.
   the conformance runner on Node.js, Bun and Deno, and a small run of the
   synthetic consumer on each backend;
 - the release job runs `npm publish --dry-run` on pull requests. On `main` it
-  publishes with provenance when the version is new, and fails with an
-  explicit message when `NPM_TOKEN` is missing.
+  publishes with provenance when the version is new (trusted publishing
+  first, then the `NPM_TOKEN` secret), and fails with an explicit message
+  when neither credential can publish.
 
 ### 4.8 Local and remote behind one contract (issue comment)
 
@@ -330,7 +333,8 @@ evidence for #108, and CI only runs a small smoke version of it.
   [data-rs#18](https://github.com/linksplatform/data-rs/issues/18) (the
   external address range overlaps a service constant). The client keeps each
   connection on one store and never shards on its own.
-- Publishing to npm needs the `NPM_TOKEN` secret (§4.7).
+- The first npm release needs the `NPM_TOKEN` secret: npm can only trust a
+  workflow as publisher of a package that already exists (§4.7).
 
 ## 8. Reproduce
 
