@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+
+## [4.0.2] - 2026-10-15
+
+Synchronize protocol documentation with links-notation 0.26 inherited from main.
+Verify legacy quoted input and lossless CRLF transport. Binary version 1
+encoding is unchanged.
+
+## [4.0.1] - 2026-10-15
+
+Update Links Notation, System.CommandLine, and test dependencies to satisfy the latest-dependency CI gate. Verify canonical lossless reference literals while retaining coverage for legacy multiline text framing.
+
+Quote numeric names in LiNo text exports and preserve quoted references as names on import, preventing numeric names from being confused with link addresses.
+
+Handle a socket disconnected before its connection worker starts so server shutdown cannot crash the process.
+
 ## [4.0.0] - 2026-10-07
 
 The binary links notation codec now comes from `Link.Foundation.Links.Notation.Binary` (links-notation 0.23.0) instead of a local copy. `ArityRange`, `LinksPacket`, `Section`, `PacketReference`, `DecodeLimits`, `LinoMapping` and `LinoFormat` are removed from `Foundation.Data.Doublets.Cli.Protocol`; import them from `Link.Foundation.Links.Notation.Binary`. `LinoStreamReader` is replaced by `PacketReader`.

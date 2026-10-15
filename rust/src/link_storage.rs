@@ -11,6 +11,7 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 
 use crate::error::LinkError;
+use crate::indexed_links::LinksMap;
 use crate::link::Link;
 use crate::storage::StorageRevision;
 
@@ -44,7 +45,7 @@ const UNUSED_HEADER: &str = "# unused:";
 /// LinkStorage provides persistent storage for links
 /// Corresponds to the storage functionality in NamedLinksDecorator in C#
 pub struct LinkStorage {
-    links: HashMap<u32, Link>,
+    links: LinksMap,
     names: HashMap<u32, String>,
     name_to_id: HashMap<String, u32>,
     /// The highest address ever handed out and not given back, i.e. the
@@ -72,7 +73,7 @@ impl LinkStorage {
         let db_path = db_path.as_ref().to_path_buf();
         let exists = db_path.exists();
         let mut storage = Self {
-            links: HashMap::new(),
+            links: LinksMap::default(),
             names: HashMap::new(),
             name_to_id: HashMap::new(),
             allocated: 0,
@@ -99,7 +100,7 @@ impl LinkStorage {
     /// they do in the CLI.
     pub fn in_memory(trace: bool) -> Self {
         Self {
-            links: HashMap::new(),
+            links: LinksMap::default(),
             names: HashMap::new(),
             name_to_id: HashMap::new(),
             allocated: 0,
@@ -108,6 +109,35 @@ impl LinkStorage {
             revision: StorageRevision::default(),
             trace,
         }
+    }
+
+    /// Adds an optional lookup-index decorator, retaining the scan-based
+    /// implementation when this builder is not called. Indexes use O(n) memory
+    /// and are rebuilt from persisted links when enabled after opening a store.
+    pub fn with_indexed_lookups(mut self) -> Self {
+        self.enable_indexed_lookups();
+        self
+    }
+
+    pub(crate) fn enable_indexed_lookups(&mut self) {
+        self.links.enable_index();
+        if self.trace {
+            eprintln!(
+                "[TRACE] IndexedLinksDecorator enabled for {} links",
+                self.links.len()
+            );
+        }
+    }
+
+    pub(crate) fn indexed_query(
+        &self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Option<Vec<&Link>> {
+        self.links
+            .indexed()
+            .map(|lookup| lookup.query(index, source, target))
     }
 
     /// Whether this storage was made by [`LinkStorage::in_memory`].
@@ -447,16 +477,14 @@ impl LinkStorage {
     /// when you are supplying your own decorator stack (or deliberately want
     /// none).
     pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
-        if let Some(link) = self.links.get_mut(&id) {
-            let before = *link;
+        if let Some(before) = self.links.get(&id).copied() {
             if self.trace {
                 eprintln!(
                     "[TRACE] Updating link {} from ({} {}) to ({} {})",
-                    id, link.source, link.target, source, target
+                    id, before.source, before.target, source, target
                 );
             }
-            link.source = source;
-            link.target = target;
+            self.links.insert(id, Link::new(id, source, target));
             Ok(before)
         } else {
             Err(LinkError::not_found(id).into())
@@ -604,6 +632,9 @@ impl LinkStorage {
         source: Option<u32>,
         target: Option<u32>,
     ) -> Vec<&Link> {
+        if let Some(matched) = self.indexed_query(index, source, target) {
+            return matched;
+        }
         self.links
             .values()
             .filter(|link| {
@@ -619,6 +650,9 @@ impl LinkStorage {
     /// When several links share the pair, the lowest address wins, so the
     /// result never depends on hash map iteration order.
     pub fn search(&self, source: u32, target: u32) -> Option<u32> {
+        if let Some(index) = self.links.indexed() {
+            return index.search(source, target);
+        }
         self.links
             .values()
             .filter(|link| link.source == source && link.target == target)

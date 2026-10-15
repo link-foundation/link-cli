@@ -2,7 +2,7 @@
 
 Binary links notation stores **links**, each a tuple of one or more
 references, in a self-delimiting packet. Both ports use the implementation
-that [links-notation](https://github.com/link-foundation/links-notation) 0.23.0
+that [links-notation](https://github.com/link-foundation/links-notation) 0.26.0
 ships: `links_notation::binary` in Rust and
 `Link.Foundation.Links.Notation.Binary` in C# (issue #104). link-cli adds only
 the transport around it: text framing, protocol detection (§2), the server,
@@ -14,6 +14,13 @@ read exactly these bytes.
 The packet layer knows nothing about LiNo. The binary LiNo protocol (§7) is
 one user of it, and the store archive (§10), a dump of a whole links store,
 is another.
+
+Text formatting follows links-notation 0.26: empty references and references
+containing control characters use lossless UTF-8 hexadecimal literals, such as
+`~1{}` for an empty reference and `~1{610d0a62}` for `a` + CRLF + `b`.
+Legacy quoted input remains accepted. Older text clients need a compatible
+notation parser to read these literals; the binary version 1 wire format and
+golden vectors are unchanged.
 
 ## 1. Conventions
 

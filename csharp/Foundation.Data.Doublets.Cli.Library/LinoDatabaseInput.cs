@@ -31,21 +31,23 @@ public static class LinoDatabaseInput
         UpdateLink(links, index, source, target);
     }
 
-    private static uint ResolveReference(INamedTypesLinks<uint> links, ImportContext context, string identifier)
+    private static uint ResolveReference(INamedTypesLinks<uint> links, ImportContext context, ImportReference reference)
     {
+        var identifier = reference.Value;
         if (identifier.Length == 0)
         {
             throw new FormatException("LiNo import references must have a value.");
         }
 
-        return TryParseSupportedReference(links, identifier, allowNull: true, out var link)
+        return !reference.IsQuoted && TryParseSupportedReference(links, identifier, allowNull: true, out var link)
             ? link
             : EnsureNamedPointLink(links, context, identifier);
     }
 
-    private static uint ResolveIndex(INamedTypesLinks<uint> links, ImportContext context, string identifier)
+    private static uint ResolveIndex(INamedTypesLinks<uint> links, ImportContext context, ImportReference reference)
     {
-        if (TryParseSupportedReference(links, identifier, allowNull: false, out var link))
+        var identifier = reference.Value;
+        if (!reference.IsQuoted && TryParseSupportedReference(links, identifier, allowNull: false, out var link))
         {
             if (!links.Exists(link))
             {
@@ -189,7 +191,7 @@ public static class LinoDatabaseInput
             return new ImportDefinition(index, source, target);
         }
 
-        private string ReadReference(bool stopAtColon)
+        private ImportReference ReadReference(bool stopAtColon)
         {
             SkipWhitespace();
             if (_position >= _line.Length)
@@ -200,7 +202,7 @@ public static class LinoDatabaseInput
             var first = _line[_position];
             if (first is '\'' or '"')
             {
-                return ReadQuotedReference(first);
+                return new ImportReference(ReadQuotedReference(first), IsQuoted: true);
             }
 
             var start = _position;
@@ -220,7 +222,7 @@ public static class LinoDatabaseInput
                 throw Error("Expected reference.");
             }
 
-            return _line[start.._position];
+            return new ImportReference(_line[start.._position], IsQuoted: false);
         }
 
         private string ReadQuotedReference(char quote)
@@ -273,7 +275,10 @@ public static class LinoDatabaseInput
         }
     }
 
-    private sealed record ImportDefinition(string Index, string Source, string Target);
+    // Keep quoting information so numeric names never become addresses.
+    private sealed record ImportReference(string Value, bool IsQuoted);
+
+    private sealed record ImportDefinition(ImportReference Index, ImportReference Source, ImportReference Target);
 
     private sealed class ImportContext
     {

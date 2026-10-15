@@ -320,6 +320,17 @@ line.
 clink --db imported.links --import family.lino --export exported.lino
 ```
 
+For large **Rust** named imports, opt into lookup-index decorators:
+
+```bash
+clink --db imported.links --indexed-lookups --import family.lino --export exported.lino
+```
+
+Indexes trade O(n) additional memory for indexed pair/source/target lookups.
+Omit `--indexed-lookups` to retain the original scan algorithms. See the
+[Rust performance and limitations notes](rust/README.md#optional-lookup-indexes-for-named-imports)
+and [scaling benchmark](examples/named-import/README.md).
+
 `exported.lino`:
 
 ```lino
@@ -655,7 +666,7 @@ clink '((1: 2 1) (2: 1 2)) ()' --changes --after
 
 ## All options and arguments
 
-Both the C# NuGet tool and the Rust CLI support every option below.
+Both the C# NuGet tool and the Rust CLI support the options below unless marked Rust only.
 
 | Parameter               | Type    | Default Value  | Aliases                             | Description                                                                |
 |-------------------------|---------|----------------|-------------------------------------|----------------------------------------------------------------------------|
@@ -668,6 +679,7 @@ Both the C# NuGet tool and the Rust CLI support every option below.
 | `--before`              | bool    | `false`        | `-b`                                | Print the state of the database before applying changes                    |
 | `--changes`             | bool    | `false`        | `-c`                                | Print the changes applied by the query                                     |
 | `--after`               | bool    | `false`        | `--links`, `-a`                     | Print the state of the database after applying changes                     |
+| `--indexed-lookups`     | bool    | `false`        | _None_                            | Rust only: compose optional indexes for local data and names stores        |
 | `--in`                  | string  | _None_         | `--import`, `--lino-input`          | Read and import a LiNo file before query execution                         |
 | `--out`                 | string  | _None_         | `--export`, `--lino-output`         | Write the complete database as a LiNo file                                 |
 | `--import-binary`       | string  | _None_         | `--binary-input`, `--binary-in`     | Read and import a store archive in binary links notation before `--in`    |

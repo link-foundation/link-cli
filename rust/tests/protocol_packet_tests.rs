@@ -203,14 +203,16 @@ fn canonical_text_round_trips_the_corpus() {
 }
 
 #[test]
-fn references_are_quoted_only_when_needed() {
+fn references_are_formatted_losslessly() {
     assert_eq!(format_reference("plain"), "plain");
     assert_eq!(format_reference("$x"), "$x");
-    assert_eq!(format_reference(""), "''");
+    assert_eq!(format_reference(""), "~1{}");
+    assert_eq!(format_reference("\n"), "~1{0a}");
     assert_eq!(format_reference("a b"), "'a b'");
     assert_eq!(format_reference("it's"), "\"it's\"");
     assert_eq!(format_reference("'\""), "`'\"`");
     assert_eq!(format_reference("'\"`"), "\"\"\"'\"`\"\"\"");
+    assert_eq!(format_reference("a\r\nb"), "~1{610d0a62}");
     for reference in [
         "",
         "a b",
@@ -221,6 +223,7 @@ fn references_are_quoted_only_when_needed() {
         "'\"`",
         "tab\there",
         "a\nb",
+        "a\r\nb",
         "'x",
         "x'",
         "'",
@@ -236,6 +239,16 @@ fn references_are_quoted_only_when_needed() {
         assert_eq!(
             document,
             vec![links_notation::LiNo::Ref(reference.to_string())]
+        );
+    }
+}
+
+#[test]
+fn legacy_quoted_references_match_lossless_literals() {
+    for (legacy, literal) in [("''", "~1{}"), ("'a\nb'", "~1{610a62}")] {
+        assert_eq!(
+            parse_document(legacy).unwrap(),
+            parse_document(literal).unwrap()
         );
     }
 }

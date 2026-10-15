@@ -16,7 +16,13 @@ fn text_messages_are_dot_stuffed() {
         .write_document(&mut wire, &document)
         .unwrap();
     let wire_text = String::from_utf8(wire.clone()).unwrap();
-    assert_eq!(wire_text, "..dot\n'first\n..second'\na b\n.\n");
+    assert_eq!(wire_text, "..dot\n~1{66697273740a2e7365636f6e64}\na b\n.\n");
+    // Legacy quoted multiline references must still be unstuffed when read.
+    let mut legacy = Cursor::new(b"..dot\n'first\n..second'\na b\n.\n");
+    assert_eq!(
+        TextLinoProtocol::new().read_document(&mut legacy).unwrap(),
+        Some(document.clone())
+    );
     let mut reader = Cursor::new(wire);
     let received = TextLinoProtocol::new()
         .read_document(&mut reader)
@@ -27,6 +33,21 @@ fn text_messages_are_dot_stuffed() {
         .read_document(&mut reader)
         .unwrap()
         .is_none());
+}
+
+#[test]
+fn text_messages_preserve_crlf_inside_lossless_reference_literals() {
+    let document = vec![links_notation::LiNo::Ref("first\r\n.second".to_string())];
+    let mut wire = Vec::new();
+    TextLinoProtocol::new()
+        .write_document(&mut wire, &document)
+        .unwrap();
+    assert_eq!(
+        TextLinoProtocol::new()
+            .read_document(&mut Cursor::new(wire))
+            .unwrap(),
+        Some(document)
+    );
 }
 
 #[test]

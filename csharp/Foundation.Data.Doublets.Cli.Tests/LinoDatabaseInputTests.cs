@@ -91,6 +91,22 @@ public class LinoDatabaseInputTests
         });
     }
 
+    [Theory]
+    [InlineData("'")]
+    [InlineData("\"")]
+    public void ImportText_KeepsQuotedNumbersDistinctFromAddresses(string quote)
+    {
+        WithNamedLinks(links =>
+        {
+            LinoDatabaseInput.ImportText(links, $"(1: 1 1)\n({quote}1{quote}: {quote}1{quote} {quote}1{quote})\n(3: 1 {quote}1{quote})");
+
+            Assert.Null(links.GetName(1));
+            Assert.Equal("1", links.GetName(2));
+            Assert.Equal(new Link<uint>(2, 2, 2), new Link<uint>(links.GetLink(2u)));
+            Assert.Equal(new Link<uint>(3, 1, 2), new Link<uint>(links.GetLink(3u)));
+        });
+    }
+
     private static void WithNamedLinks(Action<NamedTypesDecorator<uint>> test)
     {
         var dbPath = Path.GetTempFileName();

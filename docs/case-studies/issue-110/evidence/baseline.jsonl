@@ -1,0 +1,6 @@
+{"mode": "numeric", "count": 100, "returncode": 0, "stdout": "mode,count,bytes,parser_ms,import_including_parser_ms,save_ms\nnumeric,100,1176,0.446,0.923,0.202\n", "stderr": ""}
+{"mode": "numeric", "count": 1000, "returncode": 0, "stdout": "mode,count,bytes,parser_ms,import_including_parser_ms,save_ms\nnumeric,1000,14679,7.099,17.917,0.517\n", "stderr": ""}
+{"mode": "numeric", "count": 10000, "returncode": 0, "stdout": "mode,count,bytes,parser_ms,import_including_parser_ms,save_ms\nnumeric,10000,176682,68.476,1440.385,2.327\n", "stderr": ""}
+{"mode": "named", "count": 100, "returncode": 0, "stdout": "mode,count,bytes,parser_ms,import_including_parser_ms,save_ms\nnamed,100,21300,0.511,147.067,0.399\n", "stderr": ""}
+{"mode": "named", "count": 1000, "returncode": 0, "stdout": "mode,count,bytes,parser_ms,import_including_parser_ms,save_ms\nnamed,1000,213000,6.762,10154.913,1.704\n", "stderr": ""}
+{"mode": "named", "count": 10000, "returncode": -9, "stdout": "", "stderr": ""}

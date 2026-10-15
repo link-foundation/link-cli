@@ -109,18 +109,20 @@ public sealed class LinoProtocolCodecTests
     }
 
     [Fact]
-    public void ReferencesAreQuotedOnlyWhenNeeded()
+    public void ReferencesAreFormattedLosslessly()
     {
         Assert.Equal("plain", LinoFormat.FormatReference("plain"));
         Assert.Equal("$x", LinoFormat.FormatReference("$x"));
-        Assert.Equal("''", LinoFormat.FormatReference(""));
+        Assert.Equal("~1{}", LinoFormat.FormatReference(""));
+        Assert.Equal("~1{0a}", LinoFormat.FormatReference("\n"));
         Assert.Equal("'a b'", LinoFormat.FormatReference("a b"));
         Assert.Equal("\"it's\"", LinoFormat.FormatReference("it's"));
         Assert.Equal("`'\"`", LinoFormat.FormatReference("'\""));
         Assert.Equal("\"\"\"'\"`\"\"\"", LinoFormat.FormatReference("'\"`"));
+        Assert.Equal("~1{610d0a62}", LinoFormat.FormatReference("a\r\nb"));
         foreach (var reference in new[]
         {
-            "", "a b", "a:b", "(x)", "it's", "'\"", "'\"`", "tab\there", "a\nb", "'x", "x'", "'", "''", "'''",
+            "", "a b", "a:b", "(x)", "it's", "'\"", "'\"`", "tab\there", "a\nb", "a\r\nb", "'x", "x'", "'", "''", "'''",
             "\"'`x`'\"", "a''''b\"\"`", "`'\"\"\"'''``", "(a) ''",
         })
         {
@@ -129,6 +131,14 @@ public sealed class LinoProtocolCodecTests
             Assert.Equal(formatted, LinoFormat.FormatDocument(document));
             Assert.Equal(new[] { LinoFormat.Reference(reference) }, document);
         }
+    }
+
+    [Theory]
+    [InlineData("''", "~1{}")]
+    [InlineData("'a\nb'", "~1{610a62}")]
+    public void LegacyQuotedReferencesMatchLosslessLiterals(string legacy, string literal)
+    {
+        Assert.Equal(Parse(legacy), Parse(literal));
     }
 
     [Fact]
@@ -163,10 +173,22 @@ public sealed class LinoProtocolCodecTests
         var document = Parse(".dot\n'first\n.second'\n(a b)");
         using var wire = new MemoryStream();
         new TextLinoProtocol().WriteDocument(wire, document);
-        Assert.Equal("..dot\n'first\n..second'\na b\n.\n", System.Text.Encoding.UTF8.GetString(wire.ToArray()));
+        Assert.Equal("..dot\n~1{66697273740a2e7365636f6e64}\na b\n.\n", System.Text.Encoding.UTF8.GetString(wire.ToArray()));
+        // Legacy quoted multiline references must still be unstuffed when read.
+        var legacy = PacketReader.FromBytes("..dot\n'first\n..second'\na b\n.\n"u8.ToArray());
+        Assert.Equal(document, new TextLinoProtocol().ReadDocument(legacy));
         var reader = PacketReader.FromBytes(wire.ToArray());
         Assert.Equal(document, new TextLinoProtocol().ReadDocument(reader));
         Assert.Null(new TextLinoProtocol().ReadDocument(reader));
+    }
+
+    [Fact]
+    public void TextMessagesPreserveCrlfInsideLosslessReferenceLiterals()
+    {
+        var document = new[] { LinoFormat.Reference("first\r\n.second") };
+        using var wire = new MemoryStream();
+        new TextLinoProtocol().WriteDocument(wire, document);
+        Assert.Equal(document, new TextLinoProtocol().ReadDocument(PacketReader.FromBytes(wire.ToArray())));
     }
 
     [Fact]

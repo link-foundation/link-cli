@@ -145,6 +145,31 @@ public class LinoDatabaseOutputTests
         });
     }
 
+    [Theory]
+    [InlineData("1")]
+    [InlineData("0")]
+    [InlineData("42")]
+    [InlineData("01")]
+    [InlineData("+1")]
+    [InlineData("4294967295")]
+    public void FormatDatabase_QuotesNumericNames(string name)
+    {
+        WithNamedLinks(links =>
+        {
+            links.GetOrCreate(1u, 1u);
+            var named = links.GetOrCreate(2u, 2u);
+            links.SetName(named, name);
+            links.GetOrCreate(1u, named);
+
+            Assert.Equal(new[]
+            {
+                "(1: 1 1)",
+                $"('{name}': '{name}' '{name}')",
+                $"(3: 1 '{name}')"
+            }, LinoDatabaseOutput.FormatDatabase(links));
+        });
+    }
+
     private static void WithNamedLinks(Action<NamedTypesDecorator<uint>> test)
     {
         var dbPath = Path.GetTempFileName();
