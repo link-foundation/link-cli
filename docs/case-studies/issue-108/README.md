@@ -264,8 +264,8 @@ old file, so a stopped process leaves the last complete save. Evidence:
   binary it failed in every one of three runs
   ([`evidence/conformance-node-rust-before-save-fix.txt`](evidence/conformance-node-rust-before-save-fix.txt)).
   With the fix it passes on every runtime, for both servers.
-- A standalone stress loop of 20 rounds of "stop during writes, restart,
-  count" lost every acknowledged write in 6 of 20 rounds before the fix, and
+- A standalone stress loop ([`kill-during-write.mjs`](kill-during-write.mjs))
+  of 20 rounds of "stop during writes, restart, count" lost every acknowledged write in 6 of 20 rounds before the fix, and
   in 0 of 20 after.
 
 This is not full crash consistency. Nothing is `fsync`ed, and the links and
@@ -348,4 +348,5 @@ export CLINK_CSHARP=$PWD/../../csharp/Foundation.Data.Doublets.Cli/bin/Release/n
 export CLINK_WASM=$PWD/../pkg
 node test/conformance/run.mjs; bun test/conformance/run.mjs; deno run -A test/conformance/run.mjs
 node examples/synthetic-consumer.mjs --backend rust --records 300
+node ../../docs/case-studies/issue-108/kill-during-write.mjs "$CLINK_RUST" 20
 ```
