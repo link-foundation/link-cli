@@ -38,6 +38,9 @@ fn main() -> Result<()> {
         bail!("--serve and --connect cannot be used together.");
     }
     if let Some(address) = &cli.connect {
+        if cli.indexed_lookups {
+            bail!("--indexed-lookups applies to local stores; enable it on the server.");
+        }
         return run_client(&cli, address);
     }
 
@@ -73,8 +76,17 @@ fn parse_retention(raw: Option<&str>) -> Result<LogRetentionPolicy> {
     }
 }
 
+fn open_named_storage(path: impl AsRef<std::path::Path>, cli: &Cli) -> Result<NamedTypesDecorator> {
+    let storage = NamedTypesDecorator::new(path, cli.trace)?;
+    Ok(if cli.indexed_lookups {
+        storage.with_indexed_lookups()
+    } else {
+        storage
+    })
+}
+
 fn run_bare(cli: &Cli) -> Result<()> {
-    let storage = NamedTypesDecorator::new(&cli.db, cli.trace)?;
+    let storage = open_named_storage(&cli.db, cli)?;
     finish(cli, storage)
 }
 
@@ -174,13 +186,13 @@ fn run_with_transactions(
     commit_mode: CommitMode,
     retention_policy: LogRetentionPolicy,
 ) -> Result<()> {
-    let data_links = NamedTypesDecorator::new(&cli.db, cli.trace)?;
+    let data_links = open_named_storage(&cli.db, cli)?;
     let log_path = cli
         .transactions_file
         .clone()
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| TransactionsDecorator::make_transitions_database_filename(&cli.db));
-    let log_links = NamedTypesDecorator::new(&log_path, cli.trace)?;
+    let log_links = open_named_storage(&log_path, cli)?;
     let mut tx = TransactionsDecorator::new(
         data_links,
         log_links,
@@ -217,13 +229,13 @@ fn run_with_vc(
     commit_mode: CommitMode,
     retention_policy: LogRetentionPolicy,
 ) -> Result<()> {
-    let data_links = NamedTypesDecorator::new(&cli.db, cli.trace)?;
+    let data_links = open_named_storage(&cli.db, cli)?;
     let log_path = cli
         .transactions_file
         .clone()
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| TransactionsDecorator::make_transitions_database_filename(&cli.db));
-    let log_links = NamedTypesDecorator::new(&log_path, cli.trace)?;
+    let log_links = open_named_storage(&log_path, cli)?;
     let tx = TransactionsDecorator::new(
         data_links,
         log_links,
@@ -238,7 +250,7 @@ fn run_with_vc(
         .unwrap_or_else(|| {
             VersionControlDecorator::make_version_control_database_filename(&cli.db)
         });
-    let vc_links = NamedTypesDecorator::new(&vc_path, cli.trace)?;
+    let vc_links = open_named_storage(&vc_path, cli)?;
     let mut vc = VersionControlDecorator::new(tx, vc_links, cli.trace)?;
 
     // 1) --checkout (resolves seq or tag).

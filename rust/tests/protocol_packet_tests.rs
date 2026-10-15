@@ -212,6 +212,7 @@ fn references_are_formatted_losslessly() {
     assert_eq!(format_reference("it's"), "\"it's\"");
     assert_eq!(format_reference("'\""), "`'\"`");
     assert_eq!(format_reference("'\"`"), "\"\"\"'\"`\"\"\"");
+    assert_eq!(format_reference("a\r\nb"), "~1{610d0a62}");
     for reference in [
         "",
         "a b",
@@ -222,6 +223,7 @@ fn references_are_formatted_losslessly() {
         "'\"`",
         "tab\there",
         "a\nb",
+        "a\r\nb",
         "'x",
         "x'",
         "'",
@@ -237,6 +239,16 @@ fn references_are_formatted_losslessly() {
         assert_eq!(
             document,
             vec![links_notation::LiNo::Ref(reference.to_string())]
+        );
+    }
+}
+
+#[test]
+fn legacy_quoted_references_match_lossless_literals() {
+    for (legacy, literal) in [("''", "~1{}"), ("'a\nb'", "~1{610a62}")] {
+        assert_eq!(
+            parse_document(legacy).unwrap(),
+            parse_document(literal).unwrap()
         );
     }
 }

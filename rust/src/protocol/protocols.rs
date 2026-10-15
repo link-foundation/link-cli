@@ -81,8 +81,8 @@ impl ProtocolLimits {
 /// only `.`. Lines starting with `.` get one extra `.` (SMTP dot-stuffing).
 ///
 /// Lines may end with `\n` or `\r\n`; a carriage return right before a line
-/// feed is dropped, so a quoted reference holding `\r\n` arrives as `\n`
-/// (use [`BinaryLinoProtocol`] to carry such references exactly).
+/// feed is dropped in legacy quoted input. The formatter uses lossless `~1{hex}`
+/// literals for control characters, preserving `\r\n` inside references.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TextLinoProtocol {
     /// Maximum size of a message read, in bytes.

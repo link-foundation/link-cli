@@ -67,6 +67,14 @@ impl NamedTypesDecorator {
         Self::from_decorators_with_trace(pinned_types_decorator, names_links, false)
     }
 
+    /// Composes optional lookup-index decorators under both the data store and
+    /// Unicode names sidecar. Omit this builder to compare the original scans.
+    pub fn with_indexed_lookups(mut self) -> Self {
+        self.links_mut().enable_indexed_lookups();
+        self.names_links.enable_indexed_lookups();
+        self
+    }
+
     pub fn make_names_database_filename<P>(database_filename: P) -> PathBuf
     where
         P: AsRef<Path>,

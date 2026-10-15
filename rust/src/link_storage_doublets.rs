@@ -94,6 +94,23 @@ fn by_pattern(storage: &LinkStorage, source: u32, target: u32) -> Vec<Link> {
     let constants = link_storage_constants();
     let (any, null) = (constants.any, constants.null);
 
+    // Preserve upstream null/wildcard rules while using the optional indexes.
+    if let Some(matched) = storage.indexed_query(
+        None,
+        (source != any).then_some(source),
+        (target != any).then_some(target),
+    ) {
+        if source == null || target == null {
+            return Vec::new();
+        }
+        let mut matched: Vec<Link> = matched.into_iter().copied().collect();
+        matched.sort_unstable_by_key(|link| link.index);
+        if source != any && target != any {
+            matched.truncate(1);
+        }
+        return matched;
+    }
+
     match (source == any, target == any) {
         (true, true) => all(storage),
         // `targets.each_usages(target)`: the tree rooted at a null target is empty.
