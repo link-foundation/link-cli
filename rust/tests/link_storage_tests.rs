@@ -89,6 +89,33 @@ fn test_storage_named_links() -> Result<()> {
     Ok(())
 }
 
+/// A name belongs to one link: naming another link with it takes it away
+/// from the first, as the file-backed names store and the C# port do
+/// (issue #108 conformance).
+#[test]
+fn test_storage_moving_a_name_unnames_its_previous_link() -> Result<()> {
+    let mut storage = LinkStorage::in_memory(false);
+    let first = storage.create(5, 5);
+    let second = storage.create(6, 6);
+
+    storage.set_name(first, "moving");
+    storage.set_name(second, "moving");
+    assert_eq!(storage.get_by_name("moving"), Some(second));
+    assert_eq!(storage.get_name(first), None);
+    assert_eq!(storage.get_name(second), Some(&"moving".to_string()));
+
+    // Removing the stale name of the first link must not unname the second.
+    storage.remove_name(first);
+    assert_eq!(storage.get_by_name("moving"), Some(second));
+
+    // Renaming a link to its own name changes nothing.
+    storage.set_name(second, "moving");
+    assert_eq!(storage.get_by_name("moving"), Some(second));
+    assert_eq!(storage.get_name(second), Some(&"moving".to_string()));
+
+    Ok(())
+}
+
 #[test]
 fn test_storage_search() -> Result<()> {
     let temp_file = NamedTempFile::new()?;

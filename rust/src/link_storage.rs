@@ -802,14 +802,17 @@ impl LinkStorage {
         }
     }
 
-    /// Sets the name for a link
+    /// Sets the name for a link, taking it away from any other link that had it
     pub fn set_name(&mut self, id: u32, name: &str) {
         // Remove old name mapping if exists
         if let Some(old_name) = self.names.remove(&id) {
             self.name_to_id.remove(&old_name);
         }
+        // A name belongs to one link at a time
+        if let Some(previous) = self.name_to_id.insert(name.to_string(), id) {
+            self.names.remove(&previous);
+        }
         self.names.insert(id, name.to_string());
-        self.name_to_id.insert(name.to_string(), id);
         if self.trace {
             eprintln!("[TRACE] Set name: {} => {}", id, name);
         }
