@@ -1,6 +1,6 @@
 {
   "name": "link-cli-web",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "React and WebAssembly browser workbench for link-cli",
   "type": "module",
   "private": true,
