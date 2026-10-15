@@ -18,6 +18,10 @@ This folder contains:
 A consumer (`konard/vietnam-accomodation-search`) uses the Rust `clink` as a
 verified binary ledger. It carries its own projection, subprocess, readback
 and rollback adapters. A supported JS/TS client could make them much smaller.
+The consumer's dependency audit, linked from the first issue comment, lists
+this repository as "TCP/RemoteLinks and Rust/C# clients already exist" and
+asks for the small published adapter, not another server. It adds no
+acceptance gate beyond the ones in the issue.
 
 The servers already exist: `clink --serve` speaks the LiNo text protocol of
 #105 in both the Rust and the C# port, and both ports have a `RemoteLinks`
