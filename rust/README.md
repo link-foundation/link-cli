@@ -35,6 +35,39 @@ GitHub Pages alongside the C# DocFX site by `.github/workflows/docs.yml`.
 clink '() ((1 1))' --changes --after
 ```
 
+### Optional lookup indexes for named imports
+
+For thousands of named links, enable the Rust lookup-index decorator:
+
+```bash
+clink --db data.links --indexed-lookups --import pages.lino --export pages-copy.lino
+```
+
+In the library, call `NamedTypesDecorator::new(path, false)?.with_indexed_lookups()`
+(or `LinkStorage::with_indexed_lookups()` for a plain store). This composes
+`IndexedLinksDecorator` under both the data store and names sidecar. Exact
+pair, source and target indexes live for the store's lifetime and follow raw
+writes, uniqueness merges, cascading deletes and reloads. They add O(n)
+memory and are rebuilt when a fresh process opens the persisted graph.
+`--trace` reports when they are enabled. The flag works with transactions,
+version control and a local TCP server; remote clients enable it on the server.
+
+The default remains the original scan algorithm; omit the flag or pass
+`--indexed-lookups=false` to compare it. On the issue-110 Linux release fixture,
+10,000 69-character named self-links imported in about 1.2 seconds with indexes;
+1,000 took about 10.2 seconds without them. These are measurements, not a
+portable latency guarantee. Numeric imports also benefit. See the
+[bounded benchmark](../examples/named-import/README.md) and
+[investigation](../docs/case-studies/issue-110/README.md).
+
+Current limits: the baseline named algorithm still scales poorly; the Unicode
+facade and its conversion caches are still reconstructed per name operation.
+The index removes the growing scans but does not eliminate that fixed cost.
+Unconstrained queries still enumerate the full graph, save rewrites the whole
+file, and import parses the input into memory. C# and the browser do not expose
+this CLI flag; library consumers opt in explicitly. Existing numeric-name
+text-export ambiguity is tracked separately in [issue #112](https://github.com/link-foundation/link-cli/issues/112).
+
 ### Optional Transactions and Version Control
 
 Pass `--transactions` (or any flag in the family — `--transactions-file`,

@@ -78,6 +78,10 @@ Key files:
 - `rust/src/query_processor_substitution.rs`: substitution preservation helpers.
 - `rust/src/link_reference_validator.rs`: reference validation and auto-create.
 - `rust/src/named_types.rs`: names sidecar storage.
+- `rust/src/indexed_links.rs`: optional `IndexedLinksDecorator`, composed by
+  `with_indexed_lookups()` / Rust `--indexed-lookups` under local data and names
+  stores. It maintains pair/source/target indexes at raw mutation boundaries;
+  the default remains the plain map with scans.
 - `rust/src/lino_database_input.rs`: `.lino` import.
 - `rust/src/sequences/`: Unicode sequence conversion and related parity code.
 - `rust/src/storage/`: the `LinksStorage` trait the transactions layer is

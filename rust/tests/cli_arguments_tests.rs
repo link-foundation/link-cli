@@ -225,3 +225,12 @@ fn rejects_invalid_branch_from_value() {
         "unexpected error message: {error}"
     );
 }
+
+#[test]
+fn indexed_lookups_are_opt_in_and_accept_boolean_values() {
+    assert!(!parse_run(&["clink"]).indexed_lookups);
+    assert!(parse_run(&["clink", "--indexed-lookups"]).indexed_lookups);
+    assert!(parse_run(&["clink", "--indexed-lookups=true"]).indexed_lookups);
+    assert!(!parse_run(&["clink", "--indexed-lookups=false"]).indexed_lookups);
+    assert!(!parse_run(&["clink", "--indexed-lookups", "false"]).indexed_lookups);
+}

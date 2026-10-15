@@ -13,6 +13,7 @@ pub struct Cli {
     pub query: Option<String>,
     pub query_arg: Option<String>,
     pub trace: bool,
+    pub indexed_lookups: bool,
     pub auto_create_missing_references: bool,
     pub structure: Option<u32>,
     pub before: bool,
@@ -56,6 +57,7 @@ impl Default for Cli {
             query: None,
             query_arg: None,
             trace: false,
+            indexed_lookups: false,
             auto_create_missing_references: false,
             structure: None,
             before: false,
@@ -173,6 +175,10 @@ impl Cli {
             }
             if let Some(value) = inline_value(&arg, &["--structure"]) {
                 cli.structure = Some(parse_link_id("--structure", value)?);
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--indexed-lookups"]) {
+                cli.indexed_lookups = parse_bool("--indexed-lookups", value)?;
                 continue;
             }
             if let Some(value) = inline_value(&arg, &["--trace"]) {
@@ -327,6 +333,9 @@ impl Cli {
                 "-q" | "--query" | "--apply" | "--do" => {
                     cli.query = Some(next_value(&mut args, &arg)?);
                 }
+                "--indexed-lookups" => {
+                    cli.indexed_lookups = next_bool_value(&mut args, true)?;
+                }
                 "-t" | "--trace" => {
                     cli.trace = next_bool_value(&mut args, true)?;
                 }
@@ -467,6 +476,8 @@ impl Cli {
             "          Path to the links database file [default: db.links]\n",
             "  -q, --query <QUERY>, --apply <QUERY>, --do <QUERY>\n",
             "          LiNo query for CRUD operation\n",
+            "      --indexed-lookups\n",
+            "          Use optional lookup-index decorators for local links and names (Rust only)\n",
             "  -t, --trace\n",
             "          Enable trace (verbose output)\n",
             "      --auto-create-missing-references\n",
