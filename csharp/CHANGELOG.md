@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [4.0.2] - 2026-10-15
+
+Synchronize protocol documentation with links-notation 0.26 inherited from main.
+Verify legacy quoted input and lossless CRLF transport. Binary version 1
+encoding is unchanged.
+
 ## [4.0.1] - 2026-10-15
 
 Update Links Notation, System.CommandLine, and test dependencies to satisfy the latest-dependency CI gate. Verify canonical lossless reference literals while retaining coverage for legacy multiline text framing.
