@@ -25,7 +25,9 @@ updates:
       nuget:
         patterns: ['*']
   - package-ecosystem: npm
-    directory: /js
+    directories:
+      - /js
+      - /js/client
     schedule:
       interval: daily
     groups:
