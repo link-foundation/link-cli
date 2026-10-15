@@ -17,6 +17,12 @@ fn text_messages_are_dot_stuffed() {
         .unwrap();
     let wire_text = String::from_utf8(wire.clone()).unwrap();
     assert_eq!(wire_text, "..dot\n~1{66697273740a2e7365636f6e64}\na b\n.\n");
+    // Legacy quoted multiline references must still be unstuffed when read.
+    let mut legacy = Cursor::new(b"..dot\n'first\n..second'\na b\n.\n");
+    assert_eq!(
+        TextLinoProtocol::new().read_document(&mut legacy).unwrap(),
+        Some(document.clone())
+    );
     let mut reader = Cursor::new(wire);
     let received = TextLinoProtocol::new()
         .read_document(&mut reader)
@@ -27,12 +33,6 @@ fn text_messages_are_dot_stuffed() {
         .read_document(&mut reader)
         .unwrap()
         .is_none());
-    // Older peers still send quoted multiline references with dot stuffing.
-    let mut legacy = Cursor::new(b"..dot\n'first\n..second'\na b\n.\n".to_vec());
-    assert_eq!(
-        TextLinoProtocol::new().read_document(&mut legacy).unwrap(),
-        Some(document)
-    );
 }
 
 #[test]
