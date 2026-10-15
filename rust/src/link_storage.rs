@@ -34,6 +34,15 @@ fn observe(
     doublets::data::Flow::Continue
 }
 
+/// The file a save writes before it replaces `db_path`: `db.links` is saved
+/// as `db.links.saving` in the same directory, so the rename never crosses
+/// file systems.
+fn saving_path(db_path: &Path) -> PathBuf {
+    let mut name = db_path.file_name().unwrap_or_default().to_os_string();
+    name.push(".saving");
+    db_path.with_file_name(name)
+}
+
 /// Prefix of the database line that records the freed addresses.
 ///
 /// It is a comment so that a database written by this version still loads in
@@ -348,12 +357,14 @@ impl LinkStorage {
         if self.is_in_memory() {
             return Ok(());
         }
-        let file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(&self.db_path)
-            .with_context(|| format!("Failed to create database: {}", self.db_path.display()))?;
+        // Write a new file next to the database and move it over the old one,
+        // instead of truncating the database and rewriting it in place: a
+        // process stopped in the middle of a save (Ctrl+C, a crash) then
+        // leaves the previous complete file, not a truncated one (issue #108).
+        // Nothing is synced to disk, so this does not survive a power loss.
+        let saving = saving_path(&self.db_path);
+        let file = File::create(&saving)
+            .with_context(|| format!("Failed to create database: {}", saving.display()))?;
 
         let mut writer = BufWriter::new(file);
 
@@ -387,6 +398,9 @@ impl LinkStorage {
         }
 
         writer.flush()?;
+        drop(writer);
+        std::fs::rename(&saving, &self.db_path)
+            .with_context(|| format!("Failed to replace database: {}", self.db_path.display()))?;
 
         if self.trace {
             eprintln!(

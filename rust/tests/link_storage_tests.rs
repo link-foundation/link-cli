@@ -116,6 +116,58 @@ fn test_storage_moving_a_name_unnames_its_previous_link() -> Result<()> {
     Ok(())
 }
 
+/// A process stopped in the middle of a save (Ctrl+C, a crash) must leave the
+/// previous complete database behind. The file used to be truncated in place
+/// and then rewritten, so stopping `clink --serve` during a write lost every
+/// link, including the writes it had already acknowledged (issue #108). A save
+/// now writes a new file and moves it over the old one, so a reader that holds
+/// the old file keeps seeing it whole.
+#[cfg(unix)]
+#[test]
+fn test_storage_save_replaces_the_file_instead_of_truncating_it() -> Result<()> {
+    use std::io::Read;
+
+    let dir = tempfile::tempdir()?;
+    let db_path = dir.path().join("db with spaces.links");
+
+    let mut storage = LinkStorage::new(&db_path, false)?;
+    storage.create(1, 1);
+    storage.create(2, 2);
+    storage.save()?;
+    let saved = std::fs::read_to_string(&db_path)?;
+
+    let mut previous = std::fs::File::open(&db_path)?;
+    storage.create(3, 3);
+    storage.save()?;
+
+    let mut seen = String::new();
+    previous.read_to_string(&mut seen)?;
+    assert_eq!(seen, saved, "the previous file was rewritten in place");
+    assert_eq!(LinkStorage::new(&db_path, false)?.all().len(), 3);
+
+    Ok(())
+}
+
+#[test]
+fn test_storage_save_leaves_only_the_database_file() -> Result<()> {
+    let dir = tempfile::tempdir()?;
+    let db_path = dir.path().join("db.links");
+
+    let mut storage = LinkStorage::new(&db_path, false)?;
+    for i in 1..=5 {
+        storage.create(i, i);
+        storage.save()?;
+    }
+
+    let files: Vec<_> = std::fs::read_dir(dir.path())?
+        .map(|entry| entry.map(|entry| entry.file_name()))
+        .collect::<std::io::Result<_>>()?;
+    assert_eq!(files, vec![std::ffi::OsString::from("db.links")]);
+    assert_eq!(LinkStorage::new(&db_path, false)?.all().len(), 5);
+
+    Ok(())
+}
+
 #[test]
 fn test_storage_search() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
