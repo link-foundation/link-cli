@@ -3,6 +3,61 @@ use link_cli::{import_lino_text, LinkStorage, NamedTypeLinks};
 use tempfile::NamedTempFile;
 
 #[test]
+fn invalid_import_leaves_links_and_names_unchanged() -> Result<()> {
+    for populated in [false, true] {
+        for invalid in [
+            "(c: c",
+            "(c: c)",
+            "(c: c c c)",
+            "(x y)",
+            "(c: (nested: a b) (bad: a))",
+            "(c: a ())",
+        ] {
+            let file = NamedTempFile::new()?;
+            let mut storage = LinkStorage::new(file.path(), false)?;
+            if populated {
+                import_lino_text(&mut storage, "(a: a a)\n(b: b b)\n(existing: a b)")?;
+            }
+            let before = storage.lino_lines();
+
+            assert!(
+                import_lino_text(
+                    &mut storage,
+                    &format!("(a: b a)\n(new: fresh fresh)\n{invalid}")
+                )
+                .is_err(),
+                "accepted {invalid}"
+            );
+
+            assert_eq!(storage.lino_lines(), before, "input: {invalid}");
+            assert_eq!(storage.get_by_name("new"), None);
+            assert_eq!(storage.get_by_name("fresh"), None);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn import_lino_text_accepts_named_and_anonymous_nested_links() -> Result<()> {
+    let file = NamedTempFile::new()?;
+    let mut storage = LinkStorage::new(file.path(), false)?;
+    import_lino_text(
+        &mut storage,
+        "(a: a a)\n(b: b b)\n(child: (nested: a b) (b a))",
+    )?;
+
+    let nested = storage.get_by_name("nested").unwrap();
+    let child = storage
+        .get_link(storage.get_by_name("child").unwrap())
+        .unwrap();
+    assert_eq!(child.source, nested);
+    let target = storage.get_link(child.target).unwrap();
+    assert_eq!(target.source, storage.get_by_name("b").unwrap());
+    assert_eq!(target.target, storage.get_by_name("a").unwrap());
+    Ok(())
+}
+
+#[test]
 fn import_lino_text_reproduces_numbered_links_at_explicit_indexes() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
     let db_path = temp_file.path().to_str().unwrap();

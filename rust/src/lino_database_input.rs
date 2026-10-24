@@ -29,10 +29,43 @@ where
     let normalized_links_notation = normalize_links_notation(links_notation);
     let links = parser.parse(&normalized_links_notation)?;
 
+    // Parsing accepts more shapes than database import does. Validate the whole
+    // tree before resolving references, which may create links and names.
+    for link in links.iter().filter(|link| !link.is_empty()) {
+        validate_link(link, false)?;
+    }
+
     for link in links.iter().filter(|link| !link.is_empty()) {
         import_link(storage, link, false)?;
     }
 
+    Ok(())
+}
+
+fn validate_link(link: &LinoLink, allow_anonymous_index: bool) -> Result<()> {
+    let values = link
+        .values
+        .as_ref()
+        .filter(|values| values.len() == 2)
+        .ok_or_else(|| anyhow::anyhow!("LiNo import supports links with exactly two values"))?;
+
+    for reference in values {
+        match reference.values_count() {
+            2 => validate_link(reference, true)?,
+            0 => {
+                if normalize_identifier(reference.id.as_deref()).is_empty() {
+                    bail!("LiNo import references must have a value");
+                }
+            }
+            _ => bail!(
+                "LiNo import references must be scalar values or nested links with exactly two values"
+            ),
+        }
+    }
+
+    if !allow_anonymous_index && normalize_identifier(link.id.as_deref()).is_empty() {
+        bail!("Top-level LiNo import links must have an index or name");
+    }
     Ok(())
 }
 

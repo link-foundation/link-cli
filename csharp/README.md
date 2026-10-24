@@ -56,6 +56,11 @@ while bare `1` is an address. This applies to definitions and restrictions as
 well as reference values. Use `--auto-create-missing-references` to create missing
 named points; strict queries require an existing name or a substitution definition.
 
+LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
+`LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before
+writing. Invalid input leaves existing links and names unchanged, without
+requiring `--transactions`.
+
 LiNo import/export preserves backslashes literally in quoted names, including
 Windows paths and a backslash immediately before the closing delimiter. Names
 with newlines or both quote kinds export as the notation library's lossless

@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [4.0.4] - 2026-10-24
+
+Parse and validate the whole LiNo input before changing links or names, so malformed imports leave the database unchanged through both the CLI aliases and the library APIs.
+
 ## [4.0.3] - 2026-10-24
 
 Preserve literal backslashes and multiline quoted names during LiNo import. Quote
