@@ -1,0 +1,97 @@
+=== Broken_Link_Checker-40076673476.log
+      1 Check Links	##[notice]Summary report available at: https://github.com/link-foundation/link-cli/actions/runs/40076673476#summary-120821386129
+=== C__CI_CD_Pipeline-40076673386.log
+      1 Release	^[[36;1m  echo "::warning::NUGET_API_KEY is not configured — NuGet publish will be skipped."^[[0m
+      1 Release	NuGet availability check warning: fetch failed
+=== Dependencies-39759486134.log
+=== Dependencies-39935035770.log
+=== Dependencies-40076673352.log
+=== Docs-40076673348.log
+      1 Deploy to GitHub Pages	(node:2267) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+      1 Deploy to GitHub Pages	(Use `node --trace-deprecation ...` to show where the warning was created)
+=== JS_client_CI-40072304578.log
+      2 Release to npm	npm notice
+      1 Release to npm	npm notice 📦  @link-foundation/link-cli-client@0.1.0
+      1 Release to npm	npm notice version: 0.1.0
+      1 Release to npm	npm notice unpacked size: 85.8 kB
+      1 Release to npm	npm notice total files: 17
+      1 Release to npm	npm notice shasum: ba38377be32ef32031fecfeafcc10dcccd3ba85d
+      1 Release to npm	npm notice package size: 25.0 kB
+      1 Release to npm	npm notice npm tokens that bypass 2FA are being restricted for account changes and direct publishing. Learn how to prepare: https://gh.io/npm-gat-bypass2fa-deprecation
+      1 Release to npm	npm notice name: @link-foundation/link-cli-client
+      1 Release to npm	npm notice integrity: sha512-Uv0HQyCCgB401[...]X/iWpo1Cp0olQ==
+      1 Release to npm	npm notice filename: link-foundation-link-cli-client-0.1.0.tgz
+      1 Release to npm	npm notice Tarball Details
+      1 Release to npm	npm notice Tarball Contents
+      1 Release to npm	npm notice 8.0kB src/operations.js
+      1 Release to npm	npm notice 737B types/lino.d.ts
+      1 Release to npm	npm notice 7.6kB types/index.d.ts
+      1 Release to npm	npm notice 6.3kB src/process.js
+      1 Release to npm	npm notice 3.3kB src/framing.js
+      1 Release to npm	npm notice 3.2kB src/wasm.js
+      1 Release to npm	npm notice 2.9kB src/deadline.js
+      1 Release to npm	npm notice 2.8kB src/capabilities.js
+      1 Release to npm	npm notice 2.2kB src/errors.js
+      1 Release to npm	npm notice 11.6kB src/client.js
+      1 Release to npm	npm notice 10.7kB README.md
+      1 Release to npm	npm notice 10.6kB src/tcp.js
+=== JS_client_CI-40073609121.log
+      2 Release to npm	npm notice
+      1 Release to npm	npm notice 📦  @link-foundation/link-cli-client@0.1.0
+      1 Release to npm	npm notice version: 0.1.0
+      1 Release to npm	npm notice unpacked size: 85.8 kB
+      1 Release to npm	npm notice total files: 17
+      1 Release to npm	npm notice shasum: ba38377be32ef32031fecfeafcc10dcccd3ba85d
+      1 Release to npm	npm notice package size: 25.0 kB
+      1 Release to npm	npm notice npm tokens that bypass 2FA are being restricted for account changes and direct publishing. Learn how to prepare: https://gh.io/npm-gat-bypass2fa-deprecation
+      1 Release to npm	npm notice name: @link-foundation/link-cli-client
+      1 Release to npm	npm notice integrity: sha512-Uv0HQyCCgB401[...]X/iWpo1Cp0olQ==
+      1 Release to npm	npm notice filename: link-foundation-link-cli-client-0.1.0.tgz
+      1 Release to npm	npm notice Tarball Details
+      1 Release to npm	npm notice Tarball Contents
+      1 Release to npm	npm notice 8.0kB src/operations.js
+      1 Release to npm	npm notice 737B types/lino.d.ts
+      1 Release to npm	npm notice 7.6kB types/index.d.ts
+      1 Release to npm	npm notice 6.3kB src/process.js
+      1 Release to npm	npm notice 3.3kB src/framing.js
+      1 Release to npm	npm notice 3.2kB src/wasm.js
+      1 Release to npm	npm notice 2.9kB src/deadline.js
+      1 Release to npm	npm notice 2.8kB src/capabilities.js
+      1 Release to npm	npm notice 2.2kB src/errors.js
+      1 Release to npm	npm notice 11.6kB src/client.js
+      1 Release to npm	npm notice 10.7kB README.md
+      1 Release to npm	npm notice 10.6kB src/tcp.js
+=== JS_client_CI-40076673495.log
+      2 Release to npm	npm notice
+      1 Release to npm	npm notice 📦  @link-foundation/link-cli-client@0.1.0
+      1 Release to npm	npm notice version: 0.1.0
+      1 Release to npm	npm notice unpacked size: 85.8 kB
+      1 Release to npm	npm notice total files: 17
+      1 Release to npm	npm notice shasum: ba38377be32ef32031fecfeafcc10dcccd3ba85d
+      1 Release to npm	npm notice package size: 25.0 kB
+      1 Release to npm	npm notice npm tokens that bypass 2FA are being restricted for account changes and direct publishing. Learn how to prepare: https://gh.io/npm-gat-bypass2fa-deprecation
+      1 Release to npm	npm notice name: @link-foundation/link-cli-client
+      1 Release to npm	npm notice integrity: sha512-Uv0HQyCCgB401[...]X/iWpo1Cp0olQ==
+      1 Release to npm	npm notice filename: link-foundation-link-cli-client-0.1.0.tgz
+      1 Release to npm	npm notice Tarball Details
+      1 Release to npm	npm notice Tarball Contents
+      1 Release to npm	npm notice 8.0kB src/operations.js
+      1 Release to npm	npm notice 737B types/lino.d.ts
+      1 Release to npm	npm notice 7.6kB types/index.d.ts
+      1 Release to npm	npm notice 6.3kB src/process.js
+      1 Release to npm	npm notice 3.3kB src/framing.js
+      1 Release to npm	npm notice 3.2kB src/wasm.js
+      1 Release to npm	npm notice 2.9kB src/deadline.js
+      1 Release to npm	npm notice 2.8kB src/capabilities.js
+      1 Release to npm	npm notice 2.2kB src/errors.js
+      1 Release to npm	npm notice 11.6kB src/client.js
+      1 Release to npm	npm notice 10.7kB README.md
+      1 Release to npm	npm notice 10.6kB src/tcp.js
+=== Rust_CI_CD_Pipeline-40076673365.log
+      1 Lint and Format Check	##[warning]File has 903 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+      1 Auto Release	﻿##[group]Run echo "::warning::crates.io trusted publishing is unavailable, publishing with the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret"
+      1 Auto Release	^[[36;1mecho "::warning::crates.io trusted publishing is unavailable, publishing with the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret"^[[0m
+      1 Auto Release	##[warning]crates.io trusted publishing is unavailable, publishing with the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret
+=== Security-40076673394.log
+      1 CodeQL (csharp)	##[warning]Cannot build an overlay-base database because build-mode is set to "autobuild" instead of "none". Falling back to creating a normal full database instead.
+=== WebAssembly_CI-40076673383.log

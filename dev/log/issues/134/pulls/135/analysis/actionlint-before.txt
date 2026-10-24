@@ -1,0 +1,17 @@
+.github/workflows/csharp.yml:115:9: shellcheck reported issue in this script: SC2193:warning:2:32: The arguments to this comparison can never be equal. Make sure your syntax is correct [shellcheck]
+    |
+115 |         run: |
+    |         ^~~~
+.github/workflows/csharp.yml:115:9: shellcheck reported issue in this script: SC2193:warning:2:91: The arguments to this comparison can never be equal. Make sure your syntax is correct [shellcheck]
+    |
+115 |         run: |
+    |         ^~~~
+.github/workflows/csharp.yml:115:74: "github.head_ref" is potentially untrusted. avoid using it directly in inline scripts. instead, pass it through an environment variable. see https://docs.github.com/en/actions/reference/security/secure-use#good-practices-for-mitigating-script-injection-attacks for more details [expression]
+.github/workflows/csharp.yml:311:9: shellcheck reported issue in this script: SC2086:info:4:89: Double quote to prevent globbing and word splitting [shellcheck]
+    |
+311 |         run: |
+    |         ^~~~
+.github/workflows/csharp.yml:311:9: shellcheck reported issue in this script: SC2086:info:5:44: Double quote to prevent globbing and word splitting [shellcheck]
+    |
+311 |         run: |
+    |         ^~~~
