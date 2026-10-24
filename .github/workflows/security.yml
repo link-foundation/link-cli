@@ -43,12 +43,14 @@ jobs:
       # run log "Cannot build an overlay database because build-mode is set to
       # 'undefined'" and fall back to a full database, and drove the standalone
       # autobuild step, whose inputs the action now reports as DEPRECATED
-      # (issue #96). Only C# needs a compiler; the other three are analysed from
-      # source.
+      # (issue #96). C# used `autobuild`, which still logged "Cannot build an
+      # overlay-base database because build-mode is set to "autobuild" instead
+      # of "none"" on every run (issue #134); buildless extraction is supported
+      # for C#, so every language is now analysed from source.
       matrix:
         include:
           - language: csharp
-            build-mode: autobuild
+            build-mode: none
           - language: rust
             build-mode: none
           - language: javascript-typescript
@@ -60,6 +62,8 @@ jobs:
         with:
           persist-credentials: false
 
+      # Buildless C# extraction still restores NuGet packages to resolve
+      # dependency types, so the SDK stays.
       - name: Setup .NET
         if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v6
@@ -73,6 +77,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4

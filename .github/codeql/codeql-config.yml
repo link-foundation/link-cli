@@ -1,0 +1,8 @@
+name: Production source
+
+# dev/log keeps verbatim copies of other repositories (the pipeline templates
+# compared in issue #134) and CI logs as evidence. They are not built or
+# shipped from here, so alerts in them would be noise in code scanning.
+# Ported from the rust-ai-driven-development-pipeline-template.
+paths-ignore:
+  - dev/log
