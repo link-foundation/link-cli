@@ -39,10 +39,15 @@ const execFileAsync = promisify(execFile);
 
 const repoRoot = new URL('../..', import.meta.url).pathname;
 
+// execFileSync forwards a child's stderr to ours unless `stdio` is set. On a
+// runner that turned the `::error` line of the expected-failure test into a
+// real error annotation on a green run (issue #134), so the children's output
+// is always captured; a failing call still exposes it as `error.stderr`.
 function runNode(script, args, options = {}) {
   return execFileSync(process.execPath, [join(repoRoot, script), ...args], {
     cwd: options.cwd ?? repoRoot,
     encoding: 'utf8',
+    stdio: 'pipe',
     env: { ...process.env, ...(options.env ?? {}) },
   });
 }
@@ -64,6 +69,7 @@ function runGit(args, cwd) {
   return execFileSync('git', args, {
     cwd,
     encoding: 'utf8',
+    stdio: 'pipe',
   });
 }
 

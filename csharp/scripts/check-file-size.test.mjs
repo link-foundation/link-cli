@@ -67,12 +67,13 @@ test('CLI fails when a file exceeds the limit and passes otherwise', () => {
   writeTree(root, { 'rust/src/ok.rs': 'x\n'.repeat(MAX_LINES) });
   const output = execFileSync('node', [script, '--dir', root], {
     encoding: 'utf8',
+    stdio: 'pipe',
   });
   assert.match(output, /Checked 1 file\(s\) - all within the line limit/);
 
   writeTree(root, { 'rust/src/sequences/target_matcher.rs': 'x\n'.repeat(MAX_LINES + 1) });
   assert.throws(
-    () => execFileSync('node', [script, '--dir', root], { encoding: 'utf8' }),
+    () => execFileSync('node', [script, '--dir', root], { encoding: 'utf8', stdio: 'pipe' }),
     (error) => error.status === 1 && /target_matcher\.rs: 1001 lines/.test(error.stdout)
   );
 });

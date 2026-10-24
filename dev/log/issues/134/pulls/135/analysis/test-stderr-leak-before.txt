@@ -1,0 +1,21 @@
+# Before: workflow commands and git noise leaked by node --test csharp/scripts/release-scripts.test.mjs
+To /tmp/link-cli-csharp-version-1B7jzD/remote.git
+ * [new branch]      main -> main
+To /tmp/link-cli-csharp-race-uIOCGB/remote.git
+ * [new branch]      main -> main
+Cloning into '/tmp/link-cli-csharp-race-uIOCGB/rival'...
+done.
+To /tmp/link-cli-csharp-rules-7KiiMN/remote.git
+ * [new branch]      main -> main
+::error title=C# release failed::The push to 'main' was declined by a repository rule (GH006/GH013). Rebasing cannot change repository policy: allow the release bot to push to 'main' or release through a pull request.
+remote: error: GH013: Repository rule violations found for refs/heads/main.        
+To /tmp/link-cli-csharp-rules-7KiiMN/remote.git
+ ! [remote rejected] HEAD -> main (pre-receive hook declined)
+error: failed to push some refs to '/tmp/link-cli-csharp-rules-7KiiMN/remote.git'
+
+Command failed: git push origin HEAD:main
+remote: error: GH013: Repository rule violations found for refs/heads/main.        
+To /tmp/link-cli-csharp-rules-7KiiMN/remote.git
+ ! [remote rejected] HEAD -> main (pre-receive hook declined)
+error: failed to push some refs to '/tmp/link-cli-csharp-rules-7KiiMN/remote.git'
+
