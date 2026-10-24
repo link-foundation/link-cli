@@ -183,6 +183,8 @@ public interface ITransaction<TLinkAddress> : IDisposable
 {
     Guid Id { get; }
     DateTimeOffset StartedAt { get; }
+    /// <summary>A durable commit decision exists. If checkpoint persistence
+    /// failed, retry Commit, Rollback or Dispose to finish that decision.</summary>
     bool IsCommitted { get; }
     bool IsRolledBack { get; }
     IReadOnlyList<Transition<TLinkAddress>> Transitions { get; }
@@ -315,7 +317,8 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     }
 
     /// <summary>Rolls back the current transaction, including retrying cleanup
-    /// after an automatic write's rollback failed. A failure keeps it pending.</summary>
+    /// after an automatic write's rollback failed. A known durable commit instead
+    /// finishes its checkpoint. A failure keeps either outcome pending.</summary>
     public virtual void Rollback()
     {
         lock (_lock)
@@ -364,10 +367,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             }
             else
             {
-                if (_current.IsRollbackOnly)
-                {
-                    throw new InvalidOperationException("Transaction requires rollback before further writes.");
-                }
+                EnsureWriteAllowedLocked();
                 ownsTransaction = false;
             }
             transaction = _current;
@@ -462,9 +462,23 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     // INamedTypes forwarding ------------------------------------------------
 
     public virtual string? GetName(TLinkAddress link) => _inner.GetName(link);
-    public virtual TLinkAddress SetName(TLinkAddress link, string name) => _inner.SetName(link, name);
+    public virtual TLinkAddress SetName(TLinkAddress link, string name)
+    {
+        lock (_lock)
+        {
+            EnsureWriteAllowedLocked();
+            return _inner.SetName(link, name);
+        }
+    }
     public virtual TLinkAddress GetByName(string name) => _inner.GetByName(name);
-    public virtual void RemoveName(TLinkAddress link) => _inner.RemoveName(link);
+    public virtual void RemoveName(TLinkAddress link)
+    {
+        lock (_lock)
+        {
+            EnsureWriteAllowedLocked();
+            _inner.RemoveName(link);
+        }
+    }
 
     // Disposal --------------------------------------------------------------
 
@@ -520,78 +534,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             _asyncQueue.Dispose();
             _backgroundCts.Dispose();
             _disposed = true;
-        }
-    }
-
-    // Commit / rollback paths -----------------------------------------------
-
-    internal void OnCommit(Transaction transaction, bool forceAsync)
-    {
-        bool runAsync;
-        Transition<TLinkAddress>[] transitions;
-        lock (_lock)
-        {
-            if (transaction.IsCommitted || transaction.IsRolledBack) return;
-            if (transaction.IsRollbackOnly)
-            {
-                throw new InvalidOperationException("Cannot commit a rollback-only transaction; rollback is required.");
-            }
-            WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
-            _flushLog();
-            _committed.Add(transaction.Id);
-            transaction.MarkCommitted();
-            if (_current == transaction) _current = null;
-            runAsync = forceAsync || _commitMode == CommitMode.Async;
-            transitions = transaction.Transitions.ToArray();
-            Trace($"Committed tx {transaction.Id:N} (mode={(runAsync ? "async" : "sync")}, transitions={transitions.Length}).");
-        }
-
-        if (runAsync)
-        {
-            _asyncQueue.Add(() => Task.Run(() => ApplyTransitionsAsync(transitions)));
-        }
-        else
-        {
-            lock (_lock)
-            {
-                _flushData();
-                foreach (var transition in transitions)
-                {
-                    MarkApplied(transition);
-                }
-                _flushLog();
-                EnforceRetentionLocked();
-            }
-        }
-    }
-
-    internal void OnRollback(Transaction transaction)
-    {
-        lock (_lock)
-        {
-            if (transaction.IsCommitted || transaction.IsRolledBack) return;
-            // A failed undo or persistence step must preserve the abort decision.
-            transaction.MarkRollbackOnly();
-            _replaying = true;
-            try
-            {
-                foreach (var transition in transaction.Transitions.AsEnumerable().Reverse())
-                {
-                    TryRevertTransition(transition);
-                }
-            }
-            finally
-            {
-                _replaying = false;
-            }
-            _flushData();
-            WriteMarker(RollbackMarkerPrefix + transaction.Id.ToString("N"));
-            _flushLog();
-            transaction.MarkRolledBack();
-            _rolledBack.Add(transaction.Id);
-            if (_current == transaction) _current = null;
-            Trace($"Rolled back tx {transaction.Id:N} ({transaction.Transitions.Count} transitions).");
-            EnforceRetentionLocked();
         }
     }
 
@@ -933,7 +875,11 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
         public void Dispose()
         {
-            if (_state == 0)
+            if (IsCommitted)
+            {
+                _owner.OnCommit(this, forceAsync: false);
+            }
+            else if (_state == 0)
             {
                 // Per-write auto transactions should not auto-rollback if the
                 // caller forgot to commit (Commit happens automatically in

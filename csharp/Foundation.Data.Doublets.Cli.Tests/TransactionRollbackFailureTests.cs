@@ -35,24 +35,21 @@ public class TransactionRollbackFailureTests
         }
     }
 
+    public static TheoryData<string, string> CleanupCases
+    {
+        get
+        {
+            var cases = new TheoryData<string, string>();
+            foreach (var point in new[] { "undo-before", "undo-after", "data-before", "data-after",
+                "marker-before", "marker-after", "log-before", "log-after" })
+                foreach (var operation in new[] { "commit", "create", "set", "remove" }) cases.Add(point, operation);
+            return cases;
+        }
+    }
+
     [Theory]
-    [InlineData("undo-before", true)]
-    [InlineData("undo-after", true)]
-    [InlineData("data-before", true)]
-    [InlineData("data-after", true)]
-    [InlineData("marker-before", true)]
-    [InlineData("marker-after", true)]
-    [InlineData("log-before", true)]
-    [InlineData("log-after", true)]
-    [InlineData("undo-before", false)]
-    [InlineData("undo-after", false)]
-    [InlineData("data-before", false)]
-    [InlineData("data-after", false)]
-    [InlineData("marker-before", false)]
-    [InlineData("marker-after", false)]
-    [InlineData("log-before", false)]
-    [InlineData("log-after", false)]
-    public void FailedRollbackRequiresCleanupBeforeCommitOrWrite(string point, bool commit)
+    [MemberData(nameof(CleanupCases))]
+    public void FailedRollbackRequiresCleanupBeforeCommitOrWrite(string point, string operation)
     {
         var directory = Path.Combine(Path.GetTempPath(), "rollback-failure-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -69,6 +66,7 @@ public class TransactionRollbackFailureTests
             {
                 a = tx.CreateAndUpdate(11u, 12u);
                 b = tx.CreateAndUpdate(21u, 22u);
+                tx.SetName(a, "original");
                 using var transaction = tx.BeginTransaction();
                 tx.Update(new[] { a }, new[] { a, 31u, 32u }, null);
                 tx.Update(new[] { b }, new[] { b, 41u, 42u }, null);
@@ -76,10 +74,18 @@ public class TransactionRollbackFailureTests
                 Assert.Contains(point, Assert.Throws<IOException>(() => transaction.Rollback()).Message);
                 Assert.False(transaction.IsCommitted); Assert.False(transaction.IsRolledBack);
                 Assert.Throws<InvalidOperationException>(() => tx.BeginTransaction());
-                if (commit) Assert.Throws<InvalidOperationException>(() => transaction.Commit());
-                else Assert.Throws<InvalidOperationException>(() => tx.Create(null, null));
+                if (operation == "commit") Assert.Throws<InvalidOperationException>(() => transaction.Commit());
+                else if (operation == "create") Assert.Throws<InvalidOperationException>(() => tx.Create(null, null));
+                else if (operation == "set") Assert.Throws<InvalidOperationException>(() => tx.SetName(a, "changed"));
+                else Assert.Throws<InvalidOperationException>(() => tx.RemoveName(a));
+                Assert.Equal("original", tx.GetName(a));
                 transaction.Rollback();
                 Assert.True(transaction.IsRolledBack);
+                tx.SetName(a, "changed");
+                Assert.Equal("changed", tx.GetName(a));
+                tx.RemoveName(a);
+                Assert.Null(tx.GetName(a));
+                tx.SetName(a, "original");
                 Assert.Equal(2u, tx.Count());
                 Assert.Equal(11u, tx.GetSource(a)); Assert.Equal(12u, tx.GetTarget(a));
                 Assert.Equal(21u, tx.GetSource(b)); Assert.Equal(22u, tx.GetTarget(b));
@@ -91,6 +97,7 @@ public class TransactionRollbackFailureTests
             using var reopened = new TransactionsDecorator(reopenedData, reopenedLog);
             Assert.Equal(3u, reopened.Count());
             Assert.True(reopened.Exists(following));
+            Assert.Equal("original", reopened.GetName(a));
             Assert.Equal(11u, reopened.GetSource(a)); Assert.Equal(12u, reopened.GetTarget(a));
             Assert.Equal(21u, reopened.GetSource(b)); Assert.Equal(22u, reopened.GetTarget(b));
         }

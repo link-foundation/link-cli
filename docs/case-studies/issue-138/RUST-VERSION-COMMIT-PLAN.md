@@ -14,7 +14,7 @@ without undoing that known outcome or admitting another write.
   commit and reopen a following transaction.
 - [x] Run focused tests, full native/actual-WASM validation, lint/format and
   coverage.
-- [ ] Commit, push and review fresh exact-SHA CI.
+- [x] Commit, push and review fresh exact-SHA CI.
 
 Moving only the data directory makes checkpoint file creation fail after the
 separate journal's commit flush. The directory is restored before assertions
@@ -49,4 +49,6 @@ Local verification totals
 Full native Rust: 595 standard tests plus stdout harness; C#: 994 each in
 Debug/Release; actual WASM: 315 tests. Both strict Clippy runs, formatting and
 release metadata pass. Exact coverage and before/after evidence:
-`dev/log/issues/138/pulls/139/version-owner-clock.txt`. CI remains pending.
+`dev/log/issues/138/pulls/139/version-owner-clock.txt`. All nine workflows pass
+on published SHA `b6d2223`; exact run URLs are in
+`dev/log/issues/138/pulls/139/version-owner-clock-ci.txt`.

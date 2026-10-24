@@ -96,6 +96,9 @@ The legacy transaction decorators have a different architecture: their commit
 marker is flushed before acknowledging commit, data is flushed before an applied
 marker, and replay errors propagate. They still mutate the underlying store
 while a transaction is open; use the staged engine for session isolation.
+Their legacy row journal does not undo or version ordinary named writes; staged
+sessions include names in atomic revisions. Named-write admission fences do not
+add names to that legacy journal.
 Sized and chunked retention discard completed rollback records without replaying
 their writes. Chunk archives contain committed changes only; pending records
 remain in the live log. Retention limits the in-memory list, while the durable
@@ -107,11 +110,16 @@ operation fails. Automatic operations undo those observations; explicit
 transactions keep them for caller rollback. This requires the adapter's change
 callbacks. Rust panic unwinding and unobserved mutations are outside this contract.
 
-After a Rust legacy journal commit is known durable, a failed checkpoint keeps
-the transaction open and blocks later writes. Retry `commit`, `rollback` or
-`save` to finish the checkpoint; rollback cannot undo that durable decision.
-Explicit version owners likewise retain admission until branch publication
-succeeds, including named writes. This retry contract does not establish atomic
+After a legacy journal commit is known durable, a failed synchronous checkpoint
+keeps the transaction owner and blocks later row and named writes. In Rust,
+retry `commit`, `rollback` or `save`; in C#, retry the handle's `Commit`,
+`CommitAsync`, `Rollback` or `Dispose`. The C# decorator's `Rollback()` also
+retries an automatic operation's checkpoint. Cleanup finishes the durable
+commit decision; it cannot undo it. C# `IsCommitted` reports that decision even
+when checkpoint persistence still needs retry. Its normal asynchronous policy
+continues to release admission once the durable decision is queued.
+Explicit version owners likewise retain admission until their checkpoint and
+branch publication succeed, including named writes. This retry contract does not establish atomic
 publication across a process exit between journal commit and version sidecars.
 Both Rust and C# reject public recovery while an open transaction owns live
 state; finish its cleanup first. Legacy in-memory transactions and history also

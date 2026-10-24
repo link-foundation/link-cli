@@ -470,6 +470,7 @@ impl VersionControlDecorator {
                 "Version publication is incomplete; retry commit, rollback or save before writing."
             );
         }
+        self.transactions.ensure_write_allowed()?;
         Ok(())
     }
 

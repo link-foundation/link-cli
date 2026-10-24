@@ -84,3 +84,9 @@ legacy reads. Recover tag names containing equals signs without truncation.
 
 Fence named writes while committed version publication is pending. Reject
 public journal or version recovery while an open transaction owns live state.
+
+Retain known committed synchronous checkpoints through failed persistence.
+Retry them through Commit, CommitAsync, Rollback or transaction disposal before
+releasing foreground admission or publishing version metadata. Fence row and
+named writes during incomplete commit/rollback cleanup; preserve queued async
+policy and borrowed-store shutdown semantics.

@@ -6,16 +6,29 @@ C# synchronous commit marks the handle committed and releases `_current` before
 data/applied-marker persistence. A later handle Commit is a no-op. Existing
 version retry tests establish branch publication, not generic checkpoint retry.
 
-- [ ] Reproduce each checkpoint phase with explicit and automatic transactions,
+- [x] Reproduce each checkpoint phase with explicit and automatic transactions,
       assert a persisted commit decision and an incomplete applied sequence.
-- [ ] Require handle Commit/Rollback/Dispose and decorator Rollback to finish
+- [x] Require handle Commit/Rollback/Dispose and decorator Rollback to finish
       that known outcome before admitting another foreground write.
-- [ ] Fence row and named write entry points without hiding the readable outcome.
-- [ ] Verify exact checkpoint completion, no new decision marker, following
+- [x] Fence row and named write entry points without hiding the readable outcome.
+- [x] Verify exact checkpoint completion, no new decision marker, following
       committed edits and persistent reopening.
-- [ ] Preserve asynchronous policy and shutdown contracts; separately audit
-      out-of-order applied-marker recovery after asynchronous checkpoint faults.
-- [ ] Run focused and complete suites, lint/format, coverage and exact-SHA CI.
+- [x] Preserve asynchronous policy and shutdown contracts in the full suite.
+- [ ] Separately audit out-of-order applied-marker recovery after asynchronous
+      checkpoint faults; see RECOVERY-ORDER-PLAN.md.
+- [x] Run focused and complete suites, lint/format and coverage.
+- [ ] Commit, push and verify fresh exact-SHA CI.
 
 Do not infer abrupt-exit sidecar atomicity or power-loss ordering from cleanup
 retry tests. Tests need finite schedules and existing mapped-store fixtures.
+
+Before-fix evidence: all 96 commit-checkpoint cases fail, plus sixteen named
+write cases after failed rollback; sixteen existing commit/row controls pass.
+The six Rust named transaction/version bridge cases also fail before their
+shared admission guard. Tests verify repeated failure, exact readable outcome,
+checkpoint completion without another decision, following edits and reopening.
+Complete local verification passes: C# Debug/Release 1,106 each, native Rust
+601 standard tests plus stdout harness, and actual WASM 315. Strict lint,
+formatting, changeset and source-size checks pass. Exact coverage and retained
+before-fix evidence are in `dev/log/issues/138/pulls/139/checkpoint-owner.txt`.
+Fresh exact-SHA CI remains pending for this batch.

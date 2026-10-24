@@ -1093,3 +1093,54 @@ legacy journal commit and version-sidecar publication is a separate unfinished
 audit. These cleanup tests do not establish power-loss atomicity. The C# generic
 checkpoint lifecycle is separately under investigation; the Rust retry change
 does not imply that C# already has that guarantee.
+
+## C# checkpoint retry and named-write ownership
+
+Before: all 96 new C# checkpoint cases fail. Six phases inject errors before/
+after data flush, applied-marker append and final journal flush. Explicit
+transactions retry through Commit, CommitAsync, Rollback, Dispose and owner
+Rollback; automatic transactions retry through owner Rollback. The final tests
+repeat the error once and verify that admission remains fenced, cleanup finishes
+the same decision, following writes survive persistent reopening, and names
+remain exact. Sixty write cases cover Create/Update/Delete/SetName/RemoveName
+with both explicit and automatic owners. The durable commit marker precedes
+the injected checkpoint error; no duplicate commit decision is allowed.
+
+Sixteen additional C# before-fix cases show named writes bypassing failed
+rollback admission; sixteen existing row/commit controls pass. All thirty-two
+now verify exact undo, allowed naming after cleanup and a following reopened
+transaction. Six Rust real-filesystem cases likewise fail before their guard:
+named writes bypass known-commit checkpoint and failed rollback ownership in
+the transaction and version bridges. All six pass after sharing the existing
+row-write guard. The data directory is restored before assertions/cleanup.
+
+The C# version facade always calls inner Commit when retrying publication:
+IsCommitted means a durable decision, not a completed checkpoint. All fifty
+existing version commit/publication cases pass with an applied-sequence check.
+Normal async commits still queue before releasing admission; shutdown/disposal
+contracts remain covered by the full suite. No new copy or full-log scan is
+added to ordinary synchronous commit.
+
+Full-suite fixture updates preserve their original assertions. One verifies
+repeated failing Dispose then repaired cleanup. The retention control now uses
+a real failed asynchronous checkpoint, joins its borrower, then checks terminal
+rollback admission. Its initial blocking wait passed isolated Release but failed
+under the parallel suite; an awaited TaskCompletionSource removes that blocking
+wait without increasing the five-second bound.
+
+Full C# Debug/Release: 1,106 pass each, zero skips.
+Full native Rust: 601 standard tests and the custom stdout harness pass;
+four child entry points remain ignored by the ordinary harness.
+Actual WASM: all 315 tests pass. All three wrapper modules remain 100% in
+lines/functions/reported branches. Strict native/WASM Clippy, formatting,
+release metadata and combined source-size checks pass.
+Debug: 6,139/6,632 lines (92.57%), 2,809/3,212 branches (87.45%)
+Release: 4,650/4,950 lines (93.94%), 2,788/3,193 branches (87.32%)
+native: 9,464/10,291 lines (91.96%), 1,560/1,906 branches (81.85%), 1,265/1,406 functions (89.97%)
+wasm: 6,545/9,900 lines (66.11%), 1,083/1,611 branches (67.23%), 901/1,390 functions (64.82%)
+
+Project-wide coverage remains below the requested 100%. This batch establishes
+in-process retry and fencing after a known durable commit. Noncontiguous async
+applied markers, uncertain commit-decision flushes and abrupt-exit legacy version
+sidecar publication are separate unfinished audits. It does not establish
+power-loss semantics outside the adapter's persistence contract.

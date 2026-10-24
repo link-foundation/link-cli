@@ -6,10 +6,12 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class VersionRollbackFailureTests
 {
-    [Fact]
-    public void RetentionFailureAfterTerminalRollbackReleasesVersionAdmission()
+    [Fact(Timeout = 15000)]
+    public async Task RetentionFailureAfterTerminalRollbackReleasesVersionAdmission()
     {
+        await Task.CompletedTask;
         var directory = Directory.CreateTempSubdirectory("version-terminal-").FullName;
+        var attempted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
             using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
@@ -18,15 +20,22 @@ public class VersionRollbackFailureTests
             var remaining = 0;
             void Flush()
             {
-                if (remaining > 0 && --remaining == 0) throw new IOException("injected checkpoint");
+                if (remaining > 0 && --remaining == 0)
+                {
+                    attempted.TrySetResult();
+                    throw new IOException("injected checkpoint");
+                }
                 data.Flush();
             }
             using var tx = new TransactionsDecorator(data, log, flushData: Flush, flushLog: log.Flush);
-            // Retain one committed transition whose checkpoint must be retried.
-            // Construct the version facade after that failure so this control
-            // isolates rollback admission from commit attribution.
+            // Async admission permits a later transaction after an older failed
+            // checkpoint. A failed synchronous checkpoint keeps its owner now.
+            tx.CommitMode = CommitMode.Async;
             remaining = 1;
-            Assert.Throws<IOException>(() => tx.CreateAndUpdate(11u, 12u));
+            tx.Create(null, null);
+            await attempted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            tx.Shutdown(); // Join failed work before the synchronous control.
+            tx.CommitMode = CommitMode.Sync;
             tx.RetentionPolicy = new LogRetentionPolicy.Sized(1);
             using var vc = new VersionControlDecorator(tx, branches);
             using var pending = vc.BeginTransaction();

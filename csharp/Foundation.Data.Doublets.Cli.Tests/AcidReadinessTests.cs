@@ -116,6 +116,10 @@ public class AcidReadinessTests
             Assert.Throws<IOException>(() => transaction.Commit());
             Assert.True(transaction.IsCommitted);
             Assert.Equal(0, tx.AppliedSequence);
+            Assert.Throws<IOException>(transaction.Dispose);
+            fail = false;
+            transaction.Dispose();
+            Assert.Equal(tx.LastLoggedSequence, tx.AppliedSequence);
         });
     }
 

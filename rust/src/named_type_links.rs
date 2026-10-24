@@ -387,6 +387,7 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
+        self.ensure_write_allowed()?;
         NamedTypes::set_name(self.inner_mut(), id, name)
     }
 
@@ -395,6 +396,7 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn remove_name(&mut self, id: u32) -> Result<()> {
+        self.ensure_write_allowed()?;
         NamedTypes::remove_name(self.inner_mut(), id)
     }
 

@@ -12,7 +12,7 @@ compilation cannot establish support for a platform's clock functions.
   file stores and actual-WASM memory stores; keep filesystem-only tests native.
 - [x] Run focused tests, complete native/actual-WASM suites, strict lint and
   coverage; record exact measured totals without excluding linked sources.
-- [ ] Commit, push and inspect fresh exact-SHA CI.
+- [x] Commit, push and inspect fresh exact-SHA CI.
 
 Before: both actual-WASM tests panic in `std::time::SystemTime::now` with
 `time not implemented on this platform`. The preserved verbose log is
@@ -34,4 +34,6 @@ Local verification totals
 Full native Rust: 595 standard tests plus stdout harness; C#: 994 each in
 Debug/Release; actual WASM: 315 tests. Both strict Clippy runs, formatting and
 release metadata pass. Exact coverage and before/after evidence:
-`dev/log/issues/138/pulls/139/version-owner-clock.txt`. CI remains pending.
+`dev/log/issues/138/pulls/139/version-owner-clock.txt`. All nine workflows pass
+on published SHA `b6d2223`; exact run URLs are in
+`dev/log/issues/138/pulls/139/version-owner-clock-ci.txt`.

@@ -132,6 +132,7 @@ public class VersionCommitFailureTests
                 else if (entry == "owner") vc.Dispose();
                 else if (entry == "rollback") pending.Rollback();
                 else LinksFacadeDisposer.Dispose(vc);
+                Assert.Equal(tx.LastLoggedSequence, tx.AppliedSequence);
                 Assert.Equal(committedHead, vc.CurrentSequence);
                 Assert.Equal(committedHead, vc.ListBranches().Single(b => b.Name == "topic").Head);
                 if (entry != "graph")

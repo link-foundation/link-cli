@@ -49,3 +49,28 @@ Run compilers sequentially (Cargo jobs=1; reduced debug info), save long logs,
 keep reusable probes in experiments/issue-138 and real examples under examples/.
 Bound concurrency/stress probes; never exhaust the container's 2.92 GiB budget.
 No direct merges or default-branch pushes. Preserve forward-moving history.
+
+## Current failure-audit sequence
+
+1. Finish C# known-commit checkpoint ownership and native named-write fencing;
+   preserve the 112 C# and six Rust before-fix failures, full-suite evidence and
+   exact-SHA CI. See CSHARP-CHECKPOINT-PLAN.md.
+2. Reproduce recovery with an older failed asynchronous checkpoint followed by
+   a later applied commit. Preserve a recovery anchor until the entire ordered
+   suffix is durable, including interruption of recovery itself. See
+   RECOVERY-ORDER-PLAN.md.
+3. Audit commit-marker append/first flush errors whose delivery is uncertain.
+   A possibly durable commit must not be silently undone by cleanup. Exercise
+   automatic/explicit and version-owner cleanup in both native languages.
+4. Audit initial version attribution of aborted records and abrupt process exit
+   between a journal commit and branch-sidecar publication. Use finite real
+   subprocess faults in addition to graceful disposal/reopen tests.
+5. Reproduce ordinary legacy named writes across rollback/history/reopen. Their
+   admission fence is distinct from logging names atomically; staged sessions
+   already keep names in their immutable revisions.
+6. Continue the source-backed algorithm/component comparison, efficient journal
+   and state structures, finer decorator composition and full native/linked-WASM
+   coverage. Every unsupported strategy and unverified guarantee stays open.
+
+This sequence tracks remaining work; passing one audit or CI batch does not
+complete the overall issue or authorize marking the draft ready early.

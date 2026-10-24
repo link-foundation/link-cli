@@ -345,7 +345,9 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            if (!transaction.Inner.IsCommitted) transaction.Inner.Commit();
+            // IsCommitted reports the durable decision; a failed data checkpoint
+            // can still need retry before publishing the branch metadata.
+            transaction.Inner.Commit();
             if (ReferenceEquals(_activeTransaction, transaction))
             {
                 AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.BranchName);

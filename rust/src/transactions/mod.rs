@@ -551,7 +551,7 @@ where
             .unwrap_or_else(|| GenericDoubletLink::new(id, zero, zero))
     }
 
-    fn ensure_open_transaction(&mut self) -> Result<bool, LinkError> {
+    pub(crate) fn ensure_write_allowed(&self) -> Result<(), LinkError> {
         if self
             .current
             .as_ref()
@@ -566,6 +566,11 @@ where
                 "Transaction requires rollback before further writes.".into(),
             ));
         }
+        Ok(())
+    }
+
+    fn ensure_open_transaction(&mut self) -> Result<bool, LinkError> {
+        self.ensure_write_allowed()?;
         if self.sequence_counter == i64::MAX {
             return Err(LinkError::Transaction(
                 "Transaction sequence space is exhausted.".into(),
