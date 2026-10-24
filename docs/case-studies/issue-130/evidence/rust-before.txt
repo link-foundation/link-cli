@@ -1,0 +1,32 @@
+   Compiling link-cli v0.1.0 (/tmp/gh-issue-solver-1792825241758/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.70s
+     Running tests/quoted_query_references_tests.rs (rust/target/debug/deps/quoted_query_references_tests-aec0ee7137bc0959)
+
+running 3 tests
+test quoted_definitions_support_strict_matching_updating_and_deletion ... FAILED
+test missing_quoted_number_requires_its_name_even_when_address_exists ... FAILED
+test quoted_numbers_are_names ... FAILED
+
+failures:
+
+---- quoted_definitions_support_strict_matching_updating_and_deletion stdout ----
+Error: Invalid link format: Cannot ensure unsupported link address 0
+
+---- missing_quoted_number_requires_its_name_even_when_address_exists stdout ----
+
+thread 'missing_quoted_number_requires_its_name_even_when_address_exists' (10969) panicked at tests/quoted_query_references_tests.rs:55:73:
+called `Result::unwrap_err()` on an `Ok` value: [(Some(GenericLink { index: 1, source: 1, target: 1 }), Some(GenericLink { index: 1, source: 1, target: 1 }))]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- quoted_numbers_are_names stdout ----
+Error: Invalid link format: Cannot ensure unsupported link address 0
+
+
+failures:
+    missing_quoted_number_requires_its_name_even_when_address_exists
+    quoted_definitions_support_strict_matching_updating_and_deletion
+    quoted_numbers_are_names
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test quoted_query_references_tests`
