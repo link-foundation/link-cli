@@ -353,8 +353,7 @@ public class PersistentTransformationDecorator : LinksDecoratorBase<uint>, IName
 
         public static PersistentTransformationQuery Parse(string query)
         {
-            var parser = new Parser();
-            var parsedLinks = parser.Parse(query);
+            var parsedLinks = QueryParser.Parse(query);
             if (parsedLinks.Count == 0)
             {
                 throw new ArgumentException("Persistent transformation query must contain a condition and a substitution.", nameof(query));
@@ -385,7 +384,7 @@ public class PersistentTransformationDecorator : LinksDecoratorBase<uint>, IName
         {
             if (link.Values is null || link.Values.Count == 0)
             {
-                return string.IsNullOrEmpty(link.Id) ? "()" : EscapeReference(link.Id);
+                return string.IsNullOrEmpty(link.Id) ? "()" : QueryParser.FormatIdentifier(link.Id);
             }
 
             var values = string.Join(" ", link.Values.Select(Format));
@@ -394,44 +393,7 @@ public class PersistentTransformationDecorator : LinksDecoratorBase<uint>, IName
                 return $"({values})";
             }
 
-            return $"({EscapeReference(link.Id)}: {values})";
-        }
-
-        private static string EscapeReference(string reference)
-        {
-            if (string.IsNullOrWhiteSpace(reference))
-            {
-                return string.Empty;
-            }
-
-            var hasSingleQuote = reference.Contains('\'');
-            var hasDoubleQuote = reference.Contains('"');
-            var needsQuoting = reference.Contains(':')
-              || reference.Contains('(')
-              || reference.Contains(')')
-              || reference.Contains(' ')
-              || reference.Contains('\t')
-              || reference.Contains('\n')
-              || reference.Contains('\r')
-              || hasSingleQuote
-              || hasDoubleQuote;
-
-            if (hasSingleQuote && hasDoubleQuote)
-            {
-                return $"'{reference.Replace("'", "\\'")}'";
-            }
-
-            if (hasDoubleQuote)
-            {
-                return $"'{reference}'";
-            }
-
-            if (hasSingleQuote)
-            {
-                return $"\"{reference}\"";
-            }
-
-            return needsQuoting ? $"'{reference}'" : reference;
+            return $"({QueryParser.FormatIdentifier(link.Id)}: {values})";
         }
     }
 }

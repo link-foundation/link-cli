@@ -41,8 +41,7 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            var parser = new Parser();
-            var parsedLinks = parser.Parse(query);
+            var parsedLinks = QueryParser.Parse(query);
 
             TraceIfEnabled(options, $"[ProcessQuery] Parser returned {parsedLinks.Count} top-level link(s).");
             if (parsedLinks.Count == 0)

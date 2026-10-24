@@ -32,8 +32,8 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     var missing = plan.MissingReferences[0];
                     throw new InvalidOperationException(
-                      $"Invalid reference to non-existent link '{missing.Identifier}' in {missing.PatternType} pattern. " +
-                      $"Link '{missing.Identifier}' does not exist and will not be created by this operation. " +
+                      $"Invalid reference to non-existent link '{QueryParser.Name(missing.Identifier)}' in {missing.PatternType} pattern. " +
+                      $"Link '{QueryParser.Name(missing.Identifier)}' does not exist and will not be created by this operation. " +
                       "Use --auto-create-missing-references to create missing references as point links."
                     );
                 }
@@ -211,7 +211,7 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            if (links.GetByName(identifier) == links.Constants.Null && !plan.NamesToBeCreated.Contains(identifier))
+            if (links.GetByName(QueryParser.Name(identifier)) == links.Constants.Null && !plan.NamesToBeCreated.Contains(identifier))
             {
                 plan.AddMissingReference(new MissingLinkReference
                 {
@@ -255,12 +255,12 @@ namespace Foundation.Data.Doublets.Cli
 
             foreach (var missing in plan.MissingReferences.Where(reference => !reference.NumericId.HasValue).OrderBy(reference => reference.Identifier, StringComparer.Ordinal))
             {
-                if (links.GetByName(missing.Identifier) != links.Constants.Null)
+                if (links.GetByName(QueryParser.Name(missing.Identifier)) != links.Constants.Null)
                 {
                     continue;
                 }
 
-                TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{missing.Identifier}' as point link.");
+                TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{QueryParser.Name(missing.Identifier)}' as point link.");
                 EnsureNamedPointLink(links, missing.Identifier, options);
             }
         }

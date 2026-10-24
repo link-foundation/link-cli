@@ -51,6 +51,11 @@ transformation triggers with `--always`, `--once`, `--never`, `--triggers`,
 the public library, so other .NET applications can call into the same
 processors directly.
 
+Quoted query references always resolve by name: `"0"` and `"1"` are names,
+while bare `1` is an address. This applies to definitions and restrictions as
+well as reference values. Use `--auto-create-missing-references` to create missing
+named points; strict queries require an existing name or a substitution definition.
+
 LiNo import/export preserves backslashes literally in quoted names, including
 Windows paths and a backslash immediately before the closing delimiter. Names
 with newlines or both quote kinds export as the notation library's lossless
