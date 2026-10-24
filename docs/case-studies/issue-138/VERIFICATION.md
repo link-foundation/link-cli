@@ -925,3 +925,32 @@ source-union replacement were used; complete project coverage remains unfinished
 This step preserves existing behavior and changes no Rust production code.
 See [CLI-CONTRACT-PLAN.md](CLI-CONTRACT-PLAN.md) and
 `dev/log/issues/138/pulls/139/cli-policy-contracts.txt`.
+
+## Version owner and CLI CI closure
+
+Exact head `77bd2b7b95f8a39a0c7dd03ed301069af3877f3d` passes all nine
+workflows created 2026-10-24T21:47:56Z. C# passes 928 tests on each of Windows,
+Linux and macOS, including the revised facade lifetime probe. Rust passes all
+three platforms, full native coverage and fresh-merge checks. This closes the
+previous Windows probe failure without relaxing a deadline. Full IDs are in
+`dev/log/issues/138/pulls/139/version-owner-ci.txt`. New source changes need
+new exact-SHA checks. Complete native/linked-WASM coverage remains unfinished.
+
+## C# committed version publication retry
+
+Before the fix, 18 real mapped checkpoint cases leave head 2 after durable
+commit 4. With metadata faults added, all 36 pre-fix cases fail: fallible
+publication releases version admission too early. Two further before tests
+reproduce dropped publication through Rollback and accepted subsequent writes.
+Cleanup now finishes the known commit, keeps admission through failed metadata
+writes and skips already named immutable markers during retry.
+
+All 48 phase/entry-point cases verify fencing, exact recovered branch/head/data,
+unique transition markers, rewind/forward checkout, exclusive file reopening
+and a following committed/tagged transaction. Together with rollback/lifetime
+controls, 79 focused cases pass. Full Debug and Release each pass 976 tests.
+Debug: 6,027/6,555 lines (91.95%); 2,753/3,174 branches (86.74%). Release: 4,573/4,897 lines (93.38%); 2,732/3,155 branches (86.59%). Formatting and release metadata pass.
+Complete coverage remains unfinished. These tests cover one-shot error/retry,
+not abrupt process exit between journal and legacy sidecar publication. See
+[VERSION-COMMIT-PLAN.md](VERSION-COMMIT-PLAN.md) and
+`dev/log/issues/138/pulls/139/version-commit-publication.txt`.

@@ -192,7 +192,7 @@ records on reopen. Shutdown does not dispose the borrowed stores.
 
 When you own an entire facade graph, `LinksFacadeDisposer.Dispose(outermost)`
 releases borrowers before their dependencies. It joins transaction workers and
-rolls back open version transactions while their stores remain available.
+finishes version transactions while their stores remain available.
 Nested cleanup shares cycle/duplicate detection and retains references detached
 during disposal. A borrower cleanup failure propagates before its dependencies
 close, allowing a retry. Calling `TransactionsDecorator.Dispose()` directly
@@ -203,3 +203,10 @@ facade retains that transaction and rejects branch, tag, checkout and new
 transaction operations. Retry the same transaction rollback or owner disposal;
 only a terminal transaction releases admission. A whole-graph cleanup failure
 therefore leaves the stores available for the same retry.
+
+A commit can report a checkpoint error after the journal decision is durable.
+When `IsCommitted` is true, version transaction disposal, owner disposal and
+rollback finish that commit's branch metadata. They preserve the committed data.
+Failed metadata publication retains admission and rejects further writes until
+retry succeeds. Retried transition markers are idempotent, including when the
+original metadata write took effect before reporting an error.

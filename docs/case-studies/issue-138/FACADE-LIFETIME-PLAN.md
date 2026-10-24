@@ -17,7 +17,7 @@ its transaction, and a background transaction may still use its data mapping.
    native stores if simple traversal inversion cannot handle Root cycles.
 - [x] Test failed/corrupt construction, version rollback, shared dependencies and
    idempotence. Run full Debug/Release, format and release metadata checks.
-- [ ] Document ownership/evidence and verify all exact-SHA CI after an atomic commit.
+- [x] Document ownership/evidence and verify all exact-SHA CI after an atomic commit.
 
 Three initial regressions fail: mock borrowers receive a disposed dependency,
 failed borrower cleanup closes its dependency before a retry, and graph traversal
@@ -54,3 +54,7 @@ The changed probe fails against `421dd39^` with the expected closed-dependency
 assertion, then passes ten finite runs with borrower-first cleanup. Full logs
 remain under experiments; committed excerpts and the exact CI failure are in
 `dev/log/issues/138/pulls/139/facade-lifetime-ci.txt`. Fresh CI remains open.
+
+Exact head `77bd2b7b95f8a39a0c7dd03ed301069af3877f3d` passes all nine
+workflows, including Windows/Linux/macOS and fresh-merge checks. See
+`dev/log/issues/138/pulls/139/version-owner-ci.txt`. Later changes require new CI.

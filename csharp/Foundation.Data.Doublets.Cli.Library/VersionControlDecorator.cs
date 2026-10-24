@@ -65,7 +65,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     private readonly bool _trace;
 
     /// <summary>
-    /// Rolls back and releases the transaction that is still open, if any.
+    /// Completes a committed version publication or rolls back an open transaction.
     /// The wrapped transactions decorator and branches store are owned by
     /// the caller and are deliberately left untouched.
     /// </summary>
@@ -76,7 +76,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     }
 
     /// <summary>
-    /// Rolls back and releases the open transaction. Derived decorators that
+    /// Finishes the active version transaction. Derived decorators that
     /// own extra resources override this and call
     /// <c>base.Dispose(disposing)</c>.
     /// </summary>
@@ -166,6 +166,10 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            if (_activeTransaction?.Inner.IsCommitted == true)
+            {
+                throw new InvalidOperationException("Retry committed version publication before writing.");
+            }
             var beforeSeq = _transactions.LastLoggedSequence;
             var result = innerWrite();
             if (_activeTransaction is null)
@@ -337,11 +341,12 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            transaction.Inner.Commit();
+            if (!transaction.Inner.IsCommitted) transaction.Inner.Commit();
             if (ReferenceEquals(_activeTransaction, transaction))
             {
-                _activeTransaction = null;
                 AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.BranchName);
+                _activeTransaction = null;
+                if (_trace) Trace($"Published committed version tx {transaction.Id:N} on '{transaction.BranchName}'.");
             }
         }
     }
@@ -350,6 +355,11 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            if (transaction.Inner.IsCommitted)
+            {
+                CommitVersionTransaction(transaction);
+                return;
+            }
             try
             {
                 transaction.Inner.Rollback();
@@ -480,6 +490,8 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void WriteImmutableMarker(string name)
     {
+        // Publication may be retried after SetName changed storage and threw.
+        if (_branchesStore.GetByName(name) != 0) return;
         var link = _branchesStore.CreateAndUpdate(_branchesStore.Constants.Null, _branchesStore.Constants.Null);
         _branchesStore.SetName(link, name);
     }
@@ -653,7 +665,13 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
         public void Dispose()
         {
-            if (!Inner.IsCommitted && !Inner.IsRolledBack)
+            if (Inner.IsCommitted)
+            {
+                // The journal decision can precede a failed data checkpoint.
+                // Finish version publication without undoing that commit.
+                _owner.CommitVersionTransaction(this);
+            }
+            else if (!Inner.IsRolledBack)
             {
                 _owner.RollbackVersionTransaction(this);
             }

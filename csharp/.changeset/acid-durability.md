@@ -71,3 +71,7 @@ cleanup fails and must be retried.
 Keep version-control admission and owner cleanup retry after failed transaction
 rollback. Release admission when the inner transaction reaches a terminal state,
 including a failure reported after rollback completes.
+
+Finish committed version publication after checkpoint or metadata errors through
+transaction/owner disposal and rollback. Keep write and metadata admission fenced
+until publication succeeds, and avoid duplicate transition markers on retry.

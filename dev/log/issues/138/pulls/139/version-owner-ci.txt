@@ -1,0 +1,22 @@
+Published version-owner and CLI verification
+
+Head: 77bd2b7b95f8a39a0c7dd03ed301069af3877f3d
+All nine workflows were created 2026-10-24T21:47:56Z after the push,
+and all concluded success. No earlier or mismatched-SHA runs are counted.
+
+Broken Link Checker: 40135798219 success
+Workflows: 40135798195 success
+Dependencies: 40135798215 success
+JS client CI: 40135798217 success
+Docs: 40135798205 success
+C# CI/CD Pipeline: 40135798220 success
+WebAssembly CI: 40135798201 success
+Security: 40135798206 success
+Rust CI/CD Pipeline: 40135798270 success
+
+C# run 40135798220 passes all 928 tests on Windows, Linux and macOS,
+plus formatting, packaging and fresh-merge checks. This closes the corrected
+facade probe Windows follow-up after the preserved 40134580109 failure.
+Rust run 40135798270 passes all three platforms, native coverage, strict
+lint/format, packaging and fresh-merge checks. The latest main remains an
+ancestor of this head. Later changes require their own exact-SHA CI.
