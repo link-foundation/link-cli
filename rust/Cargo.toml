@@ -1,6 +1,6 @@
 [package]
 name = "link-cli"
-version = "0.1.0"
+version = "1.0.9"
 edition = "2021"
 # `std::fs::File::lock` (used by the advisory locking in `storage::lock`)
 # was stabilised in Rust 1.89.
