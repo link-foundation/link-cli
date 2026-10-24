@@ -40,8 +40,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: docs-${{ github.workflow }}-${{ github.ref }}
@@ -184,6 +182,12 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Only the deployment needs to write Pages and mint an OIDC token
+    # (zizmor excessive-permissions); the build job stays read-only.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -193,5 +197,7 @@ jobs:
         uses: actions/deploy-pages@v5
 
       - name: Print resolved deployment URL (debug)
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          echo "Pages deployed to: ${{ steps.deployment.outputs.page_url }}"
+          echo "Pages deployed to: $PAGE_URL"

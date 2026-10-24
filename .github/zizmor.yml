@@ -22,3 +22,11 @@ rules:
         peter-evans/*: ref-pin
         zizmorcore/*: ref-pin
         '*': hash-pin
+  # .github/workflows/dependencies.yml fails while any dependency is behind
+  # its latest release (the requirement of PR #106), so Dependabot has to open
+  # the update the day it is released. A cooldown would keep that check red
+  # for the whole cooldown window. The supply-chain risk a cooldown mitigates
+  # is covered instead by the lockfiles, `--locked` installs and the review of
+  # every Dependabot pull request before it merges.
+  dependabot-cooldown:
+    disable: true

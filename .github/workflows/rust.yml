@@ -358,17 +358,19 @@ jobs:
         run: |
           rust-script rust/scripts/check-release-needed.rs \
             --tag-prefix rust-v \
-            --repository "${{ github.repository }}"
+            --repository "$GITHUB_REPOSITORY"
 
       - name: Collect changelog and bump version
         id: version
         if: steps.check.outputs.should_release == 'true' && steps.check.outputs.skip_bump != 'true'
         working-directory: .
+        env:
+          BUMP_TYPE: ${{ steps.bump_type.outputs.bump_type }}
         run: |
           rust-script rust/scripts/version-and-commit.rs \
             --rust-root rust \
             --tag-prefix rust-v \
-            --bump-type "${{ steps.bump_type.outputs.bump_type }}"
+            --bump-type "$BUMP_TYPE"
 
       - name: Get current version
         id: current_version
@@ -405,22 +407,22 @@ jobs:
         if: steps.check.outputs.should_release == 'true'
         env:
           RUST_ROOT: rust
-        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.current_version.outputs.version }}"
+          RELEASE_VERSION: ${{ steps.current_version.outputs.version }}
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: steps.check.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          CURRENT_VERSION: ${{ steps.current_version.outputs.version }}
         run: |
-          RELEASE_VERSION="${{ steps.version.outputs.new_version }}"
-          if [ -z "$RELEASE_VERSION" ]; then
-            RELEASE_VERSION="${{ steps.current_version.outputs.version }}"
-          fi
+          RELEASE_VERSION="${NEW_VERSION:-$CURRENT_VERSION}"
 
           rust-script rust/scripts/create-github-release.rs \
             --rust-root rust \
             --release-version "$RELEASE_VERSION" \
-            --repository "${{ github.repository }}" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "rust-v" \
             --language "Rust"
 
@@ -460,12 +462,15 @@ jobs:
 
       - name: Version and commit
         id: version
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           rust-script rust/scripts/version-and-commit.rs \
             --rust-root rust \
             --tag-prefix rust-v \
-            --bump-type "${{ github.event.inputs.bump_type }}" \
-            --description "${{ github.event.inputs.description }}"
+            --bump-type "$BUMP_TYPE" \
+            --description "$DESCRIPTION"
 
       - name: Build release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
@@ -495,17 +500,19 @@ jobs:
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
           RUST_ROOT: rust
-        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.version.outputs.new_version }}"
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           rust-script rust/scripts/create-github-release.rs \
             --rust-root rust \
-            --release-version "${{ steps.version.outputs.new_version }}" \
-            --repository "${{ github.repository }}" \
+            --release-version "$RELEASE_VERSION" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "rust-v" \
             --language "Rust"
 

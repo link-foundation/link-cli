@@ -114,20 +114,19 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref }}
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # Read head_ref through env, never interpolate it into the script: on
+          # a fork PR the branch name is attacker-controlled (issue #134).
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
         run: |
           # Skip changeset check for automated release PRs
-          if [[ "${{ github.head_ref }}" == "changeset-release/"* ]] || [[ "${{ github.head_ref }}" == "changeset-manual-release-"* ]]; then
+          if [[ "$GITHUB_HEAD_REF" == "changeset-release/"* ]] || [[ "$GITHUB_HEAD_REF" == "changeset-manual-release-"* ]]; then
             echo "Skipping changeset check for automated release PR"
             exit 0
           fi
 
-          # Check if changeset exists in csharp/.changeset
-          CHANGESET_COUNT=$(find csharp/.changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
-          if [ "$CHANGESET_COUNT" -eq 0 ]; then
-            echo "::warning::No changeset found in csharp/.changeset/. Please add a changeset for C# code changes."
-          else
-            echo "Found $CHANGESET_COUNT changeset file(s)"
-          fi
+          # A C# code change without exactly one valid changeset never reaches
+          # a release, so this fails instead of warning (issue #134).
+          node csharp/scripts/validate-changeset.mjs
 
   # === LINT AND FORMAT CHECK ===
   lint:
@@ -322,8 +321,8 @@ jobs:
           # Count changeset files (excluding README.md and config.json)
           CHANGESET_COUNT=$(find csharp/.changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
           echo "Found $CHANGESET_COUNT changeset file(s)"
-          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "changeset_count=$CHANGESET_COUNT" >> $GITHUB_OUTPUT
+          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          echo "changeset_count=$CHANGESET_COUNT" >> "$GITHUB_OUTPUT"
 
       - name: Check if release is needed
         # Self-healing gate: even when a changeset is absent, resume publishing
@@ -362,11 +361,14 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          CURRENT_VERSION: ${{ steps.check_release.outputs.current_version }}
         run: |
-          if [ -n "${{ steps.version.outputs.new_version }}" ]; then
-            VERSION="${{ steps.version.outputs.new_version }}"
+          if [ -n "$NEW_VERSION" ]; then
+            VERSION="$NEW_VERSION"
           else
-            VERSION="${{ steps.check_release.outputs.current_version }}"
+            VERSION="$CURRENT_VERSION"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION"
@@ -438,10 +440,13 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.id }}
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --release-version "${{ steps.release_version.outputs.version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Verify library package on NuGet
         if: >-
@@ -449,10 +454,13 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.library_id }}
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.library_id }}" \
-            --release-version "${{ steps.release_version.outputs.version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: >-
@@ -461,15 +469,18 @@ jobs:
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
+          CLI_PACKAGE_ID: ${{ steps.package.outputs.id }}
+          LIBRARY_PACKAGE_ID: ${{ steps.package.outputs.library_id }}
         working-directory: .
         run: |
           node csharp/scripts/create-github-release.mjs \
-            --release-version "${{ steps.release_version.outputs.version }}" \
-            --repository "${{ github.repository }}" \
+            --release-version "$RELEASE_VERSION" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "csharp-v" \
             --language "C#" \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --package-id "${{ steps.package.outputs.library_id }}" \
+            --package-id "$CLI_PACKAGE_ID" \
+            --package-id "$LIBRARY_PACKAGE_ID" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
 
@@ -508,11 +519,14 @@ jobs:
       - name: Version and commit
         id: version
         working-directory: .
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           node csharp/scripts/version-and-commit.mjs \
             --mode instant \
-            --bump-type "${{ github.event.inputs.bump_type }}" \
-            --description "${{ github.event.inputs.description }}"
+            --bump-type "$BUMP_TYPE" \
+            --description "$DESCRIPTION"
 
       - name: Build package
         if: >-
@@ -561,20 +575,26 @@ jobs:
           steps.nuget_publish.outputs.published == 'true' && (
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true')
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.id }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --release-version "${{ steps.version.outputs.new_version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Verify library package on NuGet
         if: >-
           steps.nuget_publish.outputs.published == 'true' && (
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true')
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.library_id }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.library_id }}" \
-            --release-version "${{ steps.version.outputs.new_version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: >-
@@ -582,15 +602,18 @@ jobs:
           steps.version.outputs.already_released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
+          CLI_PACKAGE_ID: ${{ steps.package.outputs.id }}
+          LIBRARY_PACKAGE_ID: ${{ steps.package.outputs.library_id }}
         working-directory: .
         run: |
           node csharp/scripts/create-github-release.mjs \
-            --release-version "${{ steps.version.outputs.new_version }}" \
-            --repository "${{ github.repository }}" \
+            --release-version "$RELEASE_VERSION" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "csharp-v" \
             --language "C#" \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --package-id "${{ steps.package.outputs.library_id }}" \
+            --package-id "$CLI_PACKAGE_ID" \
+            --package-id "$LIBRARY_PACKAGE_ID" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
 
