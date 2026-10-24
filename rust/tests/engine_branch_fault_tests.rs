@@ -26,7 +26,8 @@ impl TransitionLogStore for FaultLog {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failed_merge_is_indeterminate_and_replay_recovers_it_once() {
     let log = FaultLog::default();
     let parent = Engine::<u32, _>::open(log.clone(), EngineOptions::default()).unwrap();
@@ -64,7 +65,8 @@ fn failed_merge_is_indeterminate_and_replay_recovers_it_once() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failed_branch_seed_does_not_modify_parent_and_unfinished_writes_do_not_merge() {
     let parent = Engine::<u32, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
     let failed = FaultLog::default();

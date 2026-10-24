@@ -19,7 +19,8 @@ fn engine() -> Engine<u64, MemoryLog> {
     db
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn read_set_configuration_requires_serializable_isolation() {
     for isolation in [IsolationLevel::Snapshot, IsolationLevel::ReadCommitted] {
         assert!(Engine::<u64, _>::open(
@@ -48,7 +49,8 @@ fn read_set_configuration_requires_serializable_isolation() {
     assert!(exclusive.begin().is_ok());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn disjoint_points_commit_but_read_dependencies_prevent_write_skew() {
     let db = engine();
     let mut a = db.begin().unwrap();
@@ -73,7 +75,8 @@ fn disjoint_points_commit_but_read_dependencies_prevent_write_skew() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn missing_reads_aba_and_branch_publications_are_validated() {
     let db = engine();
     let mut missing = db.begin().unwrap();
@@ -117,7 +120,8 @@ fn missing_reads_aba_and_branch_publications_are_validated() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn scans_names_and_read_only_commits_validate_their_dependencies() {
     let db = engine();
     for scan in 0..3 {
@@ -160,7 +164,8 @@ fn scans_names_and_read_only_commits_validate_their_dependencies() {
 // Independent oracle: enumerate serial executions of acknowledged transactions,
 // compare their observed point values and the final state. 216 profiles x 6
 // commit orders, with at most three transactions and two stored rows per probe.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn finite_concurrent_histories_have_a_serial_execution() {
     const ORDERS: [[usize; 3]; 6] = [
         [0, 1, 2],
@@ -212,7 +217,8 @@ fn finite_concurrent_histories_have_a_serial_execution() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn own_writes_and_blind_allocations_still_validate_written_addresses() {
     let db = engine();
     let mut own = db.begin().unwrap();
@@ -250,7 +256,9 @@ fn own_writes_and_blind_allocations_still_validate_written_addresses() {
     retry.commit().unwrap();
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn shared_rust_point_reads_preserve_send_sync_and_both_dependencies() {
     let db = engine();
     let mut reader = db.begin().unwrap();

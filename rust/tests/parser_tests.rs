@@ -2,14 +2,16 @@
 
 use link_cli::Parser;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_empty() {
     let parser = Parser::new();
     let result = parser.parse("").unwrap();
     assert!(result.is_empty());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_simple_link() {
     let parser = Parser::new();
     let result = parser.parse("(1 2)").unwrap();
@@ -17,7 +19,8 @@ fn test_parse_simple_link() {
     assert_eq!(result[0].values_count(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_nested_link() {
     let parser = Parser::new();
     let result = parser.parse("((1 2) (3 4))").unwrap();
@@ -25,7 +28,8 @@ fn test_parse_nested_link() {
     assert_eq!(result[0].values_count(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_link_with_id() {
     let parser = Parser::new();
     let result = parser.parse("(5: 1 2)").unwrap();
@@ -34,7 +38,8 @@ fn test_parse_link_with_id() {
     assert_eq!(result[0].values_count(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_variable() {
     let parser = Parser::new();
     let result = parser.parse("($var 1 2)").unwrap();
@@ -42,7 +47,8 @@ fn test_parse_variable() {
     assert!(result[0].values.as_ref().unwrap()[0].is_variable());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_wildcard() {
     let parser = Parser::new();
     let result = parser.parse("(* 1)").unwrap();
@@ -50,7 +56,8 @@ fn test_parse_wildcard() {
     assert!(result[0].values.as_ref().unwrap()[0].is_wildcard());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_query_format() {
     let parser = Parser::new();
     // Query format: (( restriction ) ( substitution ))
@@ -59,7 +66,8 @@ fn test_parse_query_format() {
     assert_eq!(result[0].values_count(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_parse_links_notation_backtick_unicode_identifier() {
     let parser = Parser::new();
     let result = parser

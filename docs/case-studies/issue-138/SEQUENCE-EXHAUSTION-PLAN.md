@@ -9,7 +9,7 @@ Continue R1/R8 with finite valid journals at the signed sequence boundary.
       state if a cascade exceeds the remaining capacity.
 - [x] Verify commit/write rejection, rollback, subsequent admission and reopening.
 - [x] Run full native coverage, formatting and actual WASM checks.
-- [ ] Verify exact-SHA CI after publication.
+- [x] Verify exact-SHA CI after publication.
 
 Fixtures start with three data rows. The boundary is i64/long MAX for one
 creation, MAX-1 for a two-row Rust cascade, or MAX-3 for C#: its resolver

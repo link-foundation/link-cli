@@ -14,7 +14,8 @@ fn engine(isolation: IsolationLevel) -> Engine<u64, MemoryLog> {
     .unwrap()
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn snapshots_hide_dirty_writes_and_rollback_discards_them() {
     let db = engine(IsolationLevel::Snapshot);
     let mut a = db.begin().unwrap();
@@ -26,7 +27,8 @@ fn snapshots_hide_dirty_writes_and_rollback_discards_them() {
     assert!(db.snapshot().unwrap().links().is_empty());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn snapshot_conflicts_prevent_lost_updates() {
     let db = engine(IsolationLevel::Snapshot);
     let mut seed = db.begin().unwrap();
@@ -41,7 +43,8 @@ fn snapshot_conflicts_prevent_lost_updates() {
     assert_eq!(db.snapshot().unwrap().links()[0].source, id);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn serializable_validation_detects_write_skew_and_phantoms() {
     let db = engine(IsolationLevel::Serializable);
     let mut a = db.begin().unwrap();
@@ -54,7 +57,8 @@ fn serializable_validation_detects_write_skew_and_phantoms() {
     assert!(b.commit().is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn read_committed_refreshes_but_snapshot_is_repeatable() {
     for isolation in [IsolationLevel::ReadCommitted, IsolationLevel::Snapshot] {
         let db = engine(isolation);
@@ -69,7 +73,8 @@ fn read_committed_refreshes_but_snapshot_is_repeatable() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn exclusive_control_releases_on_drop_and_history_is_bounded() {
     let db = Engine::<u64, _>::open(
         MemoryLog::default(),

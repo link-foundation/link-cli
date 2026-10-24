@@ -110,7 +110,8 @@ fn fixture() -> (Store, Store, Store, PartitionedJournalStore<Store, Store>) {
 fn keys() -> Vec<String> {
     vec!["a".into(), "b".into()]
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn portable_addresses_frame_utf8_bytes_and_entry_boundaries() {
     let vectors: Vec<serde_json::Value> = serde_json::from_str(include_str!(
         "../../docs/protocol/partitioned-journal-vectors.json"
@@ -131,7 +132,8 @@ fn portable_addresses_frame_utf8_bytes_and_entry_boundaries() {
         assert_eq!(store.read(&keys).unwrap()[0].entries, entries);
     }
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn independent_objects_are_published_by_atomic_small_pointers() {
     let (catalog, a, b, mut store) = fixture();
     let keys = keys();
@@ -158,7 +160,8 @@ fn independent_objects_are_published_by_atomic_small_pointers() {
         .unwrap());
     assert_eq!(a.0.lock().unwrap().values.len(), count);
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failures_before_publication_leave_only_orphans_and_lost_reply_is_discovered() {
     let (catalog, _, b, mut store) = fixture();
     let keys = keys();
@@ -176,7 +179,8 @@ fn failures_before_publication_leave_only_orphans_and_lost_reply_is_discovered()
     b.0.lock().unwrap().fail = true;
     assert!(store.read(&keys).is_err());
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn corrupt_or_missing_objects_and_invalid_coordinates_fail_closed() {
     let (catalog, a, _, mut store) = fixture();
     let keys = vec!["a".into()];
@@ -244,7 +248,8 @@ fn corrupt_or_missing_objects_and_invalid_coordinates_fail_closed() {
         .is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn durability_and_every_route_are_validated_before_staging() {
     let (catalog, a, b, store) = fixture();
     catalog.0.lock().unwrap().volatile = true;
@@ -290,7 +295,8 @@ fn durability_and_every_route_are_validated_before_staging() {
         .is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn malformed_snapshot_arity_and_pointer_coordinates_fail_closed() {
     let (catalog, a, _, mut store) = fixture();
     let keys = vec!["a".into()];
@@ -339,7 +345,8 @@ fn malformed_snapshot_arity_and_pointer_coordinates_fail_closed() {
         .is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn unavailable_object_staging_never_publishes_a_catalog_pointer() {
     let (catalog, a, _, mut store) = fixture();
     let keys = vec!["a".into()];
@@ -357,7 +364,8 @@ fn unavailable_object_staging_never_publishes_a_catalog_pointer() {
     assert_eq!(store.read(&keys).unwrap()[0].entries, ["new"]);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn concurrent_object_creation_reuses_only_the_complete_same_journal() {
     for competing in [
         "identical",

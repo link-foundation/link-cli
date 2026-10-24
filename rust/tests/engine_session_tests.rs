@@ -1,7 +1,8 @@
 use link_cli::engine::{Engine, EngineOptions, MemoryLog};
 use link_cli::{GenericLink, LinksStorage, NamedTypeLinks};
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn named_sessions_keep_protocol_saves_private_and_report_raw_changes() {
     let engine = Engine::<u32, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
     let mut tx = engine.begin().unwrap();
@@ -63,7 +64,8 @@ fn named_sessions_keep_protocol_saves_private_and_report_raw_changes() {
     assert!(tx.commit().is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn allocator_exhaustion_and_missing_updates_leave_no_partial_write() {
     let engine = Engine::<u32, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
     let mut tx = engine.begin().unwrap();
@@ -84,7 +86,8 @@ fn allocator_exhaustion_and_missing_updates_leave_no_partial_write() {
     assert!(engine.into_log().is_ok());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn named_allocation_errors_are_returned_to_the_protocol() {
     use link_cli::protocol::{execute_request, format_document, parse_document};
     let engine = Engine::<u32, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();

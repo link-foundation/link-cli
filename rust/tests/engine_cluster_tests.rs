@@ -65,7 +65,8 @@ impl AtomicJournalStore for Store {
         Ok(true)
     }
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn cross_shard_commit_is_atomic_and_checks_read_only_shards() {
     let store = Store::default();
     let first = ClusterEngine::<u32, _>::new(store.clone(), EngineOptions::default()).unwrap();
@@ -92,7 +93,8 @@ fn cross_shard_commit_is_atomic_and_checks_read_only_shards() {
         Some("fresh")
     );
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn independent_shards_commit_without_global_false_conflicts_and_rollback_is_private() {
     let cluster = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
     let mut a = cluster.begin(&["a"]).unwrap();
@@ -112,7 +114,8 @@ fn independent_shards_commit_without_global_false_conflicts_and_rollback_is_priv
         .get_link(1)
         .is_some());
 }
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn lost_reply_ends_transaction_and_reopen_discovers_all_committed_shards() {
     let store = Store::default();
     let cluster = ClusterEngine::<u32, _>::new(store.clone(), EngineOptions::default()).unwrap();
@@ -131,7 +134,8 @@ fn lost_reply_ends_transaction_and_reopen_discovers_all_committed_shards() {
     assert_eq!(recovered.shard("b").unwrap().links_count(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn invalid_policies_and_coordinates_are_rejected_and_constraints_publish_no_shards() {
     use link_cli::engine::{ConcurrencyControl, Constraint, IsolationLevel};
     for options in [
@@ -171,7 +175,8 @@ fn invalid_policies_and_coordinates_are_rejected_and_constraints_publish_no_shar
     assert!(store.0.lock().unwrap().values.is_empty());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn selected_shard_supports_the_named_links_api_without_individual_publication() {
     use link_cli::NamedTypeLinks;
     let cluster = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
@@ -204,7 +209,8 @@ fn selected_shard_supports_the_named_links_api_without_individual_publication() 
     tx.commit().unwrap();
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn raw_links_api_is_private_and_closed_with_its_group() {
     let cluster = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
     let mut group = cluster.begin(&["a"]).unwrap();
@@ -240,7 +246,8 @@ fn raw_links_api_is_private_and_closed_with_its_group() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn durable_backend_and_boundary_names_are_accepted_but_bad_snapshots_fail_closed() {
     let store = Store::default();
     store.0.lock().unwrap().durable = true;
@@ -277,7 +284,9 @@ fn durable_backend_and_boundary_names_are_accepted_but_bad_snapshots_fail_closed
     cluster.begin(&["a"]).unwrap().commit().unwrap();
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn panicked_coordinator_rejects_new_groups_and_pending_publication() {
     let store = Store::default();
     let cluster = ClusterEngine::<u32, _>::new(store.clone(), EngineOptions::default()).unwrap();

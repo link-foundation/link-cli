@@ -168,6 +168,7 @@ dependencies = [
  "anyhow",
  "console_error_panic_hook",
  "link-cli",
+ "links-notation",
  "minicov",
  "serde",
  "serde_json",

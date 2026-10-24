@@ -29,7 +29,8 @@ impl AtomicJournalStore for ReadOnlyCoordinator {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn coordinator_default_capability_cannot_satisfy_a_durable_requirement() {
     assert!(!ReadOnlyCoordinator.supports_durable_flush());
     assert!(ClusterEngine::<u64, _>::new(
@@ -47,7 +48,8 @@ fn coordinator_default_capability_cannot_satisfy_a_durable_requirement() {
     tx.commit().unwrap();
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn individually_valid_records_must_form_a_contiguous_monotonic_journal() {
     for entries in [
         vec![record("engine1|2|1|")],
@@ -68,7 +70,8 @@ fn individually_valid_records_must_form_a_contiguous_monotonic_journal() {
     assert_eq!(db.begin().unwrap().create_link(0, 0).unwrap(), 100);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn checksum_valid_empty_fields_are_rejected() {
     for text in [
         "engine1||1|",
@@ -90,7 +93,8 @@ fn checksum_valid_empty_fields_are_rejected() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn saved_merge_base_must_match_rows_and_allocator_as_well_as_revision() {
     let db = Engine::<u64, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
     let branch_log = MemoryLog {
@@ -111,7 +115,8 @@ fn saved_merge_base_must_match_rows_and_allocator_as_well_as_revision() {
     assert_eq!(branch.engine().snapshot().unwrap().links().len(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failed_log_operation_fences_existing_and_new_sessions_until_reopen() {
     let db = Engine::<u64, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
     let mut pending = db.begin().unwrap();
@@ -134,7 +139,8 @@ fn failed_log_operation_fences_existing_and_new_sessions_until_reopen() {
     assert_eq!(reopened.snapshot().unwrap().links().len(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn u128_allocator_exhaustion_is_bounded_and_never_wraps_to_zero() {
     let db = Engine::<u128, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
     let mut tx = db.begin().unwrap();
@@ -158,7 +164,8 @@ fn u128_allocator_exhaustion_is_bounded_and_never_wraps_to_zero() {
     assert!(next.create_link(0, 0).is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn closed_read_committed_sessions_keep_their_base_after_rollback() {
     let db = Engine::<u64, _>::open(
         MemoryLog::default(),
@@ -187,8 +194,10 @@ fn closed_read_committed_sessions_keep_their_base_after_rollback() {
     assert!(db.snapshot().unwrap().links().is_empty());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 #[cfg(target_os = "linux")]
+#[cfg(not(target_arch = "wasm32"))]
 fn unavailable_diagnostic_output_cannot_fail_an_acknowledged_commit_or_catchup() {
     let directory = tempfile::tempdir().unwrap();
     let mut failures = Vec::new();
@@ -227,7 +236,9 @@ fn unavailable_diagnostic_output_cannot_fail_an_acknowledged_commit_or_catchup()
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 struct UnavailableReplica;
+#[cfg(not(target_arch = "wasm32"))]
 impl TransitionLogStore for UnavailableReplica {
     fn append_log_entry(&mut self, _entry: &str) -> Result<(), LinkError> {
         Err(LinkError::Transaction("unavailable replica".into()))
@@ -240,8 +251,10 @@ impl TransitionLogStore for UnavailableReplica {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 #[ignore = "child process entry point"]
+#[cfg(not(target_arch = "wasm32"))]
 fn trace_failure_child() {
     use link_cli::engine::replication::{ReplicatedLog, Synchronization};
     let Some(path) = std::env::var_os("LINK_TRACE_FAILURE_PATH") else {

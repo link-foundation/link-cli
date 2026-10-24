@@ -1,11 +1,14 @@
 use link_cli::engine::{DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog};
-use link_cli::{FileTransitionLog, LinkError, LinksStorage, TransitionLogStore};
+#[cfg(not(target_arch = "wasm32"))]
+use link_cli::FileTransitionLog;
+use link_cli::{LinkError, LinksStorage, TransitionLogStore};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn portable_delta_vectors_replay_and_reject_complete_corruption() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!(
         "../../docs/protocol/engine-delta-vectors.json"
@@ -44,7 +47,8 @@ fn portable_delta_vectors_replay_and_reject_complete_corruption() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn delta_journal_replays_exact_revisions_and_periodic_checkpoints() {
     let log = DeltaLog::new(MemoryLog::default(), 3).unwrap();
     let engine = Engine::<u32, _>::open(
@@ -120,7 +124,8 @@ fn delta_journal_replays_exact_revisions_and_periodic_checkpoints() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn delta_configuration_and_full_record_fallback_are_explicit() {
     assert!(DeltaLog::new(MemoryLog::default(), 0).is_err());
     let log = DeltaLog::new(MemoryLog::default(), 1).unwrap();
@@ -176,7 +181,8 @@ impl TransitionLogStore for FaultLog {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn uncertain_mutations_fence_all_operations_until_reopen() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!(
         "../../docs/protocol/engine-delta-vectors.json"
@@ -235,7 +241,8 @@ fn uncertain_mutations_fence_all_operations_until_reopen() {
     assert_eq!(unavailable.into_inner().calls, 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn input_rejection_and_small_record_fallback_do_not_mutate_the_log() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!(
         "../../docs/protocol/engine-delta-vectors.json"
@@ -263,7 +270,9 @@ fn input_rejection_and_small_record_fallback_do_not_mutate_the_log() {
     assert_eq!(log.into_inner().entries.len(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn durable_replicas_store_identical_physical_deltas_and_reopen_with_history() {
     use link_cli::engine::replication::{ReplicatedLog, Synchronization};
     let dir = tempfile::tempdir().unwrap();
@@ -328,7 +337,8 @@ fn durable_replicas_store_identical_physical_deltas_and_reopen_with_history() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn replicas_can_compress_independently_while_comparing_logical_prefixes() {
     use link_cli::engine::replication::{ReplicatedLog, Synchronization};
     let vectors: serde_json::Value = serde_json::from_str(include_str!(
@@ -363,7 +373,8 @@ fn replicas_can_compress_independently_while_comparing_logical_prefixes() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failed_reread_requires_revalidation_before_append() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!(
         "../../docs/protocol/engine-delta-vectors.json"

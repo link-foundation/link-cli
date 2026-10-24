@@ -1,8 +1,8 @@
 use link_cli::engine::replication::{ReplicatedLog, Synchronization};
-use link_cli::engine::{
-    Constraint, Engine, EngineOptions, HistoryPolicy, IsolationLevel, MemoryLog,
-};
-use link_cli::{FileTransitionLog, LinkError, LinksStorage, TransitionLogStore};
+use link_cli::engine::{Constraint, Engine, EngineOptions, HistoryPolicy, MemoryLog};
+#[cfg(not(target_arch = "wasm32"))]
+use link_cli::{engine::IsolationLevel, FileTransitionLog};
+use link_cli::{LinkError, LinksStorage, TransitionLogStore};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Default)]
@@ -41,7 +41,8 @@ impl TransitionLogStore for FaultLog {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn unknown_commit_outcome_requires_reopen() {
     let log = FaultLog::default();
     let db = Engine::<u64, _>::open(log.clone(), EngineOptions::default()).unwrap();
@@ -64,7 +65,8 @@ fn unknown_commit_outcome_requires_reopen() {
     assert_eq!(reopened.snapshot().unwrap().links().len(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn unicode_names_history_deletion_and_replay() {
     let db = Engine::<u64, _>::open(
         MemoryLog::default(),
@@ -109,7 +111,8 @@ fn unicode_names_history_deletion_and_replay() {
     assert!(Engine::<u64, _>::open(corrupt, EngineOptions::default()).is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn constraints_check_the_entire_atomic_write_set() {
     for constraint in [
         Constraint::References,
@@ -142,7 +145,8 @@ fn constraints_check_the_entire_atomic_write_set() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn asynchronous_replication_catches_up_idempotently() {
     let replica = FaultLog::default();
     let log = ReplicatedLog::new(
@@ -163,7 +167,8 @@ fn asynchronous_replication_catches_up_idempotently() {
     assert_eq!(follower.snapshot().unwrap().links().len(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn synchronous_replication_reports_partition_and_does_not_diverge() {
     let replica = FaultLog::default();
     replica
@@ -193,7 +198,8 @@ fn synchronous_replication_reports_partition_and_does_not_diverge() {
     assert_eq!(log.synchronize().unwrap(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn replication_capability_depends_on_every_required_durable_copy() {
     for primary_durable in [false, true] {
         for replica_durable in [false, true] {
@@ -229,7 +235,8 @@ fn replication_capability_depends_on_every_required_durable_copy() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn replica_failures_never_count_as_acknowledgements_and_do_not_hide_healthy_copies() {
     use std::sync::atomic::Ordering::SeqCst;
     for failure in ["read", "append", "flush", "longer"] {
@@ -260,7 +267,8 @@ fn replica_failures_never_count_as_acknowledgements_and_do_not_hide_healthy_copi
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn primary_io_failures_are_returned_without_replica_publication() {
     use std::sync::atomic::Ordering::SeqCst;
     let primary = FaultLog::default();
@@ -282,7 +290,8 @@ fn primary_io_failures_are_returned_without_replica_publication() {
     assert!(replica.records.lock().unwrap().is_empty());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn durable_requirement_rejects_volatile_logs_and_invalid_policies() {
     assert!(Engine::<u64, _>::open(
         MemoryLog::default(),
@@ -310,7 +319,9 @@ fn durable_requirement_rejects_volatile_logs_and_invalid_policies() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn concurrent_nonconflicting_snapshot_writers_preserve_every_row() {
     let db = Engine::<u64, _>::open(
         MemoryLog::default(),
@@ -338,7 +349,9 @@ fn concurrent_nonconflicting_snapshot_writers_preserve_every_row() {
     assert_eq!(db.snapshot().unwrap().links().len(), 64);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn exclusive_file_log_recovers_after_exit_without_destructors() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("journal");
@@ -361,8 +374,10 @@ fn exclusive_file_log_recovers_after_exit_without_destructors() {
     assert_eq!(db.snapshot().unwrap().links().len(), 1);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 #[ignore = "child process entry point"]
+#[cfg(not(target_arch = "wasm32"))]
 fn process_exit_child() {
     let Some(path) = std::env::var_os("LINK_ENGINE_CRASH_PATH") else {
         return;

@@ -684,3 +684,35 @@ core, the full report measures 2,729/9,235 lines (29.55%), 392/1,305 branches
 (30.04%), 347/1,320 functions and 3,943/14,471 regions. Native and WASM Clippy,
 Rust/C# formatting and the C# release-fragment validator pass. No production
 source exclusions were added; project-wide coverage remains below 100%.
+
+
+Sequence-exhaustion commit `3bb4790b3970a3ee9b4702b4b22eb1cf413fb105`
+passes all exact-SHA CI checks: 37 successful, ten skipped and one neutral.
+Runs were created 2026-10-24 20:40:36 UTC. Windows, Linux, macOS and actual
+WASM coverage/integration all pass.
+
+## Shared native contracts executed in WASM
+
+Existing engine/model/protocol test bodies now register with wasm-bindgen-test
+on WASM and retain native test registration elsewhere. Pure protocol options
+are shared separately from native TCP helpers. Filesystem, process, native
+thread and panic-unwind contracts remain native. The depth-limit test keeps
+its finite 100,000-level rejection input on both targets; the WASM runner's
+30-second deadline replaces only its unavailable native Instant measurement.
+Production dependencies, behavior and coverage source inclusions are unchanged.
+
+Actual WASM passes 142 tests: 59 shared engine contracts, 66 model/protocol
+contracts, nine wrapper-engine and eight web tests. These include the finite
+1,296-history serial oracle and shared wire vectors. The full native Rust
+suite preserves 536 standard tests plus the stdout harness and four ignored
+child entry points. Native/WASM Clippy with warnings denied and formatting pass.
+
+The complete official LLVM report measures 3,786/9,657 lines (39.20%),
+597/1,469 branches (40.64%), 514/1,368 functions and 5,484/15,071 regions.
+The previous 17-test report measured 2,729/9,235 lines and 392/1,305 branches.
+Additional generic instantiations enlarge the denominator. Wrapper source
+remains 331/331 lines, 68/68 functions, 16/16 branches and 505/505 regions.
+The linked engine subset measures 1,366/1,395 lines and 278/306 branches.
+Complete coverage remains below the requested 100%, with no new exclusions.
+See [WASM-CONTRACT-PLAN.md](WASM-CONTRACT-PLAN.md) and curated evidence in
+`dev/log/issues/138/pulls/139/wasm-shared-contracts.txt`.

@@ -5,7 +5,8 @@ fn database() -> Engine<u32, MemoryLog> {
     Engine::open(MemoryLog::default(), EngineOptions::default()).unwrap()
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn branches_merge_independent_changes_and_reject_overlapping_edits() {
     let parent = database();
     let mut seed = parent.begin().unwrap();
@@ -47,7 +48,8 @@ fn branches_merge_independent_changes_and_reject_overlapping_edits() {
     assert!(parent.snapshot().unwrap().get(2).is_none());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn branch_merge_base_survives_reopening_and_history_eviction() {
     let parent = database();
     let mut seed = parent.begin().unwrap();
@@ -81,7 +83,8 @@ fn branch_merge_base_survives_reopening_and_history_eviction() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn fork_refuses_existing_logs_and_resume_requires_a_real_branch_revision() {
     let parent = database();
     let branch = parent
@@ -98,7 +101,8 @@ fn fork_refuses_existing_logs_and_resume_requires_a_real_branch_revision() {
         .is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn merge_obeys_exclusive_admission_constraints_and_conflict_validation() {
     use link_cli::engine::{ConcurrencyControl, Constraint, IsolationLevel};
     let parent = Engine::<u32, _>::open(
@@ -156,7 +160,8 @@ fn merge_obeys_exclusive_admission_constraints_and_conflict_validation() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn allocator_only_merge_is_durable_even_when_no_rows_survive() {
     let parent = database();
     let mut branch = parent
