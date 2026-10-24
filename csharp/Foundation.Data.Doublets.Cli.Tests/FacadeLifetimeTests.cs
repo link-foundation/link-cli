@@ -71,6 +71,11 @@ public class FacadeLifetimeTests
 
     private sealed class TrackedStore(string path, ManualResetEventSlim disposed) : NamedTypesDecorator<uint>(path)
     {
+        public void CheckBorrowedLifetime()
+        {
+            ObjectDisposedException.ThrowIf(disposed.IsSet, this);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing) disposed.Set();
@@ -127,13 +132,14 @@ public class FacadeLifetimeTests
                 {
                     entered.Set();
                     if (!release.Wait(TimeSpan.FromSeconds(12))) throw new IOException("Bounded flush gate expired.");
+                    // This probe intentionally aborts the checkpoint. Check only
+                    // managed ownership after the gate: real filesystem flushes
+                    // add unrelated platform latency to the bounded worker join.
+                    try { data.CheckBorrowedLifetime(); }
+                    catch (Exception error) { callbackError = error; throw; }
+                    throw new IOException("Probe skips native checkpoint markers.");
                 }
-                // Flush checks managed mapping ownership before touching a view.
-                // A failing old traversal cannot dereference an unmapped pointer.
-                try { data.Flush(); } catch (Exception error) { callbackError = error; throw; }
-                // Exercise only managed flush after the gate. Always stop before
-                // applied-marker writes, even if an old disposer races this gate.
-                if (Volatile.Read(ref armed)) throw new IOException("Probe skips native checkpoint markers.");
+                data.Flush();
             }
             using var tx = new TransactionsDecorator(data, log, commitMode: CommitMode.Async,
                 flushData: Flush, flushLog: log.Flush);

@@ -873,3 +873,11 @@ reach 100% measured lines/branches in both configurations. Full project coverage
 remains below 100%. See [FACADE-LIFETIME-PLAN.md](FACADE-LIFETIME-PLAN.md) and
 `dev/log/issues/138/pulls/139/facade-lifetime.txt` for the reproduction and ownership
 boundary. Rust/JS/WASM production paths are unchanged in this step.
+
+The published facade commit `421dd39fa42576d35fc43373bad309d7fba1fc65`
+passes eight workflows but fails C# Windows run `40134580109` at the new test's
+worker-join deadline. The downloaded full log and exact stack are preserved;
+see `dev/log/issues/138/pulls/139/facade-lifetime-ci.txt`. The revised probe
+removes its unrelated post-release native Flush, keeps the managed ownership
+assertion and existing deadlines, fails against the old disposer and passes
+ten finite corrected runs. Fresh Windows CI is required before closure.
