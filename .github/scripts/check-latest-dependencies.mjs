@@ -34,6 +34,9 @@
  * Usage:
  *   node .github/scripts/check-latest-dependencies.mjs [--skip-lockfiles]
  *
+ * Registry lookups that fail on the network, or answer 429 or 5xx, are
+ * retried with backoff. Set CHECK_DEPENDENCIES_DEBUG=1 to log each retry.
+ *
  * Exit codes:
  *   - 0: everything is on its latest version
  *   - 1: something is behind (listed in the output and the step summary)
@@ -42,6 +45,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -248,10 +252,57 @@ export function verdict({ version, latest }, blockerState) {
   return blockerState === 'open' ? 'held' : 'outdated';
 }
 
-async function fetchJson(url, headers = {}) {
-  const response = await fetch(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers } });
-  if (!response.ok) throw new Error(`${url} answered ${response.status}`);
-  return response.json();
+/** An answer that a retry cannot change, such as 404. */
+class PermanentError extends Error {}
+
+/**
+ * Run `operation` until it succeeds, waiting `delayMs`, then twice as long,
+ * between attempts. A single dropped connection to a registry used to fail
+ * the whole check ("coverlet.collector: fetch failed", issue #134).
+ */
+export async function withRetries(operation, { attempts = 4, delayMs = 1000 } = {}) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof PermanentError || attempt >= attempts) {
+        if (attempt > 1) error.message += ` (after ${attempt} attempts)`;
+        throw error;
+      }
+      if (process.env.CHECK_DEPENDENCIES_DEBUG) console.error(`Retrying: ${error.message}`);
+      await sleep(delayMs * 2 ** (attempt - 1));
+    }
+  }
+}
+
+/**
+ * GET `url` as JSON. Network failures, 429 and 5xx are retried. Node's
+ * fetch reports every network failure as "fetch failed" and keeps the reason
+ * in `cause`, so the cause is added to the message.
+ */
+export async function fetchJson(url, headers = {}, { fetchImpl = fetch, ...retry } = {}) {
+  return withRetries(async () => {
+    let response;
+    try {
+      response = await fetchImpl(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers } });
+    } catch (error) {
+      const cause = error.cause ? `: ${error.cause.code ?? error.cause.message ?? error.cause}` : '';
+      throw new Error(`${url}: ${error.message}${cause}`);
+    }
+    if (response.ok) return response.json();
+    const failure = `${url} answered ${response.status}`;
+    throw response.status === 429 || response.status >= 500 ? new Error(failure) : new PermanentError(failure);
+  }, retry);
+}
+
+/** Tag names of a GitHub repository, retried like the registry lookups. */
+function remoteTags(name) {
+  return withRetries(async () =>
+    execFileSync('git', ['ls-remote', '--tags', `https://github.com/${name}`], { encoding: 'utf8' })
+      .split('\n')
+      .map((line) => line.split('refs/tags/')[1])
+      .filter(Boolean),
+  );
 }
 
 const registries = {
@@ -259,20 +310,8 @@ const registries = {
   nuget: async (name) =>
     latestStable((await fetchJson(`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/index.json`)).versions),
   npm: async (name) => (await fetchJson(`https://registry.npmjs.org/${name.replaceAll('/', '%2F')}/latest`)).version,
-  action: async (name) => {
-    const tags = execFileSync('git', ['ls-remote', '--tags', `https://github.com/${name}`], { encoding: 'utf8' })
-      .split('\n')
-      .map((line) => line.split('refs/tags/')[1])
-      .filter(Boolean);
-    return `v${versionParts(latestStable(tags))[0]}`;
-  },
-  release: async (name) =>
-    latestStable(
-      execFileSync('git', ['ls-remote', '--tags', `https://github.com/${name}`], { encoding: 'utf8' })
-        .split('\n')
-        .map((line) => line.split('refs/tags/')[1])
-        .filter(Boolean),
-    ),
+  action: async (name) => `v${versionParts(latestStable(await remoteTags(name)))[0]}`,
+  release: async (name) => latestStable(await remoteTags(name)),
   pypi: async (name) => (await fetchJson(`https://pypi.org/pypi/${name}/json`)).info.version,
   node: async () => (await fetchJson('https://nodejs.org/dist/index.json')).find((release) => release.lts).version,
   dotnet: async () =>

@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   blockerOf,
   compareVersions,
+  fetchJson,
   isOutdated,
   latestStable,
   parseCargoManifest,
@@ -19,6 +20,7 @@ import {
   parseWorkflowTools,
   verdict,
   versionParts,
+  withRetries,
 } from './check-latest-dependencies.mjs';
 
 test('versions compare numerically, not as text', () => {
@@ -261,4 +263,58 @@ test('only an open issue holds an outdated dependency back', () => {
   assert.equal(verdict(behind, undefined), 'outdated');
   assert.equal(verdict(behind, 'open'), 'held');
   assert.equal(verdict(behind, 'closed'), 'outdated');
+});
+
+// A fake fetch that plays back `answers` in order: an Error is thrown like a
+// network failure, a number is answered as that HTTP status.
+function fakeFetch(answers) {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    const answer = answers[calls.length - 1];
+    if (answer instanceof Error) throw answer;
+    return { ok: answer === 200, status: answer, json: async () => ({ version: '1.2.3' }) };
+  };
+  return { calls, fetchImpl };
+}
+
+const networkFailure = () => new TypeError('fetch failed', { cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }) });
+
+test('a dropped connection to a registry is retried instead of failing the check', async () => {
+  const { calls, fetchImpl } = fakeFetch([networkFailure(), 503, 429, 200]);
+  assert.deepEqual(await fetchJson('https://registry.example/foo', {}, { fetchImpl, delayMs: 0 }), { version: '1.2.3' });
+  assert.equal(calls.length, 4);
+});
+
+test('a lookup that keeps failing reports the network cause and the attempts', async () => {
+  const { calls, fetchImpl } = fakeFetch([networkFailure(), networkFailure()]);
+  await assert.rejects(fetchJson('https://registry.example/foo', {}, { fetchImpl, attempts: 2, delayMs: 0 }), {
+    message: 'https://registry.example/foo: fetch failed: ECONNRESET (after 2 attempts)',
+  });
+  assert.equal(calls.length, 2);
+});
+
+test('an answer a retry cannot change fails at once', async () => {
+  const { calls, fetchImpl } = fakeFetch([404, 200]);
+  await assert.rejects(fetchJson('https://registry.example/missing', {}, { fetchImpl, delayMs: 0 }), {
+    message: 'https://registry.example/missing answered 404',
+  });
+  assert.equal(calls.length, 1);
+});
+
+test('retries wait longer each time and stop after the last attempt', async () => {
+  let calls = 0;
+  const started = Date.now();
+  await assert.rejects(
+    withRetries(
+      async () => {
+        calls += 1;
+        throw new Error('git ls-remote failed');
+      },
+      { attempts: 3, delayMs: 20 },
+    ),
+    { message: 'git ls-remote failed (after 3 attempts)' },
+  );
+  assert.equal(calls, 3);
+  assert.ok(Date.now() - started >= 55, 'waits 20 ms, then 40 ms');
 });
