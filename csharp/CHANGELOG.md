@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [4.0.5] - 2026-10-24
+
+Preserve quoted query references as names, including numeric names such as "0"
+and "1", throughout reference validation, creation, matching and mutation. Bare
+numbers remain link addresses. Encoded reference literals also resolve as names.
+Stored triggers preserve this distinction when normalized and replayed, and
+numeric names exported as LiNo can be replayed through queries.
+
 ## [4.0.4] - 2026-10-24
 
 Parse and validate the whole LiNo input before changing links or names, so malformed imports leave the database unchanged through both the CLI aliases and the library APIs.
