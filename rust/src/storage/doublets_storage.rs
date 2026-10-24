@@ -267,6 +267,21 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         Ok(Doublets::create_link(&mut self.store, source, target)?)
     }
 
+    fn create_link_observed(
+        &mut self,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<T, LinkError> {
+        let mut index = T::from_byte(0);
+        Doublets::create_link_with(&mut self.store, source, target, |before, after| {
+            index = after.index;
+            observer(before.into(), after.into());
+            Flow::Continue
+        })?;
+        Ok(index)
+    }
+
     fn ensure_link_created(&mut self, index: T) -> Result<T, LinkError> {
         if self.link_exists(index) {
             return Ok(index);

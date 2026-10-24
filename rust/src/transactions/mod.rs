@@ -309,26 +309,26 @@ where
             return self.inner.create_link(source, target);
         }
         let owns = self.ensure_open_transaction()?;
-        let id = match self.inner.create_link(source, target) {
+        let mut observed = Vec::new();
+        let outcome = self
+            .inner
+            .create_link_observed(source, target, &mut |before, after| {
+                record_observed(&mut observed, before, after)
+            });
+        self.record_observed_transitions(&observed, owns)?;
+        let id = match outcome {
             Ok(id) => id,
             Err(error) => {
                 if owns {
-                    self.current = None;
+                    if observed.is_empty() {
+                        self.current = None;
+                    } else {
+                        self.rollback()?;
+                    }
                 }
                 return Err(error);
             }
         };
-        let after = self
-            .inner
-            .get_link(id)
-            .map(|link| GenericDoubletLink::from_link(&link))
-            .unwrap_or_else(|| GenericDoubletLink::new(id, source, target));
-        self.record_transition(
-            TransitionKind::Create,
-            GenericDoubletLink::empty(),
-            after,
-            owns,
-        )?;
         if owns {
             self.commit_current()?;
         }

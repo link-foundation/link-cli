@@ -60,8 +60,30 @@ impl StorageRevision {
 /// [`GenericLink<T>`] values so that both in-memory maps and
 /// memory-mapped doublets stores can implement it.
 pub trait LinksStorage<T: LinkReference> {
-    /// Creates a new link and returns its address.
+    /// Creates a link and returns its address. A uniqueness resolver may return
+    /// an existing link after removing the temporary allocation.
     fn create_link(&mut self, source: T, target: T) -> Result<T, LinkError>;
+
+    /// [`Self::create_link`], reporting every change, including partial changes
+    /// before an error. Transactions need these callbacks to distinguish a new
+    /// allocation from a duplicate resolved into an existing link.
+    ///
+    /// The default is for backends that create one row atomically. Backends
+    /// with cascades or partial writes must override it with their callbacks,
+    /// as for [`Self::update_link_observed`].
+    fn create_link_observed(
+        &mut self,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<T, LinkError> {
+        let index = self.create_link(source, target)?;
+        let after = self
+            .get_link(index)
+            .unwrap_or_else(|| GenericLink::new(index, source, target));
+        observer(GenericLink::null(), after);
+        Ok(index)
+    }
 
     /// Ensures a link exists at `index`, creating placeholders as needed.
     fn ensure_link_created(&mut self, index: T) -> Result<T, LinkError>;

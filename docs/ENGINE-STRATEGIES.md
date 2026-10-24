@@ -279,3 +279,10 @@ Beginning rollback also makes the legacy transaction rollback-only before any
 undo or persistence step. An error during undo, data flush, rollback-marker append
 or journal flush retains that abort decision. Repair the failure and retry
 rollback; commit and new writes remain rejected until cleanup succeeds.
+
+Rust mapped creation also forwards allocation, update and uniqueness callbacks.
+Resolving a duplicate can return an existing address after deleting a temporary
+row; rollback must preserve the existing row and its dependents. A rejected
+creation can leave an allocated temporary row, so its observations are retained
+even on error. The default `LinksStorage::create_link_observed` is for atomic
+single-row creation; adapters with partial writes or cascades must override it.

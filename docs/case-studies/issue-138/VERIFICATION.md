@@ -582,3 +582,37 @@ All 17 actual WASM tests pass. Wrapper source remains 331/331 lines,
 core, the complete report measures 2,729/9,182 lines (29.72%), 392/1,295 branches
 (30.27%), 347/1,316 functions and 3,943/14,412 regions. Native/WASM Clippy deny
 warnings; Rust and C# formatting verification passes.
+
+Commit `38eb3fb4cfa7e6c6e06b53159e1268d5115609c5` passes all exact-SHA CI
+checks (37 successful, 10 skipped, one neutral), including Windows/Linux/macOS
+native jobs and actual WASM coverage/integration. Rust run 40128031801, C# run
+40128031799 and WASM run 40128031827 were created 2026-10-24 20:02:53 UTC.
+
+
+## Mapped creation observations
+
+Four Rust regressions first reproduce two creation defects: a duplicate's
+surviving row is treated as newly allocated during rollback/recovery, and a
+uniqueness rejection leaves its temporary allocation behind. The mapped adapter
+now forwards all creation observations, including those preceding an error.
+The transaction recorder retains that undo state before handling the outcome.
+Two passing composite-creation controls and four equivalent C# controls preserve
+existing behavior. Fixtures use three original rows and at most one temporary
+row, verify exact state, persistent reopening and subsequent admission.
+
+See [CREATE-OBSERVER-PLAN.md](CREATE-OBSERVER-PLAN.md) and curated reproduction
+output in `dev/log/issues/138/pulls/139/creation-observations.txt`.
+
+The full Rust suite passes 532 standard tests and the separate stdout harness,
+with four child entry points ignored. Coverage measures 9,052/10,036 lines
+(90.20%), 1,451/1,844 branches (78.69%), 1,220/1,383 functions and
+13,714/15,807 regions. C# Debug and Release each pass 765 tests. Debug measures
+5,849/6,506 lines (89.90%) and 2,557/3,084 branches (82.91%); Release measures
+4,437/4,856 lines (91.37%) and 2,536/3,065 branches (82.74%).
+
+All 17 actual WASM tests pass. Wrapper source remains 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. Including linked
+core, the complete report measures 2,729/9,210 lines (29.63%), 392/1,297 branches
+(30.22%), 347/1,319 functions and 3,943/14,452 regions. Native/WASM Clippy deny
+warnings; Rust and C# formatting verification passes. Project-wide coverage
+remains below 100%, with no added source exclusions.
