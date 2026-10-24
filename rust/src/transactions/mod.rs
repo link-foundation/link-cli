@@ -254,6 +254,10 @@ where
         self.committed.contains(&id)
     }
 
+    pub(crate) fn has_open_transaction(&self) -> bool {
+        self.current.is_some()
+    }
+
     pub(crate) fn must_finish_commit(&self, id: u128) -> bool {
         self.is_transaction_committed(id)
             || self

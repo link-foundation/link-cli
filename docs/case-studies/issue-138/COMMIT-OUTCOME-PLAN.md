@@ -21,7 +21,7 @@ absent and undo a potentially durable decision.
 - [x] Reopen from distinct durable images and mapped files, verify exact row and
       version state, then commit and reopen a following edit.
 - [x] Run native/C#/actual-WASM suites, coverage, lint and metadata.
-- [ ] Verify fresh exact-head CI after publishing this batch.
+- [x] Verify fresh exact-head CI after publishing this batch.
 
 A failed commit has an unknown outcome. Retrying cleanup may finish that commit;
 it must not promise an abort that a persisted marker can later resurrect. These
@@ -40,7 +40,8 @@ After: all 96 new C# cases pass; eleven shared Rust functions execute 88 finite
 fault schedules and eleven filesystem version functions pass. Full C# Debug/
 Release each pass 1,247 tests; native Rust passes 629 standard tests plus its
 stdout harness; actual WASM passes 332 tests. Exact coverage and limits are in
-commit-decision.txt beside the complete before-fix logs. Fresh CI is pending.
+commit-decision.txt beside the complete before-fix logs. All nine exact-head
+workflows pass on `7c0da30`; see commit-decision-ci.txt for URLs/timestamps.
 
 Automatic version-facade writes that fail before attribution still need their
 own retained-publication audit. The explicit version contracts here do not

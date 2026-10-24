@@ -131,6 +131,15 @@ synchronously even through `CommitAsync`.
 Explicit version owners likewise retain admission until their checkpoint and
 branch publication succeed, including named writes. This retry contract does not establish atomic
 publication across a process exit between journal commit and version sidecars.
+Creating the legacy version layer over an existing transaction journal attributes
+only committed records. Rolled-back and recovered pending sequences are not
+versions and do not advance the initial branch head. Construct/recover the layer
+after an existing transaction finishes. Startup also rejects a sidecar that
+attributes a known uncommitted record, including older incorrect attribution;
+it leaves those files intact rather than guessing a repair of already altered
+data. This validation scans the retained journal and stores its uncommitted
+sequence numbers during metadata recovery. Truncated history that no longer
+contains a referenced record still needs its separate retention audit.
 Recovery replays the complete committed suffix after its first missing applied
 marker, including later records that already have markers. It flushes the final
 redo and pending undo before filling that gap, keeping an anchor for another

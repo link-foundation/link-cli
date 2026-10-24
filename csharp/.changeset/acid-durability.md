@@ -102,3 +102,7 @@ Retain uncertain commit attempts before marker append/flush, fence new writes
 and resolve the decision through cleanup without undoing a possibly durable
 commit. Avoid duplicate decision markers on retry and retain version publication
 ownership when cleanup resolves an uncertain inner commit.
+
+Exclude aborted and recovered pending records from initial version history and
+its branch head. Reject existing sidecars that attribute a known uncommitted
+record, and reject version construction/recovery over a live inner transaction.

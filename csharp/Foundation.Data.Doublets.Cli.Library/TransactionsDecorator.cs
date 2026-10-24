@@ -296,6 +296,8 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     public long AppliedSequence { get { lock (_lock) return _appliedSequence; } }
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
+    internal bool HasOpenTransaction { get { lock (_lock) return _current is not null; } }
+    internal bool IsTransactionCommitted(Guid id) { lock (_lock) return _committed.Contains(id); }
 
     public virtual ITransaction<TLinkAddress> BeginTransaction()
     {

@@ -1241,3 +1241,47 @@ process exit between a legacy journal decision and version-sidecar publication,
 pre-journal observer mutation and power-loss behavior outside adapter flush
 contracts remain separate unfinished audits. Broader algorithm/component and
 coverage requirements remain open. Fresh exact-head CI is required after push.
+
+## Initial history excludes aborted records
+
+Before: all nine corrected C# cases and nine Rust cases fail. Initial attribution
+uses every journal record and LastLoggedSequence, exposing all-aborted head 2
+instead of zero and trailing-abort head 3 instead of committed head 2. A middle
+abort remains reachable through checkout/branch creation. Version construction
+over a live owner and older sidecars containing aborted attribution are accepted.
+The retained complete before logs contain behavioral failures only; earlier
+fixture compilation errors are excluded from the baseline.
+
+Initial attribution now selects known committed transitions and their maximum
+sequence, or zero. Sparse gaps remain unavailable. Metadata recovery rejects a
+transition marker known to belong to uncommitted work, including recovered
+pending transactions. It reports the sequence without repairing or removing
+existing files. An open inner owner blocks version construction/recovery and
+metadata operations before they publish changes.
+
+Six histories per language cover all-aborted, trailing and interleaved records
+with explicit rollback or persisted pending recovery. They verify heads, rejected
+checkout/branch creation, exact committed rows, checkout to zero and back, tags
+and native file reopening. C# also verifies no aborted attribution markers.
+Two cases per language reject exact legacy sidecar errors and preserve data;
+one rejects a live owner. The borrowed C# transaction remains usable, and the
+consuming Rust constructor releases its stores for recovery. All nine Rust
+contracts also run on actual WASM; memory-only metadata recovery there is not
+represented as an additional filesystem reopen.
+
+Full C# Debug/Release: 1,256 pass each; zero skips.
+Full native Rust: 638 standard tests and the custom stdout harness pass;
+four child entry points remain ignored by the ordinary harness.
+Actual WASM: 341 pass. All three wrapper modules remain 100% in measured lines,
+functions and reported branches. Strict native/WASM Clippy, formatting,
+release metadata and combined source-size checks pass.
+Debug: 6,166/6,656 lines (92.64%), 2,831/3,232 branches (87.59%)
+Release: 4,674/4,972 lines (94.01%), 2,810/3,213 branches (87.46%)
+native: 9,513/10,336 lines (92.04%), 1,579/1,922 branches (82.15%), 1,267/1,408 functions (89.99%)
+wasm: 6,638/9,945 lines (66.75%), 1,110/1,627 branches (68.22%), 905/1,392 functions (65.01%)
+
+Project-wide coverage remains below the required 100%. Automatic version-owner
+failure retention, abrupt-exit sidecar publication, history truncated before a
+referenced transition, broader strategies and complete coverage remain open.
+Rejecting previously invalid attribution does not repair data already changed
+by an earlier aborted checkout. Fresh exact-head CI is required after push.

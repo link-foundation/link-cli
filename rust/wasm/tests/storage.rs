@@ -63,3 +63,6 @@ mod transactions_recovery_fault;
 
 #[path = "../../tests/transactions_commit_decision_tests.rs"]
 mod transactions_commit_decision;
+
+#[path = "../../tests/version_initial_abort_tests.rs"]
+mod version_initial_abort;

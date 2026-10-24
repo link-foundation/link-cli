@@ -62,18 +62,22 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    pass on `5905049`; see RECOVERY-ORDER-PLAN.md and recovery-order-ci.txt.
 3. Uncertain commit-marker append/first-flush ownership passes full local
    suites in both native languages and actual WASM. Ordinary explicit/automatic
-   owners and explicit version cleanup are covered; publish and verify fresh
-   exact-head CI. See COMMIT-OUTCOME-PLAN.md and commit-decision.txt.
-4. Audit initial version attribution of aborted records, automatic version
-   writes whose inner commit/publication fails, and abrupt process exit between
-   a journal commit and branch-sidecar publication. Automatic writes currently
-   attribute only after success and may lack a retained facade owner; reproduce
-   that path before changing it. Use finite real subprocess faults in addition
-   to graceful disposal/reopen tests.
-5. Reproduce ordinary legacy named writes across rollback/history/reopen. Their
+   owners and explicit version cleanup are covered. All nine workflows pass on
+   `7c0da30`. See COMMIT-OUTCOME-PLAN.md and commit-decision-ci.txt.
+4. Initial version histories now exclude explicit/recovered aborts, reject
+   previously invalid attribution and reject a live inner owner. Nine cases per
+   native language first fail; full local suites and actual WASM pass. Publish
+   and verify exact-head CI; see INITIAL-HISTORY-PLAN.md.
+5. Audit automatic version writes whose inner commit/publication fails, then
+   abrupt process exit between a journal commit and branch-sidecar publication.
+   Automatic writes currently attribute only after success and may lack a
+   retained facade owner. Reproduce before changing it, and use finite real
+   subprocess faults in addition to graceful disposal/reopen tests. Prepared
+   ignored fixtures are described in AUTOMATIC-VERSION-PLAN.md.
+6. Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in their immutable revisions.
-6. Continue the source-backed algorithm/component comparison, efficient journal
+7. Continue the source-backed algorithm/component comparison, efficient journal
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.
 

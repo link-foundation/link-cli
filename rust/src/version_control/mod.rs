@@ -452,7 +452,7 @@ impl VersionControlDecorator {
     }
 
     fn ensure_no_open_transaction(&self, operation: &str) -> Result<()> {
-        if self.active_transaction.is_some() {
+        if self.active_transaction.is_some() || self.transactions.has_open_transaction() {
             bail!("{operation} is not allowed while a version-control transaction is open.");
         }
         Ok(())
@@ -520,11 +520,19 @@ impl VersionControlDecorator {
     // -- Persistence helpers -----------------------------------------
 
     fn ensure_default_branch(&mut self) -> Result<()> {
-        let existing = self.transactions.last_logged_sequence();
         if !self.branches.contains_key(DEFAULT_BRANCH_NAME) {
-            // Pre-existing transitions are attributed to the default branch.
+            let mut existing = 0;
+            // Aborted and recovered-pending records have sequence numbers,
+            // but only a known committed decision makes them versions.
             for transition in self.transactions.log() {
+                if !self
+                    .transactions
+                    .is_transaction_committed(transition.transaction_id)
+                {
+                    continue;
+                }
                 let s = transition.sequence;
+                existing = existing.max(s);
                 if let std::collections::btree_map::Entry::Vacant(entry) =
                     self.transition_branches.entry(s)
                 {
@@ -618,6 +626,13 @@ impl VersionControlDecorator {
 
     pub fn recover(&mut self) -> Result<()> {
         self.ensure_no_open_transaction("recover")?;
+        let uncommitted: HashSet<_> = self
+            .transactions
+            .log()
+            .into_iter()
+            .filter(|t| !self.transactions.is_transaction_committed(t.transaction_id))
+            .map(|t| t.sequence)
+            .collect();
         self.branches.clear();
         self.tags.clear();
         self.transition_branches.clear();
@@ -658,6 +673,9 @@ impl VersionControlDecorator {
             } else if let Some(rest) = name.strip_prefix(TRANSITION_PREFIX) {
                 if let Some(colon) = rest.find(":branch=") {
                     if let Ok(seq) = rest[..colon].parse::<i64>() {
+                        if uncommitted.contains(&seq) {
+                            bail!("Version metadata references uncommitted transition {seq}.");
+                        }
                         let branch_name = &rest[colon + ":branch=".len()..];
                         self.transition_branches
                             .insert(seq, branch_name.to_string());

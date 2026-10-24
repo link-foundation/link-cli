@@ -335,7 +335,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void EnsureNoOpenTransactionLocked(string operation)
     {
-        if (_activeTransaction is not null)
+        if (_activeTransaction is not null || _transactions.HasOpenTransaction)
         {
             throw new InvalidOperationException($"{operation} is not allowed while a version-control transaction is open.");
         }
@@ -424,13 +424,16 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            var existing = _transactions.LastLoggedSequence;
             if (!_branches.ContainsKey(DefaultBranchName))
             {
-                // Pre-existing transitions are attributed to the default branch.
+                var existing = 0L;
+                // Only committed records are versions. Aborts and recovered
+                // pending work can leave real sequence numbers in the journal.
                 foreach (var transition in _transactions.Log)
                 {
+                    if (!_transactions.IsTransactionCommitted(transition.TransactionId)) continue;
                     var s = transition.Sequence;
+                    existing = Math.Max(existing, s);
                     if (!_transitionBranches.ContainsKey(s))
                     {
                         _transitionBranches[s] = DefaultBranchName;
@@ -589,6 +592,9 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         lock (_lock)
         {
             EnsureNoOpenTransactionLocked("Recover");
+            var uncommitted = _transactions.Log
+                .Where(t => !_transactions.IsTransactionCommitted(t.TransactionId))
+                .Select(t => t.Sequence).ToHashSet();
             _branches.Clear();
             _tags.Clear();
             _transitionBranches.Clear();
@@ -650,6 +656,8 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                     if (colon > 0 &&
                         long.TryParse(rest.Substring(0, colon), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
                     {
+                        if (uncommitted.Contains(seq))
+                            throw new InvalidDataException($"Version metadata references uncommitted transition {seq}.");
                         var branchName = rest.Substring(colon + ":branch=".Length);
                         _transitionBranches[seq] = branchName;
                     }
