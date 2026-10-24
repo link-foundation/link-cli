@@ -37,6 +37,16 @@ export interface StagedEngineLike {
   begin(): StagedSessionLike;
   snapshot(revision?: bigint): string;
   journal(): string;
+  fork(options: string, journal: string): StagedBranchLike;
+  forkWithLog(options: string, log: CommitLog): StagedBranchLike;
+  resume(options: string, journal: string, base: string): StagedBranchLike;
+  resumeWithLog(options: string, log: CommitLog, base: string): StagedBranchLike;
+  free(): void;
+}
+export interface StagedBranchLike {
+  engine(): StagedEngineLike;
+  merge(): bigint;
+  mergeBaseRecord(): string;
   free(): void;
 }
 export class EngineClient extends LinksClient {
@@ -47,8 +57,18 @@ export class EngineClient extends LinksClient {
 export class WasmEngine {
   constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
   begin(): EngineClient;
+  fork(options?: EngineOptions, journal?: string[] | CommitLog): WasmBranch;
+  resumeBranch(journal: string[] | CommitLog, mergeBaseRecord: string, options?: EngineOptions): WasmBranch;
   snapshot(revision?: AddressInput): { revision: bigint; rows: (Link & { name: string | null })[] };
   journal(): string[];
+  close(): void;
+  [Symbol.dispose](): void;
+}
+export class WasmBranch {
+  private constructor();
+  readonly engine: WasmEngine;
+  merge(): bigint;
+  mergeBaseRecord(): string;
   close(): void;
   [Symbol.dispose](): void;
 }

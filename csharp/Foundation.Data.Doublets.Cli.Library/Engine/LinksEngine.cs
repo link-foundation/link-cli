@@ -33,7 +33,7 @@ public sealed class EngineSnapshot<T>
 
 /// <summary>Optional isolated engine. The revision log is authoritative; all writes
 /// must use sessions of this engine. Sessions themselves are single-threaded.</summary>
-public sealed class LinksEngine<T>
+public sealed partial class LinksEngine<T>
     where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
 {
     internal readonly object Gate = new();
@@ -41,6 +41,7 @@ public sealed class LinksEngine<T>
     internal EngineSnapshot<T> Current = new(0, new());
     internal readonly Dictionary<T, ulong> Changed = new();
     internal BigInteger Next = BigInteger.One;
+    internal BigInteger CommittedNext = BigInteger.One;
     internal int Active;
     internal bool Poisoned;
     private readonly ICommitLog _log;
@@ -66,6 +67,7 @@ public sealed class LinksEngine<T>
             Validate(snapshot.Rows);
             Current = snapshot;
             Next = next;
+            CommittedNext = next;
             Retain();
         }
         foreach (var id in Current.Rows.Keys) Changed[id] = Current.Revision;
@@ -131,6 +133,7 @@ public sealed class LinksEngine<T>
         }
         foreach (var id in writes) Changed[id] = snapshot.Revision;
         Current = snapshot;
+        CommittedNext = Next;
         Retain();
         EngineDiagnostics.Trace(Options.Trace, $"Committed revision={snapshot.Revision}");
     }

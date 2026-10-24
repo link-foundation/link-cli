@@ -17,3 +17,11 @@ using var rolledBack = engine.Begin();
 rolledBack.CreateLink(0, 0);
 if (args.Contains("--exit")) Environment.Exit(0); // Recovery probe: bypass disposal.
 rolledBack.Rollback();
+
+var fork = engine.Fork(new MemoryCommitLog());
+using var edit = fork.Engine.Begin();
+edit.SetName(id, "edited independently");
+edit.Commit();
+Console.WriteLine($"Merged revision {fork.Merge()}");
+// Persist this with application metadata to resume the same branch later.
+Console.WriteLine($"Branch merge base {fork.MergeBaseRecord}");

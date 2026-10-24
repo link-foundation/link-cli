@@ -76,5 +76,46 @@ export async function engineConformance(binding) {
     { read: () => { throw 'read failure'; }, append() {}, flush() {} },
     { read: () => '{}', append() {}, flush() {} },
   ]) assert.throws(() => binding.StagedEngine.withLog('{}', log));
+
+  const parent = new WasmEngine(binding);
+  let seed = parent.begin(); const row = await seed.create(0n, 0n); await seed.commit(); await seed.close();
+  const branch = parent.fork({ history: 1 });
+  const base = branch.mergeBaseRecord();
+  let remote = branch.engine.begin(); await remote.setName(row.index, 'branch'); await remote.commit(); await remote.close();
+  seed = parent.begin(); await seed.create(0n, 0n); await seed.commit(); await seed.close();
+  assert.equal(branch.merge(), 3n); assert.equal(branch.merge(), 3n);
+  assert.equal(parent.snapshot().rows[0].name, 'branch');
+  assert.equal(parent.snapshot().rows.length, 2);
+  const branchJournal = branch.engine.journal();
+  branch.close(); branch.close(); assert.throws(() => branch.merge(), /closed/);
+  const resumed = parent.resumeBranch(branchJournal, base);
+  assert.equal(resumed.merge(), 3n);
+  seed = parent.begin(); await seed.setName(row.index, 'parent'); await seed.commit(); await seed.close();
+  remote = resumed.engine.begin(); await remote.setName(row.index, 'conflict'); await remote.commit(); await remote.close();
+  assert.throws(() => resumed.merge(), (error) => error.outcome === 'failed' && /conflict/i.test(error.message));
+  resumed.close();
+  const branchLog = new MemoryCommitLog();
+  const external = parent.fork({}, branchLog);
+  const saved = external.mergeBaseRecord(); external.close();
+  const reopenedBranch = parent.resumeBranch(branchLog, saved); reopenedBranch.close();
+  parent.close();
+
+  const parentJournal = new MemoryCommitLog(); const forkJournal = new MemoryCommitLog();
+  let failFlush = false;
+  const failingLog = { read: () => parentJournal.read(), append: (record) => parentJournal.append(record),
+    flush() { if (failFlush) throw Error('merge flush failed'); } };
+  const uncertainParent = new WasmEngine(binding, {}, failingLog);
+  const uncertainFork = uncertainParent.fork({}, forkJournal);
+  const initialBase = uncertainFork.mergeBaseRecord();
+  const branchWrite = uncertainFork.engine.begin();
+  await branchWrite.create(0n, 0n); await branchWrite.commit(); await branchWrite.close();
+  failFlush = true;
+  assert.throws(() => uncertainFork.merge(), (error) => error.outcome === 'unknown');
+  assert.throws(() => uncertainParent.snapshot(), /indeterminate/);
+  uncertainFork.close(); uncertainParent.close(); failFlush = false;
+  const mergeRecovered = new WasmEngine(binding, {}, parentJournal);
+  assert.equal(mergeRecovered.snapshot().rows.length, 1);
+  const retry = mergeRecovered.resumeBranch(forkJournal, initialBase);
+  assert.equal(retry.merge(), 1n); retry.close(); mergeRecovered.close();
   console.log('ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen');
 }

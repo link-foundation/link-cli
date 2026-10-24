@@ -4,6 +4,8 @@
 //! Unlike the legacy undo decorator, no underlying mapped data is modified
 //! while a transaction is open. A complete checksummed revision is flushed
 //! before it becomes visible. The log is the authoritative storage.
+mod branch;
+mod commit;
 mod journal;
 mod named;
 pub mod replication;
@@ -14,6 +16,7 @@ use doublets::data::LinkReference;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+pub use branch::Branch;
 pub use journal::MemoryLog;
 pub use transaction::EngineTransaction;
 
@@ -93,6 +96,7 @@ struct State<T, L> {
     history: BTreeMap<u64, Snapshot<T>>,
     changed: BTreeMap<T, u64>,
     next: u128,
+    committed_next: u128,
     active: usize,
     poisoned: bool,
     options: EngineOptions,
@@ -132,6 +136,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             history: BTreeMap::new(),
             changed: BTreeMap::new(),
             next: 1,
+            committed_next: 1,
             active: 0,
             poisoned: false,
             options,
@@ -154,6 +159,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
                 return Err(error("journal allocator moved backwards"));
             }
             state.next = next;
+            state.committed_next = next;
             state.current = snapshot;
             state.retain();
         }

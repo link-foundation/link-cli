@@ -16,4 +16,13 @@ try {
   console.log('before commit', engine.snapshot());
   console.log('revision', await session.commit());
   console.log('after commit', engine.snapshot());
+  const branch = engine.fork();
+  const edit = branch.engine.begin();
+  try {
+    await edit.setName(link.index, 'edited independently');
+    await edit.commit();
+    console.log('merged revision', branch.merge());
+    // Persist this with application metadata to resume the same branch later.
+    console.log('branch merge base', branch.mergeBaseRecord());
+  } finally { await edit.close(); branch.close(); }
 } finally { await session.close(); engine.close(); file?.close(); }

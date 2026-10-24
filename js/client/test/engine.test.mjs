@@ -74,8 +74,69 @@ test('custom logs pass through to the binding with explicit capabilities', async
 
 test('a failing capability getter cannot leak an allocated native engine', () => {
   let allocated = 0;
-  class Native { static withLog() { allocated++; return {}; } }
+  class Native {
+    static withLog() { allocated++; return {}; }
+    forkWithLog() { allocated++; return {}; }
+    resumeWithLog() { allocated++; return {}; }
+    free() {}
+  }
   const log = { get supportsDurableFlush() { throw new Error('capability unavailable'); } };
   assert.throws(() => new WasmEngine({ StagedEngine: Native }, {}, log), /capability unavailable/);
+  const parent = new WasmEngine({ StagedEngine: Native });
+  assert.throws(() => parent.fork({}, log), /capability unavailable/);
+  assert.throws(() => parent.resumeBranch(log, 'base'), /capability unavailable/);
+  parent.close();
   assert.equal(allocated, 0);
+});
+
+test('branches pass policies and capabilities, retain ownership and classify uncertain merges', async () => {
+  const events = [];
+  let failure;
+  const log = { supportsDurableFlush: true };
+  const session = () => ({ request: () => '', commit: () => 1n, rollback() {}, free() { events.push('session freed'); } });
+  const branch = () => ({
+    engine() { return { begin: session, free() { events.push('engine freed'); } }; },
+    mergeBaseRecord() { return 'base'; },
+    merge() { if (failure) throw failure; return 2n; },
+    free() { events.push('branch freed'); },
+  });
+  class Native {
+    fork(options, journal) {
+      assert.equal(options, '{"history":1}'); assert.equal(journal, '[]'); return branch();
+    }
+    forkWithLog(options, adapter) {
+      assert.equal(options, '{}'); assert.equal(adapter, log); return branch();
+    }
+    resume(options, journal, base) {
+      assert.equal(options, '{}'); assert.equal(journal, '["saved"]'); assert.equal(base, 'base'); return branch();
+    }
+    resumeWithLog(options, adapter, base) {
+      assert.equal(options, '{"requireDurableFlush":true}'); assert.equal(adapter, log); assert.equal(base, 'base'); return branch();
+    }
+    free() { events.push('parent freed'); }
+  }
+  const parent = new WasmEngine({ StagedEngine: Native });
+  const fork = parent.fork({ history: 1 });
+  assert.equal(fork.mergeBaseRecord(), 'base'); assert.equal(fork.merge(), 2n);
+  failure = new Error('conflict: overlapping edits');
+  assert.throws(() => fork.merge(), (error) => error instanceof LinksError && error.outcome === 'failed' && error.cause === failure);
+  failure = new Error('indeterminate commit: flush failed');
+  assert.throws(() => fork.merge(), (error) => error instanceof LinksError && error.outcome === 'unknown');
+  failure = undefined;
+  const privateSession = fork.engine.begin();
+  assert.throws(() => privateSession.require('persistent'), UnsupportedError);
+  fork.close(); fork.close();
+  await privateSession.rollback(); await privateSession.close();
+  assert.throws(() => fork.merge(), /closed/); assert.throws(() => fork.mergeBaseRecord(), /closed/);
+  const durableFork = parent.fork({}, log);
+  const durableSession = durableFork.engine.begin(); durableSession.require('persistent', 'durableFlush');
+  await durableSession.close(); durableFork[Symbol.dispose]();
+  parent.resumeBranch(['saved'], 'base').close();
+  parent.resumeBranch(log, 'base', { requireDurableFlush: true }).close();
+  parent.close();
+  assert.throws(() => parent.fork(), /closed/); assert.throws(() => parent.resumeBranch([], 'base'), /closed/);
+  assert.equal(events.filter((event) => event === 'engine freed').length, 4);
+  assert.equal(events.filter((event) => event === 'branch freed').length, 4);
+  assert.equal(events.filter((event) => event === 'session freed').length, 2);
+  assert.equal(events.at(-1), 'parent freed');
 });

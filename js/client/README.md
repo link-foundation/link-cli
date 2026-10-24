@@ -218,3 +218,13 @@ A custom synchronous commit log selects storage; `MemoryCommitLog` and
 `ReplicatedCommitLog` compose portable adapters. For a filesystem journal use
 the separate `./engine-file-log` entry point. Durability is an explicit backend
 capability; replication acknowledgements do not provide consensus or failover.
+
+`const branch = engine.fork(options, journal)` seeds an independent journal.
+Edit it through `branch.engine.begin()`, then call `branch.merge()` to atomically
+merge its committed rows into the parent. Save `branch.mergeBaseRecord()` after
+each successful merge; `engine.resumeBranch(journal, savedRecord, options)`
+reopens it after a restart. Divergent edits to the same row conflict, including
+independent allocations of the same address with different values. A failed
+flush reports `LinksError.outcome === 'unknown'` and requires reopening the
+parent for outcome discovery. Close the branch and every session before closing
+its caller-owned journal adapter.

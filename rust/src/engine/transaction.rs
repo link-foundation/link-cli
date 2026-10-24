@@ -1,8 +1,7 @@
-use super::{error, journal, Engine, IsolationLevel, Row, Snapshot};
+use super::{error, Engine, IsolationLevel, Row, Snapshot};
 use crate::{GenericLink, LinkError, LinksStorage, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 /// An isolated write set with the same raw LinksStorage API as other backends.
 /// Dropping or rolling back discards the write set; allocation may leave gaps.
@@ -127,43 +126,9 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
                 }
             }
         }
-        state.validate(&rows)?;
-        let revision = state
-            .current
-            .revision
-            .checked_add(1)
-            .ok_or_else(|| error("revision overflow"))?;
-        let snapshot = Snapshot {
-            revision,
-            rows: Arc::new(rows),
-        };
-        let record = journal::encode(&snapshot, state.next);
-        // Any I/O error may follow a successful write. Reopen to discover the
-        // outcome; never reuse a possibly duplicated revision on this handle.
-        if let Err(cause) = state
-            .log
-            .append_log_entry(&record)
-            .and_then(|()| state.log.flush_log())
-        {
-            state.poisoned = true;
-            return Err(error(&format!(
-                "indeterminate commit: {cause}; reopen the engine"
-            )));
-        }
-        for id in writes.keys() {
-            state.changed.insert(*id, revision);
-        }
-        state.current = snapshot.clone();
-        state.retain();
-        if state.options.trace {
-            eprintln!(
-                "[Engine] committed revision={revision} writes={}",
-                writes.len()
-            );
-        }
-        self.base = snapshot;
+        self.base = state.publish(rows, writes.keys().copied())?;
         self.writes.clear();
-        Ok(revision)
+        Ok(self.base.revision)
     }
 }
 impl<T: LinkReference, L: TransitionLogStore> Drop for EngineTransaction<T, L> {

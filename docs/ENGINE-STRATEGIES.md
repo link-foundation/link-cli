@@ -17,6 +17,7 @@ transaction algorithm.
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed complete revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Bounded time travel | Set Rust `HistoryPolicy::Last(n)`, C# `HistoryLimit = n`, JS `history: n` | Retain up to n revisions including current. Active sessions and previously returned snapshots pin their versions independently. |
 | Complete time travel | Rust `HistoryPolicy::All`, C# `HistoryLimit = null`, JS `history: 'all'` | Every replayed/committed revision remains addressable in memory. |
+| Independent branch | Rust `Engine::fork`, C# `LinksEngine.Fork`, JS `WasmEngine.fork` | Seed and flush a separate journal; edit privately and merge committed changes atomically into the parent. |
 | Asynchronous copies | Wrap a log with replicated log, async policy | Commit waits for primary only. Call synchronize under the engine's log mutex to catch up followers. A primary loss can lose uncopied commits. |
 | Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
 
@@ -81,6 +82,42 @@ The legacy transaction decorators have a different architecture: their commit
 marker is flushed before acknowledging commit, data is flushed before an applied
 marker, and replay errors propagate. They still mutate the underlying store
 while a transaction is open; use the staged engine for session isolation.
+
+## Branches and merge recovery
+
+A fork copies the parent's current committed rows into revision 1 of an empty,
+independent journal. Choose its concurrency, isolation, constraints and retention
+separately. Unfinished sessions on either engine remain private. Branch addresses
+are local: independently allocating the same address with different values
+creates a merge conflict. Equal complete rows converge; no address remapping is
+performed. Use disjoint address ranges or externally assigned addresses when
+independent branches must allocate without collisions.
+
+Merge compares each changed complete row with its saved base and the current
+parent. Disjoint changes combine; identical changes converge; divergent edits,
+delete/update conflicts and name changes to the same row conflict. The parent
+validates its constraints and flushes one complete revision before publishing any
+merged rows. Exclusive admission and existing session conflict checks still
+apply. Repeating an unchanged successful merge adds no revision. A three-way
+merge validates its resulting state, but does not retroactively serialize the
+independent transactions that produced both histories.
+
+After a successful merge, persist `merge_base_record()` / `MergeBaseRecord` /
+`mergeBaseRecord()` with application metadata. To reopen, open the same logical
+parent and call `resume_branch` / `ResumeBranch` / `resumeBranch` with the branch
+journal and descriptor. The descriptor contains the complete committed branch
+base, so in-memory history eviction does not invalidate it. Recovery verifies
+that it matches an actual branch journal revision and validates the complete
+journal. The caller is responsible for associating it with the right parent;
+the checksum is not an authenticated lineage identifier.
+
+An older saved descriptor allows replay after a crash between parent commit and
+descriptor persistence: already identical rows are accepted, while divergent
+overlap conflicts conservatively. An append/flush error during merge has an
+unknown outcome and poisons the parent; reopen it before outcome discovery or
+retry. Failure to seed a branch leaves the parent untouched, but the branch log
+may contain the seed and must be inspected/reopened rather than blindly reused.
+Fork and merge currently copy full states and use the same O(N) record format.
 
 ## Distributed ownership and horizontal scale
 

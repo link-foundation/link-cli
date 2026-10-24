@@ -29,5 +29,12 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   await using owned = session;
   await session.create(0n, 0n);
   const revision: bigint = await session.commit();
+  using fork = engine.fork({ history: 1 }, new MemoryCommitLog());
+  const branchSession: EngineClient = fork.engine.begin();
+  await branchSession.close();
+  const merged: bigint = fork.merge();
+  const descriptor: string = fork.mergeBaseRecord();
+  using resumed = engine.resumeBranch(fork.engine.journal(), descriptor);
+  resumed.merge();
   return engine.snapshot(revision);
 }

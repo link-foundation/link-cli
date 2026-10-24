@@ -28,6 +28,14 @@ fn main() -> anyhow::Result<()> {
     assert!(db.snapshot_at(0)?.links().is_empty());
     println!("committed revision {}, link {id}", db.snapshot()?.revision);
 
+    let mut branch = db.fork(MemoryLog::default(), EngineOptions::default())?;
+    let mut edit = branch.engine().begin()?;
+    edit.set_name(id, Some("edited independently".into()))?;
+    edit.commit()?;
+    println!("merged revision {}", branch.merge()?);
+    // Persist this with application metadata to resume the same branch later.
+    println!("branch merge base {}", branch.merge_base_record());
+
     // Optional path selects durable storage instead; the exclusive writer
     // lock is held until this engine and every session have been dropped.
     if let Some(path) = std::env::args().nth(1) {

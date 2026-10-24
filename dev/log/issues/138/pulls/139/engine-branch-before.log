@@ -1,0 +1,45 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+error[E0599]: no method named `fork` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:15:29
+   |
+15 |     let mut branch = parent.fork(MemoryLog::default(), EngineOptions::default()).unwrap();
+   |                             ^^^^ method not found in `Engine<u32, MemoryLog>`
+
+error[E0599]: no method named `fork` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:40:25
+   |
+40 |     let branch = parent.fork(MemoryLog::default(), EngineOptions { history: HistoryPolicy::Last(1), ..Default::default() }).unwrap();
+   |                         ^^^^ method not found in `Engine<u32, MemoryLog>`
+
+error[E0599]: no method named `resume_branch` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:45:30
+   |
+45 |     let mut resumed = parent.resume_branch(log, EngineOptions::default(), &base).unwrap();
+   |                              ^^^^^^^^^^^^^ method not found in `Engine<u32, MemoryLog>`
+
+error[E0599]: no method named `fork` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:55:25
+   |
+55 |     let branch = parent.fork(MemoryLog::default(), EngineOptions::default()).unwrap();
+   |                         ^^^^ method not found in `Engine<u32, MemoryLog>`
+
+error[E0599]: no method named `fork` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:58:20
+   |
+58 |     assert!(parent.fork(log.clone(), EngineOptions::default()).is_err());
+   |                    ^^^^ method not found in `Engine<u32, MemoryLog>`
+
+error[E0599]: no method named `resume_branch` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:59:20
+   |
+59 |     assert!(parent.resume_branch(MemoryLog::default(), EngineOptions::default(), &base).is_err());
+   |                    ^^^^^^^^^^^^^ method not found in `Engine<u32, MemoryLog>`
+
+error[E0599]: no method named `resume_branch` found for struct `Engine<T, L>` in the current scope
+  --> tests/engine_branch_tests.rs:60:20
+   |
+60 |     assert!(parent.resume_branch(log, EngineOptions::default(), "invalid").is_err());
+   |                    ^^^^^^^^^^^^^ method not found in `Engine<u32, MemoryLog>`
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `link-cli` (test "engine_branch_tests") due to 7 previous errors

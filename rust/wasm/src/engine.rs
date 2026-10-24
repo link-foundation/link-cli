@@ -1,8 +1,8 @@
 //! JS uses the native engine through WASM, rather than reimplementing isolation.
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
-    ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction, HistoryPolicy,
-    IsolationLevel, MemoryLog,
+    Branch, ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction,
+    HistoryPolicy, IsolationLevel, MemoryLog,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
@@ -91,6 +91,40 @@ impl StagedEngine {
             inner: self.inner.begin().map_err(|e| e.to_string())?,
         })
     }
+    pub fn fork(&self, options_json: &str, journal_json: &str) -> Result<StagedBranch, String> {
+        let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        self.fork_log(options_json, BindingLog::Memory(MemoryLog { entries }))
+    }
+    #[wasm_bindgen(js_name = forkWithLog)]
+    pub fn fork_with_log(
+        &self,
+        options_json: &str,
+        log: JsCommitLog,
+    ) -> Result<StagedBranch, String> {
+        self.fork_log(options_json, BindingLog::External(log))
+    }
+    pub fn resume(
+        &self,
+        options_json: &str,
+        journal_json: &str,
+        base: &str,
+    ) -> Result<StagedBranch, String> {
+        let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        self.resume_log(
+            options_json,
+            BindingLog::Memory(MemoryLog { entries }),
+            base,
+        )
+    }
+    #[wasm_bindgen(js_name = resumeWithLog)]
+    pub fn resume_with_log(
+        &self,
+        options_json: &str,
+        log: JsCommitLog,
+        base: &str,
+    ) -> Result<StagedBranch, String> {
+        self.resume_log(options_json, BindingLog::External(log), base)
+    }
     /// Export does not persist anything; caller owns the resulting bytes.
     pub fn journal(&self) -> Result<String, String> {
         self.inner
@@ -113,6 +147,50 @@ impl StagedEngine {
             serde_json::json!({"revision": snapshot.revision.to_string(), "rows": rows})
                 .to_string(),
         )
+    }
+}
+
+impl StagedEngine {
+    fn fork_log(&self, options_json: &str, log: BindingLog) -> Result<StagedBranch, String> {
+        Ok(StagedBranch {
+            inner: self
+                .inner
+                .fork(log, options(options_json)?)
+                .map_err(|error| error.to_string())?,
+        })
+    }
+    fn resume_log(
+        &self,
+        options_json: &str,
+        log: BindingLog,
+        base: &str,
+    ) -> Result<StagedBranch, String> {
+        Ok(StagedBranch {
+            inner: self
+                .inner
+                .resume_branch(log, options(options_json)?, base)
+                .map_err(|error| error.to_string())?,
+        })
+    }
+}
+
+#[wasm_bindgen]
+pub struct StagedBranch {
+    inner: Branch<u32, BindingLog, BindingLog>,
+}
+#[wasm_bindgen]
+impl StagedBranch {
+    pub fn engine(&self) -> StagedEngine {
+        StagedEngine {
+            inner: self.inner.engine().clone(),
+        }
+    }
+    pub fn merge(&mut self) -> Result<u64, String> {
+        self.inner.merge().map_err(|error| error.to_string())
+    }
+    #[wasm_bindgen(js_name = mergeBaseRecord)]
+    pub fn merge_base_record(&self) -> String {
+        self.inner.merge_base_record()
     }
 }
 
