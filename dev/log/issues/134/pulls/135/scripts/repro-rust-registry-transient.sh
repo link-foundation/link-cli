@@ -3,7 +3,9 @@
 #
 # Usage: repro-rust-registry-transient.sh <git-revision> [always]
 #
-# Copies rust/scripts from <git-revision> into a temporary directory, points
+# Copies rust/scripts from <git-revision> into a temporary directory (set
+# REPRO_REPO and REPRO_SCRIPTS to use another repository, for example
+# REPRO_REPO=<template clone> REPRO_SCRIPTS=scripts), points
 # the crates.io and GitHub URLs at a local fake registry and runs
 # check-release-needed.rs for link-cli 1.0.8, which is published and has its
 # GitHub release. The first request for /api/v1/crates/link-cli/1.0.8 is
@@ -18,12 +20,14 @@ set -euo pipefail
 
 revision="${1:?usage: $0 <git-revision> [always]}"
 mode="${2:-once}"
-repo="$(git rev-parse --show-toplevel)"
+repo="${REPRO_REPO:-$(git rev-parse --show-toplevel)}"
+scripts="${REPRO_SCRIPTS:-rust/scripts}"
 work="$(mktemp -d)"
 trap 'kill "${server_pid:-0}" 2>/dev/null || true; rm -rf "$work"' EXIT
 
 mkdir -p "$work/scripts" "$work/rust/src"
-git -C "$repo" archive "$revision" rust/scripts | tar -x -C "$work/scripts" --strip-components=2
+depth="$(awk -F/ '{print NF}' <<< "$scripts")"
+git -C "$repo" archive "$revision" "$scripts" | tar -x -C "$work/scripts" --strip-components="$depth"
 cat > "$work/rust/Cargo.toml" <<'TOML'
 [package]
 name = "link-cli"

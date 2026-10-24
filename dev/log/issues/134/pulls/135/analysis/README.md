@@ -21,7 +21,7 @@ Terms used:
 | R4 | Report the same issues to the templates when they have them | Section 6; [`../upstream`](../upstream) |
 | R5 | Follow the hive-mind CI/CD best practices | Section 5; copy at [`../best-practices/CI-CD-BEST-PRACTICES.md`](../best-practices/CI-CD-BEST-PRACTICES.md) |
 | R6 | Collect logs and data under `dev/log/issues/134/pulls/135` and write a deep analysis | This file. Raw run logs are downloaded to `../ci-logs`, which `.gitignore` excludes because of its size; the excerpts that matter are committed here |
-| R7 | Leave debug output where a root cause was unclear | `List unified site (debug)` and `Print resolved deployment URL (debug)` in docs.yml; NuGet fetch failures now log `error.cause` (`4e3e753`) |
+| R7 | Leave debug output where a root cause was unclear | `List unified site (debug)` and `Print resolved deployment URL (debug)` in docs.yml; NuGet fetch failures now log `error.cause` (`4e3e753`); `CHECK_DEPENDENCIES_DEBUG=1` logs every retried dependency lookup (`036a87d`); the release lookups always print their retries |
 | R8 | Everything in this one pull request | Pull request #135 |
 
 ## 2. Timeline
@@ -37,6 +37,7 @@ All times are UTC on 2026-10-24.
 | 09:45 | Every workflow on `59cfa94` is green. Its only annotations are the intended `CODECOV_TOKEN` notice and GitHub's macOS capacity notice. |
 | 09:52 | Template issues filed (Section 6). |
 | 10:01 | The Dependencies run on `0653ed0` fails on one dropped nuget.org connection, which is fixed by retrying transient lookups (Section 4.2). |
+| 10:12 | The same audit of the Rust release scripts finds that a failed crates.io lookup counted as "not published" (Section 4.1). Fixed in `f3c5331`, and the same defects in the templates are reported as rust template #218 and csharp template #76. |
 
 ## 3. How the findings were collected
 
@@ -59,6 +60,7 @@ All times are UTC on 2026-10-24.
 | **C# release could leave a local tag and fail on a lost race.** | It tagged before pushing, pushed with a bare `git push` plus `--tags`, and never fetched first, so a concurrent Rust release made the push non-fast-forward. Release descriptions were interpolated into a shell, and every release added one more blank line to the CHANGELOG (12 had accumulated). | `b3de0c3`:<br>- fetch and rebase first;<br>- push `HEAD:<branch>`;<br>- retry only lost races;<br>- fail fast with `::error` on GH006/GH013 rule rejections;<br>- tag after the push;<br>- run git through `execFileSync`. | `csharp/scripts/release-scripts.test.mjs` |
 | **A missing NuGet key passed the release.** | The publish step printed "NUGET_API_KEY not set, skipping NuGet publish", and the job succeeded. | `e624ec2` fails with an `::error` naming the secret. `24c7e3e` adds NuGet trusted publishing via the `NUGET_USER` variable, as in the csharp template. | Policy test "publish steps do not silently skip on missing credentials" |
 | **C# code changes without a changeset passed.** | The check printed `::warning::` instead of failing. Its `${{ github.head_ref }}` comparison was flagged by shellcheck SC2193 ("can never be equal") and is a template injection. | `eb50eb6` runs `validate-changeset.mjs`, which fails, and passes `head_ref` through `env`. | [`actionlint-before.txt`](actionlint-before.txt); zizmor clean |
+| **A failed crates.io lookup counted as "not published".** One dropped connection made the Rust release decision republish a fully published version, which then fails with a misleading "VERSION ALREADY PUBLISHED … bug in version bumping". | `check-release-needed.rs` printed `Warning: Could not check crates.io` and returned `false` on any error. The same applied to Docker Hub, the GitHub release and the highest published version. `version-and-commit.rs` mapped `Err(_)` to `false`/`None`, so it bumped from `Cargo.toml` instead of the highest published version. Nothing retried. | `f3c5331`: the shared `rust/scripts/registry.rs`:<br>- retries transport errors, 429 and 5xx with exponential backoff;<br>- treats 404 as "not found";<br>- fails with `::error title=crates.io lookup failed::…` once the attempts run out. | [`../scripts/repro-rust-registry-transient.sh`](../scripts/repro-rust-registry-transient.sh) runs against a local fake registry that drops one connection. Before (`066ee83`): `should_release=true`, `skip_bump=true`. After (`f3c5331`): one retry, then `should_release=false`. When the connection always drops, the script exits 1 after 4 attempts: [`rust-registry-transient-repro.txt`](rust-registry-transient-repro.txt). Four unit tests in `registry.rs` run via `version-and-commit.rs`. |
 | **Queued main runs were cancelled.** | csharp, rust, js-client, docs and wasm declared one workflow-level concurrency group. It held the whole run, including the release and the registry wait, so a third push to main cancelled the pending run. | `2643614`:<br>- per-job `check-<workflow>-<ref>-<job>` groups, cancelled only when superseded off main;<br>- writer jobs share never-cancelled groups. | Policy test "writer jobs own a never-cancelled concurrency group" |
 
 ### 4.2 Checks that checked less than they claimed (false negatives)
@@ -72,7 +74,7 @@ All times are UTC on 2026-10-24.
 | **Workflow definitions were never linted.** | Nothing ran actionlint or zizmor. The policy tests ran only when a C# or Rust path changed. | `1b8551d` adds `workflows.yml`:<br>- actionlint, digest-pinned with shellcheck;<br>- zizmor 1.31.1 plus a pedantic high/high pass;<br>- `node --test .github/scripts/*.test.mjs` on every `.github/**` change. | The Workflows run on this pull request |
 | **The runner OS changed without a diff.** | `ubuntu-latest` already ran Ubuntu 26.04 while runner-images documented it as 24.04. | `eb09cdd` pins `ubuntu-24.04`, `macos-26` and `windows-2025`. | Policy test "hosted runners use pinned OS labels" |
 | **Coverage was never uploaded.** | Codecov accepts tokenless uploads only from forks, so every upload failed with `Token required - not valid tokenless upload` behind `fail_ci_if_error: false`. The Codecov API reports the repository as `"activated": false, "totals": null`. | `59cfa94`:<br>- upload with the token and `fail_ci_if_error: true`;<br>- `.github/codecov.yml` sets `require_ci_to_pass`;<br>- a `Codecov Token` job fails on main with what to do (Section 7) and blocks no release; pull requests stay green. | [`codecov-before.txt`](codecov-before.txt); policy test "every Codecov upload uses a token, reads only its reports and fails loudly" |
-| **One dropped connection failed the dependency check, and the C# release decision.** The Dependencies run on `0653ed0` failed with `coverlet.collector: fetch failed`, although the same dependencies passed on `5d5a3d6` minutes earlier. | Every registry lookup and `git ls-remote` ran exactly once. Node's fetch reports every network error as `fetch failed` and keeps the reason in `cause`. `check-release-needed.mjs`, which decides whether main releases C#, also queried nuget.org and the GitHub API once. | `036a87d` and `622610a`:<br>- retry network failures, 429 and 5xx with exponential backoff;<br>- fail at once on answers like 404;<br>- add the network cause and the attempt count to the message;<br>- log retries with `CHECK_DEPENDENCIES_DEBUG=1`. | [`dependencies-transient-fetch.txt`](dependencies-transient-fetch.txt); four tests in `check-latest-dependencies.test.mjs` and three in `release-scripts.test.mjs` fail against the previous code |
+| **One dropped connection failed the dependency check, and the C# release decision.** The Dependencies run on `0653ed0` failed with `coverlet.collector: fetch failed`, although the same dependencies passed on `5d5a3d6` minutes earlier. | Every registry lookup and `git ls-remote` ran exactly once. Node's fetch reports every network error as `fetch failed` and keeps the reason in `cause`. `check-release-needed.mjs`, which decides whether main releases C#, also queried nuget.org and the GitHub API once. | `036a87d` and `622610a`:<br>- retry network failures, 429 and 5xx with exponential backoff;<br>- fail at once on answers like 404;<br>- add the network cause and the attempt count to the message;<br>- log retries with `CHECK_DEPENDENCIES_DEBUG=1`. | [`dependencies-transient-fetch.txt`](dependencies-transient-fetch.txt); [`../scripts/release-needed-transient-fetch.mjs`](../scripts/release-needed-transient-fetch.mjs) fails on the csharp template and passes after `622610a` ([`release-needed-transient-fetch-repro.txt`](release-needed-transient-fetch-repro.txt)); four tests in `check-latest-dependencies.test.mjs` and three in `release-scripts.test.mjs` fail against the previous code |
 | **Security findings in the workflows.** zizmor reported 23 high findings: unpinned third-party actions, `${{ }}` template injection into `run:`, persisted checkout credentials and broad `pages`/`id-token` permissions. | Workflows grew without an auditor. | `fb1e88e` and `eb50eb6` pin actions, pass values through `env`, set `persist-credentials: false` except in pushing jobs, and scope permissions per job. `.github/zizmor.yml` mirrors the template pin policy. | [`zizmor-before.txt`](zizmor-before.txt); zizmor job reports no findings |
 
 ### 4.3 False positives
@@ -131,6 +133,7 @@ Their trees are in [`../templates/*-tree.txt`](../templates); the scripts that w
 
 **Defects found in templates.** These were not copied (Section 6):
 - substring exclusions in both file-size checks;
+- release lookups that run once (csharp) or read a failure as "not published" (rust);
 - the unrestricted Codecov search in the csharp template.
 
 The js template's `check-file-line-limits.sh` uses `git ls-files` with case globs and is not affected.
@@ -141,12 +144,15 @@ The js template's `check-file-line-limits.sh` uses `git ls-files` with case glob
 | --- | --- | --- |
 | [rust-ai-driven-development-pipeline-template#217](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/217) | `check-file-size.rs` skips `src/retarget.rs`, all of `.github/**` and every file of a checkout named `*target*` | [`../scripts/template-file-size-substring-exclusion.sh`](../scripts/template-file-size-substring-exclusion.sh), [`template-file-size-repro.txt`](template-file-size-repro.txt) |
 | [csharp-ai-driven-development-pipeline-template#74](https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/74) | `check-file-size.mjs` skips `src/Robin.cs`, all of `.github/**` and every file of a checkout named `*bin*` | same |
+| [rust-ai-driven-development-pipeline-template#218](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/218) | `check-release-needed.rs` and `version-and-commit.rs` read a failed crates.io, Docker Hub or GitHub lookup as "not published", so one dropped connection re-releases a published version | [`../scripts/repro-rust-registry-transient.sh`](../scripts/repro-rust-registry-transient.sh), [`template-rust-registry-transient-repro.txt`](template-rust-registry-transient-repro.txt) |
+| [csharp-ai-driven-development-pipeline-template#76](https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/76) | `check-release-needed.mjs` queries NuGet and the GitHub releases API once, so one dropped connection fails the release job | [`../scripts/release-needed-transient-fetch.mjs`](../scripts/release-needed-transient-fetch.mjs), [`release-needed-transient-fetch-repro.txt`](release-needed-transient-fetch-repro.txt) |
 | [csharp-ai-driven-development-pipeline-template#75](https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/75) | The Codecov step searches the whole checkout and runs every plugin, and a missing `CODECOV_TOKEN` never fails on main (follow-up to its #34) | link-cli logs in [`codecov-before.txt`](codecov-before.txt) |
 
 **Already reported, so not filed again:**
 - the CodeQL C# `autobuild` overlay warning (csharp template #73).
 
 **Not filed:**
+- The js template's release lookups do not retry either, but `github-release-state.mjs` returns `null` ("unknown") and `npm-registry.mjs` throws, so it never guesses "not published".
 - The Rust template's release script errors on a missing `CHANGELOG.md` pathspec. The template ships `CHANGELOG.md` and the failure is loud, so it is not a false negative there.
 
 Each issue body is also kept in [`../upstream`](../upstream).
@@ -193,4 +199,8 @@ pipx run zizmor==1.31.1 --config .github/zizmor.yml .github
 bash dev/log/issues/134/pulls/135/scripts/repro-rust-release-commit.sh WORKTREE
 bash dev/log/issues/134/pulls/135/scripts/template-file-size-substring-exclusion.sh \
   <csharp-template>/scripts/check-file-size.mjs <rust-template>/scripts/check-file-size.rs
+bash dev/log/issues/134/pulls/135/scripts/repro-rust-registry-transient.sh HEAD [always]
+REPRO_REPO=<rust-template> REPRO_SCRIPTS=scripts \
+  bash dev/log/issues/134/pulls/135/scripts/repro-rust-registry-transient.sh HEAD
+node dev/log/issues/134/pulls/135/scripts/release-needed-transient-fetch.mjs csharp/scripts/check-release-needed.mjs
 ```
