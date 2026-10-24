@@ -872,7 +872,8 @@ fn escape_lino_reference(reference: &str) -> String {
 
     let has_single_quote = reference.contains('\'');
     let has_double_quote = reference.contains('"');
-    let needs_quoting = reference.contains(':')
+    let needs_quoting = reference.parse::<u32>().is_ok()
+        || reference.contains(':')
         || reference.contains('(')
         || reference.contains(')')
         || reference.contains(' ')

@@ -105,7 +105,7 @@ public static class LinoDatabaseOutput
         return name is null ? link.ToString() : EscapeReference(name);
     }
 
-    private static string EscapeReference(string reference)
+    internal static string EscapeReference(string reference)
     {
         if (string.IsNullOrEmpty(reference))
         {

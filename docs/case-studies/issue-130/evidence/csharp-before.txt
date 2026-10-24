@@ -1,0 +1,225 @@
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.92]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "1") [FAIL]
+[xUnit.net 00:00:01.98]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "01") [FAIL]
+[xUnit.net 00:00:02.02]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "4294967295") [FAIL]
+[xUnit.net 00:00:02.07]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "0") [FAIL]
+[xUnit.net 00:00:02.09]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "2") [FAIL]
+[xUnit.net 00:00:02.18]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "99") [FAIL]
+[xUnit.net 00:00:02.24]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "+1") [FAIL]
+[xUnit.net 00:00:02.27]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MissingQuotedNumberRequiresItsNameEvenWhenAddressExists [FAIL]
+[xUnit.net 00:00:02.32]     Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedDefinitionsSupportStrictMatchingUpdatingAndDeletion [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "1") [718 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0)
+---- Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 26
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "01") [34 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0)
+---- Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at InvokeStub_AdvancedMixedQueryProcessor.QuotedNumbersAreNames(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 26
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "4294967295") [59 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Cannot ensure unsupported link address 4294967295. Only non-zero internal references in the supported range can be created.)
+---- System.InvalidOperationException : Cannot ensure unsupported link address 4294967295. Only non-zero internal references in the supported range can be created.
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at InvokeStub_AdvancedMixedQueryProcessor.QuotedNumbersAreNames(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.LinksExtensions.EnsureSupportedInternalReference[TLinkAddress](ILinks`1 links, TLinkAddress address) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs:line 78
+   at Foundation.Data.Doublets.Cli.LinksExtensions.EnsureCreated[TLinkAddress](ILinks`1 links, Func`1 creator, TLinkAddress[] addresses) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs:line 16
+   at Foundation.Data.Doublets.Cli.LinksExtensions.EnsureCreated[TLinkAddress](ILinks`1 links, TLinkAddress[] addresses) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs:line 9
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.EnsureAddress(INamedTypesLinks`1 links, UInt32 index, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Mutations.cs:line 308
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.AutoCreateMissingReferences(INamedTypesLinks`1 links, LinkReferencePlan plan, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 242
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ValidateLinksExistOrWillBeCreated(INamedTypesLinks`1 links, IList`1 restrictionPatterns, IList`1 substitutionPatterns, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 43
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs:line 85
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ProcessQuery(NamedTypesDecorator`1 links, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 89
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ProcessQuery(NamedTypesDecorator`1 links, String query) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 83
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 24
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "0") [65 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Cannot ensure unsupported link address 0. Only non-zero internal references in the supported range can be created.)
+---- System.InvalidOperationException : Cannot ensure unsupported link address 0. Only non-zero internal references in the supported range can be created.
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at InvokeStub_AdvancedMixedQueryProcessor.QuotedNumbersAreNames(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.LinksExtensions.EnsureSupportedInternalReference[TLinkAddress](ILinks`1 links, TLinkAddress address) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs:line 78
+   at Foundation.Data.Doublets.Cli.LinksExtensions.EnsureCreated[TLinkAddress](ILinks`1 links, Func`1 creator, TLinkAddress[] addresses) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs:line 16
+   at Foundation.Data.Doublets.Cli.LinksExtensions.EnsureCreated[TLinkAddress](ILinks`1 links, TLinkAddress[] addresses) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs:line 9
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.EnsureAddress(INamedTypesLinks`1 links, UInt32 index, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Mutations.cs:line 308
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.AutoCreateMissingReferences(INamedTypesLinks`1 links, LinkReferencePlan plan, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 242
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ValidateLinksExistOrWillBeCreated(INamedTypesLinks`1 links, IList`1 restrictionPatterns, IList`1 substitutionPatterns, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 43
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs:line 85
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ProcessQuery(NamedTypesDecorator`1 links, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 89
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ProcessQuery(NamedTypesDecorator`1 links, String query) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 83
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 24
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "2") [20 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0)
+---- Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at InvokeStub_AdvancedMixedQueryProcessor.QuotedNumbersAreNames(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 26
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "99") [79 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0)
+---- Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at InvokeStub_AdvancedMixedQueryProcessor.QuotedNumbersAreNames(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 26
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(name: "+1") [56 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0)
+---- Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedNumbersAreNames(String name) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 19
+   at InvokeStub_AdvancedMixedQueryProcessor.QuotedNumbersAreNames(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass106_0.<QuotedNumbersAreNames>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 26
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MissingQuotedNumberRequiresItsNameEvenWhenAddressExists [37 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException))
+---- Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.MissingQuotedNumberRequiresItsNameEvenWhenAddressExists() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 60
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c.<MissingQuotedNumberRequiresItsNameEvenWhenAddressExists>b__108_0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 63
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedDefinitionsSupportStrictMatchingUpdatingAndDeletion [46 ms]
+  Error Message:
+   System.AggregateException : One or more errors occurred. (Invalid reference to non-existent link 'a' in restriction pattern. Link 'a' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.)
+---- System.InvalidOperationException : Invalid reference to non-existent link 'a' in restriction pattern. Link 'a' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+  Stack Trace:
+     at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at System.Threading.Tasks.Task.Wait(CancellationToken cancellationToken)
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.RunTestWithLinks(Action`1 testAction, Boolean enableTracing) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 51
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedDefinitionsSupportStrictMatchingUpdatingAndDeletion() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 39
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ValidateLinksExistOrWillBeCreated(INamedTypesLinks`1 links, IList`1 restrictionPatterns, IList`1 substitutionPatterns, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 34
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs:line 111
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ProcessQueryStrict(NamedTypesDecorator`1 links, Options options) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 100
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.ProcessQueryStrict(NamedTypesDecorator`1 links, String query) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 94
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c.<QuotedDefinitionsSupportStrictMatchingUpdatingAndDeletion>b__107_0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.QuotedReferences.cs:line 44
+   at Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.<>c__DisplayClass53_0.<RunTestWithLinks>b__0() in /tmp/gh-issue-solver-1792825241758/csharp/Foundation.Data.Doublets.Cli.Tests/AdvancedMixedQueryProcessor.Helpers.cs:line 46
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+
+Failed!  - Failed:     9, Passed:     0, Skipped:     0, Total:     9, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

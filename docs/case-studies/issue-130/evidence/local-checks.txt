@@ -1,0 +1,44 @@
+Local verification, 2026-10-24, after merging main ea3b9cb
+
+C# (.NET 10, Release, one MSBuild worker, 512 MiB managed heap)
+  dotnet test csharp --no-restore -c Release -m:1 -p:UseSharedCompilation=false
+  552 passed, 0 failed, 0 skipped
+  dotnet format csharp --no-restore --verify-no-changes
+  0 files changed
+
+Rust (one compiler job, debug symbols disabled)
+  cargo test --manifest-path rust/Cargo.toml --all-features
+  370 passed, 0 failed, 2 existing ignored tests, across 41 suites
+  cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+  cargo fmt --manifest-path rust/wasm/Cargo.toml --all -- --check
+  cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+  cargo clippy --manifest-path rust/wasm/Cargo.toml --all-targets --all-features -- -D warnings
+  All passed
+
+WebAssembly and browser
+  wasm-pack test --node rust/wasm
+  7 passed, 0 failed
+  npm run --prefix js build
+  Optimized WASM and React build passed
+
+JavaScript and workflow/release scripts
+  node --test .github/scripts/*.test.mjs js/test/*.test.mjs csharp/scripts/*.test.mjs js/client/test/*.test.mjs
+  147 passed, 0 failed
+  npm run --prefix js/client typecheck
+  Passed
+
+Real-backend client conformance (Rust, C#, WebAssembly)
+  node js/client/test/conformance/run.mjs
+  bun js/client/test/conformance/run.mjs
+  deno run --allow-all js/client/test/conformance/run.mjs
+  Each runtime: 32 passed, 0 failed, 4 expected skips for WASM server-only operations
+  Synthetic consumer: 40 records on each backend, identical fresh-client readback
+
+Quoted-query-name example
+  python3 examples/quoted-query-names/run.py dotnet csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  python3 examples/quoted-query-names/run.py rust/target/debug/clink
+  Both passed; identical output and strict export/query replay
+
+Repository checks
+  C# and Rust files stay within the 1000-line limit
+  git diff --check passed

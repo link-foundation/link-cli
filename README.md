@@ -209,6 +209,16 @@ has a name. Missing named references are rejected by default; use
 `--auto-create-missing-references` when the query should create missing names as
 self-referential point links.
 
+Quoted references in queries always mean names in both C# and Rust (including
+WebAssembly). For example, `() ((p: x "0"))` with
+`--auto-create-missing-references` creates a point named `0` and uses it as the
+target of `p`. `"1"`, `'1'`, and `` `1` `` refer to the name `1`; bare `1` still
+refers to address 1. Quoted numeric identifiers also work in definitions,
+restrictions, updates, deletions, and stored triggers. Without automatic creation,
+the named link must already exist or be defined by the substitution. Reference
+literals such as `~1{31}` likewise mean names. Quoting `*` or `$value` makes it a
+literal name.
+
 Create a named `child` link from named `father` and `mother` references:
 
 ```bash

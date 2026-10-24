@@ -144,7 +144,7 @@ impl QueryProcessor {
         }
 
         Ok(storage
-            .get_by_name(pattern_id)?
+            .get_by_name(crate::query_parser::name(pattern_id))?
             .is_some_and(|named_id| named_id == candidate_id))
     }
 
@@ -166,7 +166,9 @@ impl QueryProcessor {
         if let Ok(parsed) = identifier.parse::<u32>() {
             return Ok(parsed);
         }
-        Ok(storage.get_by_name(identifier)?.unwrap_or(0))
+        Ok(storage
+            .get_by_name(crate::query_parser::name(identifier))?
+            .unwrap_or(0))
     }
 
     pub(super) fn matched_links(

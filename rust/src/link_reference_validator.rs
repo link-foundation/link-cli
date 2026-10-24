@@ -17,6 +17,7 @@ use crate::query_processor::Changes;
 pub struct LinkReferenceValidator {
     trace: bool,
     auto_create_missing_references: bool,
+    enveloped_names: bool,
 }
 
 #[derive(Debug, Default)]
@@ -63,9 +64,26 @@ impl LinkReferenceValidator {
         Self {
             trace,
             auto_create_missing_references,
+            enveloped_names: false,
         }
     }
 
+    pub(crate) fn for_query(trace: bool, auto_create_missing_references: bool) -> Self {
+        Self {
+            enveloped_names: true,
+            ..Self::new(trace, auto_create_missing_references)
+        }
+    }
+
+    fn name<'a>(&self, identifier: &'a str) -> &'a str {
+        if self.enveloped_names {
+            crate::query_parser::name(identifier)
+        } else {
+            identifier
+        }
+    }
+
+    /// Validate already-decoded identifiers supplied by a custom front end.
     pub fn validate_links_exist_or_will_be_created(
         &self,
         storage: &mut impl NamedTypeLinks,
@@ -87,7 +105,7 @@ impl LinkReferenceValidator {
                 let missing = &plan.missing_references[0];
                 return Err(LinkError::QueryError(format!(
                     "Invalid reference to non-existent link '{}' in {} pattern. Link '{}' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.",
-                    missing.identifier, missing.pattern_type, missing.identifier
+                    self.name(&missing.identifier), missing.pattern_type, self.name(&missing.identifier)
                 ))
                 .into());
             }
@@ -268,7 +286,7 @@ impl LinkReferenceValidator {
             return Ok(());
         }
 
-        if storage.get_by_name(identifier)?.is_none()
+        if storage.get_by_name(self.name(identifier))?.is_none()
             && !plan.names_to_be_created.contains(identifier)
         {
             plan.add_missing_reference(MissingLinkReference {
@@ -340,14 +358,14 @@ impl LinkReferenceValidator {
         named_references.dedup();
 
         for name in named_references {
-            if storage.get_by_name(&name)?.is_some() {
+            if storage.get_by_name(self.name(&name))?.is_some() {
                 continue;
             }
 
             self.trace_msg(&format!(
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{name}' as point link."
             ));
-            let link_id = storage.get_or_create_named(&name)?;
+            let link_id = storage.get_or_create_named(self.name(&name))?;
             created.push((None, storage.get_link(link_id)));
         }
 

@@ -32,6 +32,28 @@ fn executes_lino_queries_with_the_rust_core() {
 }
 
 #[wasm_bindgen_test]
+fn quoted_numbers_stay_names_in_the_javascript_api() {
+    let mut clink = Clink::new();
+    assert_eq!(
+        execute_json(&mut clink, "() ((a: a a) (b: b b))")["success"],
+        true
+    );
+    let result = execute_json(
+        &mut clink,
+        "() ((zero: x \"0\") (one: x \"1\") (two: x '2') (address: x 1))",
+    );
+    assert_eq!(result["success"], true, "{result}");
+    let links = result["links"].as_array().unwrap();
+    let named = |name: &str| links.iter().find(|link| link["name"] == name).unwrap();
+    for (link, name) in [("zero", "0"), ("one", "1"), ("two", "2")] {
+        assert_eq!(named(link)["target"], named(name)["id"]);
+    }
+    assert_ne!(named("1")["id"], 1);
+    assert_ne!(named("2")["id"], 2);
+    assert_eq!(named("address")["target"], 1);
+}
+
+#[wasm_bindgen_test]
 fn reports_invalid_options() {
     let mut clink = Clink::new();
     let raw = clink.execute("() ((1 1))", "invalid json");

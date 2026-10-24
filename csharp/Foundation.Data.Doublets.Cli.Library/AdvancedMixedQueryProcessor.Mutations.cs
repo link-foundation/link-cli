@@ -20,7 +20,7 @@ namespace Foundation.Data.Doublets.Cli
             if (linkDefinition.Index == anyConstant)
             {
                 TraceIfEnabled(options, "[CreateOrUpdateLink] Detected wildcard substitution => nested create & name.");
-                var parsed = new Parser().Parse(options.Query ?? string.Empty);
+                var parsed = QueryParser.Parse(options.Query ?? string.Empty);
                 if (parsed.Count > 0)
                 {
                     var outer = parsed[0];
@@ -156,7 +156,7 @@ namespace Foundation.Data.Doublets.Cli
                     return true;
                 }
                 // Try to resolve as string alias
-                var aliasId = links.GetByName(trimmed);
+                var aliasId = links.GetByName(QueryParser.Name(trimmed));
                 if (aliasId != links.Constants.Null)
                 {
                     parsedValue = aliasId;
@@ -171,7 +171,7 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 // Try to resolve as string alias
-                var aliasId = links.GetByName(id);
+                var aliasId = links.GetByName(QueryParser.Name(id));
                 if (aliasId != links.Constants.Null)
                 {
                     parsedValue = aliasId;
@@ -321,14 +321,14 @@ namespace Foundation.Data.Doublets.Cli
         /// </summary>
         private static uint EnsureNamedPointLink(INamedTypesLinks<uint> links, string name, Options options)
         {
-            var existing = links.GetByName(name);
+            var existing = links.GetByName(QueryParser.Name(name));
             if (existing != links.Constants.Null)
             {
                 return existing;
             }
             var created = links.Create();
             ReportCreatedEmpty(links, created, options);
-            links.SetName(created, name);
+            links.SetName(created, QueryParser.Name(name));
             ApplyCompositeUpdate(links, created, created, created, options);
             TraceIfEnabled(options, $"[EnsureNamedPointLink] Created point link '{name}' => ID={created}");
             return created;
@@ -479,7 +479,7 @@ namespace Foundation.Data.Doublets.Cli
             if (isName)
             {
                 // A name is an address too: the link it already names is updated in place.
-                var named = links.GetByName(literalIdentifier!);
+                var named = links.GetByName(QueryParser.Name(literalIdentifier!));
                 if (named != links.Constants.Null)
                 {
                     compositeIndex = named;
@@ -491,7 +491,7 @@ namespace Foundation.Data.Doublets.Cli
             TraceIfEnabled(options, $"[EnsureNestedLinkCreatedRecursively] Created or ensured composite link => Index={compositeIndex}, Source={sourceLinkId}, Target={targetLinkId} => Actual ID={compositeLinkId}");
             if (isName)
             {
-                links.SetName(compositeLinkId, literalIdentifier!);
+                links.SetName(compositeLinkId, QueryParser.Name(literalIdentifier!));
             }
             return compositeLinkId;
         }
