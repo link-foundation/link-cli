@@ -1,0 +1,44 @@
+//! Execute shared query, naming, Unicode and storage semantics in actual WASM.
+#![cfg(target_arch = "wasm32")]
+
+#[path = "../../tests/common/storage.rs"]
+mod test_store;
+
+#[path = "../../tests/query_processor_tests.rs"]
+mod query_processor;
+
+#[path = "../../tests/query_processor_change_report_tests.rs"]
+mod query_processor_change_report;
+
+#[path = "../../tests/query_processor_csharp_parity_tests.rs"]
+mod query_processor_csharp_parity;
+
+#[path = "../../tests/quoted_query_references_tests.rs"]
+mod quoted_query_references;
+
+#[path = "../../tests/unicode_sequence_converter_tests.rs"]
+mod unicode_sequence_converter;
+
+#[path = "../../tests/unicode_string_storage_tests.rs"]
+mod unicode_string_storage;
+
+#[path = "../../tests/pinned_types_decorator_tests.rs"]
+mod pinned_types_decorator;
+
+#[path = "../../tests/issue62_review_coverage_tests.rs"]
+mod issue62_review_coverage;
+
+#[path = "../../tests/lino_database_input_tests.rs"]
+mod lino_database_input;
+
+#[path = "../../tests/indexed_links_tests.rs"]
+mod indexed_links;
+
+#[path = "../../tests/storage_trait_defaults_tests.rs"]
+mod storage_trait_defaults;
+
+#[path = "../../tests/link_storage_tests.rs"]
+mod link_storage;
+
+#[path = "../../tests/named_types_decorator_tests.rs"]
+mod named_types_decorator;

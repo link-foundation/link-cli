@@ -1,7 +1,8 @@
 //! Compare indexed and scan algorithms through mutations and upstream decorators.
 use anyhow::Result;
-use doublets::Doublets;
+use link_cli::doublets::{self, Doublets};
 use link_cli::{link_storage_constants, Link, LinkStorage, NamedTypeLinks, NamedTypesDecorator};
+#[cfg(not(target_arch = "wasm32"))]
 use tempfile::tempdir;
 
 fn snapshot(storage: &LinkStorage, query: &[u32]) -> Vec<Link> {
@@ -44,7 +45,8 @@ fn assert_parity(plain: &LinkStorage, indexed: &LinkStorage) {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn indexes_follow_raw_writes_duplicates_and_reused_addresses() -> Result<()> {
     let mut plain = LinkStorage::in_memory(false);
     plain.create(1, 1);
@@ -74,7 +76,8 @@ fn indexes_follow_raw_writes_duplicates_and_reused_addresses() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn indexes_follow_uniqueness_merges_and_cascading_deletes() -> Result<()> {
     let mut plain = LinkStorage::in_memory(false);
     let mut indexed = LinkStorage::in_memory(false).with_indexed_lookups();
@@ -94,7 +97,9 @@ fn indexes_follow_uniqueness_merges_and_cascading_deletes() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn enabling_after_open_and_reloading_rebuilds_indexes() -> Result<()> {
     let dir = tempdir()?;
     let path = dir.path().join("data.links");
@@ -111,7 +116,8 @@ fn enabling_after_open_and_reloading_rebuilds_indexes() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn indexed_names_match_baseline_after_rename_reassignment_and_deletion() -> Result<()> {
     let make = || {
         NamedTypesDecorator::from_link_storages(

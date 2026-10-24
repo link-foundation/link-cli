@@ -2,18 +2,20 @@
 
 use anyhow::Result;
 use link_cli::{Link, LinkStorage, QueryProcessor};
-use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
 fn auto_processor() -> QueryProcessor {
     QueryProcessor::new(false).with_auto_create_missing_references(true)
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_query_processor_create() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     // Create a simple link: (() ((1 2)))
@@ -26,12 +28,10 @@ fn test_query_processor_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_query_processor_empty() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     let changes = processor.process_query(&mut storage, "")?;
@@ -40,12 +40,10 @@ fn test_query_processor_empty() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_missing_numeric_reference_fails_without_auto_create() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = QueryProcessor::new(false);
 
     let error = processor
@@ -60,12 +58,10 @@ fn test_missing_numeric_reference_fails_without_auto_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_future_numeric_references_succeed_without_auto_create() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = QueryProcessor::new(false);
 
     processor.process_query(&mut storage, "(() ((1: 1 2) (2: 2 1)))")?;
@@ -78,12 +74,10 @@ fn test_future_numeric_references_succeed_without_auto_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_auto_create_missing_numeric_reference_creates_point_link() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() ((20: 10 20)))")?;
@@ -100,12 +94,10 @@ fn test_auto_create_missing_numeric_reference_creates_point_link() -> Result<()>
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_auto_create_missing_numeric_reference_fills_existing_gap() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() ((3: 3 3)))")?;
@@ -133,10 +125,10 @@ fn store_with_2_and_3_freed(storage: &mut LinkStorage) -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_reference_to_a_freed_address_the_new_link_does_not_get_fails() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     store_with_2_and_3_freed(&mut storage)?;
 
     let error = QueryProcessor::new(false)
@@ -148,10 +140,10 @@ fn test_reference_to_a_freed_address_the_new_link_does_not_get_fails() -> Result
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_auto_create_a_reference_to_a_freed_address_the_new_link_does_not_get() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     store_with_2_and_3_freed(&mut storage)?;
 
     auto_processor().process_query(&mut storage, "() ((2 2))")?;
@@ -161,10 +153,10 @@ fn test_auto_create_a_reference_to_a_freed_address_the_new_link_does_not_get() -
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_auto_create_a_reference_the_new_link_would_have_got_before() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     QueryProcessor::new(false).process_query(&mut storage, "() ((1 1) (2 2) (3 3) (4 4))")?;
 
     // Creating 7 frees 5 and 6 on the way, so `(5 7)` gets 6, not 5.
@@ -177,12 +169,10 @@ fn test_auto_create_a_reference_the_new_link_would_have_got_before() -> Result<(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_missing_named_reference_fails_without_auto_create() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = QueryProcessor::new(false);
 
     let error = processor
@@ -197,12 +187,10 @@ fn test_missing_named_reference_fails_without_auto_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_auto_create_missing_named_references_creates_point_links() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() ((child: father mother)))")?;
@@ -228,15 +216,13 @@ fn test_auto_create_missing_named_references_creates_point_links() -> Result<()>
 // Link Deduplication Tests (Issue #65)
 // ============================================
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_duplicate_pair_with_named_links() -> Result<()> {
     // Issue #65: Test deduplication of (m a) (m a) pattern
     // Query: () (((m a) (m a)))
     // Expected: m, a (named self-refs), link for (m a), link for ((m a) (m a))
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((m a) (m a))))")?;
@@ -273,17 +259,15 @@ fn test_deduplicate_duplicate_pair_with_named_links() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_duplicate_pair_with_numeric_links() -> Result<()> {
     // Issue #65: Test deduplication with numeric IDs
     // Query: () (((1 2) (1 2)))
     // When using numeric IDs directly, they are treated as references (not creating self-refs)
     // So (1 2) creates link with source=1, target=2
     // The deduplication still works: ((1 2) (1 2)) creates only one (1 2) link
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((1 2) (1 2))))")?;
@@ -306,14 +290,12 @@ fn test_deduplicate_duplicate_pair_with_numeric_links() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_triple_duplicate_pair() -> Result<()> {
     // Test with three identical pairs using named links: (((a b) ((a b) (a b))))
     // The (a b) should only be created once
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((a b) ((a b) (a b)))))")?;
@@ -350,15 +332,13 @@ fn test_deduplicate_triple_duplicate_pair() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_with_different_pairs() -> Result<()> {
     // Test that different pairs are NOT deduplicated
     // Query: () (((a b) (b a))) - using named links
     // (a b) and (b a) are different and should both be created
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() (((a b) (b a))))")?;
@@ -394,15 +374,13 @@ fn test_deduplicate_with_different_pairs() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_nested_duplicates() -> Result<()> {
     // Test deeply nested deduplication using named links
     // Query: () ((((x y) (x y)) ((x y) (x y))))
     // (x y) is duplicated at multiple levels
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     processor.process_query(&mut storage, "(() ((((x y) (x y)) ((x y) (x y)))))")?;
@@ -439,13 +417,11 @@ fn test_deduplicate_nested_duplicates() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_named_links_multiple_queries() -> Result<()> {
     // Issue #65: Verify that named links maintain consistent IDs across operations
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     // First create named links
@@ -485,13 +461,11 @@ fn test_deduplicate_named_links_multiple_queries() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_deduplicate_mixed_named_and_numeric() -> Result<()> {
     // Test that named links are reused across queries
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let processor = auto_processor();
 
     // First query creates (m a)

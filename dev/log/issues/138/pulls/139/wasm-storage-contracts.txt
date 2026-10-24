@@ -1,0 +1,24 @@
+Shared query and storage contract execution in actual WASM
+
+126 additional shared native contracts pass on WASM:
+query processing/change reporting/C# parity, quoted references, Unicode sequences
+and strings, pinned/named types, import, indexes and storage trait contracts.
+All five WASM test binaries: 59 + 9 + 66 + 126 + 8 = 268 pass, zero failures.
+Native filesystem persistence, revisions and reload checks retain their bodies.
+
+Official complete LLVM totals after fixture deduplication:
+  lines 5,203/9,704 (53.61706512778236%)
+  branches 884/1,521 (58.119658119658126%)
+  functions 742/1,372
+  regions 7,677/15,141
+Wrapper: 331/331 lines, 16/16 branches, 68/68 functions, 505/505 regions.
+Linked engine: 1,366/1,395 lines, 278/306 branches.
+
+Full native Rust: 536 standard tests plus stdout harness pass;
+four child entry points ignored. Native/WASM Clippy -D warnings and format pass.
+Complete coverage remains below 100%. Production code and coverage inclusions
+are unchanged. Pinned toolchain/semantics: COVERAGE-METHOD.md.
+
+Shared-contract commit 71a8e980613615956efb058030dc28af6b7b7de0 passes all exact-SHA
+CI checks: 37 successful, ten skipped and one neutral. Runs were created
+2026-10-24 20:46:58 UTC; native Linux/Windows/macOS and actual WASM pass.

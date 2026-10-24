@@ -11,7 +11,7 @@ those contracts successfully.
 - [x] Verify native tests preserve their existing behavior and counts.
 - [x] Collect official complete LLVM coverage, including the linked core.
 - [x] Run native/WASM Clippy and formatting.
-- [ ] Verify exact-SHA CI after publication.
+- [x] Verify exact-SHA CI after publication.
 
 The shared tests cover isolation/admission/retention, independent branches and
 merge failures, finite serial-history oracles, allocator limits, corruption,

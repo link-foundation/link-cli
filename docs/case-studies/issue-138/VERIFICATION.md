@@ -716,3 +716,27 @@ The linked engine subset measures 1,366/1,395 lines and 278/306 branches.
 Complete coverage remains below the requested 100%, with no new exclusions.
 See [WASM-CONTRACT-PLAN.md](WASM-CONTRACT-PLAN.md) and curated evidence in
 `dev/log/issues/138/pulls/139/wasm-shared-contracts.txt`.
+
+
+## Shared query and storage contracts executed in WASM
+
+Another 126 existing native query, naming, Unicode, index, import and storage
+contracts now run in actual WASM. A shared fixture retains native temporary-file
+construction and ownership, and selects the existing in-memory backend on WASM.
+Native-only filesystem persistence, revision and reload assertions are unchanged.
+No production behavior or coverage source inclusions change.
+
+All 268 actual WASM tests pass. The full native suite retains 536 standard tests,
+the stdout harness and four ignored child entry points. Native/WASM Clippy with
+warnings denied and both formatting checks pass. The final coverage run after
+fixture deduplication measures 5,203/9,704 lines (53.62%), 884/1,521 branches
+(58.12%), 742/1,372 functions and 7,677/15,141 regions. Wrapper source retains
+331/331 lines, 68/68 functions, 16/16 branches and 505/505 regions. Linked engine
+coverage remains 1,366/1,395 lines and 278/306 branches. Complete coverage remains
+below the requested 100%; no denominator or source exclusions hide that gap.
+See [WASM-STORAGE-PLAN.md](WASM-STORAGE-PLAN.md) and curated evidence in
+`dev/log/issues/138/pulls/139/wasm-storage-contracts.txt`.
+
+Shared-contract commit `71a8e980613615956efb058030dc28af6b7b7de0` passes all exact-SHA
+CI checks: 37 successful, ten skipped and one neutral. Runs were created
+2026-10-24 20:46:58 UTC; native Linux/Windows/macOS and actual WASM pass.

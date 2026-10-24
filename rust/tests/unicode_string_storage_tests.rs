@@ -1,16 +1,19 @@
 use anyhow::Result;
-use link_cli::{external_reference, LinkStorage, NamedLinks, UnicodeStringStorage};
-use tempfile::NamedTempFile;
+use link_cli::{external_reference, NamedLinks, UnicodeStringStorage};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
 fn with_storage(test: impl FnOnce(&mut UnicodeStringStorage<'_>) -> Result<()>) -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let mut links = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut links) = test_store::links()?;
     let mut storage = UnicodeStringStorage::new(&mut links)?;
     test(&mut storage)
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn create_and_retrieve_empty_string() -> Result<()> {
     with_storage(|storage| {
         let empty = storage.create_string("")?;
@@ -19,7 +22,8 @@ fn create_and_retrieve_empty_string() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn create_and_retrieve_simple_string() -> Result<()> {
     with_storage(|storage| {
         let hello = storage.create_string("Hello")?;
@@ -28,7 +32,8 @@ fn create_and_retrieve_simple_string() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn create_and_retrieve_multiple_strings() -> Result<()> {
     with_storage(|storage| {
         let first = storage.create_string("First")?;
@@ -40,7 +45,8 @@ fn create_and_retrieve_multiple_strings() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn create_and_retrieve_unicode_string_as_utf16_sequence() -> Result<()> {
     with_storage(|storage| {
         let content = "Hello, 世界! Привет, мир! 😀";
@@ -52,7 +58,8 @@ fn create_and_retrieve_unicode_string_as_utf16_sequence() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn pinned_types_are_created_and_named() -> Result<()> {
     with_storage(|storage| {
         assert_eq!(1, storage.type_type());
@@ -78,7 +85,8 @@ fn pinned_types_are_created_and_named() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn create_and_retrieve_user_defined_type() -> Result<()> {
     with_storage(|storage| {
         let user_type = storage.get_or_create_type("UserType")?;
@@ -88,7 +96,8 @@ fn create_and_retrieve_user_defined_type() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn name_external_reference_matches_csharp_hybrid_encoding() -> Result<()> {
     with_storage(|storage| {
         assert_eq!(u32::MAX, external_reference(1));
@@ -112,7 +121,8 @@ fn name_external_reference_matches_csharp_hybrid_encoding() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn name_is_removed_when_link_is_deleted() -> Result<()> {
     with_storage(|storage| {
         let link = storage.links_mut().create(0, 0);
@@ -129,7 +139,8 @@ fn name_is_removed_when_link_is_deleted() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn deleting_non_named_link_does_not_affect_other_names() -> Result<()> {
     with_storage(|storage| {
         let named_link = storage.links_mut().create(0, 0);
@@ -144,7 +155,8 @@ fn deleting_non_named_link_does_not_affect_other_names() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn name_is_removed_when_external_reference_is_deleted() -> Result<()> {
     with_storage(|storage| {
         storage.set_name_for_external_reference(123, "ExternalName")?;
@@ -168,11 +180,10 @@ fn name_is_removed_when_external_reference_is_deleted() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn named_links_facade_matches_csharp_named_links_role() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let mut links = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut links) = test_store::links()?;
     let mut named_links = NamedLinks::new(&mut links)?;
 
     let link = named_links.unicode_storage_mut().links_mut().create(0, 0);

@@ -3,25 +3,26 @@
 
 use anyhow::Result;
 use link_cli::{Changes, Link, NamedTypeLinks, NamedTypesDecorator, QueryProcessor};
-use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
 struct Store {
     links: NamedTypesDecorator,
     processor: QueryProcessor,
-    _files: (NamedTempFile, NamedTempFile),
+    _files: test_store::NamedFiles,
 }
 
 impl Store {
     fn new() -> Result<Self> {
-        let database = NamedTempFile::new()?;
-        let names = NamedTempFile::new()?;
-        let links =
-            NamedTypesDecorator::with_names_database_path(database.path(), names.path(), false)?;
+        let (_files, links) = test_store::named()?;
         let processor = QueryProcessor::new(false).with_auto_create_missing_references(true);
         Ok(Self {
             links,
             processor,
-            _files: (database, names),
+            _files,
         })
     }
 
@@ -53,7 +54,8 @@ fn created(link: Link) -> (Option<Link>, Option<Link>) {
     (None, Some(link))
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_numeric_point_link_is_reported_created() -> Result<()> {
     let mut store = Store::new()?;
     assert_eq!(
@@ -63,7 +65,8 @@ fn a_numeric_point_link_is_reported_created() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_named_point_link_is_reported_created() -> Result<()> {
     let mut store = Store::new()?;
     let changes = store.query("() ((a: a a))")?;
@@ -71,7 +74,8 @@ fn a_named_point_link_is_reported_created() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_named_leaf_created_on_the_way_is_reported_created() -> Result<()> {
     let mut store = Store::new()?;
     let changes = store.query("() ((c: c d))")?;
@@ -86,7 +90,8 @@ fn a_named_leaf_created_on_the_way_is_reported_created() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn every_named_leaf_of_a_composite_is_reported_created() -> Result<()> {
     let mut store = Store::new()?;
     let changes = store.query("() ((child: father mother))")?;
@@ -107,7 +112,8 @@ fn every_named_leaf_of_a_composite_is_reported_created() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn creating_an_existing_name_redefines_that_link() -> Result<()> {
     let mut store = Store::new()?;
     store.query("() ((child: father mother))")?;
@@ -128,7 +134,8 @@ fn creating_an_existing_name_redefines_that_link() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_new_name_for_an_existing_doublet_names_it_instead_of_copying_it() -> Result<()> {
     let mut store = Store::new()?;
     store.query("() ((a: a a))")?;
@@ -140,7 +147,8 @@ fn a_new_name_for_an_existing_doublet_names_it_instead_of_copying_it() -> Result
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_numeric_reference_is_reported_created_as_the_point_link() -> Result<()> {
     let mut store = Store::new()?;
     assert_eq!(
@@ -152,7 +160,8 @@ fn a_numeric_reference_is_reported_created_as_the_point_link() -> Result<()> {
 
 /// Doublets are unique, so the point link `(2: 2 2)` and the defined
 /// `(3: 2 2)` cannot both exist: the reference is left empty.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn a_reference_to_the_pair_a_link_defines_is_reported_created_empty() -> Result<()> {
     let mut store = Store::new()?;
     assert_eq!(

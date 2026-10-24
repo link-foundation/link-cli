@@ -1,5 +1,7 @@
 //! Raw default algorithms also serve external stores that implement only CRUD.
-use link_cli::{GenericLink, LinkError, LinksStorage, LinksStorageRef, StorageRevision};
+#[cfg(not(target_arch = "wasm32"))]
+use link_cli::StorageRevision;
+use link_cli::{GenericLink, LinkError, LinksStorage, LinksStorageRef};
 use std::collections::BTreeMap;
 
 #[derive(Default)]
@@ -64,7 +66,8 @@ impl LinksStorageRef<u64> for TinyStore {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn raw_and_borrowed_default_queries_apply_every_optional_filter() {
     let mut store = TinyStore::default();
     store.create_link(2, 3).unwrap();
@@ -112,7 +115,8 @@ fn raw_and_borrowed_default_queries_apply_every_optional_filter() {
     assert_eq!(store.links_count(), 3);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn default_search_and_get_or_create_preserve_addresses_and_errors() {
     let mut store = TinyStore::default();
     store.create_link(2, 3).unwrap();
@@ -131,7 +135,8 @@ fn default_search_and_get_or_create_preserve_addresses_and_errors() {
     assert_eq!(store.links_count(), 3);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn default_observers_run_once_after_success_and_never_after_a_failed_write() {
     for hide_after_update in [false, true] {
         let mut store = TinyStore {
@@ -164,7 +169,9 @@ fn default_observers_run_once_after_success_and_never_after_a_failed_write() {
     }
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn filesystem_revision_distinguishes_missing_present_changed_and_invalid_paths() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("data");
