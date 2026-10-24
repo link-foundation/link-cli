@@ -264,6 +264,40 @@ for (const workflow of workflows) {
       );
     }
   });
+
+  // A release whose publish step quietly skips on a missing credential still
+  // ends green, so a version is tagged and announced but never reaches the
+  // registry (issue #134: the C# NuGet push printed "NUGET_API_KEY not set,
+  // skipping NuGet publish"). Missing credentials must fail the job instead.
+  test(`${workflow.name}: publish steps do not silently skip on missing credentials`, () => {
+    const offenders = readSteps(workflow.text)
+      .filter(({ text }) => /\bsecrets\.[A-Z0-9_]*(?:TOKEN|KEY)\b/.test(text))
+      .map((step) => ({ ...step, code: step.text.replace(/^\s*#.*$/gm, '') }))
+      .filter(({ code }) => /(?:not set|not configured|missing)[^\n]*skip|skip[^\n]*publish/i.test(code))
+      .map(({ first }) => first);
+    assert.deepEqual(offenders, [], `${workflow.name} skips publishing on missing credentials at lines ${offenders}`);
+  });
+
+  // `gh workflow run` and the REST API refuse a dispatch that omits a
+  // required input without a default, although the web form preselects the
+  // first option, so the same release cannot be started from the CLI.
+  test(`${workflow.name}: required choice inputs declare a default`, () => {
+    const lines = workflow.text.split('\n');
+    const offenders = [];
+    lines.forEach((line, index) => {
+      if (line.trim() !== 'type: choice') return;
+      const indent = line.length - line.trimStart().length;
+      let start = index;
+      while (start > 0 && lines[start - 1].length - lines[start - 1].trimStart().length >= indent) start -= 1;
+      let end = index;
+      while (end + 1 < lines.length && (lines[end + 1].trim() === '' || lines[end + 1].length - lines[end + 1].trimStart().length >= indent)) end += 1;
+      const body = lines.slice(start, end + 1).join('\n');
+      if (/^\s*required: true$/m.test(body) && !/^\s*default:/m.test(body)) {
+        offenders.push(lines[start - 1].trim());
+      }
+    });
+    assert.deepEqual(offenders, [], `${workflow.name} has required choice inputs without a default`);
+  });
 }
 
 // GitHub Pages serves a single site per repository, so two workflows that both

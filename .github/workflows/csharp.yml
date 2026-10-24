@@ -24,6 +24,7 @@ on:
         description: 'Version bump type'
         required: true
         type: choice
+        default: 'patch'
         options:
           - patch
           - minor
@@ -428,8 +429,8 @@ jobs:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           if [ -z "$NUGET_API_KEY" ]; then
-            echo "::warning::NUGET_API_KEY is not configured — NuGet publish will be skipped."
-            exit 0
+            echo "::error title=NUGET_API_KEY is missing::The release was versioned but cannot be published to NuGet. Add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
           fi
           echo "NUGET_API_KEY length: ${#NUGET_API_KEY}"
 
@@ -442,13 +443,14 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          if [ -n "$NUGET_API_KEY" ]; then
-            dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "NUGET_API_KEY not set, skipping NuGet publish"
-            echo "published=false" >> "$GITHUB_OUTPUT"
+          # A missing key used to skip the push while the release stayed green
+          # (issue #134); a versioned but unpublished release must fail.
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error title=NUGET_API_KEY is missing::The release was versioned but cannot be published to NuGet. Add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
           fi
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify CLI package on NuGet
         if: >-
@@ -578,13 +580,14 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          if [ -n "$NUGET_API_KEY" ]; then
-            dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "NUGET_API_KEY not set, skipping NuGet publish"
-            echo "published=false" >> "$GITHUB_OUTPUT"
+          # A missing key used to skip the push while the release stayed green
+          # (issue #134); a versioned but unpublished release must fail.
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error title=NUGET_API_KEY is missing::The release was versioned but cannot be published to NuGet. Add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
           fi
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify CLI package on NuGet
         if: >-
