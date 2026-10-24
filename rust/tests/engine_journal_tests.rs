@@ -9,13 +9,25 @@ use std::sync::{Arc, Mutex};
 struct FaultLog {
     records: Arc<Mutex<Vec<String>>>,
     fail: Arc<std::sync::atomic::AtomicBool>,
+    fail_read: Arc<std::sync::atomic::AtomicBool>,
+    fail_append: Arc<std::sync::atomic::AtomicBool>,
+    durable: bool,
 }
 impl TransitionLogStore for FaultLog {
+    fn supports_durable_flush(&self) -> bool {
+        self.durable
+    }
     fn append_log_entry(&mut self, text: &str) -> Result<(), LinkError> {
+        if self.fail_append.load(std::sync::atomic::Ordering::SeqCst) {
+            return Err(LinkError::Transaction("injected append failure".into()));
+        }
         self.records.lock().unwrap().push(text.into());
         Ok(())
     }
     fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
+        if self.fail_read.load(std::sync::atomic::Ordering::SeqCst) {
+            return Err(LinkError::Transaction("injected read failure".into()));
+        }
         Ok(self.records.lock().unwrap().clone())
     }
     fn flush_log(&mut self) -> Result<(), LinkError> {
@@ -179,6 +191,95 @@ fn synchronous_replication_reports_partition_and_does_not_diverge() {
     assert_eq!(replica.records.lock().unwrap().len(), 1);
     replica.records.lock().unwrap()[0] = "diverged".into();
     assert_eq!(log.synchronize().unwrap(), 1);
+}
+
+#[test]
+fn replication_capability_depends_on_every_required_durable_copy() {
+    for primary_durable in [false, true] {
+        for replica_durable in [false, true] {
+            for policy in [
+                Synchronization::Asynchronous,
+                Synchronization::Synchronous {
+                    acknowledgements: 1,
+                },
+                Synchronization::Synchronous {
+                    acknowledgements: 2,
+                },
+            ] {
+                let primary = FaultLog {
+                    durable: primary_durable,
+                    ..Default::default()
+                };
+                let replica = FaultLog {
+                    durable: replica_durable,
+                    ..Default::default()
+                };
+                let log = ReplicatedLog::new(primary, vec![replica], policy).unwrap();
+                assert_eq!(
+                    log.supports_durable_flush(),
+                    primary_durable
+                        && (policy
+                            != Synchronization::Synchronous {
+                                acknowledgements: 2
+                            }
+                            || replica_durable)
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn replica_failures_never_count_as_acknowledgements_and_do_not_hide_healthy_copies() {
+    use std::sync::atomic::Ordering::SeqCst;
+    for failure in ["read", "append", "flush", "longer"] {
+        let primary = FaultLog::default();
+        primary.records.lock().unwrap().push("one".into());
+        let failed = FaultLog::default();
+        match failure {
+            "read" => failed.fail_read.store(true, SeqCst),
+            "append" => failed.fail_append.store(true, SeqCst),
+            "flush" => failed.fail.store(true, SeqCst),
+            _ => *failed.records.lock().unwrap() = vec!["one".into(), "extra".into()],
+        }
+        let healthy = FaultLog::default();
+        let mut log = ReplicatedLog::new(
+            primary,
+            vec![failed, healthy.clone()],
+            Synchronization::Synchronous {
+                acknowledgements: 2,
+            },
+        )
+        .unwrap();
+        log.set_trace(true);
+        log.flush_log().unwrap();
+        assert_eq!(*healthy.records.lock().unwrap(), ["one"]);
+        let (mut primary, replicas) = log.into_parts();
+        assert_eq!(primary.read_log_entries().unwrap(), ["one"]);
+        assert_eq!(replicas.len(), 2);
+    }
+}
+
+#[test]
+fn primary_io_failures_are_returned_without_replica_publication() {
+    use std::sync::atomic::Ordering::SeqCst;
+    let primary = FaultLog::default();
+    let replica = FaultLog::default();
+    let mut log = ReplicatedLog::new(
+        primary.clone(),
+        vec![replica.clone()],
+        Synchronization::Asynchronous,
+    )
+    .unwrap();
+    primary.fail_append.store(true, SeqCst);
+    assert!(log.append_log_entry("not written").is_err());
+    primary.fail_read.store(true, SeqCst);
+    assert!(log.read_log_entries().is_err());
+    assert!(log.synchronize().is_err());
+    primary.fail.store(true, SeqCst);
+    assert!(log.flush_log().is_err());
+    assert!(log.synchronize().is_err());
+    assert!(replica.records.lock().unwrap().is_empty());
 }
 
 #[test]

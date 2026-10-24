@@ -16,15 +16,21 @@ struct State {
     revision: u64,
     fail: bool,
     lose_reply: bool,
+    volatile: bool,
+    short_read: bool,
+    race: Option<&'static str>,
 }
 impl AtomicJournalStore for Store {
     fn supports_durable_flush(&self) -> bool {
-        true
+        !self.0.lock().unwrap().volatile
     }
     fn read(&mut self, keys: &[String]) -> Result<Vec<JournalVersion>, LinkError> {
         let state = self.0.lock().unwrap();
         if state.fail {
             return Err(LinkError::Transaction("partition unavailable".into()));
+        }
+        if state.short_read {
+            return Ok(vec![]);
         }
         Ok(keys
             .iter()
@@ -40,6 +46,22 @@ impl AtomicJournalStore for Store {
         let mut state = self.0.lock().unwrap();
         if state.fail {
             return Err(LinkError::Transaction("partition unavailable".into()));
+        }
+        if let Some(race) = state.race {
+            if race != "absent" {
+                state.values.insert(
+                    keys[0].clone(),
+                    JournalVersion {
+                        generation: 1,
+                        entries: match race {
+                            "identical" => updates[0].clone().unwrap(),
+                            "different-content" => vec!["collision".into()],
+                            _ => vec![],
+                        },
+                    },
+                );
+            }
+            return Ok(false);
         }
         if keys
             .iter()
@@ -220,4 +242,121 @@ fn corrupt_or_missing_objects_and_invalid_coordinates_fail_closed() {
     assert!(wrong
         .compare_exchange(&keys, &[JournalVersion::default()], &[Some(vec![])])
         .is_err());
+}
+
+#[test]
+fn durability_and_every_route_are_validated_before_staging() {
+    let (catalog, a, b, store) = fixture();
+    catalog.0.lock().unwrap().volatile = true;
+    assert!(!store.supports_durable_flush());
+    catalog.0.lock().unwrap().volatile = false;
+    b.0.lock().unwrap().volatile = true;
+    assert!(!store.supports_durable_flush());
+    b.0.lock().unwrap().volatile = false;
+    assert!(store.supports_durable_flush());
+    assert!(PartitionedJournalStore::new(
+        catalog.clone(),
+        BTreeMap::from([("../east".into(), a.clone())]),
+        |_| "east".into()
+    )
+    .is_err());
+    let mut wrong = PartitionedJournalStore::new(
+        catalog.clone(),
+        BTreeMap::from([("east".into(), a.clone())]),
+        |key| {
+            if key == "a" {
+                "east".into()
+            } else {
+                "missing".into()
+            }
+        },
+    )
+    .unwrap();
+    assert!(wrong
+        .compare_exchange(
+            &keys(),
+            &[JournalVersion::default(), JournalVersion::default()],
+            &[Some(vec!["one".into()]), Some(vec!["two".into()])]
+        )
+        .is_err());
+    assert!(catalog.0.lock().unwrap().values.is_empty());
+    assert!(a.0.lock().unwrap().values.is_empty());
+    assert!(wrong
+        .compare_exchange(
+            &keys(),
+            &[JournalVersion::default(), JournalVersion::default()],
+            &[None]
+        )
+        .is_err());
+}
+
+#[test]
+fn malformed_snapshot_arity_and_pointer_coordinates_fail_closed() {
+    let (catalog, a, _, mut store) = fixture();
+    let keys = vec!["a".into()];
+    let base = store.read(&keys).unwrap();
+    store
+        .compare_exchange(&keys, &base, &[Some(vec!["original".into()])])
+        .unwrap();
+    let pointer = catalog.0.lock().unwrap().values["a"].clone();
+    for generation in ["", "0", "-1", "+1", "1 ", "18446744073709551616", "01"] {
+        let mut item = pointer.clone();
+        item.entries[3] = generation.into();
+        catalog.0.lock().unwrap().values.insert("a".into(), item);
+        assert!(
+            store.read(&keys).is_err(),
+            "accepted generation {generation:?}"
+        );
+    }
+    for address in [
+        "../bad",
+        "blob1-000000000000000G",
+        "blob1-0000000000000000\n",
+    ] {
+        let mut item = pointer.clone();
+        item.entries[2] = address.into();
+        catalog.0.lock().unwrap().values.insert("a".into(), item);
+        assert!(store.read(&keys).is_err(), "accepted address {address:?}");
+    }
+    let mut absent = pointer.clone();
+    absent.generation = 0;
+    catalog.0.lock().unwrap().values.insert("a".into(), absent);
+    assert!(store.read(&keys).is_err());
+    catalog
+        .0
+        .lock()
+        .unwrap()
+        .values
+        .insert("a".into(), pointer.clone());
+    catalog.0.lock().unwrap().short_read = true;
+    assert!(store.read(&keys).is_err());
+    catalog.0.lock().unwrap().short_read = false;
+    a.0.lock().unwrap().short_read = true;
+    assert!(store.read(&keys).is_err());
+    assert!(store
+        .compare_exchange(&keys, &[pointer], &[Some(vec!["other".into()])])
+        .is_err());
+}
+
+#[test]
+fn concurrent_object_creation_reuses_only_the_complete_same_journal() {
+    for competing in [
+        "identical",
+        "different-content",
+        "different-length",
+        "absent",
+    ] {
+        let (catalog, a, _, mut store) = fixture();
+        let keys = vec!["a".into()];
+        let snapshot = store.read(&keys).unwrap();
+        a.0.lock().unwrap().race = Some(competing);
+        let result = store.compare_exchange(&keys, &snapshot, &[Some(vec!["original".into()])]);
+        if competing == "identical" {
+            assert!(result.unwrap());
+            assert_eq!(store.read(&keys).unwrap()[0].entries, ["original"]);
+        } else {
+            assert!(result.is_err());
+            assert!(catalog.0.lock().unwrap().values.is_empty());
+        }
+    }
 }

@@ -15,10 +15,20 @@ struct State {
     revision: u64,
     values: BTreeMap<String, JournalVersion>,
     lose_reply: bool,
+    short_read: bool,
+    panic_read: bool,
+    durable: bool,
 }
 impl AtomicJournalStore for Store {
+    fn supports_durable_flush(&self) -> bool {
+        self.0.lock().unwrap().durable
+    }
     fn read(&mut self, keys: &[String]) -> Result<Vec<JournalVersion>, LinkError> {
         let state = self.0.lock().unwrap();
+        assert!(!state.panic_read, "injected coordinator panic");
+        if state.short_read {
+            return Ok(vec![]);
+        }
         Ok(keys
             .iter()
             .map(|key| state.values.get(key).cloned().unwrap_or_default())
@@ -192,4 +202,95 @@ fn selected_shard_supports_the_named_links_api_without_individual_publication() 
     exercise(shard);
     assert!(LinksStorage::flush(shard).is_err());
     tx.commit().unwrap();
+}
+
+#[test]
+fn raw_links_api_is_private_and_closed_with_its_group() {
+    let cluster = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
+    let mut group = cluster.begin(&["a"]).unwrap();
+    let shard = group.shard("a").unwrap();
+    assert_eq!(shard.ensure_link_created(10).unwrap(), 10);
+    assert_eq!(shard.create_link(10, 0).unwrap(), 11);
+    assert_eq!(shard.update_link(10, 11, 0).unwrap().source, 0);
+    shard.set_name(10, Some("雪".into())).unwrap();
+    assert_eq!(shard.get_by_name("雪"), Some(10));
+    shard.set_name(10, None).unwrap();
+    assert_eq!(shard.get_by_name("雪"), None);
+    assert_eq!(shard.all_links().len(), 2);
+    assert_eq!(shard.delete_link(11).unwrap().index, 11);
+    assert!(cluster
+        .begin(&["a"])
+        .unwrap()
+        .shard("a")
+        .unwrap()
+        .all_links()
+        .is_empty());
+    group.commit().unwrap();
+    assert!(group.shard("a").is_err());
+    assert_eq!(
+        cluster
+            .begin(&["a"])
+            .unwrap()
+            .shard("a")
+            .unwrap()
+            .get_link(10)
+            .unwrap()
+            .source,
+        11
+    );
+}
+
+#[test]
+fn durable_backend_and_boundary_names_are_accepted_but_bad_snapshots_fail_closed() {
+    let store = Store::default();
+    store.0.lock().unwrap().durable = true;
+    let cluster = ClusterEngine::<u32, _>::new(
+        store.clone(),
+        EngineOptions {
+            require_durable_flush: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    for name in ["a.b_c-d", &"a".repeat(128)] {
+        cluster.begin(&[name]).unwrap().commit().unwrap();
+    }
+    for name in ["", &"a".repeat(129)] {
+        assert!(cluster.begin(&[name]).is_err());
+    }
+    store.0.lock().unwrap().short_read = true;
+    assert!(cluster
+        .begin(&["a"])
+        .err()
+        .unwrap()
+        .to_string()
+        .contains("incomplete"));
+    store.0.lock().unwrap().short_read = false;
+    store.0.lock().unwrap().values.insert(
+        "bad".into(),
+        JournalVersion {
+            generation: 1,
+            entries: vec!["corrupt".into()],
+        },
+    );
+    assert!(cluster.begin(&["a", "bad"]).is_err());
+    cluster.begin(&["a"]).unwrap().commit().unwrap();
+}
+
+#[test]
+fn panicked_coordinator_rejects_new_groups_and_pending_publication() {
+    let store = Store::default();
+    let cluster = ClusterEngine::<u32, _>::new(store.clone(), EngineOptions::default()).unwrap();
+    let mut group = cluster.begin(&["a"]).unwrap();
+    group.shard("a").unwrap().create_link(0, 0).unwrap();
+    store.0.lock().unwrap().panic_read = true;
+    let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cluster.begin(&["a"])));
+    assert!(panic.is_err());
+    assert!(cluster
+        .begin(&["a"])
+        .err()
+        .unwrap()
+        .to_string()
+        .contains("poisoned"));
+    assert!(group.commit().unwrap_err().to_string().contains("poisoned"));
 }

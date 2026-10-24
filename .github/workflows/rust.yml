@@ -302,7 +302,11 @@ jobs:
           cargo install cargo-llvm-cov --version 0.9.1 --locked
 
       - name: Measure Rust test coverage
-        run: cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --lcov --output-path rust/coverage.lcov
+        # Branch instrumentation is experimental. Limit the unstable compiler
+        # option to this measurement; normal builds still use stable Rust.
+        env:
+          RUSTC_BOOTSTRAP: '1'
+        run: cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --branch --lcov --output-path rust/coverage.lcov
 
       - name: Preserve coverage report
         uses: actions/upload-artifact@v7

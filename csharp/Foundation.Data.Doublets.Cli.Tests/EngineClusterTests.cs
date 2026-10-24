@@ -11,8 +11,9 @@ public class EngineClusterTests
         private ulong _generation;
         public bool LoseReply;
         public bool SupportsDurableFlush => false;
+        public Func<IReadOnlyList<string>, IReadOnlyList<JournalVersion>>? ReadOverride;
         public IReadOnlyList<JournalVersion> Read(IReadOnlyList<string> keys)
-        { lock (_gate) return keys.Select(key => _values.GetValueOrDefault(key) ?? new(0, Array.Empty<string>())).ToArray(); }
+        { lock (_gate) return ReadOverride?.Invoke(keys) ?? keys.Select(key => _values.GetValueOrDefault(key) ?? new(0, Array.Empty<string>())).ToArray(); }
         public bool CompareExchange(IReadOnlyList<string> keys, IReadOnlyList<JournalVersion> expected, IReadOnlyList<IReadOnlyList<string>?> updates)
         {
             lock (_gate)
@@ -75,5 +76,48 @@ public class EngineClusterTests
         tx.Shard("a").CreateLink(0, 0); tx.Shard("b").CreateLink(999, 0);
         Assert.Throws<InvalidOperationException>(() => tx.Commit());
         using var check = cluster.Begin("a"); Assert.Null(check.Shard("a").GetLink(1));
+    }
+
+    [Fact]
+    public void StandardLinksAndNamesApiRemainsPrivateAndClosesWithItsGroup()
+    {
+        var cluster = new ClusterEngine<uint>(new Store());
+        using var group = cluster.Begin("a"); var shard = group.Shard("a");
+        Assert.Equal(10u, shard.EnsureCreated(10));
+        Assert.Equal(11u, shard.CreateLink(10, 0));
+        Assert.Equal(0u, shard.UpdateLink(10, 11, 0).Source);
+        Assert.Equal(10u, shard.SetName(10, "雪")); Assert.Equal(10u, shard.GetByName("雪"));
+        shard.RemoveName(10); Assert.Null(shard.GetName(10)); Assert.Equal(0u, shard.GetByName("雪"));
+        Assert.Equal(2u, shard.Count(null));
+        var rows = new List<uint>();
+        Assert.Equal(shard.Constants.Continue, shard.Each(null, link => { rows.Add(link![0]); return shard.Constants.Continue; }));
+        Assert.Equal(new uint[] { 10, 11 }, rows);
+        Assert.Equal(shard.Constants.Continue, shard.Create(null, null));
+        Assert.Equal(shard.Constants.Break, shard.Update(new uint[] { 12 }, new uint[] { 12, 10, 11 }, (before, after) =>
+        { Assert.Equal(0u, before![1]); Assert.Equal(10u, after![1]); return shard.Constants.Break; }));
+        Assert.Equal(shard.Constants.Continue, shard.Delete(new uint[] { 12 }, null));
+        Assert.Equal(11u, shard.DeleteLink(11).Index);
+        using (var hidden = cluster.Begin("a")) Assert.Equal(0u, hidden.Shard("a").Count(null));
+        group.Commit();
+        Assert.Throws<InvalidOperationException>(() => shard.Count(null));
+        Assert.Throws<InvalidOperationException>(() => shard.RemoveName(10));
+        using var reader = cluster.Begin("a"); Assert.Equal(11u, reader.Shard("a").GetLink(10)!.Value.Source);
+        Assert.Equal(1u, reader.Shard("a").Count(null));
+    }
+
+    [Fact]
+    public void IncompleteAndCorruptCoordinatorSnapshotsDoNotPreventLaterValidGroups()
+    {
+        var store = new Store(); var cluster = new ClusterEngine<uint>(store);
+        Assert.Throws<ArgumentException>(() => cluster.Begin(new string[] { null! }));
+        Assert.Throws<ArgumentException>(() => cluster.Begin(new string('a', 129)));
+        using (var boundary = cluster.Begin(new string('a', 128), "b.c_d-e")) boundary.Commit();
+        store.ReadOverride = _ => Array.Empty<JournalVersion>();
+        Assert.Throws<InvalidDataException>(() => cluster.Begin("a"));
+        store.ReadOverride = keys => keys.Select(key => key == "bad" ? new JournalVersion(1, new[] { "corrupt" }) : new(0, Array.Empty<string>())).ToArray();
+        Assert.Throws<InvalidDataException>(() => cluster.Begin("a", "bad"));
+        store.ReadOverride = null;
+        using var valid = cluster.Begin("a"); valid.Shard("a").CreateLink(0, 0); valid.Commit();
+        using var reader = cluster.Begin("a"); Assert.Equal(1u, reader.Shard("a").Count(null));
     }
 }

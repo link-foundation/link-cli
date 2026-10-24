@@ -159,3 +159,26 @@ portable-address fixture then passes in the focused four-test suite. C# passes
 the new fixture. Its coverage before that fixture is 5,605/6,313 lines (88.78%)
 and 2,334/2,938 branches (79.44%). Native coverage remains below the issue's
 requested 100% scope.
+
+## Native network failure-path coverage
+
+The expanded suites pass 416 Rust unit/integration tests (two subprocess helper
+entry points ignored) and 620 C# tests. New cases verify replica read/append/flush
+faults, poisoned coordinator locks, concurrent immutable-object creation,
+malformed metadata, request-body cancellation and the complete shard facade.
+The stalled-body test has a finite fallback so a lost cancellation cannot hang.
+
+Rust branch instrumentation is now enabled explicitly with `RUSTC_BOOTSTRAP=1`
+and `cargo llvm-cov --all-features --branch`. This unstable measurement option
+is confined to the coverage job; ordinary builds retain stable compiler settings.
+The measured result is 8,283/9,509 lines (87.11%), 1,287/1,708 branches (75.35%)
+and 1,105/1,326 functions (83.33%). Prior reports without branch instrumentation
+must not be interpreted as branch coverage. The cluster coordinator measures
+100% branches, the partitioned store 95.45%, and replication 72.73%.
+
+C# measures 5,621/6,313 lines (89.03%) and 2,366/2,938 branches (80.53%).
+`ClusterEngine`, `ClusterTransaction`, `ClusterShardSession` and
+`PartitionedJournalStore` each measure 100% lines and branches. `EtcdJournalStore`
+measures 98.87% lines and 100% branches. Project coverage still falls short of
+100%; these module results do not remove that acceptance gap. The 168 workflow
+policy tests, native Clippy and formatting checks pass.
