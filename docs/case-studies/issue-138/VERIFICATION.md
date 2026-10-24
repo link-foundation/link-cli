@@ -16,7 +16,8 @@ build job and reduced debug information under a 2.92 GiB container limit.
   `dev/log/issues/138/pulls/139/`.
 - Rust Windows CI 40107962488 failed in two new durability tests with OS error 5
   (`Access is denied`). `File::open` supplied a read-only handle to `sync_all`.
-  Commit 126168f uses a writable handle; new Windows CI must verify it.
+  Commit 126168f uses a writable handle; run 40109338737 passes on Windows,
+  Linux and macOS, including both previously failing tests.
 - Shared journal vectors reproduced language differences: Rust accepted a leading
   plus in numbers and hex names, while .NET accepted some whitespace/trailing NUL
   forms. ASCII decimal/hex validation now precedes numeric decoding. The independent
@@ -25,6 +26,10 @@ build job and reduced debug information under a 2.92 GiB container limit.
   `FileCommitLog` now loops until each requested read completes and rejects zero
   progress; tests also inject partial/zero writes, truncation and constructor flush
   failure. The before log is preserved alongside other regression excerpts.
+- A malformed subprocess startup banner leaked its owned server. A real finite
+  child process reproduced the leak; address validation now occurs inside the
+  startup cleanup boundary. Failure, cancellation, forced termination, protocol
+  mismatch and ownership tests also exercise the process adapter.
 
 ## Local measurements (2026-10-24)
 
@@ -32,7 +37,7 @@ build job and reduced debug information under a 2.92 GiB container limit.
 | --- | --- | --- |
 | Rust | `cargo llvm-cov --all-features --json` | Full suite passes; 7,483/8,834 lines (84.71%), 992/1,230 functions (80.65%). Branch instrumentation was not enabled; zero reported branches means unmeasured. Native named-session tests added afterward require a new report. |
 | C# | `dotnet test --collect:"XPlat Code Coverage"` | 588 pass, 0 fail; 5,339/6,027 lines (88.58%), 2,143/2,714 branches (78.96%). New engine classes have 97.67–100% line coverage; uncovered engine and legacy branches remain. |
-| JS unit tests | `node --test --experimental-test-coverage` | 53 pass; loaded source files 96.06% lines, 91.42% branches, 87.91% functions. The process adapter is not loaded by this measurement, so this is not whole-package coverage. |
+| JS unit tests | `node --test --experimental-test-coverage` | 59 pass; 96.55% lines, 92.49% branches, 89.58% functions, including the process adapter (100% for that module). Other uncovered lines/branches remain. |
 | Actual WASM | Existing conformance runner on Node, Bun and Deno | Shared vectors, staged request ordering, isolation, history, conflicts, rollback, Unicode, custom logs and replication partition recovery pass. This is integration evidence, not a WASM coverage measurement. |
 
 The full Node conformance run against the actual Rust server, C# server and WASM

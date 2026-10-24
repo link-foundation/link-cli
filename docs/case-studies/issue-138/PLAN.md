@@ -40,8 +40,8 @@ run 40107962518 passes all three platforms, 562 tests each. Both logs are
 preserved. Coverage measurements are currently below 100%; do not replace that
 requirement with test counts. Final engine changes require new CI on their SHA.
 Rust run 40107962488 separately failed two Windows durability tests: `sync_all`
-used a read-only handle. Commit 126168f opens it writable; Linux/macOS and
-fresh-merge checks pass, while Windows validation is still running.
+used a read-only handle. Commit 126168f opens it writable; subsequent run
+40109338737 passes Windows, Linux, macOS and fresh-merge checks.
 
 Run compilers sequentially (Cargo jobs=1; reduced debug info), save long logs,
 keep reusable probes in experiments/issue-138 and real examples under examples/.
