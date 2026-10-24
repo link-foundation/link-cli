@@ -1,0 +1,12 @@
+# Old csharp/scripts/check-file-size.mjs (HEAD) against the checked-out tree
+  Found 76 C# file(s)
+  Found 119 Rust file(s)
+
+# Tracked files the old substring matching skipped:
+rust/examples/lino_binary_dump.rs
+rust/src/sequences/target_matcher.rs
+
+# New script
+  Found 76 C# file(s)
+  Found 121 Rust file(s)
+Checked 197 file(s) - all within the line limit
