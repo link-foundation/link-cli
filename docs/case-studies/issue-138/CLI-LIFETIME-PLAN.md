@@ -9,7 +9,7 @@ process exit to release mapped storage.
 - [x] Release owned layers in reverse order, including constructor failures.
 - [x] Verify raw cache, transactions, version operations and trigger modes.
 - [x] Run complete Debug/Release coverage, formatting and release-fragment checks.
-- [ ] Publish and verify exact-SHA CI.
+- [x] Publish and verify exact-SHA CI.
 
 The original five cases exercise normal cache return, malformed transactional
 input, unknown version checkout, persistent triggers and a blocked journal
@@ -31,3 +31,7 @@ single-pass input, bounded prefix consumption and disposal on enumeration error.
 Four transport cases deterministically inject IOException/ObjectDisposedException
 at write/flush, checking the protocol category, original exception and progress.
 These 92 contract cases already pass; they are not presented as bug fixes.
+
+Commit `e295deebb2ef7b8093cd323e066382b7727ae71b` includes the CLI fix and
+passes every exact-SHA CI check (36 successful, 11 skipped, one neutral).
+Runs were created 2026-10-24 20:21:49 UTC; C# tests pass on all three platforms.

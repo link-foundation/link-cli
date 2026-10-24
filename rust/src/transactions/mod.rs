@@ -53,18 +53,17 @@
 //!
 //! # Durability
 //!
-//! Transitions are appended to the log *before* the write they describe
-//! is reported as committed, and [`FileTransitionLog`] `fsync`s each
-//! append by default, so a crash can lose at most the transition that
-//! was in flight. The data store itself is made durable by
-//! [`GenericTransactionsDecorator::save`], which calls
-//! [`LinksStorage::flush`] — for a memory-mapped store that is the
-//! `fsync` of the mapping; for the CLI's in-memory store it is the
-//! rewrite of the database file. Recovery, run by
-//! [`GenericTransactionsDecorator::new`], replays committed-but-unapplied
-//! transitions and rolls back transitions that were never committed, so
-//! a store that lost unflushed writes is brought back in line with the
-//! log.
+//! Transitions are durably logged before commit is acknowledged. Commit then
+//! flushes the wrapped data before persisting its applied markers. Recovery
+//! replays committed-but-unapplied transitions and undoes logged uncommitted
+//! changes, reporting replay and flush failures.
+//!
+//! This legacy observer adapter mutates the wrapped store before recording its
+//! callbacks. A process failure between a mutation and its journal append can
+//! leave changes without undo records; a cascade can affect several rows in
+//! that window. This adapter does not provide power-loss atomicity for those
+//! unlogged changes. The optional [`crate::engine::Engine`] stages private
+//! changes until durable journal publication instead.
 
 mod log;
 // Replay, recovery and retention live in a submodule; see transactions/recovery.rs.
@@ -104,6 +103,7 @@ struct PendingTransaction<T> {
 /// One link address and the `(before, after)` states a single logical
 /// write left it in, after collapsing repeated callbacks for that address.
 type ObservedChange<T> = (T, GenericDoubletLink<T>, GenericDoubletLink<T>);
+type TransitionChange<T> = (TransitionKind, GenericDoubletLink<T>, GenericDoubletLink<T>);
 
 /// Folds one `(before, after)` callback into `observed`.
 ///
@@ -544,6 +544,11 @@ where
                 "Transaction requires rollback before further writes.".into(),
             ));
         }
+        if self.sequence_counter == i64::MAX {
+            return Err(LinkError::Transaction(
+                "Transaction sequence space is exhausted.".into(),
+            ));
+        }
         if self.current.is_none() {
             self.current = Some(PendingTransaction {
                 id: new_transaction_id(),
@@ -578,16 +583,15 @@ where
         owns: bool,
     ) -> Result<(), LinkError> {
         let zero = T::from_byte(0);
-        let mut prepared = Vec::with_capacity(observed.len());
-        for (_, before, after) in observed {
+        let changes = observed.iter().map(|(_, before, after)| {
             let kind = match (before.index != zero, after.index != zero) {
                 (false, true) => TransitionKind::Create,
                 (true, false) => TransitionKind::Delete,
                 _ => TransitionKind::Update,
             };
-            prepared.push(self.prepare_transition(kind, *before, *after)?);
-        }
-        self.append_transitions(&prepared, owns)
+            (kind, *before, *after)
+        });
+        self.record_transitions(changes, owns)
     }
 
     fn record_transition(
@@ -597,37 +601,61 @@ where
         after: GenericDoubletLink<T>,
         owns: bool,
     ) -> Result<(), LinkError> {
-        let transition = self.prepare_transition(kind, before, after)?;
-        self.append_transitions(&[transition], owns)
+        self.record_transitions(std::iter::once((kind, before, after)), owns)
     }
 
-    fn prepare_transition(
+    fn record_transitions(
         &mut self,
-        kind: TransitionKind,
-        before: GenericDoubletLink<T>,
-        after: GenericDoubletLink<T>,
-    ) -> Result<GenericTransition<T>, LinkError> {
-        self.sequence_counter += 1;
-        let sequence = self.sequence_counter;
-        let timestamp_ms = now_unix_ms();
+        changes: impl ExactSizeIterator<Item = TransitionChange<T>>,
+        owns: bool,
+    ) -> Result<(), LinkError> {
         let transaction_id = self.current.as_ref().map(|tx| tx.id).ok_or_else(|| {
             LinkError::Transaction(
                 "internal: missing open transaction while recording transition".to_string(),
             )
         })?;
-        let transition = GenericTransition {
-            transaction_id,
-            sequence,
-            timestamp_ms,
-            kind,
-            before,
-            after,
-        };
-        if let Some(current) = self.current.as_mut() {
-            current.transitions.push(transition);
+        let exhausted = changes.len() as u128 > (i64::MAX - self.sequence_counter) as u128;
+        let mut prepared = Vec::with_capacity(changes.len());
+        for (kind, before, after) in changes {
+            let sequence = if exhausted {
+                0
+            } else {
+                self.sequence_counter += 1;
+                self.sequence_counter
+            };
+            let transition = GenericTransition {
+                transaction_id,
+                sequence,
+                timestamp_ms: now_unix_ms(),
+                kind,
+                before,
+                after,
+            };
+            self.current
+                .as_mut()
+                .expect("open transaction")
+                .transitions
+                .push(transition);
+            if !exhausted {
+                self.log.push(transition);
+            }
+            prepared.push(transition);
         }
-        self.log.push(transition);
-        Ok(transition)
+        if exhausted {
+            // Keep the entire unnumbered undo batch only in pending memory.
+            // It must never become invalid serialized journal/history entries.
+            self.current
+                .as_mut()
+                .expect("open transaction")
+                .rollback_only = true;
+            if owns {
+                self.rollback()?;
+            }
+            return Err(LinkError::Transaction(
+                "Transaction sequence space is exhausted.".into(),
+            ));
+        }
+        self.append_transitions(&prepared, owns)
     }
 
     fn append_transitions(

@@ -286,3 +286,12 @@ row; rollback must preserve the existing row and its dependents. A rejected
 creation can leave an allocated temporary row, so its observations are retained
 even on error. The default `LinksStorage::create_link_observed` is for atomic
 single-row creation; adapters with partial writes or cascades must override it.
+
+Legacy signed journal sequence numbers never wrap. Already-exhausted logs reject
+writes before mutation. If an observed cascade needs more numbers than remain,
+all its undo state stays in pending memory, outside numbered history and the
+journal; automatic operations attempt rollback and explicit transactions require
+rollback. A rejected callback batch does not consume numbers; preparatory
+nested writes may already have consumed valid numbers and are undone with the
+operation. As with other legacy observed writes, this does not close the crash
+window before the batch is journaled.

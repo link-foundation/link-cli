@@ -50,3 +50,6 @@ decision when undo or rollback persistence fails until cleanup is retried.
 
 Release CLI-owned mapped data, journal, version and trigger stores before the
 entry point returns, including failure while constructing a later layer.
+
+Reject exhausted legacy transaction sequence space before mutation and retain
+complete pending undo when a cascade exceeds remaining sequence capacity.

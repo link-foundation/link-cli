@@ -351,6 +351,8 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         bool ownsTransaction;
         lock (_lock)
         {
+            if (_sequenceCounter == long.MaxValue)
+                throw new InvalidOperationException("Transaction sequence space is exhausted.");
             if (_current is null)
             {
                 _current = new Transaction(this, autoCommit: true);
@@ -452,38 +454,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     }
 
     private static TLinkAddress NullHandler(IList<TLinkAddress>? before, IList<TLinkAddress>? after) => TLinkAddress.Zero;
-
-    private void RecordTransitions(Transaction transaction, TransitionKind kind,
-        IEnumerable<(Link<TLinkAddress>? Before, Link<TLinkAddress>? After)> observed)
-    {
-        lock (_lock)
-        {
-            var prepared = new List<Transition<TLinkAddress>>();
-            // Keep the complete undo set before the first journal write can fail.
-            foreach (var state in observed)
-            {
-                var transition = new Transition<TLinkAddress>(
-                    transaction.Id, ++_sequenceCounter, DateTimeOffset.UtcNow,
-                    kind, state.Before ?? default, state.After ?? default);
-                transaction.AddTransition(transition);
-                _log.Add(transition);
-                prepared.Add(transition);
-            }
-            try
-            {
-                foreach (var transition in prepared)
-                {
-                    WriteTransitionToLog(transition);
-                    Trace($"Recorded {kind} seq={transition.Sequence} tx={transaction.Id:N}: ({transition.Before.Index},{transition.Before.Source},{transition.Before.Target}) -> ({transition.After.Index},{transition.After.Source},{transition.After.Target}).");
-                }
-            }
-            catch
-            {
-                transaction.MarkRollbackOnly();
-                throw;
-            }
-        }
-    }
 
     // INamedTypes forwarding ------------------------------------------------
 

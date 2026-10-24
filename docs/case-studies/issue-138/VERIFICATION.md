@@ -646,3 +646,41 @@ Rust and WASM production code is unchanged from the mapped-creation step.
 C# formatting verification and the release-fragment validator pass. The bounded
 LLVM generic-instantiation experiment and its control reproduce their documented
 counts; see [COVERAGE-METHOD.md](COVERAGE-METHOD.md) for measurement semantics.
+
+Mapped-creation commit `23644f1385a4b7710ee5eb34a0e307e3f55b94dd` passes all
+exact-SHA CI checks (37 successful, 10 skipped, one neutral). Rust run
+40128987034, C# run 40128987067 and WASM run 40128987143 were created
+2026-10-24 20:15:47 UTC; Linux, Windows and macOS pass.
+
+CLI ownership and coverage-method commit
+`e295deebb2ef7b8093cd323e066382b7727ae71b` passes all exact-SHA CI checks
+(36 successful, 11 skipped, one neutral), created 2026-10-24 20:21:49 UTC.
+C# Debug/Release local verification and all three native CI platforms pass.
+
+
+## Legacy signed sequence exhaustion
+
+Four Rust regressions first panic at unchecked addition; four C# regressions
+first accept writes without enough remaining positive signed sequence numbers.
+Tiny valid boundary journals reproduce automatic/explicit creation and cascades.
+Already-exhausted admission now fails before mutation. A larger observed batch
+keeps complete unnumbered pending undo, rejects commit/further writes and never
+publishes invalid numbers. Rollback restores all three baseline rows. The last
+available number remains usable, and persistent reopening rejects further writes.
+See [SEQUENCE-EXHAUSTION-PLAN.md](SEQUENCE-EXHAUSTION-PLAN.md) and
+`dev/log/issues/138/pulls/139/sequence-exhaustion.txt`.
+
+The complete Rust coverage suite passes 536 standard tests and the stdout
+harness, with four child entry points ignored. Official LLVM totals measure
+9,078/10,061 lines (90.23%), 1,460/1,852 branches (78.83%),
+1,221/1,384 functions and 13,739/15,826 regions. C# Debug and Release each pass
+871 tests. Debug measures 5,938/6,494 lines (91.44%) and 2,673/3,102 branches
+(86.17%); Release measures 4,503/4,843 lines (92.98%) and 2,652/3,083 branches
+(86.02%). Percentages round the underlying counts.
+
+All 17 actual WASM tests pass. Wrapper source remains 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. Including linked
+core, the full report measures 2,729/9,235 lines (29.55%), 392/1,305 branches
+(30.04%), 347/1,320 functions and 3,943/14,471 regions. Native and WASM Clippy,
+Rust/C# formatting and the C# release-fragment validator pass. No production
+source exclusions were added; project-wide coverage remains below 100%.
