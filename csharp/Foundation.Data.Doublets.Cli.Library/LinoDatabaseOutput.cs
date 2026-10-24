@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ReferenceLiteral = Link.Foundation.Links.Notation.ReferenceLiteral;
 using Platform.Data;
 using Platform.Data.Doublets;
 
@@ -106,28 +107,31 @@ public static class LinoDatabaseOutput
 
     private static string EscapeReference(string reference)
     {
-        if (string.IsNullOrEmpty(reference) || string.IsNullOrWhiteSpace(reference))
+        if (string.IsNullOrEmpty(reference))
         {
             return string.Empty;
         }
 
         var hasSingleQuote = reference.Contains('\'');
         var hasDoubleQuote = reference.Contains('"');
+        if ((hasSingleQuote && hasDoubleQuote) || reference.Any(character => character < ' ' || character == '\u007f'))
+        {
+            // Share the notation library's lossless form for controls and mixed
+            // quotes, instead of inventing backslash escapes for literal names.
+            return ReferenceLiteral.Encode(reference);
+        }
+
         var needsQuoting = uint.TryParse(reference, out _)
             || reference.Contains(':')
             || reference.Contains('(')
             || reference.Contains(')')
-            || reference.Contains(' ')
-            || reference.Contains('\t')
-            || reference.Contains('\n')
-            || reference.Contains('\r')
+            || reference.Any(char.IsWhiteSpace)
+            || reference.Contains('\\')
+            || reference.Contains('`')
+            || reference.StartsWith('#')
+            || Regex.IsMatch(reference, @"^~[0-9]+\{")
             || hasSingleQuote
             || hasDoubleQuote;
-
-        if (hasSingleQuote && hasDoubleQuote)
-        {
-            return $"'{reference.Replace("'", "\\'")}'";
-        }
 
         if (hasDoubleQuote)
         {

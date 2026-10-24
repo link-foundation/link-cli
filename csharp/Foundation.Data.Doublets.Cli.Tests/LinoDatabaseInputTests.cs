@@ -107,6 +107,105 @@ public class LinoDatabaseInputTests
         });
     }
 
+    [Theory]
+    [InlineData("'", @"x\y")]
+    [InlineData("\"", @"x\y")]
+    [InlineData("'", @"C:\Users\name\")]
+    [InlineData("\"", @"\\server\share\")]
+    [InlineData("'", @"literal\n\r\t")]
+    [InlineData("'", "first\nsecond")]
+    [InlineData("\"", "first\r\nsecond")]
+    [InlineData("`", "both'\"quotes")]
+    public void ImportText_PreservesLiteralQuotedNames(string quote, string name)
+    {
+        WithNamedLinks(links =>
+        {
+            LinoDatabaseInput.ImportText(links, $"({quote}{name}{quote}: {quote}{name}{quote} {quote}{name}{quote})");
+
+            var index = links.GetByName(name);
+            Assert.NotEqual(links.Constants.Null, index);
+            Assert.Equal(name, links.GetName(index));
+            Assert.Equal(new Link<uint>(index, index, index), new Link<uint>(links.GetLink(index)));
+        });
+    }
+
+    [Fact]
+    public void ImportText_PreservesBackslashInIssueReproduction()
+    {
+        WithNamedLinks(links =>
+        {
+            LinoDatabaseInput.ImportText(links, @"(a: a 'x\y')");
+
+            var a = links.GetByName("a");
+            var target = new Link<uint>(links.GetLink(a)).Target;
+            Assert.Equal(@"x\y", links.GetName(target));
+            Assert.Equal(links.Constants.Null, links.GetByName("xy"));
+        });
+    }
+
+    [Theory]
+    [InlineData("~1{31}", "1")]
+    [InlineData("~1{610d0a62}", "a\r\nb")]
+    [InlineData("~1{626f746827226071756f746573}", "both'\"`quotes")]
+    public void ImportText_DecodesLosslessLiteralsAsNames(string literal, string name)
+    {
+        WithNamedLinks(links =>
+        {
+            LinoDatabaseInput.ImportText(links, $"(1: 1 1)\n({literal}: {literal} {literal})");
+
+            Assert.Null(links.GetName(1));
+            Assert.Equal(name, links.GetName(2));
+            Assert.Equal(new Link<uint>(2, 2, 2), new Link<uint>(links.GetLink(2u)));
+        });
+    }
+
+    [Theory]
+    [InlineData("~1{0}")]
+    [InlineData("~1{zz}")]
+    [InlineData("~2{61}")]
+    [InlineData("~1{ff}")]
+    [InlineData("~1{61")]
+    public void ImportText_RejectsInvalidReferenceLiterals(string literal)
+    {
+        WithNamedLinks(links =>
+        {
+            var error = Assert.Throws<FormatException>(() =>
+                LinoDatabaseInput.ImportText(links, $"\n\n({literal}: a b)"));
+
+            Assert.Contains("Invalid LiNo import line 3:", error.Message);
+        });
+    }
+
+    [Theory]
+    [InlineData("(a: a)")]
+    [InlineData("(a: a a a)")]
+    [InlineData("(a: a a) trailing")]
+    [InlineData("(a: a a) (b: b b)")]
+    [InlineData("(a: a\na)")]
+    [InlineData("(a: a 'unterminated)")]
+    public void ImportText_StillRejectsMalformedDefinitions(string text)
+    {
+        WithNamedLinks(links => Assert.Throws<FormatException>(() => LinoDatabaseInput.ImportText(links, text)));
+    }
+
+    [Fact]
+    public void ImportText_SeparatesDefinitionsAroundMultilineNames()
+    {
+        WithNamedLinks(links =>
+        {
+            LinoDatabaseInput.ImportText(links, "\r\n \t(a: 'first\r\nsecond' a) \r\n\r\n(b: a '~1{31}')\r\n");
+
+            var a = links.GetByName("a");
+            var b = links.GetByName("b");
+            var first = new Link<uint>(links.GetLink(a));
+            var second = new Link<uint>(links.GetLink(b));
+            Assert.Equal("first\r\nsecond", links.GetName(first.Source));
+            Assert.Equal(a, first.Target);
+            Assert.Equal(a, second.Source);
+            Assert.Equal("~1{31}", links.GetName(second.Target));
+        });
+    }
+
     private static void WithNamedLinks(Action<NamedTypesDecorator<uint>> test)
     {
         var dbPath = Path.GetTempFileName();
