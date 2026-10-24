@@ -562,7 +562,7 @@ impl<L: NamedTypeLinks> PersistentTransformationDecorator<L> {
 
     fn trace_msg(&self, message: &str) {
         if self.trace {
-            println!("[PersistentTransformation] {message}");
+            crate::diagnostics::stdout!("[PersistentTransformation] {message}");
         }
     }
 }

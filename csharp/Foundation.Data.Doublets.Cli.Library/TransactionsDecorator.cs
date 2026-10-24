@@ -32,12 +32,12 @@ public enum CommitMode
 /// Retention policy for the transitions log:
 /// <list type="bullet">
 /// <item><see cref="Infinite"/> keeps every transition forever.</item>
-/// <item><see cref="Chunked"/> archives the oldest <c>ChunkSize</c> transitions
-/// to a rolling file in <c>ArchiveDirectory</c> once the live log reaches that
-/// size.</item>
+/// <item><see cref="Chunked"/> processes the oldest <c>ChunkSize</c> records
+/// once the live log reaches that size, archiving committed changes in
+/// <c>ArchiveDirectory</c> and discarding aborted records.</item>
 /// <item><see cref="Sized"/> drops the oldest transitions once the live log
-/// exceeds <c>MaxTransitions</c>, but only after verifying every dropped
-/// transition has been applied (R7).</item>
+/// exceeds <c>MaxTransitions</c>, after verifying each is applied or rolled
+/// back. Pending writes remain in the live log.</item>
 /// </list>
 /// </summary>
 public abstract record LogRetentionPolicy
@@ -729,14 +729,15 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         while (_log.Count > maxTransitions)
         {
             var head = _log[0];
-            if (!_applied.Contains(head.Sequence))
+            if (!_rolledBack.Contains(head.TransactionId) && !_applied.Contains(head.Sequence))
             {
+                if (!_committed.Contains(head.TransactionId)) break;
                 // R7: never drop an un-applied transition.
                 TryApplyTransition(head, recordApplied: true);
                 if (!_applied.Contains(head.Sequence)) break;
             }
             _log.RemoveAt(0);
-            Trace($"Dropped applied transition seq={head.Sequence} per sized retention.");
+            Trace($"Dropped completed transition seq={head.Sequence} per sized retention.");
         }
     }
 
@@ -746,13 +747,23 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         if (_log.Count < chunked.ChunkSize) return;
 
         var chunk = _log.Take((int)chunked.ChunkSize).ToList();
-        foreach (var transition in chunk)
+        // A durable rollback makes its records reclaimable without reapplying
+        // their writes. Archive only committed changes, not aborted operations.
+        var archived = chunk.Where(t => !_rolledBack.Contains(t.TransactionId)).ToList();
+        foreach (var transition in archived)
         {
             if (!_applied.Contains(transition.Sequence))
             {
+                if (!_committed.Contains(transition.TransactionId)) return;
                 TryApplyTransition(transition, recordApplied: true);
                 if (!_applied.Contains(transition.Sequence)) return; // never drop unapplied
             }
+        }
+
+        if (archived.Count == 0)
+        {
+            _log.RemoveRange(0, chunk.Count);
+            return;
         }
 
         try
@@ -763,9 +774,9 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
               $"transitions-chunk-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{Guid.NewGuid():N}.log");
             using (var writer = new StreamWriter(fileName, append: false))
             {
-                foreach (var t in chunk) writer.WriteLine(t.Serialize());
+                foreach (var t in archived) writer.WriteLine(t.Serialize());
             }
-            Trace($"Archived {chunk.Count} transitions to {fileName}.");
+            Trace($"Archived {archived.Count} transitions to {fileName}.");
         }
         catch (Exception ex)
         {
@@ -819,7 +830,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     private void Trace(string message)
     {
-        if (_trace) Console.WriteLine($"[Transactions] {message}");
+        if (_trace) DiagnosticOutput.WriteLine($"[Transactions] {message}");
     }
 
     /// <summary>Conventional sidecar filename for the transitions log.</summary>

@@ -48,7 +48,7 @@ namespace Foundation.Data.Doublets.Cli
         public SimpleLinksDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false) : base(links)
         {
             _tracingEnabled = tracingEnabled;
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Constructing SimpleLinksDecorator with names DB: {namesDatabaseFilename}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Constructing SimpleLinksDecorator with names DB: {namesDatabaseFilename}");
             var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
             var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);

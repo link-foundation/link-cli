@@ -290,7 +290,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (options.Trace)
             {
-                Console.WriteLine(message);
+                DiagnosticOutput.WriteLine(message);
             }
         }
 

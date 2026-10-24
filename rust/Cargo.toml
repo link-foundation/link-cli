@@ -23,6 +23,12 @@ path = "src/lib.rs"
 name = "clink"
 path = "src/main.rs"
 
+# A normal test harness writes to stdout before invoking a child test, which
+# prevents exercising library stdout failures against /dev/full.
+[[test]]
+name = "diagnostic_stdout"
+harness = false
+
 [dependencies]
 thiserror = "2.0.21"
 anyhow = "1.0.104"

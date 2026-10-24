@@ -141,11 +141,17 @@ impl LinksServer {
                 Job::Shutdown => break,
                 Job::Request { document, reply } => {
                     if options.trace {
-                        eprintln!("[server] request: {}", format_document(&document));
+                        crate::diagnostics::stderr!(
+                            "[server] request: {}",
+                            format_document(&document)
+                        );
                     }
                     let response = execute_request(storage, &processor, &document);
                     if options.trace {
-                        eprintln!("[server] reply: {}", format_document(&response));
+                        crate::diagnostics::stderr!(
+                            "[server] reply: {}",
+                            format_document(&response)
+                        );
                     }
                     let _ = reply.send(response);
                 }
@@ -173,7 +179,7 @@ fn accept_loop(
         thread::spawn(move || {
             if let Err(error) = handle_connection(stream, jobs, options) {
                 if options.trace {
-                    eprintln!("[server] connection closed: {error}");
+                    crate::diagnostics::stderr!("[server] connection closed: {error}");
                 }
             }
         });
@@ -193,7 +199,7 @@ fn handle_connection(
             Ok(Some(message)) => message,
             Ok(None) => {
                 if options.trace {
-                    eprintln!("[server] client hung up");
+                    crate::diagnostics::stderr!("[server] client hung up");
                 }
                 return Ok(());
             }

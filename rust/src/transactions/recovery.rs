@@ -280,7 +280,12 @@ where
         }
         while self.log.len() as u64 > max_transitions {
             let head = self.log[0];
-            if !self.applied.contains(&head.sequence) {
+            if !self.rolled_back.contains(&head.transaction_id)
+                && !self.applied.contains(&head.sequence)
+            {
+                if !self.committed.contains(&head.transaction_id) {
+                    break; // A pending transaction is not reclaimable.
+                }
                 self.replaying = true;
                 let result = self.try_apply_transition(&head, true);
                 self.replaying = false;
@@ -291,8 +296,8 @@ where
             }
             self.log.remove(0);
             if self.trace {
-                eprintln!(
-                    "[Transactions] Dropped applied transition seq={} per sized retention.",
+                crate::diagnostics::stderr!(
+                    "[Transactions] Dropped completed transition seq={} per sized retention.",
                     head.sequence
                 );
             }
@@ -313,8 +318,18 @@ where
         }
         let chunk: Vec<GenericTransition<T>> =
             self.log.iter().take(chunk_size as usize).copied().collect();
-        for transition in &chunk {
+        // Rollback has already durably undone these writes. Reapplying them
+        // would resurrect aborted data; archives contain committed changes only.
+        let archived: Vec<_> = chunk
+            .iter()
+            .filter(|transition| !self.rolled_back.contains(&transition.transaction_id))
+            .copied()
+            .collect();
+        for transition in &archived {
             if !self.applied.contains(&transition.sequence) {
+                if !self.committed.contains(&transition.transaction_id) {
+                    return Ok(()); // Never apply or discard a pending chunk.
+                }
                 self.replaying = true;
                 let result = self.try_apply_transition(transition, true);
                 self.replaying = false;
@@ -323,6 +338,10 @@ where
                     return Ok(()); // never drop un-applied
                 }
             }
+        }
+        if archived.is_empty() {
+            self.log.drain(0..chunk.len());
+            return Ok(());
         }
         std::fs::create_dir_all(archive_directory).map_err(|error| {
             LinkError::StorageError(format!(
@@ -343,14 +362,14 @@ where
                 path.display()
             ))
         })?;
-        for transition in &chunk {
+        for transition in &archived {
             writeln!(file, "{}", transition.serialize())?;
         }
         file.flush()?;
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[Transactions] Archived {} transitions to {}.",
-                chunk.len(),
+                archived.len(),
                 path.display()
             );
         }

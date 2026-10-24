@@ -36,6 +36,7 @@
 
 pub mod changes_simplifier;
 pub mod cli;
+mod diagnostics;
 pub mod engine;
 pub mod error;
 pub mod hybrid_reference;

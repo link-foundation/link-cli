@@ -82,7 +82,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             _tracingEnabled = tracingEnabled;
             PinnedTypesDecorator = pinnedTypesDecorator;
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
             var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
             _namesMemory = new DurableMappedMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
             var namesLinks = new UnitedMemoryLinks<TLinkAddress>(_namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
@@ -140,15 +140,15 @@ namespace Foundation.Data.Doublets.Cli
 
         public virtual string? GetName(TLinkAddress link)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetName called for link: {link}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetName called for link: {link}");
             var result = NamedLinks.GetNameByExternalReference(link);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetName result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetName result: {result}");
             return result;
         }
 
         public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
             var existingLinkWithName = NamedLinks.GetExternalReferenceByName(name);
             if (!existingLinkWithName.Equals(_links.Constants.Null) && !existingLinkWithName.Equals(link))
             {
@@ -156,23 +156,23 @@ namespace Foundation.Data.Doublets.Cli
             }
             RemoveName(link);
             var result = NamedLinks.SetNameForExternalReference(link, name);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] SetName result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] SetName result: {result}");
             return result;
         }
 
         public virtual TLinkAddress GetByName(string name)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName called for name: '{name}'");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetByName called for name: '{name}'");
             var result = NamedLinks.GetExternalReferenceByName(name);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] GetByName result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetByName result: {result}");
             return result;
         }
 
         public virtual void RemoveName(TLinkAddress link)
         {
-            if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName called for link: {link}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] RemoveName called for link: {link}");
             NamedLinks.RemoveNameByExternalReference(link);
-            if (_tracingEnabled) Console.WriteLine($"[Trace] RemoveName completed for link: {link}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] RemoveName completed for link: {link}");
         }
 
         public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
@@ -180,12 +180,12 @@ namespace Foundation.Data.Doublets.Cli
             if (_tracingEnabled)
             {
                 var req = restriction == null ? "null" : string.Join(",", restriction);
-                Console.WriteLine($"[Trace] Update called with restriction: [{req}]");
+                DiagnosticOutput.WriteLine($"[Trace] Update called with restriction: [{req}]");
             }
             var @continue = _links.Constants.Continue;
             var result = _links.Update(restriction, substitution, (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
+                if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
                 if (before != null && after == null)
                 {
                     var deletedLinkIndex = _links.GetIndex(link: before);
@@ -193,7 +193,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 return handler == null ? @continue : handler(before, after);
             });
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Update result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Update result: {result}");
             return result;
         }
 
@@ -202,14 +202,14 @@ namespace Foundation.Data.Doublets.Cli
             if (_tracingEnabled)
             {
                 var formattedRestriction = restriction == null ? "null" : string.Join(",", restriction);
-                Console.WriteLine($"[Trace] Delete called with restriction: [{formattedRestriction}]");
+                DiagnosticOutput.WriteLine($"[Trace] Delete called with restriction: [{formattedRestriction}]");
             }
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: this._links is of type: {_links.GetType()}");
             var @continue = _links.Constants.Continue;
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: Calling underlying _links.Delete");
             TLinkAddress result = _links.Delete(restriction, (IList<TLinkAddress>? before, IList<TLinkAddress>? after) =>
             {
-                if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
+                if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: handlerWrapper invoked - before={(before == null ? "null" : string.Join(",", before))}, after={(after == null ? "null" : string.Join(",", after))}");
                 if (before != null && after == null)
                 {
                     var deletedLinkIndex = _links.GetIndex(link: before);
@@ -217,7 +217,7 @@ namespace Foundation.Data.Doublets.Cli
                 }
                 return handler == null ? @continue : handler(before, after);
             });
-            if (_tracingEnabled) Console.WriteLine($"[Trace] Debug: Delete result: {result}");
+            if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Debug: Delete result: {result}");
             return result;
         }
     }

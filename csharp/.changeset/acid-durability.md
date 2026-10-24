@@ -28,3 +28,8 @@ after the final session validates, preserving optimistic ABA/branch conflicts.
 Select serializable point-read validation independently of journal/history settings.
 Permit disjoint point edits while checking missing rows, ABA, branch changes and
 read/write cycles; scans retain conservative revision validation.
+
+Preserve storage outcomes when optional store, query, server, transaction,
+trigger or version console diagnostics fail. Retention no longer replays
+rolled-back writes or archives them as committed changes; background retention
+waits for pending transactions.

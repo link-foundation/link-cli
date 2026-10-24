@@ -1,0 +1,47 @@
+Legacy diagnostics and retention outcome audit (2026-10-24)
+
+Before implementation, baseline adb93d0:
+  Rust /dev/full stderr: nine finite storage/named/query/transaction/version
+  child modes fail, exit 101. Persistent-trigger stdout fails independently in
+  a custom harness (the standard test harness cannot start with failed stdout).
+  Restoring only the server's old eprintln! traces reproduces exit 101 for a
+  real TCP request; the fixed child creates a row and reads it back.
+  C# throwing writer: 11 transaction/version/trigger cases fail with IOException.
+  A further 20 named-store/simple-store/query/server cases fail with IOException.
+  Server faults cover diagnostics before a request and after its mutation.
+
+Retention failures exposed after removing diagnostic interruptions:
+  Rust: sized and chunked rollback tests both fail, resurrecting a rolled-back
+  create. The final tests also check updates/deletes, following commits, reopen
+  and committed-only archive contents.
+  C#: six sized/chunked create/update/delete cases fail before the retention fix.
+  C#: two deterministic pending-transaction cases fail with the pending guards
+  removed: applied sequences become 3 (sized) and 2 (chunked), expected 1.
+
+After implementation:
+  Fallible diagnostic writes preserve existing destinations and opt-in flags.
+  Storage/journal failures and normal query result output keep their semantics.
+  Aborted writes are reclaimed without replay or committed archive entries.
+  Pending records remain live and unapplied until commit/rollback.
+  Rust diagnostic parent: all ten stderr child modes pass; custom stdout passes.
+  Rust retention: two tests pass, each checking all three operation kinds.
+  C# focused diagnostics/retention: 39 passed, zero failed.
+
+Full validation (one Cargo job, reduced debug info, bounded .NET GC heap):
+  Rust coverage suite: 465 standard tests passed, four child entry points ignored,
+  plus one custom stdout harness check. A subsequent focused run includes the
+  added real TCP mode. Lines 8833/9800 (90.13%), branches 1426/1814 (78.61%),
+  functions 1193/1360, regions 13390/15467.
+  C# Debug: 695 passed, lines 5775/6444 (89.62%), branches 2531/3068 (82.50%).
+  C# Release: 695 passed, lines 4393/4818 (91.18%), branches 2510/3049 (82.32%).
+  Native Rust Clippy --all-features --all-targets -- -D warnings: passed.
+  Rust formatting for both manifests and .NET formatting verification: passed.
+  Actual WASM: 17 passed; WASM-target Clippy denies warnings.
+  Wrapper: lines 331/331, functions 68/68, branches 16/16, regions 505/505.
+  Complete report including linked core: lines 2725/8974 (30.37%),
+  branches 392/1269 (30.89%), functions 346/1296, regions 3938/14112.
+
+No new coverage exclusions. Native and linked-core 100% coverage remains open.
+The ENOSPC destination is immediate and bounded; this does not fill a disk or
+simulate power loss. Rust console fault subprocesses run on Linux. Portable
+retention tests and C# throwing-writer cases run on other supported platforms.

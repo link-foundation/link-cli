@@ -15,7 +15,8 @@ exercise public failure semantics rather than treating test counts as coverage.
   matching filters and reference queries with a bounded in-memory fixture.
 - [x] Add equivalent C# boundary cases and bounded network/header/object failures.
 - [x] Run focused tests, full native suites, coverage and lint/format checks.
-- [ ] Publish one useful atomic step and inspect exact-SHA CI.
+- [x] Publish one useful atomic step and inspect exact-SHA CI: `adb93d0`,
+  37 successful, ten skipped and one neutral check.
 
 Private Rust fixtures set a counter directly for the revision-overflow case;
 no experiment loops to the counter limit. All records and stores are tiny.

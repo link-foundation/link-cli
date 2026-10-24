@@ -542,7 +542,7 @@ where
         self.log.push(transition);
         self.write_transition_to_log(&transition)?;
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[Transactions] Recorded {:?} seq={} tx={:032x}: ({},{},{}) -> ({},{},{}).",
                 kind,
                 sequence,
@@ -612,7 +612,7 @@ where
         // Never persist an applied marker before its data is durable.
         self.inner.flush()?;
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[Transactions] Committed tx {:032x} (mode={:?}, transitions={}).",
                 pending.id,
                 self.commit_mode,
@@ -648,7 +648,7 @@ where
         self.rolled_back.insert(pending.id);
         self.current = None;
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[Transactions] Rolled back tx {:032x} ({} transitions).",
                 pending.id,
                 pending.transitions.len(),

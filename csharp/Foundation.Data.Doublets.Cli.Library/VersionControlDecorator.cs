@@ -608,7 +608,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void Trace(string message)
     {
-        if (_trace) Console.WriteLine($"[VersionControl] {message}");
+        if (_trace) DiagnosticOutput.WriteLine($"[VersionControl] {message}");
     }
 
     private sealed class VersionControlTransaction : ITransaction<uint>

@@ -255,7 +255,7 @@ public sealed class LinksServer : IDisposable
     {
         if (_options.Trace)
         {
-            Console.Error.WriteLine($"[server] {message}");
+            DiagnosticOutput.WriteErrorLine($"[server] {message}");
         }
     }
 

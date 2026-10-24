@@ -791,7 +791,7 @@ impl QueryProcessor {
     /// Logs a trace message if tracing is enabled
     fn trace_msg(&self, msg: &str) {
         if self.trace {
-            eprintln!("{}", msg);
+            crate::diagnostics::stderr!("{}", msg);
         }
     }
 }

@@ -132,7 +132,7 @@ impl LinkStorage {
     pub(crate) fn enable_indexed_lookups(&mut self) {
         self.links.enable_index();
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[TRACE] IndexedLinksDecorator enabled for {} links",
                 self.links.len()
             );
@@ -231,7 +231,7 @@ impl LinkStorage {
         self.unused = self.restore_unused(recorded_unused);
 
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[TRACE] Loaded {} links from {}",
                 self.links.len(),
                 self.db_path.display()
@@ -404,7 +404,7 @@ impl LinkStorage {
             .with_context(|| format!("Failed to replace database: {}", self.db_path.display()))?;
 
         if self.trace {
-            eprintln!(
+            crate::diagnostics::stderr!(
                 "[TRACE] Saved {} links to {}",
                 self.links.len(),
                 self.db_path.display()
@@ -425,7 +425,7 @@ impl LinkStorage {
         self.links.insert(id, link);
 
         if self.trace {
-            eprintln!("[TRACE] Created link: ({} {} {})", id, source, target);
+            crate::diagnostics::stderr!("[TRACE] Created link: ({} {} {})", id, source, target);
         }
 
         id
@@ -468,7 +468,7 @@ impl LinkStorage {
         }
 
         if self.trace {
-            eprintln!("[TRACE] Ensured link: ({} 0 0)", id);
+            crate::diagnostics::stderr!("[TRACE] Ensured link: ({} 0 0)", id);
         }
 
         id
@@ -494,9 +494,13 @@ impl LinkStorage {
     pub fn update_raw(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
         if let Some(before) = self.links.get(&id).copied() {
             if self.trace {
-                eprintln!(
+                crate::diagnostics::stderr!(
                     "[TRACE] Updating link {} from ({} {}) to ({} {})",
-                    id, before.source, before.target, source, target
+                    id,
+                    before.source,
+                    before.target,
+                    source,
+                    target
                 );
             }
             self.links.insert(id, Link::new(id, source, target));
@@ -520,9 +524,11 @@ impl LinkStorage {
         if let Some(link) = self.links.remove(&id) {
             self.release(id);
             if self.trace {
-                eprintln!(
+                crate::diagnostics::stderr!(
                     "[TRACE] Deleted link: ({} {} {})",
-                    link.index, link.source, link.target
+                    link.index,
+                    link.source,
+                    link.target
                 );
             }
             Ok(link)
@@ -811,7 +817,7 @@ impl LinkStorage {
             self.names.insert(id, name.to_string());
             self.name_to_id.insert(name.to_string(), id);
             if self.trace {
-                eprintln!("[TRACE] Created named link: {} => {}", name, id);
+                crate::diagnostics::stderr!("[TRACE] Created named link: {} => {}", name, id);
             }
             id
         }
@@ -829,7 +835,7 @@ impl LinkStorage {
         }
         self.names.insert(id, name.to_string());
         if self.trace {
-            eprintln!("[TRACE] Set name: {} => {}", id, name);
+            crate::diagnostics::stderr!("[TRACE] Set name: {} => {}", id, name);
         }
     }
 
@@ -848,7 +854,7 @@ impl LinkStorage {
         if let Some(name) = self.names.remove(&id) {
             self.name_to_id.remove(&name);
             if self.trace {
-                eprintln!("[TRACE] Removed name: {} => {}", id, name);
+                crate::diagnostics::stderr!("[TRACE] Removed name: {} => {}", id, name);
             }
         }
     }

@@ -391,7 +391,7 @@ impl LinkReferenceValidator {
 
     fn trace_msg(&self, msg: &str) {
         if self.trace {
-            eprintln!("{}", msg);
+            crate::diagnostics::stderr!("{}", msg);
         }
     }
 }

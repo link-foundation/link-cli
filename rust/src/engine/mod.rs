@@ -140,13 +140,6 @@ fn error(message: &str) -> LinkError {
     LinkError::Transaction(message.into())
 }
 
-// Diagnostic output must not turn a durable publication into a panic or poison
-// its commit mutex. In particular, stderr can fail with ENOSPC or a broken pipe.
-fn trace(message: std::fmt::Arguments<'_>) {
-    use std::io::Write;
-    let _ = writeln!(std::io::stderr().lock(), "{message}");
-}
-
 impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
     pub fn open(mut log: L, options: EngineOptions) -> Result<Self, LinkError> {
         if options.serializable_validation == SerializableValidation::ReadSet

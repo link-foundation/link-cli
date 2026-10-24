@@ -365,3 +365,52 @@ The execution checklist and platform scope are recorded in
 [BOUNDARY-PLAN.md](BOUNDARY-PLAN.md), with curated before/after evidence in
 `dev/log/issues/138/pulls/139/diagnostic-boundaries.txt`. Coverage inclusions are
 unchanged; the 100% acceptance criterion remains open.
+
+## Existing decorator diagnostics and rollback retention
+
+The next audit reproduces nine Rust storage/named/query/transaction/version
+operations failing against `/dev/full` on `adb93d0`, plus the persistent-trigger
+stdout path. A custom harness is necessary for stdout: the normal test harness
+itself refuses to start when stdout returns ENOSPC. Restoring only the server's
+old trace calls independently reproduces a failed real TCP request. Best-effort
+diagnostics now preserve the original destination and opt-in flag while leaving
+storage, journal and ordinary query output errors unchanged.
+
+C# first reproduces 11 transaction/version/trigger failures, then 20 additional
+named-store, simple-store, query and server failures through throwing writers.
+The two server cases fault both before the request and after its mutation.
+Console replacement is isolated from other collections and always restored.
+All 31 diagnostic cases and eight retention cases pass after the changes.
+
+Removing the diagnostic interruption exposes retention replaying rolled-back
+creates. Two Rust tests reproduce this for sized and chunked policies; six C#
+cases additionally reproduce updates and deletes. After the fix, both native
+suites verify all three operation kinds, following commits, persistent reopen,
+unmodified baseline rows and committed-only archive contents. Rollback records
+are reclaimed without replay, and durable rollback markers remain in the sidecar.
+
+A deterministic C# data-flush callback inserts a new pending transaction while
+the previous asynchronous commit is being processed. Removing only the pending
+guards makes both policies advance applied markers into uncommitted writes.
+The guard leaves those records unmarked and unreclaimed until commit/rollback.
+A bounded event and worker join provide completion without scheduler sleeps.
+
+The full native Rust coverage suite passes 465 standard tests, with four child
+entry points ignored, plus the separate stdout harness check. A subsequent
+focused run verifies the added server fault mode. Coverage measures 8,833/9,800
+lines (90.13%), 1,426/1,814 branches (78.61%), 1,193/1,360 functions and
+13,390/15,467 regions. Native Clippy and formatting pass with the extended tests.
+
+The final C# Debug and Release suites each pass 695 tests. Debug measures
+5,775/6,444 lines (89.62%) and 2,531/3,068 branches (82.50%); Release measures
+4,393/4,818 lines (91.18%) and 2,510/3,049 branches (82.32%). Configuration
+denominators remain separate. C# formatting verification passes.
+
+All 17 actual WASM tests pass. Wrapper coverage remains 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. Including linked
+core, the complete report measures 2,725/8,974 lines (30.37%), 392/1,269 branches
+(30.89%), 346/1,296 functions and 3,938/14,112 regions. No new source exclusions
+are used. Native and linked-core 100% coverage remains unfinished.
+
+See [LEGACY-DIAGNOSTICS-PLAN.md](LEGACY-DIAGNOSTICS-PLAN.md) for the execution
+checklist, fixture limits and retention semantics.

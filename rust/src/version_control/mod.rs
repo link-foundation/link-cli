@@ -624,7 +624,7 @@ impl VersionControlDecorator {
 
     fn trace(&self, message: &str) {
         if self.trace {
-            eprintln!("[VersionControl] {message}");
+            crate::diagnostics::stderr!("[VersionControl] {message}");
         }
     }
 }

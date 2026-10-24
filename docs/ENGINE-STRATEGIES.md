@@ -90,6 +90,11 @@ The legacy transaction decorators have a different architecture: their commit
 marker is flushed before acknowledging commit, data is flushed before an applied
 marker, and replay errors propagate. They still mutate the underlying store
 while a transaction is open; use the staged engine for session isolation.
+Sized and chunked retention discard completed rollback records without replaying
+their writes. Chunk archives contain committed changes only; pending records
+remain in the live log. Retention limits the in-memory list, while the durable
+sidecar still keeps recovery markers. Optional diagnostic I/O failures preserve
+the operation's outcome; storage and journal errors retain their error semantics.
 
 ## Branches and merge recovery
 
