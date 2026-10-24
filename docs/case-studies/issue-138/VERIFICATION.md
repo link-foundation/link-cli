@@ -992,3 +992,50 @@ minor release metadata validation pass. No coverage exclusions were added.
 The staged JS/actual-WASM version API and code are unchanged by this step.
 Complete native and linked WASM coverage remains below the requested 100%.
 Logs and machine-readable reports remain under experiments/issue-138.
+
+Sequence head `d23bc02260f6379d85ce6bed0b7e936241a7ce2f` passes all nine
+workflows created 2026-10-24T22:12:10Z. C# passes 981 tests on all three
+platforms; native Rust, actual WASM and the remaining checks pass. Run IDs are
+in `dev/log/issues/138/pulls/139/version-sequence-ci.txt`.
+
+## Unambiguous persisted version names
+
+Before implementation: three independent cases per native language all fail.
+C#: version-names-csharp-before.log lines 13,22,31: delimiter tag missing,
+quoted branch has a changed parent, and delimiter branch is absent after reopen.
+Rust: version-names-rust-before.log lines 14,22,29 shows the same independent
+failures. No tests pass in either three-case before run.
+A separate shared invalid-tag vector first demonstrates Rust accepting an
+empty name: version-names-empty-tag-before.log lines 12–15, actual 7 tags vs 6.
+
+New branch markers encode four hexadecimal digits per UTF-16 code unit and
+retain an unambiguous null-parent field. Both readers retain ordinary legacy
+records, including a legacy name beginning with the version-two prefix.
+Tag readers split at the final equals sign and reject empty names. Shared
+fixtures specify ten branch records, nineteen malformed branches, six tags
+and six malformed tags. The protocol documents intrinsic ambiguity in older
+separator-injected records and older binaries' inability to read new records.
+
+Six real persistent scenarios per language verify exact names, nested ancestry,
+head/tag values, current branch, main/child switching and rewind/forward rows.
+Additional fixture/decoder tests cover punctuation, Unicode, NUL, newline,
+empty versus null parent, signed bounds, malformed fields and legacy decoding.
+C# also verifies exact unpaired UTF-16 code-unit encoding; Rust rejects invalid
+UTF-16 because it cannot form a Rust string. Native database formats remain
+separate; shared marker bytes and valid Unicode semantics match.
+
+Full C# Debug and Release: 990 tests pass each, zero skips.
+Full native Rust: 571 standard tests plus the custom stdout harness pass;
+four subprocess entry points are ignored by the ordinary harness.
+Actual WASM: all 279 tests pass; the three wrapper modules retain 100% lines,
+functions and reported branches. These legacy format changes do not add a
+new JavaScript wrapper API. Complete linked/native coverage remains unfinished.
+Debug: 6,098/6,591 lines (92.52%); 2,792/3,198 branches (87.30%).
+Release: 4,622/4,922 lines (93.90%); 2,771/3,179 branches (87.17%).
+Native Rust: 9,363/10,211 lines (91.70%), 1,541/1,886 branches (81.71%), 1,247/1,397 functions (89.26%)
+Complete linked WASM: 5,279/9,820 lines (53.76%), 919/1,553 branches (59.18%), 750/1,381 functions (54.31%)
+The first strict lint run flagged constant-size chunks_exact iteration.
+Using as_chunks::<4>() preserves the checked four-digit decoder semantics;
+strict Clippy then passes, followed by a new full native coverage run and
+actual WASM suite. .NET/Rust formatting and minor release metadata pass.
+No coverage exclusions were added. Full logs/reports: experiments/issue-138.

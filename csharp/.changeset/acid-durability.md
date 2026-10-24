@@ -78,3 +78,6 @@ until publication succeeds, and avoid duplicate transition markers on retry.
 
 Publish the final signed version sequence without wrapping. Initialize version
 history from retained journal records, avoiding phantom versions across gaps.
+
+Persist branch and parent names with an unambiguous versioned marker, retaining
+legacy reads. Recover tag names containing equals signs without truncation.

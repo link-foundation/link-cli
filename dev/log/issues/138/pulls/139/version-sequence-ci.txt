@@ -1,0 +1,19 @@
+Version sequence boundary CI closure
+
+Head d23bc02260f6379d85ce6bed0b7e936241a7ce2f
+All nine workflows created 2026-10-24T22:12:10Z, after publication,
+concluded success on this exact SHA. No older runs count.
+
+Broken Link Checker: 40137529849 success
+Dependencies: 40137529972 success
+Workflows: 40137530013 success
+Docs: 40137529898 success
+JS client CI: 40137529848 success
+Security: 40137529834 success
+WebAssembly CI: 40137529947 success
+C# CI/CD Pipeline: 40137529920 success
+Rust CI/CD Pipeline: 40137530099 success
+
+C# passes 981 tests on Windows, Linux and macOS; native Rust and
+actual WASM, JS, packaging/fresh-merge, docs, security, dependency and
+workflow checks pass. Later name-encoding changes require fresh CI.

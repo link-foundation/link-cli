@@ -214,3 +214,8 @@ original metadata write took effect before reporting an error.
 Initial version history visits retained journal records. Gaps in sequence
 numbers do not create checkout targets, and the final signed sequence remains
 publishable before later writes are rejected as exhausted.
+
+Version sidecars preserve delimiter text, Unicode, NUL and newline in branch,
+parent and tag names. New branch markers use a versioned encoding and ordinary
+legacy markers remain readable; see the [marker protocol](../docs/protocol/version-metadata.md)
+for compatibility and upgrade limits.

@@ -15,7 +15,7 @@ integer up to the last logged sequence, including gaps in valid sparse journals.
 - [x] Add public version API edge contracts for cancellation, rejected metadata
   and transaction state, using existing public entry points rather than reflection.
 - [x] Run focused and full Debug/Release, coverage, format and release checks.
-- [ ] Commit/push, review fresh exact-SHA CI, and preserve any failures.
+- [x] Commit/push, review fresh exact-SHA CI, and preserve any failures.
 
 The fixtures add one valid committed/applied no-op transition at long.MaxValue
 or one less, rather than executing an impractical number of operations.
@@ -38,3 +38,7 @@ Full C# Debug/Release each pass 981 tests. Native Rust passes 561 standard
 tests plus the custom stdout harness, with four child entry points ignored.
 Official coverage and checks are recorded in
 `dev/log/issues/138/pulls/139/version-sequence-boundaries.txt`.
+
+All nine workflows pass `d23bc02260f6379d85ce6bed0b7e936241a7ce2f`,
+including 981 C# tests on Windows/Linux/macOS. Exact run IDs are recorded in
+`dev/log/issues/138/pulls/139/version-sequence-ci.txt`.

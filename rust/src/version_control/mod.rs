@@ -613,7 +613,7 @@ impl VersionControlDecorator {
                     self.applied_link = link.index;
                 }
             } else if let Some(rest) = name.strip_prefix(TAG_PREFIX) {
-                if let Some(eq) = rest.find('=') {
+                if let Some(eq) = rest.rfind('=').filter(|&index| index > 0) {
                     let tag_name = &rest[..eq];
                     if let Ok(tag_seq) = rest[eq + 1..].parse::<i64>() {
                         self.tags.insert(tag_name.to_string(), tag_seq);
@@ -641,17 +641,76 @@ impl VersionControlDecorator {
 }
 
 fn encode_branch_marker(info: &BranchInfo) -> String {
-    let parent = info.parent.as_deref().unwrap_or("");
+    let parent = info
+        .parent
+        .as_deref()
+        .map(encode_version_name)
+        .unwrap_or_else(|| "-".to_string());
     format!(
-        "{BRANCH_PREFIX}{name}:parent={parent}:fork={fork}:head={head}",
-        name = info.name,
+        "{BRANCH_PREFIX}2|{name}|{parent}|{fork}|{head}",
+        name = encode_version_name(&info.name),
         fork = info.fork_seq,
         head = info.head,
     )
 }
 
+// Four hexadecimal digits per UTF-16 code unit match the C# sidecar format.
+fn encode_version_name(name: &str) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789ABCDEF";
+    let mut text = String::new();
+    for unit in name.encode_utf16() {
+        for shift in [12, 8, 4, 0] {
+            text.push(DIGITS[((unit >> shift) & 15) as usize] as char);
+        }
+    }
+    text
+}
+
+fn decode_version_name(text: &str) -> Option<String> {
+    if !text.len().is_multiple_of(4) {
+        return None;
+    }
+    let mut units = Vec::with_capacity(text.len() / 4);
+    for digits in text.as_bytes().as_chunks::<4>().0 {
+        let mut unit = 0u16;
+        for &digit in digits {
+            unit = (unit << 4)
+                | match digit {
+                    b'0'..=b'9' => (digit - b'0') as u16,
+                    b'a'..=b'f' => (digit - b'a' + 10) as u16,
+                    b'A'..=b'F' => (digit - b'A' + 10) as u16,
+                    _ => return None,
+                };
+        }
+        units.push(unit);
+    }
+    String::from_utf16(&units).ok()
+}
+
 fn try_decode_branch_marker(text: &str) -> Option<BranchInfo> {
     let rest = text.strip_prefix(BRANCH_PREFIX)?;
+    if rest.starts_with("2|") {
+        let fields: Vec<_> = rest.split('|').collect();
+        if fields.len() == 5 {
+            let decoded = (|| {
+                Some(BranchInfo::new(
+                    decode_version_name(fields[1])?,
+                    if fields[2] == "-" {
+                        None
+                    } else {
+                        Some(decode_version_name(fields[2])?)
+                    },
+                    fields[3].parse().ok()?,
+                    fields[4].parse().ok()?,
+                ))
+            })();
+            if decoded.is_some() {
+                return decoded;
+            }
+        }
+        // Legacy names can start with "2|"; their delimiter suffix prevents
+        // them from being mistaken for a valid version-two record.
+    }
     let parent_idx = rest.find(":parent=")?;
     let name = &rest[..parent_idx];
     let rest = &rest[parent_idx + ":parent=".len()..];
@@ -674,6 +733,58 @@ fn try_decode_branch_marker(text: &str) -> Option<BranchInfo> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn vectors() -> serde_json::Value {
+        serde_json::from_str(include_str!(
+            "../../../docs/protocol/version-metadata-vectors.json"
+        ))
+        .unwrap()
+    }
+
+    #[test]
+    fn shared_branch_vectors_preserve_names_and_legacy_records() {
+        for value in vectors()["branches"].as_array().unwrap() {
+            let expected = BranchInfo::new(
+                value["name"].as_str().unwrap().into(),
+                value["parent"].as_str().map(str::to_string),
+                value["fork"].as_i64().unwrap(),
+                value["head"].as_i64().unwrap(),
+            );
+            let marker = value["marker"].as_str().unwrap();
+            assert_eq!(
+                try_decode_branch_marker(marker),
+                Some(expected.clone()),
+                "{marker}"
+            );
+            if value["version"] == 2 {
+                assert_eq!(encode_branch_marker(&expected), marker);
+            }
+        }
+    }
+
+    #[test]
+    fn shared_malformed_branch_vectors_are_rejected() {
+        for marker in vectors()["invalidBranches"].as_array().unwrap() {
+            assert!(
+                try_decode_branch_marker(marker.as_str().unwrap()).is_none(),
+                "{marker}"
+            );
+        }
+    }
+
+    #[test]
+    fn version_name_decoder_accepts_lowercase_and_rejects_invalid_utf16() {
+        assert_eq!(decode_version_name("006a006b"), Some("jk".into()));
+        for invalid in [
+            "D800",
+            "DFFF",
+            "D8000041",
+            "éé",
+            "\u{ff10}\u{ff10}\u{ff10}\u{ff10}",
+        ] {
+            assert!(decode_version_name(invalid).is_none(), "{invalid}");
+        }
+    }
 
     #[test]
     fn encode_round_trips_through_decode() {

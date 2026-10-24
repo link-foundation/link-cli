@@ -498,22 +498,66 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         _branchesStore.SetName(link, name);
     }
 
-    private static string EncodeBranchMarker(BranchInfo info)
+    internal static string EncodeBranchMarker(BranchInfo info)
     {
-        var parent = info.Parent ?? string.Empty;
-        return string.Concat(
-          BranchPrefix,
-          info.Name,
-          ":parent=", parent,
-          ":fork=", info.ForkSeq.ToString(CultureInfo.InvariantCulture),
-          ":head=", info.Head.ToString(CultureInfo.InvariantCulture));
+        return string.Concat(BranchPrefix, "2|", EncodeVersionName(info.Name), "|",
+          info.Parent is null ? "-" : EncodeVersionName(info.Parent), "|",
+          info.ForkSeq.ToString(CultureInfo.InvariantCulture), "|",
+          info.Head.ToString(CultureInfo.InvariantCulture));
     }
 
-    private static bool TryDecodeBranchMarker(string text, out BranchInfo info)
+    // Four hex digits per UTF-16 code unit avoid delimiter ambiguity and retain
+    // the exact .NET string, including supplementary characters and NULs.
+    private static string EncodeVersionName(string value)
+    {
+        const string digits = "0123456789ABCDEF";
+        return string.Create(checked(value.Length * 4), value, (output, name) =>
+        {
+            for (var i = 0; i < name.Length; ++i)
+                for (var j = 0; j < 4; ++j)
+                    output[i * 4 + j] = digits[(name[i] >> ((3 - j) * 4)) & 15];
+        });
+    }
+
+    private static bool TryDecodeVersionName(string text, out string name)
+    {
+        name = string.Empty;
+        if (text.Length % 4 != 0) return false;
+        var units = new char[text.Length / 4];
+        for (var i = 0; i < units.Length; ++i)
+        {
+            if (!ushort.TryParse(text.AsSpan(i * 4, 4), NumberStyles.AllowHexSpecifier,
+                CultureInfo.InvariantCulture, out var unit)) return false;
+            units[i] = (char)unit;
+        }
+        name = new string(units);
+        return true;
+    }
+
+    internal static bool TryDecodeBranchMarker(string text, out BranchInfo info)
     {
         info = default!;
         if (!text.StartsWith(BranchPrefix, StringComparison.Ordinal)) return false;
         var rest = text.Substring(BranchPrefix.Length);
+        if (rest.StartsWith("2|", StringComparison.Ordinal))
+        {
+            var fields = rest.Split('|');
+            if (fields.Length == 5 && TryDecodeVersionName(fields[1], out var decodedName)
+                && long.TryParse(fields[3], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var decodedFork)
+                && long.TryParse(fields[4], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var decodedHead))
+            {
+                string? parent = null;
+                if (fields[2] != "-")
+                {
+                    if (!TryDecodeVersionName(fields[2], out var decodedParent)) return false;
+                    parent = decodedParent;
+                }
+                info = new BranchInfo(decodedName, parent, decodedFork, decodedHead);
+                return true;
+            }
+            // A legacy branch name may itself start with "2|". Its delimiter
+            // suffix distinguishes it from a valid version-two marker.
+        }
         var parentIdx = rest.IndexOf(":parent=", StringComparison.Ordinal);
         if (parentIdx < 0) return false;
         var name = rest.Substring(0, parentIdx);
@@ -579,7 +623,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                 else if (name.StartsWith(TagPrefix, StringComparison.Ordinal))
                 {
                     var rest = name.Substring(TagPrefix.Length);
-                    var eq = rest.IndexOf('=');
+                    var eq = rest.LastIndexOf('=');
                     if (eq > 0)
                     {
                         var tagName = rest.Substring(0, eq);

@@ -204,3 +204,8 @@ available for cache workloads without these layers.
 Select `ConcurrencyControl::Pessimistic` for overlapping sessions that reserve
 written addresses and immediately reject competing writes. Isolation and history
 remain independent options. See [ownership, retry rules and costs](../docs/ENGINE-PESSIMISTIC.md).
+
+Legacy version sidecars preserve delimiter text, Unicode, NUL and newline in
+branch, parent and tag names. New branch markers use a versioned encoding and
+ordinary legacy markers remain readable; see the [marker protocol](../docs/protocol/version-metadata.md)
+for compatibility and upgrade limits.
