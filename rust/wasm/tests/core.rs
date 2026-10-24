@@ -31,3 +31,6 @@ mod delta;
 
 #[path = "../../tests/engine_journal_tests.rs"]
 mod journal;
+
+#[path = "../../tests/engine_portable_recovery_tests.rs"]
+mod portable_recovery;

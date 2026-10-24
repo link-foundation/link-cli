@@ -772,3 +772,24 @@ complete. Cancelled queued work and failed checkpoints remain recoverable from
 committed journal records; shutdown does not promise to drain cancelled work.
 See [ASYNC-SHUTDOWN-PLAN.md](ASYNC-SHUTDOWN-PLAN.md), `csharp/README.md` and
 `dev/log/issues/138/pulls/139/async-shutdown.txt` for evidence and ownership.
+
+
+## Portable public recovery and enabled diagnostics
+
+The public engine now executes every shared journal fixture on native and actual
+WASM: three valid contiguous revisions and all 26 invalid u32 records. Assertions
+cover Unicode names, deletion, empty names and final address allocation. Enabled
+tracing preserves admission, private writes, old snapshots and recovered state
+under four existing concurrency/validation configurations. No production behavior
+or coverage inclusions change.
+
+All 538 standard native tests and the stdout harness pass, with four child entry
+points ignored. All 270 actual WASM tests pass. Native/WASM strict Clippy and
+formatting pass. Complete official native LLVM coverage measures 9,078/10,061
+lines (90.23%), 1,460/1,852 branches (78.83%), 1,221/1,384 functions and
+13,736/15,826 regions. Complete WASM coverage measures 5,213/9,704 lines
+(53.72%), 897/1,521 branches (58.97%), 746/1,372 functions and 7,693/15,141
+regions. Wrapper coverage remains 331/331 lines, 68/68 functions, 16/16 branches
+and 505/505 regions. Complete coverage remains below 100%.
+See [PORTABLE-RECOVERY-PLAN.md](PORTABLE-RECOVERY-PLAN.md) and
+`dev/log/issues/138/pulls/139/portable-recovery.txt` for evidence.
