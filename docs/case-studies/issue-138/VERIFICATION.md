@@ -118,3 +118,16 @@ semantics. The regression checks the actual next frame written to the socket.
 Before/after excerpts and the full coverage summary are preserved with the PR's
 other evidence. Additional tests verify current-revision snapshots, authoritative
 replica reads, and cancellation before a queued WASM request reaches native code.
+
+JS conformance run 40113225861 passed native/WASM writes but failed at member
+status discovery with `ECONNREFUSED` (saved log lines 1045–1062). The harness had
+waited for a majority, then queried every member. It now waits for each member's
+status and nonzero leader before testing. A deterministic delayed-member test
+covers refused connections, HTTP failure and election delay, plus finite failure.
+The full three-member experiment passes locally after this correction, including
+native writers, leader termination and majority loss. Fresh CI is still required.
+
+Full Rust coverage on 5155c80 passes 403 unit/integration tests (two subprocess
+helpers ignored) and measures 8,095/9,351 lines (86.57%) and 1,084/1,312 functions
+(82.62%). Branch instrumentation is not enabled. This measurement precedes the
+partitioned-data decorator and leaves native coverage work open.

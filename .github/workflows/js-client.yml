@@ -18,7 +18,7 @@ on:
       - 'csharp/**'
       - 'docs/protocol/**'
       - 'examples/cluster-csharp/**'
-      - 'experiments/issue-138/etcd-cluster.mjs'
+      - 'experiments/issue-138/etcd-*.mjs'
   pull_request:
     branches:
       - main
@@ -30,7 +30,7 @@ on:
       - 'csharp/**'
       - 'docs/protocol/**'
       - 'examples/cluster-csharp/**'
-      - 'experiments/issue-138/etcd-cluster.mjs'
+      - 'experiments/issue-138/etcd-*.mjs'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -195,6 +195,7 @@ jobs:
           curl --fail --location --retry 3 --output experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.7.3/etcd-v3.7.3-linux-amd64.tar.gz
           printf '%s  %s\n' '5dfa9cc3b3ce3b4b491fbcc2057d3daa166bcc6676f743fcd20f8e5760cb9775' 'experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz' | sha256sum --check
           tar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd
+          node --test --test-timeout=10000 experiments/issue-138/etcd-harness.test.mjs
           node experiments/issue-138/etcd-cluster.mjs
 
       - name: Preserve consensus member logs

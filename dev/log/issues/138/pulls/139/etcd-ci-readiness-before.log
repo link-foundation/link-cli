@@ -1,0 +1,36 @@
+1030: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:53.8117985Z
+1031: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:54.0383452Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+1032: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:54.0384353Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+1033: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:54.4179592Z
+1034: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:54.4180673Z 100 22.8M  100 22.8M    0     0  37.6M      0 --:--:-- --:--:-- --:--:-- 37.6M
+1035: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:54.4508714Z experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz: OK
+1036: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.1067295Z PASS real etcd: atomic multi-shard CAS and read-only dependency conflict
+1037: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.1142078Z PASS real etcd: dropped response discovers both committed shards without replay
+1038: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.1195631Z PASS Rust HTTP: both shard journals committed atomically
+1039: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3111205Z PASS C# HTTP: both shard journals committed atomically
+1040: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3366926Z etcd evidence: /home/runner/work/link-cli/link-cli/experiments/issue-138/etcd/run-Eh7u8D
+1041: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3369476Z node:internal/modules/run_main:107
+1042: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3370158Z     triggerUncaughtException(
+1043: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3370493Z     ^
+1044: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3370609Z
+1045: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3370760Z [TypeError: fetch failed] {
+1046: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3371153Z   [cause]: Error: connect ECONNREFUSED 127.0.0.1:39809
+1047: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3381199Z       at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2021:16) {
+1048: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3381981Z     errno: -111,
+1049: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3382406Z     code: 'ECONNREFUSED',
+1050: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3382703Z     syscall: 'connect',
+1051: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3382976Z     address: '127.0.0.1',
+1052: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3383234Z     port: 39809
+1053: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3383443Z   }
+1054: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3383635Z }
+1055: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3383738Z
+1056: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3383835Z Node.js v24.21.0
+1057: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3473765Z ##[error]Process completed with exit code 1.
+1058: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3543115Z ##[group]Run actions/upload-artifact@v7
+1059: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3543417Z with:
+1060: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3543626Z   name: issue-138-etcd-logs
+1061: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3543900Z   path: experiments/issue-138/etcd/run-*/*.log
+1062: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3544200Z   if-no-files-found: ignore
+1063: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3544436Z   compression-level: 6
+1064: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3544660Z   overwrite: false
+1065: Conformance on Node.js, Bun and Deno	UNKNOWN STEP	2026-10-24T16:50:58.3544877Z   include-hidden-files: false

@@ -8,6 +8,7 @@ import net from 'node:net';
 import { resolve, join } from 'node:path';
 import * as binding from '../../js/pkg/clink_wasm.js';
 import { ClusterEngine, EtcdJournalStore } from '../../js/client/src/cluster.js';
+import { waitForMembers } from './etcd-harness.mjs';
 
 binding.initSync({ module: readFileSync(new URL('../../js/pkg/clink_wasm_bg.wasm', import.meta.url)) });
 const binary = process.env.ETCD_BIN ?? resolve('experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd');
@@ -44,6 +45,7 @@ try {
     nodes.push({ child, exited: once(child, 'exit'), log });
   }
   const options = { prefix: '/issue138/', timeoutMs: 700 };
+  await waitForMembers(endpoints);
   const store = new EtcdJournalStore(endpoints, options);
   await ready(() => store.read(['a']));
   const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
