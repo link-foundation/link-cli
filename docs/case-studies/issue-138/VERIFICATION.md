@@ -616,3 +616,33 @@ core, the complete report measures 2,729/9,210 lines (29.63%), 392/1,297 branche
 (30.22%), 347/1,319 functions and 3,943/14,452 regions. Native/WASM Clippy deny
 warnings; Rust and C# formatting verification passes. Project-wide coverage
 remains below 100%, with no added source exclusions.
+
+
+## C# CLI owner lifetime and coverage contracts
+
+Five minimal cases first reproduce the real compiled CLI entry point returning
+with mapped stores still open. The failed assertions request immediate exclusive
+file access; finalizer forcing occurs only afterward for failing-test cleanup.
+The command now owns every store in a using scope spanning construction and
+execution. Wrappers stop before their borrowed stores close, and embedded
+triggers retain a single base owner. Ten cases verify normal/error returns,
+async mutation and failures constructing journal/version/trigger stores.
+
+An independent 88-case enumerable fixture checks arities one through eight,
+short/exact/long single-pass prefixes, bounded consumption and cleanup on error.
+Four deterministic protocol cases inject transport failures during write/flush
+and verify the category, original exception and progress. These contracts
+already pass; no corresponding production bug is claimed. See
+[CLI-LIFETIME-PLAN.md](CLI-LIFETIME-PLAN.md) and
+`dev/log/issues/138/pulls/139/cli-lifetime.txt`.
+
+Debug and Release each pass all 867 C# tests. Debug measures 5,929/6,485 lines
+(91.43%) and 2,665/3,094 branches (86.13%); Release measures 4,495/4,835 lines
+(92.97%) and 2,644/3,075 branches (85.98%), rounding the underlying counts.
+The two transport catch lines are now exercised deterministically rather than
+occasionally through TCP timing. No production source exclusions were added.
+Rust and WASM production code is unchanged from the mapped-creation step.
+
+C# formatting verification and the release-fragment validator pass. The bounded
+LLVM generic-instantiation experiment and its control reproduce their documented
+counts; see [COVERAGE-METHOD.md](COVERAGE-METHOD.md) for measurement semantics.

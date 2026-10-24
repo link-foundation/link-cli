@@ -47,3 +47,6 @@ Rollback() on the decorator to retry cleanup when an implicit rollback fails.
 
 Make the transaction rollback-only before undo starts, preserving the abort
 decision when undo or rollback persistence fails until cleanup is retried.
+
+Release CLI-owned mapped data, journal, version and trigger stores before the
+entry point returns, including failure while constructing a later layer.
