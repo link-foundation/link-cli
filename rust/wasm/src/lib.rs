@@ -6,6 +6,10 @@ use link_cli::{Link, LinkStorage, QueryProcessor};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+mod engine;
+mod engine_log;
+pub use engine::{StagedEngine, StagedSession};
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct ClinkOptions {

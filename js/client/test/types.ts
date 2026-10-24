@@ -16,3 +16,18 @@ async function main(links: Links) {
   await using x = c;
   return [n, p];
 }
+
+import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, type EngineOptions, type StagedEngineLike, type CommitLog } from '../types/index.js';
+import { FileCommitLog } from '../types/engine-file-log.js';
+async function engineTypes(binding: { StagedEngine: { new(options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }) {
+  const options: EngineOptions = { isolation: 'snapshot', concurrency: 'exclusive', history: 'all', constraints: ['unique-names'], requireDurableFlush: true };
+  using file = new FileCommitLog('journal');
+  const replica = new MemoryCommitLog();
+  const log: CommitLog = new ReplicatedCommitLog(file, [replica], { acknowledgements: 1 });
+  using engine = new WasmEngine(binding, options, log);
+  const session: EngineClient = engine.begin();
+  await using owned = session;
+  await session.create(0n, 0n);
+  const revision: bigint = await session.commit();
+  return engine.snapshot(revision);
+}

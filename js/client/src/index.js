@@ -5,6 +5,8 @@
 
 export { LinksClient, LinksDecorator } from './client.js';
 export { createWasmClient, WasmTransport } from './wasm.js';
+export { EngineClient, WasmEngine } from './engine.js';
+export { MemoryCommitLog, ReplicatedCommitLog } from './engine-logs.js';
 export { GUARANTEES, MAX_U32_ADDRESS, tcpServerCapabilities, wasmCapabilities } from './capabilities.js';
 export { scopeOf } from './deadline.js';
 export {

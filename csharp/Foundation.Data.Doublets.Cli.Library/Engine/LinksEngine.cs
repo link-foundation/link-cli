@@ -1,0 +1,173 @@
+using System.Collections.ObjectModel;
+using System.Numerics;
+using Platform.Data.Doublets;
+
+namespace Foundation.Data.Doublets.Cli.Engine;
+
+public enum ConcurrencyControl { Optimistic, Exclusive }
+public enum IsolationLevel { ReadCommitted, Snapshot, Serializable }
+public enum EngineConstraint { References, UniquePairs, UniqueNames }
+
+public sealed record EngineOptions
+{
+    public ConcurrencyControl Concurrency { get; init; } = ConcurrencyControl.Optimistic;
+    public IsolationLevel Isolation { get; init; } = IsolationLevel.Serializable;
+    /// <summary>Zero disables history, null retains all, a positive limit includes current.</summary>
+    public int? HistoryLimit { get; init; } = 0;
+    public IReadOnlyList<EngineConstraint> Constraints { get; init; } = Array.Empty<EngineConstraint>();
+    public bool RequireDurableFlush { get; init; }
+    public Action<string>? Trace { get; init; }
+}
+
+public readonly record struct EngineRow<T>(Link<T> Link, string? Name)
+    where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>;
+
+public sealed class EngineSnapshot<T>
+    where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
+{
+    public ulong Revision { get; }
+    public IReadOnlyDictionary<T, EngineRow<T>> Rows { get; }
+    internal EngineSnapshot(ulong revision, SortedDictionary<T, EngineRow<T>> rows)
+    { Revision = revision; Rows = new ReadOnlyDictionary<T, EngineRow<T>>(rows); }
+}
+
+/// <summary>Optional isolated engine. The revision log is authoritative; all writes
+/// must use sessions of this engine. Sessions themselves are single-threaded.</summary>
+public sealed class LinksEngine<T>
+    where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
+{
+    internal readonly object Gate = new();
+    internal readonly EngineOptions Options;
+    internal EngineSnapshot<T> Current = new(0, new());
+    internal readonly Dictionary<T, ulong> Changed = new();
+    internal BigInteger Next = BigInteger.One;
+    internal int Active;
+    internal bool Poisoned;
+    private readonly ICommitLog _log;
+    private readonly SortedDictionary<ulong, EngineSnapshot<T>> _history = new();
+
+    public LinksEngine(ICommitLog log, EngineOptions? options = null)
+    {
+        _log = log;
+        Options = options ?? new();
+        if (Options.HistoryLimit < 0 || !Enum.IsDefined(Options.Isolation) || !Enum.IsDefined(Options.Concurrency)
+            || Options.Constraints.Any(c => !Enum.IsDefined(c)))
+            throw new ArgumentException("Invalid engine strategy.", nameof(options));
+        if (Options.RequireDurableFlush && !log.SupportsDurableFlush)
+            throw new ArgumentException("Selected log does not support durable flush.", nameof(log));
+        // Freeze caller-owned collections before using them as policy.
+        Options = Options with { Constraints = Options.Constraints.ToArray() };
+        Retain();
+        foreach (var record in log.Read())
+        {
+            var (snapshot, next) = RevisionJournal<T>.Decode(record);
+            if (snapshot.Revision != checked(Current.Revision + 1) || next < Next)
+                throw new InvalidDataException("Journal revision or allocator moved backwards.");
+            Validate(snapshot.Rows);
+            Current = snapshot;
+            Next = next;
+            Retain();
+        }
+        foreach (var id in Current.Rows.Keys) Changed[id] = Current.Revision;
+    }
+
+    internal void CheckReady()
+    { if (Poisoned) throw new InvalidOperationException("Indeterminate journal outcome; close and reopen the engine."); }
+
+    public EngineSession<T> Begin()
+    {
+        lock (Gate)
+        {
+            CheckReady();
+            if (Options.Concurrency == ConcurrencyControl.Exclusive && Active > 0)
+                throw new InvalidOperationException("Busy: an exclusive transaction is active.");
+            Active++;
+            return new(this, Current);
+        }
+    }
+    public EngineSnapshot<T> Snapshot()
+    { lock (Gate) { CheckReady(); return Current; } }
+    public EngineSnapshot<T> SnapshotAt(ulong revision)
+    {
+        lock (Gate)
+        {
+            CheckReady();
+            return revision == Current.Revision ? Current : _history.TryGetValue(revision, out var snapshot)
+                ? snapshot : throw new KeyNotFoundException("Revision is not retained.");
+        }
+    }
+    public TResult WithLog<TResult>(Func<ICommitLog, TResult> operation)
+    {
+        lock (Gate)
+        {
+            CheckReady();
+            try { return operation(_log); }
+            catch { Poisoned = true; throw; }
+        }
+    }
+    internal T Allocate()
+    {
+        CheckReady();
+        T id = T.CreateChecked(Next);
+        Advance(BigInteger.CreateChecked(id));
+        return id;
+    }
+    internal void Advance(BigInteger id)
+    {
+        var next = BigInteger.Max(Next, id + 1);
+        if (next > BigInteger.CreateChecked(UInt128.MaxValue)) throw new OverflowException("Address space exhausted.");
+        Next = next;
+    }
+    internal void Publish(SortedDictionary<T, EngineRow<T>> rows, IEnumerable<T> writes)
+    {
+        Validate(rows);
+        var snapshot = new EngineSnapshot<T>(checked(Current.Revision + 1), rows);
+        var record = RevisionJournal<T>.Encode(snapshot, Next);
+        try { _log.Append(record); _log.Flush(); }
+        catch (Exception error)
+        {
+            Poisoned = true;
+            throw new IOException("Indeterminate commit; reopen the engine to discover the outcome.", error);
+        }
+        foreach (var id in writes) Changed[id] = snapshot.Revision;
+        Current = snapshot;
+        Retain();
+        EngineDiagnostics.Trace(Options.Trace, $"Committed revision={snapshot.Revision}");
+    }
+    private void Retain()
+    {
+        if (Options.HistoryLimit == 0) return;
+        _history[Current.Revision] = Current;
+        while (Options.HistoryLimit is { } limit && _history.Count > limit) _history.Remove(_history.First().Key);
+    }
+    internal void Validate(IReadOnlyDictionary<T, EngineRow<T>> rows)
+    {
+        foreach (var constraint in Options.Constraints)
+        {
+            switch (constraint)
+            {
+                case EngineConstraint.References:
+                    if (rows.Values.Any(row => (row.Link.Source != T.Zero && !rows.ContainsKey(row.Link.Source))
+                        || (row.Link.Target != T.Zero && !rows.ContainsKey(row.Link.Target))))
+                        throw new InvalidOperationException("Constraint: dangling link reference.");
+                    break;
+                case EngineConstraint.UniquePairs:
+                    if (rows.Values.Select(row => (row.Link.Source, row.Link.Target)).Distinct().Count() != rows.Count)
+                        throw new InvalidOperationException("Constraint: duplicate pair.");
+                    break;
+                case EngineConstraint.UniqueNames:
+                    var names = rows.Values.Select(row => row.Name).OfType<string>().ToArray();
+                    if (names.Distinct(StringComparer.Ordinal).Count() != names.Length)
+                        throw new InvalidOperationException("Constraint: duplicate name.");
+                    break;
+            }
+        }
+    }
+}
+
+internal static class EngineDiagnostics
+{
+    // Diagnostics must not turn an acknowledged commit into a reported failure.
+    internal static void Trace(Action<string>? trace, string message)
+    { try { trace?.Invoke(message); } catch { /* The storage result remains authoritative. */ } }
+}

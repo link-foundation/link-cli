@@ -1,5 +1,58 @@
 import type { LinoDocument } from './lino.js';
 
+export interface EngineOptions {
+  concurrency?: 'optimistic' | 'exclusive';
+  isolation?: 'read-committed' | 'snapshot' | 'serializable';
+  history?: null | 'all' | number;
+  constraints?: ('references' | 'unique-pairs' | 'unique-names')[];
+  trace?: boolean;
+  requireDurableFlush?: boolean;
+}
+export interface CommitLog {
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class MemoryCommitLog implements CommitLog {
+  constructor(records?: string[]);
+  readonly supportsDurableFlush: false;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class ReplicatedCommitLog implements CommitLog {
+  constructor(primary: CommitLog, replicas: CommitLog[], options?: { acknowledgements?: number | null; trace?: (message: string) => void });
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+  synchronize(): number;
+}
+export interface StagedSessionLike extends ClinkLike {
+  commit(): bigint;
+  rollback(): void;
+}
+export interface StagedEngineLike {
+  begin(): StagedSessionLike;
+  snapshot(revision?: bigint): string;
+  journal(): string;
+  free(): void;
+}
+export class EngineClient extends LinksClient {
+  constructor(session: StagedSessionLike, capabilities?: { durableFlush?: boolean; persistent?: boolean });
+  commit(): Promise<bigint>;
+  rollback(): Promise<void>;
+}
+export class WasmEngine {
+  constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
+  begin(): EngineClient;
+  snapshot(revision?: AddressInput): { revision: bigint; rows: (Link & { name: string | null })[] };
+  journal(): string[];
+  close(): void;
+  [Symbol.dispose](): void;
+}
+
 export type { LinoDocument, LinoLink, LinoNode, LinoRef } from './lino.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
 
@@ -185,6 +238,8 @@ export class WasmTransport implements Transport {
   readonly capabilities: Capabilities;
   readonly stats: { requests: number; bytesSent: number; bytesReceived: number };
   send(text: string, scope?: Scope): Promise<string>;
+  control(method: 'commit'): Promise<bigint>;
+  control(method: 'rollback'): Promise<void>;
   close(): Promise<void>;
 }
 export function createWasmClient(clink: ClinkLike, options?: WasmOptions): LinksClient;

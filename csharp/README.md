@@ -167,3 +167,10 @@ dotnet test --configuration Release
 
 Release automation for this package lives in `csharp/scripts/` and uses
 changesets from `csharp/.changeset/`.
+
+The optional `Foundation.Data.Doublets.Cli.Engine` namespace exposes
+`LinksEngine<T>` sessions through the existing links and names API. Concurrency,
+isolation, immutable history, constraints and revision-log storage are selected
+at construction. See [engine strategies](../docs/ENGINE-STRATEGIES.md) for costs,
+file/replication ownership, guarantee limits and runnable examples. The existing
+bare links store remains available for cache workloads.

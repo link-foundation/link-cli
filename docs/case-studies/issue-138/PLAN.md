@@ -10,15 +10,16 @@ finite test suite proves all failure modes or that all DBMS have been surveyed.
 
 - [x] Read the entire issue, conversation, inline comments, reviews, and sub-issue inventory.
 - [x] Verify prepared branch and clean starting tree; locate repository guidance.
-- [ ] Audit existing storage, transactions, history, and language surfaces.
-- [ ] Study recent related PRs and primary competitor documentation/source.
-- [ ] Record requirements, proposed solutions, costs, and verification per requirement.
-- [ ] Reproduce durability/recovery failures with failing automated tests before fixes.
-- [ ] Correct transaction failure and persistence ordering; retain opt-in tracing.
-- [ ] Add interchangeable concurrency strategies and transaction isolation tests.
-- [ ] Add configurable version retention and test historical visibility.
-- [ ] Add replaceable synchronization decorators and failure/partition tests.
-- [ ] Implement matching public surfaces in Rust, C#, and JS/TS where supported.
+- [x] Audit existing storage, transactions, history, and language surfaces.
+- [x] Study recent related PRs and primary competitor documentation/source.
+- [x] Record requirements, proposed solutions, costs, and verification per requirement.
+- [x] Reproduce durability/recovery failures with failing automated tests before fixes.
+- [x] Correct transaction failure and persistence ordering; retain opt-in tracing.
+- [x] Add interchangeable concurrency strategies and transaction isolation tests.
+- [x] Add configurable version retention and test historical visibility.
+- [x] Add replaceable synchronization decorators and failure/partition tests.
+- [x] Implement matching staged-engine public surfaces in Rust, C#, and JS/TS.
+- [ ] Compose branches/merges, network transport, routing and consensus-backed storage.
 - [ ] Document cache, durable store, and distributed deployment recipes, examples,
       competitor comparisons, component reuse, and exact guarantee limits.
 - [ ] Measure coverage, add missing edge cases, distinguish measured coverage from guarantees.
@@ -32,6 +33,15 @@ finite test suite proves all failure modes or that all DBMS have been surveyed.
 - [ ] Verify all relevant CI on final SHA and mark PR 139 ready when implementation is complete.
 
 ## Resource and evidence discipline
+
+C# run 40107157910 failed on Windows because Flush reopened an exclusively
+mapped file. Commit 52d4da5 flushes the owned mapping and file handle; subsequent
+run 40107962518 passes all three platforms, 562 tests each. Both logs are
+preserved. Coverage measurements are currently below 100%; do not replace that
+requirement with test counts. Final engine changes require new CI on their SHA.
+Rust run 40107962488 separately failed two Windows durability tests: `sync_all`
+used a read-only handle. Commit 126168f opens it writable; Linux/macOS and
+fresh-merge checks pass, while Windows validation is still running.
 
 Run compilers sequentially (Cargo jobs=1; reduced debug info), save long logs,
 keep reusable probes in experiments/issue-138 and real examples under examples/.

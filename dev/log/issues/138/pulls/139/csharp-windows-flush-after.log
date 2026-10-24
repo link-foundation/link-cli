@@ -1,0 +1,6 @@
+Test (windows-2025)	Run tests	2026-10-24T15:41:02.4937031Z   Passed Foundation.Data.Doublets.Cli.Tests.CliImportAtomicityTests.InvalidLastLine_LeavesDatabaseUnchangedAfterReopening(option: "--in", populated: True, transactions: False) [1 s]
+Test (windows-2025)	Run tests	2026-10-24T15:41:02.5039501Z
+Test (windows-2025)	Run tests	2026-10-24T15:41:02.5088485Z Test Run Successful.
+Test (windows-2025)	Run tests	2026-10-24T15:41:02.5089022Z Total tests: 562
+Test (windows-2025)	Run tests	2026-10-24T15:41:02.5089417Z      Passed: 562
+Test (windows-2025)	Run tests	2026-10-24T15:41:02.5092312Z  Total time: 29.1987 Seconds

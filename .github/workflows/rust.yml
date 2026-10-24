@@ -281,6 +281,36 @@ jobs:
       - name: Run doc tests
         run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
 
+  # === COVERAGE MEASUREMENT ===
+  coverage:
+    name: Rust coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-coverage
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust coverage tools
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update --component llvm-tools-preview
+          rustup default stable
+          cargo install cargo-llvm-cov --version 0.9.1 --locked
+
+      - name: Measure Rust test coverage
+        run: cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --lcov --output-path rust/coverage.lcov
+
+      - name: Preserve coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-coverage
+          path: rust/coverage.lcov
+          if-no-files-found: error
+
   # === SEMANTIC MERGE CONFLICT CHECK ===
   # Every other job tests the pull request head. A pull request can be green in
   # isolation and still break `main`: two changes that merge without a textual

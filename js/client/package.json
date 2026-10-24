@@ -1,6 +1,6 @@
 {
   "name": "@link-foundation/link-cli-client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Minimal universal JS/TS client for link-cli stores: the clink --serve TCP protocol (Node.js, Bun, Deno), a subprocess adapter and the in-process WebAssembly backend, behind one contract with explicit capabilities",
   "type": "module",
   "license": "Unlicense",
@@ -41,7 +41,11 @@
       "types": "./types/lino.d.ts",
       "default": "./src/lino.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./engine-file-log": {
+      "types": "./types/engine-file-log.d.ts",
+      "default": "./src/engine-file-log.js"
+    }
   },
   "files": [
     "src",

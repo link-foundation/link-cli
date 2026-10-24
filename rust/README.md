@@ -193,3 +193,10 @@ cargo test --manifest-path rust/Cargo.toml --all-features
 
 Release automation for this package lives in `rust/scripts/` and uses changelog
 fragments from `rust/changelog.d/`.
+
+The optional [`engine`](src/engine/mod.rs)
+module provides private transaction sessions, configurable concurrency/isolation,
+immutable history, constraints and replaceable revision logs. See
+[engine strategies](../docs/ENGINE-STRATEGIES.md) for configuration, costs,
+distributed ownership, guarantees and examples. The existing bare store remains
+available for cache workloads without these layers.

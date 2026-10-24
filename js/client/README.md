@@ -203,3 +203,18 @@ Versioning follows semver. The wire protocol is versioned separately as
 `capabilities.protocol` (`links-text/1`). See
 [docs/case-studies/issue-108](../../docs/case-studies/issue-108/README.md) for
 the design and the measurements.
+
+### Optional isolated engine
+
+`WasmEngine` wraps the compiled Rust staged engine with the same asynchronous
+links methods on each session. Create a session with `engine.begin()`, issue
+several requests, then `await session.commit()` or `await session.rollback()`.
+Closing an uncommitted session rolls it back. Commit shares the request queue,
+so it cannot overtake an earlier write. Defaults are optimistic admission,
+serializable validation, no historical retention and a volatile memory log.
+
+See [engine configurations, guarantees, costs and runnable examples](../../docs/ENGINE-STRATEGIES.md).
+A custom synchronous commit log selects storage; `MemoryCommitLog` and
+`ReplicatedCommitLog` compose portable adapters. For a filesystem journal use
+the separate `./engine-file-log` entry point. Durability is an explicit backend
+capability; replication acknowledgements do not provide consensus or failover.

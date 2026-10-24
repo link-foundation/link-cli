@@ -195,7 +195,7 @@ impl QueryProcessor {
             self.trace_msg(&format!(
                 "[CreateOrUpdateLink] Creating new link => (S={source},T={target})."
             ));
-            let created = storage.create(source, target);
+            let created = storage.try_create(source, target)?;
             changes.push((None, storage.get_link(created)));
             created
         };
@@ -251,19 +251,19 @@ impl QueryProcessor {
                     // Specific ID requested.
                     self.ensure_indexed_link(storage, num, source_id, target_id, changes)?
                 } else if id == "*" || Self::is_variable(id) {
-                    self.ensure_doublet(storage, source_id, target_id, changes)
+                    self.ensure_doublet(storage, source_id, target_id, changes)?
                 } else if let Some(named) = storage.get_by_name(crate::query_parser::name(id))? {
                     self.ensure_indexed_link(storage, named, source_id, target_id, changes)?
                 } else {
                     // A doublet is unique, so a new name for an existing
                     // `(source, target)` names that link instead of copying it.
-                    let named = self.ensure_doublet(storage, source_id, target_id, changes);
+                    let named = self.ensure_doublet(storage, source_id, target_id, changes)?;
                     storage.set_name(named, crate::query_parser::name(id))?;
                     named
                 }
             } else {
                 // Anonymous link
-                self.ensure_doublet(storage, source_id, target_id, changes)
+                self.ensure_doublet(storage, source_id, target_id, changes)?
             };
 
             return Ok(link_id);
@@ -324,7 +324,7 @@ impl QueryProcessor {
         source: u32,
         target: u32,
         changes: &mut Changes,
-    ) -> u32 {
+    ) -> Result<u32> {
         if let Some(existing_id) = Self::search_unspecified(storage, source, target) {
             self.trace_msg(&format!(
                 "[EnsureLinkCreated] Link already found => ID={existing_id} => no-op."
@@ -333,16 +333,16 @@ impl QueryProcessor {
                 .get_link(existing_id)
                 .unwrap_or_else(|| Link::new(existing_id, source, target));
             changes.push((Some(existing), Some(existing)));
-            existing_id
+            Ok(existing_id)
         } else {
             let source = Self::resolve_unspecified(source, 0);
             let target = Self::resolve_unspecified(target, 0);
             self.trace_msg(&format!(
                 "[EnsureLinkCreated] Creating link for (S={source}, T={target})."
             ));
-            let created = storage.create(source, target);
+            let created = storage.try_create(source, target)?;
             changes.push((None, storage.get_link(created)));
-            created
+            Ok(created)
         }
     }
 

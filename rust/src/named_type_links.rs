@@ -18,6 +18,10 @@ use crate::named_types::{NamedTypes, NamedTypesDecorator};
 
 pub trait NamedTypeLinks {
     fn create(&mut self, source: u32, target: u32) -> u32;
+    /// Fallible allocation for backends that can report transaction/address errors.
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        Ok(self.create(source, target))
+    }
     fn ensure_created(&mut self, id: u32) -> u32;
     fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
         if id == 0 || id == u32::MAX {
@@ -80,7 +84,7 @@ pub trait NamedTypeLinks {
             return Ok(id);
         }
 
-        let id = self.create(0, 0);
+        let id = self.try_create(0, 0)?;
         self.set_name(id, name)?;
         self.update(id, id, id)?;
         Ok(id)

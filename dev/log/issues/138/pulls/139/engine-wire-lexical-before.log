@@ -1,0 +1,20 @@
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Missing expected exception.
+    at engineConformance (file:///tmp/gh-issue-solver-1792854251187/js/client/test/conformance/engine.mjs:44:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async wasmBackend (file:///tmp/gh-issue-solver-1792854251187/js/client/test/conformance/run.mjs:76:3)
+    at async backendsFromEnvironment (file:///tmp/gh-issue-solver-1792854251187/js/client/test/conformance/run.mjs:99:33)
+    at async main (file:///tmp/gh-issue-solver-1792854251187/js/client/test/conformance/run.mjs:445:20)
+    at async file:///tmp/gh-issue-solver-1792854251187/js/client/test/conformance/run.mjs:481:1 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: undefined,
+  expected: undefined,
+  operator: 'throws',
+  diff: 'simple'
+}
+
+Node.js v26.12.1

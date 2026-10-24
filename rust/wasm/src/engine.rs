@@ -1,0 +1,172 @@
+//! JS uses the native engine through WASM, rather than reimplementing isolation.
+use crate::engine_log::{BindingLog, JsCommitLog};
+use link_cli::engine::{
+    ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction, HistoryPolicy,
+    IsolationLevel, MemoryLog,
+};
+use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
+use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
+use serde::Deserialize;
+use wasm_bindgen::prelude::*;
+
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+struct Options {
+    concurrency: Option<String>,
+    isolation: Option<String>,
+    history: Option<serde_json::Value>,
+    constraints: Vec<String>,
+    trace: bool,
+    require_durable_flush: bool,
+}
+fn options(text: &str) -> Result<EngineOptions, String> {
+    let parsed: Options = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    Ok(EngineOptions {
+        concurrency: match parsed.concurrency.as_deref() {
+            None | Some("optimistic") => ConcurrencyControl::Optimistic,
+            Some("exclusive") => ConcurrencyControl::Exclusive,
+            _ => return Err("unknown concurrency control".into()),
+        },
+        isolation: match parsed.isolation.as_deref() {
+            None | Some("serializable") => IsolationLevel::Serializable,
+            Some("snapshot") => IsolationLevel::Snapshot,
+            Some("read-committed") => IsolationLevel::ReadCommitted,
+            _ => return Err("unknown isolation level".into()),
+        },
+        history: match parsed.history {
+            None | Some(serde_json::Value::Null) => HistoryPolicy::None,
+            Some(serde_json::Value::String(text)) if text == "all" => HistoryPolicy::All,
+            Some(serde_json::Value::Number(number)) => HistoryPolicy::Last(
+                number
+                    .as_u64()
+                    .and_then(|n| usize::try_from(n).ok())
+                    .filter(|n| *n > 0)
+                    .ok_or("history must be positive")?,
+            ),
+            _ => return Err("history must be null, all, or a positive integer".into()),
+        },
+        constraints: parsed
+            .constraints
+            .iter()
+            .map(|constraint| match constraint.as_str() {
+                "references" => Ok(Constraint::References),
+                "unique-pairs" => Ok(Constraint::UniquePairs),
+                "unique-names" => Ok(Constraint::UniqueNames),
+                _ => Err("unknown constraint".into()),
+            })
+            .collect::<Result<_, String>>()?,
+        trace: parsed.trace,
+        require_durable_flush: parsed.require_durable_flush,
+    })
+}
+
+#[wasm_bindgen]
+pub struct StagedEngine {
+    inner: Engine<u32, BindingLog>,
+}
+#[wasm_bindgen]
+impl StagedEngine {
+    /// journal_json is an array of engine1 records ("[]" for an empty store).
+    #[wasm_bindgen(constructor)]
+    pub fn new(options_json: &str, journal_json: &str) -> Result<StagedEngine, String> {
+        let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
+        Ok(Self {
+            inner: Engine::open(
+                BindingLog::Memory(MemoryLog { entries }),
+                options(options_json)?,
+            )
+            .map_err(|e| e.to_string())?,
+        })
+    }
+    /// The caller owns the external adapter's resources and fencing.
+    #[wasm_bindgen(js_name = withLog)]
+    pub fn with_log(options_json: &str, log: JsCommitLog) -> Result<StagedEngine, String> {
+        Ok(Self {
+            inner: Engine::open(BindingLog::External(log), options(options_json)?)
+                .map_err(|e| e.to_string())?,
+        })
+    }
+    pub fn begin(&self) -> Result<StagedSession, String> {
+        Ok(StagedSession {
+            inner: self.inner.begin().map_err(|e| e.to_string())?,
+        })
+    }
+    /// Export does not persist anything; caller owns the resulting bytes.
+    pub fn journal(&self) -> Result<String, String> {
+        self.inner
+            .with_log(|log| {
+                Ok(serde_json::to_string(&log.read_log_entries()?).expect("strings serialize"))
+            })
+            .map_err(|e| e.to_string())
+    }
+    /// Historical rows use decimal addresses, avoiding JS number precision loss.
+    pub fn snapshot(&self, revision: Option<u64>) -> Result<String, String> {
+        let snapshot = match revision {
+            Some(revision) => self.inner.snapshot_at(revision),
+            None => self.inner.snapshot(),
+        }
+        .map_err(|e| e.to_string())?;
+        let rows: Vec<_> = snapshot.rows().values().map(|row| serde_json::json!({
+            "index": row.link.index.to_string(), "source": row.link.source.to_string(), "target": row.link.target.to_string(), "name": row.name,
+        })).collect();
+        Ok(
+            serde_json::json!({"revision": snapshot.revision.to_string(), "rows": rows})
+                .to_string(),
+        )
+    }
+}
+
+#[wasm_bindgen]
+pub struct StagedSession {
+    inner: EngineTransaction<u32, BindingLog>,
+}
+#[wasm_bindgen]
+impl StagedSession {
+    pub fn request(&mut self, text: &str) -> String {
+        let reply = match parse_document(text) {
+            Ok(document) => {
+                execute_request(&mut self.inner, &QueryProcessor::new(false), &document)
+            }
+            Err(error) => error_document(&error.to_string()),
+        };
+        format_document(&reply)
+    }
+    pub fn commit(&mut self) -> Result<u64, String> {
+        self.inner.commit().map_err(|e| e.to_string())
+    }
+    pub fn rollback(&mut self) {
+        self.inner.rollback();
+    }
+    pub fn count(&self) -> usize {
+        self.inner.links_count()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn binding_sessions_and_journal_round_trip() {
+        let engine = StagedEngine::new(r#"{"history":"all"}"#, "[]").unwrap();
+        let mut session = engine.begin().unwrap();
+        assert!(!session.request("(create: (0 0))").contains("error:"));
+        assert_eq!(engine.begin().unwrap().count(), 0);
+        assert_eq!(session.commit().unwrap(), 1);
+        assert!(session.request("(create: (0 0))").contains("error:"));
+        let reopened = StagedEngine::new("{}", &engine.journal().unwrap()).unwrap();
+        assert_eq!(reopened.begin().unwrap().count(), 1);
+        assert!(engine.snapshot(Some(0)).unwrap().contains("\"rows\":[]"));
+    }
+    #[test]
+    fn invalid_policies_are_not_silently_ignored() {
+        for text in [
+            r#"{"isolation":"dirty"}"#,
+            r#"{"concurrency":"none"}"#,
+            r#"{"history":0}"#,
+            r#"{"constraints":["unknown"]}"#,
+            r#"{"durable":true}"#,
+        ] {
+            assert!(StagedEngine::new(text, "[]").is_err(), "{text}");
+        }
+    }
+}

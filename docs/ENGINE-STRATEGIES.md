@@ -1,0 +1,172 @@
+# Optional staged engine
+
+The existing `LinkStorage` / `NamedTypesDecorator` path remains the cache and
+compatibility path. It does not gain isolation merely by acquiring a file lock.
+The optional Rust `engine::Engine`, C# `Engine.LinksEngine<T>`, and JS/TS
+`WasmEngine` keep a session's writes private until commit. Sessions implement
+the existing raw links and names interfaces. Choose the policies at construction.
+JS runs the Rust implementation through WASM; it does not duplicate the
+transaction algorithm.
+
+## Choose a configuration
+
+| Scenario | Construction | Acknowledgement and cost |
+| --- | --- | --- |
+| Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
+| Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
+| Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed complete revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
+| Bounded time travel | Set Rust `HistoryPolicy::Last(n)`, C# `HistoryLimit = n`, JS `history: n` | Retain up to n revisions including current. Active sessions and previously returned snapshots pin their versions independently. |
+| Complete time travel | Rust `HistoryPolicy::All`, C# `HistoryLimit = null`, JS `history: 'all'` | Every replayed/committed revision remains addressable in memory. |
+| Asynchronous copies | Wrap a log with replicated log, async policy | Commit waits for primary only. Call synchronize under the engine's log mutex to catch up followers. A primary loss can lose uncopied commits. |
+| Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
+
+`supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
+an adapter contract. Memory logs declare false. An unknown adapter defaults to
+false in Rust; explicit durability requirements reject it. A durable external
+adapter must actually flush its storage before returning. Replicated durability
+requires durable primary and, conservatively, every eligible follower when
+more than one acknowledgement is requested. A copy count alone says nothing
+about independent failure domains, fencing, power-loss protection, or elections.
+
+## Concurrency and isolation
+
+Optimistic admission permits multiple sessions. Validation and publication use
+one engine mutex, so two commits cannot validate the same state concurrently.
+Exclusive admission fails immediately when another session is active; rollback,
+drop/dispose, and completed attempts release admission. A session belongs to
+one caller; share engine handles between threads instead of sharing a session.
+
+| Isolation | Reads | Conflict checks |
+| --- | --- | --- |
+| Read committed | Each operation sees current committed state plus its own writes | A written address changed after begin aborts. Reads can change and scans can gain rows. |
+| Snapshot | Begin-time immutable state plus own writes | Same write/write check. Disjoint write skew is allowed. |
+| Serializable (default) | Begin-time immutable state plus own writes | Any intervening database revision aborts the session, including scans and read-only commits. This conservative check prevents predicate anomalies but can abort unrelated work. |
+
+There are no dirty reads or dirty writes between sessions of the same engine.
+These properties do not apply to independent writers or direct mutation of an
+adapter behind the engine. Retry conflicts with a **new** session. A failed
+commit attempt closes its session and discards its staged writes. Allocations
+can leave gaps after rollback. An optional references, unique pairs or unique
+names constraint validates the whole proposed state at commit. Raw mutation
+never silently merges duplicate pairs or cascades deletes: select an existing
+usages/uniqueness decorator if that policy is wanted. Legacy CLI backends retain
+their established merge and cascading behavior.
+
+## Commit, recovery and errors
+
+A write commit encodes the complete next revision, appends its record, flushes
+the log, then publishes the immutable state. The log is authoritative; there
+is no separately acknowledged data checkpoint. This avoids mixed mapped data
+and journal visibility. Full revision records are deliberately simple, not a
+space-efficient WAL implementation.
+
+An append or flush error is an **indeterminate commit**: data may have reached
+the log even if the caller got an error. The engine then rejects further
+writes and engine snapshots. Close/reopen using the same authoritative log to
+discover the outcome. Do not blindly retry an uncertain business operation;
+use an application idempotency key or inspect recovered state first. JS reports
+`LinksError.outcome === 'unknown'`; validation conflicts are `failed`.
+Replication does not change these rules. Followers can contain an unacknowledged
+commit and must not be promoted automatically.
+
+The exclusive file adapters discard an incomplete final line and reject complete
+corrupt records. Recovery checks checksum, UTF-8 names, address bounds, unique
+addresses, contiguous revisions, nondecreasing allocator and selected constraints.
+Checksums detect accidental corruption, not malicious tampering. Establish the
+database directory and protect its metadata before depending on power-loss
+recovery. Filesystem/device failure outside the adapter's flush contract is not
+proven by ordinary process crash tests.
+
+The legacy transaction decorators have a different architecture: their commit
+marker is flushed before acknowledging commit, data is flushed before an applied
+marker, and replay errors propagate. They still mutate the underlying store
+while a transaction is open; use the staged engine for session isolation.
+
+## Distributed ownership and horizontal scale
+
+Replicated logs have a fixed, externally fenced primary and fixed followers.
+A follower must be an exact prefix of the primary; divergent or ahead followers
+are rejected. Catch-up appends only missing records, then flushes. Scheduling is
+explicit, so a bare store pays no background replication cost. Adapter resources
+remain owned by the caller; close sessions and engines before releasing them.
+
+A shared-storage deployment must enforce one writer through the file adapter's
+advisory lock or an external fencing mechanism that every writer respects.
+Local advisory locks are not a distributed lease and must not be assumed to
+work on an arbitrary network filesystem. A shared-nothing deployment gives
+independent logs and failure domains to followers and each independent shard.
+Partition tenants/keys into separate engines to scale aggregate independent
+work horizontally. Addresses are local to a shard; use `(shard, address)` in
+application references and keep an atomic transaction within one shard.
+
+Safe automatic primary election, changing membership, consensus, cross-shard
+atomic transactions, and a routing/network service are not supplied by these
+log decorators. They require protocols beyond acknowledgement counting. Existing
+`RemoteLinks` TCP stores carry individual links operations; they do not create a
+transaction boundary across connections. Do not infer any of those guarantees
+from a replicated in-memory test.
+
+## Costs and comparison
+
+The staged implementation clones the current rows for each write commit and
+writes a complete revision: O(N + W) memory/work plus O(N) journal bytes for N
+rows and W staged writes. A scan currently materializes its view. History adds
+up to O(HN) retained row memory. Allocator and per-address modification metadata
+are shared; deleted-address conflict tombstones currently remain allocated.
+Recovery reads the full log; retention bounds in-memory history, not log size.
+Replication catch-up compares prefixes and copies missing complete revisions.
+There is no background compaction or group commit. These limits matter for a
+large or frequently written database.
+
+| Competitor configuration | Closest available configuration | Material difference |
+| --- | --- | --- |
+| SQLite WAL with synchronous commit | Exclusive file log + staged engine, serializable | Full-state records instead of page WAL, conservative validation, no SQLite locking/checkpoint implementation or performance equivalence. |
+| PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
+| PostgreSQL SERIALIZABLE | Serializable | Whole-revision abort check instead of SSI dependency tracking, usually more conflicts. |
+| RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
+| Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
+| Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
+| etcd / TiKV consensus transactions | No equivalent configuration yet | Raft leadership/fencing/membership, distributed recovery and cross-shard coordination are separate unfinished work. |
+
+See [the pinned source study](case-studies/issue-138/RESEARCH.md),
+[acceptance inventory](case-studies/issue-138/REQUIREMENTS.md), and
+[portable revision vectors](protocol/engine-revision-vectors.json). Tests and
+coverage evidence must be read at their measured scope; neither a passing suite
+nor a configuration analogy proves every ACID failure mode.
+
+## Run the examples
+
+```sh
+cargo run --manifest-path rust/Cargo.toml --example engine_strategies
+cargo run --manifest-path rust/Cargo.toml --example engine_strategies -- /existing-directory/links.journal
+dotnet run --project examples/engine-csharp -- /existing-directory/links.journal
+wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
+node js/client/examples/engine.mjs /existing-directory/links.journal
+```
+
+Use a separate journal per simultaneously running writer. To verify portable
+recovery, stop one example before opening its journal with another language.
+Every implementation uses the same `engine1` records; u32 consumers reject
+addresses outside their range. C# and Rust support wider unsigned addresses.
+
+The JS filesystem adapter is imported separately from
+`@link-foundation/link-cli-client/engine-file-log`; the universal browser entry
+point has no Node imports. It uses an atomic `journal.writer` directory to fence
+writers. After an abrupt process exit, first verify/fence the old owner and then
+remove that directory explicitly. It deliberately does not guess whether a
+remote owner is dead or automatically break a stale lock. Native file adapters
+use the existing advisory file-lock implementation, released by the OS at exit.
+These lock formats differ: a JS writer directory does not fence a native writer's
+advisory lock. Never open the same journal concurrently through different
+adapters; mixed-language deployments need one externally enforced writer fence.
+Replicas must be independent storage instances and failure domains. C# and JS
+reject repeated object identities, but different wrappers can still alias the
+same underlying storage; the adapter owner must prevent that aliasing.
+
+JS/WASM custom adapters implement `read(): string` (a JSON array of record
+strings), `append(record): void`, `flush(): void`, and a boolean
+`supportsDurableFlush`. Append and flush must complete synchronously and return
+undefined. A Promise cannot provide this boundary and is rejected. Browser
+IndexedDB and other asynchronous storage require a server-side engine or a
+separate asynchronous transaction interface; an exported in-memory journal is
+not a durable commit. Caller-owned adapters outlive all sessions that use them.

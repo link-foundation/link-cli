@@ -6,7 +6,7 @@
 import { wasmCapabilities } from './capabilities.js';
 import { LinksClient } from './client.js';
 import { scopeError } from './deadline.js';
-import { ConnectionClosedError, LimitExceededError } from './errors.js';
+import { ConnectionClosedError, LimitExceededError, LinksError, UnsupportedError } from './errors.js';
 import { DEFAULT_MAX_MESSAGE_BYTES } from './framing.js';
 
 const encoder = new TextEncoder();
@@ -56,9 +56,27 @@ export class WasmTransport {
       return reply;
     };
     // Keep requests in order, each after the previous one settled.
+    return this.#enqueue(run);
+  }
+
+  #enqueue(run) {
     const result = this.#tail.then(run);
     this.#tail = result.catch(() => {});
     return result;
+  }
+
+  /** Serializes transaction controls after all previously queued requests. */
+  control(method) {
+    return this.#enqueue(() => {
+      if (this.#closed) throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
+      if (!['commit', 'rollback'].includes(method) || typeof this.#clink[method] !== 'function') {
+        throw new UnsupportedError('this WebAssembly store has no transaction control');
+      }
+      try { return this.#clink[method](); }
+      catch (cause) { throw new LinksError(String(cause), {
+        outcome: method === 'commit' && String(cause).includes('indeterminate commit') ? 'unknown' : 'failed', cause,
+      }); }
+    });
   }
 
   /** Waits for queued requests; frees the store only if this transport owns it. */
