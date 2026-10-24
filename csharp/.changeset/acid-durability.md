@@ -37,3 +37,6 @@ waits for pending transactions.
 Retain observed partial writes when storage or user callbacks throw, undo
 automatic operations and preserve explicit rollback state. Keep the original
 absent state across repeated allocation/update callbacks.
+
+Release owned data handles and partially initialized names mappings when a
+constructor fails; leave borrowed data usable after failed construction.

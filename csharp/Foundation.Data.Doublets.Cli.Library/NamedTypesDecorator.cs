@@ -76,19 +76,28 @@ namespace Foundation.Data.Doublets.Cli
         {
         }
 
-        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
-            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
-        public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false) : base(pinnedTypesDecorator)
+        public NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator, string namesDatabaseFilename, bool tracingEnabled = false)
+            : this(pinnedTypesDecorator, namesDatabaseFilename, tracingEnabled, null)
+        {
+        }
+
+        private NamedTypesDecorator(PinnedTypesDecorator<TLinkAddress> pinnedTypesDecorator,
+            string namesDatabaseFilename, bool tracingEnabled, DurableMappedMemory? ownedDataMemory) : base(pinnedTypesDecorator)
         {
             _tracingEnabled = tracingEnabled;
             PinnedTypesDecorator = pinnedTypesDecorator;
+            _dataMemory = ownedDataMemory;
             if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
-            var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
-            _namesMemory = new DurableMappedMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
-            var namesLinks = new UnitedMemoryLinks<TLinkAddress>(_namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
-            var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing();
-            _namedLinksFacade = decoratedNamesLinks;
-            NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
+            try
+            {
+                _namesMemory = new DurableMappedMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
+                (_namedLinksFacade, NamedLinks) = NamesDatabase<TLinkAddress>.Open(_namesMemory);
+            }
+            catch
+            {
+                if (ownedDataMemory is not null) LinksFacadeDisposer.Dispose(pinnedTypesDecorator);
+                throw;
+            }
             NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
 
@@ -98,9 +107,15 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private NamedTypesDecorator((ILinks<TLinkAddress> Links, DurableMappedMemory Memory) store,
-            string namesFilename, bool tracingEnabled) : this(store.Links, namesFilename, tracingEnabled)
+            string namesFilename, bool tracingEnabled)
+            : this(PinOwnedStore(store.Links), namesFilename, tracingEnabled, store.Memory)
         {
-            _dataMemory = store.Memory;
+        }
+
+        private static PinnedTypesDecorator<TLinkAddress> PinOwnedStore(ILinks<TLinkAddress> links)
+        {
+            try { return new PinnedTypesDecorator<TLinkAddress>(links); }
+            catch { LinksFacadeDisposer.Dispose(links); throw; }
         }
 
         public void Dispose()

@@ -32,7 +32,8 @@ namespace Foundation.Data.Doublets.Cli
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
             var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
-            return links.DecorateWithAutomaticUniquenessAndUsagesRepointing();
+            try { return links.DecorateWithAutomaticUniquenessAndUsagesRepointing(); }
+            catch { LinksFacadeDisposer.Dispose(links); throw; }
         }
 
         public static string MakeNamesDatabaseFilename(string databaseFilename)
@@ -43,23 +44,33 @@ namespace Foundation.Data.Doublets.Cli
             return namesDatabaseFilename;
         }
 
+        public SimpleLinksDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false)
+            : this(links, namesDatabaseFilename, tracingEnabled, ownsData: false)
+        {
+        }
+
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
-            Justification = "The names database memory and links are owned by this instance and released by " + nameof(Dispose) + ".")]
-        public SimpleLinksDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename, bool tracingEnabled = false) : base(links)
+            Justification = "NamesDatabase.Open disposes on failure and transfers the mapping to the owned names facade on success.")]
+        private SimpleLinksDecorator(ILinks<TLinkAddress> links, string namesDatabaseFilename,
+            bool tracingEnabled, bool ownsData) : base(links)
         {
             _tracingEnabled = tracingEnabled;
             if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] Constructing SimpleLinksDecorator with names DB: {namesDatabaseFilename}");
-            var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
-            var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
-            var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
-            var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing();
-            _namedLinksFacade = decoratedNamesLinks;
-            NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
+            try
+            {
+                var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
+                (_namedLinksFacade, NamedLinks) = NamesDatabase<TLinkAddress>.Open(namesMemory);
+            }
+            catch
+            {
+                if (ownsData) LinksFacadeDisposer.Dispose(links);
+                throw;
+            }
             NamedLinksDatabaseFileName = namesDatabaseFilename;
         }
 
         public SimpleLinksDecorator(string databaseFilename, bool tracingEnabled = false)
-            : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
+            : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled, ownsData: true)
         {
         }
 

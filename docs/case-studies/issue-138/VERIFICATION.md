@@ -488,3 +488,22 @@ All 17 actual WASM tests pass. Wrapper coverage remains 331/331 lines,
 the report measures 2,729/9,093 lines (30.01%), 392/1,287 branches (30.46%),
 347/1,308 functions and 3,943/14,307 regions. Native/WASM Clippy deny warnings;
 Rust and C# formatting checks pass. No source exclusions were added.
+
+## Failed C# constructor ownership
+
+Three regressions first reproduce owned typed/named/simple constructors retaining
+the data handle when a directory blocks the names path. Immediate exclusive
+reopening fails without any GC forcing. All three pass after guarded construction;
+four borrowed cases preserve the caller's store, including the direct pinned
+constructor. Two bounded memory adapters additionally fail before raw pointer
+access and later during Unicode names initialization, checking cleanup before
+the test's own disposal. All nine focused cases pass.
+
+C# Debug and Release each pass 727 tests. Debug measures 5,821/6,482 lines
+(89.80%) and 2,547/3,074 branches (82.86%); Release measures 4,423/4,843 lines
+(91.33%) and 2,526/3,055 branches (82.68%). Formatting verification passes;
+project-wide coverage remains below 100%, with no added source exclusions.
+Rust and WASM production sources are unchanged from the preceding verified step.
+
+See [CONSTRUCTOR-PLAN.md](CONSTRUCTOR-PLAN.md) and
+`dev/log/issues/138/pulls/139/constructor-failure.txt` for reproduction and scope.

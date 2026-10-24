@@ -258,3 +258,8 @@ payloads and preserves unknown outcomes. Full journals in one coordinator group
 limit scale. `PartitionedJournalStore` moves immutable journals to independently
 routed data groups and retains atomic pointer publication in the catalog. See the
 deployment and costs guide for topology, object retention and throughput limits.
+
+C# named, typed and simple file constructors release their owned data handle
+if names construction fails. A failed constructor over a caller-supplied store
+leaves that store usable. Partially initialized names mappings are released on
+both raw-facade and names-content errors; no GC/finalizer wait is required.

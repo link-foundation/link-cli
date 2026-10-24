@@ -11,7 +11,7 @@ callbacks for a new address must also preserve its original absent state.
 - [x] Preserve the storage error and journal partial effects before cleanup.
 - [x] Test following writes, persistent reopen and both normal/error outcomes.
 - [x] Run native/WASM suites, coverage, Clippy and formatting.
-- [ ] Publish and inspect exact-SHA CI.
+- [x] Publish and inspect exact-SHA CI.
 
 Use at most three live data rows per fixture, no stress loops. Custom adapters
 implement the existing callback contract; additionally inspect ordinary user
@@ -36,3 +36,7 @@ The expanded 21-case C# focused suite passes after removing an unsupported
 synchronous-test Timeout attribute. Six added cases check errors before mutation
 for create/update/delete and both transaction ownership modes. CI job-level
 deadlines remain in place.
+
+Fresh exact-SHA checks for `6f9673b5a0fe86ad9df1a82d7cf42e3a6838bf40`
+finish with 37 successes, ten skipped and one neutral. Recent runs were created
+at 2026-10-24T19:29:57Z and match that SHA.
