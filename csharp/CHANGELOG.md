@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.6] - 2026-10-24
+
+Harden the C# release automation (issue #134): the release commit is rebased
+onto the latest main before any file is touched, a push that loses the race to
+a concurrent release is rebased and retried while a repository-rule rejection
+fails fast with an explicit error, the tag is created only after the commit
+reached main and exactly that tag is pushed, git runs without a shell so
+release descriptions are passed verbatim, and CHANGELOG.md no longer gains an
+extra blank line on every release.
+
+The NuGet and GitHub release lookups that decide whether to release now retry
+network failures, 429 and 5xx with backoff and report the network cause, so a
+single dropped connection no longer fails the release.
+
+A changeset whose bump type cannot be parsed now fails the release with an
+"Invalid changeset" error naming the file. It used to be skipped with a
+warning and then deleted, so its bump and description were silently lost.
+
+`LinksServer` no longer crashes the process when it shuts down right after
+accepting a connection. The worker used to get its stream while `Shutdown`
+disposed the client, and `TcpClient` throws `ArgumentNullException` when that
+happens midway; the stream is now taken in the accept loop, under the lock
+`Shutdown` holds.
+
 ## [4.0.5] - 2026-10-24
 
 Preserve quoted query references as names, including numeric names such as "0"
