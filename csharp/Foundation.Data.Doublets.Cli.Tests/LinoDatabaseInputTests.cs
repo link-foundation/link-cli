@@ -6,6 +6,36 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class LinoDatabaseInputTests
 {
+    [Theory]
+    [InlineData("(c: c")]
+    [InlineData("(c: c)")]
+    [InlineData("(c: c c) trailing")]
+    [InlineData("('c: c c)")]
+    [InlineData("(c: '' c)")]
+    [InlineData("(c: c \"\")")]
+    public void ImportText_InvalidLastLineLeavesLinksAndNamesUnchanged(string invalidLine)
+    {
+        foreach (var populated in new[] { false, true })
+        {
+            WithNamedLinks(links =>
+            {
+                if (populated)
+                {
+                    LinoDatabaseInput.ImportText(links, "(a: a a)\n(b: b b)\n(existing: a b)");
+                }
+                var before = LinoDatabaseOutput.FormatDatabase(links).ToArray();
+
+                var error = Assert.Throws<FormatException>(() => LinoDatabaseInput.ImportText(
+                    links, $"(a: b a)\n(new: fresh fresh)\n{invalidLine}"));
+
+                Assert.Contains("line 3", error.Message);
+                Assert.Equal(before, LinoDatabaseOutput.FormatDatabase(links));
+                Assert.Equal(links.Constants.Null, links.GetByName("new"));
+                Assert.Equal(links.Constants.Null, links.GetByName("fresh"));
+            });
+        }
+    }
+
     [Fact]
     public void ImportText_ReproducesNumberedLinksAtTheirExplicitIndexes()
     {

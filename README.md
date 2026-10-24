@@ -312,6 +312,13 @@ Use `--in`, `--import`, or `--lino-input` to read a `.lino` file before the
 query runs. Import accepts one complete two-value link definition per non-empty
 line.
 
+Both implementations parse and validate the entire LiNo input before changing
+links or names. A malformed file leaves an empty or populated database unchanged
+and the CLI exits with code 1; no `--transactions` flag is needed. This validation
+also applies to the C# `LinoDatabaseInput.ImportText`/`ReadFromFile` and Rust
+`import_lino_text`/`import_lino_file` library APIs. Storage failures or process
+termination during writes retain the underlying store's durability guarantees.
+
 ```lino
 (father: father father)
 (mother: mother mother)

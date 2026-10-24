@@ -15,9 +15,13 @@ public static class LinoDatabaseInput
 
     public static void ImportText(INamedTypesLinks<uint> links, string linksNotation)
     {
+        // Finish parsing and validating every line before touching either store.
+        // Enumerating ParseDefinitions while importing leaves a partial import
+        // behind when a later line is malformed.
+        var definitions = ParseDefinitions(linksNotation).ToArray();
         var context = new ImportContext();
 
-        foreach (var definition in ParseDefinitions(linksNotation))
+        foreach (var definition in definitions)
         {
             ImportLink(links, context, definition);
         }
@@ -179,6 +183,10 @@ public static class LinoDatabaseInput
             Expect(':');
             var source = ReadReference(stopAtColon: false);
             var target = ReadReference(stopAtColon: false);
+            if (source.Value.Length == 0 || target.Value.Length == 0)
+            {
+                throw Error("LiNo import references must have a value.");
+            }
             SkipWhitespace();
             Expect(')');
             SkipWhitespace();

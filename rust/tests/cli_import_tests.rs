@@ -22,6 +22,63 @@ fn import_option_reads_numbered_lino_file() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn invalid_import_preserves_database_after_reopening() -> Result<()> {
+    for (option, flags) in [
+        ("--import", vec![]),
+        ("--in", vec!["--transactions"]),
+        ("--lino-input", vec!["--indexed-lookups"]),
+    ] {
+        for populated in [false, true] {
+            for invalid in ["(c: c", "(c: (nested: a b) (bad: a))"] {
+                let dir = tempdir()?;
+                let db = dir.path().join("data.links");
+                let input = dir.path().join("input.lino");
+                let before = dir.path().join("before.bin");
+                let after = dir.path().join("after.bin");
+                if populated {
+                    std::fs::write(&input, "(a: a a)\n(b: b b)\n(existing: a b)\n")?;
+                    ensure_success(&run_clink(&db, &input, &dir.path().join("seed.lino"))?)?;
+                }
+                ensure_success(
+                    &Command::new(env!("CARGO_BIN_EXE_clink"))
+                        .arg("--db")
+                        .arg(&db)
+                        .arg("--export-binary")
+                        .arg(&before)
+                        .output()?,
+                )?;
+                std::fs::write(&input, format!("(a: b a)\n(new: fresh fresh)\n{invalid}\n"))?;
+
+                let result = Command::new(env!("CARGO_BIN_EXE_clink"))
+                    .arg("--db")
+                    .arg(&db)
+                    .args(&flags)
+                    .arg(option)
+                    .arg(&input)
+                    .output()?;
+
+                assert_eq!(result.status.code(), Some(1));
+                assert!(!result.stderr.is_empty());
+                ensure_success(
+                    &Command::new(env!("CARGO_BIN_EXE_clink"))
+                        .arg("--db")
+                        .arg(&db)
+                        .arg("--export-binary")
+                        .arg(&after)
+                        .output()?,
+                )?;
+                assert_eq!(
+                    std::fs::read(&before)?,
+                    std::fs::read(&after)?,
+                    "{option} {invalid}"
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
 fn run_clink(db_path: &Path, input_path: &Path, output_path: &Path) -> Result<Output> {
     Ok(Command::new(env!("CARGO_BIN_EXE_clink"))
         .arg("--db")

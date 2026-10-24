@@ -51,6 +51,11 @@ transformation triggers with `--always`, `--once`, `--never`, `--triggers`,
 the public library, so other .NET applications can call into the same
 processors directly.
 
+LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
+`LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before
+writing. Invalid input leaves existing links and names unchanged, without
+requiring `--transactions`.
+
 ### Optional Transactions and Version Control
 
 Pass `--transactions` (or any flag in the family — `--transactions-file`,
