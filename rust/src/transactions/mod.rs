@@ -130,9 +130,8 @@ fn record_observed<T: LinkReference>(
     let after = GenericDoubletLink::from_link(&after);
     match observed.iter_mut().find(|(index, _, _)| *index == key) {
         Some(entry) => {
-            if entry.1.index == zero {
-                entry.1 = before;
-            }
+            // A null first before means the address did not exist. A later
+            // update must not replace it with the intermediate created row.
             entry.2 = after;
         }
         None => observed.push((key, before, after)),
@@ -363,8 +362,15 @@ where
         let prev = match outcome {
             Ok(prev) => prev,
             Err(err) => {
+                // Callbacks describe changes already made, even if a later
+                // part of the storage operation fails.
+                self.record_observed_transitions(&observed)?;
                 if owns {
-                    self.current = None;
+                    if observed.is_empty() {
+                        self.current = None;
+                    } else {
+                        self.rollback()?;
+                    }
                 }
                 return Err(err);
             }
@@ -416,8 +422,15 @@ where
         let deleted = match outcome {
             Ok(d) => d,
             Err(err) => {
+                // Callbacks describe changes already made, even if a later
+                // part of the storage operation fails.
+                self.record_observed_transitions(&observed)?;
                 if owns {
-                    self.current = None;
+                    if observed.is_empty() {
+                        self.current = None;
+                    } else {
+                        self.rollback()?;
+                    }
                 }
                 return Err(err);
             }

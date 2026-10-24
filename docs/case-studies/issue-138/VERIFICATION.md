@@ -456,3 +456,35 @@ All 17 actual WASM tests pass. Wrapper coverage remains 331/331 lines,
 core, the report measures 2,729/9,085 lines (30.04%), 392/1,285 branches
 (30.51%), 347/1,308 functions and 3,943/14,292 regions. No source exclusions
 were added. Native/WASM Clippy deny warnings; Rust and .NET formatting pass.
+
+## Observed partial writes and callback exceptions
+
+Six new Rust regressions first fail after a storage adapter emits change
+callbacks and then returns an error, or emits repeated create/update callbacks
+before an explicit rollback. Fifteen C# regressions independently fail for
+adapter errors and ordinary user callbacks throwing after mutation. Six further
+C# cases check errors before mutation. The transaction wrappers now record
+observed partial changes before propagating errors and roll back automatic work;
+explicit work stays caller-owned. Repeated callbacks preserve the original
+absent state, so rollback deletes a newly created row rather than retaining an
+intermediate version. Tests check following transactions and persistent reopening.
+
+The full Rust suite passes 488 standard tests plus the separate stdout harness,
+with four child entry points ignored. Coverage measures 8,962/9,919 lines
+(90.35%), 1,442/1,834 branches (78.63%), 1,211/1,372 functions and
+13,594/15,662 regions. C# Debug and Release each pass 718 tests. Debug measures
+5,793/6,447 lines (89.86%) and 2,538/3,066 branches (82.78%); Release measures
+4,404/4,819 lines (91.39%) and 2,517/3,047 branches (82.61%). Percentages here
+are calculated from integer counts rather than Coverlet's truncated rates.
+
+See [PARTIAL-WRITES-PLAN.md](PARTIAL-WRITES-PLAN.md) and the curated evidence in
+`dev/log/issues/138/pulls/139/partial-writes.txt`. Fixtures use at most three data
+rows. This verifies Result/exception paths under the existing callback contract;
+it does not establish Rust panic safety, silent-mutation recovery, or legacy
+crash atomicity. Project-wide 100% coverage remains unfinished.
+
+All 17 actual WASM tests pass. Wrapper coverage remains 331/331 lines,
+68/68 functions, 16/16 branches and 505/505 regions. Including linked core,
+the report measures 2,729/9,093 lines (30.01%), 392/1,287 branches (30.46%),
+347/1,308 functions and 3,943/14,307 regions. Native/WASM Clippy deny warnings;
+Rust and C# formatting checks pass. No source exclusions were added.

@@ -373,12 +373,25 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
                 }
                 else
                 {
-                    state = (state.Before ?? beforeLink, afterLink);
+                    // Null is the original absent state of a newly created
+                    // address, not a missing observation to replace.
+                    state = (state.Before, afterLink);
                 }
                 observed[key] = state;
             }
             return userHandler is null ? @continue : userHandler(before, after);
         };
+
+        void RecordObservedChanges()
+        {
+            foreach (var key in observedOrder)
+            {
+                var state = observed[key];
+                var before = state.Before ?? default;
+                var after = state.After ?? default;
+                RecordTransition(transaction, kind, before, after);
+            }
+        }
 
         TLinkAddress result;
         try
@@ -387,25 +400,27 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         }
         catch
         {
-            // best-effort: record nothing if the inner store threw before any
-            // before/after callback fired, and discard the auto transaction.
+            // A callback describes a change already made, even when the
+            // storage adapter or user handler subsequently throws.
+            RecordObservedChanges();
             if (ownsTransaction)
             {
-                lock (_lock)
+                if (observedOrder.Count > 0)
                 {
-                    if (_current == transaction) _current = null;
+                    transaction.Rollback();
+                }
+                else
+                {
+                    lock (_lock)
+                    {
+                        if (_current == transaction) _current = null;
+                    }
                 }
             }
             throw;
         }
 
-        foreach (var key in observedOrder)
-        {
-            var state = observed[key];
-            var before = state.Before ?? default;
-            var after = state.After ?? default;
-            RecordTransition(transaction, kind, before, after);
-        }
+        RecordObservedChanges();
 
         if (ownsTransaction)
         {

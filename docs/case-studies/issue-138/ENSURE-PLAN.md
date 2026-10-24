@@ -11,7 +11,7 @@ use this public path. Establish its behavior before changing it.
 - [x] Keep fallible named-query bridges from panicking on transaction I/O errors.
 - [x] Verify error cleanup with bounded injected storage failures.
 - [x] Run focused/full suites, coverage, Clippy and formatting.
-- [ ] Publish and inspect exact-SHA CI.
+- [x] Publish and inspect exact-SHA CI.
 
 All probes use at most eight requested addresses. Existing allocator behavior
 differs between backends: the map removes intermediate allocations, while the
@@ -25,3 +25,7 @@ bridge cases additionally reproduce panics instead of returned I/O errors.
 Three injected allocation/composite failures reproduce stuck automatic
 transactions or a partially created row. The fixes preserve caller-owned
 transactions for explicit rollback while releasing failed automatic operations.
+
+Fresh exact-SHA checks for `b16332647ddacad22a999c741941a29a204b62f1`
+finish with 37 successes, ten skipped and one neutral. Recent runs are created
+at 2026-10-24T19:17:39Z and match that SHA.

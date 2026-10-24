@@ -96,6 +96,11 @@ remain in the live log. Retention limits the in-memory list, while the durable
 sidecar still keeps recovery markers. Optional diagnostic I/O failures preserve
 the operation's outcome; storage and journal errors retain their error semantics.
 
+Legacy Rust/C# transaction wrappers retain observed partial writes when a storage
+operation fails. Automatic operations undo those observations; explicit
+transactions keep them for caller rollback. This requires the adapter's change
+callbacks. Rust panic unwinding and unobserved mutations are outside this contract.
+
 Explicit-address allocation through the legacy Rust transactions/version APIs
 is a logged write, including any intermediate placeholders retained by the
 backend. Rollback and checkout undo those rows; automatic allocation flushes

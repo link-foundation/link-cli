@@ -33,3 +33,7 @@ Preserve storage outcomes when optional store, query, server, transaction,
 trigger or version console diagnostics fail. Retention no longer replays
 rolled-back writes or archives them as committed changes; background retention
 waits for pending transactions.
+
+Retain observed partial writes when storage or user callbacks throw, undo
+automatic operations and preserve explicit rollback state. Keep the original
+absent state across repeated allocation/update callbacks.
