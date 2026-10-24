@@ -55,6 +55,37 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # Temporary read-only probe for issue #136: determine whether the existing
+  # publishing token can administer trusted publisher configuration.
+  inspect-existing-registry-access:
+    if: github.event_name == 'workflow_dispatch' && inputs.release_mode == 'verify-trusted-publishing'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-inspect-registry-access
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - name: Inspect trusted publishing API access without changing configuration
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN || secrets.CARGO_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.error, urllib.request
+          token = os.environ.get('CARGO_REGISTRY_TOKEN')
+          if not token:
+              raise SystemExit('No existing registry token is available.')
+          request = urllib.request.Request(
+              'https://crates.io/api/v1/trusted_publishing/github_configs?crate=link-cli',
+              headers={'Authorization': token, 'User-Agent': 'link-cli-issue-136-read-only-diagnostic'})
+          try:
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  print('Trusted publisher configuration GET: HTTP', response.status)
+                  print(json.dumps(json.load(response)))
+          except urllib.error.HTTPError as error:
+              print('Trusted publisher configuration GET: HTTP', error.code)
+              print(error.read().decode())
+          PY
+
   # Authenticate without a version commit, tag, or package upload. This lets
   # maintainers verify the registry policy before retiring the token fallback.
   verify-trusted-publishing:
