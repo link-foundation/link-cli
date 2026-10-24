@@ -3,9 +3,9 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14584: Invoking test: transactions_portable_clock::in_memory_transactions_have_real_timestamps_and_unique_ids
 14585: panicked at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/sys/time/unsupported.rs:35:9:
 14586: time not implemented on this platform
-14587: 
+14587:
 14588: Stack:
-14589: 
+14589:
 14590: Error
 14591:     at /tmp/.tmpC7cvwD/wasm-bindgen-test.js:333:25
 14592:     at logError (/tmp/.tmpC7cvwD/wasm-bindgen-test.js:666:18)
@@ -17,15 +17,15 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14598:     at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[2266]:0x165265)
 14599:     at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[4082]:0x1b45c3)
 14600:     at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[13405]:0x21c894)
-14601: 
-14602: 
+14601:
+14602:
 14603: test transactions_portable_clock::in_memory_transactions_have_real_timestamps_and_unique_ids ... FAIL
 14604: Invoking test: transactions_portable_clock::in_memory_legacy_version_transactions_keep_branch_and_tag_history
 14605: panicked at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/sys/time/unsupported.rs:35:9:
 14606: time not implemented on this platform
-14607: 
+14607:
 14608: Stack:
-14609: 
+14609:
 14610: Error
 14611:     at /tmp/.tmpC7cvwD/wasm-bindgen-test.js:333:25
 14612:     at logError (/tmp/.tmpC7cvwD/wasm-bindgen-test.js:666:18)
@@ -37,19 +37,19 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14618:     at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[2266]:0x165265)
 14619:     at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[4082]:0x1b45c3)
 14620:     at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[13405]:0x21c894)
-14621: 
-14622: 
+14621:
+14622:
 14623: test transactions_portable_clock::in_memory_legacy_version_transactions_keep_branch_and_tag_history ... FAIL
-14624: 
+14624:
 14625: failures:
-14626: 
+14626:
 14627: ---- transactions_portable_clock::in_memory_transactions_have_real_timestamps_and_unique_ids output ----
 14628:     error output:
 14629:         panicked at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/sys/time/unsupported.rs:35:9:
 14630:         time not implemented on this platform
-14631:         
+14631:
 14632:         Stack:
-14633:         
+14633:
 14634:         Error
 14635:             at /tmp/.tmpC7cvwD/wasm-bindgen-test.js:333:25
 14636:             at logError (/tmp/.tmpC7cvwD/wasm-bindgen-test.js:666:18)
@@ -61,9 +61,9 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14642:             at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[2266]:0x165265)
 14643:             at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[4082]:0x1b45c3)
 14644:             at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[13405]:0x21c894)
-14645:         
-14646:         
-14647:     
+14645:
+14646:
+14647:
 14648:     JS exception that was thrown:
 14649:         RuntimeError: unreachable
 14650:             at storage-1afc4e9245aee6d6.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[14189]:0x21dd7d)
@@ -76,14 +76,14 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14657:             at storage-1afc4e9245aee6d6.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[7193]:0x1fa5fd)
 14658:             at storage-1afc4e9245aee6d6.wasm.<std[359a46decee746ed]::time::SystemTime>::now (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[11449]:0x217e10)
 14659:             at storage-1afc4e9245aee6d6.wasm.link_cli[38825886053e30d4]::transactions::now_unix_ms (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[5894]:0x1e3d72)
-14660: 
+14660:
 14661: ---- transactions_portable_clock::in_memory_legacy_version_transactions_keep_branch_and_tag_history output ----
 14662:     error output:
 14663:         panicked at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/sys/time/unsupported.rs:35:9:
 14664:         time not implemented on this platform
-14665:         
+14665:
 14666:         Stack:
-14667:         
+14667:
 14668:         Error
 14669:             at /tmp/.tmpC7cvwD/wasm-bindgen-test.js:333:25
 14670:             at logError (/tmp/.tmpC7cvwD/wasm-bindgen-test.js:666:18)
@@ -95,9 +95,9 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14676:             at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[2266]:0x165265)
 14677:             at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[4082]:0x1b45c3)
 14678:             at storage-1afc4e9245aee6d6.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[13405]:0x21c894)
-14679:         
-14680:         
-14681:     
+14679:
+14680:
+14681:
 14682:     JS exception that was thrown:
 14683:         RuntimeError: unreachable
 14684:             at storage-1afc4e9245aee6d6.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[14189]:0x21dd7d)
@@ -110,16 +110,16 @@ Excerpt from the original verbose actual-WASM log; original line numbers retaine
 14691:             at storage-1afc4e9245aee6d6.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[7193]:0x1fa5fd)
 14692:             at storage-1afc4e9245aee6d6.wasm.<std[359a46decee746ed]::time::SystemTime>::now (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[11449]:0x217e10)
 14693:             at storage-1afc4e9245aee6d6.wasm.link_cli[38825886053e30d4]::transactions::now_unix_ms (wasm://wasm/storage-1afc4e9245aee6d6.wasm-016ddc66:wasm-function[5894]:0x1e3d72)
-14694: 
+14694:
 14695: failures:
-14696: 
+14696:
 14697:     transactions_portable_clock::in_memory_transactions_have_real_timestamps_and_unique_ids
 14698:     transactions_portable_clock::in_memory_legacy_version_transactions_keep_branch_and_tag_history
-14699: 
+14699:
 14700: test result: FAILED. 0 passed; 2 failed; 0 ignored; 126 filtered out; finished in 0.06s
-14701: 
+14701:
 14702: Error: Node failed with exit_code 1
 14703: error: test failed, to rerun pass `--test storage`
-14704: 
+14704:
 14705: Caused by:
 14706:   process didn't exit successfully: `/home/box/.cache/.wasm-pack/wasm-bindgen-9411bdb1a3e2bbb9/wasm-bindgen-test-runner /tmp/gh-issue-solver-1792854251187/rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-1afc4e9245aee6d6.wasm transactions_portable_clock --nocapture` (exit status: 1)
