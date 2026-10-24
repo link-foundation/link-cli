@@ -34,10 +34,12 @@ the implementation was investigated.
 
 Local checks passed: 553 C# tests with Cobertura coverage, 370 Rust tests across
 41 suites (two existing tests ignored), 29 release-helper tests, 217 JavaScript/
-workflow tests, 37 client unit tests, client type declarations, Rust formatting,
-actionlint with ShellCheck, and zizmor. CI additionally passed the Rust and C#
-OS matrices, optimized builds, WebAssembly checks and browser app build,
-Node/Bun/Deno conformance, and security/dependency checks for the implementation.
+workflow tests, 37 client unit tests, client type declarations, seven WebAssembly
+tests, the browser app production build, and Node/Bun/Deno conformance (32 passed
+and four expected skips per runtime). The cross-backend synthetic check returned
+identical data from Rust, C#, and WebAssembly. Rust formatting, both Clippy
+workspaces, actionlint with ShellCheck, and zizmor passed. CI additionally passed
+the Rust and C# OS matrices, optimized builds, and security/dependency checks.
 
 ## External blockers: still unfinished
 
@@ -62,12 +64,17 @@ authentication jobs finished; the isolated modes fix that behavior.
 
 | Registry | Live result | Required external state |
 | --- | --- | --- |
-| crates.io | [Run 40094150068](https://github.com/link-foundation/link-cli/actions/runs/40094150068), authentication job: HTTP 400, `No Trusted Publishing config found for repository link-foundation/link-cli`. | A crate owner must configure this repository and `rust.yml` in the `link-cli` trusted publisher settings. After a successful verification, enable `CRATES_IO_TRUSTED_PUBLISHING=true` and remove both Rust release paths' secret fallbacks. |
+| crates.io | [Run 40095765020](https://github.com/link-foundation/link-cli/actions/runs/40095765020), authentication job: HTTP 400, `No Trusted Publishing config found for repository link-foundation/link-cli`. A separate read-only probe using the existing publishing token received HTTP 403 from the trusted-publisher configuration API: `this token does not have the required permissions to perform this action`. | A crate owner with account access or a token authorized to manage trusted publishing must configure this repository and `rust.yml` in the `link-cli` trusted publisher settings. After a successful verification, enable `CRATES_IO_TRUSTED_PUBLISHING=true` and remove both Rust release paths' secret fallbacks. |
 | NuGet | [Run 40094151877](https://github.com/link-foundation/link-cli/actions/runs/40094151877), authentication job: HTTP 401, `No matching trust policy owned by user 'konard' was found`. No `NUGET_USER` repository or inherited organization variable is configured. | Identify the personal account that created a policy covering this repository, `csharp.yml`, and both packages (`clink` and `Foundation.Data.Doublets.Cli`), or create the policies using an authorized NuGet account. Verify that account, set `NUGET_USER`, then remove both release paths' API-key fallbacks. The tested GitHub account name does not establish that no other account owns a policy. |
 
-The GitHub credential available in this workspace does not grant registry
-account access to create these policies. Package organization owners on NuGet
-do not identify the personal policy creator. The required account is the
+The read-only crates.io configuration probe was temporary and has been removed;
+it did not change registry configuration or disclose the token. The existing
+publishing token cannot administer trust, and the GitHub credential available in
+this workspace does not grant registry account access. NuGet policy creation
+requires an authenticated account session and anti-forgery token, as shown by
+the registry's [policy-creation endpoint](https://github.com/NuGet/NuGetGallery/blob/4f91f0b69278ef98292dfbd4ed637a846f5864cd/src/NuGetGallery/Controllers/UsersController.cs#L1319).
+Its publishing API key does not provide that session. Package organization owners
+on NuGet do not identify the personal policy creator. The required account is the
 [NuGet policy creator](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing),
 not necessarily a package owner.
 
