@@ -1,4 +1,5 @@
 using System.Numerics;
+using Platform.Data.Doublets;
 
 namespace Foundation.Data.Doublets.Cli;
 
@@ -11,21 +12,25 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             if (transaction.IsRolledBack) return;
             // A durable decision can still own an incomplete synchronous
             // checkpoint. Successful/queued transactions have released it.
-            var retry = transaction.IsCommitted;
-            if (retry && _current != transaction) return;
-            if (!retry)
+            var retry = transaction.IsCommitAttempted;
+            if (transaction.IsCommitted && _current != transaction) return;
+            if (!transaction.IsCommitted)
             {
                 if (transaction.IsRollbackOnly)
                 {
                     throw new InvalidOperationException("Cannot commit a rollback-only transaction; rollback is required.");
                 }
-                WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
+                // Append/flush may persist and then throw. Fence writes before
+                // either operation and resolve this decision through cleanup.
+                transaction.MarkCommitAttempted();
+                var marker = CommitMarkerPrefix + transaction.Id.ToString("N");
+                if (!retry || !ContainsCommitMarker(marker)) WriteMarker(marker);
                 _flushLog();
                 _committed.Add(transaction.Id);
                 transaction.MarkCommitted();
             }
 
-            // Retrying a known decision finishes synchronously, even through
+            // Retrying an uncertain/known decision finishes synchronously, even through
             // CommitAsync, so cleanup does not silently detach failed work.
             var runAsync = !retry && (forceAsync || _commitMode == CommitMode.Async);
             Trace($"Committed tx {transaction.Id:N} (mode={(runAsync ? "async" : "sync")}, transitions={transaction.Transitions.Count}).");
@@ -51,7 +56,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
     {
         lock (_lock)
         {
-            if (transaction.IsCommitted)
+            if (transaction.IsCommitAttempted)
             {
                 OnCommit(transaction, forceAsync: false);
                 return;
@@ -84,13 +89,23 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
 
     private void EnsureWriteAllowedLocked()
     {
-        if (_current?.IsCommitted == true)
+        if (_current?.IsCommitAttempted == true)
         {
-            throw new InvalidOperationException("Committed transaction requires checkpoint retry before further writes.");
+            throw new InvalidOperationException("Transaction commit requires retry before further writes; its outcome may be unknown.");
         }
         if (_current?.IsRollbackOnly == true)
         {
             throw new InvalidOperationException("Transaction requires rollback before further writes.");
         }
+    }
+
+    private bool ContainsCommitMarker(string marker)
+    {
+        // Only uncertain retries scan; ordinary commits and known-checkpoint
+        // retries keep their existing cost and never append another decision.
+        var any = _logStore.Constants.Any;
+        foreach (var row in _logStore.All(new Link<TLinkAddress>(any, any, any)))
+            if (row is not null && string.Equals(_logStore.GetName(row[0]), marker, StringComparison.Ordinal)) return true;
+        return false;
     }
 }

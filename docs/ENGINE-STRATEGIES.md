@@ -120,6 +120,14 @@ retries an automatic operation's checkpoint. Cleanup finishes the durable
 commit decision; it cannot undo it. C# `IsCommitted` reports that decision even
 when checkpoint persistence still needs retry. Its normal asynchronous policy
 continues to release admission once the durable decision is queued.
+An error during the commit-marker append or its first flush can also leave a
+durable decision. The owner retains that attempt and fences further writes;
+the same cleanup entry points resolve it as a commit instead of undoing it.
+`IsCommitted == false` after a failed C# commit therefore does not establish an
+abort. Uncertain retries scan the journal to avoid duplicate decision markers;
+normal commits and known-checkpoint retries do not pay that O(journal length)
+read cost. A failed retry read retains ownership too. C# retries finish
+synchronously even through `CommitAsync`.
 Explicit version owners likewise retain admission until their checkpoint and
 branch publication succeed, including named writes. This retry contract does not establish atomic
 publication across a process exit between journal commit and version sidecars.

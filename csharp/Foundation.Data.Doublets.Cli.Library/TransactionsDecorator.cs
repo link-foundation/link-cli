@@ -183,8 +183,9 @@ public interface ITransaction<TLinkAddress> : IDisposable
 {
     Guid Id { get; }
     DateTimeOffset StartedAt { get; }
-    /// <summary>A durable commit decision exists. If checkpoint persistence
-    /// failed, retry Commit, Rollback or Dispose to finish that decision.</summary>
+    /// <summary>A durable commit decision is known. False after a failed Commit
+    /// can mean an unknown outcome. Retry Commit, Rollback or Dispose to finish
+    /// the attempted decision, including any incomplete checkpoint.</summary>
     bool IsCommitted { get; }
     bool IsRolledBack { get; }
     IReadOnlyList<Transition<TLinkAddress>> Transitions { get; }
@@ -841,6 +842,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         private readonly bool _autoCommit;
         private int _state; // 0 = open, 1 = committed, 2 = rolled back
         public bool IsRollbackOnly { get; private set; }
+        public bool IsCommitAttempted { get; private set; }
 
         public Transaction(TransactionsDecorator<TLinkAddress> owner, bool autoCommit)
         {
@@ -858,6 +860,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
         internal void AddTransition(Transition<TLinkAddress> transition) => _transitions.Add(transition);
         internal void MarkCommitted() => _state = 1;
+        internal void MarkCommitAttempted() => IsCommitAttempted = true;
         internal void MarkRolledBack() => _state = 2;
         internal void MarkRollbackOnly() => IsRollbackOnly = true;
 

@@ -369,13 +369,16 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
             try
             {
                 transaction.Inner.Rollback();
+                // An uncertain inner decision can become known while cleanup
+                // retries it. Publish that commit before releasing admission.
+                if (transaction.Inner.IsCommitted) CommitVersionTransaction(transaction);
             }
             finally
             {
                 // Failed undo/checkpoint work still owns admission and must be
                 // retryable through this facade. Retention can fail after the
                 // inner rollback completes, so inspect its terminal state.
-                if ((transaction.Inner.IsCommitted || transaction.Inner.IsRolledBack)
+                if (transaction.Inner.IsRolledBack
                     && ReferenceEquals(_activeTransaction, transaction))
                 {
                     _activeTransaction = null;

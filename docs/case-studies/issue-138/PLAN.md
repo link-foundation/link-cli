@@ -58,14 +58,18 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    CSHARP-CHECKPOINT-PLAN.md and checkpoint-owner-ci.txt under the PR evidence.
 2. Ordered recovery and live retention regressions pass in full native, C#
    Debug/Release and actual-WASM suites. Recovery keeps an anchor until the
-   complete committed suffix and pending undo are durable. Commit/push this
-   batch and verify exact-SHA CI; see RECOVERY-ORDER-PLAN.md.
-3. Audit commit-marker append/first flush errors whose delivery is uncertain.
-   A possibly durable commit must not be silently undone by cleanup. Exercise
-   automatic/explicit and version-owner cleanup in both native languages.
-4. Audit initial version attribution of aborted records and abrupt process exit
-   between a journal commit and branch-sidecar publication. Use finite real
-   subprocess faults in addition to graceful disposal/reopen tests.
+   complete committed suffix and pending undo are durable. All nine workflows
+   pass on `5905049`; see RECOVERY-ORDER-PLAN.md and recovery-order-ci.txt.
+3. Uncertain commit-marker append/first-flush ownership passes full local
+   suites in both native languages and actual WASM. Ordinary explicit/automatic
+   owners and explicit version cleanup are covered; publish and verify fresh
+   exact-head CI. See COMMIT-OUTCOME-PLAN.md and commit-decision.txt.
+4. Audit initial version attribution of aborted records, automatic version
+   writes whose inner commit/publication fails, and abrupt process exit between
+   a journal commit and branch-sidecar publication. Automatic writes currently
+   attribute only after success and may lack a retained facade owner; reproduce
+   that path before changing it. Use finite real subprocess faults in addition
+   to graceful disposal/reopen tests.
 5. Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in their immutable revisions.

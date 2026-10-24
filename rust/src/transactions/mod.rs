@@ -67,6 +67,7 @@
 
 mod log;
 // Replay, recovery and retention live in a submodule; see transactions/recovery.rs.
+mod commit;
 mod recovery;
 mod types;
 
@@ -97,6 +98,7 @@ struct PendingTransaction<T> {
     transitions: Vec<GenericTransition<T>>,
     auto_commit: bool,
     rollback_only: bool,
+    commit_attempted: bool,
     started_ms: i64,
 }
 
@@ -252,6 +254,14 @@ where
         self.committed.contains(&id)
     }
 
+    pub(crate) fn must_finish_commit(&self, id: u128) -> bool {
+        self.is_transaction_committed(id)
+            || self
+                .current
+                .as_ref()
+                .is_some_and(|pending| pending.id == id && pending.commit_attempted)
+    }
+
     /// Returns a snapshot of the transitions log in sequence order.
     pub fn log(&self) -> Vec<GenericTransition<T>> {
         self.log.clone()
@@ -282,7 +292,7 @@ where
         if self
             .current
             .as_ref()
-            .is_some_and(|pending| self.committed.contains(&pending.id))
+            .is_some_and(|pending| pending.commit_attempted)
         {
             return self.commit_current();
         }
@@ -555,10 +565,11 @@ where
         if self
             .current
             .as_ref()
-            .is_some_and(|pending| self.committed.contains(&pending.id))
+            .is_some_and(|pending| pending.commit_attempted)
         {
             return Err(LinkError::Transaction(
-                "Retry committed transaction checkpoint before further writes.".into(),
+                "Retry transaction commit before further writes; its outcome may be unknown."
+                    .into(),
             ));
         }
         if self.current.as_ref().is_some_and(|tx| tx.rollback_only) {
@@ -582,6 +593,7 @@ where
                 transitions: Vec::new(),
                 auto_commit: true,
                 rollback_only: false,
+                commit_attempted: false,
                 started_ms: now_unix_ms(),
             });
             Ok(true)
@@ -749,11 +761,15 @@ where
             transitions: Vec::new(),
             auto_commit: false,
             rollback_only: false,
+            commit_attempted: false,
             started_ms,
         });
         Ok(TransactionHandle { id, started_ms })
     }
 
+    /// Finish the transaction. An append/flush error can have an unknown
+    /// outcome: retry commit, rollback or save to finish the attempted decision.
+    /// Further writes remain fenced until that work succeeds.
     pub fn commit(&mut self) -> Result<(), LinkError> {
         if self.current.is_none() {
             return Ok(());
@@ -761,61 +777,15 @@ where
         self.commit_current()
     }
 
-    fn commit_current(&mut self) -> Result<(), LinkError> {
-        let Some(current) = self.current.as_ref() else {
-            return Ok(());
-        };
-        if current.rollback_only {
-            return Err(LinkError::Transaction(
-                "Cannot commit a rollback-only transaction; rollback is required.".into(),
-            ));
-        }
-        let id = current.id;
-        if !self.committed.contains(&id) {
-            self.write_marker(&format!("{COMMIT_MARKER_PREFIX}{id:032x}"))?;
-            // A links-backed log buffers appends; a commit is durable only
-            // after its explicit flush, even if FileTransitionLog syncs appends.
-            self.log_store.flush_log()?;
-            self.committed.insert(id);
-        }
-        let pending = self.current.take().expect("transaction is still open");
-        if let Err(error) = self.finish_commit_checkpoint(&pending.transitions) {
-            self.current = Some(pending);
-            return Err(error);
-        }
-        if self.trace {
-            crate::diagnostics::stderr!(
-                "[Transactions] Committed tx {:032x} (mode={:?}, transitions={}).",
-                pending.id,
-                self.commit_mode,
-                pending.transitions.len()
-            );
-        }
-        let _ = pending.auto_commit;
-        let _ = pending.started_ms;
-        Ok(())
-    }
-
-    fn finish_commit_checkpoint(
-        &mut self,
-        transitions: &[GenericTransition<T>],
-    ) -> Result<(), LinkError> {
-        // Never persist an applied marker before its data is durable.
-        self.inner.flush()?;
-        for transition in transitions {
-            self.mark_applied(transition)?;
-        }
-        self.log_store.flush_log()?;
-        self.enforce_retention()
-    }
-
+    /// Undo an open transaction, or finish its attempted commit if a previous
+    /// commit failed with a possibly durable decision.
     pub fn rollback(&mut self) -> Result<(), LinkError> {
         if self
             .current
             .as_ref()
-            .is_some_and(|pending| self.committed.contains(&pending.id))
+            .is_some_and(|pending| pending.commit_attempted)
         {
-            // A durable commit decision survives a failed checkpoint.
+            // A commit append/flush may have persisted before returning an error.
             return self.commit_current();
         }
         // Once undo begins, an error can leave the data partially restored.

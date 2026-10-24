@@ -1194,3 +1194,50 @@ adapter's flush contract and recovery interruptions; they do not establish
 power-loss semantics outside it. Uncertain commit-decision append/first-flush
 outcomes and abrupt-exit legacy sidecar publication are separate unfinished
 audits. Broader algorithm/component and coverage requirements remain open.
+
+## Uncertain commit-decision ownership and retry
+
+Before: 76 C# failures and four passing controls across 80 mapped-store cases;
+nine generic Rust failures; ten real-filesystem Rust version failures and one
+passing commit-retry control. Cleanup undoes possibly durable edits, subsequent
+writes bypass admission, version rollback/save omits the eventual branch head,
+and generic append-only retry duplicates physical commit decisions. Complete
+normalized baseline logs are retained beside this report.
+
+Both native owners now retain an attempted decision before commit-marker append
+or first flush. All writes remain fenced. Commit, rollback, disposal and Rust
+save finish that attempt. IsCommitted still reports only a known durable
+decision; false after an error can mean an unknown outcome. An uncertain retry
+scans the journal for its exact decision before appending, then flushes it and
+finishes the checkpoint. Ordinary commits and known-checkpoint retries add no
+journal scan. Failed discovery retains ownership. C# asynchronous retry finishes
+synchronously. Version cleanup publishes a decision that becomes known during
+retry, retaining admission if sidecar publication then fails.
+
+C# has 96 new cases: 80 ordinary-owner cases cover four append/flush points,
+explicit/automatic owners, repeated failing cleanup, five write paths and
+before/after decision reread faults. Sixteen version cases cover transaction,
+owner, graph and rollback cleanup plus a second publication failure. Actual
+mapped files are reopened, checked for exact rows/names/unique markers, changed
+again and reopened. Generic Rust has eleven shared test functions executing 88
+finite schedules, with distinct durable images and a following reopened edit.
+Eleven filesystem version tests cover commit/rollback/save retry and eight row/
+named admission paths. The shared generic functions execute on actual WASM too.
+
+Full C# Debug/Release: 1,247 pass each; zero skips.
+Full native Rust: 629 standard tests and the custom stdout harness pass;
+four child entry points remain ignored by the ordinary harness.
+Actual WASM: 332 pass. All three wrapper modules remain 100% in measured lines,
+functions and reported branches. Strict native/WASM Clippy, formatting,
+release metadata and combined source-size checks pass.
+Debug: 6,157/6,647 lines (92.63%), 2,825/3,226 branches (87.57%)
+Release: 4,665/4,963 lines (94.00%), 2,804/3,207 branches (87.43%)
+native: 9,494/10,316 lines (92.03%), 1,573/1,916 branches (82.10%), 1,265/1,406 functions (89.97%)
+wasm: 6,595/9,925 lines (66.45%), 1,100/1,621 branches (67.86%), 903/1,390 functions (64.96%)
+
+Project-wide coverage remains below the required 100%. Resolving an uncertain
+commit can finish it even when cleanup was requested through rollback. Abrupt
+process exit between a legacy journal decision and version-sidecar publication,
+pre-journal observer mutation and power-loss behavior outside adapter flush
+contracts remain separate unfinished audits. Broader algorithm/component and
+coverage requirements remain open. Fresh exact-head CI is required after push.

@@ -97,3 +97,8 @@ cannot overwrite later committed updates, deletions or recreated rows.
 
 Checkpoint current inline effects when sized/chunked retention encounters an
 older failed async checkpoint; preserve newer updates, deletion and recreation.
+
+Retain uncertain commit attempts before marker append/flush, fence new writes
+and resolve the decision through cleanup without undoing a possibly durable
+commit. Avoid duplicate decision markers on retry and retain version publication
+ownership when cleanup resolves an uncertain inner commit.

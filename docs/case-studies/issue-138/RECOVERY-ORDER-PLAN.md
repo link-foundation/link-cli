@@ -20,7 +20,7 @@ implementations may contain the same valid marker pattern.
       checkpoint current inline effects without replaying stale state.
 - [x] Preserve legacy version/sidecar contracts in the complete suites.
 - [x] Run full local suites, coverage and strict checks.
-- [ ] Verify fresh exact-SHA CI after publishing this batch.
+- [x] Verify fresh exact-SHA CI after publishing this batch.
 
 The first-failure evidence and observed limits must be recorded before changing
 replay. Tests use finite schedules, bounded worker gates and distinct durable
@@ -38,4 +38,5 @@ inline state before marking older records, avoiding stale redo. All 45 focused C
 Debug/Release (1,151 each), native Rust (607 plus stdout harness), and actual
 WASM (321) pass, along with strict lint, formatting, metadata and file sizes.
 Exact measured coverage is retained in recovery-order.txt under the PR evidence;
-project-wide 100% coverage and fresh CI remain pending.
+project-wide 100% coverage remains pending. All nine exact-head workflows pass
+for `5905049`; URLs and timestamp checks are retained in recovery-order-ci.txt.

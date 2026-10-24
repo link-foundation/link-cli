@@ -1,0 +1,175 @@
+   Compiling link-cli v1.0.9 (<repository>/rust)
+    Finished `test` profile [unoptimized] target(s) in 15.82s
+     Running tests/transactions_commit_decision_tests.rs (rust/target/debug/deps/transactions_commit_decision_tests-f38b1fd95ad6cad4)
+
+running 9 tests
+test commit_retries_every_uncertain_decision_phase ... FAILED
+test composite_waits_for_uncertain_decision ... FAILED
+test create_waits_for_uncertain_decision ... FAILED
+test delete_waits_for_uncertain_decision ... FAILED
+test get_or_create_waits_for_uncertain_decision ... FAILED
+test ensure_waits_for_uncertain_decision ... FAILED
+test rollback_finishes_every_uncertain_decision_phase ... FAILED
+test save_finishes_every_uncertain_decision_phase ... FAILED
+test update_waits_for_uncertain_decision ... FAILED
+
+failures:
+
+---- commit_retries_every_uncertain_decision_phase stdout ----
+
+thread 'commit_retries_every_uncertain_decision_phase' (875470) panicked at tests/transactions_commit_decision_tests.rs:169:13:
+assertion `left == right` failed: retry does not write another commit decision
+  left: 3
+ right: 2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- composite_waits_for_uncertain_decision stdout ----
+
+thread 'composite_waits_for_uncertain_decision' (875471) panicked at tests/transactions_commit_decision_tests.rs:216:13:
+MarkerBefore, automatic=false, composite
+
+---- create_waits_for_uncertain_decision stdout ----
+
+thread 'create_waits_for_uncertain_decision' (875472) panicked at tests/transactions_commit_decision_tests.rs:216:13:
+MarkerBefore, automatic=false, create
+
+---- delete_waits_for_uncertain_decision stdout ----
+
+thread 'delete_waits_for_uncertain_decision' (875473) panicked at tests/transactions_commit_decision_tests.rs:216:13:
+MarkerBefore, automatic=false, delete
+
+---- get_or_create_waits_for_uncertain_decision stdout ----
+
+thread 'get_or_create_waits_for_uncertain_decision' (875475) panicked at tests/transactions_commit_decision_tests.rs:216:13:
+MarkerBefore, automatic=false, get_or_create
+
+---- ensure_waits_for_uncertain_decision stdout ----
+
+thread 'ensure_waits_for_uncertain_decision' (875474) panicked at tests/transactions_commit_decision_tests.rs:216:13:
+MarkerBefore, automatic=false, ensure
+
+---- rollback_finishes_every_uncertain_decision_phase stdout ----
+
+thread 'rollback_finishes_every_uncertain_decision_phase' (875476) panicked at tests/transactions_commit_decision_tests.rs:161:13:
+assertion `left == right` failed: uncertain commit cannot be undone during failed cleanup
+  left: 11
+ right: 21
+
+---- save_finishes_every_uncertain_decision_phase stdout ----
+
+thread 'save_finishes_every_uncertain_decision_phase' (875477) panicked at tests/transactions_commit_decision_tests.rs:169:13:
+assertion `left == right` failed: retry does not write another commit decision
+  left: 1
+ right: 2
+
+---- update_waits_for_uncertain_decision stdout ----
+
+thread 'update_waits_for_uncertain_decision' (875478) panicked at tests/transactions_commit_decision_tests.rs:216:13:
+MarkerBefore, automatic=false, update
+
+
+failures:
+    commit_retries_every_uncertain_decision_phase
+    composite_waits_for_uncertain_decision
+    create_waits_for_uncertain_decision
+    delete_waits_for_uncertain_decision
+    ensure_waits_for_uncertain_decision
+    get_or_create_waits_for_uncertain_decision
+    rollback_finishes_every_uncertain_decision_phase
+    save_finishes_every_uncertain_decision_phase
+    update_waits_for_uncertain_decision
+
+test result: FAILED. 0 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test transactions_commit_decision_tests`
+     Running tests/version_commit_decision_tests.rs (rust/target/debug/deps/version_commit_decision_tests-795efca2dbe535eb)
+
+running 11 tests
+test create_is_fenced_until_version_publication ... FAILED
+test composite_is_fenced_until_version_publication ... FAILED
+test get_or_create_is_fenced_until_version_publication ... FAILED
+test delete_is_fenced_until_version_publication ... FAILED
+test ensure_is_fenced_until_version_publication ... FAILED
+test remove_name_is_fenced_until_version_publication ... FAILED
+test set_name_is_fenced_until_version_publication ... FAILED
+test update_is_fenced_until_version_publication ... FAILED
+test rollback_after_uncertain_decision_failure_finishes_publication ... FAILED
+test save_after_uncertain_decision_failure_finishes_publication ... FAILED
+test commit_retry_after_uncertain_decision_failure_finishes_publication ... ok
+
+failures:
+
+---- create_is_fenced_until_version_publication stdout ----
+
+thread 'create_is_fenced_until_version_publication' (875482) panicked at tests/version_commit_decision_tests.rs:168:5:
+create must wait for version publication
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- composite_is_fenced_until_version_publication stdout ----
+
+thread 'composite_is_fenced_until_version_publication' (875481) panicked at tests/version_commit_decision_tests.rs:168:5:
+composite must wait for version publication
+
+---- get_or_create_is_fenced_until_version_publication stdout ----
+
+thread 'get_or_create_is_fenced_until_version_publication' (875485) panicked at tests/version_commit_decision_tests.rs:168:5:
+get_or_create must wait for version publication
+
+---- delete_is_fenced_until_version_publication stdout ----
+
+thread 'delete_is_fenced_until_version_publication' (875483) panicked at tests/version_commit_decision_tests.rs:168:5:
+delete must wait for version publication
+
+---- ensure_is_fenced_until_version_publication stdout ----
+
+thread 'ensure_is_fenced_until_version_publication' (875484) panicked at tests/version_commit_decision_tests.rs:168:5:
+ensure must wait for version publication
+
+---- remove_name_is_fenced_until_version_publication stdout ----
+
+thread 'remove_name_is_fenced_until_version_publication' (875502) panicked at tests/version_commit_decision_tests.rs:168:5:
+remove_name must wait for version publication
+
+---- set_name_is_fenced_until_version_publication stdout ----
+
+thread 'set_name_is_fenced_until_version_publication' (875505) panicked at tests/version_commit_decision_tests.rs:168:5:
+set_name must wait for version publication
+
+---- update_is_fenced_until_version_publication stdout ----
+
+thread 'update_is_fenced_until_version_publication' (875506) panicked at tests/version_commit_decision_tests.rs:168:5:
+update must wait for version publication
+
+---- rollback_after_uncertain_decision_failure_finishes_publication stdout ----
+
+thread 'rollback_after_uncertain_decision_failure_finishes_publication' (875503) panicked at tests/version_commit_decision_tests.rs:104:5:
+assertion `left == right` failed: an uncertain commit must resolve and publish through cleanup
+  left: 2
+ right: 4
+
+---- save_after_uncertain_decision_failure_finishes_publication stdout ----
+
+thread 'save_after_uncertain_decision_failure_finishes_publication' (875504) panicked at tests/version_commit_decision_tests.rs:104:5:
+assertion `left == right` failed: an uncertain commit must resolve and publish through cleanup
+  left: 2
+ right: 4
+
+
+failures:
+    composite_is_fenced_until_version_publication
+    create_is_fenced_until_version_publication
+    delete_is_fenced_until_version_publication
+    ensure_is_fenced_until_version_publication
+    get_or_create_is_fenced_until_version_publication
+    remove_name_is_fenced_until_version_publication
+    rollback_after_uncertain_decision_failure_finishes_publication
+    save_after_uncertain_decision_failure_finishes_publication
+    set_name_is_fenced_until_version_publication
+    update_is_fenced_until_version_publication
+
+test result: FAILED. 1 passed; 10 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+
+error: test failed, to rerun pass `--test version_commit_decision_tests`
+error: 2 targets failed:
+    `--test transactions_commit_decision_tests`
+    `--test version_commit_decision_tests`

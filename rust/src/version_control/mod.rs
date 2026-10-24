@@ -138,7 +138,7 @@ impl VersionControlDecorator {
     }
 
     pub fn save(&mut self) -> Result<()> {
-        if self.has_committed_transaction() {
+        if self.has_pending_commit() {
             self.commit()?;
         }
         self.transactions.save()?;
@@ -186,8 +186,8 @@ impl VersionControlDecorator {
     }
 
     pub fn rollback(&mut self) -> Result<()> {
-        if self.has_committed_transaction() {
-            // A checkpoint failure cannot turn a durable commit into an abort.
+        if self.has_pending_commit() {
+            // An uncertain/durable decision must finish before publication.
             return self.commit();
         }
         self.active_transaction
@@ -458,14 +458,14 @@ impl VersionControlDecorator {
         Ok(())
     }
 
-    fn has_committed_transaction(&self) -> bool {
+    fn has_pending_commit(&self) -> bool {
         self.active_transaction
             .as_ref()
-            .is_some_and(|state| self.transactions.is_transaction_committed(state.id))
+            .is_some_and(|state| self.transactions.must_finish_commit(state.id))
     }
 
     pub(crate) fn ensure_write_allowed(&self) -> Result<()> {
-        if self.has_committed_transaction() {
+        if self.has_pending_commit() {
             bail!(
                 "Version publication is incomplete; retry commit, rollback or save before writing."
             );
