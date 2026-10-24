@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [4.0.3] - 2026-10-24
+
+Preserve literal backslashes and multiline quoted names during LiNo import. Quote
+backslash-containing names on export, and use the existing UTF-8 hexadecimal
+reference literals for control characters and mixed quotes so user text survives
+import/export/import into a fresh database.
+
 ## [4.0.2] - 2026-10-15
 
 Synchronize protocol documentation with links-notation 0.26 inherited from main.
