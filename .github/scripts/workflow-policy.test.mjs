@@ -289,6 +289,17 @@ for (const workflow of workflows) {
     assert.deepEqual(offenders, [], `${workflow.name} skips publishing on missing credentials at lines ${offenders}`);
   });
 
+  // `if npm view pkg@version` reads every failure, including an unreachable
+  // registry, as "not published", so main then publishes an existing version
+  // and fails with a misleading error (issue #134). Only E404 means "missing".
+  test(`${workflow.name}: npm lookups tell "not published" apart from a failure`, () => {
+    const offenders = readSteps(workflow.text)
+      .filter(({ text }) => /\bnpm view\b/.test(text.replace(/^\s*#.*$/gm, '')))
+      .filter(({ text }) => !/code E404/.test(text) || /npm view[^\n]*>\s*\/dev\/null/.test(text))
+      .map(({ first }) => first);
+    assert.deepEqual(offenders, [], `${workflow.name} treats any npm view failure as "not published" at lines ${offenders}`);
+  });
+
   // `gh workflow run` and the REST API refuse a dispatch that omits a
   // required input without a default, although the web form preselects the
   // first option, so the same release cannot be started from the CLI.
