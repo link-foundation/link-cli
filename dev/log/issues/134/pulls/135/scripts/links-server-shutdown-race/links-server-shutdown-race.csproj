@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Build against another checkout with -p:LinkCliRoot=/path/to/link-cli -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LinkCliRoot Condition="'$(LinkCliRoot)' == ''">$(MSBuildThisFileDirectory)../../../../../../../..</LinkCliRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(LinkCliRoot)/csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj" />
+  </ItemGroup>
+</Project>
