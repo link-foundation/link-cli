@@ -202,9 +202,16 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # deploy-pages v5.0.1 bundles a dependency that loads Node's deprecated
+      # `punycode` module, so every deployment logged "[DEP0040]
+      # DeprecationWarning" (issue #134, upstream actions/deploy-pages#413 and
+      # #434). Silence that one code only; other deprecations still print.
+      # Drop once deploy-pages ships the upgraded dependency.
       - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        env:
+          NODE_OPTIONS: --disable-warning=DEP0040
 
       - name: Print resolved deployment URL (debug)
         env:
