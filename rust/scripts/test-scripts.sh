@@ -8,8 +8,10 @@ set -euo pipefail
 cd "$(dirname "$0")"
 status=0
 for script in *.rs; do
-  # Modules included by other scripts (rust-paths.rs) are tested through them.
   grep -q '^#\[cfg(test)\]' "$script" || continue
+  # Modules included by other scripts via #[path] (rust-paths.rs,
+  # release-changelog.rs) have no main and are tested through them.
+  grep -q '^fn main' "$script" || continue
   echo "::group::rust-script --test $script"
   if ! rust-script --test "$script"; then
     echo "::error file=rust/scripts/$script::rust-script --test $script failed"
