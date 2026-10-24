@@ -83,7 +83,7 @@ public class LinoDatabaseOutputTests
             {
                 "(\"single'quote\": \"single'quote\" \"single'quote\")",
                 "('double\"quote': 'double\"quote' 'double\"quote')",
-                "('both\\'\"quote': \"single'quote\" 'double\"quote')"
+                "(~1{626f7468272271756f7465}: \"single'quote\" 'double\"quote')"
             }, lines);
         });
     }
@@ -167,6 +167,26 @@ public class LinoDatabaseOutputTests
                 $"('{name}': '{name}' '{name}')",
                 $"(3: 1 '{name}')"
             }, LinoDatabaseOutput.FormatDatabase(links));
+        });
+    }
+
+    [Theory]
+    [InlineData(@"x\y", @"'x\y'")]
+    [InlineData(@"C:\Users\name\", @"'C:\Users\name\'")]
+    [InlineData("a\nb", "~1{610a62}")]
+    [InlineData("a\r\nb", "~1{610d0a62}")]
+    [InlineData("both'\"quote", "~1{626f7468272271756f7465}")]
+    [InlineData("~1{31}", "'~1{31}'")]
+    [InlineData(" ", "' '")]
+    [InlineData("a\u2003b", "'a\u2003b'")]
+    public void FormatDatabase_WritesLosslessNames(string name, string reference)
+    {
+        WithNamedLinks(links =>
+        {
+            var index = links.GetOrCreate(1u, 1u);
+            links.SetName(index, name);
+
+            Assert.Equal(new[] { $"({reference}: {reference} {reference})" }, LinoDatabaseOutput.FormatDatabase(links));
         });
     }
 

@@ -181,6 +181,48 @@ public class CliExportIntegrationTests
         }
     }
 
+    [Theory]
+    [InlineData(@"x\y")]
+    [InlineData(@"C:\Users\name\")]
+    [InlineData(@"\\server\share")]
+    [InlineData("literal\\n versus actual\nnewline")]
+    [InlineData("first\r\nsecond")]
+    [InlineData("both'\"quotes\\path\nnext")]
+    public async Task ImportExport_RoundTripsUserTextIntoFreshDatabase(string name)
+    {
+        var tempDirectory = CreateTempDirectory();
+        try
+        {
+            var inputPath = Path.Combine(tempDirectory, "input.lino");
+            // Choose a delimiter absent from the test value; no backslash escapes.
+            var quote = name.Contains('\'') ? "`" : "'";
+            var reference = $"{quote}{name}{quote}";
+            await File.WriteAllTextAsync(inputPath, $"(a: a {reference})\n");
+            var sourcePath = Path.Combine(tempDirectory, "source.links");
+            var textPath = Path.Combine(tempDirectory, "export.lino");
+            var beforePath = Path.Combine(tempDirectory, "before.bin");
+            var afterPath = Path.Combine(tempDirectory, "after.bin");
+
+            Clink.AssertSucceeded(await Clink.RunAsync(
+                "--db", sourcePath, "--import", inputPath, "--auto-create-missing-references"));
+            using (var links = new Foundation.Data.Doublets.Cli.NamedTypesDecorator<uint>(sourcePath, false))
+            {
+                Assert.Equal(name, links.GetName(links.GetByName(name)));
+            }
+            Clink.AssertSucceeded(await Clink.RunAsync(
+                "--db", sourcePath, "--export", textPath, "--export-binary", beforePath));
+            Clink.AssertSucceeded(await Clink.RunAsync(
+                "--db", Path.Combine(tempDirectory, "target.links"),
+                "--import", textPath, "--export-binary", afterPath));
+
+            Assert.Equal(File.ReadAllBytes(beforePath), File.ReadAllBytes(afterPath));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static string CreateTempDirectory()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"clink-export-{Guid.NewGuid():N}");
