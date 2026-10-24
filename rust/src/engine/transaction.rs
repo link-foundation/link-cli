@@ -86,6 +86,9 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
                 .lock()
                 .unwrap_or_else(|poison| poison.into_inner());
             state.active -= 1;
+            if state.active == 0 {
+                state.changed.clear();
+            }
             self.closed = true;
             self.writes.clear();
         }
@@ -97,38 +100,46 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         state.active -= 1;
         self.closed = true;
         let writes = std::mem::take(&mut self.writes);
-        if self.isolation == IsolationLevel::Serializable
-            && state.current.revision != self.base.revision
-        {
-            return Err(error(
-                "conflict: database revision changed (serializable validation)",
-            ));
-        }
-        if writes.keys().any(|id| {
-            state
-                .changed
-                .get(id)
-                .is_some_and(|revision| *revision > self.base.revision)
-        }) {
-            return Err(error("conflict: a written link changed since begin"));
-        }
-        if writes.is_empty() {
-            return Ok(state.current.revision);
-        }
-        let mut rows = state.current.rows.as_ref().clone();
-        for (id, row) in &writes {
-            match row {
-                Some(row) => {
-                    rows.insert(*id, row.clone());
-                }
-                None => {
-                    rows.remove(id);
+        let result = (|| {
+            if self.isolation == IsolationLevel::Serializable
+                && state.current.revision != self.base.revision
+            {
+                return Err(error(
+                    "conflict: database revision changed (serializable validation)",
+                ));
+            }
+            if writes.keys().any(|id| {
+                state
+                    .changed
+                    .get(id)
+                    .is_some_and(|revision| *revision > self.base.revision)
+            }) {
+                return Err(error("conflict: a written link changed since begin"));
+            }
+            if writes.is_empty() {
+                return Ok(state.current.revision);
+            }
+            let mut rows = state.current.rows.as_ref().clone();
+            for (id, row) in &writes {
+                match row {
+                    Some(row) => {
+                        rows.insert(*id, row.clone());
+                    }
+                    None => {
+                        rows.remove(id);
+                    }
                 }
             }
+            self.base = state.publish(rows, writes.keys().copied())?;
+            self.writes.clear();
+            Ok(self.base.revision)
+        })();
+        // Validate the last committer before reclaiming generations: otherwise
+        // an intervening delete/recreate could be mistaken for an unchanged row.
+        if state.active == 0 {
+            state.changed.clear();
         }
-        self.base = state.publish(rows, writes.keys().copied())?;
-        self.writes.clear();
-        Ok(self.base.revision)
+        result
     }
 }
 impl<T: LinkReference, L: TransitionLogStore> Drop for EngineTransaction<T, L> {

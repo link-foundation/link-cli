@@ -255,3 +255,27 @@ thresholds enforced. Actual WASM wrapper source measures 327/327 lines,
 do not imply complete linked-core coverage. Native and linked-core 100% remain
 unfinished. Curated reproduction and measurement evidence is retained in
 `dev/log/issues/138/pulls/139/delta-journals.txt`.
+
+
+## Conflict metadata selected by strategy
+
+Before the optimization, all four Rust metadata tests and ten C# cases fail:
+a 128-row seed retains 128 generations even with one writer and after reopening.
+The generation map now starts empty. Only overlapping optimistic read-committed
+or snapshot sessions track changed addresses; exclusive and whole-revision
+serializable strategies skip it. Cleanup follows the last session's validation,
+so ABA/delete-recreate and branch publication still invalidate stale writers.
+Read-only commit, conflict, rollback and drop reclaim bookkeeping. C# allocates
+the dictionary lazily and releases its backing storage, rather than just clearing
+entries. Continuous overlap can still retain a large set until sessions end.
+
+The full local suites pass 431 Rust and 639 C# tests. Rust/native-WASM Clippy and
+both formatters pass. Actual WASM conformance passes the same ABA, disjoint-write,
+branch and reopen schedules in Node, Bun and Deno. The instrumented WASM suite
+passes 16 tests, with wrapper source still at 100% lines, functions and reported
+branches. No newly excluded production paths are used for these measurements.
+
+Full native Rust measures 8,514/9,718 lines (87.61%), 1,365/1,776 branches (76.86%)
+and 1,141/1,352 functions (84.39%). C# measures 5,730/6,419 lines (89.27%) and
+2,457/3,028 branches (81.14%). JS source is unchanged from its 17-module, 95-test
+100% measurement. Native and linked-core 100% coverage remains unfinished.

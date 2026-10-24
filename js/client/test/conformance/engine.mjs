@@ -129,5 +129,45 @@ export async function engineConformance(binding) {
   assert.equal(decoded.snapshot().rows.find((row) => row.index === 100n).name, 'after compressed reopen');
   const compressedFork = decoded.fork({}, new DeltaCommitLog(new MemoryCommitLog()));
   compressedFork.close(); decoded.close();
+  await conflictGenerationSchedules(binding);
   console.log('ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen, delta journals');
+}
+
+// The native core may reclaim conflict generations only after the final session
+// validates. Exercise ABA, disjoint commits and branch publications in real WASM.
+async function conflictGenerationSchedules(binding) {
+  for (const isolation of ['snapshot', 'read-committed']) {
+    const engine = new WasmEngine(binding, { isolation });
+    try {
+      const seed = engine.begin();
+      const one = await seed.create(0n, 0n);
+      const two = await seed.create(one.index, one.index);
+      await seed.commit(); await seed.close();
+      const stale = engine.begin();
+      await stale.setName(one.index, 'stale');
+      const writer = engine.begin();
+      await writer.setName(one.index, 'temporary'); await writer.commit(); await writer.close();
+      const restored = engine.begin();
+      await restored.removeName(one.index); await restored.commit(); await restored.close();
+      await assert.rejects(stale.commit(), /conflict/i); await stale.close();
+      assert.equal(engine.snapshot().rows.find(row => row.index === one.index).name, null);
+
+      const first = engine.begin(); const second = engine.begin();
+      await first.setName(one.index, 'first'); await second.setName(two.index, 'second');
+      await first.commit(); await second.commit(); await first.close(); await second.close();
+      assert.equal(engine.snapshot().rows.find(row => row.index === two.index).name, 'second');
+      const branch = engine.fork();
+      const pending = engine.begin(); await pending.setName(one.index, 'pending');
+      const child = branch.engine.begin();
+      await child.setName(one.index, 'branch'); await child.commit(); await child.close();
+      branch.merge(); branch.close();
+      await assert.rejects(pending.commit(), /conflict/i); await pending.close();
+      assert.equal(engine.snapshot().rows.find(row => row.index === one.index).name, 'branch');
+      const reopened = new WasmEngine(binding, { isolation }, engine.journal());
+      const next = reopened.begin();
+      await next.setName(one.index, 'after reopen'); await next.commit(); await next.close();
+      assert.equal(reopened.snapshot().rows.find(row => row.index === one.index).name, 'after reopen');
+      reopened.close();
+    } finally { engine.close(); }
+  }
 }

@@ -7,6 +7,12 @@ Initial adapter tests failed before implementation:
 
 Self-review regression before readiness invalidation:
 
+test at js/client/test/engine-delta.test.mjs:62:1
+✖ malformed inner reads fail without changing the cached base (17.354441ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/engine-delta.test.mjs:73:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+
 After the fix, all three language regressions require successful complete
 rereplay before append following a failed reread. No writes occur while the
 physical stream remains unavailable. Mutation errors require reopening.

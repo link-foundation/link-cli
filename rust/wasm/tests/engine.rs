@@ -244,3 +244,39 @@ fn javascript_log_failures_poison_uncertain_commits_without_publishing() {
         );
     }
 }
+
+#[wasm_bindgen_test]
+fn reclaimed_generations_preserve_aba_and_branch_conflicts() {
+    for isolation in ["snapshot", "read-committed"] {
+        let options = format!(r#"{{"isolation":"{isolation}"}}"#);
+        let engine = StagedEngine::new(&options, "[]").unwrap();
+        let mut seed = engine.begin().unwrap();
+        assert!(!seed.request("(create: (0 0))").contains("error:"));
+        seed.commit().unwrap();
+        let mut stale = engine.begin().unwrap();
+        stale.request("(set-name: (1 'stale'))");
+        let mut writer = engine.begin().unwrap();
+        writer.request("(set-name: (1 'temporary'))");
+        writer.commit().unwrap();
+        let mut restored = engine.begin().unwrap();
+        assert!(!restored.request("(remove-name: (1))").contains("error:"));
+        restored.commit().unwrap();
+        assert!(stale.commit().unwrap_err().contains("conflict"));
+        assert_eq!(snapshot(&engine, None)["rows"][0]["name"], Value::Null);
+
+        let mut branch = engine.fork("{}", "[]").unwrap();
+        let mut pending = engine.begin().unwrap();
+        pending.request("(set-name: (1 'pending'))");
+        let mut child = branch.engine().begin().unwrap();
+        child.request("(set-name: (1 'child'))");
+        child.commit().unwrap();
+        branch.merge().unwrap();
+        assert!(pending.commit().unwrap_err().contains("conflict"));
+        assert_eq!(snapshot(&engine, None)["rows"][0]["name"], "child");
+        let reopened = StagedEngine::new(&options, &engine.journal().unwrap()).unwrap();
+        let mut next = reopened.begin().unwrap();
+        next.request("(set-name: (1 'after reopen'))");
+        next.commit().unwrap();
+        assert_eq!(snapshot(&reopened, None)["rows"][0]["name"], "after reopen");
+    }
+}

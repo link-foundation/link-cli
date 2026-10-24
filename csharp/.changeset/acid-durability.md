@@ -21,3 +21,6 @@ discovery across independent consensus groups.
 
 Add optional portable delta journal decorators with bounded checkpoint chains,
 exact logical replay, corruption rejection and uncertain-write fencing.
+Avoid unnecessary recovered-row conflict metadata and skip per-row generation
+tracking for exclusive/whole-revision serializable strategies. Reclaim generations
+after the final session validates, preserving optimistic ABA/branch conflicts.

@@ -150,8 +150,13 @@ from a replicated in-memory test.
 The staged implementation clones the current rows for each write commit and
 writes a complete logical revision: O(N + W) memory/work plus O(N) journal bytes for N
 rows and W staged writes. A scan currently materializes its view. History adds
-up to O(HN) retained row memory. Allocator and per-address modification metadata
-are shared; deleted-address conflict tombstones currently remain allocated.
+up to O(HN) retained row memory. The allocator is shared. Optimistic read-committed
+and snapshot sessions track per-address changes only while another session can
+be stale, retaining deleted-address tombstones to detect delete/recreate races.
+The final session validates before reclaiming that map. Opening an engine,
+exclusive admission and whole-revision serializable validation do not build
+per-row generations. A continuously overlapping set of sessions can still retain
+many changed addresses; end sessions promptly.
 Recovery reads the full log; retention bounds in-memory history, not log size.
 Optional single-span delta encoding reduces physical bytes for localized changes
 and adds an O(N) comparison; it does not compact history or remove full-state work.

@@ -1,0 +1,34 @@
+Conflict metadata cost reproduction
+
+128 seeded rows; no overlapping writer. Rust before:
+---- engine::cost_tests::serializable_validation_needs_no_row_generations stdout ----
+
+thread 'engine::cost_tests::serializable_validation_needs_no_row_generations' (270106) panicked at src/engine/cost_tests.rs:44:5:
+assertion `left == right` failed
+  left: 128
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+C# before: ten failing cases; expected zero or one generation, actual 128.
+After: four Rust tests and ten C# cases pass, including all six concurrency /
+isolation combinations, replay, disjoint commits, ABA/delete-recreate,
+last-session conflict/read-only/rollback/drop and branch publication.
+
+Final local verification:
+- Rust: 431 passed; two subprocess entry points ignored.
+- C#: 639 passed, zero failed or skipped; nullable/lazy dictionary verified.
+- Actual release WASM conformance passes Node, Bun and Deno.
+- Actual WASM tests: 16 passed; wrapper 327/327 lines, 68/68 functions,
+  16/16 reported branches. Linked-core coverage remains incomplete.
+- Native and target WASM Clippy deny warnings; Rust/.NET formatting pass.
+- Rust: 8514/9718 lines, 1365/1776 branches, 1141/1352 functions.
+- C#: 5730/6419 lines, 2457/3028 branches.
+
+No session predates open. Exclusive admission precludes other publishers;
+whole-revision serializable validation needs no per-row generations.
+Optimistic snapshot/read-committed sessions retain changed-address tombstones
+while another session can be stale. Validate the last committer BEFORE clearing.
+C# releases the dictionary, including retained capacity, when the last session
+ends. Continuous overlap can still retain metadata; there is no oldest-reader
+pruning. Full-state engine work remains O(N). No production exclusions added.

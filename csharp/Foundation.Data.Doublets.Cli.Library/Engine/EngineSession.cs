@@ -116,26 +116,39 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             CheckOpen();
             _closed = true;
             _engine.Active--;
-            var writes = _writes.ToArray();
-            _writes.Clear();
-            if (_engine.Options.Isolation == IsolationLevel.Serializable && _engine.Current.Revision != _base.Revision)
-                throw new InvalidOperationException("Conflict: database revision changed.");
-            if (writes.Any(write => _engine.Changed.TryGetValue(write.Key, out var revision) && revision > _base.Revision))
-                throw new InvalidOperationException("Conflict: a written link changed since begin.");
-            if (writes.Length == 0) return _engine.Current.Revision;
-            var rows = new SortedDictionary<T, EngineRow<T>>(_engine.Current.Rows.ToDictionary());
-            foreach (var (id, row) in writes)
-            { if (row is { } present) rows[id] = present; else rows.Remove(id); }
-            _engine.Publish(rows, writes.Select(write => write.Key));
-            _base = _engine.Current;
-            return _base.Revision;
+            try
+            {
+                var writes = _writes.ToArray();
+                _writes.Clear();
+                if (_engine.Options.Isolation == IsolationLevel.Serializable && _engine.Current.Revision != _base.Revision)
+                    throw new InvalidOperationException("Conflict: database revision changed.");
+                if (_engine.Changed is { } changed && writes.Any(write => changed.TryGetValue(write.Key, out var revision) && revision > _base.Revision))
+                    throw new InvalidOperationException("Conflict: a written link changed since begin.");
+                if (writes.Length == 0) return _engine.Current.Revision;
+                var rows = new SortedDictionary<T, EngineRow<T>>(_engine.Current.Rows.ToDictionary());
+                foreach (var (id, row) in writes)
+                { if (row is { } present) rows[id] = present; else rows.Remove(id); }
+                _engine.Publish(rows, writes.Select(write => write.Key));
+                _base = _engine.Current;
+                return _base.Revision;
+            }
+            finally
+            {
+                // Validate the last committer before reclaiming generations,
+                // including delete/recreate changes that restore identical rows.
+                if (_engine.Active == 0) _engine.Changed = null;
+            }
         }
     }
     public void Rollback()
     {
         lock (_engine.Gate)
         {
-            if (!_closed) { _closed = true; _engine.Active--; _writes.Clear(); }
+            if (!_closed)
+            {
+                _closed = true; _engine.Active--; _writes.Clear();
+                if (_engine.Active == 0) _engine.Changed = null;
+            }
         }
     }
     public void Dispose() => Rollback();

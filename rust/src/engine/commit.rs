@@ -1,4 +1,4 @@
-use super::{error, journal, Row, Snapshot, State};
+use super::{error, journal, ConcurrencyControl, IsolationLevel, Row, Snapshot, State};
 use crate::{LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::{collections::BTreeMap, sync::Arc};
@@ -32,10 +32,17 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
                 "indeterminate commit: {cause}; reopen the engine"
             )));
         }
+        let track = self.active > 0
+            && self.options.concurrency == ConcurrencyControl::Optimistic
+            && self.options.isolation != IsolationLevel::Serializable;
         let mut count = 0;
-        for id in changed {
-            self.changed.insert(id, revision);
-            count += 1;
+        if track || self.options.trace {
+            for id in changed {
+                if track {
+                    self.changed.insert(id, revision);
+                }
+                count += 1;
+            }
         }
         self.current = snapshot.clone();
         self.committed_next = self.next;

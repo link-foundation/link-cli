@@ -7,6 +7,8 @@
 mod branch;
 pub mod cluster;
 mod commit;
+#[cfg(test)]
+mod cost_tests;
 mod delta;
 #[cfg(feature = "etcd")]
 pub mod etcd;
@@ -169,13 +171,8 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             state.current = snapshot;
             state.retain();
         }
-        // No transaction predates open, so a single generation suffices.
-        state.changed = state
-            .current
-            .rows
-            .keys()
-            .map(|id| (*id, state.current.revision))
-            .collect();
+        // No transaction predates open, so recovered rows need no conflict
+        // generations. Track only changes made while a session can be stale.
         Ok(Self {
             state: Arc::new(Mutex::new(state)),
         })

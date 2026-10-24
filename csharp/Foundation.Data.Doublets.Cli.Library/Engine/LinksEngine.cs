@@ -39,7 +39,7 @@ public sealed partial class LinksEngine<T>
     internal readonly object Gate = new();
     internal readonly EngineOptions Options;
     internal EngineSnapshot<T> Current = new(0, new());
-    internal readonly Dictionary<T, ulong> Changed = new();
+    internal Dictionary<T, ulong>? Changed;
     internal BigInteger Next = BigInteger.One;
     internal BigInteger CommittedNext = BigInteger.One;
     internal int Active;
@@ -70,7 +70,7 @@ public sealed partial class LinksEngine<T>
             CommittedNext = next;
             Retain();
         }
-        foreach (var id in Current.Rows.Keys) Changed[id] = Current.Revision;
+        // No session predates open; recovered rows need no conflict generations.
     }
 
     internal void CheckReady()
@@ -131,7 +131,8 @@ public sealed partial class LinksEngine<T>
             Poisoned = true;
             throw new IOException("Indeterminate commit; reopen the engine to discover the outcome.", error);
         }
-        foreach (var id in writes) Changed[id] = snapshot.Revision;
+        if (Active > 0 && Options.Concurrency == ConcurrencyControl.Optimistic && Options.Isolation != IsolationLevel.Serializable)
+            foreach (var id in writes) (Changed ??= new())[id] = snapshot.Revision;
         Current = snapshot;
         CommittedNext = Next;
         Retain();
