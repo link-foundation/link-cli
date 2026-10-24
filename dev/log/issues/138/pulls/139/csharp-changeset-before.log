@@ -1,0 +1,14 @@
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2582842Z Validating changesets added by this PR...
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2585859Z Comparing eb7074aa504e87e50106ad9ecd46d7422e61c9a8...dd6902af83fb73a3ae31819660a35dc878acfd51
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2675512Z Found 2 changeset file(s) added by this PR
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2677877Z Added changesets:
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2679885Z   - acid-durability.md
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2682274Z   - staged-engine-strategies.md
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2712055Z ##[error]Multiple changesets found in this PR (2). Each PR should add exactly ONE changeset.
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2728567Z ##[error]Found changeset files added by this PR:
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2732034Z   acid-durability.md
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2733181Z   staged-engine-strategies.md
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2733941Z 
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2736816Z ##[error]Please combine these into a single changeset or remove the extras.
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2745673Z ##[error]Process completed with exit code 1.
+Changeset Validation	Post Run actions/checkout@v7	﻿2026-10-24T16:04:25.3100074Z Post job cleanup.
