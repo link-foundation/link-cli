@@ -905,3 +905,23 @@ coverage remains unfinished. Formatting and release metadata pass.
 See [VERSION-ROLLBACK-PLAN.md](VERSION-ROLLBACK-PLAN.md) and
 `dev/log/issues/138/pulls/139/version-rollback-owner.txt`. Rust already keeps its
 active owner on failed rollback; its production path and JS/WASM are unchanged.
+
+## Native CLI policy contracts
+
+Ten contracts invoke the real binary for commit/retention policies, terminal
+commands, change rendering, persistent branch/tag/checkout operations and
+rejected-operation invariants. Actual text/binary clients exercise empty replies
+against the existing in-process server framework. Network configuration and
+server bind/query/protocol failures are covered without platform-specific error
+strings. Every child has a finite deadline and is reaped on all paths.
+
+The complete native suite passes 557 standard tests plus the custom stdout harness
+(four child entry points ignored). The final added client contract and expanded
+server cases then pass in the complete ten-test CLI target; its instrumented run
+retains the full-suite profiles. Strict Clippy and formatting pass. Official LLVM
+coverage is 9,269/10,126 lines (91.54%) and 1,524/1,874 branches (81.32%). Main is
+377/387 lines, 112/114 branches and 34/34 functions. No source exclusions or
+source-union replacement were used; complete project coverage remains unfinished.
+This step preserves existing behavior and changes no Rust production code.
+See [CLI-CONTRACT-PLAN.md](CLI-CONTRACT-PLAN.md) and
+`dev/log/issues/138/pulls/139/cli-policy-contracts.txt`.

@@ -1,0 +1,40 @@
+Native CLI policy/configuration contracts (R1/R3/R8)
+
+Ten integration contracts invoke the real clink binary. They cover terminal
+help/version without stores; valid/empty/invalid commit and retention settings;
+before/change/after rendering and persistent reopening; numeric/tag/alias
+checkout, branch logs and tracing; rejected-operation invariants; client
+configuration validation; actual text/binary client empty replies; and server
+query/protocol/bind failures, including the trigger facade path.
+
+This is coverage of existing behavior, not a claimed production bug fix.
+An initial assertion incorrectly expected explicit identity substitution to
+produce no --changes output. Existing behavior reports that substitution;
+the contract was corrected to preserve it. No Rust production code changed.
+
+Each child has a finite 30-second deadline, closed stdin and anonymous output
+files to avoid pipe blocking. A guard kills/reaps on every path, including
+assertion failure. Actual client tests reuse RunningServer and its shutdown/join
+framework. Bind errors use a held ephemeral listener and portable error checks.
+
+The complete native LLVM suite passes 557 standard tests, zero failed and four
+child entry points ignored, plus the custom stdout harness. After adding the
+last client contract and server cases, all ten final contracts pass; their
+instrumented run uses --no-clean to retain that successful full-suite profile.
+Strict Clippy across all features/targets and formatting verification pass.
+
+Official native LLVM totals, no exclusions or source-coordinate substitution:
+  Lines:     9,269/10,126 = 91.5366383567%.
+  Branches:  1,524/1,874  = 81.3233724653%.
+  Functions: 1,238/1,388  = 89.1930835735%.
+CLI main: 377/387 lines, 112/114 branches, 34/34 functions.
+Previous native coverage: 9,143 lines and 1,482 branches covered.
+Complete coverage remains below the issue's 100% requirement. No killed server
+child is counted as measured execution without a written profile.
+
+Reusable local scripts: validate-cli-policy.sh and
+validate-cli-policy-incremental.sh under experiments/issue-138.
+Preserved logs: cli-policy-native-full.log, -native-incremental.log,
+-clippy.log, -validation.log and -incremental-validation.log.
+Official report: cli-policy-native-coverage.json.
+Fresh exact-SHA CI remains required after publication.
