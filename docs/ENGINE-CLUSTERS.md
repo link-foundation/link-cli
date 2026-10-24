@@ -33,8 +33,73 @@ checked in addition to engine journal integrity, allocator and constraint checks
 This is suitable for small datasets and coordination; it is not a high-throughput
 bulk storage design. One consensus group replicates every journal and limits
 aggregate write throughput. More workers and separate shard namespaces spread
-processing; independent consensus groups and independently stored shard data
-require a further protocol. Those broader scale-out options remain unfinished.
+processing. Use the optional partitioned decorator below to move journal data
+out of the catalog into independent stores and consensus groups.
+
+## Independent data stores
+
+`PartitionedJournalStore` implements the same atomic journal store contract in
+Rust, C# and JS. Supply a catalog, a map of named data stores, and a function
+mapping each shard name to a data-store name. The stores can use separate etcd
+deployments, disks, memberships and quotas. No application filesystem is shared.
+
+```mermaid
+flowchart LR
+  Workers[Application workers] --> Catalog[Atomic catalog: shard pointers]
+  Workers --> East[East group: immutable journals]
+  Workers --> West[West group: immutable journals]
+  Catalog -. points to .-> East
+  Catalog -. points to .-> West
+```
+
+At begin, the decorator reads all selected catalog pointers in one linearizable
+snapshot, then loads their immutable data objects. At commit it creates the
+changed objects in their routed stores, verifies their complete contents, then
+atomically compares every selected catalog generation and publishes the pointers.
+A failed comparison publishes none of the group. A data failure before catalog
+publication leaves only unreferenced objects. An unknown catalog response still
+requires a fresh read. No data or catalog mutation is automatically retried.
+
+The portable pointer is four strings: `blob1`, partition name, object key, and
+object modification generation. Keys use a length-framed UTF-8 FNV-1a-64 index.
+Creation checks full contents and rejects a collision; existing objects are never
+overwritten. Reads verify both generation and index. This detects accidental
+corruption and namespace misuse; it does not authenticate an untrusted backend.
+Catalog and data namespaces must be dedicated to this protocol. Keep each
+partition name bound to its original storage namespace, even when changing the
+router for future writes. Never delete or mutate objects: old readers may still
+hold pointers. This version retains old and orphan objects, so provision quotas
+and monitor growth. No concurrent garbage collector is supplied.
+
+The catalog carries O(selected shards) bounded metadata per operation. Bulk
+journal writes and storage capacity are distributed across independent data
+groups; each journal still stores and transfers complete revisions and history.
+Catalog metadata throughput and each individual data group's request/quota limits
+remain constraints. Split unrelated transaction domains into independent catalogs
+to scale metadata throughput; one transaction cannot span independent catalogs.
+This does not promise linear throughput scaling or provide LSM compaction.
+`requireDurableFlush` requires the catalog and every configured data store to
+declare durable persistence. Injected stores remain caller-owned.
+
+For example, with independent groups on ports 2379 (catalog), 3379 (east) and
+4379 (west), append the two data endpoints to any cluster example:
+
+```sh
+cargo run --manifest-path rust/Cargo.toml --features etcd --example cluster -- http://localhost:2379 /partitioned/ http://localhost:3379 http://localhost:4379
+dotnet run --project examples/cluster-csharp -- http://localhost:2379 /partitioned/ http://localhost:3379 http://localhost:4379
+```
+
+The JS constructor accepts the same `EtcdJournalStore` instances:
+
+```js
+const journals = new PartitionedJournalStore(catalog, { east, west },
+  (shard) => shard === 'a' ? 'east' : 'west');
+const engine = new ClusterEngine(binding, journals, { requireDurableFlush: true });
+```
+
+The design follows the general immutable-data/atomic-metadata pattern described
+in [Apache Iceberg's specification](https://iceberg.apache.org/spec/). The wire
+format and engine implementation here are independent of Iceberg's table format.
 
 ## Configuration and ownership
 
@@ -84,9 +149,10 @@ are using its generations.
 The [Rust and C# examples](../examples/cluster-csharp/README.md) and
 [JS example](../js/client/examples/cluster.mjs) use the same journal representation.
 The bounded [integration runner](../experiments/issue-138/etcd-cluster.mjs) launches
-three actual etcd members, uses JS and optional native writers, injects a lost
-commit response, kills the elected leader, verifies a surviving-majority commit,
-and then checks that majority loss refuses a fresh read. All children are killed
+a three-member catalog and two independent data groups, uses JS and optional
+native writers, injects a lost commit response and a data-group outage, kills the
+elected catalog leader, verifies a surviving-majority commit, and then checks
+that majority loss refuses a fresh read. All children are killed
 and reaped in `finally`. The JS CI conformance job runs this experiment.
 
 Primary references: [etcd API](https://etcd.io/docs/v3.6/learning/api/),

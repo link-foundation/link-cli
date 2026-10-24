@@ -1,8 +1,11 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-if (args.Length != 2) throw new ArgumentException("usage: ClusterExample endpoints-comma-separated prefix/");
+if (args.Length != 2 && args.Length != 4) throw new ArgumentException("usage: ClusterExample catalog-endpoints prefix/ [east-endpoints west-endpoints]");
 using var store = new EtcdJournalStore(args[0].Split(',').Select(value => new Uri(value)), args[1]);
-var engine = new ClusterEngine<uint>(store, new() { RequireDurableFlush = true });
+using var east = args.Length == 4 ? new EtcdJournalStore(args[2].Split(',').Select(value => new Uri(value)), args[1]) : null;
+using var west = args.Length == 4 ? new EtcdJournalStore(args[3].Split(',').Select(value => new Uri(value)), args[1]) : null;
+IAtomicJournalStore journals = args.Length == 4 ? new PartitionedJournalStore(store, new Dictionary<string, IAtomicJournalStore> { ["east"] = east!, ["west"] = west! }, key => key == "a" ? "east" : "west") : store;
+var engine = new ClusterEngine<uint>(journals, new() { RequireDurableFlush = true });
 using var transaction = engine.Begin("a", "b");
 foreach (var key in new[] { "a", "b" })
 {

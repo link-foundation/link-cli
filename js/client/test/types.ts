@@ -39,12 +39,15 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   return engine.snapshot(revision);
 }
 
-import { ClusterEngine, EtcdJournalStore, type JournalVersion, type AtomicJournalStore } from '../types/index.js';
+import { ClusterEngine, EtcdJournalStore, PartitionedJournalStore, type JournalVersion, type AtomicJournalStore } from '../types/index.js';
 async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]) {
   const store: AtomicJournalStore = new EtcdJournalStore(['https://localhost:2379'], { headers: { Authorization: 'token' }, timeoutMs: 1000 });
   const versions: JournalVersion[] = await store.read(['a']);
   await store.compareExchange(['a'], versions, [null]);
   const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
+  const partitioned: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east');
+  const routed = new ClusterEngine(binding, partitioned);
+  await (await routed.begin(['a'])).close();
   await using transaction = await engine.begin(['a', 'b']);
   const links: Links = transaction.shard('a');
   await links.create(0, 0); await transaction.commit();

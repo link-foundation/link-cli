@@ -305,3 +305,10 @@ export class ClusterTransaction {
   close(): Promise<void>;
   [Symbol.asyncDispose](): Promise<void>;
 }
+/** Immutable data objects in independent stores; atomic publication in a catalog. */
+export class PartitionedJournalStore implements AtomicJournalStore {
+  constructor(catalog: AtomicJournalStore, partitions: Record<string, AtomicJournalStore>, route: (shard: string) => string);
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}

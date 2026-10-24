@@ -164,7 +164,8 @@ large or frequently written database.
 | Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
 | Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
 | etcd consensus transactions | ClusterEngine + EtcdJournalStore | Linearizable selected-shard snapshots and atomic CAS; etcd supplies consensus. Full journals in one group limit data/write scale. |
-| TiKV distributed transactions | Selected-shard atomic groups | Independent consensus groups, LSM storage and distributed shard recovery remain unfinished. |
+| TiKV distributed transactions | Selected-shard atomic groups + partitioned journal stores | Independent data groups and atomic catalog publication; no TiKV lock/timestamp protocol, LSM storage or Region rebalancing. |
+| Iceberg optimistic metadata publication | PartitionedJournalStore | Immutable journal objects plus atomic pointer CAS; different data/wire formats, full journal transfers, no manifest tree or garbage collector. |
 
 See [the pinned source study](case-studies/issue-138/RESEARCH.md),
 [acceptance inventory](case-studies/issue-138/REQUIREMENTS.md), and
@@ -215,4 +216,6 @@ not a durable commit. Caller-owned adapters outlive all sessions that use them.
 journal store. The optional etcd adapter supplies linearizable snapshots, atomic
 publication across selected shards, and consensus failover. It bounds network
 payloads and preserves unknown outcomes. Full journals in one coordinator group
-limit scale; see the deployment and costs guide before choosing this backend.
+limit scale. `PartitionedJournalStore` moves immutable journals to independently
+routed data groups and retains atomic pointer publication in the catalog. See the
+deployment and costs guide for topology, object retention and throughput limits.

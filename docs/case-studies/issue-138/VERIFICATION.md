@@ -69,8 +69,9 @@ prove the filesystem/controller's persistence guarantees.
 The 100% coverage requirement is unmet. The optional etcd backend now supplies routed named-shard groups, consensus
 failover and atomic cross-shard coordination. The three-member experiment passes
 with native Rust/C# and actual WASM writers, lost responses, leader termination
-and majority loss. Independent consensus groups and bulk data scaling remain
-unfinished. Fixed-primary replica acknowledgements do not establish consensus.
+and majority loss. The partitioned decorator additionally separates immutable
+journals into independent data groups. Native/WASM coverage and efficient
+delta/LSM storage remain unfinished. Fixed-primary replica acknowledgements do not establish consensus.
 See REQUIREMENTS.md and ENGINE-STRATEGIES.md for the implementation boundary.
 
 
@@ -125,9 +126,36 @@ waited for a majority, then queried every member. It now waits for each member's
 status and nonzero leader before testing. A deterministic delayed-member test
 covers refused connections, HTTP failure and election delay, plus finite failure.
 The full three-member experiment passes locally after this correction, including
-native writers, leader termination and majority loss. Fresh CI is still required.
+native writers, leader termination and majority loss. Fresh JS conformance run 40113656214 passes after this correction.
 
 Full Rust coverage on 5155c80 passes 403 unit/integration tests (two subprocess
 helpers ignored) and measures 8,095/9,351 lines (86.57%) and 1,084/1,312 functions
 (82.62%). Branch instrumentation is not enabled. This measurement precedes the
 partitioned-data decorator and leaves native coverage work open.
+
+## Independent data groups
+
+The partitioned-store regression first fails because the feature is absent.
+Native Rust and C# tests then exercise the same atomic pointer publication,
+read-only dependency conflicts, object reuse, failed staging, uncertain catalog
+responses and missing/modified object rejection as JS. Shared portable fixtures
+verify byte-length framing, empty records, NULs and multibyte UTF-8 addresses.
+
+The real integration launches five bounded etcd processes: one three-member
+catalog and two separate single-member data groups, each with its own directories
+and consensus identity. Native Rust/C# examples and actual WASM use the same
+pointer and object representations. The catalog contains only four-string
+pointers. Killing the west group makes a multi-shard commit fail without changing
+either pointer; east-only transactions continue to commit and read back. The
+existing catalog leader-loss/majority-loss checks also pass. Single-member data
+groups verify separate storage/failure domains, not production redundancy.
+
+The JS suite, including the new decorator, passes 89 tests at 100% measured lines,
+branches and functions across all 16 production modules, with enforced thresholds.
+Actual WASM conformance passes Node, Bun and Deno. The full Rust suite passes
+406 unit/integration checks plus six documentation checks; the additional
+portable-address fixture then passes in the focused four-test suite. C# passes
+607 full-suite tests followed by its four-test partitioned-store suite including
+the new fixture. Its coverage before that fixture is 5,605/6,313 lines (88.78%)
+and 2,334/2,938 branches (79.44%). Native coverage remains below the issue's
+requested 100% scope.

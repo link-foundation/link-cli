@@ -11,6 +11,7 @@ mod commit;
 pub mod etcd;
 mod journal;
 mod named;
+pub mod partitioned;
 pub mod replication;
 mod transaction;
 

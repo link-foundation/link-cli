@@ -13,6 +13,7 @@ performance, failure handling, or guarantees.
 | [Redis replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/) | [replication.c](https://github.com/redis/redis/blob/unstable/src/replication.c) | Asynchronous primary/follower copies improve read scale. Waiting for replica acknowledgements alone does not provide consensus or safe automatic failover. |
 | [etcd API guarantees](https://etcd.io/docs/v3.6/learning/api_guarantees/) | [raft.go](https://github.com/etcd-io/raft/blob/main/raft.go) | Quorum intersection, a fenced leader, ordered durable logs, and safe membership changes are necessary for consensus. A fan-out log must not advertise Raft guarantees. |
 | [TiKV transactions](https://tikv.github.io/sig-transaction/doc/tikv/index.html) | [transaction](https://github.com/tikv/tikv/tree/master/src/storage/txn) | Cross-shard atomic writes require coordination and recovery beyond per-shard atomicity. Raw and transactional writes cannot be mixed safely. |
+| [Apache Iceberg optimistic concurrency](https://iceberg.apache.org/spec/#optimistic-concurrency) | [format specification](https://apache.googlesource.com/iceberg/+/HEAD/format/spec.md), optimistic concurrency and filesystem operations | Immutable data plus atomic metadata publication separates data storage from the serialization point. The partitioned journal decorator stages objects in independent groups, then compares all selected catalog generations before publishing pointers. Data files and table formats are not copied. |
 
 ## Existing reusable components
 

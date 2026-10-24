@@ -21,7 +21,7 @@ finite test suite proves all failure modes or that all DBMS have been surveyed.
 - [x] Implement matching staged-engine public surfaces in Rust, C#, and JS/TS.
 - [x] Compose independent branches and atomic three-way merges with staged engines.
 - [x] Implement network transport, named shard routing and consensus-backed storage.
-- [ ] Implement independently stored shard data and multiple consensus groups.
+- [x] Implement independently stored shard data and multiple consensus groups.
 - [ ] Document cache, durable store, and distributed deployment recipes, examples,
       competitor comparisons, component reuse, and exact guarantee limits.
 - [ ] Measure coverage, add missing edge cases, distinguish measured coverage from guarantees.

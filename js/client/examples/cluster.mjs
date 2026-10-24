@@ -3,12 +3,16 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ClusterEngine, EtcdJournalStore } from '../src/index.js';
+import { ClusterEngine, EtcdJournalStore, PartitionedJournalStore } from '../src/index.js';
 const directory = resolve(process.env.CLINK_WASM ?? '../pkg');
 const binding = await import(pathToFileURL(resolve(directory, 'clink_wasm.js')).href);
 binding.initSync({ module: await readFile(resolve(directory, 'clink_wasm_bg.wasm')) });
 const store = new EtcdJournalStore((process.argv[2] ?? 'http://localhost:2379').split(','), { prefix: process.argv[3] ?? '/demo/' });
-const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
+const journals = process.argv[4] && process.argv[5] ? new PartitionedJournalStore(store, {
+  east: new EtcdJournalStore(process.argv[4].split(','), { prefix: process.argv[3] ?? '/demo/' }),
+  west: new EtcdJournalStore(process.argv[5].split(','), { prefix: process.argv[3] ?? '/demo/' }),
+}, (key) => key === 'a' ? 'east' : 'west') : store;
+const engine = new ClusterEngine(binding, journals, { requireDurableFlush: true });
 const transaction = await engine.begin(['a', 'b']);
 try {
 for (const key of ['a', 'b']) {

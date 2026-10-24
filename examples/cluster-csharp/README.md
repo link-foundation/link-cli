@@ -24,3 +24,8 @@ An independent address `1` in shard `a` is distinct from address `1` in shard `b
 See [deployment and costs](../../docs/ENGINE-CLUSTERS.md) and the
 [three-member failure experiment](../../experiments/issue-138/etcd-cluster.mjs)
 for actual leader loss, majority loss, dropped responses, and language interop.
+
+Append east and west endpoint lists to either command to route bulk journals to
+independent consensus groups. The original endpoint list then serves only the
+atomic catalog. See the independent-data recipe in the deployment documentation;
+partition namespaces must remain immutable and old objects are retained.

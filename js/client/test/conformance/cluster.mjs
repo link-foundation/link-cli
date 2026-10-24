@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { ClusterEngine } from '../../src/cluster.js';
+import { PartitionedJournalStore } from '../../src/partitioned.js';
 
 class Store {
   supportsDurableFlush = false; revision = 0; values = new Map(); loseReply = false;
@@ -41,4 +42,14 @@ export async function clusterConformance(binding) {
   store.values.set('bad', { generation: '1', entries: ['corrupt'] });
   await assert.rejects(first.begin(['a', 'bad']), /checksum/);
   console.log('ok wasm cluster: atomic groups, read-only dependency conflicts, independent shards, rollback, uncertain commits');
+  const catalog = new Store(); const east = new Store(); const west = new Store();
+  const partitioned = new PartitionedJournalStore(catalog, { east, west }, (key) => key === 'a' ? 'east' : 'west');
+  const routed = new ClusterEngine(binding, partitioned);
+  const group = await routed.begin(['a', 'b']);
+  await group.shard('a').create(0, 0); await group.shard('b').create(0, 0); await group.commit();
+  const read = await routed.begin(['a', 'b']);
+  assert.equal(await read.shard('a').count(), 1n); assert.equal(await read.shard('b').count(), 1n); await read.close();
+  assert.equal(east.values.size, 1); assert.equal(west.values.size, 1);
+  assert.ok([...catalog.values.values()].every((value) => value.entries.length === 4 && value.entries[0] === 'blob1'));
+  console.log('ok wasm partitioned: independent immutable journals and atomic catalog pointers');
 }
