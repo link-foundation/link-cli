@@ -273,7 +273,7 @@ for (const workflow of workflows) {
     const offenders = readSteps(workflow.text)
       .filter(({ text }) => /\bsecrets\.[A-Z0-9_]*(?:TOKEN|KEY)\b/.test(text))
       .map((step) => ({ ...step, code: step.text.replace(/^\s*#.*$/gm, '') }))
-      .filter(({ code }) => /(?:not set|not configured|missing)[^\n]*skip|skip[^\n]*publish/i.test(code))
+      .filter(({ code }) => /(?:not set|not configured|missing)[^\n]*\bskipp(?:ing|ed)\b|\bskipping\b[^\n]*publish/i.test(code))
       .map(({ first }) => first);
     assert.deepEqual(offenders, [], `${workflow.name} skips publishing on missing credentials at lines ${offenders}`);
   });

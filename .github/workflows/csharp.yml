@@ -315,6 +315,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -427,12 +429,29 @@ jobs:
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_USER: ${{ vars.NUGET_USER }}
         run: |
+          if [ -n "$NUGET_USER" ]; then
+            echo "Publishing with NuGet trusted publishing as $NUGET_USER"
+            exit 0
+          fi
           if [ -z "$NUGET_API_KEY" ]; then
-            echo "::error title=NUGET_API_KEY is missing::The release was versioned but cannot be published to NuGet. Add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            echo "::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
             exit 1
           fi
           echo "NUGET_API_KEY length: ${#NUGET_API_KEY}"
+
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        # Trusted publishing: a one-hour key requested right before the push.
+        if: >-
+          vars.NUGET_USER != '' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
 
       - name: Publish to NuGet
         id: nuget_publish
@@ -441,15 +460,19 @@ jobs:
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          # The long-lived secret is only the fallback while trusted
+          # publishing is not configured (vars.NUGET_USER unset).
+          NUGET_API_KEY: ${{ vars.NUGET_USER == '' && secrets.NUGET_API_KEY || steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           # A missing key used to skip the push while the release stayed green
           # (issue #134); a versioned but unpublished release must fail.
           if [ -z "$NUGET_API_KEY" ]; then
-            echo "::error title=NUGET_API_KEY is missing::The release was versioned but cannot be published to NuGet. Add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            echo "::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
             exit 1
           fi
-          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          # zizmor flags every --api-key push; the key is the short-lived
+          # trusted-publishing key whenever vars.NUGET_USER is set.
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate # zizmor: ignore[use-trusted-publishing]
           echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify CLI package on NuGet
@@ -517,6 +540,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -572,21 +597,36 @@ jobs:
           echo "id=$CLI_ID" >> "$GITHUB_OUTPUT"
           echo "library_id=$LIB_ID" >> "$GITHUB_OUTPUT"
 
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        # Trusted publishing: a one-hour key requested right before the push.
+        if: >-
+          vars.NUGET_USER != '' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true')
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Publish to NuGet
         id: nuget_publish
         if: >-
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true'
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          # The long-lived secret is only the fallback while trusted
+          # publishing is not configured (vars.NUGET_USER unset).
+          NUGET_API_KEY: ${{ vars.NUGET_USER == '' && secrets.NUGET_API_KEY || steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           # A missing key used to skip the push while the release stayed green
           # (issue #134); a versioned but unpublished release must fail.
           if [ -z "$NUGET_API_KEY" ]; then
-            echo "::error title=NUGET_API_KEY is missing::The release was versioned but cannot be published to NuGet. Add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            echo "::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
             exit 1
           fi
-          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          # zizmor flags every --api-key push; the key is the short-lived
+          # trusted-publishing key whenever vars.NUGET_USER is set.
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate # zizmor: ignore[use-trusted-publishing]
           echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify CLI package on NuGet
