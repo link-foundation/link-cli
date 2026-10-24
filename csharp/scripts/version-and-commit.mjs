@@ -235,6 +235,7 @@ function processChangesets() {
   console.log(`Found ${files.length} changeset file(s)`);
 
   const parsedChangesets = [];
+  const invalid = [];
   for (const file of files) {
     const filePath = join(CHANGESET_DIR, file);
     const parsed = parseChangeset(filePath);
@@ -244,12 +245,19 @@ function processChangesets() {
         filePath,
         ...parsed,
       });
+    } else {
+      invalid.push(file);
     }
   }
 
-  if (parsedChangesets.length === 0) {
-    console.log('No valid changesets could be parsed');
-    return null;
+  // Every changeset is deleted after the release, so one that does not parse
+  // would lose its bump and its description on a green run (issue #134).
+  if (invalid.length > 0) {
+    console.error(
+      `::error title=Invalid changeset::Cannot parse ${invalid.join(', ')} in ${CHANGESET_DIR}. ` +
+        `How to fix: start it with ---, '${PACKAGE_NAME}': major|minor|patch, --- and a description.`
+    );
+    process.exit(1);
   }
 
   const bumpTypes = parsedChangesets.map((c) => c.type);

@@ -102,6 +102,56 @@ test('merge-changesets honors the requested directory and package name', () => {
   assert.match(merged, /Second fix\./);
 });
 
+// A changeset that does not parse used to be skipped with a warning and then
+// deleted with the rest, so its bump and its description silently vanished
+// from a green release (issue #134). The validator only checks changesets a
+// PR adds, so an edited or directly pushed one reaches main unchecked.
+const typoChangeset = "---\n'Foundation.Data.Doublets.Cli': minr\n---\n\nNew command.\n";
+
+test('merge-changesets fails on a changeset it cannot parse and keeps every file', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'link-cli-changesets-invalid-'));
+  const changesetDir = join(dir, 'csharp', '.changeset');
+  mkdirSync(changesetDir, { recursive: true });
+  writeFileSync(
+    join(changesetDir, 'one.md'),
+    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFirst fix.\n"
+  );
+  writeFileSync(join(changesetDir, 'typo.md'), typoChangeset);
+
+  assert.throws(
+    () =>
+      runNode('csharp/scripts/merge-changesets.mjs', [
+        '--dir',
+        changesetDir,
+        '--package-name',
+        'Foundation.Data.Doublets.Cli',
+      ]),
+    (error) => /::error title=Invalid changeset::.*typo\.md/.test(error.stderr)
+  );
+  assert.deepEqual(readdirSync(changesetDir).sort(), ['one.md', 'typo.md']);
+});
+
+test('version-and-commit fails on a changeset it cannot parse instead of dropping it', () => {
+  const { dir, remote, work, outputFile } = createCsharpReleaseSandbox('link-cli-csharp-invalid-');
+  writeFileSync(join(work, 'csharp', '.changeset', 'typo.md'), typoChangeset);
+  runGit(['add', '.'], work);
+  runGit(['commit', '-m', 'add a changeset with a typo'], work);
+  runGit(['push', 'origin', 'main'], work);
+  const remoteHead = runGit(['--git-dir', remote, 'rev-parse', 'main'], dir);
+
+  assert.throws(
+    () =>
+      runNode('csharp/scripts/version-and-commit.mjs', ['--mode', 'changeset'], {
+        cwd: work,
+        env: { GITHUB_OUTPUT: outputFile },
+      }),
+    (error) => /::error title=Invalid changeset::.*typo\.md/.test(error.stderr)
+  );
+  assert.equal(runGit(['--git-dir', remote, 'rev-parse', 'main'], dir), remoteHead);
+  assert.equal(runGit(['--git-dir', remote, 'tag', '--list'], dir), '');
+  assert.ok(existsSync(join(work, 'csharp', '.changeset', 'typo.md')));
+});
+
 test('create-github-release dry run uses tag prefix and component changelog', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-'));
   const changelog = join(dir, 'CHANGELOG.md');

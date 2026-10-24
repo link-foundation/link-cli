@@ -163,6 +163,7 @@ function main() {
 
   // Parse all changesets
   const parsedChangesets = [];
+  const invalid = [];
   for (const file of changesetFiles) {
     const filePath = join(changesetDir, file);
     const parsed = parseChangeset(filePath, packageName);
@@ -172,11 +173,18 @@ function main() {
         filePath,
         ...parsed,
       });
+    } else {
+      invalid.push(file);
     }
   }
 
-  if (parsedChangesets.length === 0) {
-    console.error('Error: No valid changesets could be parsed');
+  // A changeset left out of the merge is deleted by the release without its
+  // bump or description, so it must fail here instead (issue #134).
+  if (invalid.length > 0) {
+    console.error(
+      `::error title=Invalid changeset::Cannot parse ${invalid.join(', ')} in ${changesetDir}. ` +
+        `How to fix: start it with ---, '${packageName}': major|minor|patch, --- and a description.`
+    );
     process.exit(1);
   }
 
