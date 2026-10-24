@@ -1,0 +1,22 @@
+Using CLI configured Rust root: rust
+Max published version on crates.io: 1.0.8
+Initial bump (patch) from 0.1.0: 0.1.1
+Version 0.1.1 is not greater than max published 1.0.8, adjusting to 1.0.9
+Adjusted version from 0.1.1 to 1.0.9 to exceed published versions
+Final release version: 1.0.9
+Updated rust/Cargo.toml to version 1.0.9
+Collected 47 changelog fragment(s)
+No changes to commit
+Output: version_committed=false
+Output: new_version=1.0.9
+--- exit status: 0
+--- GITHUB_OUTPUT:
+version_committed=false
+new_version=1.0.9
+--- fragments before: 47, left in work tree: 47
+--- origin/main log:
+3495f16 state of main
+--- origin tags:
+--- version on origin/main: version = "0.1.0"
+--- uncommitted changes left in the work tree:
+ M rust/Cargo.toml

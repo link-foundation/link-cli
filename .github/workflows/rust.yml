@@ -76,7 +76,7 @@ jobs:
           rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Detect changes
         id: changes
@@ -106,7 +106,7 @@ jobs:
           rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Check for changelog fragments
         env:
@@ -142,7 +142,7 @@ jobs:
           rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -171,6 +171,13 @@ jobs:
 
       - name: Check file size limit
         run: rust-script rust/scripts/check-file-size.rs
+
+      # The release scripts commit and push straight to main, where no
+      # workflow re-checks their output; their own test suites are the gate
+      # (issue #134: a silently failing `git add` released 1.0.6-1.0.8
+      # without ever committing the version bump).
+      - name: Test release scripts
+        run: bash rust/scripts/test-scripts.sh
 
       # A dependency bump in Cargo.toml without the matching Cargo.lock update
       # otherwise passes CI while every job silently re-resolves the graph
@@ -338,7 +345,7 @@ jobs:
           rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Configure git
         run: rust-script rust/scripts/git-config.rs
@@ -455,7 +462,7 @@ jobs:
           rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Configure git
         run: rust-script rust/scripts/git-config.rs
@@ -545,7 +552,7 @@ jobs:
           rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Create changelog fragment
         env:
