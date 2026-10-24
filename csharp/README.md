@@ -197,3 +197,9 @@ Nested cleanup shares cycle/duplicate detection and retains references detached
 during disposal. A borrower cleanup failure propagates before its dependencies
 close, allowing a retry. Calling `TransactionsDecorator.Dispose()` directly
 continues to leave its borrowed stores with the caller.
+
+If version-transaction rollback fails during undo or persistence, the version
+facade retains that transaction and rejects branch, tag, checkout and new
+transaction operations. Retry the same transaction rollback or owner disposal;
+only a terminal transaction releases admission. A whole-graph cleanup failure
+therefore leaves the stores available for the same retry.

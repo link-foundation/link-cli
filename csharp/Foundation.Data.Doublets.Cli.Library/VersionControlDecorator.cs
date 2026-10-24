@@ -87,7 +87,6 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         lock (_lock)
         {
             active = _activeTransaction;
-            _activeTransaction = null;
         }
         active?.Dispose();
     }
@@ -357,7 +356,11 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
             }
             finally
             {
-                if (ReferenceEquals(_activeTransaction, transaction))
+                // Failed undo/checkpoint work still owns admission and must be
+                // retryable through this facade. Retention can fail after the
+                // inner rollback completes, so inspect its terminal state.
+                if ((transaction.Inner.IsCommitted || transaction.Inner.IsRolledBack)
+                    && ReferenceEquals(_activeTransaction, transaction))
                 {
                     _activeTransaction = null;
                 }

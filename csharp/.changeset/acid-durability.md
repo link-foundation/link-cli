@@ -67,3 +67,7 @@ Dispose complete facade graphs with borrowers before their dependencies, joining
 asynchronous checkpoints before mapped stores close. Share nested/cyclic traversal
 state, preserve detached references, and leave dependencies available when borrower
 cleanup fails and must be retried.
+
+Keep version-control admission and owner cleanup retry after failed transaction
+rollback. Release admission when the inner transaction reaches a terminal state,
+including a failure reported after rollback completes.

@@ -881,3 +881,27 @@ see `dev/log/issues/138/pulls/139/facade-lifetime-ci.txt`. The revised probe
 removes its unrelated post-release native Flush, keeps the managed ownership
 assertion and existing deadlines, fails against the old disposer and passes
 ten finite corrected runs. Fresh Windows CI is required before closure.
+
+## C# version admission after failed rollback
+
+All 24 new pre-fix mapped-store cases fail because version Branch unexpectedly
+succeeds after inner rollback fails. The version finally block drops admission
+despite pending undo, and owner Dispose drops the reference needed for retry.
+The fix retains that reference until inner rollback becomes terminal. Eight
+before/after undo and persistence phases exercise explicit rollback, owner
+disposal and whole-graph disposal. Every case verifies metadata/begin fencing,
+rejected commit, retry through the same entry point, exact baseline/head recovery,
+exclusive file reopening and a following committed/tagged transaction.
+
+A real retention control also completes rollback, then fails checkpointing an
+older committed transition. Its terminal inner owner must release admission
+even though rollback reports that later error. All 25 cases and six facade
+controls pass. Full final Debug and Release each pass 928 tests. Debug measures
+6,014/6,542 lines (91.93%) and 2,742/3,162 branches (86.72%); Release measures
+4,564/4,888 lines (93.37%) and 2,721/3,143 branches (86.57%). The version rollback
+method reaches 100% measured lines and branches in both; complete project
+coverage remains unfinished. Formatting and release metadata pass.
+
+See [VERSION-ROLLBACK-PLAN.md](VERSION-ROLLBACK-PLAN.md) and
+`dev/log/issues/138/pulls/139/version-rollback-owner.txt`. Rust already keeps its
+active owner on failed rollback; its production path and JS/WASM are unchanged.
