@@ -7,6 +7,7 @@
 mod branch;
 pub mod cluster;
 mod commit;
+mod delta;
 #[cfg(feature = "etcd")]
 pub mod etcd;
 mod journal;
@@ -21,6 +22,7 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 pub use branch::Branch;
+pub use delta::DeltaLog;
 pub use journal::MemoryLog;
 pub use transaction::EngineTransaction;
 

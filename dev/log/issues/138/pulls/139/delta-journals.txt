@@ -1,0 +1,40 @@
+Optional delta journals: bounded reproduction and final verification
+
+Initial adapter tests failed before implementation:
+- Rust: unresolved import DeltaLog (engine-delta-before.log).
+- C#: missing DeltaCommitLog type (csharp-delta-before.log).
+- JS: missing DeltaCommitLog export (js-delta-before.log).
+
+Self-review regression before readiness invalidation:
+
+After the fix, all three language regressions require successful complete
+rereplay before append following a failed reread. No writes occur while the
+physical stream remains unavailable. Mutation errors require reopening.
+
+Full local verification:
+- Rust: 427 passed; two subprocess helper entry points ignored.
+- C#: 629 passed, zero failed or skipped.
+- JS: 95 passed, zero failed. TypeScript check passes.
+- Rust Clippy --all-features --all-targets -D warnings and format pass.
+- .NET format --verify-no-changes passes.
+- Actual release WASM conformance passes Node, Bun and Deno.
+- Actual WASM coverage: 15 tests passed.
+
+Shared-file interoperability (Rust -> C# -> actual WASM):
+Rust -> C# -> actual WASM: 6 revisions, 203 rows, 5 deltas; history recovered
+
+Finite actual-WASM journal byte probe (1,000 rows, ten one-row edits):
+{"baseline":{"strategy":"engine1","rows":1000,"oneRowUpdates":10,"totalRecordBytes":109276,"initialRecordBytes":9924,"lastUpdateBytes":9936},"delta":{"strategy":"delta1","rows":1000,"oneRowUpdates":10,"totalRecordBytes":10697,"initialRecordBytes":9924,"lastUpdateBytes":77},"totalByteReductionPercent":90.2110252937516}
+
+Coverage (no newly excluded production paths):
+- Rust delta module: 201/201 lines, 26/26 functions, 54/54 branches,
+  318/318 regions. Per-monomorphization coverage is not complete.
+- C# delta module: 100% lines and branches.
+- Full native Rust: 8500/9710 lines, 1353/1762 branches, 1141/1352 functions.
+- Full C#: 5723/6412 lines, 2444/3016 branches.
+- JS: all 17 production modules, 100% lines/branches/functions.
+- Actual WASM wrapper: 327/327 lines, 68/68 functions, 16/16 reported branches.
+  Linked Rust core remains below 100%; this is not full project coverage.
+
+The probe measures encoded record bytes, not latency or throughput. Engine
+full-state cloning/encoding and replay remain O(N); delta is not compaction.

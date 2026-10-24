@@ -11,7 +11,7 @@ internal static class RevisionJournal<T>
 {
     private static readonly UTF8Encoding Utf8 = new(false, true);
     private static string Number<TNumber>(TNumber value) where TNumber : IFormattable => value.ToString(null, CultureInfo.InvariantCulture);
-    private static ulong Checksum(string text)
+    internal static ulong Checksum(string text)
     {
         ulong hash = 0xcbf29ce484222325;
         foreach (byte value in Utf8.GetBytes(text)) hash = unchecked((hash ^ value) * 0x100000001b3);

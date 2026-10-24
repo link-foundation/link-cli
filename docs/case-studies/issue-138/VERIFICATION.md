@@ -71,7 +71,9 @@ failover and atomic cross-shard coordination. The three-member experiment passes
 with native Rust/C# and actual WASM writers, lost responses, leader termination
 and majority loss. The partitioned decorator additionally separates immutable
 journals into independent data groups. Native/WASM coverage and efficient
-delta/LSM storage remain unfinished. Fixed-primary replica acknowledgements do not establish consensus.
+LSM storage and full-state CPU costs remain unfinished. Optional delta encoding
+now reduces physical journal bytes without removing those CPU costs.
+Fixed-primary replica acknowledgements do not establish consensus.
 See REQUIREMENTS.md and ENGINE-STRATEGIES.md for the implementation boundary.
 
 ## Actual WASM coverage and object-only configuration
@@ -217,3 +219,39 @@ branches. Malformed JSON/protobuf shapes, noncanonical base64, missing values,
 generation bounds and constructor validation use bounded real TCP peers. Actual
 release WASM conformance passes Node, Bun and Deno after the options fix. Native
 wrapper tests, native/target WASM Clippy and all 168 workflow policy tests pass.
+
+
+## Optional physical delta journals
+
+The adapter tests first fail with the missing Rust/C#/JS API. Five valid and 38
+invalid independently generated sequences then verify the common `delta1`
+format, checksums, canonical bounds, checkpoint fallback and exact replay. Fault
+injection covers append-before-write, append-after-write, flush and failed
+rereads. The reread regression fails before readiness is invalidated: it reports
+"Missing expected exception" while appending against an unvalidated cached base.
+All three implementations now require successful revalidation after a read error.
+
+The final local suites pass 427 Rust checks (two subprocess entry points ignored),
+629 C# tests and 95 JS unit tests. Native Clippy denies warnings, Rust/.NET
+formatting checks pass, and the TS usage test composes the new adapter. Actual
+release WASM conformance passes Node, Bun and Deno. A reusable shared-file probe
+runs Rust, C# and actual WASM sequentially against the same physical journal:
+six revisions, 203 rows and five deltas recover with full historical snapshots.
+The rebuilt actual WASM coverage suite passes all 15 tests.
+
+The finite actual-WASM byte experiment retains identical recovered history for
+1,000 initial rows and ten localized updates. Full records total 109,276 bytes;
+deltas total 10,697, a 90.21% reduction. The last update uses 77 versus 9,936
+bytes. These figures exclude filesystem framing and measure neither latency nor
+CPU cost. Full-state engine cloning, encoding and replay still cost O(N).
+
+The delta adapter measures 201/201 lines, 26/26 functions and 54/54 instrumented
+branches in Rust, and 100% lines and branches in C#. The full Rust report measures
+8,500/9,710 lines (87.54%), 1,353/1,762 branches (76.79%) and 1,141/1,352 functions
+(84.39%). C# measures 5,723/6,412 lines (89.25%) and 2,444/3,016 branches (81.03%).
+All 17 JS production modules measure 100% lines, branches and functions with
+thresholds enforced. Actual WASM wrapper source measures 327/327 lines,
+68/68 functions and 16/16 reported branches; these narrow binding measurements
+do not imply complete linked-core coverage. Native and linked-core 100% remain
+unfinished. Curated reproduction and measurement evidence is retained in
+`dev/log/issues/138/pulls/139/delta-journals.txt`.

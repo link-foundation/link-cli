@@ -18,3 +18,6 @@ validation, unknown outcomes and actual three-member failover integration.
 Route immutable journals to independent data stores while atomically publishing
 small catalog pointers; preserve cross-shard validation and unknown-outcome
 discovery across independent consensus groups.
+
+Add optional portable delta journal decorators with bounded checkpoint chains,
+exact logical replay, corruption rejection and uncertain-write fencing.

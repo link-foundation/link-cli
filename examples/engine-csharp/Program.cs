@@ -1,8 +1,11 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/engine-csharp -- [journal-path] [--exit]
-using var file = args.Length > 0 ? new FileCommitLog(args[0]) : null;
-var engine = new LinksEngine<ulong>(file ?? (ICommitLog)new MemoryCommitLog(), new()
+// dotnet run --project examples/engine-csharp -- [journal-path] [--delta] [--exit]
+var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal));
+using var file = path is not null ? new FileCommitLog(path) : null;
+ICommitLog log = file ?? (ICommitLog)new MemoryCommitLog();
+if (args.Contains("--delta")) log = new DeltaCommitLog(log);
+var engine = new LinksEngine<ulong>(log, new()
 {
     HistoryLimit = null,
     RequireDurableFlush = file is not null

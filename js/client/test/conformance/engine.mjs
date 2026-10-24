@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog } from '../../src/index.js';
+import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog } from '../../src/index.js';
 
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
@@ -117,5 +117,17 @@ export async function engineConformance(binding) {
   assert.equal(mergeRecovered.snapshot().rows.length, 1);
   const retry = mergeRecovered.resumeBranch(forkJournal, initialBase);
   assert.equal(retry.merge(), 1n); retry.close(); mergeRecovered.close();
-  console.log('ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen');
+  const deltas = JSON.parse(readFileSync(new URL('../../../../docs/protocol/engine-delta-vectors.json', import.meta.url), 'utf8'));
+  const physical = new MemoryCommitLog(deltas.validSequences[0].physical);
+  const compressed = new WasmEngine(binding, { history: 'all' }, new DeltaCommitLog(physical));
+  assert.equal(compressed.snapshot(2n).rows.find((row) => row.index === 100n).name, '雪;|😀');
+  const update = compressed.begin();
+  await update.setName(100n, 'after compressed reopen'); await update.commit(); await update.close();
+  assert.match(JSON.parse(physical.read()).at(-1), /^delta1\|/);
+  compressed.close();
+  const decoded = new WasmEngine(binding, {}, new DeltaCommitLog(physical));
+  assert.equal(decoded.snapshot().rows.find((row) => row.index === 100n).name, 'after compressed reopen');
+  const compressedFork = decoded.fork({}, new DeltaCommitLog(new MemoryCommitLog()));
+  compressedFork.close(); decoded.close();
+  console.log('ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen, delta journals');
 }

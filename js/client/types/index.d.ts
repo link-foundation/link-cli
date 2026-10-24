@@ -21,6 +21,13 @@ export class MemoryCommitLog implements CommitLog {
   append(record: string): void;
   flush(): void;
 }
+export class DeltaCommitLog implements CommitLog {
+  constructor(inner: CommitLog, options?: { checkpointInterval?: number });
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
 export class ReplicatedCommitLog implements CommitLog {
   constructor(primary: CommitLog, replicas: CommitLog[], options?: { acknowledgements?: number | null; trace?: (message: string) => void });
   readonly supportsDurableFlush: boolean;

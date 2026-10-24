@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <None Include="../../docs/protocol/engine-revision-vectors.json" Link="Protocol/engine-revision-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/engine-delta-vectors.json" Link="Protocol/engine-delta-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/partitioned-journal-vectors.json" Link="Protocol/partitioned-journal-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="coverlet.collector" Version="10.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />

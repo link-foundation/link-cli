@@ -215,7 +215,11 @@ serializable validation, no historical retention and a volatile memory log.
 
 See [engine configurations, guarantees, costs and runnable examples](../../docs/ENGINE-STRATEGIES.md).
 A custom synchronous commit log selects storage; `MemoryCommitLog` and
-`ReplicatedCommitLog` compose portable adapters. For a filesystem journal use
+`ReplicatedCommitLog` compose portable adapters. Optional `DeltaCommitLog` wraps
+either a physical log or each replica to compress localized edits between full
+checkpoints. Reopen the stream through the same decorator; see the
+[delta format, costs and recipes](../../docs/ENGINE-DELTA.md).
+For a filesystem journal use
 the separate `./engine-file-log` entry point. Durability is an explicit backend
 capability; replication acknowledgements do not provide consensus or failover.
 

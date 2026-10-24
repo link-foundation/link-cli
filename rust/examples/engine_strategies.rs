@@ -1,7 +1,22 @@
 //! cargo run --example engine_strategies --manifest-path rust/Cargo.toml
 use link_cli::engine::replication::{ReplicatedLog, Synchronization};
-use link_cli::engine::{Engine, EngineOptions, HistoryPolicy, MemoryLog};
-use link_cli::{FileTransitionLog, LinksStorage};
+use link_cli::engine::{DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog};
+use link_cli::{FileTransitionLog, LinksStorage, TransitionLogStore};
+
+fn durable<L: TransitionLogStore>(log: L) -> anyhow::Result<()> {
+    let persistent = Engine::<u64, _>::open(
+        log,
+        EngineOptions {
+            require_durable_flush: true,
+            ..Default::default()
+        },
+    )?;
+    let mut tx = persistent.begin()?;
+    let id = tx.create_link(0, 0)?;
+    tx.set_name(id, Some("durable".into()))?;
+    println!("durable revision {}", tx.commit()?);
+    Ok(())
+}
 
 fn main() -> anyhow::Result<()> {
     // Bare stores remain the cheapest disposable cache. This example selects
@@ -38,18 +53,14 @@ fn main() -> anyhow::Result<()> {
 
     // Optional path selects durable storage instead; the exclusive writer
     // lock is held until this engine and every session have been dropped.
-    if let Some(path) = std::env::args().nth(1) {
-        let persistent = Engine::<u64, _>::open(
-            FileTransitionLog::open_exclusive(path)?,
-            EngineOptions {
-                require_durable_flush: true,
-                ..Default::default()
-            },
-        )?;
-        let mut tx = persistent.begin()?;
-        let id = tx.create_link(0, 0)?;
-        tx.set_name(id, Some("durable".into()))?;
-        println!("durable revision {}", tx.commit()?);
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    if let Some(path) = args.iter().find(|arg| !arg.starts_with("--")) {
+        let log = FileTransitionLog::open_exclusive(path)?;
+        if args.iter().any(|arg| arg == "--delta") {
+            durable(DeltaLog::new(log, 128)?)?;
+        } else {
+            durable(log)?;
+        }
     }
     Ok(())
 }

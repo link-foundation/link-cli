@@ -20,6 +20,7 @@ transaction algorithm.
 | Independent branch | Rust `Engine::fork`, C# `LinksEngine.Fork`, JS `WasmEngine.fork` | Seed and flush a separate journal; edit privately and merge committed changes atomically into the parent. |
 | Asynchronous copies | Wrap a log with replicated log, async policy | Commit waits for primary only. Call synchronize under the engine's log mutex to catch up followers. A primary loss can lose uncopied commits. |
 | Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
+| Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Store a checksummed changed span between periodic full checkpoints; engine cloning and replay remain O(N). See [format, composition and examples](ENGINE-DELTA.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
 an adapter contract. Memory logs declare false. An unknown adapter defaults to
@@ -59,7 +60,8 @@ A write commit encodes the complete next revision, appends its record, flushes
 the log, then publishes the immutable state. The log is authoritative; there
 is no separately acknowledged data checkpoint. This avoids mixed mapped data
 and journal visibility. Full revision records are deliberately simple, not a
-space-efficient WAL implementation.
+space-efficient WAL implementation. The optional [delta journal](ENGINE-DELTA.md)
+compresses physical records without changing this logical commit boundary.
 
 An append or flush error is an **indeterminate commit**: data may have reached
 the log even if the caller got an error. The engine then rejects further
@@ -146,11 +148,13 @@ from a replicated in-memory test.
 ## Costs and comparison
 
 The staged implementation clones the current rows for each write commit and
-writes a complete revision: O(N + W) memory/work plus O(N) journal bytes for N
+writes a complete logical revision: O(N + W) memory/work plus O(N) journal bytes for N
 rows and W staged writes. A scan currently materializes its view. History adds
 up to O(HN) retained row memory. Allocator and per-address modification metadata
 are shared; deleted-address conflict tombstones currently remain allocated.
 Recovery reads the full log; retention bounds in-memory history, not log size.
+Optional single-span delta encoding reduces physical bytes for localized changes
+and adds an O(N) comparison; it does not compact history or remove full-state work.
 Replication catch-up compares prefixes and copies missing complete revisions.
 There is no background compaction or group commit. These limits matter for a
 large or frequently written database.

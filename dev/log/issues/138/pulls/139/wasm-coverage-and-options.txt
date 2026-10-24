@@ -16,7 +16,7 @@ failures:
     error output:
         panicked at tests/engine.rs:66:9:
         []
-        
+
 
 After: experiments/issue-138/wasm-coverage.sh; Rust 1.98.0 / LLVM 22; 15 tests pass.
 src/engine.rs: {"branches": {"count": 2, "covered": 2, "notcovered": 0, "percent": 100.0}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "functions": {"count": 38, "covered": 38, "percent": 100.0}, "instantiations": {"count": 38, "covered": 38, "percent": 100.0}, "lines": {"count": 165, "covered": 165, "percent": 100.0}, "regions": {"count": 261, "covered": 261, "notcovered": 0, "percent": 100.0}}
