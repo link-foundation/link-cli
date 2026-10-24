@@ -192,7 +192,7 @@ jobs:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: |
-      !cancelled() && (
+      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -248,7 +248,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes, changeset-check]
-    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     permissions:
       contents: read
       id-token: write

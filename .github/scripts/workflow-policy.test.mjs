@@ -465,6 +465,9 @@ test('registry trust can be verified without versioning or publishing a release'
     assert.match(verify.body, /^ {6}id-token: write$/m);
     assert.doesNotMatch(verify.body, /secrets\.|cargo publish|nuget push|version-and-commit|contents: write/);
     assert.match(verify.body, name === 'rust.yml' ? trustedPublishingAuth : /uses: NuGet\/login@/);
+    for (const job of readJobs(workflow.text).filter(({ name }) => ['lint', 'test'].includes(name))) {
+      assert.match(job.body, /inputs.release_mode != 'verify-trusted-publishing'/, `${name}: authentication-only dispatch must not start or cancel ${job.name}`);
+    }
   }
   const npm = workflows.find(({ name }) => name === 'js-client.yml');
   const verify = readJobs(npm.text).find(({ name }) => name === 'verify-trusted-publishing');
@@ -472,6 +475,7 @@ test('registry trust can be verified without versioning or publishing a release'
   assert.match(verify.body, /^ {6}id-token: write$/m);
   assert.match(verify.body, /node .github\/scripts\/verify-npm-trust.mjs/);
   assert.doesNotMatch(verify.body, /secrets\.|npm publish/);
+  assert.doesNotMatch(npm.text, /secrets\.NPM_TOKEN|NODE_AUTH_TOKEN/, 'verified npm OIDC publishing must not fall back to a long-lived token');
 });
 
 test('Dependabot watches every directory the dependency check reads', () => {

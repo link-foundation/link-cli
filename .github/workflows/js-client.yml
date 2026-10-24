@@ -249,15 +249,11 @@ jobs:
         if: github.event_name != 'push' || github.ref != 'refs/heads/main'
         run: npm publish --dry-run --access public
 
-      # npm 11.5.1+ publishes through trusted publishing (OIDC) when the
-      # package trusts this workflow, and otherwise with the NPM_TOKEN secret.
-      # On main a release that neither credential can publish is an error,
-      # never a silent skip: it would otherwise never happen while CI stays
-      # green.
+      # The package's OIDC policy is verified through the authentication-only
+      # dispatch above (issue #136). No long-lived publishing token is used.
       - name: Publish to npm
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outputs.published == 'false'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           VERSION: ${{ steps.check.outputs.version }}
         run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
           # Trusted publishing needs npm 11.5.1+, newer than the npm bundled
@@ -265,12 +261,8 @@ jobs:
           # because npm 12 requires Node.js ^24.15.0, which the runner's
           # cached 24.x need not satisfy.
           npm install --global npm@11.21.1
-          if npm publish --access public --provenance; then
+          if npm publish --access public --provenance --loglevel verbose; then
             exit 0
           fi
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error title=NPM_TOKEN is missing::@link-foundation/link-cli-client $VERSION is not on npm, trusted publishing is not configured for it and there is no token. Either add an npm automation token with publish access to the @link-foundation scope as the NPM_TOKEN repository secret (Settings > Secrets and variables > Actions), or configure this workflow (js-client.yml) as a trusted publisher of the package on npmjs.com, then re-run this job."
-          else
-            echo "::error title=npm publish failed::@link-foundation/link-cli-client $VERSION could not be published with trusted publishing or the NPM_TOKEN secret. Check that the token has publish access to the @link-foundation scope."
-          fi
+          echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-client $VERSION could not be published. Check the js-client.yml trusted publisher policy on npmjs.com (including permission to publish directly), then run the authentication-only verification dispatch and retry."
           exit 1
