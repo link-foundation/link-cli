@@ -15,7 +15,7 @@ serializable validation already rejects any changed database revision.
       merges, last-session conflict/read-only/rollback/drop and reopening.
 - [x] Verify actual WASM behavior through the existing cross-runtime framework.
 - [x] Run focused tests, full native suites, formatting/Clippy and coverage.
-- [ ] Document the exact lifetime and remaining full-state costs; commit/push
+- [x] Document the exact lifetime and remaining full-state costs; commit/push
       this independently useful optimization to PR 139 and review its CI.
 
 The map must retain tombstones while a possibly stale session remains. An ABA

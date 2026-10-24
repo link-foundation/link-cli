@@ -1,13 +1,19 @@
 //! cargo run --example engine_strategies --manifest-path rust/Cargo.toml
 use link_cli::engine::replication::{ReplicatedLog, Synchronization};
-use link_cli::engine::{DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog};
+use link_cli::engine::{
+    DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog, SerializableValidation,
+};
 use link_cli::{FileTransitionLog, LinksStorage, TransitionLogStore};
 
-fn durable<L: TransitionLogStore>(log: L) -> anyhow::Result<()> {
+fn durable<L: TransitionLogStore>(
+    log: L,
+    validation: SerializableValidation,
+) -> anyhow::Result<()> {
     let persistent = Engine::<u64, _>::open(
         log,
         EngineOptions {
             require_durable_flush: true,
+            serializable_validation: validation,
             ..Default::default()
         },
     )?;
@@ -19,6 +25,12 @@ fn durable<L: TransitionLogStore>(log: L) -> anyhow::Result<()> {
 }
 
 fn main() -> anyhow::Result<()> {
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    let validation = if args.iter().any(|arg| arg == "--read-set") {
+        SerializableValidation::ReadSet
+    } else {
+        SerializableValidation::Revision
+    };
     // Bare stores remain the cheapest disposable cache. This example selects
     // isolated sessions and two volatile copies, with explicit acknowledgement.
     let log = ReplicatedLog::new(
@@ -32,6 +44,7 @@ fn main() -> anyhow::Result<()> {
         log,
         EngineOptions {
             history: HistoryPolicy::All,
+            serializable_validation: validation,
             ..Default::default()
         },
     )?;
@@ -51,15 +64,27 @@ fn main() -> anyhow::Result<()> {
     // Persist this with application metadata to resume the same branch later.
     println!("branch merge base {}", branch.merge_base_record());
 
+    if validation == SerializableValidation::ReadSet {
+        let mut seed = db.begin()?;
+        let other = seed.create_link(0, 0)?;
+        seed.commit()?;
+        let mut one = db.begin()?;
+        let mut two = db.begin()?;
+        one.set_name(id, Some("profile one".into()))?;
+        two.set_name(other, Some("profile two".into()))?;
+        one.commit()?;
+        two.commit()?;
+        println!("independent serializable point edits both committed");
+    }
+
     // Optional path selects durable storage instead; the exclusive writer
     // lock is held until this engine and every session have been dropped.
-    let args: Vec<_> = std::env::args().skip(1).collect();
     if let Some(path) = args.iter().find(|arg| !arg.starts_with("--")) {
         let log = FileTransitionLog::open_exclusive(path)?;
         if args.iter().any(|arg| arg == "--delta") {
-            durable(DeltaLog::new(log, 128)?)?;
+            durable(DeltaLog::new(log, 128)?, validation)?;
         } else {
-            durable(log)?;
+            durable(log, validation)?;
         }
     }
     Ok(())

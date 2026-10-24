@@ -1,4 +1,4 @@
-use super::{error, journal, ConcurrencyControl, IsolationLevel, Row, Snapshot, State};
+use super::{error, journal, Row, Snapshot, State};
 use crate::{LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::{collections::BTreeMap, sync::Arc};
@@ -32,9 +32,7 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
                 "indeterminate commit: {cause}; reopen the engine"
             )));
         }
-        let track = self.active > 0
-            && self.options.concurrency == ConcurrencyControl::Optimistic
-            && self.options.isolation != IsolationLevel::Serializable;
+        let track = self.active > 0 && self.options.tracks_generations();
         let mut count = 0;
         if track || self.options.trace {
             for id in changed {

@@ -279,3 +279,48 @@ Full native Rust measures 8,514/9,718 lines (87.61%), 1,365/1,776 branches (76.8
 and 1,141/1,352 functions (84.39%). C# measures 5,730/6,419 lines (89.27%) and
 2,457/3,028 branches (81.14%). JS source is unchanged from its 17-module, 95-test
 100% measurement. Native and linked-core 100% coverage remains unfinished.
+
+## Serializable point-read validation
+
+Before implementation, the actual WASM binding rejects `serializableValidation`
+as an unknown field on commit `6d240a9`. Native tests fail to compile against the
+missing enum/option. Optional read sets now preserve point dependencies, including
+missing rows, ABA and branch publications. Scans retain revision validation;
+exclusive admission fences publishers and allocates no read set. The default
+revision validator is unchanged.
+
+Each native implementation checks 1,296 small concurrent histories against a
+separate serial-execution oracle. Targeted cases cover own writes/deletes,
+blind allocation collisions, read-only commits and conflict retries. Rust also
+checks shared point reads without losing the public type's Send/Sync bounds and
+refuses publication after an injected read-set mutex failure. Bookkeeping is
+reclaimed after successful or failed validation and rollback.
+
+The actual WASM test suite has 17 tests, including binding options, disjoint
+point writes, read/write cycles, scans and missing-row conflicts. The shared
+Node/Bun/Deno schedules additionally cover read-only, ABA and branch conflicts.
+Wrapper coverage measures 331/331 lines, 68/68 functions, 16/16 reported branches
+and 505/505 regions. Linked-core coverage remains below 100%.
+A finite acceptance probe opens 32 concurrent sessions editing separate profiles:
+revision validation accepts one and aborts 31; read-set validation accepts all 32.
+This is conflict acceptance, not a throughput/latency benchmark.
+
+The full Rust suite passes 440 tests, with two subprocess helper entry points
+ignored. Native coverage measures 8,576/9,767 lines (87.81%), 1,384/1,802 branches
+(76.80%), 1,151/1,359 functions and 13,116/15,441 regions. No coverage exclusions
+were added. The new read-set data type has all six executable lines and all three
+regions covered; generic instantiation coverage is separately below 100%.
+
+C# Debug and Release suites each pass 649 tests. Debug measures 5,746/6,435 lines
+(89.29%) and 2,494/3,060 branches (81.50%). Release measures 4,377/4,810 lines
+(91.00%) and 2,473/3,041 branches (81.32%); optimized sequence points change the
+denominator. Compare configurations separately. `LinksEngine` and `EngineSession`
+reach 100% lines/branches in both configurations; project coverage remains below
+100%. Formatting, release example and TypeScript checks pass. JS remains 95 tests
+across 17 production modules with 100% lines/branches/functions.
+
+See [validation choices and costs](../../ENGINE-VALIDATION.md),
+[pinned FoundationDB source observations](RESEARCH.md),
+[execution plan](READSET-PLAN.md), and the committed acceptance probe under
+`experiments/issue-138/readset-contention.mjs`. Full-state O(N) work, conservative
+scans and the separate distributed shard conflict boundary remain explicit limits.

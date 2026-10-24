@@ -20,6 +20,11 @@ async function main(links: Links) {
 import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog, type EngineOptions, type StagedEngineLike, type CommitLog } from '../types/index.js';
 import { FileCommitLog } from '../types/engine-file-log.js';
 async function engineTypes(binding: { StagedEngine: { new(options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }) {
+  const pointOptions: EngineOptions = { serializableValidation: 'read-set' };
+  new WasmEngine(binding, pointOptions).close();
+  // @ts-expect-error unknown validator
+  const invalidValidation: EngineOptions = { serializableValidation: 'none' };
+  void invalidValidation;
   const options: EngineOptions = { isolation: 'snapshot', concurrency: 'exclusive', history: 'all', constraints: ['unique-names'], requireDurableFlush: true };
   using file = new FileCommitLog('journal');
   const replica = new MemoryCommitLog();

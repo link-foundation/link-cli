@@ -3,6 +3,8 @@ import type { LinoDocument } from './lino.js';
 export interface EngineOptions {
   concurrency?: 'optimistic' | 'exclusive';
   isolation?: 'read-committed' | 'snapshot' | 'serializable';
+  /** Serializable point dependencies; scans conservatively validate the revision. */
+  serializableValidation?: 'revision' | 'read-set';
   history?: null | 'all' | number;
   constraints?: ('references' | 'unique-pairs' | 'unique-names')[];
   trace?: boolean;

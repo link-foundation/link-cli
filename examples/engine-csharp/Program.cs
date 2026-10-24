@@ -1,6 +1,6 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/engine-csharp -- [journal-path] [--delta] [--exit]
+// dotnet run --project examples/engine-csharp -- [journal-path] [--delta] [--read-set] [--exit]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal));
 using var file = path is not null ? new FileCommitLog(path) : null;
 ICommitLog log = file ?? (ICommitLog)new MemoryCommitLog();
@@ -8,6 +8,7 @@ if (args.Contains("--delta")) log = new DeltaCommitLog(log);
 var engine = new LinksEngine<ulong>(log, new()
 {
     HistoryLimit = null,
+    SerializableValidation = args.Contains("--read-set") ? SerializableValidation.ReadSet : SerializableValidation.Revision,
     RequireDurableFlush = file is not null
 });
 using var session = engine.Begin();
@@ -28,3 +29,12 @@ edit.Commit();
 Console.WriteLine($"Merged revision {fork.Merge()}");
 // Persist this with application metadata to resume the same branch later.
 Console.WriteLine($"Branch merge base {fork.MergeBaseRecord}");
+
+if (args.Contains("--read-set"))
+{
+    using var seed = engine.Begin(); var other = seed.CreateLink(0, 0); seed.Commit();
+    using var one = engine.Begin(); using var two = engine.Begin();
+    one.SetName(id, "profile one"); two.SetName(other, "profile two");
+    one.Commit(); two.Commit();
+    Console.WriteLine("Independent serializable point edits both committed");
+}

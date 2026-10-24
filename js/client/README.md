@@ -211,7 +211,10 @@ links methods on each session. Create a session with `engine.begin()`, issue
 several requests, then `await session.commit()` or `await session.rollback()`.
 Closing an uncommitted session rolls it back. Commit shares the request queue,
 so it cannot overtake an earlier write. Defaults are optimistic admission,
-serializable validation, no historical retention and a volatile memory log.
+serializable revision validation, no historical retention and a volatile memory log.
+Use `{ serializableValidation: 'read-set' }` for serializable independent point
+edits; scans still validate the entire revision. It composes with log/history
+choices. See [validation configuration and costs](../../docs/ENGINE-VALIDATION.md).
 
 See [engine configurations, guarantees, costs and runnable examples](../../docs/ENGINE-STRATEGIES.md).
 A custom synchronous commit log selects storage; `MemoryCommitLog` and

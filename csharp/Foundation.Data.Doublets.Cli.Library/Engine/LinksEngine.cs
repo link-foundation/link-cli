@@ -6,12 +6,14 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 
 public enum ConcurrencyControl { Optimistic, Exclusive }
 public enum IsolationLevel { ReadCommitted, Snapshot, Serializable }
+public enum SerializableValidation { Revision, ReadSet }
 public enum EngineConstraint { References, UniquePairs, UniqueNames }
 
 public sealed record EngineOptions
 {
     public ConcurrencyControl Concurrency { get; init; } = ConcurrencyControl.Optimistic;
     public IsolationLevel Isolation { get; init; } = IsolationLevel.Serializable;
+    public SerializableValidation SerializableValidation { get; init; } = SerializableValidation.Revision;
     /// <summary>Zero disables history, null retains all, a positive limit includes current.</summary>
     public int? HistoryLimit { get; init; } = 0;
     public IReadOnlyList<EngineConstraint> Constraints { get; init; } = Array.Empty<EngineConstraint>();
@@ -52,6 +54,8 @@ public sealed partial class LinksEngine<T>
         _log = log;
         Options = options ?? new();
         if (Options.HistoryLimit < 0 || !Enum.IsDefined(Options.Isolation) || !Enum.IsDefined(Options.Concurrency)
+            || !Enum.IsDefined(Options.SerializableValidation)
+            || (Options.SerializableValidation == SerializableValidation.ReadSet && Options.Isolation != IsolationLevel.Serializable)
             || Options.Constraints.Any(c => !Enum.IsDefined(c)))
             throw new ArgumentException("Invalid engine strategy.", nameof(options));
         if (Options.RequireDurableFlush && !log.SupportsDurableFlush)
@@ -131,7 +135,7 @@ public sealed partial class LinksEngine<T>
             Poisoned = true;
             throw new IOException("Indeterminate commit; reopen the engine to discover the outcome.", error);
         }
-        if (Active > 0 && Options.Concurrency == ConcurrencyControl.Optimistic && Options.Isolation != IsolationLevel.Serializable)
+        if (Active > 0 && Options.Concurrency == ConcurrencyControl.Optimistic && (Options.Isolation != IsolationLevel.Serializable || Options.SerializableValidation == SerializableValidation.ReadSet))
             foreach (var id in writes) (Changed ??= new())[id] = snapshot.Revision;
         Current = snapshot;
         CommittedNext = Next;

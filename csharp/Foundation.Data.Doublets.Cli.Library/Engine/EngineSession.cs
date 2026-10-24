@@ -14,10 +14,17 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     private EngineSnapshot<T> _base;
     private readonly SortedDictionary<T, EngineRow<T>?> _writes = new();
     private bool _closed;
+    private HashSet<T>? _reads;
+    private bool _scanned;
     // Platform.Data's default NumericType maximum predates UInt128. Supply
     // the generic-math bounds explicitly so all supported unsigned types work.
     public LinksConstants<T> Constants { get; } = new((T.One, T.MaxValue));
-    internal EngineSession(LinksEngine<T> engine, EngineSnapshot<T> snapshot) { _engine = engine; _base = snapshot; }
+    internal EngineSession(LinksEngine<T> engine, EngineSnapshot<T> snapshot)
+    {
+        _engine = engine; _base = snapshot;
+        if (engine.Options.SerializableValidation == SerializableValidation.ReadSet && engine.Options.Concurrency == ConcurrencyControl.Optimistic)
+            _reads = new();
+    }
 
     private void CheckOpen()
     {
@@ -26,12 +33,14 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     }
     private EngineRow<T>? Row(T id)
     {
+        if (!_closed) _reads?.Add(id);
         if (_writes.TryGetValue(id, out var written)) return written;
         var snapshot = !_closed && _engine.Options.Isolation == IsolationLevel.ReadCommitted ? _engine.Current : _base;
         return snapshot.Rows.TryGetValue(id, out var row) ? row : null;
     }
     private SortedDictionary<T, EngineRow<T>> View()
     {
+        if (!_closed && _reads is not null) _scanned = true;
         var snapshot = !_closed && _engine.Options.Isolation == IsolationLevel.ReadCommitted ? _engine.Current : _base;
         var rows = new SortedDictionary<T, EngineRow<T>>(snapshot.Rows.ToDictionary());
         foreach (var (id, row) in _writes)
@@ -120,8 +129,13 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             {
                 var writes = _writes.ToArray();
                 _writes.Clear();
-                if (_engine.Options.Isolation == IsolationLevel.Serializable && _engine.Current.Revision != _base.Revision)
+                if (_engine.Options.Isolation == IsolationLevel.Serializable
+                    && (_engine.Options.SerializableValidation == SerializableValidation.Revision || _scanned)
+                    && _engine.Current.Revision != _base.Revision)
                     throw new InvalidOperationException("Conflict: database revision changed.");
+                if (_reads is { } reads && _engine.Changed is { } generations
+                    && reads.Any(id => generations.TryGetValue(id, out var revision) && revision > _base.Revision))
+                    throw new InvalidOperationException("Conflict: a read link changed since begin.");
                 if (_engine.Changed is { } changed && writes.Any(write => changed.TryGetValue(write.Key, out var revision) && revision > _base.Revision))
                     throw new InvalidOperationException("Conflict: a written link changed since begin.");
                 if (writes.Length == 0) return _engine.Current.Revision;
@@ -134,6 +148,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             }
             finally
             {
+                _reads = null;
                 // Validate the last committer before reclaiming generations,
                 // including delete/recreate changes that restore identical rows.
                 if (_engine.Active == 0) _engine.Changed = null;
@@ -146,7 +161,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             if (!_closed)
             {
-                _closed = true; _engine.Active--; _writes.Clear();
+                _closed = true; _engine.Active--; _writes.Clear(); _reads = null;
                 if (_engine.Active == 0) _engine.Changed = null;
             }
         }

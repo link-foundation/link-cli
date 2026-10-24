@@ -55,6 +55,9 @@ fn validates_every_binding_option_and_journal_before_opening() {
         r#"{"unknown":true}"#,
         r#"{"concurrency":"invalid"}"#,
         r#"{"isolation":"invalid"}"#,
+        r#"{"serializableValidation":"invalid"}"#,
+        r#"{"serializableValidation":42}"#,
+        r#"{"isolation":"snapshot","serializableValidation":"read-set"}"#,
         r#"{"history":0}"#,
         r#"{"history":-1}"#,
         r#"{"history":1.5}"#,
@@ -72,6 +75,9 @@ fn validates_every_binding_option_and_journal_before_opening() {
     for options in [
         "{}",
         r#"{"history":null}"#,
+        r#"{"serializableValidation":"revision"}"#,
+        r#"{"serializableValidation":"read-set"}"#,
+        r#"{"concurrency":"exclusive","serializableValidation":"read-set"}"#,
         r#"{"history":2}"#,
         r#"{"history":"all","isolation":"snapshot","concurrency":"optimistic"}"#,
         r#"{"isolation":"read-committed","concurrency":"exclusive","trace":true}"#,
@@ -279,4 +285,45 @@ fn reclaimed_generations_preserve_aba_and_branch_conflicts() {
         next.commit().unwrap();
         assert_eq!(snapshot(&reopened, None)["rows"][0]["name"], "after reopen");
     }
+}
+
+#[wasm_bindgen_test]
+fn read_set_validation_allows_points_and_protects_dependencies_and_scans() {
+    let engine = StagedEngine::new(r#"{"serializableValidation":"read-set"}"#, "[]").unwrap();
+    let mut seed = engine.begin().unwrap();
+    seed.request("(create: (0 0))");
+    seed.request("(create: (0 0))");
+    seed.commit().unwrap();
+    let mut a = engine.begin().unwrap();
+    let mut b = engine.begin().unwrap();
+    a.request("(set-name: (1 'one'))");
+    b.request("(set-name: (2 'two'))");
+    assert_eq!(a.commit().unwrap(), 2);
+    assert_eq!(b.commit().unwrap(), 3);
+    let mut c = engine.begin().unwrap();
+    let mut d = engine.begin().unwrap();
+    c.request("(get-name: (2))");
+    d.request("(get-name: (1))");
+    c.request("(remove-name: (1))");
+    d.request("(remove-name: (2))");
+    c.commit().unwrap();
+    assert!(d.commit().unwrap_err().contains("read"));
+    let mut scan = engine.begin().unwrap();
+    assert_eq!(scan.count(), 2);
+    let mut writer = engine.begin().unwrap();
+    writer.request("(set-name: (2 'later'))");
+    writer.commit().unwrap();
+    assert!(scan.commit().unwrap_err().contains("serializable"));
+    let mut missing = engine.begin().unwrap();
+    missing.request("(get-name: (3))");
+    let mut inserted = engine.begin().unwrap();
+    inserted.request("(create: (0 0))");
+    inserted.commit().unwrap();
+    // The next allocator address was absent when the reader observed it.
+    assert!(snapshot(&engine, None)["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|r| r["index"] == "3"));
+    assert!(missing.commit().unwrap_err().contains("read"));
 }

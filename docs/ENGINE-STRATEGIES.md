@@ -20,6 +20,7 @@ transaction algorithm.
 | Independent branch | Rust `Engine::fork`, C# `LinksEngine.Fork`, JS `WasmEngine.fork` | Seed and flush a separate journal; edit privately and merge committed changes atomically into the parent. |
 | Asynchronous copies | Wrap a log with replicated log, async policy | Commit waits for primary only. Call synchronize under the engine's log mutex to catch up followers. A primary loss can lose uncopied commits. |
 | Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
+| Serializable independent point edits | Select `SerializableValidation::ReadSet` / `SerializableValidation.ReadSet` / `serializableValidation: 'read-set'` | Track observed addresses and validate concurrent changes at commit; scans still check the whole revision. [Recipe and costs](ENGINE-VALIDATION.md). |
 | Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Store a checksummed changed span between periodic full checkpoints; engine cloning and replay remain O(N). See [format, composition and examples](ENGINE-DELTA.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
@@ -42,7 +43,12 @@ one caller; share engine handles between threads instead of sharing a session.
 | --- | --- | --- |
 | Read committed | Each operation sees current committed state plus its own writes | A written address changed after begin aborts. Reads can change and scans can gain rows. |
 | Snapshot | Begin-time immutable state plus own writes | Same write/write check. Disjoint write skew is allowed. |
-| Serializable (default) | Begin-time immutable state plus own writes | Any intervening database revision aborts the session, including scans and read-only commits. This conservative check prevents predicate anomalies but can abort unrelated work. |
+| Serializable, revision validation (default) | Begin-time immutable state plus own writes | Any intervening database revision aborts the session, including scans and read-only commits. This conservative check prevents predicate anomalies but can abort unrelated work. |
+
+Optional serializable read-set validation accepts disjoint point reads/writes while
+checking their observed addresses, including missing rows. Scans and name searches
+still check the whole revision. It requires serializable isolation; default
+revision validation is unchanged. See [configuration and tradeoffs](ENGINE-VALIDATION.md).
 
 There are no dirty reads or dirty writes between sessions of the same engine.
 These properties do not apply to independent writers or direct mutation of an
@@ -151,7 +157,7 @@ The staged implementation clones the current rows for each write commit and
 writes a complete logical revision: O(N + W) memory/work plus O(N) journal bytes for N
 rows and W staged writes. A scan currently materializes its view. History adds
 up to O(HN) retained row memory. The allocator is shared. Optimistic read-committed
-and snapshot sessions track per-address changes only while another session can
+and snapshot sessions, plus serializable read-set sessions, track per-address changes only while another session can
 be stale, retaining deleted-address tombstones to detect delete/recreate races.
 The final session validates before reclaiming that map. Opening an engine,
 exclusive admission and whole-revision serializable validation do not build
@@ -168,7 +174,8 @@ large or frequently written database.
 | --- | --- | --- |
 | SQLite WAL with synchronous commit | Exclusive file log + staged engine, serializable | Full-state records instead of page WAL, conservative validation, no SQLite locking/checkpoint implementation or performance equivalence. |
 | PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
-| PostgreSQL SERIALIZABLE | Serializable | Whole-revision abort check instead of SSI dependency tracking, usually more conflicts. |
+| PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
+| FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
 | Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
 | Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
@@ -191,6 +198,10 @@ dotnet run --project examples/engine-csharp -- /existing-directory/links.journal
 wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
 node js/client/examples/engine.mjs /existing-directory/links.journal
 ```
+
+Add `--read-set` to any of these engine examples to select serializable point
+validation and demonstrate two independent edits committing. It composes with
+`--delta` and the optional journal path.
 
 Use a separate journal per simultaneously running writer. To verify portable
 recovery, stop one example before opening its journal with another language.

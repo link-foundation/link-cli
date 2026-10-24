@@ -17,6 +17,7 @@ mod named;
 pub mod partitioned;
 pub mod replication;
 mod transaction;
+mod validation;
 
 use crate::{GenericLink, LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
@@ -27,6 +28,7 @@ pub use branch::Branch;
 pub use delta::DeltaLog;
 pub use journal::MemoryLog;
 pub use transaction::EngineTransaction;
+pub use validation::SerializableValidation;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ConcurrencyControl {
@@ -40,7 +42,7 @@ pub enum ConcurrencyControl {
 pub enum IsolationLevel {
     ReadCommitted,
     Snapshot,
-    /// Conservative validation of the entire database revision, including scans.
+    /// Serializable commits; whole-revision validation is the default strategy.
     #[default]
     Serializable,
 }
@@ -67,11 +69,20 @@ pub enum Constraint {
 pub struct EngineOptions {
     pub concurrency: ConcurrencyControl,
     pub isolation: IsolationLevel,
+    pub serializable_validation: SerializableValidation,
     pub history: HistoryPolicy,
     pub constraints: Vec<Constraint>,
     pub trace: bool,
     /// Reject volatile or unknown log adapters, rather than claiming durability.
     pub require_durable_flush: bool,
+}
+
+impl EngineOptions {
+    fn tracks_generations(&self) -> bool {
+        self.concurrency == ConcurrencyControl::Optimistic
+            && (self.isolation != IsolationLevel::Serializable
+                || self.serializable_validation == SerializableValidation::ReadSet)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -129,6 +140,11 @@ fn error(message: &str) -> LinkError {
 
 impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
     pub fn open(mut log: L, options: EngineOptions) -> Result<Self, LinkError> {
+        if options.serializable_validation == SerializableValidation::ReadSet
+            && options.isolation != IsolationLevel::Serializable
+        {
+            return Err(error("read-set validation requires serializable isolation"));
+        }
         if options.require_durable_flush && !log.supports_durable_flush() {
             return Err(error("selected log does not support durable flush"));
         }
@@ -216,6 +232,9 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             writes: BTreeMap::new(),
             closed: false,
             isolation: state.options.isolation,
+            reads: (state.options.serializable_validation == SerializableValidation::ReadSet
+                && state.options.concurrency == ConcurrencyControl::Optimistic)
+                .then(|| Mutex::new(validation::ReadSet::default())),
         })
     }
     /// Run a caller's replication/catch-up/diagnostics operation under the same

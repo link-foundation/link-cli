@@ -97,4 +97,28 @@ public class EngineMetadataCostTests
         Assert.Equal(0, Count(engine));
         Assert.Equal(2ul, engine.Snapshot().Rows[1].Link.Source);
     }
+    [Fact]
+    public void ReadSetsAreAllocatedOnlyWhenSelectedAndReleasedOnFinish()
+    {
+        var field = typeof(EngineSession<ulong>).GetField("_reads", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        foreach (var concurrency in new[] { ConcurrencyControl.Optimistic, ConcurrencyControl.Exclusive })
+            foreach (var validation in new[] { SerializableValidation.Revision, SerializableValidation.ReadSet })
+            {
+                bool selected = concurrency == ConcurrencyControl.Optimistic && validation == SerializableValidation.ReadSet;
+                var engine = Seed(new(), new() { Concurrency = concurrency, SerializableValidation = validation });
+                using var reader = engine.Begin(); reader.GetLink(1);
+                Assert.Equal(selected, field.GetValue(reader) is not null);
+                if (selected)
+                {
+                    Assert.Single((HashSet<ulong>)field.GetValue(reader)!);
+                    using var writer = engine.Begin(); writer.UpdateLink(2, 2, 0); writer.Commit();
+                    Assert.Equal(1, Count(engine));
+                }
+                reader.Commit(); Assert.Null(field.GetValue(reader)); Assert.Equal(0, Count(engine));
+                reader.GetLink(1); reader.Count(null); Assert.Null(field.GetValue(reader));
+                using var discarded = engine.Begin(); discarded.GetLink(1); discarded.Rollback();
+                Assert.Null(field.GetValue(discarded));
+            }
+    }
+
 }

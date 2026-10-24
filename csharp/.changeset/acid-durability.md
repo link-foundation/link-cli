@@ -24,3 +24,7 @@ exact logical replay, corruption rejection and uncertain-write fencing.
 Avoid unnecessary recovered-row conflict metadata and skip per-row generation
 tracking for exclusive/whole-revision serializable strategies. Reclaim generations
 after the final session validates, preserving optimistic ABA/branch conflicts.
+
+Select serializable point-read validation independently of journal/history settings.
+Permit disjoint point edits while checking missing rows, ABA, branch changes and
+read/write cycles; scans retain conservative revision validation.

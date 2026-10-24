@@ -2,7 +2,7 @@
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
     Branch, ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction,
-    HistoryPolicy, IsolationLevel, MemoryLog,
+    HistoryPolicy, IsolationLevel, MemoryLog, SerializableValidation,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
@@ -14,6 +14,7 @@ use wasm_bindgen::prelude::*;
 struct Options {
     concurrency: Option<String>,
     isolation: Option<String>,
+    serializable_validation: Option<String>,
     history: Option<serde_json::Value>,
     constraints: Vec<String>,
     trace: bool,
@@ -38,6 +39,11 @@ fn options(text: &str) -> Result<EngineOptions, String> {
             Some("snapshot") => IsolationLevel::Snapshot,
             Some("read-committed") => IsolationLevel::ReadCommitted,
             _ => return Err("unknown isolation level".into()),
+        },
+        serializable_validation: match parsed.serializable_validation.as_deref() {
+            None | Some("revision") => SerializableValidation::Revision,
+            Some("read-set") => SerializableValidation::ReadSet,
+            _ => return Err("unknown serializable validation".into()),
         },
         history: match parsed.history {
             None | Some(serde_json::Value::Null) => HistoryPolicy::None,
@@ -246,6 +252,9 @@ mod tests {
         for text in [
             "[]",
             r#"{"isolation":"dirty"}"#,
+            r#"{"serializableValidation":"invalid"}"#,
+            r#"{"serializableValidation":42}"#,
+            r#"{"isolation":"snapshot","serializableValidation":"read-set"}"#,
             r#"{"concurrency":"none"}"#,
             r#"{"history":0}"#,
             r#"{"constraints":["unknown"]}"#,

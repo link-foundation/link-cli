@@ -1,7 +1,9 @@
-use super::{error, Engine, IsolationLevel, Row, Snapshot};
+use super::{
+    error, validation::ReadSet, Engine, IsolationLevel, Row, SerializableValidation, Snapshot,
+};
 use crate::{GenericLink, LinkError, LinksStorage, TransitionLogStore};
 use doublets::data::LinkReference;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Mutex};
 
 /// An isolated write set with the same raw LinksStorage API as other backends.
 /// Dropping or rolling back discards the write set; allocation may leave gaps.
@@ -11,6 +13,7 @@ pub struct EngineTransaction<T: LinkReference, L: TransitionLogStore> {
     pub(super) writes: BTreeMap<T, Option<Row<T>>>,
     pub(super) closed: bool,
     pub(super) isolation: IsolationLevel,
+    pub(super) reads: Option<Mutex<ReadSet<T>>>,
 }
 impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
     fn check_open(&self) -> Result<(), LinkError> {
@@ -21,6 +24,15 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         }
     }
     fn row(&self, id: T) -> Option<Row<T>> {
+        if !self.closed {
+            if let Some(reads) = &self.reads {
+                reads
+                    .lock()
+                    .expect("read-set mutex poisoned")
+                    .keys
+                    .insert(id);
+            }
+        }
         if let Some(row) = self.writes.get(&id) {
             return row.clone();
         }
@@ -38,6 +50,11 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         self.base.rows.get(&id).cloned()
     }
     fn view(&self) -> BTreeMap<T, Row<T>> {
+        if !self.closed {
+            if let Some(reads) = &self.reads {
+                reads.lock().expect("read-set mutex poisoned").scanned = true;
+            }
+        }
         let mut rows = if self.isolation == IsolationLevel::ReadCommitted && !self.closed {
             self.engine
                 .state
@@ -91,6 +108,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
             }
             self.closed = true;
             self.writes.clear();
+            self.reads.take();
         }
     }
     pub fn commit(&mut self) -> Result<u64, LinkError> {
@@ -100,13 +118,29 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         state.active -= 1;
         self.closed = true;
         let writes = std::mem::take(&mut self.writes);
+        let reads = self.reads.take().map(Mutex::into_inner);
         let result = (|| {
+            let reads = reads
+                .transpose()
+                .map_err(|_| error("read-set mutex poisoned"))?;
             if self.isolation == IsolationLevel::Serializable
+                && (state.options.serializable_validation == SerializableValidation::Revision
+                    || reads.as_ref().is_some_and(|reads| reads.scanned))
                 && state.current.revision != self.base.revision
             {
                 return Err(error(
                     "conflict: database revision changed (serializable validation)",
                 ));
+            }
+            if reads.as_ref().is_some_and(|reads| {
+                reads.keys.iter().any(|id| {
+                    state
+                        .changed
+                        .get(id)
+                        .is_some_and(|revision| *revision > self.base.revision)
+                })
+            }) {
+                return Err(error("conflict: a read link changed since begin"));
             }
             if writes.keys().any(|id| {
                 state

@@ -130,6 +130,7 @@ export async function engineConformance(binding) {
   const compressedFork = decoded.fork({}, new DeltaCommitLog(new MemoryCommitLog()));
   compressedFork.close(); decoded.close();
   await conflictGenerationSchedules(binding);
+  await readSetSchedules(binding);
   console.log('ok wasm engine: staged requests, commit ordering, isolation, history, conflict, Unicode, rollback, reopen, delta journals');
 }
 
@@ -170,4 +171,51 @@ async function conflictGenerationSchedules(binding) {
       reopened.close();
     } finally { engine.close(); }
   }
+}
+
+// Only point APIs use address read sets. Query/count/name scans retain the
+// conservative whole-revision check so missing predicates cannot admit phantoms.
+async function readSetSchedules(binding) {
+  for (const options of [
+    { serializableValidation: 'invalid' },
+    { serializableValidation: 1 },
+    { isolation: 'snapshot', serializableValidation: 'read-set' },
+    { isolation: 'read-committed', serializableValidation: 'read-set' },
+  ]) assert.throws(() => new WasmEngine(binding, options));
+  const engine = new WasmEngine(binding, { serializableValidation: 'read-set' });
+  const sessions = [];
+  const begin = () => { const session = engine.begin(); sessions.push(session); return session; };
+  try {
+    const seed = begin();
+    const one = await seed.create(0n, 0n); const two = await seed.create(0n, 0n); await seed.commit();
+    const a = begin(); const b = begin();
+    await a.setName(one.index, 'one'); await b.setName(two.index, 'two');
+    assert.equal(await a.commit(), 2n); assert.equal(await b.commit(), 3n);
+    const c = begin(); const d = begin();
+    assert.equal(await c.getName(two.index), 'two'); assert.equal(await d.getName(one.index), 'one');
+    await c.removeName(one.index); await d.removeName(two.index); await c.commit();
+    await assert.rejects(d.commit(), /read.*changed/i);
+    const readonly = begin(); await readonly.getName(one.index);
+    const unrelated = begin(); await unrelated.setName(two.index, 'later'); await unrelated.commit();
+    assert.equal(await readonly.commit(), engine.snapshot().revision);
+    const scan = begin(); assert.equal(await scan.count(), 2n);
+    const writer = begin(); await writer.setName(two.index, 'after scan'); await writer.commit();
+    await assert.rejects(scan.commit(), /revision.*changed/i);
+    const missing = begin(); assert.equal(await missing.getName(3n), null);
+    const insert = begin(); assert.equal((await insert.create(0n, 0n)).index, 3n); await insert.commit();
+    await assert.rejects(missing.commit(), /read.*changed/i);
+    const aba = begin(); await aba.getName(one.index);
+    const temporary = begin(); await temporary.setName(one.index, 'temporary'); await temporary.commit();
+    const restored = begin(); await restored.removeName(one.index); await restored.commit();
+    await assert.rejects(aba.commit(), /read.*changed/i);
+    const branch = engine.fork();
+    try {
+      const stale = begin(); await stale.getName(one.index);
+      const child = branch.engine.begin();
+      try { await child.setName(one.index, 'branch'); await child.commit(); }
+      finally { await child.close(); }
+      branch.merge(); await assert.rejects(stale.commit(), /read.*changed/i);
+    } finally { branch.close(); }
+    console.log('ok wasm serializable read sets: disjoint points, cycles, scans, missing rows, ABA, branches');
+  } finally { for (const session of sessions) await session.close(); engine.close(); }
 }
