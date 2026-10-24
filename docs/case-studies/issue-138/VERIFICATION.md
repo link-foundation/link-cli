@@ -844,3 +844,32 @@ All 95 JS unit tests and TypeScript checks pass, with enforced 100% lines,
 branches and functions across all 17 JS production modules. .NET format and
 release metadata checks pass. Full evidence is in
 `dev/log/issues/138/pulls/139/pessimistic-writes.txt`.
+
+The published pessimistic-write commit `6087cfc3e01f8b8d953ce46b6c3184ae0d2859c1`
+passes all nine exact-SHA workflows created 2026-10-24 21:24:47 UTC: 37 successful
+checks, ten skipped and one neutral. Linux, Windows, macOS, actual WASM and shared
+etcd conformance pass.
+
+## C# whole-facade dependency lifetimes
+
+Three initial runtime regressions fail because graph cleanup closes dependencies
+before their borrowers. That includes a real checkpoint still using its mapped
+data store and a borrower whose failed cleanup needs its dependency for retry.
+The bounded integration probe always stops after managed flush and before native
+applied-marker writes, then awaits both actual worker and disposer.
+
+Cleanup now captures inner references before owner cleanup can detach them,
+disposes borrowers first and shares cycle/duplicate detection across synchronous
+nested calls. A borrower failure preserves dependencies for retry. Direct
+transaction disposal still borrows stores; the explicit whole-graph helper owns
+all reachable facades. Real version rollback, exclusive file reopening, cyclic
+references, detached fields, corrupt construction and idempotence pass.
+
+All six new contracts and 31 focused lifetime/ACID controls pass. Full Debug and
+Release each pass 903 tests. Debug measures 5,999/6,542 lines (91.70%) and
+2,732/3,158 branches (86.51%); Release measures 4,555/4,888 lines (93.19%) and
+2,712/3,139 branches (86.40%). The disposer and its reference enumerator each
+reach 100% measured lines/branches in both configurations. Full project coverage
+remains below 100%. See [FACADE-LIFETIME-PLAN.md](FACADE-LIFETIME-PLAN.md) and
+`dev/log/issues/138/pulls/139/facade-lifetime.txt` for the reproduction and ownership
+boundary. Rust/JS/WASM production paths are unchanged in this step.

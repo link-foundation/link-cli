@@ -62,3 +62,8 @@ Select optional pessimistic point-write ownership with immediate busy errors,
 independent isolation/read-set validation, stale/ABA rejection, branch protection
 and cleanup on every session outcome. Keep engine-local locks out of cluster
 workspaces and preserve existing optimistic/exclusive defaults.
+
+Dispose complete facade graphs with borrowers before their dependencies, joining
+asynchronous checkpoints before mapped stores close. Share nested/cyclic traversal
+state, preserve detached references, and leave dependencies available when borrower
+cleanup fails and must be retried.

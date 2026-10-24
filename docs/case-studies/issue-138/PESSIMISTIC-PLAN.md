@@ -35,7 +35,11 @@ strategy/design seam, never copy that implementation or claim RocksDB parity.
 - [x] Add configuration/cost/retry docs and comparison with pinned RocksDB source,
    runnable cross-language examples and minor release fragments. Review complete
    PR diff/feedback/main ancestry.
-- [ ] Commit/push and verify fresh exact-SHA CI.
+- [x] Commit/push and verify fresh exact-SHA CI.
+
+Commit 6087cfc3e01f8b8d953ce46b6c3184ae0d2859c1 passes all nine workflows
+created 2026-10-24 21:24:47 UTC: 37 successful checks, ten skipped and one neutral.
+Linux, Windows, macOS, actual WASM and shared etcd conformance pass.
 
 Avoid a global mutex held for a session's lifetime or silently serializing
 unrelated point writes. Keep selected strategy costs explicit. Do not add waiting

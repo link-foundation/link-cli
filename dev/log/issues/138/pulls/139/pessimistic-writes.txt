@@ -62,6 +62,11 @@ actual WASM conformance on Node, Bun and Deno (8 pass/4 process-only skips each)
 Full actual Rust/C#/WASM Node conformance passes 32 scenarios with four WASM
 process-only skips. All three optional --pessimistic --read-set examples pass.
 
+Published commit 6087cfc3e01f8b8d953ce46b6c3184ae0d2859c1 passes all nine
+workflows created 2026-10-24 21:24:47 UTC. The exact-SHA check inventory has
+37 success, ten skipped, one neutral and no nonterminal checks. Linux, Windows,
+macOS, actual WASM, enforced JS coverage and shared etcd conformance all pass.
+
 A shared durable file journal wrapped with delta encoding is sequentially opened
 by the Rust, C# and WASM examples for two full cycles, retaining each previous
 language's commits. Final independent WASM recovery confirms revision 22 and ten

@@ -189,3 +189,11 @@ return for shutdown to complete. Calls from active background callbacks (includi
 `InvalidOperationException` to prevent joining their own work. Cancelled queued
 checkpoint work and failed checkpoints remain recoverable from committed journal
 records on reopen. Shutdown does not dispose the borrowed stores.
+
+When you own an entire facade graph, `LinksFacadeDisposer.Dispose(outermost)`
+releases borrowers before their dependencies. It joins transaction workers and
+rolls back open version transactions while their stores remain available.
+Nested cleanup shares cycle/duplicate detection and retains references detached
+during disposal. A borrower cleanup failure propagates before its dependencies
+close, allowing a retry. Calling `TransactionsDecorator.Dispose()` directly
+continues to leave its borrowed stores with the caller.
