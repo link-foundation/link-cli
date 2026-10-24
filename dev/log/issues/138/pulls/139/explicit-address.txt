@@ -1,0 +1,59 @@
+Explicit-address transaction and version audit (2026-10-24)
+
+Before: baseline e652c2c, four new finite integration tests
+  cargo test --manifest-path rust/Cargo.toml --all-features \
+    --test transactions_ensure_tests
+  map rollback: explicit-address creation remains after rollback
+  mapped rollback: eight placeholders remain, expected zero
+  auto-commit: no journal entry is recorded
+  version branch: branch head does not include explicit-address allocation
+  Result: 0 passed, 4 failed.
+
+Root cause: public GenericTransactionsDecorator::ensure_created forwards
+directly to its inner store, assuming only replay uses this method. The named
+query bridge and public version API also call it. Recovery already calls the
+inner store directly. The version wrapper additionally omits branch attribution.
+
+Four independent fallible bridge regressions:
+  Block the journal checkpoint path with a directory after opening the store.
+  NamedTypeLinks::try_create / try_ensure_created on transaction/version stores
+  panic via the infallible bridge, instead of returning their Result error.
+  Result: 0 passed, 4 failed; all failures report the actual checkpoint I/O error.
+
+Three independent bounded storage failure regressions:
+  An injected create error leaves an automatic transaction open.
+  A composite create error also leaves it open.
+  A composite update error leaves the already created row in place.
+  Result before cleanup changes: 3 failed, 2 ensure failure cases already passed
+  with the initial explicit-address fix.
+
+After:
+  Explicit-address writes observe and record every backend allocation.
+  Map adapters retain only the target and observe it directly. The mapped
+  adapter retains its existing intermediate-placeholder semantics; the default
+  observer compares row maps, including partial effects on error. Rollback and
+  recovery undo all recorded rows.
+  Version allocations update the active branch like other writes. Fallible
+  named bridges propagate errors and retain reserved-address validation.
+  Automatic create failures release admission; composite automatic failures
+  undo their earlier allocation. Caller-owned transactions remain available
+  for explicit rollback.
+  Additional cases verify persisted pending data, repeat recovery, existing/zero
+  no-ops, explicit version commit/rollback, following writes and branch reopen.
+
+All requested addresses are at most eight; address-limit inputs are validated
+before allocation. These tests do not loop towards an allocator limit. The
+legacy architecture remains eager: use staged engines for session isolation.
+
+Final local validation:
+  12 explicit-address + five storage-failure tests: PASS
+  Full Rust coverage suite: 482 standard tests PASS, four child entry points
+    ignored, plus the custom stdout harness.
+    Lines 8,955/9,911 (90.35%); branches 1,441/1,832 (78.66%).
+  C# full Debug/Release: 697 tests PASS each, including two explicit-address
+    parity tests. Debug lines 5,778/6,444; branches 2,534/3,068.
+    Release lines 4,396/4,818; branches 2,513/3,049.
+  Actual WASM: 17 tests PASS. Wrapper lines 331/331, branches 16/16,
+    functions 68/68. Linked report lines 2,729/9,085, branches 392/1,285.
+  Native/WASM Clippy with denied warnings and Rust/.NET formatting: PASS.
+  Project-wide 100% coverage remains unfinished; no source exclusions added.

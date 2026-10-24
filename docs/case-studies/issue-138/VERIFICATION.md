@@ -414,3 +414,45 @@ are used. Native and linked-core 100% coverage remains unfinished.
 
 See [LEGACY-DIAGNOSTICS-PLAN.md](LEGACY-DIAGNOSTICS-PLAN.md) for the execution
 checklist, fixture limits and retention semantics.
+
+## Explicit-address writes and automatic failure cleanup
+
+Four finite Rust regressions first reproduce unlogged explicit-address writes:
+map and mapped allocations survive rollback, auto allocation has no journal
+entry, and the version branch has no sequence for its allocation. Public
+`ensure_created` now observes every backend allocation; recovery still calls
+the inner backend directly. The map retains its target-only behavior and the
+mapped backend retains its intermediate placeholders. Rollback and recovery
+undo every recorded row. Existing and zero addresses remain no-ops.
+
+Four additional regressions reproduce fallible transaction/version named-query
+bridges panicking on checkpoint I/O errors. Their overrides now propagate the
+error and validate reserved addresses before allocation. Three storage-fault
+regressions reproduce stuck automatic transactions or a composite create's
+leftover row. Automatic cleanup now releases admission and undoes that earlier
+allocation; explicit transactions remain caller-owned for rollback.
+
+The 12 explicit-address tests and five storage-failure tests pass, including
+persisted pending data, repeated recovery, following writes, explicit version
+commit/rollback and branch reopening. Two C# tests confirm its existing
+callback-based explicit-address path already provides matching rollback,
+durability and version behavior. Inputs request at most address eight.
+
+The full Rust coverage suite passes 482 standard tests, with four child entry
+points ignored, plus the separate stdout harness. Coverage measures
+8,955/9,911 lines (90.35%), 1,441/1,832 branches (78.66%), 1,211/1,372 functions
+and 13,587/15,647 regions. C# Debug and Release each pass 697 tests. Debug
+measures 5,778/6,444 lines (89.66%) and 2,534/3,068 branches (82.59%); Release
+measures 4,396/4,818 lines (91.24%) and 2,513/3,049 branches (82.42%).
+
+See [ENSURE-PLAN.md](ENSURE-PLAN.md) and the curated evidence in
+`dev/log/issues/138/pulls/139/explicit-address.txt`. The public observer default
+costs O(N log N) time and O(N) rows; built-in map adapters observe directly.
+Bare stores do not take that transaction path. Project-wide 100% coverage
+remains unfinished.
+
+All 17 actual WASM tests pass. Wrapper coverage remains 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. Including linked
+core, the report measures 2,729/9,085 lines (30.04%), 392/1,285 branches
+(30.51%), 347/1,308 functions and 3,943/14,292 regions. No source exclusions
+were added. Native/WASM Clippy deny warnings; Rust and .NET formatting pass.

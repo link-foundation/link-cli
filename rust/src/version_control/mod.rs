@@ -275,9 +275,19 @@ impl VersionControlDecorator {
     }
 
     pub fn ensure_created(&mut self, id: u32) -> u32 {
-        self.transactions
-            .ensure_created(id)
-            .expect("TransactionsDecorator::ensure_created failed")
+        self.try_ensure_created(id)
+            .expect("VersionControlDecorator::ensure_created failed")
+    }
+
+    /// Fallible explicit-address allocation, attributed like other writes.
+    pub fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        let before_seq = self.transactions.last_logged_sequence();
+        let created = self.transactions.ensure_created(id)?;
+        if self.active_transaction.is_none() {
+            let branch = self.current_branch.clone();
+            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
+        }
+        Ok(created)
     }
 
     fn attribute_new_transitions_for_branch(

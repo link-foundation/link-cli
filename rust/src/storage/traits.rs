@@ -66,6 +66,41 @@ pub trait LinksStorage<T: LinkReference> {
     /// Ensures a link exists at `index`, creating placeholders as needed.
     fn ensure_link_created(&mut self, index: T) -> Result<T, LinkError>;
 
+    /// [`Self::ensure_link_created`], reporting every placeholder it creates.
+    ///
+    /// Backends differ in whether intermediate addresses remain allocated.
+    /// This default compares rows before/after the operation, including partial
+    /// changes on error, so a transaction can undo either backend's behavior.
+    /// It costs O(N log N) time and O(N) rows; backends may override it with
+    /// allocation callbacks. The built-in map adapters avoid this copy.
+    fn ensure_link_created_observed(
+        &mut self,
+        index: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<T, LinkError> {
+        let before: std::collections::BTreeMap<_, _> = self
+            .all_links()
+            .into_iter()
+            .map(|row| (row.index, row))
+            .collect();
+        let outcome = self.ensure_link_created(index);
+        let mut after: std::collections::BTreeMap<_, _> = self
+            .all_links()
+            .into_iter()
+            .map(|row| (row.index, row))
+            .collect();
+        for (id, previous) in before {
+            let next = after.remove(&id).unwrap_or_else(GenericLink::null);
+            if previous != next {
+                observer(previous, next);
+            }
+        }
+        for (_, row) in after {
+            observer(GenericLink::null(), row);
+        }
+        outcome
+    }
+
     /// Returns the link stored at `index`, if any.
     fn get_link(&self, index: T) -> Option<GenericLink<T>>;
 

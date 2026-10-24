@@ -16,6 +16,16 @@ use crate::link::Link;
 use crate::link_storage::{ChangeObserver, LinkStorage};
 use crate::named_types::{NamedTypes, NamedTypesDecorator};
 
+fn validate_ensure_address(id: u32) -> Result<()> {
+    if id == 0 || id == u32::MAX {
+        return Err(LinkError::InvalidFormat(format!(
+            "Cannot ensure unsupported link address {id}"
+        ))
+        .into());
+    }
+    Ok(())
+}
+
 pub trait NamedTypeLinks {
     fn create(&mut self, source: u32, target: u32) -> u32;
     /// Fallible allocation for backends that can report transaction/address errors.
@@ -24,13 +34,7 @@ pub trait NamedTypeLinks {
     }
     fn ensure_created(&mut self, id: u32) -> u32;
     fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
-        if id == 0 || id == u32::MAX {
-            return Err(LinkError::InvalidFormat(format!(
-                "Cannot ensure unsupported link address {id}"
-            ))
-            .into());
-        }
-
+        validate_ensure_address(id)?;
         Ok(self.ensure_created(id))
     }
     fn get_link(&mut self, id: u32) -> Option<Link>;
@@ -316,6 +320,19 @@ impl NamedTypeLinks for NamedTypesDecorator {
 }
 
 impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        Ok(crate::transactions::TransactionsDecorator::create(
+            self, source, target,
+        )?)
+    }
+
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        validate_ensure_address(id)?;
+        Ok(crate::transactions::TransactionsDecorator::ensure_created(
+            self, id,
+        )?)
+    }
+
     fn create(&mut self, source: u32, target: u32) -> u32 {
         crate::transactions::TransactionsDecorator::create(self, source, target)
             .expect("TransactionsDecorator::create failed in NamedTypeLinks bridge")
@@ -387,6 +404,15 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
 }
 
 impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        crate::version_control::VersionControlDecorator::create(self, source, target)
+    }
+
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        validate_ensure_address(id)?;
+        crate::version_control::VersionControlDecorator::try_ensure_created(self, id)
+    }
+
     fn create(&mut self, source: u32, target: u32) -> u32 {
         crate::version_control::VersionControlDecorator::create(self, source, target)
             .expect("VersionControlDecorator::create failed in NamedTypeLinks bridge")

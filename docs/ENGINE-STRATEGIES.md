@@ -96,6 +96,15 @@ remain in the live log. Retention limits the in-memory list, while the durable
 sidecar still keeps recovery markers. Optional diagnostic I/O failures preserve
 the operation's outcome; storage and journal errors retain their error semantics.
 
+Explicit-address allocation through the legacy Rust transactions/version APIs
+is a logged write, including any intermediate placeholders retained by the
+backend. Rollback and checkout undo those rows; automatic allocation flushes
+its journal and data like other writes. Existing/zero addresses are no-ops.
+Built-in map adapters observe the surviving row directly. The default observation
+adapter for other backends compares complete before/after row maps, costing
+O(N log N) time and O(N) space for this operation; a backend can provide its own
+allocation callbacks. Bare `ensure_link_created` keeps its existing cost.
+
 ## Branches and merge recovery
 
 A fork copies the parent's current committed rows into revision 1 of an empty,

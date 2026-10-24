@@ -32,3 +32,10 @@ https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-accept
 The log alone does not distinguish inherited socket mode, timeout, or port reuse;
 these fixture corrections remove both portability/race assumptions. Fresh
 Windows CI must verify the corrected fixture.
+
+Fresh exact-SHA verification:
+  3720ba5a86891ec28a892a7b2e226c9cb9906a45
+  Rust workflow 40124044877, Windows job 120962009751: SUCCESS
+  https://github.com/link-foundation/link-cli/actions/runs/40124044877/job/120962009751
+  All checks finished: 37 success, 10 skipped, one neutral.
+  Recent run timestamps are 2026-10-24T19:10:02Z/03Z and match this SHA.

@@ -309,7 +309,15 @@ where
             return self.inner.create_link(source, target);
         }
         let owns = self.ensure_open_transaction();
-        let id = self.inner.create_link(source, target)?;
+        let id = match self.inner.create_link(source, target) {
+            Ok(id) => id,
+            Err(error) => {
+                if owns {
+                    self.current = None;
+                }
+                return Err(error);
+            }
+        };
         let after = self
             .inner
             .get_link(id)
@@ -432,8 +440,19 @@ where
     pub fn create_and_update(&mut self, source: T, target: T) -> Result<T, LinkError> {
         let owns = self.ensure_open_transaction();
         let zero = T::from_byte(0);
-        let id = self.create(zero, zero)?;
-        self.update(id, source, target)?;
+        let outcome = self.create(zero, zero).and_then(|id| {
+            self.update(id, source, target)?;
+            Ok(id)
+        });
+        let id = match outcome {
+            Ok(id) => id,
+            Err(error) => {
+                if owns {
+                    self.rollback()?;
+                }
+                return Err(error);
+            }
+        };
         if owns {
             self.commit_current()?;
         }
@@ -456,9 +475,34 @@ where
     }
 
     pub fn ensure_created(&mut self, id: T) -> Result<T, LinkError> {
-        // ensure_created is used by recovery/replay only and is not
-        // itself a logical write; bypass transition recording.
-        self.inner.ensure_link_created(id)
+        if id == T::from_byte(0) || self.inner.link_exists(id) {
+            return Ok(id);
+        }
+        if self.replaying {
+            return self.inner.ensure_link_created(id);
+        }
+        let owns = self.ensure_open_transaction();
+        let mut observed = Vec::new();
+        let outcome = self
+            .inner
+            .ensure_link_created_observed(id, &mut |before, after| {
+                record_observed(&mut observed, before, after)
+            });
+        self.record_observed_transitions(&observed)?;
+        match outcome {
+            Ok(created) => {
+                if owns {
+                    self.commit_current()?;
+                }
+                Ok(created)
+            }
+            Err(error) => {
+                if owns {
+                    self.rollback()?;
+                }
+                Err(error)
+            }
+        }
     }
 
     /// Current state of `id` as a doublet, or an empty one at `id`.

@@ -29,7 +29,9 @@ one neutral and one Windows Rust failure. The failed job is an existing etcd
 socket fixture, not a diagnostic/retention regression. The complete workflow
 and failed-job logs are downloaded; the specific errors and portable fixture
 corrections are preserved in `dev/log/issues/138/pulls/139/windows-peer.txt`.
-Fresh Windows verification of that correction remains required.
+Fresh Rust Windows job 120962009751 passes on correction commit `3720ba5a`
+(run 40124044877). All 48 checks finish with 37 success, ten skipped and one
+neutral.
 
 All inputs, subprocess counts and stored rows are finite. A diagnostic fault
 does not simulate storage failure or power loss. Normal query result output

@@ -40,6 +40,21 @@ macro_rules! impl_in_memory_links_storage {
                 Ok(self.ensure_created(index))
             }
 
+            fn ensure_link_created_observed(
+                &mut self,
+                index: u32,
+                observer: &mut dyn FnMut(GenericLink<u32>, GenericLink<u32>),
+            ) -> Result<u32, LinkError> {
+                let existing = self.exists(index);
+                let created = self.ensure_created(index);
+                // These adapters remove intermediate allocations; only the
+                // requested address survives. Avoid copying every stored row.
+                if index != 0 && !existing {
+                    observer(GenericLink::null(), *self.get(index).expect("ensured row"));
+                }
+                Ok(created)
+            }
+
             fn get_link(&self, index: u32) -> Option<GenericLink<u32>> {
                 self.get(index).copied()
             }
