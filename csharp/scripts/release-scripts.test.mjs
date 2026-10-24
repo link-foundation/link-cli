@@ -15,7 +15,7 @@ import { tmpdir } from 'node:os';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
-import { decide, readCsprojInfo } from './check-release-needed.mjs';
+import { decide, fetchGithubReleaseExists, fetchNugetVersions, readCsprojInfo } from './check-release-needed.mjs';
 import {
   DEFAULT_MAX_ATTEMPTS,
   DEFAULT_SLEEP_SECONDS,
@@ -792,4 +792,43 @@ test('wait-for-nuget fails only after exhausting all attempts', async () => {
   assert.equal(available, false);
   assert.equal(attempts, 3);
   assert.deepEqual(sleeps, [120, 120]);
+});
+
+const droppedConnection = () =>
+  new TypeError('fetch failed', { cause: Object.assign(new Error('connect ETIMEDOUT'), { code: 'ETIMEDOUT' }) });
+
+// Plays back `answers`: an Error is thrown like a network failure, a number
+// is answered as that HTTP status.
+function playback(answers, body = {}) {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    const answer = answers[calls.length - 1];
+    if (answer instanceof Error) throw answer;
+    return { ok: answer >= 200 && answer < 300, status: answer, json: async () => body };
+  };
+  return { calls, fetchImpl };
+}
+
+test('the release decision retries a dropped NuGet connection instead of failing', async () => {
+  const { calls, fetchImpl } = playback([droppedConnection(), 503, 200], { versions: ['2.4.0'] });
+  assert.deepEqual(await fetchNugetVersions('clink', fetchImpl, { delayMs: 0 }), ['2.4.0']);
+  assert.equal(calls.length, 3);
+});
+
+test('the release decision reports the network cause once retries run out', async () => {
+  const { calls, fetchImpl } = playback([droppedConnection(), droppedConnection()]);
+  await assert.rejects(fetchNugetVersions('clink', fetchImpl, { attempts: 2, delayMs: 0 }), {
+    message: 'https://api.nuget.org/v3-flatcontainer/clink/index.json: fetch failed: ETIMEDOUT (after 2 attempts)',
+  });
+  assert.equal(calls.length, 2);
+});
+
+test('answers a retry cannot change are not retried', async () => {
+  const nuget = playback([404, 200]);
+  assert.equal(await fetchNugetVersions('clink', nuget.fetchImpl, { delayMs: 0 }), null);
+  assert.equal(nuget.calls.length, 1);
+  const release = playback([429, 404]);
+  assert.equal(await fetchGithubReleaseExists('owner/repo', 'csharp-v1.0.0', release.fetchImpl, { delayMs: 0 }), false);
+  assert.equal(release.calls.length, 2);
 });

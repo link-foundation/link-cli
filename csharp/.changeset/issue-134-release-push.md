@@ -9,3 +9,7 @@ fails fast with an explicit error, the tag is created only after the commit
 reached main and exactly that tag is pushed, git runs without a shell so
 release descriptions are passed verbatim, and CHANGELOG.md no longer gains an
 extra blank line on every release.
+
+The NuGet and GitHub release lookups that decide whether to release now retry
+network failures, 429 and 5xx with backoff and report the network cause, so a
+single dropped connection no longer fails the release.
