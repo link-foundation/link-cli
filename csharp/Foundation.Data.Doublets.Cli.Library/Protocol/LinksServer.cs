@@ -110,14 +110,11 @@ public sealed class LinksServer : IDisposable
             {
                 break;
             }
-            lock (_clients)
+            if (Register(client) is not { } stream)
             {
-                // Shutdown disposes only listed clients, so this one still has its socket.
-                // Accepted while stopping, it closes in its worker, which sees _stopping.
-                TryDisableNagle(client);
-                _clients.Add(client);
+                continue;
             }
-            var worker = new Thread(() => HandleConnection(client, links)) { IsBackground = true };
+            var worker = new Thread(() => HandleConnection(client, stream, links)) { IsBackground = true };
             workers.Add(worker);
             worker.Start();
             workers.RemoveAll(thread => !thread.IsAlive);
@@ -147,11 +144,37 @@ public sealed class LinksServer : IDisposable
     /// <inheritdoc/>
     public void Dispose() => Shutdown();
 
-    internal void HandleConnection(TcpClient client, INamedTypesLinks<uint> links)
+    /// <summary>Lists an accepted client and returns its stream, or null when its socket is already gone.</summary>
+    internal NetworkStream? Register(TcpClient client)
+    {
+        lock (_clients)
+        {
+            // Shutdown disposes only listed clients, and under this lock, so this
+            // one still has its socket. TcpClient is not thread safe: a Dispose in
+            // the middle of GetStream makes it throw ArgumentNullException, which
+            // used to kill the process when a worker got its own stream.
+            // Accepted while stopping, it closes in its worker, which sees _stopping.
+            TryDisableNagle(client);
+            try
+            {
+                var stream = client.GetStream();
+                _clients.Add(client);
+                return stream;
+            }
+            catch (InvalidOperationException error)
+            {
+                Trace($"connection closed: {error.Message}");
+                client.Dispose();
+                return null;
+            }
+        }
+    }
+
+    /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
+    internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
     {
         try
         {
-            using var stream = client.GetStream();
             var reader = new PacketReader(stream);
             while (!_stopping)
             {
@@ -177,11 +200,6 @@ public sealed class LinksServer : IDisposable
                 format.Protocol(_options.Limits).WriteDocument(stream, reply);
             }
         }
-        catch (InvalidOperationException error) when (!client.Connected)
-        {
-            // Shutdown can disconnect the socket before this worker gets its stream.
-            Trace($"connection closed: {error.Message}");
-        }
         catch (Exception error) when (error is IOException or ObjectDisposedException or SocketException or LinoProtocolException)
         {
             Trace($"connection closed: {error.Message}");
@@ -192,6 +210,7 @@ public sealed class LinksServer : IDisposable
             {
                 _clients.Remove(client);
             }
+            // Also disposes the stream.
             client.Dispose();
         }
     }

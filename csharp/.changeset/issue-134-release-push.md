@@ -17,3 +17,9 @@ single dropped connection no longer fails the release.
 A changeset whose bump type cannot be parsed now fails the release with an
 "Invalid changeset" error naming the file. It used to be skipped with a
 warning and then deleted, so its bump and description were silently lost.
+
+`LinksServer` no longer crashes the process when it shuts down right after
+accepting a connection. The worker used to get its stream while `Shutdown`
+disposed the client, and `TcpClient` throws `ArgumentNullException` when that
+happens midway; the stream is now taken in the accept loop, under the lock
+`Shutdown` holds.
