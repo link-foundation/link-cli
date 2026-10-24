@@ -29,31 +29,38 @@ namespace Foundation.Data.Doublets.Cli
         public readonly string NamedLinksDatabaseFileName;
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
-        private readonly string? _dataDatabaseFilename;
+        private readonly DurableMappedMemory? _dataMemory;
+        private readonly DurableMappedMemory _namesMemory;
 
-        public bool SupportsDurableFlush => _dataDatabaseFilename is not null;
+        public bool SupportsDurableFlush => _dataMemory is not null;
 
         public virtual void Flush()
         {
-            if (_dataDatabaseFilename is null)
+            if (_dataMemory is null)
                 throw new InvalidOperationException("A caller-owned store needs an explicit flush callback.");
-            FlushFile(_dataDatabaseFilename);
-            FlushFile(NamedLinksDatabaseFileName);
-        }
-
-        private static void FlushFile(string path)
-        {
-            using var file = new FileStream(path, FileMode.Open, FileAccess.ReadWrite,
-                FileShare.ReadWrite | FileShare.Delete);
-            file.Flush(flushToDisk: true);
+            _dataMemory.Flush();
+            _namesMemory.Flush();
         }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
         public static ILinks<TLinkAddress> MakeLinks(string databaseFilename)
         {
-            var links = new UnitedMemoryLinks<TLinkAddress>(databaseFilename);
-            return links.DecorateWithAutomaticUniquenessAndUsagesRepointing();
+            return CreateOwnedStore(databaseFilename).Links;
+        }
+
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
+            Justification = "The returned decorator owns its UnitedMemoryLinks and mapping; LinksFacadeDisposer releases the chain.")]
+        private static (ILinks<TLinkAddress> Links, DurableMappedMemory Memory) CreateOwnedStore(string filename)
+        {
+            var memory = new DurableMappedMemory(filename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
+            try
+            {
+                var links = new UnitedMemoryLinks<TLinkAddress>(memory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep,
+                    new LinksConstants<TLinkAddress>(), IndexTreeType.Default);
+                return (links.DecorateWithAutomaticUniquenessAndUsagesRepointing(), memory);
+            }
+            catch { memory.Dispose(); throw; }
         }
 
         public static string MakeNamesDatabaseFilename(string databaseFilename)
@@ -77,8 +84,8 @@ namespace Foundation.Data.Doublets.Cli
             PinnedTypesDecorator = pinnedTypesDecorator;
             if (_tracingEnabled) Console.WriteLine($"[Trace] Constructing NamedTypesDecorator with names DB: {namesDatabaseFilename}");
             var namesConstants = new LinksConstants<TLinkAddress>(enableExternalReferencesSupport: true);
-            var namesMemory = new FileMappedResizableDirectMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
-            var namesLinks = new UnitedMemoryLinks<TLinkAddress>(namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
+            _namesMemory = new DurableMappedMemory(namesDatabaseFilename, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep);
+            var namesLinks = new UnitedMemoryLinks<TLinkAddress>(_namesMemory, UnitedMemoryLinks<TLinkAddress>.DefaultLinksSizeStep, namesConstants, IndexTreeType.Default);
             var decoratedNamesLinks = namesLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing();
             _namedLinksFacade = decoratedNamesLinks;
             NamedLinks = new UnicodeStringStorage<TLinkAddress>(decoratedNamesLinks).NamedLinks;
@@ -86,9 +93,14 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         public NamedTypesDecorator(string databaseFilename, bool tracingEnabled = false)
-            : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
+            : this(CreateOwnedStore(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
-            _dataDatabaseFilename = databaseFilename;
+        }
+
+        private NamedTypesDecorator((ILinks<TLinkAddress> Links, DurableMappedMemory Memory) store,
+            string namesFilename, bool tracingEnabled) : this(store.Links, namesFilename, tracingEnabled)
+        {
+            _dataMemory = store.Memory;
         }
 
         public void Dispose()

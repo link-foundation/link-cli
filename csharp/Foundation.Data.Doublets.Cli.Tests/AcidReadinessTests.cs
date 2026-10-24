@@ -4,6 +4,52 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class AcidReadinessTests
 {
+    [Fact]
+    public void OwnedMappingsFlushWhileWriterIsOpenAndReopenNames()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "acid-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "data.links");
+        try
+        {
+            using (var data = new NamedTypesDecorator<uint>(path))
+            {
+                Assert.True(data.SupportsDurableFlush);
+                var id = data.CreateAndUpdate(0u, 0u);
+                data.SetName(id, "durable 雪");
+                data.Flush();
+                data.SetName(id, "second flush");
+                data.Flush();
+            }
+            using var reopened = new NamedTypesDecorator<uint>(path);
+            Assert.Equal(1u, reopened.GetByName("second flush"));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [Fact]
+    public void DurableMappingFlushesAfterGrowthAndRejectsDisposedUse()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "mapping-" + Guid.NewGuid().ToString("N"));
+        var memory = new DurableMappedMemory(path, 4096);
+        try
+        {
+            System.Runtime.InteropServices.Marshal.WriteByte(memory.Pointer, 42);
+            memory.UsedCapacity = 1;
+            memory.ReservedCapacity *= 2;
+            Assert.Equal(42, System.Runtime.InteropServices.Marshal.ReadByte(memory.Pointer));
+            System.Runtime.InteropServices.Marshal.WriteByte(memory.Pointer, 1, 43);
+            memory.UsedCapacity = 2;
+            memory.Flush();
+            using (var reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            { Assert.Equal(42, reader.ReadByte()); Assert.Equal(43, reader.ReadByte()); }
+            memory.Dispose();
+            Assert.Throws<ObjectDisposedException>(() => memory.Flush());
+            Assert.Equal(new byte[] { 42, 43 }, File.ReadAllBytes(path));
+        }
+        finally { memory.Dispose(); File.Delete(path); }
+    }
+
     [Theory]
     [InlineData("commit:bad-id")]
     [InlineData("rollback:bad-id")]
