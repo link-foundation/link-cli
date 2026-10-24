@@ -14,3 +14,9 @@ crates.io trusted publishing now runs only when the
 `CRATES_IO_TRUSTED_PUBLISHING` repository variable is `true`. Attempting it
 unconditionally left a "No Trusted Publishing config found" error annotation on
 every successful release that published with the token secret.
+
+The crates.io, Docker Hub and GitHub release lookups that decide whether and
+which version to release now retry network failures, 429 and 5xx with backoff
+and fail with an error once their attempts run out. A failed lookup used to
+count as "not published", so a single dropped connection re-released a
+published version or bumped from a stale base.

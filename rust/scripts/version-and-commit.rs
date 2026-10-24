@@ -40,7 +40,6 @@
 
 use chrono::Utc;
 use regex::Regex;
-use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -55,6 +54,9 @@ mod release_changelog;
 
 #[path = "release-write.rs"]
 mod release_write;
+
+#[path = "registry.rs"]
+mod registry;
 
 use release_changelog::collect_changelog_with_date;
 use release_write::{classify_push_failure, update_cargo_lock, verify_release_write, PushFailure};
@@ -188,17 +190,6 @@ fn update_cargo_toml(cargo_toml_path: &str, new_version: &str) -> Result<(), Str
     Ok(())
 }
 
-#[derive(Deserialize)]
-struct CratesIoCrate {
-    versions: Option<Vec<CratesIoVersionEntry>>,
-}
-
-#[derive(Deserialize)]
-struct CratesIoVersionEntry {
-    num: String,
-    yanked: bool,
-}
-
 fn get_crate_name(cargo_toml_path: &str) -> Result<String, String> {
     let content = fs::read_to_string(cargo_toml_path)
         .map_err(|e| format!("Failed to read {}: {}", cargo_toml_path, e))?;
@@ -216,60 +207,9 @@ fn check_tag_exists(tag_prefix: &str, version: &str) -> bool {
     exec_check("git", &["rev-parse", &format!("{}{}", tag_prefix, version)])
 }
 
-fn check_version_on_crates_io(crate_name: &str, version: &str) -> bool {
-    let url = format!("https://crates.io/api/v1/crates/{}/{}", crate_name, version);
-    match ureq::get(&url)
-        .set("User-Agent", "rust-script-version-and-commit")
-        .call()
-    {
-        Ok(response) => response.status() == 200,
-        Err(_) => false,
-    }
-}
-
-fn get_max_published_version(crate_name: &str) -> Option<(u32, u32, u32)> {
-    let url = format!("https://crates.io/api/v1/crates/{}", crate_name);
-    match ureq::get(&url)
-        .set("User-Agent", "rust-script-version-and-commit")
-        .call()
-    {
-        Ok(response) => {
-            if response.status() == 200 {
-                if let Ok(body) = response.into_string() {
-                    if let Ok(data) = serde_json::from_str::<CratesIoCrate>(&body) {
-                        if let Some(versions) = data.versions {
-                            let mut max: Option<(u32, u32, u32)> = None;
-                            for v in &versions {
-                                if v.yanked {
-                                    continue;
-                                }
-                                let base = match v.num.split('-').next() {
-                                    Some(b) => b,
-                                    None => continue,
-                                };
-                                let parts: Vec<&str> = base.split('.').collect();
-                                if parts.len() == 3 {
-                                    if let (Ok(a), Ok(b), Ok(c)) = (
-                                        parts[0].parse::<u32>(),
-                                        parts[1].parse::<u32>(),
-                                        parts[2].parse::<u32>(),
-                                    ) {
-                                        let tuple = (a, b, c);
-                                        if max.map_or(true, |m| tuple > m) {
-                                            max = Some(tuple);
-                                        }
-                                    }
-                                }
-                            }
-                            return max;
-                        }
-                    }
-                }
-            }
-            None
-        }
-        Err(_) => None,
-    }
+fn version_published(crate_name: &str, version: &str) -> bool {
+    registry::version_published(crate_name, version)
+        .unwrap_or_else(|e| fail(&format!("crates.io lookup failed: {}", e)))
 }
 
 fn ensure_version_exceeds_published(
@@ -308,8 +248,7 @@ fn ensure_version_exceeds_published(
 
     let mut candidate = format!("{}.{}.{}", major, minor, patch);
     let mut safety_counter = 0;
-    while (check_tag_exists(tag_prefix, &candidate)
-        || check_version_on_crates_io(crate_name, &candidate))
+    while (check_tag_exists(tag_prefix, &candidate) || version_published(crate_name, &candidate))
         && safety_counter < 100
     {
         println!(
@@ -471,7 +410,8 @@ fn main() {
         Err(e) => fail(&e),
     };
 
-    let max_published = get_max_published_version(&crate_name);
+    let max_published = registry::max_published_version(&crate_name)
+        .unwrap_or_else(|e| fail(&format!("crates.io lookup failed: {}", e)));
     if let Some((ma, mi, pa)) = max_published {
         println!("Max published version on crates.io: {}.{}.{}", ma, mi, pa);
     } else {
