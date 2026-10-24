@@ -1,0 +1,122 @@
+name: Workflows
+
+# Lints the CI/CD definitions themselves (issue #134). Before this workflow
+# nothing ran actionlint or zizmor, and the workflow policy tests only ran
+# when a C# or Rust path changed, so a defect in docs.yml, wasm.yml or
+# links.yml reached main unchecked. Mirrors workflows.yml of the
+# rust/csharp/js ai-driven-development-pipeline templates.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/**'
+  workflow_dispatch:
+
+# Least-privilege default; these jobs only read the checked-out tree.
+permissions:
+  contents: read
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  actionlint:
+    name: Lint Workflows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-actionlint
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # The Docker image bundles shellcheck and pyflakes, so this also lints
+      # every `run:` block. A native actionlint binary without shellcheck on
+      # PATH silently skips the shell checks and exits 0. To reproduce locally:
+      #   docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+      #
+      # Pinned by digest because a mutable tag of a repository we do not
+      # control is arbitrary code execution (the `'*': hash-pin` policy of
+      # .github/zizmor.yml). Re-resolve when bumping:
+      #   docker pull rhysd/actionlint:<tag> &&
+      #   docker inspect --format='{{index .RepoDigests 0}}' rhysd/actionlint:<tag>
+      - name: Lint workflow files
+        uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 # v1.7.12
+        with:
+          args: -color
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-zizmor
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # actionlint cannot see workflow security defects: unpinned third-party
+      # actions, checkouts that persist GITHUB_TOKEN in .git/config, or
+      # template injection into `run:` blocks. zizmor covers those.
+      #
+      # Only .github is audited: dev/log keeps verbatim copies of the template
+      # workflows as evidence, and they are not run here.
+      #
+      # Annotations instead of SARIF, so findings fail the job loudly without
+      # depending on code scanning. `version` is named because the action's
+      # default is its own frozen table, not the latest zizmor. To reproduce:
+      #   pipx run zizmor==1.31.1 --config .github/zizmor.yml .github
+      - name: Audit workflow files
+        uses: zizmorcore/zizmor-action@v0.8.0
+        with:
+          inputs: .github
+          advanced-security: false
+          annotations: true
+          config: .github/zizmor.yml
+          version: 1.31.1
+
+      # The audits that cover container image references (`unpinned-images`
+      # among them) are pedantic-only, so the hash-pin policy is not enforced
+      # against `uses: docker://` by the regular pass above. Narrowing this
+      # pass to high severity and high confidence keeps that enforcement
+      # without the stylistic noise of the pedantic persona.
+      - name: Audit for pedantic-only high-severity findings
+        timeout-minutes: 5
+        run: |
+          pipx run zizmor==1.31.1 --config .github/zizmor.yml \
+            --persona pedantic --min-severity high --min-confidence high \
+            .github
+
+  policy:
+    name: Workflow Policy Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-policy
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Run workflow policy tests
+        run: node --test .github/scripts/*.test.mjs
