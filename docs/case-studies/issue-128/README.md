@@ -60,6 +60,11 @@ notation crate (0.26.0 → 0.27.1), and Lucide (1.57.0 → 1.61.0) and Vite
 (8.3.4 → 8.3.5) in the JavaScript manifest and lockfile. Dependency updates and
 lockfiles are included to satisfy the repository's existing freshness policy.
 
+A fresh local check also identified nine stale transitive lockfile entries:
+libc and memmap2 in the native, WebAssembly, and external-range evidence
+lockfiles, plus cc, find-msvc-tools, and Tokio in the WebAssembly lockfile. Those
+compatible updates are included as well.
+
 Local command output and downloaded CI logs are retained in the ignored
 `ci-logs/` directory beside this document. The PR description records final
 validation and CI links.
