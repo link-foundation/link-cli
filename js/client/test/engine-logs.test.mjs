@@ -82,3 +82,9 @@ test('diagnostic callback failures cannot change replication results', () => {
   });
   assert.equal(log.synchronize(), 1);
 });
+
+test('replicated reads return the authoritative primary journal before catch-up', () => {
+  const primary = new MemoryCommitLog(['committed']);
+  const log = new ReplicatedCommitLog(primary, [new MemoryCommitLog()]);
+  assert.equal(log.read(), '["committed"]');
+});

@@ -102,3 +102,19 @@ C# suite passes 604 tests, measuring 5,539/6,247 lines (88.66%) and 2,283/2,880
 branches (79.27%). Actual WASM conformance, including coordinated groups, passes
 on Node, Bun and Deno. Native and WASM Clippy, formatting and TypeScript checks
 pass. These measurements still leave the project-wide 100% requirement unmet.
+
+## Complete JS module coverage and deadline regression
+
+The complete JS unit suite now passes 84 tests and measures 100% lines, branches
+and functions across all 15 production modules. The CI unit job enforces all
+three thresholds and includes `src/**`. These are V8 execution measurements for
+the JS package, not execution coverage for the underlying WASM/native engines.
+
+A deterministic clock reproduces a TCP deadline expiring while its cancellation
+watcher is being registered. Previously the callback removed a different queued
+request, then transmitted the expired request despite reporting `not-sent`.
+Queueing the entry before registering its watcher preserves both requests'
+semantics. The regression checks the actual next frame written to the socket.
+Before/after excerpts and the full coverage summary are preserved with the PR's
+other evidence. Additional tests verify current-revision snapshots, authoritative
+replica reads, and cancellation before a queued WASM request reaches native code.

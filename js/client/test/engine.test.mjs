@@ -140,3 +140,12 @@ test('branches pass policies and capabilities, retain ownership and classify unc
   assert.equal(events.filter((event) => event === 'session freed').length, 2);
   assert.equal(events.at(-1), 'parent freed');
 });
+
+test('snapshot without a revision requests the current native state', () => {
+  class Native {
+    snapshot(revision) { assert.equal(revision, undefined); return '{"revision":"0","rows":[]}'; }
+    free() {}
+  }
+  const engine = new WasmEngine({ StagedEngine: Native });
+  assert.deepEqual(engine.snapshot(), { revision: 0n, rows: [] }); engine.close();
+});

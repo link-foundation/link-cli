@@ -17,6 +17,8 @@ on:
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
+      - 'examples/cluster-csharp/**'
+      - 'experiments/issue-138/etcd-cluster.mjs'
   pull_request:
     branches:
       - main
@@ -27,6 +29,8 @@ on:
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
+      - 'examples/cluster-csharp/**'
+      - 'experiments/issue-138/etcd-cluster.mjs'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -101,8 +105,12 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Unit tests
-        run: npm test -- --test-timeout=30000
+      - name: Unit tests and complete production coverage
+        run: >-
+          node --test --test-concurrency=1 --test-timeout=30000
+          --experimental-test-coverage --test-coverage-include='src/**'
+          --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100
+          test/*.test.mjs
 
       - name: Type declarations
         run: npm run typecheck
@@ -191,7 +199,7 @@ jobs:
 
       - name: Preserve consensus member logs
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: issue-138-etcd-logs
           path: experiments/issue-138/etcd/run-*/*.log

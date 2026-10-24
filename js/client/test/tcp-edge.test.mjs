@@ -64,3 +64,18 @@ test('graceful close forcibly ends an unresponsive owned peer after its grace pe
   await closing;
   assert.equal(socket.destroyed, true);
 });
+
+test('a deadline expiring during registration cannot remove another queued request or send expired work', async (t) => {
+  const socket = new Socket(); const transport = new TcpTransport(socket, { maxInFlight: 1 });
+  const first = transport.send('first'); const second = transport.send('second');
+  second.catch(() => {});
+  let checks = 0; const clock = t.mock.method(Date, 'now', () => ++checks === 1 ? 99 : 100);
+  try {
+    const expired = transport.send('expired', { deadline: 100 });
+    await assert.rejects(expired, { outcome: 'not-sent', name: 'DeadlineExceededError' });
+    clock.mock.restore();
+    socket.emit('data', encodeMessage('first reply')); await first;
+    assert.deepEqual(new MessageReader().push(socket.writes[1]), ['second']);
+    socket.emit('data', encodeMessage('second reply')); assert.equal(await second, 'second reply');
+  } finally { clock.mock.restore(); transport.destroy(); await transport.close(); }
+});
