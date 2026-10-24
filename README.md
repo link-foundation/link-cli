@@ -279,8 +279,9 @@ clink --db family.links '((($index: $source $target)) (($index: $target $source)
 (child: mother father)
 ```
 
-If a name contains spaces, parentheses, colons, or quotes, the exporter quotes
-it in LiNo output.
+If a name contains spaces, parentheses, colons, quotes, or backslashes, the C#
+exporter quotes it in LiNo output. Names containing control characters or both
+quote kinds use lossless reference literals, as described below.
 
 ## Structure formatting
 
@@ -310,7 +311,7 @@ clink --db structure.links --structure 4
 
 Use `--in`, `--import`, or `--lino-input` to read a `.lino` file before the
 query runs. Import accepts one complete two-value link definition per non-empty
-line.
+line. In C#, a quoted name can span physical lines.
 
 Both implementations parse and validate the entire LiNo input before changing
 links or names. A malformed file leaves an empty or populated database unchanged
@@ -328,6 +329,30 @@ termination during writes retain the underlying store's durability guarantees.
 ```bash
 clink --db imported.links --import family.lino --export exported.lino
 ```
+
+The **C# importer treats backslashes literally** inside single, double, or
+backtick quotes. For example, `'x\y'`, `'C:\Users\name\'`, and `'literal\n'`
+keep every backslash; `\n` is two characters, not an escape for a newline. Choose
+a quote delimiter absent from the name, or use a lossless reference literal:
+
+```lino
+(path: path 'C:\Users\name\')
+(mixed: mixed `both'"quotes`)
+(multiline: multiline ~1{610d0a62})
+```
+
+`~1{610d0a62}` represents `a`, CRLF, then `b`: the braces hold the exact UTF-8
+bytes as hexadecimal. The C# importer and exporter share this literal format
+with the LiNo protocol library. Unsupported versions, malformed hexadecimal,
+and invalid UTF-8 are rejected. A quoted `'~1{31}'` is the literal name
+`~1{31}`, while bare `~1{31}` decodes to the name `1`. Quoted and encoded numeric
+names remain distinct from bare link addresses.
+
+The C# exporter uses these literals for control characters (including newlines)
+and names containing both single and double quotes. Exported definitions stay
+on one physical line and can be imported into a fresh database without changing
+the names. Existing text exports that used backslashes to escape quotes should
+be rewritten using another quote delimiter or a reference literal.
 
 For large **Rust** named imports, opt into lookup-index decorators:
 

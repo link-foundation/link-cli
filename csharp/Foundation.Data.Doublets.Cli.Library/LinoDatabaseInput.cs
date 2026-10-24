@@ -1,6 +1,8 @@
 using Platform.Data;
 using Platform.Data.Doublets;
 using System.Text;
+using System.Text.RegularExpressions;
+using ReferenceLiteral = Link.Foundation.Links.Notation.ReferenceLiteral;
 
 using DoubletLink = Platform.Data.Doublets.Link<uint>;
 
@@ -148,33 +150,39 @@ public static class LinoDatabaseInput
 
     private static IEnumerable<ImportDefinition> ParseDefinitions(string linksNotation)
     {
-        var lineNumber = 0;
-        foreach (var rawLine in linksNotation.Split('\n'))
-        {
-            lineNumber++;
-            var line = rawLine.Trim();
-            if (line.Length == 0)
-            {
-                continue;
-            }
-
-            yield return new LineParser(line, lineNumber).Parse();
-        }
+        return new ImportParser(linksNotation).Parse();
     }
 
-    private sealed class LineParser
+    private sealed class ImportParser
     {
-        private readonly string _line;
-        private readonly int _lineNumber;
+        private readonly string _text;
         private int _position;
 
-        public LineParser(string line, int lineNumber)
+        public ImportParser(string text)
         {
-            _line = line;
-            _lineNumber = lineNumber;
+            _text = text;
         }
 
-        public ImportDefinition Parse()
+        public IEnumerable<ImportDefinition> Parse()
+        {
+            while (true)
+            {
+                // Physical newlines separate definitions only outside quoted names.
+                while (_position < _text.Length && char.IsWhiteSpace(_text[_position]))
+                {
+                    _position++;
+                }
+
+                if (_position == _text.Length)
+                {
+                    yield break;
+                }
+
+                yield return ParseDefinition();
+            }
+        }
+
+        private ImportDefinition ParseDefinition()
         {
             SkipWhitespace();
             Expect('(');
@@ -191,7 +199,7 @@ public static class LinoDatabaseInput
             Expect(')');
             SkipWhitespace();
 
-            if (_position != _line.Length)
+            if (_position < _text.Length && _text[_position] is not '\r' and not '\n')
             {
                 throw Error("Unexpected trailing content.");
             }
@@ -202,21 +210,21 @@ public static class LinoDatabaseInput
         private ImportReference ReadReference(bool stopAtColon)
         {
             SkipWhitespace();
-            if (_position >= _line.Length)
+            if (_position >= _text.Length)
             {
                 throw Error("Expected reference.");
             }
 
-            var first = _line[_position];
-            if (first is '\'' or '"')
+            var first = _text[_position];
+            if (first is '\'' or '"' or '`')
             {
                 return new ImportReference(ReadQuotedReference(first), IsQuoted: true);
             }
 
             var start = _position;
-            while (_position < _line.Length)
+            while (_position < _text.Length)
             {
-                var current = _line[_position];
+                var current = _text[_position];
                 if (char.IsWhiteSpace(current) || current == ')' || (stopAtColon && current == ':'))
                 {
                     break;
@@ -230,7 +238,21 @@ public static class LinoDatabaseInput
                 throw Error("Expected reference.");
             }
 
-            return new ImportReference(_line[start.._position], IsQuoted: false);
+            var token = _text[start.._position];
+            if (Regex.IsMatch(token, @"^~[0-9]+\{"))
+            {
+                try
+                {
+                    // Literals are names even when their decoded text is numeric.
+                    return new ImportReference(ReferenceLiteral.Decode(token), IsQuoted: true);
+                }
+                catch (FormatException error)
+                {
+                    throw Error(error.Message);
+                }
+            }
+
+            return new ImportReference(token, IsQuoted: false);
         }
 
         private string ReadQuotedReference(char quote)
@@ -238,20 +260,16 @@ public static class LinoDatabaseInput
             _position++;
             var value = new StringBuilder();
 
-            while (_position < _line.Length)
+            while (_position < _text.Length)
             {
-                var current = _line[_position++];
+                var current = _text[_position++];
                 if (current == quote)
                 {
                     return value.ToString();
                 }
 
-                if (current == '\\' && _position < _line.Length)
-                {
-                    value.Append(_line[_position++]);
-                    continue;
-                }
-
+                // Like LiNo quoted references, backslashes are literal, including
+                // a trailing backslash immediately before the closing quote.
                 value.Append(current);
             }
 
@@ -261,7 +279,7 @@ public static class LinoDatabaseInput
         private void Expect(char expected)
         {
             SkipWhitespace();
-            if (_position >= _line.Length || _line[_position] != expected)
+            if (_position >= _text.Length || _text[_position] != expected)
             {
                 throw Error($"Expected '{expected}'.");
             }
@@ -271,7 +289,8 @@ public static class LinoDatabaseInput
 
         private void SkipWhitespace()
         {
-            while (_position < _line.Length && char.IsWhiteSpace(_line[_position]))
+            while (_position < _text.Length && char.IsWhiteSpace(_text[_position])
+                && _text[_position] is not '\r' and not '\n')
             {
                 _position++;
             }
@@ -279,7 +298,8 @@ public static class LinoDatabaseInput
 
         private FormatException Error(string message)
         {
-            return new FormatException($"Invalid LiNo import line {_lineNumber}: {message}");
+            var lineNumber = 1 + _text.AsSpan(0, _position).Count('\n');
+            return new FormatException($"Invalid LiNo import line {lineNumber}: {message}");
         }
     }
 

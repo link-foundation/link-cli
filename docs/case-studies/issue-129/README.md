@@ -44,11 +44,34 @@ in the same invocation keep their existing behavior.
 | Exit 1 and preserve state after reopening | C# `InvalidLastLine_LeavesDatabaseUnchangedAfterReopening`; Rust `invalid_import_preserves_database_after_reopening` compare binary exports, including addresses and names, from separate processes |
 | Support all LiNo input aliases and optional decorators | CLI tests cover `--import`, `--in`, `--lino-input`, and transactions; Rust also covers indexed lookups |
 | Preserve successful imports | Existing numeric, named, quoted-name, round-trip, and indexed-import tests |
+| Preserve atomicity with the latest C# name syntax | Malformed hexadecimal/UTF-8 literals leave empty and populated stores unchanged; `ImportText_InvalidInputAfterMultilineNamesLeavesLinksAndNamesUnchanged` covers LF/CRLF names, trailing Windows-path backslashes, existing-link updates, and line-4 diagnostics |
 
 Before the fix, the focused C# run had 9 failures and 6 passes, and the Rust
 library regression failed with a nonempty store where an empty one was expected.
 After the fix, these regressions pass. Local investigation logs are kept in the
 ignored `ci-logs/` directory beside this document.
+
+## Integration with the latest default branch
+
+PR #131 added lossless backslash, multiline-name, and reference-literal parsing
+while this fix was under review. Merging `main` at `a9f3613` (including the C#
+4.0.3 release) conflicted in `csharp/README.md`; both documentation sections are
+retained. The combined parser keeps that name syntax and validates all
+definitions before writing.
+
+The regression cases for malformed literals and multiline names were checked
+against the lazy importer by temporarily removing `.ToArray()`: all ten focused
+cases failed because earlier definitions changed the store. Restoring eager
+validation passes all 518 C# tests, including upstream's import/export
+round-trip coverage. The C# and Rust patch release fragments remain in place.
+
+The merged branch also passes 359 Rust tests including doctests (two existing
+ignored tests), six WebAssembly tests, 110 repository/script checks, and 37 JS
+client tests. Client conformance passes on Node.js, Bun, and Deno with 32 passed
+and four expected skips per runtime. Formatting, Rust/WebAssembly clippy, client
+type checking, the web build, and dependency freshness checks pass. The local
+WebAssembly package uses the development profile to fit the container memory
+limit; CI verifies the optimized release build.
 
 Run the regression suites with:
 

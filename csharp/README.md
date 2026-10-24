@@ -56,6 +56,12 @@ LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
 writing. Invalid input leaves existing links and names unchanged, without
 requiring `--transactions`.
 
+LiNo import/export preserves backslashes literally in quoted names, including
+Windows paths and a backslash immediately before the closing delimiter. Names
+with newlines or both quote kinds export as the notation library's lossless
+`~1{UTF-8 hex}` reference literals. See the
+[import syntax and examples](../README.md#import-database-from-lino).
+
 ### Optional Transactions and Version Control
 
 Pass `--transactions` (or any flag in the family — `--transactions-file`,
