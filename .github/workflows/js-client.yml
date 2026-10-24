@@ -12,6 +12,7 @@ on:
       - main
     paths:
       - '.github/workflows/js-client.yml'
+      - '.github/scripts/verify-npm-trust*'
       - 'js/client/**'
       - 'rust/**'
       - 'csharp/**'
@@ -21,11 +22,17 @@ on:
       - main
     paths:
       - '.github/workflows/js-client.yml'
+      - '.github/scripts/verify-npm-trust*'
       - 'js/client/**'
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
   workflow_dispatch:
+    inputs:
+      verify_trusted_publishing:
+        description: 'Verify npm OIDC authentication without publishing'
+        type: boolean
+        default: false
 
 # Concurrency is set per job (issue #134): superseded read-only checks are
 # cancelled on pull requests, while writer jobs share a never-cancelled
@@ -45,7 +52,31 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  verify-trusted-publishing:
+    name: Verify npm trusted publishing
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Verify npm OIDC exchange
+        run: node .github/scripts/verify-npm-trust.mjs
+
   unit:
+    if: inputs.verify_trusted_publishing != true
     name: Unit tests and types
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -77,6 +108,7 @@ jobs:
         run: npm run typecheck
 
   conformance:
+    if: inputs.verify_trusted_publishing != true
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-24.04
     timeout-minutes: 40
