@@ -6,3 +6,4 @@ https://github.com/link-foundation/csharp-ai-driven-development-pipeline-templat
 https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/219
 https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/261
 https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/77
+https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/78
