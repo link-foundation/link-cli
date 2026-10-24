@@ -1,0 +1,12 @@
+=== cargo audit --file rust/Cargo.lock --deny warnings
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1352 security advisories (from /home/box/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning rust/Cargo.lock for vulnerabilities (61 crate dependencies)
+exit=0
+=== cargo audit --file rust/wasm/Cargo.lock --deny warnings
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1352 security advisories (from /home/box/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning rust/wasm/Cargo.lock for vulnerabilities (96 crate dependencies)
+exit=0

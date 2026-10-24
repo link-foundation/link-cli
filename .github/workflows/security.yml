@@ -124,8 +124,15 @@ jobs:
         with:
           tool: cargo-audit@0.22.2
 
+      # `unmaintained`, `unsound` and `yanked` advisories are warnings, and a
+      # warning does not move `cargo audit`'s exit status: it prints
+      # "warning: N allowed warnings found" and exits 0, so the job passed while
+      # showing findings (issue #134). Ported from the
+      # rust-ai-driven-development-pipeline-template.
       - name: Audit committed Cargo.lock
-        run: cargo audit --file ${{ matrix.manifest }}/Cargo.lock
+        env:
+          MANIFEST: ${{ matrix.manifest }}
+        run: cargo audit --file "$MANIFEST/Cargo.lock" --deny warnings
 
   npm-audit:
     name: Audit npm lock

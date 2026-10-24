@@ -387,6 +387,18 @@ test('the Rust and C# pipelines simulate a fresh merge on pull requests', () => 
 // The dependency check reads every manifest git tracks (issue #104), so
 // Dependabot must watch each of their directories, or nothing proposes the
 // update the check asks for.
+// cargo audit reports unmaintained, unsound and yanked advisories as warnings
+// and still exits 0, so the audit job passed while listing findings.
+test('every cargo audit invocation denies warnings', () => {
+  const offenders = workflows.flatMap(({ name, text }) =>
+    text
+      .split('\n')
+      .filter((line) => /^\s*run: cargo audit\b/.test(line) && !/--deny warnings\b/.test(line))
+      .map((line) => `${name}: ${line.trim()}`),
+  );
+  assert.deepEqual(offenders, []);
+});
+
 test('Dependabot watches every directory the dependency check reads', () => {
   const config = readFileSync(join(repoRoot, '.github', 'dependabot.yml'), 'utf8');
   const watched = (ecosystem) => {
