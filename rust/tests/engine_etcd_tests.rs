@@ -33,7 +33,7 @@ fn peer_raw_headers(
     listener.set_nonblocking(true).unwrap();
     let handle = thread::spawn(move || {
         let mut requests = Vec::new();
-        for reply in replies {
+        for (request_index, reply) in replies.into_iter().enumerate() {
             let deadline = Instant::now() + Duration::from_secs(5);
             let mut stream = loop {
                 match listener.accept() {
@@ -47,6 +47,9 @@ fn peer_raw_headers(
                     Err(cause) => panic!("bounded peer accept failed: {cause}"),
                 }
             };
+            // Winsock inherits the listener's nonblocking mode. Restore
+            // blocking reads before applying the finite request deadlines.
+            stream.set_nonblocking(false).unwrap();
             stream
                 .set_read_timeout(Some(Duration::from_secs(2)))
                 .unwrap();
@@ -56,7 +59,12 @@ fn peer_raw_headers(
             let mut bytes = Vec::new();
             let mut byte = [0];
             while !bytes.ends_with(b"\r\n\r\n") {
-                stream.read_exact(&mut byte).unwrap();
+                stream.read_exact(&mut byte).unwrap_or_else(|cause| {
+                    panic!(
+                        "peer request {request_index}: header read failed after {} bytes: {cause}",
+                        bytes.len()
+                    )
+                });
                 bytes.push(byte[0]);
                 assert!(bytes.len() < 8192);
             }
@@ -269,10 +277,9 @@ fn etcd_safe_read_failover_but_lost_mutation_response_is_not_replayed() {
         Some(json!({"succeeded":true,"responses":[{"response_range":{}}]})),
         None,
     ]);
-    // A closed local port is an immediate transport failure, not an external dependency.
-    let absent = TcpListener::bind("127.0.0.1:0").unwrap();
-    let absent_url = format!("http://{}", absent.local_addr().unwrap());
-    drop(absent);
+    // Consume one request then close without a reply. Keeping this endpoint
+    // owned avoids a released port being reused by a parallel fixture.
+    let (absent_url, unavailable) = peer(vec![None]);
     let mut store = EtcdJournalStore::new(vec![absent_url, endpoint], "/test/".into()).unwrap();
     let keys = vec!["a".into()];
     let snapshot = store.read(&keys).unwrap();
@@ -280,6 +287,7 @@ fn etcd_safe_read_failover_but_lost_mutation_response_is_not_replayed() {
         .compare_exchange(&keys, &snapshot, &[Some(vec!["new".into()])])
         .is_err());
     assert_eq!(handle.join().unwrap().len(), 2);
+    assert_eq!(unavailable.join().unwrap().len(), 1);
 }
 #[test]
 fn etcd_invalid_wire_responses_fail_closed() {

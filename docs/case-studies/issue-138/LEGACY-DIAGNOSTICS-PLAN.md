@@ -22,7 +22,14 @@ The staged-engine fix does not establish their behavior.
 - [x] Verify a real Rust TCP request and subsequent read while stderr fails.
 - [x] Run focused regressions, complete native suites, actual WASM, formatting
   and coverage.
-- [ ] Publish and inspect exact-SHA CI.
+- [x] Publish and inspect exact-SHA CI.
+
+Exact-SHA CI for `e652c2c` completes with 35 successful checks, 11 skipped,
+one neutral and one Windows Rust failure. The failed job is an existing etcd
+socket fixture, not a diagnostic/retention regression. The complete workflow
+and failed-job logs are downloaded; the specific errors and portable fixture
+corrections are preserved in `dev/log/issues/138/pulls/139/windows-peer.txt`.
+Fresh Windows verification of that correction remains required.
 
 All inputs, subprocess counts and stored rows are finite. A diagnostic fault
 does not simulate storage failure or power loss. Normal query result output
