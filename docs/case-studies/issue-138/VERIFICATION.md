@@ -552,3 +552,33 @@ All 17 actual WASM tests pass. Wrapper source measures 331/331 lines,
 core, the complete report measures 2,729/9,179 lines (29.73%), 392/1,293 branches
 (30.32%), 347/1,316 functions and 3,943/14,408 regions. Native/WASM Clippy deny
 warnings; Rust and C# formatting verification passes.
+
+## Failed manual rollback admission
+
+An ordinary explicit transaction can reach rollback with a complete journal,
+then fail during undo or rollback persistence. Sixteen new tests in each native
+language first reproduce accepting either commit or another write after that
+failure. The earlier journal-error fence does not cover this path because no
+append error preceded rollback. Both implementations now choose rollback-only
+before beginning undo, retaining the abort decision until cleanup succeeds.
+
+One-shot faults cover both sides of undo, data flush, rollback-marker append
+and journal flush. Commit and write rejection have independent cases. All
+focused cases pass, including exact baseline restoration on retry, a following
+commit and persistent reopening. Fixtures start with two rows and do not crash
+the process or stress memory. See [ROLLBACK-FAILURE-PLAN.md](ROLLBACK-FAILURE-PLAN.md)
+and `dev/log/issues/138/pulls/139/rollback-failures.txt` for reproduction evidence.
+
+The full Rust suite passes 526 standard tests and the separate stdout harness,
+with four child entry points ignored. Coverage measures 9,033/10,008 lines
+(90.26%), 1,450/1,842 branches (78.72%), 1,218/1,380 functions and
+13,687/15,767 regions. C# Debug and Release each pass 761 tests. Debug measures
+5,849/6,506 lines (89.90%) and 2,557/3,084 branches (82.91%); Release measures
+4,439/4,856 lines (91.41%) and 2,536/3,065 branches (82.74%). Coverage remains
+below the requested 100%; source inclusions are unchanged.
+
+All 17 actual WASM tests pass. Wrapper source remains 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. Including linked
+core, the complete report measures 2,729/9,182 lines (29.72%), 392/1,295 branches
+(30.27%), 347/1,316 functions and 3,943/14,412 regions. Native/WASM Clippy deny
+warnings; Rust and C# formatting verification passes.

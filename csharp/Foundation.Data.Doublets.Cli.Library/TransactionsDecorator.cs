@@ -360,7 +360,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             {
                 if (_current.IsRollbackOnly)
                 {
-                    throw new InvalidOperationException("Journal failure requires rollback before further writes.");
+                    throw new InvalidOperationException("Transaction requires rollback before further writes.");
                 }
                 ownsTransaction = false;
             }
@@ -549,7 +549,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             if (transaction.IsCommitted || transaction.IsRolledBack) return;
             if (transaction.IsRollbackOnly)
             {
-                throw new InvalidOperationException("Cannot commit after a journal failure; rollback is required.");
+                throw new InvalidOperationException("Cannot commit a rollback-only transaction; rollback is required.");
             }
             WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
             _flushLog();
@@ -585,6 +585,8 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_lock)
         {
             if (transaction.IsCommitted || transaction.IsRolledBack) return;
+            // A failed undo or persistence step must preserve the abort decision.
+            transaction.MarkRollbackOnly();
             _replaying = true;
             try
             {

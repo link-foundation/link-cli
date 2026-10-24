@@ -541,7 +541,7 @@ where
     fn ensure_open_transaction(&mut self) -> Result<bool, LinkError> {
         if self.current.as_ref().is_some_and(|tx| tx.rollback_only) {
             return Err(LinkError::Transaction(
-                "Journal failure requires rollback before further writes.".into(),
+                "Transaction requires rollback before further writes.".into(),
             ));
         }
         if self.current.is_none() {
@@ -712,7 +712,7 @@ where
         };
         if current.rollback_only {
             return Err(LinkError::Transaction(
-                "Cannot commit after a journal failure; rollback is required.".into(),
+                "Cannot commit a rollback-only transaction; rollback is required.".into(),
             ));
         }
         let id = current.id;
@@ -743,6 +743,11 @@ where
     }
 
     pub fn rollback(&mut self) -> Result<(), LinkError> {
+        // Once undo begins, an error can leave the data partially restored.
+        // Keep the abort decision until every rollback step succeeds.
+        if let Some(current) = self.current.as_mut() {
+            current.rollback_only = true;
+        }
         let pending = match self.current.clone() {
             Some(p) => p,
             None => return Ok(()),

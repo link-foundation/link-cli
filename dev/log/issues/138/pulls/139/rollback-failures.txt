@@ -1,0 +1,215 @@
+Issue 138 / PR 139: failed manual rollback fencing
+Baseline: 39a3173a9fb9fd32791f3bea5452ec53048d03ed
+
+Two baseline rows, two updates, one one-shot fault. No crash or power-loss claim.
+Boundaries: before/after undo, data flush, rollback marker and journal flush.
+Commit and write guards have independent cases; all 16 fail in each language.
+
+
+=== rollback-rust-before.log ===
+6: test data_before_rejects_write ... FAILED
+7: test data_after_rejects_write ... FAILED
+8: test log_after_rejects_write ... FAILED
+9: test data_before_rejects_commit ... FAILED
+10: test data_after_rejects_commit ... FAILED
+11: test log_after_rejects_commit ... FAILED
+12: test log_before_rejects_write ... FAILED
+13: test log_before_rejects_commit ... FAILED
+14: test marker_after_rejects_write ... FAILED
+15: test marker_after_rejects_commit ... FAILED
+16: test marker_before_rejects_write ... FAILED
+17: test marker_before_rejects_commit ... FAILED
+18: test undo_after_rejects_write ... FAILED
+19: test undo_before_rejects_write ... FAILED
+20: test undo_after_rejects_commit ... FAILED
+21: test undo_before_rejects_commit ... FAILED
+28: failed rollback must reject further writes
+34: failed rollback must reject further writes
+39: failed rollback must reject further writes
+44: failed rollback must reject commit
+49: failed rollback must reject commit
+54: failed rollback must reject commit
+59: failed rollback must reject further writes
+64: failed rollback must reject commit
+69: failed rollback must reject further writes
+74: failed rollback must reject commit
+79: failed rollback must reject further writes
+84: failed rollback must reject commit
+89: failed rollback must reject further writes
+94: failed rollback must reject further writes
+99: failed rollback must reject commit
+104: failed rollback must reject commit
+125: test result: FAILED. 0 passed; 16 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+
+=== rollback-csharp-before.log ===
+11: [xUnit.net 00:00:00.92]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-before", commit: False) [FAIL]
+12: [xUnit.net 00:00:01.00]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-after", commit: False) [FAIL]
+13: [xUnit.net 00:00:01.08]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "undo-before", commit: True) [FAIL]
+14: [xUnit.net 00:00:01.15]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-before", commit: True) [FAIL]
+15: [xUnit.net 00:00:01.23]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-before", commit: False) [FAIL]
+16: [xUnit.net 00:00:01.30]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-after", commit: True) [FAIL]
+17: [xUnit.net 00:00:01.39]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "undo-after", commit: True) [FAIL]
+20:    Assert.Throws() Failure: No exception was thrown
+21: Expected: typeof(System.InvalidOperationException)
+23:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+28:    Assert.Throws() Failure: No exception was thrown
+29: Expected: typeof(System.InvalidOperationException)
+31:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+36:    Assert.Throws() Failure: No exception was thrown
+37: Expected: typeof(System.InvalidOperationException)
+39:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+44:    Assert.Throws() Failure: No exception was thrown
+45: Expected: typeof(System.InvalidOperationException)
+47:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+52:    Assert.Throws() Failure: No exception was thrown
+53: Expected: typeof(System.InvalidOperationException)
+55:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+60:    Assert.Throws() Failure: No exception was thrown
+61: Expected: typeof(System.InvalidOperationException)
+63:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+66: [xUnit.net 00:00:01.49]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "log-after", commit: True) [FAIL]
+67: [xUnit.net 00:00:01.57]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "undo-before", commit: False) [FAIL]
+68: [xUnit.net 00:00:01.67]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "log-before", commit: True) [FAIL]
+69: [xUnit.net 00:00:01.75]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-after", commit: False) [FAIL]
+70: [xUnit.net 00:00:01.84]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "marker-before", commit: True) [FAIL]
+71: [xUnit.net 00:00:01.93]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "data-after", commit: True) [FAIL]
+72: [xUnit.net 00:00:02.01]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "log-after", commit: False) [FAIL]
+73: [xUnit.net 00:00:02.08]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "log-before", commit: False) [FAIL]
+76:    Assert.Throws() Failure: No exception was thrown
+77: Expected: typeof(System.InvalidOperationException)
+79:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+84:    Assert.Throws() Failure: No exception was thrown
+85: Expected: typeof(System.InvalidOperationException)
+87:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+92:    Assert.Throws() Failure: No exception was thrown
+93: Expected: typeof(System.InvalidOperationException)
+95:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+100:    Assert.Throws() Failure: No exception was thrown
+101: Expected: typeof(System.InvalidOperationException)
+103:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+108:    Assert.Throws() Failure: No exception was thrown
+109: Expected: typeof(System.InvalidOperationException)
+111:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+116:    Assert.Throws() Failure: No exception was thrown
+117: Expected: typeof(System.InvalidOperationException)
+119:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+124:    Assert.Throws() Failure: No exception was thrown
+125: Expected: typeof(System.InvalidOperationException)
+127:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 79
+132:    Assert.Throws() Failure: No exception was thrown
+133: Expected: typeof(System.InvalidOperationException)
+135:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+140:    Assert.Throws() Failure: No exception was thrown
+141: Expected: typeof(System.InvalidOperationException)
+143:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+146: [xUnit.net 00:00:02.18]     Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(point: "undo-after", commit: False) [FAIL]
+149:    Assert.Throws() Failure: No exception was thrown
+150: Expected: typeof(System.InvalidOperationException)
+152:      at Foundation.Data.Doublets.Cli.Tests.TransactionRollbackFailureTests.FailedRollbackRequiresCleanupBeforeCommitOrWrite(String point, Boolean commit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionRollbackFailureTests.cs:line 80
+156: Failed!  - Failed:    16, Passed:     0, Skipped:     0, Total:    16, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+=== rollback-rust-after.log ===
+27: test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.46s
+49: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+
+=== rollback-csharp-focused.log ===
+12: Passed!  - Failed:     0, Passed:    16, Skipped:     0, Total:    16, Duration: 2 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+=== rollback-final-native-focused.log ===
+9: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+27: test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+39: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+61: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+72: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+=== rollback-rust-full.log ===
+34: test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+40: test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+52: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+74: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+94: test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+103: test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+113: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+121: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s
+130: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 69.47s
+137: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+147: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+163: test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s
+180: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+188: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+196: test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.34s
+199: stdout diagnostic subprocess: passed
+210: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+218: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+244: test result: ok. 15 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.06s
+259: test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.03s
+267: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+278: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+292: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+306: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+320: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+348: test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+362: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+375: test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+384: test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+395: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+405: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+415: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+447: test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+458: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+469: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+480: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+494: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+508: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+525: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+534: test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+564: test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.79s
+588: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+602: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+616: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+651: test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+675: test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+691: test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+711: test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.78s
+745: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+755: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+777: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+789: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.00s
+809: test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.77s
+817: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+835: test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.54s
+861: test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s
+873: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+881: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+903: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+914: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+925: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+942: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+961: test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+
+=== rollback-rust-clippy.log ===
+2:     Finished `dev` profile [unoptimized] target(s) in 13.84s
+
+=== rollback-csharp-Debug-full.log ===
+12: Passed!  - Failed:     0, Passed:   761, Skipped:     0, Total:   761, Duration: 21 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+=== rollback-csharp-Release-full.log ===
+12: Passed!  - Failed:     0, Passed:   761, Skipped:     0, Total:   761, Duration: 22 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+Rust: 9033/10008 lines, 1450/1842 branches.
+C# Debug: 5849/6506 lines, 2557/3084 branches.
+C# Release: 4439/4856 lines, 2536/3065 branches.
+No source exclusions added. Full project coverage remains below 100%.
+
+=== rollback-wasm-coverage.log ===
+5:     Finished `test` profile [unoptimized] target(s) in 8.65s
+19: test result: ok. 9 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.11s
+33: test result: ok. 8 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.11s
+36:     Finished report saved to /tmp/gh-issue-solver-1792854251187/experiments/issue-138/wasm-coverage.json
+
+=== rollback-wasm-clippy.log ===
+3:     Finished `dev` profile [unoptimized] target(s) in 2.31s
+
+Actual WASM wrappers: 331/331 lines, 16/16 branches.
+Including linked core: 2729/9182 lines, 392/1295 branches.
+Native/WASM Clippy and Rust/C# formatting pass.

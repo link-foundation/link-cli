@@ -274,3 +274,8 @@ forward upstream cascade callbacks, including uniqueness merges and dependent
 deletes. These in-process undo guarantees do not close the legacy crash window
 between in-place mutation and its journal append; use the staged engine when
 unpublished mutations must stay outside the authoritative store.
+
+Beginning rollback also makes the legacy transaction rollback-only before any
+undo or persistence step. An error during undo, data flush, rollback-marker append
+or journal flush retains that abort decision. Repair the failure and retry
+rollback; commit and new writes remain rejected until cleanup succeeds.

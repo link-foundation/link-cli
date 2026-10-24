@@ -12,7 +12,7 @@ its first or second transition append. At most four rows are ever live.
 - [x] Verify failed rollback markers keep the transaction pending until retried.
 - [x] Maintain Rust/C# parity and add release/documentation evidence.
 - [x] Run focused/full suites, coverage and formatting.
-- [ ] Publish and inspect exact-SHA CI.
+- [x] Publish and inspect exact-SHA CI.
 
 An append error can have an unknown physical outcome. Tests cover both outcomes;
 never retry an unknown append as a fresh logical write. Failed undo or rollback
@@ -39,3 +39,9 @@ updates, Rust explicit-address allocation, a two-row cascade, manual rollback,
 and rollback-marker failure. Subsequent writes and reopening are checked where
 applicable. None of these fixtures exercises process crashes or silently mutated
 storage that violates the observer contract.
+
+All checks for `39a3173a9fb9fd32791f3bea5452ec53048d03ed` finish with 37
+successes, ten skips and one neutral aggregate. Recent runs have matching SHA
+and creation time 2026-10-24T19:52:26Z. Rust workflow 40127261909, C# workflow
+40127261905 and actual WASM workflow 40127261924 pass, including all three
+native platforms and the independent coverage jobs.
