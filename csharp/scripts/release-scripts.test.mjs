@@ -19,7 +19,9 @@ import { decide, readCsprojInfo } from './check-release-needed.mjs';
 import {
   DEFAULT_MAX_ATTEMPTS,
   DEFAULT_SLEEP_SECONDS,
+  checkNugetPackageVersion,
   createNugetNuspecUrl,
+  describeFetchError,
   parseArgs as parseWaitForNugetArgs,
   waitForNugetPackage,
 } from './wait-for-nuget.mjs';
@@ -717,6 +719,22 @@ test('wait-for-nuget builds the flat-container nuspec URL', () => {
     }),
     'https://api.nuget.org/v3-flatcontainer/clink/2.4.0/clink.nuspec'
   );
+});
+
+test('wait-for-nuget reports the cause of a failed fetch (issue #134)', async () => {
+  const failure = new TypeError('fetch failed', {
+    cause: Object.assign(new Error('getaddrinfo ENOTFOUND api.nuget.org'), { code: 'ENOTFOUND' }),
+  });
+  const result = await checkNugetPackageVersion({
+    fetchImpl: async () => {
+      throw failure;
+    },
+    packageId: 'clink',
+    version: '1.0.0',
+  });
+  assert.equal(result.status, 'network-error');
+  assert.equal(result.error, 'fetch failed (ENOTFOUND: getaddrinfo ENOTFOUND api.nuget.org)');
+  assert.equal(describeFetchError(new Error('plain')), 'plain');
 });
 
 test('wait-for-nuget succeeds when indexing takes longer than the old 125 second loop', async () => {

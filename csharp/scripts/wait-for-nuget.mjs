@@ -124,11 +124,25 @@ export async function checkNugetPackageVersion({
   } catch (error) {
     return {
       available: false,
-      error: error.message,
+      error: describeFetchError(error),
       status: 'network-error',
       url,
     };
   }
+}
+
+/**
+ * fetch() rejects with a bare "fetch failed" and keeps the reason (DNS
+ * failure, reset connection, TLS error) in `cause`, so the log of a transient
+ * NuGet outage said nothing actionable (issue #134).
+ */
+export function describeFetchError(error) {
+  const cause = error?.cause;
+  if (!cause) {
+    return error?.message ?? String(error);
+  }
+  const reason = [cause.code, cause.message].filter(Boolean).join(': ');
+  return reason ? `${error.message} (${reason})` : error.message;
 }
 
 function sleep(seconds) {
