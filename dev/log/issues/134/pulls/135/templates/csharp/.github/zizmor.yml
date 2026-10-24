@@ -1,0 +1,15 @@
+# zizmor configuration — https://docs.zizmor.sh/configuration/
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # These publishers are trusted at tag granularity. Everything else
+        # must be pinned to a full commit hash.
+        actions/*: ref-pin
+        github/*: ref-pin
+        oven-sh/*: ref-pin
+        codecov/*: ref-pin
+        lycheeverse/*: ref-pin
+        peter-evans/*: ref-pin
+        zizmorcore/*: ref-pin
+        '*': hash-pin

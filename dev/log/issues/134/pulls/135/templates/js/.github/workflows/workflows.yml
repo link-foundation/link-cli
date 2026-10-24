@@ -1,0 +1,178 @@
+name: Workflows
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/**'
+      - 'scripts/check-ci-workflows.mjs'
+      - 'scripts/check-status-gate-covers-all-jobs.mjs'
+      - 'scripts/check-pipeline-status.sh'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/**'
+      - 'scripts/check-ci-workflows.mjs'
+      - 'scripts/check-status-gate-covers-all-jobs.mjs'
+      - 'scripts/check-pipeline-status.sh'
+  workflow_dispatch:
+
+# Least-privilege default; these jobs only need to read the checked-out tree.
+permissions:
+  contents: read
+
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+jobs:
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-actionlint
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # The Docker image bundles shellcheck and pyflakes, so this also lints
+      # every `run:` block. A native actionlint binary without shellcheck on
+      # PATH silently skips the shell checks and exits 0 - worth knowing when
+      # reproducing a failure locally:
+      #   docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+      # Pinned by digest because a mutable tag of a repository we do not
+      # control is arbitrary code execution in any job that holds
+      # credentials (the same reasoning as the `'*': hash-pin` policy in
+      # .github/zizmor.yml). Re-resolve when bumping:
+      #   docker pull rhysd/actionlint:<tag> &&
+      #   docker inspect --format='{{index .RepoDigests 0}}' rhysd/actionlint:<tag>
+      - uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 # v1.7.12
+        with:
+          args: -color
+
+  # The terminal status job of release.yml keys branch protection; its
+  # needs list is hand-maintained, so a job left out of it could fail while
+  # the gate reports success. This derives the requirement from the
+  # workflow itself.
+  status-gate-coverage:
+    name: Status Gate Coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-status-gate-coverage
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Check pinned workflow tooling and hosted runners
+        run: node scripts/check-ci-workflows.mjs
+
+      - name: Check the status gate covers every job
+        # Every workflow here runs a hand-maintained pipeline-status gate;
+        # this derives each requirement from the workflow itself.
+        run: >-
+          node scripts/check-status-gate-covers-all-jobs.mjs
+          .github/workflows/release.yml
+          .github/workflows/links.yml
+          .github/workflows/security.yml
+          .github/workflows/workflows.yml
+          .github/workflows/example-app.yml
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-zizmor
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # Annotations instead of SARIF: forks of this template do not necessarily
+      # have code scanning enabled, and the job should fail loudly either way.
+      #
+      # Named `version` rather than left at the default, because the action's
+      # `latest` entry is its own frozen table (v0.6.4 -> zizmor 1.30.1), not
+      # the latest zizmor. Naming it keeps the next bump a visible line in the
+      # diff rather than a side effect of bumping the action, and documents
+      # exactly which analyser reproduces a finding:
+      #   pipx run zizmor==1.30.1 --config .github/zizmor.yml \
+      #     --min-confidence low --persona regular .
+      - uses: zizmorcore/zizmor-action@v0.6.4
+        with:
+          advanced-security: false
+          annotations: true
+          config: .github/zizmor.yml
+          # Low, not medium: the artipacked audit reports at Low confidence,
+          # and a floor above the finding hides every checkout that forgets
+          # persist-credentials: false. tests/checkout-credentials.test.js
+          # pins the same invariant in-repo, so the floor only needs to catch
+          # the workflows the test cannot see.
+          min-confidence: low
+          version: 1.30.1
+
+      # The job above runs `--persona regular`, which is the right default:
+      # pedantic surfaces dozens of stylistic findings. But the audits that
+      # cover container image references (`unpinned-images` among them) are
+      # Pedantic-only, so the `'*': hash-pin` policy declared in
+      # .github/zizmor.yml is not enforced against `uses: docker://` or
+      # `container:` references by the run above. Narrowing this second pass
+      # to high severity *and* high confidence keeps that enforcement without
+      # importing the noise. Measured: after the digest pins below it reports
+      # nothing, and stays silent until someone reintroduces a mutable image.
+      - name: Audit for pedantic-only high-severity findings
+        timeout-minutes: 10
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pipx run zizmor==1.30.1 --config .github/zizmor.yml \
+            --persona pedantic --min-severity high --min-confidence high \
+            .
+
+  # Terminal status gate: runs even when the jobs above fail or are
+  # cancelled, and turns a `timeout-minutes` kill (reported as cancelled)
+  # into a red run. needs is derived and checked by the
+  # status-gate-coverage job above.
+  pipeline-status:
+    name: Pipeline Status
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    # A status function is required: without one the gate inherits the
+    # implicit "every dependency succeeded" condition and is skipped in
+    # exactly the runs it exists to report.
+    if: >-
+      !cancelled()
+    needs:
+      - actionlint
+      - status-gate-coverage
+      - zizmor
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+
+      - name: Fail the run when a required job was cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          RUN_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: bash scripts/check-pipeline-status.sh

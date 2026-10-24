@@ -1,0 +1,4 @@
+# Lychee ignore patterns - regex patterns for URLs to skip during link checking
+
+# npmjs.com returns 403 to link checkers because of bot protection.
+https://www\.npmjs\.com
