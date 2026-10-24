@@ -15,6 +15,7 @@ import {
   parsePackageJson,
   parsePackageLock,
   parseWorkflowActions,
+  parsePinnedWorkflowActions,
   parseWorkflowTools,
   verdict,
   versionParts,
@@ -144,11 +145,37 @@ test('runtimes and installed tools are found', () => {
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-audit@0.22.2, wasm-pack
+      - run: cargo install wasm-pack --version 0.14.0 --locked
+      - run: cargo install cargo-edit --locked
+      - run: |
+          pipx run zizmor==1.31.1 --config .github/zizmor.yml \\
+            .github
 `;
   assert.deepEqual(parseWorkflowTools(workflow), [
     { kind: 'node', name: 'Node.js', version: '24.x' },
     { kind: 'dotnet', name: '.NET', version: '10.0.x' },
     { kind: 'crate', name: 'cargo-audit', version: '0.22.2' },
+    { kind: 'crate', name: 'wasm-pack', version: '0.14.0' },
+    { kind: 'pypi', name: 'zizmor', version: '1.31.1' },
+  ]);
+});
+
+test('actions pinned to a commit, a digest or an exact tag are found', () => {
+  const sha = 'c6f97d42243bad5fab37ca0427f495c86d5b1a18';
+  const digest = 'b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667';
+  const workflow = `
+      - uses: rust-lang/crates-io-auth-action@${sha} # v1.0.5
+      - uses: docker://rhysd/actionlint@sha256:${digest} # v1.7.12
+      - uses: zizmorcore/zizmor-action@v0.8.0
+      - uses: dtolnay/rust-toolchain@${sha} # master branch @ 2026-10-01
+      - uses: NuGet/login@${sha} # v1.2.0 # https://github.com/link-foundation/link-cli/issues/1
+      - uses: actions/checkout@v7
+`;
+  assert.deepEqual(parsePinnedWorkflowActions(workflow), [
+    { name: 'rust-lang/crates-io-auth-action', version: 'v1.0.5' },
+    { name: 'rhysd/actionlint', version: 'v1.7.12' },
+    { name: 'NuGet/login', version: 'v1.2.0', blocker: 'https://github.com/link-foundation/link-cli/issues/1' },
+    { name: 'zizmorcore/zizmor-action', version: 'v0.8.0' },
   ]);
 });
 

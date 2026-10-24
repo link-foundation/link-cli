@@ -10,8 +10,11 @@
  * - NuGet packages of every .csproj (nuget.org);
  * - npm dependencies, declared and locked (registry.npmjs.org);
  * - GitHub Actions used by the workflows (major tags of the action's repo);
- * - Node.js and .NET versions set up by the workflows (latest LTS) and tools
- *   installed with taiki-e/install-action (crates.io).
+ *   actions and Docker images pinned to a commit or digest with a `# vX.Y.Z`
+ *   comment, or to an exact tag, against the latest release tag of the repo;
+ * - Node.js and .NET versions set up by the workflows (latest LTS), tools
+ *   installed with taiki-e/install-action or `cargo install --version`
+ *   (crates.io) and `pipx run name==version` (PyPI).
  *
  * A declared version is compared only as far as it is written: `v7` matches
  * any 7.x release, `24.x` any 24.x, and `2.0.21` exactly 2.0.21.
@@ -179,7 +182,29 @@ export function parseWorkflowActions(text) {
   return [...actions.values()];
 }
 
-/** Runtimes and tools a workflow installs: node-version, dotnet-version, `tool: name@version`. */
+/**
+ * Actions and images pinned to an exact release: a commit SHA or image digest
+ * followed by its `# vX.Y.Z` comment, or an exact tag (`@v0.8.0`). Before
+ * issue #134 these were not checked at all, so rust-lang/crates-io-auth-action
+ * stayed on v1.0.5 after v1.0.6 was released.
+ */
+export function parsePinnedWorkflowActions(text) {
+  const actions = [];
+  for (const [, repository, version, comment] of text.matchAll(
+    /uses:\s*(?:docker:\/\/)?([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@(?:[0-9a-f]{40}|sha256:[0-9a-f]{64})\s*#\s*(v?\d+(?:\.\d+)+)\b(.*)$/gm,
+  )) {
+    actions.push(withBlocker({ name: repository, version }, comment));
+  }
+  for (const [, repository, version, comment] of text.matchAll(
+    /uses:\s*([\w.-]+\/[\w.-]+)(?:\/[\w./-]+)?@(v\d+\.\d+(?:\.\d+)?)\s*(?:#(.*))?$/gm,
+  )) {
+    actions.push(withBlocker({ name: repository, version }, comment));
+  }
+  return actions;
+}
+
+/** Runtimes and tools a workflow installs: node-version, dotnet-version, `tool: name@version`,
+ * `cargo install name --version x.y.z` and `pipx run name==x.y.z`. */
 export function parseWorkflowTools(text) {
   const tools = [];
   for (const [, kind, version, comment] of text.matchAll(
@@ -192,6 +217,14 @@ export function parseWorkflowTools(text) {
       const pinned = /^\s*([\w-]+)@([\d.]+)\s*$/.exec(entry);
       if (pinned) tools.push(withBlocker({ kind: 'crate', name: pinned[1], version: pinned[2] }, comment));
     }
+  }
+  for (const [, name, version, comment] of text.matchAll(
+    /\bcargo install\s+([\w-]+)\s+--version\s+=?([\d.]+)\b[^#\n]*(?:#(.*))?$/gm,
+  )) {
+    tools.push(withBlocker({ kind: 'crate', name, version }, comment));
+  }
+  for (const [, name, version, comment] of text.matchAll(/\bpipx run\s+([\w.-]+)==([\d.]+)\b[^#\n]*(?:#(.*))?$/gm)) {
+    tools.push(withBlocker({ kind: 'pypi', name, version }, comment));
   }
   return tools;
 }
@@ -233,6 +266,14 @@ const registries = {
       .filter(Boolean);
     return `v${versionParts(latestStable(tags))[0]}`;
   },
+  release: async (name) =>
+    latestStable(
+      execFileSync('git', ['ls-remote', '--tags', `https://github.com/${name}`], { encoding: 'utf8' })
+        .split('\n')
+        .map((line) => line.split('refs/tags/')[1])
+        .filter(Boolean),
+    ),
+  pypi: async (name) => (await fetchJson(`https://pypi.org/pypi/${name}/json`)).info.version,
   node: async () => (await fetchJson('https://nodejs.org/dist/index.json')).find((release) => release.lts).version,
   dotnet: async () =>
     latestStable(
@@ -282,6 +323,7 @@ function collectDependencies(files) {
   for (const workflow of files.filter((file) => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(file))) {
     const text = read(workflow);
     for (const action of parseWorkflowActions(text)) entries.push({ registry: 'action', source: workflow, ...action });
+    for (const action of parsePinnedWorkflowActions(text)) entries.push({ registry: 'release', source: workflow, ...action });
     for (const { kind, ...tool } of parseWorkflowTools(text)) entries.push({ registry: kind, source: workflow, ...tool });
   }
   const seen = new Set();

@@ -1,0 +1,10 @@
+Checked 102 declared versions.
+
+4 dependencies are behind their latest release:
+
+| File | Dependency | Used | Latest |
+|---|---|---|---|
+| .github/workflows/docs.yml | wasm-pack | 0.14.0 | 0.15.0 |
+| .github/workflows/js-client.yml | wasm-pack | 0.14.0 | 0.15.0 |
+| .github/workflows/rust.yml | rust-lang/crates-io-auth-action | v1.0.5 | v1.0.6 |
+| .github/workflows/wasm.yml | wasm-pack | 0.14.0 | 0.15.0 |
