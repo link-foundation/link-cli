@@ -181,8 +181,17 @@ fn main() {
             eprintln!("    env:");
             eprintln!("      CARGO_REGISTRY_TOKEN: ${{{{ secrets.YOUR_SECRET_NAME }}}}");
             eprintln!();
+            eprintln!(
+                "Alternatively, configure crates.io trusted publishing for this repository and"
+            );
+            eprintln!("workflow, then set the CRATES_IO_TRUSTED_PUBLISHING repository variable to 'true'.");
+            eprintln!();
             eprintln!("See: https://doc.rust-lang.org/cargo/reference/publishing.html");
             eprintln!();
+            println!(
+                "::error title=crates.io credentials are missing::{}@{} could not be published. Add a crates.io API token with publish access as the CARGO_REGISTRY_TOKEN repository secret, or configure crates.io trusted publishing for this repository and set the CRATES_IO_TRUSTED_PUBLISHING repository variable to 'true', then re-run this job.",
+                name, version
+            );
             set_output("publish_result", "auth_failed");
             exit(1);
         } else {

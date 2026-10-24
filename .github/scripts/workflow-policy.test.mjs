@@ -53,6 +53,11 @@ function readJobs(text) {
   return jobs.map((job) => ({ name: job.name, body: job.body.join('\n') }));
 }
 
+/** A job that pushes to the repository or publishes to a registry or Pages. */
+function isWriterJob(body) {
+  return /^ {6}(?:contents|pages|id-token|packages): write$/m.test(body);
+}
+
 const trustedPublishingAuth = /^\s*uses:\s*rust-lang\/crates-io-auth-action@/m;
 
 /** Splits a workflow into `{ first, last, text }` entries, one per job step. */
@@ -183,33 +188,65 @@ for (const workflow of workflows) {
     }
   });
 
+  // A workflow-level group holds the whole run, release and registry wait
+  // included, so on main a third push cancelled the queued second run, and a
+  // cancellable one would interrupt a writer that already pushed (issue #134).
+  // Writers own a never-cancelled group instead.
+  test(`${workflow.name}: writer jobs own a never-cancelled concurrency group`, () => {
+    const writers = readJobs(workflow.text).filter((job) => isWriterJob(job.body));
+    if (writers.length === 0) return;
+    assert.doesNotMatch(
+      workflow.text,
+      /^concurrency:$/m,
+      `${workflow.name} has writer jobs (${writers.map((job) => job.name).join(', ')}) but a workflow-level concurrency group`,
+    );
+    for (const job of writers) {
+      assert.match(
+        job.body,
+        /^ {4}concurrency:\n {6}group: [^\n]+\n {6}cancel-in-progress: false$/m,
+        `writer job "${job.name}" in ${workflow.name} needs its own concurrency group with cancel-in-progress: false`,
+      );
+    }
+  });
+
   // `continue-on-error` turns a real failure into a green run - the exact
   // false negative that hid the Windows test failures reported in issue #96.
-  // The one exception is the crates.io trusted publishing exchange: when it
-  // fails, the publish step falls back to the token secret, and it still fails
-  // when neither credential works, so nothing is masked.
+  // The crates.io trusted publishing exchange used to be the one exception,
+  // but its expected failure left a red annotation on every green release
+  // (issue #134), so it is now gated on a repository variable instead.
   test(`${workflow.name}: does not mask failures with continue-on-error`, () => {
-    const steps = readSteps(workflow.text);
-    workflow.text.split('\n').forEach((line, index) => {
-      if (!/continue-on-error/.test(line)) return;
-      const number = index + 1;
-      const step = steps.find(({ first, last }) => first <= number && number <= last);
-      assert.ok(
-        step && trustedPublishingAuth.test(step.text),
-        `${workflow.name}:${number} uses continue-on-error, which masks real failures`,
+    const offenders = workflow.text
+      .split('\n')
+      .map((line, index) => ({ line, number: index + 1 }))
+      .filter(({ line }) => /^\s*continue-on-error:/.test(line));
+    assert.deepEqual(
+      offenders.map(({ number }) => `${workflow.name}:${number}`),
+      [],
+      'continue-on-error masks real failures',
+    );
+  });
+
+  // Trusted publishing that is not configured on crates.io fails with
+  // "No Trusted Publishing config found", so it must only run once it is.
+  test(`${workflow.name}: crates.io trusted publishing runs only when enabled`, () => {
+    for (const step of readSteps(workflow.text).filter((s) => trustedPublishingAuth.test(s.text))) {
+      assert.match(
+        step.text,
+        /^\s*if: vars\.CRATES_IO_TRUSTED_PUBLISHING == 'true' && /m,
+        `${workflow.name}:${step.first} exchanges a trusted publishing token without checking that it is configured`,
       );
       const id = /^\s*id:\s*(\S+)\s*$/m.exec(step.text)?.[1];
-      assert.ok(id, `${workflow.name}:${number}: the trusted publishing step needs an id`);
+      assert.ok(id, `${workflow.name}:${step.first}: the trusted publishing step needs an id`);
       const consumers = workflow.text.split('\n').filter((other) => other.includes(`steps.${id}.outputs.token`));
       assert.ok(consumers.length > 0, `${workflow.name}: nothing reads steps.${id}.outputs.token`);
       for (const consumer of consumers) {
         assert.match(
           consumer,
           new RegExp(`steps\\.${id}\\.outputs\\.token \\|\\| secrets\\.`),
-          `${workflow.name}: "${consumer.trim()}" has no token secret fallback for a failed exchange`,
+          `${workflow.name}: "${consumer.trim()}" has no token secret for runs without trusted publishing`,
         );
       }
-    });
+    }
   });
 
   // In YAML a leading `!` starts a tag, so `if: !cancelled() && ...` is a
@@ -237,6 +274,75 @@ for (const workflow of workflows) {
         `${workflow.name} offers release_mode "${mode}" but no job guards on it`,
       );
     }
+  });
+
+  // A release whose publish step quietly skips on a missing credential still
+  // ends green, so a version is tagged and announced but never reaches the
+  // registry (issue #134: the C# NuGet push printed "NUGET_API_KEY not set,
+  // skipping NuGet publish"). Missing credentials must fail the job instead.
+  test(`${workflow.name}: publish steps do not silently skip on missing credentials`, () => {
+    const offenders = readSteps(workflow.text)
+      .filter(({ text }) => /\bsecrets\.[A-Z0-9_]*(?:TOKEN|KEY)\b/.test(text))
+      .map((step) => ({ ...step, code: step.text.replace(/^\s*#.*$/gm, '') }))
+      .filter(({ code }) => /(?:not set|not configured|missing)[^\n]*\bskipp(?:ing|ed)\b|\bskipping\b[^\n]*publish/i.test(code))
+      .map(({ first }) => first);
+    assert.deepEqual(offenders, [], `${workflow.name} skips publishing on missing credentials at lines ${offenders}`);
+  });
+
+  // `if npm view pkg@version` reads every failure, including an unreachable
+  // registry, as "not published", so main then publishes an existing version
+  // and fails with a misleading error (issue #134). Only E404 means "missing".
+  test(`${workflow.name}: npm lookups tell "not published" apart from a failure`, () => {
+    const offenders = readSteps(workflow.text)
+      .filter(({ text }) => /\bnpm view\b/.test(text.replace(/^\s*#.*$/gm, '')))
+      .filter(({ text }) => !/code E404/.test(text) || /npm view[^\n]*>\s*\/dev\/null/.test(text))
+      .map(({ first }) => first);
+    assert.deepEqual(offenders, [], `${workflow.name} treats any npm view failure as "not published" at lines ${offenders}`);
+  });
+
+  // `gh workflow run` and the REST API refuse a dispatch that omits a
+  // required input without a default, although the web form preselects the
+  // first option, so the same release cannot be started from the CLI.
+  test(`${workflow.name}: required choice inputs declare a default`, () => {
+    const lines = workflow.text.split('\n');
+    const offenders = [];
+    lines.forEach((line, index) => {
+      if (line.trim() !== 'type: choice') return;
+      const indent = line.length - line.trimStart().length;
+      let start = index;
+      while (start > 0 && lines[start - 1].length - lines[start - 1].trimStart().length >= indent) start -= 1;
+      let end = index;
+      while (end + 1 < lines.length && (lines[end + 1].trim() === '' || lines[end + 1].length - lines[end + 1].trimStart().length >= indent)) end += 1;
+      const body = lines.slice(start, end + 1).join('\n');
+      if (/^\s*required: true$/m.test(body) && !/^\s*default:/m.test(body)) {
+        offenders.push(lines[start - 1].trim());
+      }
+    });
+    assert.deepEqual(offenders, [], `${workflow.name} has required choice inputs without a default`);
+  });
+
+  // `ubuntu-latest` moved these jobs to Ubuntu 26.04 mid-rollout while the
+  // runner-images README still documented it as 24.04, with no diff in this
+  // repository (issue #134). Runner OS upgrades belong in a dedicated PR.
+  test(`${workflow.name}: hosted runners use pinned OS labels`, () => {
+    const offenders = workflow.text
+      .split('\n')
+      .map((line, index) => ({ line: line.replace(/#.*$/, ''), number: index + 1 }))
+      .filter(({ line }) => /\b(?:ubuntu|macos|windows)-latest\b/.test(line))
+      .map(({ number }) => number);
+    assert.deepEqual(offenders, [], `${workflow.name} uses a -latest runner label at lines ${offenders}`);
+  });
+
+  // actions/checkout runs `git init` before any step can configure Git, so
+  // only the environment reaches it; without it every checkout printed the
+  // "Using 'master' as the name for the initial branch" hint (issue #134).
+  test(`${workflow.name}: provides init.defaultBranch to actions/checkout`, () => {
+    if (!/uses: actions\/checkout@/.test(workflow.text)) return;
+    assert.match(
+      workflow.text,
+      /^env:\n(?: {2}.*\n)*? {2}GIT_CONFIG_KEY_0: init\.defaultBranch$/m,
+      `${workflow.name} does not set init.defaultBranch through GIT_CONFIG_* env`,
+    );
   });
 }
 
@@ -303,6 +409,35 @@ test('the Rust and C# pipelines simulate a fresh merge on pull requests', () => 
 // The dependency check reads every manifest git tracks (issue #104), so
 // Dependabot must watch each of their directories, or nothing proposes the
 // update the check asks for.
+// cargo audit reports unmaintained, unsound and yanked advisories as warnings
+// and still exits 0, so the audit job passed while listing findings.
+test('every cargo audit invocation denies warnings', () => {
+  const offenders = workflows.flatMap(({ name, text }) =>
+    text
+      .split('\n')
+      .filter((line) => /^\s*run: cargo audit\b/.test(line) && !/--deny warnings\b/.test(line))
+      .map((line) => `${name}: ${line.trim()}`),
+  );
+  assert.deepEqual(offenders, []);
+});
+
+// Codecov rejects tokenless uploads from this repository, and the upload ran
+// with `fail_ci_if_error: false`, so it failed on every run without anyone
+// noticing; its file search also uploaded a Rust test file whose name
+// contains "coverage" (issue #134).
+test('every Codecov upload uses a token, reads only its reports and fails loudly', () => {
+  const uploads = workflows.flatMap(({ name, text }) =>
+    readSteps(text)
+      .filter((step) => /uses: codecov\/codecov-action@/.test(step.text))
+      .map((step) => ({ ...step, name })),
+  );
+  for (const { name, first, text } of uploads) {
+    assert.match(text, /^\s*token: \$\{\{ secrets\.CODECOV_TOKEN \}\}$/m, `${name}:${first} uploads without a token`);
+    assert.match(text, /^\s*fail_ci_if_error: true$/m, `${name}:${first} hides a failed upload`);
+    assert.match(text, /^\s*(?:directory|files):/m, `${name}:${first} searches the whole tree for reports`);
+  }
+});
+
 test('Dependabot watches every directory the dependency check reads', () => {
   const config = readFileSync(join(repoRoot, '.github', 'dependabot.yml'), 'utf8');
   const watched = (ecosystem) => {

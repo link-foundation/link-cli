@@ -24,6 +24,7 @@ on:
         description: 'Version bump type'
         required: true
         type: choice
+        default: 'patch'
         options:
           - patch
           - minor
@@ -33,27 +34,34 @@ on:
         required: false
         type: string
 
-# Reader runs (PR validation) are cancelled when superseded; runs on main are
-# writers - they publish to crates.io and push version commits, so cancelling
-# one mid-flight would leave a half-published release behind (issue #96).
-concurrency:
-  group: rust-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# Concurrency is set per job (issue #134): superseded read-only checks are
+# cancelled on pull requests, while writer jobs share a never-cancelled
+# group. A workflow-level group held the whole run, including the release
+# and the registry wait, so a third push to main cancelled the queued run.
 
 # Least privilege by default; the publishing jobs opt into more below.
 permissions:
   contents: read
 
+# The GIT_CONFIG_* entries provide Git config to actions/checkout itself;
+# checkout runs git init before any workflow step can configure Git, which
+# otherwise prints the default-branch hint into every log.
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 jobs:
   # === DETECT CHANGES - determines which jobs should run ===
   detect-changes:
     name: Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     if: github.event_name != 'workflow_dispatch'
     outputs:
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
@@ -66,13 +74,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Detect changes
         id: changes
@@ -85,20 +97,27 @@ jobs:
   # === CHANGELOG CHECK - only runs on PRs with code changes ===
   changelog:
     name: Changelog Fragment Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-changelog
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Check for changelog fragments
         env:
@@ -109,8 +128,11 @@ jobs:
   # === LINT AND FORMAT CHECK ===
   lint:
     name: Lint and Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: |
       !cancelled() && (
@@ -124,14 +146,17 @@ jobs:
       )
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update --component rustfmt,clippy
+          rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -161,6 +186,13 @@ jobs:
       - name: Check file size limit
         run: rust-script rust/scripts/check-file-size.rs
 
+      # The release scripts commit and push straight to main, where no
+      # workflow re-checks their output; their own test suites are the gate
+      # (issue #134: a silently failing `git add` released 1.0.6-1.0.8
+      # without ever committing the version bump).
+      - name: Test release scripts
+        run: bash rust/scripts/test-scripts.sh
+
       # A dependency bump in Cargo.toml without the matching Cargo.lock update
       # otherwise passes CI while every job silently re-resolves the graph
       # (issue #96). --locked turns that drift into a failure.
@@ -184,17 +216,25 @@ jobs:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes, changelog]
     if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-26, windows-2025]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -222,19 +262,24 @@ jobs:
   # Ported from the Rust pipeline template's "Simulate fresh merge" step.
   fresh-merge:
     name: Simulate Fresh Merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     if: github.event_name == 'pull_request'
     needs: [detect-changes]
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update --component rustfmt,clippy
+          rustup default stable
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -259,15 +304,23 @@ jobs:
   # === BUILD ===
   build:
     name: Build Package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [lint, test]
     if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -291,7 +344,7 @@ jobs:
     name: Auto Release
     needs: [lint, test, build]
     if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a
     # crate or pushed a version commit.
@@ -304,14 +357,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: true
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Configure git
         run: rust-script rust/scripts/git-config.rs
@@ -331,17 +388,19 @@ jobs:
         run: |
           rust-script rust/scripts/check-release-needed.rs \
             --tag-prefix rust-v \
-            --repository "${{ github.repository }}"
+            --repository "$GITHUB_REPOSITORY"
 
       - name: Collect changelog and bump version
         id: version
         if: steps.check.outputs.should_release == 'true' && steps.check.outputs.skip_bump != 'true'
         working-directory: .
+        env:
+          BUMP_TYPE: ${{ steps.bump_type.outputs.bump_type }}
         run: |
           rust-script rust/scripts/version-and-commit.rs \
             --rust-root rust \
             --tag-prefix rust-v \
-            --bump-type "${{ steps.bump_type.outputs.bump_type }}"
+            --bump-type "$BUMP_TYPE"
 
       - name: Get current version
         id: current_version
@@ -354,17 +413,16 @@ jobs:
         if: steps.check.outputs.should_release == 'true'
         run: cargo build --manifest-path rust/Cargo.toml --release
 
+      # Trusted publishing runs only once it is configured on crates.io and
+      # the CRATES_IO_TRUSTED_PUBLISHING repository variable is 'true'.
+      # Attempting it unconditionally with continue-on-error left a red
+      # "No Trusted Publishing config found" annotation on every green
+      # release (issue #134). Without the variable the publish step uses the
+      # CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret and fails when it is missing.
       - name: Authenticate with crates.io (trusted publishing)
-        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
         id: prm_auth
-        # Trusted publishing first; the publish step falls back to the token
-        # secret, and still fails when neither credential is available.
-        continue-on-error: true
-        if: steps.check.outputs.should_release == 'true' && steps.check.outputs.crate_published != 'true'
-
-      - name: Report token fallback
-        if: steps.prm_auth.outcome == 'failure'
-        run: echo "::warning::crates.io trusted publishing is unavailable, publishing with the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret"
+        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && (steps.check.outputs.should_release == 'true' && steps.check.outputs.crate_published != 'true')
 
       - name: Publish to Crates.io
         id: publish_crate
@@ -378,22 +436,22 @@ jobs:
         if: steps.check.outputs.should_release == 'true'
         env:
           RUST_ROOT: rust
-        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.current_version.outputs.version }}"
+          RELEASE_VERSION: ${{ steps.current_version.outputs.version }}
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: steps.check.outputs.should_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          CURRENT_VERSION: ${{ steps.current_version.outputs.version }}
         run: |
-          RELEASE_VERSION="${{ steps.version.outputs.new_version }}"
-          if [ -z "$RELEASE_VERSION" ]; then
-            RELEASE_VERSION="${{ steps.current_version.outputs.version }}"
-          fi
+          RELEASE_VERSION="${NEW_VERSION:-$CURRENT_VERSION}"
 
           rust-script rust/scripts/create-github-release.rs \
             --rust-root rust \
             --release-version "$RELEASE_VERSION" \
-            --repository "${{ github.repository }}" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "rust-v" \
             --language "Rust"
 
@@ -402,7 +460,7 @@ jobs:
     name: Manual Release
     needs: [lint, test, build]
     if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Writer group: never cancel a release that may already have published a
     # crate or pushed a version commit.
@@ -415,42 +473,48 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: true
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Configure git
         run: rust-script rust/scripts/git-config.rs
 
       - name: Version and commit
         id: version
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           rust-script rust/scripts/version-and-commit.rs \
             --rust-root rust \
             --tag-prefix rust-v \
-            --bump-type "${{ github.event.inputs.bump_type }}" \
-            --description "${{ github.event.inputs.description }}"
+            --bump-type "$BUMP_TYPE" \
+            --description "$DESCRIPTION"
 
       - name: Build release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         run: cargo build --manifest-path rust/Cargo.toml --release
 
+      # Trusted publishing runs only once it is configured on crates.io and
+      # the CRATES_IO_TRUSTED_PUBLISHING repository variable is 'true'.
+      # Attempting it unconditionally with continue-on-error left a red
+      # "No Trusted Publishing config found" annotation on every green
+      # release (issue #134). Without the variable the publish step uses the
+      # CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret and fails when it is missing.
       - name: Authenticate with crates.io (trusted publishing)
-        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
         id: prm_auth
-        # Trusted publishing first; the publish step falls back to the token
-        # secret, and still fails when neither credential is available.
-        continue-on-error: true
-        if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
-
-      - name: Report token fallback
-        if: steps.prm_auth.outcome == 'failure'
-        run: echo "::warning::crates.io trusted publishing is unavailable, publishing with the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret"
+        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && (steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true')
 
       - name: Publish to Crates.io
         id: publish_crate
@@ -464,17 +528,19 @@ jobs:
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
           RUST_ROOT: rust
-        run: rust-script rust/scripts/wait-for-crate.rs --release-version "${{ steps.version.outputs.new_version }}"
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
+        run: rust-script rust/scripts/wait-for-crate.rs --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           rust-script rust/scripts/create-github-release.rs \
             --rust-root rust \
-            --release-version "${{ steps.version.outputs.new_version }}" \
-            --repository "${{ github.repository }}" \
+            --release-version "$RELEASE_VERSION" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "rust-v" \
             --language "Rust"
 
@@ -485,7 +551,7 @@ jobs:
   changelog-pr:
     name: Create Changelog PR
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changelog-pr'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Writer group: never cancel a run that may already have pushed a branch.
     concurrency:
@@ -497,13 +563,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: true
           fetch-depth: 0
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
 
       - name: Install rust-script
-        run: cargo install rust-script
+        run: bash rust/scripts/install-rust-script.sh
 
       - name: Create changelog fragment
         env:

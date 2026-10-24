@@ -1,0 +1,11 @@
+name: Production source
+
+# dev/log and docs/case-studies keep verbatim copies of other repositories
+# (the pipeline templates compared in issues #86, #92 and #134) and other
+# investigation evidence. They are not built or shipped from here; analysing
+# them logged "semantic analyzer unavailable (no manifest found)" for every
+# copied Rust script and would turn their code into alerts of this repository.
+# Ported from the rust-ai-driven-development-pipeline-template.
+paths-ignore:
+  - dev/log
+  - docs/case-studies

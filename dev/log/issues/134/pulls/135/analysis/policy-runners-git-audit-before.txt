@@ -1,0 +1,19 @@
+ℹ fail 16
+ℹ pass 92
+✖ csharp.yml: hosted runners use pinned OS labels (19.376501ms)
+✖ csharp.yml: provides init.defaultBranch to actions/checkout (0.445279ms)
+✖ dependencies.yml: hosted runners use pinned OS labels (0.616418ms)
+✖ dependencies.yml: provides init.defaultBranch to actions/checkout (0.21992ms)
+✖ docs.yml: hosted runners use pinned OS labels (1.146444ms)
+✖ docs.yml: provides init.defaultBranch to actions/checkout (3.275688ms)
+✖ every cargo audit invocation denies warnings (6.775763ms)
+✖ failing tests:
+✖ js-client.yml: hosted runners use pinned OS labels (6.847436ms)
+✖ js-client.yml: provides init.defaultBranch to actions/checkout (0.242111ms)
+✖ links.yml: hosted runners use pinned OS labels (0.431703ms)
+✖ rust.yml: hosted runners use pinned OS labels (0.569901ms)
+✖ rust.yml: provides init.defaultBranch to actions/checkout (4.379403ms)
+✖ security.yml: hosted runners use pinned OS labels (6.497525ms)
+✖ security.yml: provides init.defaultBranch to actions/checkout (0.349721ms)
+✖ wasm.yml: hosted runners use pinned OS labels (6.20439ms)
+✖ wasm.yml: provides init.defaultBranch to actions/checkout (0.184373ms)

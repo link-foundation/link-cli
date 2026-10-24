@@ -1,0 +1,134 @@
+# link-cli .github/scripts/check-web-archive.mjs before (83d6768) and after (0610443) the fix
+
+== 83d6768 (before), Wayback API rate-limited: once
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Wayback API returned 429 for https://example.com/moved-page
+  ✗ Not found in Web Archive
+
+=== Web Archive Check Summary ===
+
+✗ 1 broken link(s) have NO Web Archive version:
+  https://example.com/moved-page
+
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://example.com/moved-page
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+== GITHUB_OUTPUT
+all_archived=false
+
+== 0610443 (after), Wayback API rate-limited: once
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Retrying the Wayback API (attempt 2 of 3) after: HTTP 429
+  ✓ Archived on 2024-01-01: https://web.archive.org/web/20240101000000/https://example.com/moved-page
+
+=== Web Archive Check Summary ===
+
+✓ 1 broken link(s) have Web Archive versions - consider replacing:
+  Original: https://example.com/moved-page
+  Archive (2024-01-01): https://web.archive.org/web/20240101000000/https://example.com/moved-page
+
+::notice title=Broken link - Web Archive available (2024-01-01)::Broken link detected: https://example.com/moved-page
+A Web Archive snapshot from 2024-01-01 is available.
+Suggested fix: replace the broken link with the archived version:
+  https://web.archive.org/web/20240101000000/https://example.com/moved-page
+all_archived=true
+
+All broken links have Web Archive versions. Consider replacing them with the suggested archive.org URLs.
+exit=0
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+== GITHUB_OUTPUT
+all_archived=true
+
+== 83d6768 (before), Wayback API rate-limited: always
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Wayback API returned 429 for https://example.com/moved-page
+  ✗ Not found in Web Archive
+
+=== Web Archive Check Summary ===
+
+✗ 1 broken link(s) have NO Web Archive version:
+  https://example.com/moved-page
+
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://example.com/moved-page
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+== GITHUB_OUTPUT
+all_archived=false
+
+== 0610443 (after), Wayback API rate-limited: always
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Retrying the Wayback API (attempt 2 of 3) after: HTTP 429
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 429
+  ✗ Web Archive lookup failed: HTTP 429 (after 3 attempts)
+
+=== Web Archive Check Summary ===
+
+✗ 1 broken link(s) could not be checked against the Web Archive:
+  https://example.com/moved-page: HTTP 429 (after 3 attempts)
+::error title=Broken link - Web Archive lookup failed::Broken link detected: https://example.com/moved-page
+The Wayback Machine could not be asked whether it has a snapshot: HTTP 429 (after 3 attempts)
+How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.
+
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+== GITHUB_OUTPUT
+all_archived=false

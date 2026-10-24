@@ -1,0 +1,59 @@
+== link-cli 2219ee1: csharp/scripts/version-and-commit.mjs --mode changeset
+Found 2 changeset file(s)
+Warning: Could not parse version type from csharp/.changeset/add-export.md
+Bump types found: patch
+Using highest: patch
+Updated csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj to version 4.0.6
+Updated csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj to version 4.0.6
+Updated CHANGELOG.md with version 4.0.6
+Removed changeset: add-export.md
+Removed changeset: fix-help.md
+Staged release files:
+csharp/.changeset/add-export.md
+csharp/.changeset/fix-help.md
+csharp/CHANGELOG.md
+csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj
+csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj
+Committed version 4.0.6
+Created tag csharp-v4.0.6
+Pushed release commit and tag csharp-v4.0.6
+Output: version_committed=true
+Output: new_version=4.0.6
+exit=0
+== GITHUB_OUTPUT
+version_committed=true
+new_version=4.0.6
+== changesets left in csharp/.changeset
+README.md
+config.json
+== newest csharp/CHANGELOG.md entry
+## [4.0.6] - 2026-10-24
+
+Fix a typo in the help text.
+
+== does csharp/CHANGELOG.md mention the minor change?
+0
+
+== link-cli d35df2e: csharp/scripts/version-and-commit.mjs --mode changeset
+Found 2 changeset file(s)
+Warning: Could not parse version type from csharp/.changeset/add-export.md
+::error title=Invalid changeset::Cannot parse add-export.md in csharp/.changeset. How to fix: start it with ---, 'Foundation.Data.Doublets.Cli': major|minor|patch, --- and a description.
+exit=1
+== GITHUB_OUTPUT
+(not written)
+== changesets left in csharp/.changeset
+README.md
+add-export.md
+config.json
+fix-help.md
+== newest csharp/CHANGELOG.md entry
+## [4.0.5] - 2026-10-24
+
+Preserve quoted query references as names, including numeric names such as "0"
+and "1", throughout reference validation, creation, matching and mutation. Bare
+numbers remain link addresses. Encoded reference literals also resolve as names.
+Stored triggers preserve this distinction when normalized and replayed, and
+numeric names exported as LiNo can be replayed through queries.
+
+== does csharp/CHANGELOG.md mention the minor change?
+0

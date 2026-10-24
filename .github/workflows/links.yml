@@ -30,7 +30,7 @@ env:
 jobs:
   link-checker:
     name: Check Links
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Typical run: <1min with lychee cache. 10min prevents slow
     # external hosts or Wayback Machine probes from hanging the workflow.
     timeout-minutes: 10
@@ -41,6 +41,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Check links with lychee
         id: lychee

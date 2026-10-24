@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Foundation.Data.Doublets.Cli.Protocol;
@@ -142,13 +143,28 @@ public sealed class LinksServerTests
     }
 
     [Fact]
-    public void ADisconnectedSocketBeforeTheWorkerStartsIsClean()
+    public void AnAcceptedSocketThatIsAlreadyGoneIsDropped()
     {
         using var server = LinksServer.Bind("127.0.0.1", 0);
         using var client = new TcpClient();
-        // Reproduce the state seen when shutdown disconnects an accepted socket
-        // before the worker obtains its stream, without scheduling a race.
-        server.HandleConnection(client, null!);
+        // A socket that is no longer connected has no stream to serve.
+        Assert.Null(server.Register(client));
+    }
+
+    [Fact]
+    public void AWorkerWhoseClientShutdownDisposedIsClean()
+    {
+        using var server = LinksServer.Bind("127.0.0.1", 0);
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        using var peer = new TcpClient("127.0.0.1", ((IPEndPoint)listener.LocalEndpoint).Port);
+        using var client = listener.AcceptTcpClient();
+        var stream = server.Register(client);
+        Assert.NotNull(stream);
+        // The worker starts only after the shutdown disposed its client: it
+        // already holds the stream, so it never calls into the disposed TcpClient.
+        server.Shutdown();
+        server.HandleConnection(client, stream, null!);
     }
 
     [Fact]
@@ -159,7 +175,8 @@ public sealed class LinksServerTests
         for (var attempt = 0; attempt < 200; attempt++)
         {
             using var server = new RunningServer();
-            using var client = server.Client(new TextLinoProtocol());
+            using var client = RawConnection(server);
+            server.Stop();
         }
     }
 

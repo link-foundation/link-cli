@@ -1,0 +1,5 @@
+# Reduce GitHub secondary rate limits. Keep lychee's default accepted statuses:
+# 429 and 5xx are retried by scripts/recheck-broken-links.mjs, never accepted.
+[hosts."github.com"]
+concurrency = 2
+request_interval = "1s"

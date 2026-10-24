@@ -1,0 +1,28 @@
+# Codecov upload on main (run 40076673386, 4bfa252) and on the PR (run 40082441114, 12cc6ef)
+## dev/log/issues/134/pulls/135/ci-logs/main-4bfa252/csharp-40076673386.log
+gpg: WARNING: This key is not certified with a trusted signature!
+info - 2026-10-24 08:06:05,897 -- ci service found: github-actions
+warning - 2026-10-24 08:06:05,906 -- No config file could be found. Ignoring config.
+warning - 2026-10-24 08:06:05,926 -- xcrun is not installed or can't be found.
+warning - 2026-10-24 08:06:05,936 -- No gcov data found.
+warning - 2026-10-24 08:06:05,937 -- coverage.py is not installed or can't be found.
+info - 2026-10-24 08:06:05,962 -- Found 2 coverage files to report
+info - 2026-10-24 08:06:05,962 -- > /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/08ef963d-700a-4053-9170-d1ca97aec796/coverage.cobertura.xml
+info - 2026-10-24 08:06:05,962 -- > /home/runner/work/link-cli/link-cli/rust/tests/issue62_review_coverage_tests.rs
+info - 2026-10-24 08:06:06,239 -- Upload queued for processing complete
+error - 2026-10-24 08:06:06,239 -- Upload queued for processing failed: {"message":"Token required - not valid tokenless upload"}
+## dev/log/issues/134/pulls/135/ci-logs/12cc6ef/40082441114.log
+gpg: WARNING: This key is not certified with a trusted signature!
+info - 2026-10-24 09:34:45,976 -- ci service found: github-actions
+warning - 2026-10-24 09:34:45,987 -- No config file could be found. Ignoring config.
+warning - 2026-10-24 09:34:46,022 -- xcrun is not installed or can't be found.
+warning - 2026-10-24 09:34:46,042 -- No gcov data found.
+warning - 2026-10-24 09:34:46,043 -- coverage.py is not installed or can't be found.
+info - 2026-10-24 09:34:46,088 -- Found 2 coverage files to report
+info - 2026-10-24 09:34:46,088 -- > /home/runner/work/link-cli/link-cli/rust/tests/issue62_review_coverage_tests.rs
+info - 2026-10-24 09:34:46,088 -- > /home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/bc301113-8f04-48f3-b824-f34f2416c0a9/coverage.cobertura.xml
+info - 2026-10-24 09:34:46,869 -- Upload queued for processing complete
+error - 2026-10-24 09:34:46,869 -- Upload queued for processing failed: {"message":"Token required - not valid tokenless upload"}
+
+# Codecov API, 2026-10-24T09:45:26Z
+{"name":"link-cli","private":false,"updatestamp":"2026-10-24T09:43:13.472806Z","author":{"service":"github","username":"link-foundation","name":null},"language":null,"branch":"main","active":false,"activated":false,"totals":null}

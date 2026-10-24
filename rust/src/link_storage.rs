@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 use crate::error::LinkError;
 use crate::indexed_links::LinksMap;
 use crate::link::Link;
+use crate::named_type_links::escape_lino_reference;
 use crate::storage::StorageRevision;
 
 /// Callback invoked once per `(before, after)` change a write produced.
@@ -863,41 +864,4 @@ impl LinkStorage {
             .map(|name| escape_lino_reference(name))
             .unwrap_or_else(|| id.to_string())
     }
-}
-
-fn escape_lino_reference(reference: &str) -> String {
-    if reference.is_empty() || reference.trim().is_empty() {
-        return String::new();
-    }
-
-    let has_single_quote = reference.contains('\'');
-    let has_double_quote = reference.contains('"');
-    let needs_quoting = reference.parse::<u32>().is_ok()
-        || reference.contains(':')
-        || reference.contains('(')
-        || reference.contains(')')
-        || reference.contains(' ')
-        || reference.contains('\t')
-        || reference.contains('\n')
-        || reference.contains('\r')
-        || has_single_quote
-        || has_double_quote;
-
-    if has_single_quote && has_double_quote {
-        return format!("'{}'", reference.replace('\'', "\\'"));
-    }
-
-    if has_double_quote {
-        return format!("'{reference}'");
-    }
-
-    if has_single_quote {
-        return format!("\"{reference}\"");
-    }
-
-    if needs_quoting {
-        return format!("'{reference}'");
-    }
-
-    reference.to_string()
 }

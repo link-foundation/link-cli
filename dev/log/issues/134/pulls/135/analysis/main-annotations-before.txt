@@ -1,0 +1,15 @@
+== 40076673386
+== 40076673352
+== 40076673348
+== 40076673495
+[Release to npm] failure:  Process completed with exit code 1.
+[Release to npm] failure: NPM_TOKEN is missing @link-foundation/link-cli-client 0.1.0 is not on npm, trusted publishing is not configured for it and there is no token. Either add an npm automation token with publish access to the @link-foundation 
+== 40076673476
+[Check Links] notice:  Summary report available at: https://github.com/link-foundation/link-cli/actions/runs/40076673476#summary-120821386129
+== 40076673365
+[Lint and Format Check] warning:  File has 903 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+[Auto Release] warning:  crates.io trusted publishing is unavailable, publishing with the CARGO_REGISTRY_TOKEN/CARGO_TOKEN secret
+[Auto Release] failure:  Failed to retrieve token from Cargo registry. Status: 400. Error: No Trusted Publishing config found for repository `link-foundation/link-cli`.
+== 40076673394
+[CodeQL (csharp)] warning:  Cannot build an overlay-base database because build-mode is set to "autobuild" instead of "none". Falling back to creating a normal full database instead.
+== 40076673383

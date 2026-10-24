@@ -1,0 +1,74 @@
+# dev/log/issues/134/pulls/135/scripts/template-file-size-substring-exclusion.sh run against link-cli's fixed checkers.
+# The Rust checker now reports every oversized file. link-cli's C# checker only scans
+# csharp/ and rust/, so the template fixture layout does not apply to it; its component
+# matching is verified by csharp/scripts/check-file-size.test.mjs instead.
+
+=== C# template: repository checked out as 'csharp-app'
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 0 C# file(s)
+Checking Rust files in rust/...
+  Found 0 Rust file(s)
+
+Checked 0 file(s) - all within the line limit
+
+exit: 0
+=== C# template: repository checked out as 'robin-cli' (every path contains 'bin')
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 0 C# file(s)
+Checking Rust files in rust/...
+  Found 0 Rust file(s)
+
+Checked 0 file(s) - all within the line limit
+
+exit: 0
+=== Rust template: repository checked out as 'rust-app'
+
+Checking Rust files for maximum 1000 lines (warning above 900)...
+
+Found files exceeding the line limit:
+
+  src/retarget.rs: 1001 lines (exceeds 1000)
+  src/target_matcher.rs: 1001 lines (exceeds 1000)
+
+Please refactor these files to be under 1000 lines
+
+exit: 1
+=== Rust template: repository checked out as 'target-cli' (every path contains 'target')
+
+Checking Rust files for maximum 1000 lines (warning above 900)...
+
+Found files exceeding the line limit:
+
+  src/main.rs: 1001 lines (exceeds 1000)
+
+Please refactor these files to be under 1000 lines
+
+exit: 1
+=== Both templates: oversized tooling under .github ('.git' is a substring of '.github')
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 0 C# file(s)
+Checking Rust files in rust/...
+  Found 0 Rust file(s)
+
+Checked 0 file(s) - all within the line limit
+
+exit: 0
+
+Checking Rust files for maximum 1000 lines (warning above 900)...
+
+Found files exceeding the line limit:
+
+  .github/scripts/tool.rs: 1001 lines (exceeds 1000)
+
+Please refactor these files to be under 1000 lines
+
+exit: 1

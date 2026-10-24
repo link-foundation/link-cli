@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  checkWaybackMachine,
   extractErrorsSection,
   extractBrokenLinks,
 } from './check-web-archive.mjs';
@@ -66,4 +67,55 @@ test('the parsed error count matches the count lychee reports', () => {
   const { urls, others } = extractBrokenLinks(report);
   const reported = Number(/🚫 Errors\s*\|\s*(\d+)/.exec(report)[1]);
   assert.equal(urls.length + others.length, reported);
+});
+
+// Issue #134: a failed Wayback lookup was reported as "No archived version
+// was found", which failed runs whose links do have a snapshot.
+const snapshot = {
+  archived_snapshots: {
+    closest: { available: true, url: 'http://web.archive.org/web/2024/https://example.com/', timestamp: '20240101000000' },
+  },
+};
+const answer = (status, body = {}) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+const droppedConnection = () =>
+  Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }) });
+const playback = (...steps) => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    const step = steps[Math.min(calls.length, steps.length) - 1];
+    if (step instanceof Error) throw step;
+    return step;
+  };
+  return { calls, fetchImpl };
+};
+
+test('transient Wayback failures are retried before a snapshot is reported', async () => {
+  const { calls, fetchImpl } = playback(droppedConnection(), answer(503), answer(200, snapshot));
+  const result = await checkWaybackMachine('https://example.com/', { fetchImpl, delayMs: 0 });
+  assert.equal(calls.length, 3);
+  assert.deepEqual(result, {
+    available: true,
+    archiveUrl: 'https://web.archive.org/web/2024/https://example.com/',
+    timestamp: '20240101000000',
+  });
+});
+
+test('a Wayback lookup that keeps failing is reported as failed, not as unarchived', async () => {
+  const { calls, fetchImpl } = playback(droppedConnection());
+  const result = await checkWaybackMachine('https://example.com/', { fetchImpl, attempts: 2, delayMs: 0 });
+  assert.equal(calls.length, 2);
+  assert.equal(result.available, false);
+  assert.equal(result.error, 'fetch failed: ECONNRESET (after 2 attempts)');
+});
+
+test('a definite Wayback answer is not retried', async () => {
+  const { calls, fetchImpl } = playback(answer(200, { archived_snapshots: {} }));
+  const result = await checkWaybackMachine('https://example.com/', { fetchImpl, delayMs: 0 });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(result, { available: false, archiveUrl: null, timestamp: null });
+
+  const forbidden = playback(answer(403));
+  assert.equal((await checkWaybackMachine('https://example.com/', { fetchImpl: forbidden.fetchImpl, delayMs: 0 })).error, 'HTTP 403');
+  assert.equal(forbidden.calls.length, 1);
 });

@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import {
   blockerOf,
   compareVersions,
+  fetchJson,
   isOutdated,
   latestStable,
   parseCargoManifest,
@@ -15,9 +16,11 @@ import {
   parsePackageJson,
   parsePackageLock,
   parseWorkflowActions,
+  parsePinnedWorkflowActions,
   parseWorkflowTools,
   verdict,
   versionParts,
+  withRetries,
 } from './check-latest-dependencies.mjs';
 
 test('versions compare numerically, not as text', () => {
@@ -144,11 +147,37 @@ test('runtimes and installed tools are found', () => {
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-audit@0.22.2, wasm-pack
+      - run: cargo install wasm-pack --version 0.14.0 --locked
+      - run: cargo install cargo-edit --locked
+      - run: |
+          pipx run zizmor==1.31.1 --config .github/zizmor.yml \\
+            .github
 `;
   assert.deepEqual(parseWorkflowTools(workflow), [
     { kind: 'node', name: 'Node.js', version: '24.x' },
     { kind: 'dotnet', name: '.NET', version: '10.0.x' },
     { kind: 'crate', name: 'cargo-audit', version: '0.22.2' },
+    { kind: 'crate', name: 'wasm-pack', version: '0.14.0' },
+    { kind: 'pypi', name: 'zizmor', version: '1.31.1' },
+  ]);
+});
+
+test('actions pinned to a commit, a digest or an exact tag are found', () => {
+  const sha = 'c6f97d42243bad5fab37ca0427f495c86d5b1a18';
+  const digest = 'b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667';
+  const workflow = `
+      - uses: rust-lang/crates-io-auth-action@${sha} # v1.0.5
+      - uses: docker://rhysd/actionlint@sha256:${digest} # v1.7.12
+      - uses: zizmorcore/zizmor-action@v0.8.0
+      - uses: dtolnay/rust-toolchain@${sha} # master branch @ 2026-10-01
+      - uses: NuGet/login@${sha} # v1.2.0 # https://github.com/link-foundation/link-cli/issues/1
+      - uses: actions/checkout@v7
+`;
+  assert.deepEqual(parsePinnedWorkflowActions(workflow), [
+    { name: 'rust-lang/crates-io-auth-action', version: 'v1.0.5' },
+    { name: 'rhysd/actionlint', version: 'v1.7.12' },
+    { name: 'NuGet/login', version: 'v1.2.0', blocker: 'https://github.com/link-foundation/link-cli/issues/1' },
+    { name: 'zizmorcore/zizmor-action', version: 'v0.8.0' },
   ]);
 });
 
@@ -234,4 +263,58 @@ test('only an open issue holds an outdated dependency back', () => {
   assert.equal(verdict(behind, undefined), 'outdated');
   assert.equal(verdict(behind, 'open'), 'held');
   assert.equal(verdict(behind, 'closed'), 'outdated');
+});
+
+// A fake fetch that plays back `answers` in order: an Error is thrown like a
+// network failure, a number is answered as that HTTP status.
+function fakeFetch(answers) {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    const answer = answers[calls.length - 1];
+    if (answer instanceof Error) throw answer;
+    return { ok: answer === 200, status: answer, json: async () => ({ version: '1.2.3' }) };
+  };
+  return { calls, fetchImpl };
+}
+
+const networkFailure = () => new TypeError('fetch failed', { cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }) });
+
+test('a dropped connection to a registry is retried instead of failing the check', async () => {
+  const { calls, fetchImpl } = fakeFetch([networkFailure(), 503, 429, 200]);
+  assert.deepEqual(await fetchJson('https://registry.example/foo', {}, { fetchImpl, delayMs: 0 }), { version: '1.2.3' });
+  assert.equal(calls.length, 4);
+});
+
+test('a lookup that keeps failing reports the network cause and the attempts', async () => {
+  const { calls, fetchImpl } = fakeFetch([networkFailure(), networkFailure()]);
+  await assert.rejects(fetchJson('https://registry.example/foo', {}, { fetchImpl, attempts: 2, delayMs: 0 }), {
+    message: 'https://registry.example/foo: fetch failed: ECONNRESET (after 2 attempts)',
+  });
+  assert.equal(calls.length, 2);
+});
+
+test('an answer a retry cannot change fails at once', async () => {
+  const { calls, fetchImpl } = fakeFetch([404, 200]);
+  await assert.rejects(fetchJson('https://registry.example/missing', {}, { fetchImpl, delayMs: 0 }), {
+    message: 'https://registry.example/missing answered 404',
+  });
+  assert.equal(calls.length, 1);
+});
+
+test('retries wait longer each time and stop after the last attempt', async () => {
+  let calls = 0;
+  const started = Date.now();
+  await assert.rejects(
+    withRetries(
+      async () => {
+        calls += 1;
+        throw new Error('git ls-remote failed');
+      },
+      { attempts: 3, delayMs: 20 },
+    ),
+    { message: 'git ls-remote failed (after 3 attempts)' },
+  );
+  assert.equal(calls, 3);
+  assert.ok(Date.now() - started >= 55, 'waits 20 ms, then 40 ms');
 });

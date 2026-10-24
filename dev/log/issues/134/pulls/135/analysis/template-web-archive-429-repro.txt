@@ -1,0 +1,100 @@
+# Templates: rust 265219d, csharp 4cc372e, js 0a62b80 (scripts/check-web-archive.mjs; rust and js are identical)
+
+== rust template, Wayback API rate-limited: once
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Wayback API returned 429 for https://example.com/moved-page
+  ✗ Not found in Web Archive
+
+=== Web Archive Check Summary ===
+
+✗ 1 broken link(s) have NO Web Archive version:
+  https://example.com/moved-page
+
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://example.com/moved-page
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+== GITHUB_OUTPUT
+all_archived=false
+
+== csharp template, Wayback API rate-limited: once
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s) (lychee reported 1). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Wayback API returned 429 for https://example.com/moved-page
+  ✗ Not found in Web Archive
+
+=== Web Archive Check Summary ===
+
+✗ 1 broken link(s) have NO Web Archive version:
+  https://example.com/moved-page
+
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://example.com/moved-page
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+== GITHUB_OUTPUT
+all_archived=false
+
+== js template, Wayback API rate-limited: once
+=== Web Archive Fallback Check ===
+
+Reading lychee output from: $WORK/out.md
+
+Found 1 broken URL(s). Checking Web Archive...
+
+Checking: https://example.com/moved-page
+  Wayback API returned 429 for https://example.com/moved-page
+  ✗ Not found in Web Archive
+
+=== Web Archive Check Summary ===
+
+✗ 1 broken link(s) have NO Web Archive version:
+  https://example.com/moved-page
+
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://example.com/moved-page
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+== fake Wayback API requests
+GET /wayback/available?url=https%3A%2F%2Fexample.com%2Fmoved-page
+  -> 429
+== GITHUB_OUTPUT
+all_archived=false

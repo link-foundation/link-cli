@@ -1,0 +1,66 @@
+# curl -sD - 'https://archive.org/wayback/available?url=https%3A%2F%2Fexample.com%2F' (2026-10-24 10:18 UTC)
+HTTP/2 429 (no Retry-After header); body: 429 Too Many Requests
+
+# LYCHEE_OUTPUT=.github/scripts/fixtures/lychee-report.md node <check-web-archive.mjs at 83d6768>
+Found 2 broken URL(s). Checking Web Archive...
+
+Checking: https://link-foundation.github.io/link-cli/csharp/
+  Wayback API returned 429 for https://link-foundation.github.io/link-cli/csharp/
+  ✗ Not found in Web Archive
+Checking: https://link-foundation.github.io/link-cli/rust/link_cli/
+  Wayback API returned 429 for https://link-foundation.github.io/link-cli/rust/link_cli/
+  ✗ Not found in Web Archive
+
+=== Web Archive Check Summary ===
+
+✗ 2 broken link(s) have NO Web Archive version:
+  https://link-foundation.github.io/link-cli/csharp/
+  https://link-foundation.github.io/link-cli/rust/link_cli/
+
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://link-foundation.github.io/link-cli/csharp/
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+::error title=Broken link - No Web Archive fallback::Broken link detected: https://link-foundation.github.io/link-cli/rust/link_cli/
+No archived version was found in the Wayback Machine.
+How to fix:
+  1. Find an updated URL for the same or equivalent content and replace the link.
+  2. Remove the link if the content is no longer relevant.
+  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1
+
+# the same with the fixed .github/scripts/check-web-archive.mjs
+Found 2 broken URL(s). Checking Web Archive...
+
+Checking: https://link-foundation.github.io/link-cli/csharp/
+  Retrying the Wayback API (attempt 2 of 3) after: HTTP 429
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 429
+  ✗ Web Archive lookup failed: HTTP 429 (after 3 attempts)
+Checking: https://link-foundation.github.io/link-cli/rust/link_cli/
+  Retrying the Wayback API (attempt 2 of 3) after: HTTP 429
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 429
+  ✗ Web Archive lookup failed: HTTP 429 (after 3 attempts)
+
+=== Web Archive Check Summary ===
+
+✗ 2 broken link(s) could not be checked against the Web Archive:
+  https://link-foundation.github.io/link-cli/csharp/: HTTP 429 (after 3 attempts)
+::error title=Broken link - Web Archive lookup failed::Broken link detected: https://link-foundation.github.io/link-cli/csharp/
+The Wayback Machine could not be asked whether it has a snapshot: HTTP 429 (after 3 attempts)
+How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.
+  https://link-foundation.github.io/link-cli/rust/link_cli/: HTTP 429 (after 3 attempts)
+::error title=Broken link - Web Archive lookup failed::Broken link detected: https://link-foundation.github.io/link-cli/rust/link_cli/
+The Wayback Machine could not be asked whether it has a snapshot: HTTP 429 (after 3 attempts)
+How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.
+
+all_archived=false
+
+Action required: Fix or remove the broken links listed above.
+For links with Web Archive versions, you can replace them with the suggested archive.org URLs.
+exit=1

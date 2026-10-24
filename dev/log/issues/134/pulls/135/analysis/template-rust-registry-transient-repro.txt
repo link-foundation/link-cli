@@ -1,0 +1,29 @@
+== revision 265219d, connection dropped: once
+Using CLI configured Rust root: rust
+Max published version on crates.io: 1.0.8
+Output: max_published_version=1.0.8
+Warning: Could not check crates.io: http://127.0.0.1:PORT/api/v1/crates/link-cli/1.0.8: Network Error: Unexpected EOF
+Output: crate_published=false
+Output: dockerhub_required=false
+Output: dockerhub_published=false
+Output: github_release_published=true
+Crate: link-cli, Version: 1.0.8, Published on crates.io: false
+Docker Hub artifact check skipped: DOCKERHUB_IMAGE or Dockerfile is not configured
+GitHub release rust-v1.0.8 published: true
+No changelog fragments but v1.0.8 is missing at least one release artifact
+Output: should_release=true
+Output: skip_bump=true
+exit=0
+== fake registry requests
+GET /api/v1/crates/link-cli
+GET /api/v1/crates/link-cli/1.0.8
+  -> connection dropped
+GET /repos/link-foundation/link-cli/releases/tags/rust-v1.0.8
+== GITHUB_OUTPUT
+max_published_version=1.0.8
+crate_published=false
+dockerhub_required=false
+dockerhub_published=false
+github_release_published=true
+should_release=true
+skip_bump=true

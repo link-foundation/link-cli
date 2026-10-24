@@ -44,6 +44,7 @@
  */
 
 import { appendFileSync, readFileSync } from 'node:fs';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 const NUGET_FLAT_CONTAINER = 'https://api.nuget.org/v3-flatcontainer';
 const GITHUB_API = 'https://api.github.com';
@@ -119,6 +120,31 @@ export function readCsprojInfo(csprojPath) {
 }
 
 /**
+ * `fetchImpl(url, options)`, retried with backoff on network failures, 429
+ * and 5xx, so one dropped connection does not fail the release decision on
+ * main (issue #134). Other answers are returned at once; after the last
+ * attempt the last answer is returned or the network error is thrown with
+ * its cause, which Node's "fetch failed" message leaves out.
+ */
+export async function fetchWithRetries(url, options, fetchImpl = fetch, { attempts = 4, delayMs = 1000 } = {}) {
+  for (let attempt = 1; ; attempt += 1) {
+    let response;
+    try {
+      response = await fetchImpl(url, options);
+    } catch (error) {
+      if (attempt >= attempts) {
+        const cause = error.cause ? `: ${error.cause.code ?? error.cause.message ?? error.cause}` : '';
+        throw new Error(`${url}: ${error.message}${cause} (after ${attempt} attempts)`);
+      }
+    }
+    const transient = !response || response.status === 429 || response.status >= 500;
+    if (!transient || attempt >= attempts) return response;
+    console.log(`Retrying ${url} (attempt ${attempt + 1} of ${attempts})`);
+    await sleep(delayMs * 2 ** (attempt - 1));
+  }
+}
+
+/**
  * Probe `https://api.nuget.org/v3-flatcontainer/{id-lower}/index.json` for the
  * package's published versions.
  *
@@ -130,12 +156,12 @@ export function readCsprojInfo(csprojPath) {
  * @param {string} packageId
  * @returns {Promise<string[] | null>}
  */
-export async function fetchNugetVersions(packageId, fetchImpl = fetch) {
+export async function fetchNugetVersions(packageId, fetchImpl = fetch, retry = {}) {
   const baseUrl = process.env.NUGET_INDEX_URL ?? NUGET_FLAT_CONTAINER;
   const url = `${baseUrl}/${packageId.toLowerCase()}/index.json`;
   console.log(`Fetching ${url}`);
 
-  const response = await fetchImpl(url);
+  const response = await fetchWithRetries(url, undefined, fetchImpl, retry);
   if (response.status === 404) {
     return null;
   }
@@ -154,7 +180,7 @@ export async function fetchNugetVersions(packageId, fetchImpl = fetch) {
  * @param {string} tag         full tag, e.g. csharp-v2.4.0
  * @returns {Promise<boolean>}
  */
-export async function fetchGithubReleaseExists(repository, tag, fetchImpl = fetch) {
+export async function fetchGithubReleaseExists(repository, tag, fetchImpl = fetch, retry = {}) {
   if (!repository) {
     return false;
   }
@@ -169,7 +195,7 @@ export async function fetchGithubReleaseExists(repository, tag, fetchImpl = fetc
     headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
 
-  const response = await fetchImpl(url, { headers });
+  const response = await fetchWithRetries(url, { headers }, fetchImpl, retry);
   if (response.status === 404) {
     return false;
   }

@@ -1,0 +1,37 @@
+Removed rust/changelog.d/20261005_120000_issue_105_remote_links.md
+Removed rust/changelog.d/20261005_150000_issue_105_store_archive.md
+Removed rust/changelog.d/20261005_180000_issue_105_latest_dependencies.md
+Removed rust/changelog.d/20261005_210000_issue_105_browser_storage.md
+Removed rust/changelog.d/20261005_230000_issue_105_protocol_coverage.md
+Removed rust/changelog.d/20261007_120000_issue_104_links_notation_binary.md
+Removed rust/changelog.d/20261013_145444_trusted_publishing.md
+Removed rust/changelog.d/20261015_065000_issue_117_wasm_publish_policy.md
+Removed rust/changelog.d/20261015_065500_ci_dependency_updates.md
+Removed rust/changelog.d/20261015_073000_issue_110_indexed_lookups.md
+Removed rust/changelog.d/20261015_074000_issue_110_protocol_documentation.md
+Removed rust/changelog.d/20261015_090000_issue_108_wasm_request.md
+Removed rust/changelog.d/20261015_100000_issue_108_moving_names.md
+Removed rust/changelog.d/20261015_110000_issue_108_save_replaces_file.md
+Removed rust/changelog.d/20261024_070000_issue_128_dependencies.md
+Removed rust/changelog.d/20261024_070000_validate_lino_import.md
+Removed rust/changelog.d/20261024_073000_quoted_query_names.md
+Removed rust/changelog.d/20261024_120000_issue_134_release_commit.md
+Collected 48 changelog fragment(s)
+Staged release files: rust/CHANGELOG.md, rust/Cargo.lock, rust/Cargo.toml, rust/changelog.d/20260430_041900_rust_query_parity.md, rust/changelog.d/20260430_063000_lino_output_export.md, rust/changelog.d/20260430_070900_named_types_decorator.md, rust/changelog.d/20260430_072128_validate_missing_references.md, rust/changelog.d/20260430_073500_pinned_types_decorator.md, rust/changelog.d/20260430_105500_named_type_query_cli.md, rust/changelog.d/20260502_061000_export_alias.md, rust/changelog.d/20260508_104000_lino_input_import.md, rust/changelog.d/20260508_105800_issue_20_substitution.md, rust/changelog.d/20260509_053805_issue_62_review_coverage.md, rust/changelog.d/20260512_000000_issue_77_layout.md, rust/changelog.d/20260515_140000_issue_92_library_metadata.md, rust/changelog.d/20260520_120000_issue_94_transactions_and_version_control.md, rust/changelog.d/20260818_120000_issue_96_cicd_hardening.md, rust/changelog.d/20260829_100000_issue_98_dependency_refresh.md, rust/changelog.d/20260829_110000_issue_98_windows_log_repair.md, rust/changelog.d/20260829_140000_issue_98_reusable_storage.md, rust/changelog.d/20260829_150000_issue_100_doublets_050.md, rust/changelog.d/20260829_151000_issue_100_decorators.md, rust/changelog.d/20260829_160000_issue_100_cascade_parity.md, rust/changelog.d/20260829_170000_issue_100_hybrid_constants.md, rust/changelog.d/20260829_171000_issue_100_rust_triggers.md, rust/changelog.d/20260829_180000_issue_100_trigger_cli.md, rust/changelog.d/20260829_181000_issue_100_address_allocation.md, rust/changelog.d/20260829_182000_issue_100_changes_parity.md, rust/changelog.d/20260829_190000_issue_100_public_api.md, rust/changelog.d/20260829_195000_issue_100_unspecified_halves.md, rust/changelog.d/20260922_140000_issue_102_existing_file_capacity.md, rust/changelog.d/20261004_120000_issue_105_tcp_protocols.md, rust/changelog.d/20261005_090000_issue_105_creation_reports.md, rust/changelog.d/20261005_120000_issue_105_remote_links.md, rust/changelog.d/20261005_150000_issue_105_store_archive.md, rust/changelog.d/20261005_180000_issue_105_latest_dependencies.md, rust/changelog.d/20261005_210000_issue_105_browser_storage.md, rust/changelog.d/20261005_230000_issue_105_protocol_coverage.md, rust/changelog.d/20261007_120000_issue_104_links_notation_binary.md, rust/changelog.d/20261013_145444_trusted_publishing.md, rust/changelog.d/20261015_065000_issue_117_wasm_publish_policy.md, rust/changelog.d/20261015_065500_ci_dependency_updates.md, rust/changelog.d/20261015_073000_issue_110_indexed_lookups.md, rust/changelog.d/20261015_074000_issue_110_protocol_documentation.md, rust/changelog.d/20261015_090000_issue_108_wasm_request.md, rust/changelog.d/20261015_100000_issue_108_moving_names.md, rust/changelog.d/20261015_110000_issue_108_save_replaces_file.md, rust/changelog.d/20261024_070000_issue_128_dependencies.md, rust/changelog.d/20261024_070000_validate_lino_import.md, rust/changelog.d/20261024_073000_quoted_query_names.md, rust/changelog.d/20261024_120000_issue_134_release_commit.md
+Committed version 1.0.9
+Created tag rust-v1.0.9
+Pushed release commit and tag rust-v1.0.9
+Output: version_committed=true
+Output: new_version=1.0.9
+--- exit status: 0
+--- GITHUB_OUTPUT:
+version_committed=true
+new_version=1.0.9
+--- fragments before: 48, left in work tree: 0
+--- origin/main log:
+653a300 chore: release rust-v1.0.9
+179643c state of main
+--- origin tags:
+rust-v1.0.9
+--- version on origin/main: version = "1.0.9"
+--- uncommitted changes left in the work tree:

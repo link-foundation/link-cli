@@ -1,0 +1,47 @@
+== CI: C# CI/CD Pipeline run 40086095559, Test (macos-26), commit 0652b2c
+Unhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter 'socket')
+   at System.ArgumentNullException.Throw(String paramName)
+   at System.ArgumentNullException.ThrowIfNull(Object argument, String paramName)
+   at System.Net.Sockets.NetworkStream..ctor(Socket socket, FileAccess access, Boolean ownsSocket)
+   at System.Net.Sockets.TcpClient.GetStream()
+   at Foundation.Data.Doublets.Cli.Protocol.LinksServer.HandleConnection(TcpClient client, INamedTypesLinks`1 links) in /Users/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksServer.cs:line 154
+   at Foundation.Data.Doublets.Cli.Protocol.LinksServer.<>c__DisplayClass11_1.<Serve>b__1() in /Users/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksServer.cs:line 120
+   at System.Threading.Thread.StartCallback()
+Test Run Aborted.
+     Passed: 44
+
+== dev/log/issues/134/pulls/135/scripts/tcpclient-getstream-race: TcpClient.GetStream() racing TcpClient.Dispose()
+20000 races on .NET 10.0.12 (Ubuntu 24.04.5 LTS)
+  ArgumentNullException: 429
+  InvalidOperationException: 18
+  IOException: 8
+  ObjectDisposedException: 14082
+  stream obtained: 5463
+
+== dev/log/issues/134/pulls/135/scripts/links-server-shutdown-race, before (beec18d), run 1: 5000 shutdowns
+Unhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter 'socket')
+exit=134
+== dev/log/issues/134/pulls/135/scripts/links-server-shutdown-race, before (beec18d), run 2: 5000 shutdowns
+Unhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter 'socket')
+exit=134
+== dev/log/issues/134/pulls/135/scripts/links-server-shutdown-race, before (beec18d), run 3: 5000 shutdowns
+Unhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter 'socket')
+exit=134
+== dev/log/issues/134/pulls/135/scripts/links-server-shutdown-race, after (7d5bbd7), run 1: 5000 shutdowns
+all 5000 shutdowns survived
+exit=0
+== dev/log/issues/134/pulls/135/scripts/links-server-shutdown-race, after (7d5bbd7), run 2: 5000 shutdowns
+all 5000 shutdowns survived
+exit=0
+== dev/log/issues/134/pulls/135/scripts/links-server-shutdown-race, after (7d5bbd7), run 3: 5000 shutdowns
+all 5000 shutdowns survived
+exit=0
+== before: crashed in 20 of 20 runs of 200 shutdowns (the loop size of ShuttingDownRightAfterAConnectionArrivesIsClean)
+
+== Earlier occurrence on main: run 38697246013, Test (macos-latest), commit c3430de (2026-10-15)
+Unhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter 'socket')
+   at Foundation.Data.Doublets.Cli.Protocol.LinksServer.HandleConnection(TcpClient client, INamedTypesLinks`1 links)
+The test host crashed the same way. 9a66f9e, which landed right after it, catches
+the InvalidOperationException of a Dispose between GetStream's Disposed and
+Connected checks; this ArgumentNullException, a Dispose between the Connected
+check and the read of Client, stayed uncaught.

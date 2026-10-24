@@ -17,10 +17,18 @@ on:
 permissions:
   contents: read
 
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   codeql:
     name: CodeQL (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}
@@ -35,12 +43,14 @@ jobs:
       # run log "Cannot build an overlay database because build-mode is set to
       # 'undefined'" and fall back to a full database, and drove the standalone
       # autobuild step, whose inputs the action now reports as DEPRECATED
-      # (issue #96). Only C# needs a compiler; the other three are analysed from
-      # source.
+      # (issue #96). C# used `autobuild`, which still logged "Cannot build an
+      # overlay-base database because build-mode is set to "autobuild" instead
+      # of "none"" on every run (issue #134); buildless extraction is supported
+      # for C#, so every language is now analysed from source.
       matrix:
         include:
           - language: csharp
-            build-mode: autobuild
+            build-mode: none
           - language: rust
             build-mode: none
           - language: javascript-typescript
@@ -49,7 +59,11 @@ jobs:
             build-mode: none
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
+      # Buildless C# extraction still restores NuGet packages to resolve
+      # dependency types, so the SDK stays.
       - name: Setup .NET
         if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v6
@@ -63,6 +77,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4
@@ -70,7 +85,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-dependency-review
@@ -80,6 +95,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Review dependency changes
         uses: actions/dependency-review-action@v5
@@ -89,7 +106,7 @@ jobs:
 
   cargo-audit:
     name: Cargo audit (${{ matrix.manifest }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-cargo-audit-${{ matrix.manifest }}
@@ -100,23 +117,34 @@ jobs:
         manifest: [rust, rust/wasm]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - uses: taiki-e/install-action@v2
+      - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
           tool: cargo-audit@0.22.2
 
+      # `unmaintained`, `unsound` and `yanked` advisories are warnings, and a
+      # warning does not move `cargo audit`'s exit status: it prints
+      # "warning: N allowed warnings found" and exits 0, so the job passed while
+      # showing findings (issue #134). Ported from the
+      # rust-ai-driven-development-pipeline-template.
       - name: Audit committed Cargo.lock
-        run: cargo audit --file ${{ matrix.manifest }}/Cargo.lock
+        env:
+          MANIFEST: ${{ matrix.manifest }}
+        run: cargo audit --file "$MANIFEST/Cargo.lock" --deny warnings
 
   npm-audit:
     name: Audit npm lock
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:
@@ -135,13 +163,15 @@ jobs:
   # are skipped.
   secrets-scan:
     name: Scan for committed secrets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-secrets-scan
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:

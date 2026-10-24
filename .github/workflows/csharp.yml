@@ -24,6 +24,7 @@ on:
         description: 'Version bump type'
         required: true
         type: choice
+        default: 'patch'
         options:
           - patch
           - minor
@@ -33,21 +34,25 @@ on:
         required: false
         type: string
 
-# Reader runs (PR validation) are cancelled when superseded; runs on main are
-# writers - they publish to NuGet and push version commits, so cancelling one
-# mid-flight would leave a half-published release behind (issue #96).
-concurrency:
-  group: csharp-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# Concurrency is set per job (issue #134): superseded read-only checks are
+# cancelled on pull requests, while writer jobs share a never-cancelled
+# group. A workflow-level group held the whole run, including the release
+# and the registry wait, so a third push to main cancelled the queued run.
 
 # Least privilege by default; the publishing jobs opt into more below.
 permissions:
   contents: read
 
+# The GIT_CONFIG_* entries provide Git config to actions/checkout itself;
+# checkout runs git init before any workflow step can configure Git, which
+# otherwise prints the default-branch hint into every log.
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 defaults:
   run:
@@ -57,8 +62,11 @@ jobs:
   # === DETECT CHANGES - determines which jobs should run ===
   detect-changes:
     name: Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     if: github.event_name != 'workflow_dispatch'
     outputs:
       cs-changed: ${{ steps.changes.outputs.cs-changed }}
@@ -73,6 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -92,13 +101,17 @@ jobs:
   # === CHANGESET CHECK - only runs on PRs with code changes ===
   changeset-check:
     name: Changeset Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -112,26 +125,28 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref }}
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # Read head_ref through env, never interpolate it into the script: on
+          # a fork PR the branch name is attacker-controlled (issue #134).
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
         run: |
           # Skip changeset check for automated release PRs
-          if [[ "${{ github.head_ref }}" == "changeset-release/"* ]] || [[ "${{ github.head_ref }}" == "changeset-manual-release-"* ]]; then
+          if [[ "$GITHUB_HEAD_REF" == "changeset-release/"* ]] || [[ "$GITHUB_HEAD_REF" == "changeset-manual-release-"* ]]; then
             echo "Skipping changeset check for automated release PR"
             exit 0
           fi
 
-          # Check if changeset exists in csharp/.changeset
-          CHANGESET_COUNT=$(find csharp/.changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
-          if [ "$CHANGESET_COUNT" -eq 0 ]; then
-            echo "::warning::No changeset found in csharp/.changeset/. Please add a changeset for C# code changes."
-          else
-            echo "Found $CHANGESET_COUNT changeset file(s)"
-          fi
+          # A C# code change without exactly one valid changeset never reaches
+          # a release, so this fails instead of warning (issue #134).
+          node csharp/scripts/validate-changeset.mjs
 
   # === LINT AND FORMAT CHECK ===
   lint:
     name: Lint and Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: |
       !cancelled() && (
@@ -147,6 +162,8 @@ jobs:
       )
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -184,14 +201,19 @@ jobs:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes, changeset-check]
     if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-26, windows-2025]
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -207,11 +229,61 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
+      # Codecov accepts tokenless uploads only from fork pull requests, so
+      # every upload from this repository failed with "Token required - not
+      # valid tokenless upload" behind `fail_ci_if_error: false`, and the
+      # repository never received a report (issue #134). Upload only when the
+      # token exists and then fail loudly; the codecov-token job below turns
+      # main red while it is missing.
+      - name: Check Codecov token
+        id: codecov
+        if: matrix.os == 'ubuntu-24.04'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          if [ -n "$CODECOV_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::CODECOV_TOKEN is not configured, so no coverage is uploaded; the Codecov Token job fails on main until it is."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The search used to pick up rust/tests/issue62_review_coverage_tests.rs
+      # as a coverage report because of its name, and the gcov, xcode and
+      # coverage.py plugins only logged that their tools were missing. Read
+      # the Cobertura reports of `dotnet test` and nothing else.
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest'
+        if: steps.codecov.outputs.available == 'true'
+        timeout-minutes: 5
         uses: codecov/codecov-action@v7
         with:
-          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
+          plugins: noop
+          fail_ci_if_error: true
+
+  # Coverage needs a secret only a maintainer can add, so pull requests pass
+  # without it while main fails here with what to do. No release job needs
+  # this one, so a missing token never blocks a release.
+  codecov-token:
+    name: Codecov Token
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-codecov-token
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Require CODECOV_TOKEN on main
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        working-directory: .
+        run: |
+          if [ -z "$CODECOV_TOKEN" ]; then
+            echo "::error title=CODECOV_TOKEN is missing::C# coverage is never uploaded. Activate link-foundation/link-cli on https://app.codecov.io/gh/link-foundation and add its upload token as the CODECOV_TOKEN repository secret, or remove the Codecov steps from csharp.yml."
+            exit 1
+          fi
+          echo "CODECOV_TOKEN is configured."
 
   # === SEMANTIC MERGE CONFLICT CHECK ===
   # The jobs above test the pull request head. Two pull requests that each pass
@@ -220,13 +292,17 @@ jobs:
   # tip of the base branch and rebuilds and retests that tree.
   fresh-merge:
     name: Simulate Fresh Merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     if: github.event_name == 'pull_request'
     needs: [detect-changes]
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup .NET
@@ -248,12 +324,17 @@ jobs:
   # === BUILD PACKAGE ===
   build:
     name: Build Package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [lint, test]
     if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -280,7 +361,7 @@ jobs:
     name: Release
     needs: [lint, test, build]
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
     # package or a version commit.
@@ -290,9 +371,12 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: true
           fetch-depth: 0
 
       - name: Setup .NET
@@ -312,8 +396,8 @@ jobs:
           # Count changeset files (excluding README.md and config.json)
           CHANGESET_COUNT=$(find csharp/.changeset -name "*.md" ! -name "README.md" 2>/dev/null | wc -l)
           echo "Found $CHANGESET_COUNT changeset file(s)"
-          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "changeset_count=$CHANGESET_COUNT" >> $GITHUB_OUTPUT
+          echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          echo "changeset_count=$CHANGESET_COUNT" >> "$GITHUB_OUTPUT"
 
       - name: Check if release is needed
         # Self-healing gate: even when a changeset is absent, resume publishing
@@ -352,11 +436,14 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          CURRENT_VERSION: ${{ steps.check_release.outputs.current_version }}
         run: |
-          if [ -n "${{ steps.version.outputs.new_version }}" ]; then
-            VERSION="${{ steps.version.outputs.new_version }}"
+          if [ -n "$NEW_VERSION" ]; then
+            VERSION="$NEW_VERSION"
           else
-            VERSION="${{ steps.check_release.outputs.current_version }}"
+            VERSION="$CURRENT_VERSION"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing version: $VERSION"
@@ -398,12 +485,29 @@ jobs:
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_USER: ${{ vars.NUGET_USER }}
         run: |
-          if [ -z "$NUGET_API_KEY" ]; then
-            echo "::warning::NUGET_API_KEY is not configured — NuGet publish will be skipped."
+          if [ -n "$NUGET_USER" ]; then
+            echo "Publishing with NuGet trusted publishing as $NUGET_USER"
             exit 0
           fi
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
+          fi
           echo "NUGET_API_KEY length: ${#NUGET_API_KEY}"
+
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        # Trusted publishing: a one-hour key requested right before the push.
+        if: >-
+          vars.NUGET_USER != '' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true' ||
+          (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
 
       - name: Publish to NuGet
         id: nuget_publish
@@ -412,15 +516,20 @@ jobs:
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          # The long-lived secret is only the fallback while trusted
+          # publishing is not configured (vars.NUGET_USER unset).
+          NUGET_API_KEY: ${{ vars.NUGET_USER == '' && secrets.NUGET_API_KEY || steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
-          if [ -n "$NUGET_API_KEY" ]; then
-            dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "NUGET_API_KEY not set, skipping NuGet publish"
-            echo "published=false" >> "$GITHUB_OUTPUT"
+          # A missing key used to skip the push while the release stayed green
+          # (issue #134); a versioned but unpublished release must fail.
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
           fi
+          # zizmor flags every --api-key push; the key is the short-lived
+          # trusted-publishing key whenever vars.NUGET_USER is set.
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate # zizmor: ignore[use-trusted-publishing]
+          echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify CLI package on NuGet
         if: >-
@@ -428,10 +537,13 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.id }}
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --release-version "${{ steps.release_version.outputs.version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Verify library package on NuGet
         if: >-
@@ -439,10 +551,13 @@ jobs:
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true' ||
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true'))
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.library_id }}
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.library_id }}" \
-            --release-version "${{ steps.release_version.outputs.version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: >-
@@ -451,15 +566,18 @@ jobs:
           (steps.check_release.outputs.should_release == 'true' && steps.check_release.outputs.skip_bump == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.release_version.outputs.version }}
+          CLI_PACKAGE_ID: ${{ steps.package.outputs.id }}
+          LIBRARY_PACKAGE_ID: ${{ steps.package.outputs.library_id }}
         working-directory: .
         run: |
           node csharp/scripts/create-github-release.mjs \
-            --release-version "${{ steps.release_version.outputs.version }}" \
-            --repository "${{ github.repository }}" \
+            --release-version "$RELEASE_VERSION" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "csharp-v" \
             --language "C#" \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --package-id "${{ steps.package.outputs.library_id }}" \
+            --package-id "$CLI_PACKAGE_ID" \
+            --package-id "$LIBRARY_PACKAGE_ID" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
 
@@ -468,7 +586,7 @@ jobs:
     name: Instant Release
     needs: [lint, test, build]
     if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
     # package or a version commit.
@@ -478,9 +596,12 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # NuGet trusted publishing (NuGet/login) exchanges the OIDC token.
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: true
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -497,11 +618,14 @@ jobs:
       - name: Version and commit
         id: version
         working-directory: .
+        env:
+          BUMP_TYPE: ${{ github.event.inputs.bump_type }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
         run: |
           node csharp/scripts/version-and-commit.mjs \
             --mode instant \
-            --bump-type "${{ github.event.inputs.bump_type }}" \
-            --description "${{ github.event.inputs.description }}"
+            --bump-type "$BUMP_TYPE" \
+            --description "$DESCRIPTION"
 
       - name: Build package
         if: >-
@@ -529,41 +653,63 @@ jobs:
           echo "id=$CLI_ID" >> "$GITHUB_OUTPUT"
           echo "library_id=$LIB_ID" >> "$GITHUB_OUTPUT"
 
+      - name: NuGet login (OIDC)
+        id: nuget-login
+        # Trusted publishing: a one-hour key requested right before the push.
+        if: >-
+          vars.NUGET_USER != '' && (
+          steps.version.outputs.version_committed == 'true' ||
+          steps.version.outputs.already_released == 'true')
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Publish to NuGet
         id: nuget_publish
         if: >-
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true'
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          # The long-lived secret is only the fallback while trusted
+          # publishing is not configured (vars.NUGET_USER unset).
+          NUGET_API_KEY: ${{ vars.NUGET_USER == '' && secrets.NUGET_API_KEY || steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
-          if [ -n "$NUGET_API_KEY" ]; then
-            dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "NUGET_API_KEY not set, skipping NuGet publish"
-            echo "published=false" >> "$GITHUB_OUTPUT"
+          # A missing key used to skip the push while the release stayed green
+          # (issue #134); a versioned but unpublished release must fail.
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error title=NuGet credentials are missing::The release was versioned but cannot be published to NuGet. Either configure a nuget.org trusted publishing policy for this repository and csharp.yml and set the NUGET_USER repository variable to the nuget.org account name, or add a nuget.org API key with push access to the clink and Foundation.Data.Doublets.Cli packages as the NUGET_API_KEY repository secret (Settings > Secrets and variables > Actions), then re-run this job."
+            exit 1
           fi
+          # zizmor flags every --api-key push; the key is the short-lived
+          # trusted-publishing key whenever vars.NUGET_USER is set.
+          dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate # zizmor: ignore[use-trusted-publishing]
+          echo "published=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify CLI package on NuGet
         if: >-
           steps.nuget_publish.outputs.published == 'true' && (
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true')
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.id }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --release-version "${{ steps.version.outputs.new_version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Verify library package on NuGet
         if: >-
           steps.nuget_publish.outputs.published == 'true' && (
           steps.version.outputs.version_committed == 'true' ||
           steps.version.outputs.already_released == 'true')
+        env:
+          PACKAGE_ID: ${{ steps.package.outputs.library_id }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           node scripts/wait-for-nuget.mjs \
-            --package-id "${{ steps.package.outputs.library_id }}" \
-            --release-version "${{ steps.version.outputs.new_version }}"
+            --package-id "$PACKAGE_ID" \
+            --release-version "$RELEASE_VERSION"
 
       - name: Create GitHub Release
         if: >-
@@ -571,15 +717,18 @@ jobs:
           steps.version.outputs.already_released == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.new_version }}
+          CLI_PACKAGE_ID: ${{ steps.package.outputs.id }}
+          LIBRARY_PACKAGE_ID: ${{ steps.package.outputs.library_id }}
         working-directory: .
         run: |
           node csharp/scripts/create-github-release.mjs \
-            --release-version "${{ steps.version.outputs.new_version }}" \
-            --repository "${{ github.repository }}" \
+            --release-version "$RELEASE_VERSION" \
+            --repository "$GITHUB_REPOSITORY" \
             --tag-prefix "csharp-v" \
             --language "C#" \
-            --package-id "${{ steps.package.outputs.id }}" \
-            --package-id "${{ steps.package.outputs.library_id }}" \
+            --package-id "$CLI_PACKAGE_ID" \
+            --package-id "$LIBRARY_PACKAGE_ID" \
             --changelog-path "csharp/CHANGELOG.md" \
             --assets-glob "csharp/artifacts/*.nupkg"
 
@@ -593,7 +742,7 @@ jobs:
   changeset-pr:
     name: Create Changeset PR
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changeset-pr'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a run that may already have pushed a branch.
     concurrency:
@@ -605,6 +754,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: true
           fetch-depth: 0
 
       - name: Create changeset file

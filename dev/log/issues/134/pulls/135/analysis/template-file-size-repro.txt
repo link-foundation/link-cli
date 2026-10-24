@@ -1,0 +1,45 @@
+=== C# template: repository checked out as 'csharp-app'
+
+Checking C# files for maximum 1000 lines (warning above 900)...
+
+Found files exceeding the line limit:
+
+  src/Objects/Store.cs: 1001 lines (exceeds 1000)
+
+Please refactor these files to be under 1000 lines
+
+exit: 1
+=== C# template: repository checked out as 'robin-cli' (every path contains 'bin')
+
+Checking C# files for maximum 1000 lines (warning above 900)...
+
+Checked 0 file(s) - all within the line limit
+
+exit: 0
+=== Rust template: repository checked out as 'rust-app'
+
+Checking source files for maximum 1000 lines (warning above 900) and documentation for maximum 2500 lines (warning above 2250)...
+
+All files are within the line limit
+
+exit: 0
+=== Rust template: repository checked out as 'target-cli' (every path contains 'target')
+
+Checking source files for maximum 1000 lines (warning above 900) and documentation for maximum 2500 lines (warning above 2250)...
+
+All files are within the line limit
+
+exit: 0
+=== Both templates: oversized tooling under .github ('.git' is a substring of '.github')
+
+Checking C# files for maximum 1000 lines (warning above 900)...
+
+Checked 0 file(s) - all within the line limit
+
+exit: 0
+
+Checking source files for maximum 1000 lines (warning above 900) and documentation for maximum 2500 lines (warning above 2250)...
+
+All files are within the line limit
+
+exit: 0
