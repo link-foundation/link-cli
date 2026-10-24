@@ -18,13 +18,27 @@ use walkdir::WalkDir;
 const MAX_LINES: usize = 1000;
 const WARN_LINES: usize = 900;
 const FILE_EXTENSIONS: &[&str] = &[".rs"];
-const EXCLUDE_PATTERNS: &[&str] = &["target", ".git", "node_modules"];
+/// Directory names skipped wherever they appear: build output and VCS data.
+const EXCLUDE_DIRS: &[&str] = &["target", ".git", "node_modules"];
+/// Repository paths skipped: verbatim copies of other repositories kept as
+/// investigation evidence (for example the pipeline templates compared in
+/// dev/log/issues/134/pulls/135/templates).
+const EXCLUDE_PREFIXES: &[&str] = &["dev/log"];
 
-fn should_exclude(path: &Path) -> bool {
-    let path_str = path.to_string_lossy();
-    EXCLUDE_PATTERNS
+/// Matches whole path components relative to the scanned root. The previous
+/// substring match (issue #134) also skipped `.github/...` because it
+/// contains `.git`, and any path containing `target`, such as `retarget.rs`.
+fn should_exclude(path: &Path, cwd: &Path) -> bool {
+    let relative = path.strip_prefix(cwd).unwrap_or(path);
+    let relative_str = relative
+        .to_string_lossy()
+        .replace(std::path::MAIN_SEPARATOR, "/");
+    EXCLUDE_PREFIXES
         .iter()
-        .any(|pattern| path_str.contains(pattern))
+        .any(|prefix| relative_str == *prefix || relative_str.starts_with(&format!("{prefix}/")))
+        || relative
+            .components()
+            .any(|component| EXCLUDE_DIRS.iter().any(|dir| component.as_os_str() == *dir))
 }
 
 fn has_valid_extension(path: &Path) -> bool {
@@ -89,14 +103,11 @@ fn check_directory(cwd: &Path) -> CheckResult {
 
     for entry in WalkDir::new(cwd)
         .into_iter()
+        .filter_entry(|e| !should_exclude(e.path(), cwd))
         .filter_map(std::result::Result::ok)
         .filter(|e| e.file_type().is_file())
     {
         let path = entry.path();
-
-        if should_exclude(path) {
-            continue;
-        }
 
         if !has_valid_extension(path) {
             continue;
@@ -276,6 +287,37 @@ mod tests {
                 lines: MAX_LINES + 1,
             }]
         );
+    }
+
+    #[test]
+    fn exclusions_match_whole_components_not_substrings() {
+        let repo = temp_dir("exclusions");
+        for dir in [
+            ".github/scripts",
+            "src",
+            "target/debug",
+            "js/node_modules/pkg",
+            "dev/log/issues/1/pulls/2/templates",
+        ] {
+            fs::create_dir_all(repo.join(dir)).unwrap();
+        }
+        write_rust_file_with_lines(&repo.join(".github/scripts/tool.rs"), MAX_LINES + 1);
+        write_rust_file_with_lines(&repo.join("src/retarget.rs"), MAX_LINES + 1);
+        write_rust_file_with_lines(&repo.join("target/debug/build.rs"), MAX_LINES + 1);
+        write_rust_file_with_lines(&repo.join("js/node_modules/pkg/lib.rs"), MAX_LINES + 1);
+        write_rust_file_with_lines(
+            &repo.join("dev/log/issues/1/pulls/2/templates/copy.rs"),
+            MAX_LINES + 1,
+        );
+
+        let mut files: Vec<String> = check_directory(&repo)
+            .violations
+            .into_iter()
+            .map(|finding| finding.file)
+            .collect();
+        files.sort();
+
+        assert_eq!(files, vec![".github/scripts/tool.rs", "src/retarget.rs"]);
     }
 
     #[test]
