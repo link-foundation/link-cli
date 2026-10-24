@@ -1,0 +1,71 @@
+Optional pessimistic point-write ownership (R2/R5/R6/R7/R9/R11)
+
+Feature-absence reproductions were run before implementation: native Rust and
+C# tests fail to compile because their public concurrency enums have no
+Pessimistic variant. These are feature-absence checks, not runtime bug failures.
+Focused Rust: nine public contracts plus private cost/lifetime tests pass.
+Focused C#: all sixteen tests pass.
+
+Sessions reserve individual written addresses under the publication mutex;
+competing writes return busy without staging. Repeated own writes and disjoint
+writers proceed. Stale/ABA acquisition, explicit/automatic address reservations,
+independent branch merges, constraint rejection, rollback/drop/dispose and all
+three journal fault phases are tested. Read committed/snapshot/serializable
+visibility and independent revision/read-set validation remain selected options.
+Failed writes retain any observed serializable read dependency. Cluster engines
+explicitly reject engine-local locking in Rust, C# and JS/WASM.
+
+Each native implementation checks 1,296 finite histories against an independent
+serial-execution oracle. The Rust tests also execute inside actual WebAssembly.
+These are finite schedules, not a proof over all possible executions.
+Private cost assertions verify unselected modes have no tracker/ownership entries,
+repeated writes retain one entry, and every terminal path releases ownership.
+
+Full native Rust: 548 standard tests plus custom stdout harness pass; four child
+entry points ignored. Actual WASM: 279 pass (70 shared core, 9 engine binding,
+66 model/protocol, 126 storage/query and 8 web). Strict Clippy and fmt pass for
+native and actual WASM targets.
+
+Official native LLVM totals: lines 9,143/10,126 (90.29231680821648%),
+branches 1,482/1,874 (79.08217716115261%), functions 1,225/1,388,
+regions 13,852/15,937. New Rust ownership module: 29/29 lines, 8/8 branch
+outcomes, 3/3 functions, 37/37 regions.
+Official complete WASM totals: lines 5,279/9,770 (54.03275332650972%),
+branches 919/1,543 (59.559300064808816%), functions 750/1,376,
+regions 7,804/15,254. Wrapper: 332/332 lines, 68/68 functions, 16/16 branches,
+507/507 regions. Generic-instantiation semantics remain in COVERAGE-METHOD.md;
+no source exclusions or metric substitutions were added.
+
+C# Debug full suite: 897 passed, zero failed/skipped. Lines 5,988/6,535;
+branches 2,728/3,156. New ownership module: 100% measured lines and branches.
+
+Docs describe costs, ownership, busy retries, failed-operation reads, ABA,
+branch behavior and the lack of waits/distributed locking. Examples retain their
+existing behavior and optionally demonstrate busy writes plus disjoint commits.
+Pinned RocksDB source observations are recorded in RESEARCH.md; no competitor
+implementation or performance claim is copied. Minor release fragments updated.
+
+Latest main eb7074aa504e87e50106ad9ecd46d7422e61c9a8 remains an ancestor.
+Fresh feedback has no issue comments, required sub-issues, inline comments or
+reviews. The sole Codecov bot comment was read completely (patch 95.78189%,
+41 missing lines); overall requested native/WASM 100% coverage remains unmet.
+GitHub rejects gh pr diff with HTTP 406 once the PR exceeds its 300-file limit.
+The paginated files API (302 published files before this step) and complete local
+diff against fetched main preserve review material without that service limit.
+
+C# Release full suite: 897 passed, zero failed/skipped. Lines 4547/4882; branches 2708/3137.
+
+Remaining local checks pass: .NET formatting and release metadata; all 95 JS
+unit tests and strict TypeScript declarations; enforced 100% JS lines/branches/
+functions across all 17 production modules; production optimized WASM build;
+actual WASM conformance on Node, Bun and Deno (8 pass/4 process-only skips each).
+Full actual Rust/C#/WASM Node conformance passes 32 scenarios with four WASM
+process-only skips. All three optional --pessimistic --read-set examples pass.
+
+A shared durable file journal wrapped with delta encoding is sequentially opened
+by the Rust, C# and WASM examples for two full cycles, retaining each previous
+language's commits. Final independent WASM recovery confirms revision 22 and ten
+rows, including durable/profile names. No journal or lock format was changed.
+The first JS validation attempt could not find the already-downloaded wasm-pack
+on PATH; correcting the experiment harness PATH and resuming remaining checks
+passed without changing production code or repeating successful native suites.

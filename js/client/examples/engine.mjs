@@ -1,5 +1,6 @@
-// node js/client/examples/engine.mjs [journal-path] [--delta] [--read-set]
+// node js/client/examples/engine.mjs [journal-path] [--delta] [--read-set] [--pessimistic]
 import { readFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
 import * as binding from '../../../js/pkg/clink_wasm.js';
 import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog } from '../src/index.js';
 import { FileCommitLog } from '../src/engine-file-log.js';
@@ -11,6 +12,7 @@ const follower = new MemoryCommitLog();
 const baseLog = file ?? new ReplicatedCommitLog(new MemoryCommitLog(), [follower], { acknowledgements: 2 });
 const log = process.argv.includes('--delta') ? new DeltaCommitLog(baseLog) : baseLog;
 const engine = new WasmEngine(binding, { history: 'all', requireDurableFlush: file !== null,
+  concurrency: process.argv.includes('--pessimistic') ? 'pessimistic' : 'optimistic',
   serializableValidation: process.argv.includes('--read-set') ? 'read-set' : 'revision' }, log);
 const session = engine.begin();
 try {
@@ -35,6 +37,13 @@ try {
     const one = engine.begin(); const two = engine.begin();
     try {
       await one.setName(link.index, 'profile one'); await two.setName(other.index, 'profile two');
+      if (process.argv.includes('--pessimistic')) {
+        const blocked = engine.begin();
+        try {
+          await assert.rejects(blocked.removeName(link.index), /busy/i);
+          console.log('Competing point write rejected as busy');
+        } finally { await blocked.close(); }
+      }
       await one.commit(); await two.commit();
       console.log('Independent serializable point edits both committed');
     } finally { await one.close(); await two.close(); }

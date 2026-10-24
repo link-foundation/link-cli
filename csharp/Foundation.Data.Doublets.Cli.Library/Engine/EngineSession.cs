@@ -16,14 +16,16 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     private bool _closed;
     private HashSet<T>? _reads;
     private bool _scanned;
+    private PessimisticWrites<T>? _locks;
     // Platform.Data's default NumericType maximum predates UInt128. Supply
     // the generic-math bounds explicitly so all supported unsigned types work.
     public LinksConstants<T> Constants { get; } = new((T.One, T.MaxValue));
     internal EngineSession(LinksEngine<T> engine, EngineSnapshot<T> snapshot)
     {
         _engine = engine; _base = snapshot;
-        if (engine.Options.SerializableValidation == SerializableValidation.ReadSet && engine.Options.Concurrency == ConcurrencyControl.Optimistic)
+        if (engine.Options.SerializableValidation == SerializableValidation.ReadSet && engine.Options.Concurrency != ConcurrencyControl.Exclusive)
             _reads = new();
+        if (engine.Options.Concurrency == ConcurrencyControl.Pessimistic) _locks = new();
     }
 
     private void CheckOpen()
@@ -52,7 +54,10 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         lock (_engine.Gate)
         {
             CheckOpen();
-            T id = _engine.Allocate();
+            T id = T.CreateChecked(_engine.Next);
+            var next = _engine.NextAfter(BigInteger.CreateChecked(id));
+            _locks?.Acquire(_engine, id, _base.Revision);
+            _engine.Next = next;
             _writes[id] = new(new Link<T>(id, source, target), null);
             return id;
         }
@@ -65,7 +70,9 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             if (id == T.Zero) throw new ArgumentOutOfRangeException(nameof(id));
             if (Row(id) is null)
             {
-                _engine.Advance(BigInteger.CreateChecked(id));
+                var next = _engine.NextAfter(BigInteger.CreateChecked(id));
+                _locks?.Acquire(_engine, id, _base.Revision);
+                _engine.Next = next;
                 _writes[id] = new(new Link<T>(id, T.Zero, T.Zero), null);
             }
             return id;
@@ -78,6 +85,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             CheckOpen();
             var row = Row(id) ?? throw new KeyNotFoundException("Link not found.");
+            _locks?.Acquire(_engine, id, _base.Revision);
             _writes[id] = row with { Link = new(id, source, target) };
             return row.Link;
         }
@@ -88,6 +96,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             CheckOpen();
             var row = Row(id) ?? throw new KeyNotFoundException("Link not found.");
+            _locks?.Acquire(_engine, id, _base.Revision);
             _writes[id] = null;
             return row.Link;
         }
@@ -100,6 +109,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             CheckOpen();
             var row = Row(link) ?? throw new KeyNotFoundException("Link not found.");
+            _locks?.Acquire(_engine, link, _base.Revision);
             _writes[link] = row with { Name = name };
             return link;
         }
@@ -110,6 +120,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             CheckOpen();
             var row = Row(link) ?? throw new KeyNotFoundException("Link not found.");
+            _locks?.Acquire(_engine, link, _base.Revision);
             _writes[link] = row with { Name = null };
         }
     }
@@ -122,11 +133,12 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     {
         lock (_engine.Gate)
         {
-            CheckOpen();
+            if (_closed) throw new InvalidOperationException("Transaction is closed.");
             _closed = true;
             _engine.Active--;
             try
             {
+                _engine.CheckReady();
                 var writes = _writes.ToArray();
                 _writes.Clear();
                 if (_engine.Options.Isolation == IsolationLevel.Serializable
@@ -148,6 +160,9 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             }
             finally
             {
+                _locks?.Release(_engine);
+                _locks = null;
+                _writes.Clear();
                 _reads = null;
                 // Validate the last committer before reclaiming generations,
                 // including delete/recreate changes that restore identical rows.
@@ -162,6 +177,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             if (!_closed)
             {
                 _closed = true; _engine.Active--; _writes.Clear(); _reads = null;
+                _locks?.Release(_engine); _locks = null;
                 if (_engine.Active == 0) _engine.Changed = null;
             }
         }

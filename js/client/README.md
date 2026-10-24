@@ -216,6 +216,10 @@ Use `{ serializableValidation: 'read-set' }` for serializable independent point
 edits; scans still validate the entire revision. It composes with log/history
 choices. See [validation configuration and costs](../../docs/ENGINE-VALIDATION.md).
 
+Use `{ concurrency: 'pessimistic' }` to reserve written addresses until the
+session ends. Independent writes can proceed; a competing write returns busy
+immediately. See [ownership, retries and costs](../../docs/ENGINE-PESSIMISTIC.md).
+
 See [engine configurations, guarantees, costs and runnable examples](../../docs/ENGINE-STRATEGIES.md).
 A custom synchronous commit log selects storage; `MemoryCommitLog` and
 `ReplicatedCommitLog` compose portable adapters. Optional `DeltaCommitLog` wraps

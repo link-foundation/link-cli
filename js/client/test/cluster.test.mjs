@@ -95,7 +95,7 @@ test('cluster validates configuration and snapshots before creating private engi
   const { ClusterEngine } = await import('../src/cluster.js');
   const events = []; const binding = bindingWith(events);
   assert.throws(() => new ClusterEngine(binding, {}), TypeError);
-  for (const options of [{ concurrency: 'exclusive' }, { isolation: 'snapshot' }, { requireDurableFlush: true }])
+  for (const options of [{ concurrency: 'exclusive' }, { concurrency: 'pessimistic' }, { isolation: 'snapshot' }, { requireDurableFlush: true }])
     assert.throws(() => new ClusterEngine(binding, { read() {}, compareExchange() {} }, options), { name: 'UnsupportedError' });
   for (const snapshot of [[], null]) {
     const cluster = new ClusterEngine(binding, { read: async () => snapshot, compareExchange() {} });

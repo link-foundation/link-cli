@@ -24,6 +24,9 @@ public class EngineMetadataCostTests
     [InlineData(ConcurrencyControl.Exclusive, IsolationLevel.Serializable)]
     [InlineData(ConcurrencyControl.Exclusive, IsolationLevel.Snapshot)]
     [InlineData(ConcurrencyControl.Exclusive, IsolationLevel.ReadCommitted)]
+    [InlineData(ConcurrencyControl.Pessimistic, IsolationLevel.Serializable)]
+    [InlineData(ConcurrencyControl.Pessimistic, IsolationLevel.Snapshot)]
+    [InlineData(ConcurrencyControl.Pessimistic, IsolationLevel.ReadCommitted)]
     public void ReplayAndSingleWriterNeedNoGenerations(ConcurrencyControl concurrency, IsolationLevel isolation)
     {
         var log = new MemoryCommitLog();
@@ -101,10 +104,10 @@ public class EngineMetadataCostTests
     public void ReadSetsAreAllocatedOnlyWhenSelectedAndReleasedOnFinish()
     {
         var field = typeof(EngineSession<ulong>).GetField("_reads", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        foreach (var concurrency in new[] { ConcurrencyControl.Optimistic, ConcurrencyControl.Exclusive })
+        foreach (var concurrency in new[] { ConcurrencyControl.Optimistic, ConcurrencyControl.Exclusive, ConcurrencyControl.Pessimistic })
             foreach (var validation in new[] { SerializableValidation.Revision, SerializableValidation.ReadSet })
             {
-                bool selected = concurrency == ConcurrencyControl.Optimistic && validation == SerializableValidation.ReadSet;
+                bool selected = concurrency != ConcurrencyControl.Exclusive && validation == SerializableValidation.ReadSet;
                 var engine = Seed(new(), new() { Concurrency = concurrency, SerializableValidation = validation });
                 using var reader = engine.Begin(); reader.GetLink(1);
                 Assert.Equal(selected, field.GetValue(reader) is not null);

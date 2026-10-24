@@ -57,3 +57,8 @@ complete pending undo when a cascade exceeds remaining sequence capacity.
 Wait for active asynchronous checkpoints before transaction shutdown returns,
 serialize concurrent shutdown callers and reject callback self-joins. Preserve
 borrowed-store ownership and journal recovery for cancelled/failed checkpoints.
+
+Select optional pessimistic point-write ownership with immediate busy errors,
+independent isolation/read-set validation, stale/ABA rejection, branch protection
+and cleanup on every session outcome. Keep engine-local locks out of cluster
+workspaces and preserve existing optimistic/exclusive defaults.

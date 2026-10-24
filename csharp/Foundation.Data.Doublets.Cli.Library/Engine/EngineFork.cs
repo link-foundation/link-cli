@@ -72,6 +72,8 @@ public sealed class EngineFork<T>
                     if (current != before && current != after)
                         throw new InvalidOperationException("Conflict: branch and parent changed the same row.");
                     if (current == after) continue;
+                    if (_parent.WriteOwners?.ContainsKey(id) == true)
+                        throw new InvalidOperationException("Busy: another transaction owns this write address.");
                     if (after is { } value) rows[id] = value; else rows.Remove(id);
                     changes.Add(id);
                 }

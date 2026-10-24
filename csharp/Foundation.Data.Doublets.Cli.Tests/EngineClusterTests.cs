@@ -67,7 +67,7 @@ public class EngineClusterTests
     public void InvalidPoliciesKeysAndConstraintsNeverPublishPartialGroups()
     {
         var store = new Store();
-        foreach (var options in new EngineOptions[] { new() { Concurrency = ConcurrencyControl.Exclusive }, new() { Isolation = IsolationLevel.Snapshot }, new() { RequireDurableFlush = true } })
+        foreach (var options in new EngineOptions[] { new() { Concurrency = ConcurrencyControl.Exclusive }, new() { Concurrency = ConcurrencyControl.Pessimistic }, new() { Isolation = IsolationLevel.Snapshot }, new() { RequireDurableFlush = true } })
             Assert.Throws<ArgumentException>(() => new ClusterEngine<uint>(store, options));
         var cluster = new ClusterEngine<uint>(store, new() { Constraints = new[] { EngineConstraint.References } });
         foreach (var keys in new[] { Array.Empty<string>(), new[] { "a", "a" }, new[] { "../a" }, Enumerable.Repeat("a", 33).ToArray() })

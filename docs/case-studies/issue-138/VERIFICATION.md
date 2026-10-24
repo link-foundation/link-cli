@@ -793,3 +793,54 @@ regions. Wrapper coverage remains 331/331 lines, 68/68 functions, 16/16 branches
 and 505/505 regions. Complete coverage remains below 100%.
 See [PORTABLE-RECOVERY-PLAN.md](PORTABLE-RECOVERY-PLAN.md) and
 `dev/log/issues/138/pulls/139/portable-recovery.txt` for evidence.
+
+## Optional pessimistic point writes
+
+The public concurrency enums initially lack the strategy, so the focused feature
+contracts fail to compile before implementation. Optional point-write ownership
+now rejects competing writes immediately while permitting independent addresses.
+The existing session API, isolation choices and history/log composition remain
+available. Acquisition validates generations under the publication mutex; branch
+merges honor ownership. Every session outcome releases its addresses, including
+constraint failures and uncertain journal writes. Unselected modes allocate no
+ownership tracker or entries. Cluster workspaces explicitly reject local locks.
+See [configuration and costs](../../ENGINE-PESSIMISTIC.md).
+
+Nine shared Rust contracts run natively and in actual WASM. Sixteen C# contracts
+also cover reflection-based private bookkeeping costs and cleanup. Both native
+implementations compare 1,296 bounded histories with an independent serial oracle.
+Failed busy writes retain any point reads they performed; tests exercise their
+serializable dependency checks. Shared oracle execution is evidence for those
+finite histories, not exhaustive ACID verification.
+
+The full native suite passes 548 standard tests plus the custom stdout harness
+(four child entry points ignored). All 279 actual WASM tests pass. Native/WASM
+strict Clippy and formatting pass. Official native coverage is 9,143/10,126 lines
+(90.29%) and 1,482/1,874 branches (79.08%). Official complete WASM coverage is
+5,279/9,770 lines (54.03%) and 919/1,543 branches (59.56%). Wrapper coverage is
+332/332 lines, 68/68 functions and 16/16 reported branches. The new ownership
+module measures 29/29 lines and 8/8 branches on both targets. Complete project
+coverage remains below 100%; no source exclusions were added.
+
+The preceding async-shutdown and portable-recovery commits pass all nine
+exact-SHA workflows. Portable recovery's link-check attempt received HTTP 502
+from GitHub's existing release index (saved log lines 290–291, 311 and 315).
+A direct request returned HTTP 200; unchanged workflow attempt two passed.
+This did not require weaker checking or modified URLs. Evidence is preserved
+in `dev/log/issues/138/pulls/139/portable-recovery.txt`.
+
+C# passes 897 tests in Debug and Release. Debug measures 5988/6535 lines
+(91.63%) and 2728/3156 branches (86.44%); Release measures
+4547/4882 lines (93.14%) and 2708/3137 branches (86.32%). Different optimized
+sequence points mean these are separate configurations. The C# ownership module
+reaches 100% lines and branches in both.
+
+The existing examples pass with `--pessimistic --read-set`. The same durable delta
+journal is then opened sequentially by Rust, C# and WASM for two cycles; final
+independent recovery verifies revision 22 with ten rows and names from previous
+writers. Actual Node conformance passes all 32 Rust/C#/WASM scenarios (four
+WASM process-only skips); Bun and Deno actual-WASM conformance also pass.
+All 95 JS unit tests and TypeScript checks pass, with enforced 100% lines,
+branches and functions across all 17 JS production modules. .NET format and
+release metadata checks pass. Full evidence is in
+`dev/log/issues/138/pulls/139/pessimistic-writes.txt`.

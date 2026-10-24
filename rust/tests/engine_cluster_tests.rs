@@ -144,6 +144,10 @@ fn invalid_policies_and_coordinates_are_rejected_and_constraints_publish_no_shar
             ..Default::default()
         },
         EngineOptions {
+            concurrency: ConcurrencyControl::Pessimistic,
+            ..Default::default()
+        },
+        EngineOptions {
             isolation: IsolationLevel::Snapshot,
             ..Default::default()
         },

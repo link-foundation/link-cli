@@ -175,6 +175,11 @@ at construction. See [engine strategies](../docs/ENGINE-STRATEGIES.md) for costs
 file/replication ownership, guarantee limits and runnable examples. The existing
 bare links store remains available for cache workloads.
 
+Select `ConcurrencyControl.Pessimistic` for overlapping sessions that reserve
+written addresses and immediately reject competing writes. It composes with the
+existing isolation and history options. See [point-write ownership, retry rules
+and costs](../docs/ENGINE-PESSIMISTIC.md).
+
 `TransactionsDecorator` borrows its data and journal stores. Finish foreground
 operations, dispose the decorator, then dispose those stores. `Shutdown()` and
 `Dispose()` wait for the active asynchronous checkpoint to finish; concurrent

@@ -1,6 +1,6 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/engine-csharp -- [journal-path] [--delta] [--read-set] [--exit]
+// dotnet run --project examples/engine-csharp -- [journal-path] [--delta] [--read-set] [--pessimistic] [--exit]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal));
 using var file = path is not null ? new FileCommitLog(path) : null;
 ICommitLog log = file ?? (ICommitLog)new MemoryCommitLog();
@@ -8,6 +8,7 @@ if (args.Contains("--delta")) log = new DeltaCommitLog(log);
 var engine = new LinksEngine<ulong>(log, new()
 {
     HistoryLimit = null,
+    Concurrency = args.Contains("--pessimistic") ? ConcurrencyControl.Pessimistic : ConcurrencyControl.Optimistic,
     SerializableValidation = args.Contains("--read-set") ? SerializableValidation.ReadSet : SerializableValidation.Revision,
     RequireDurableFlush = file is not null
 });
@@ -35,6 +36,14 @@ if (args.Contains("--read-set"))
     using var seed = engine.Begin(); var other = seed.CreateLink(0, 0); seed.Commit();
     using var one = engine.Begin(); using var two = engine.Begin();
     one.SetName(id, "profile one"); two.SetName(other, "profile two");
+    if (args.Contains("--pessimistic"))
+    {
+        using var blocked = engine.Begin();
+        try { blocked.RemoveName(id); throw new Exception("Expected a busy write."); }
+        catch (InvalidOperationException error) when (error.Message.StartsWith("Busy:", StringComparison.Ordinal))
+        { Console.WriteLine($"Competing point write rejected: {error.Message}"); }
+        blocked.Rollback();
+    }
     one.Commit(); two.Commit();
     Console.WriteLine("Independent serializable point edits both committed");
 }

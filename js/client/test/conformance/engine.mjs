@@ -4,6 +4,7 @@ import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog } from
 
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
+  await pessimisticConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin(); const observer = engine.begin();
   try {
@@ -218,4 +219,39 @@ async function readSetSchedules(binding) {
     } finally { branch.close(); }
     console.log('ok wasm serializable read sets: disjoint points, cycles, scans, missing rows, ABA, branches');
   } finally { for (const session of sessions) await session.close(); engine.close(); }
+}
+
+
+async function pessimisticConformance(binding) {
+  for (const validation of [
+    { isolation: 'snapshot' },
+    { isolation: 'serializable', serializableValidation: 'read-set' },
+  ]) {
+    const engine = new WasmEngine(binding, { concurrency: 'pessimistic', ...validation });
+    const sessions = [];
+    const begin = () => { const session = engine.begin(); sessions.push(session); return session; };
+    try {
+      const seed = begin(); const one = await seed.create(0n, 0n); const two = await seed.create(0n, 0n); await seed.commit();
+      const first = begin(); const second = begin();
+      await first.setName(one.index, 'one'); await second.setName(two.index, 'two');
+      await assert.rejects(second.setName(one.index, 'busy'), /busy/i);
+      await assert.rejects(first.setName(two.index, 'busy'), /busy/i);
+      assert.equal(await second.getName(two.index), 'two');
+      assert.equal(engine.snapshot().rows[0].name, null);
+      await first.commit();
+      if (validation.isolation === 'snapshot') await second.commit();
+      else {
+        // The rejected writes read those rows before checking write ownership;
+        // retained point dependencies still require serializable validation.
+        await assert.rejects(second.commit(), /conflict/i);
+      }
+      const owner = begin(); const retry = begin();
+      await owner.setName(one.index, 'private');
+      await assert.rejects(retry.setName(one.index, 'retry'), /busy/i);
+      await owner.close(); await retry.setName(one.index, 'retry'); await retry.commit();
+      const recovered = new WasmEngine(binding, { concurrency: 'pessimistic' }, engine.journal());
+      try { assert.equal(recovered.snapshot().rows[0].name, 'retry'); }
+      finally { recovered.close(); }
+    } finally { for (const session of sessions) await session.close(); engine.close(); }
+  }
 }

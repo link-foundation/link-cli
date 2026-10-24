@@ -14,6 +14,7 @@ transaction algorithm.
 | --- | --- | --- |
 | Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
+| Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed complete revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Bounded time travel | Set Rust `HistoryPolicy::Last(n)`, C# `HistoryLimit = n`, JS `history: n` | Retain up to n revisions including current. Active sessions and previously returned snapshots pin their versions independently. |
 | Complete time travel | Rust `HistoryPolicy::All`, C# `HistoryLimit = null`, JS `history: 'all'` | Every replayed/committed revision remains addressable in memory. |
@@ -38,6 +39,11 @@ one engine mutex, so two commits cannot validate the same state concurrently.
 Exclusive admission fails immediately when another session is active; rollback,
 drop/dispose, and completed attempts release admission. A session belongs to
 one caller; share engine handles between threads instead of sharing a session.
+
+Optional [pessimistic point writes](ENGINE-PESSIMISTIC.md) reserve written addresses
+and reject competing writes before staging. Independent addresses remain concurrent;
+isolation and serializable validation remain separately selected. Cluster engines
+reject this local-only strategy.
 
 | Isolation | Reads | Conflict checks |
 | --- | --- | --- |
@@ -179,9 +185,11 @@ up to O(HN) retained row memory. The allocator is shared. Optimistic read-commit
 and snapshot sessions, plus serializable read-set sessions, track per-address changes only while another session can
 be stale, retaining deleted-address tombstones to detect delete/recreate races.
 The final session validates before reclaiming that map. Opening an engine,
-exclusive admission and whole-revision serializable validation do not build
+exclusive admission and optimistic whole-revision serializable validation do not build
 per-row generations. A continuously overlapping set of sessions can still retain
-many changed addresses; end sessions promptly.
+many changed addresses; end sessions promptly. Pessimistic admission additionally
+tracks reserved write addresses and generations under all isolation levels; its
+[separate cost description](ENGINE-PESSIMISTIC.md) explains ownership and cleanup.
 Recovery reads the full log; retention bounds in-memory history, not log size.
 Optional single-span delta encoding reduces physical bytes for localized changes
 and adds an O(N) comparison; it does not compact history or remove full-state work.
@@ -196,6 +204,7 @@ large or frequently written database.
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
+| RocksDB pessimistic transactions | Pessimistic point writes + selected isolation | Immediate busy errors, engine-local ownership and snapshot validation; no waiting, deadlock detector, range locks, LSM tree or performance equivalence. |
 | Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
 | Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
 | etcd consensus transactions | ClusterEngine + EtcdJournalStore | Linearizable selected-shard snapshots and atomic CAS; etcd supplies consensus. Full journals in one group limit data/write scale. |

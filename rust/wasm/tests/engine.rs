@@ -81,6 +81,8 @@ fn validates_every_binding_option_and_journal_before_opening() {
         r#"{"history":2}"#,
         r#"{"history":"all","isolation":"snapshot","concurrency":"optimistic"}"#,
         r#"{"isolation":"read-committed","concurrency":"exclusive","trace":true}"#,
+        r#"{"isolation":"snapshot","concurrency":"pessimistic"}"#,
+        r#"{"concurrency":"pessimistic","serializableValidation":"read-set"}"#,
         r#"{"constraints":["references","unique-pairs","unique-names"]}"#,
     ] {
         assert!(StagedEngine::new(options, "[]").is_ok(), "{options}");

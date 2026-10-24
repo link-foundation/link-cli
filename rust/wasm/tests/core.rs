@@ -34,3 +34,6 @@ mod journal;
 
 #[path = "../../tests/engine_portable_recovery_tests.rs"]
 mod portable_recovery;
+
+#[path = "../../tests/engine_pessimistic_tests.rs"]
+mod pessimistic;

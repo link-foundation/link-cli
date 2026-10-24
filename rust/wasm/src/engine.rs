@@ -32,6 +32,7 @@ fn options(text: &str) -> Result<EngineOptions, String> {
         concurrency: match parsed.concurrency.as_deref() {
             None | Some("optimistic") => ConcurrencyControl::Optimistic,
             Some("exclusive") => ConcurrencyControl::Exclusive,
+            Some("pessimistic") => ConcurrencyControl::Pessimistic,
             _ => return Err("unknown concurrency control".into()),
         },
         isolation: match parsed.isolation.as_deref() {

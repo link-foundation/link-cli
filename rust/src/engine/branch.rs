@@ -122,6 +122,9 @@ impl<T: LinkReference, P: TransitionLogStore, L: TransitionLogStore> Branch<T, P
             if current == after {
                 continue;
             }
+            if state.write_owners.contains_key(&id) {
+                return Err(error("busy: another transaction owns this write address"));
+            }
             match after {
                 Some(row) => {
                     rows.insert(id, row.clone());

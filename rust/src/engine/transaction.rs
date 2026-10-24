@@ -14,6 +14,7 @@ pub struct EngineTransaction<T: LinkReference, L: TransitionLogStore> {
     pub(super) closed: bool,
     pub(super) isolation: IsolationLevel,
     pub(super) reads: Option<Mutex<ReadSet<T>>>,
+    pub(super) locks: Option<super::pessimistic::WriteLocks<T>>,
 }
 impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
     fn check_open(&self) -> Result<(), LinkError> {
@@ -22,6 +23,13 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         } else {
             Ok(())
         }
+    }
+    fn acquire_write(&mut self, id: T) -> Result<(), LinkError> {
+        if let Some(locks) = &mut self.locks {
+            let mut state = self.engine.lock()?;
+            locks.acquire(&mut state, id, self.base.revision)?;
+        }
+        Ok(())
     }
     fn row(&self, id: T) -> Option<Row<T>> {
         if !self.closed {
@@ -85,6 +93,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
     pub fn set_name(&mut self, id: T, name: Option<String>) -> Result<(), LinkError> {
         self.check_open()?;
         let mut row = self.row(id).ok_or_else(|| LinkError::not_found(id))?;
+        self.acquire_write(id)?;
         row.name = name;
         self.writes.insert(id, Some(row));
         Ok(())
@@ -103,6 +112,9 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
                 .lock()
                 .unwrap_or_else(|poison| poison.into_inner());
             state.active -= 1;
+            if let Some(mut locks) = self.locks.take() {
+                locks.release(&mut state);
+            }
             if state.active == 0 {
                 state.changed.clear();
             }
@@ -113,10 +125,23 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
     }
     pub fn commit(&mut self) -> Result<u64, LinkError> {
         self.check_open()?;
-        let mut state = self.engine.lock()?;
+        let engine = self.engine.clone();
+        let mut state = match engine.lock() {
+            Ok(state) => state,
+            Err(cause) => {
+                self.rollback();
+                return Err(cause);
+            }
+        };
         // Every commit attempt ends this session, including conflicts/failures.
         state.active -= 1;
         self.closed = true;
+        // Publication holds this mutex until completion, so no writer can
+        // acquire released addresses yet. Release before fallible callbacks
+        // also avoids retaining ownership if a custom log panics.
+        if let Some(mut locks) = self.locks.take() {
+            locks.release(&mut state);
+        }
         let writes = std::mem::take(&mut self.writes);
         let reads = self.reads.take().map(Mutex::into_inner);
         let result = (|| {
@@ -189,10 +214,14 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
             let mut state = self.engine.lock()?;
             let id =
                 T::try_from(state.next).map_err(|_| LinkError::AddressOutOfRange(state.next))?;
-            state.next = state
+            let next = state
                 .next
                 .checked_add(1)
                 .ok_or_else(|| error("address space exhausted"))?;
+            if let Some(locks) = &mut self.locks {
+                locks.acquire(&mut state, id, self.base.revision)?;
+            }
+            state.next = next;
             id
         };
         self.writes.insert(
@@ -214,11 +243,15 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
                 .try_into()
                 .map_err(|_| error("address conversion failed"))?;
             let mut state = self.engine.lock()?;
-            state.next = state.next.max(
+            let next = state.next.max(
                 address
                     .checked_add(1)
                     .ok_or_else(|| error("address space exhausted"))?,
             );
+            if let Some(locks) = &mut self.locks {
+                locks.acquire(&mut state, id, self.base.revision)?;
+            }
+            state.next = next;
             self.writes.insert(
                 id,
                 Some(Row {
@@ -235,6 +268,7 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
     fn update_link(&mut self, id: T, source: T, target: T) -> Result<GenericLink<T>, LinkError> {
         self.check_open()?;
         let mut row = self.row(id).ok_or_else(|| LinkError::not_found(id))?;
+        self.acquire_write(id)?;
         let previous = row.link;
         row.link = GenericLink::new(id, source, target);
         self.writes.insert(id, Some(row));
@@ -243,6 +277,7 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
     fn delete_link(&mut self, id: T) -> Result<GenericLink<T>, LinkError> {
         self.check_open()?;
         let previous = self.row(id).ok_or_else(|| LinkError::not_found(id))?.link;
+        self.acquire_write(id)?;
         self.writes.insert(id, None);
         Ok(previous)
     }

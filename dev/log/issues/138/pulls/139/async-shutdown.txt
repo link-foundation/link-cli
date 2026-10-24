@@ -41,3 +41,8 @@ eb7074aa504e87e50106ad9ecd46d7422e61c9a8 is an ancestor of this branch.
 2026-10-24 feedback refresh: no issue comments/sub-issues/inline comments/reviews;
 one Codecov bot comment read completely (patch 95.35865%, 44 missing lines).
 No requested work is removed; the full issue's acceptance gaps remain open.
+
+Exact-SHA CI closure for b37c4c50e740dc3d1e87aa464fdd5191999d4613:
+all nine workflows pass; 36 successful checks, eleven skipped and one neutral.
+Runs created 2026-10-24 21:03:45 UTC. Conditional release checks account for
+the success/skip count difference from adjacent commits.

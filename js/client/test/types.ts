@@ -25,7 +25,7 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   // @ts-expect-error unknown validator
   const invalidValidation: EngineOptions = { serializableValidation: 'none' };
   void invalidValidation;
-  const options: EngineOptions = { isolation: 'snapshot', concurrency: 'exclusive', history: 'all', constraints: ['unique-names'], requireDurableFlush: true };
+  const options: EngineOptions = { isolation: 'snapshot', concurrency: 'pessimistic', history: 'all', constraints: ['unique-names'], requireDurableFlush: true };
   using file = new FileCommitLog('journal');
   const replica = new MemoryCommitLog();
   const log: CommitLog = new DeltaCommitLog(new ReplicatedCommitLog(file, [replica], { acknowledgements: 1 }), { checkpointInterval: 128 });

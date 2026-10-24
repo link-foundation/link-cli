@@ -1,19 +1,22 @@
 //! cargo run --example engine_strategies --manifest-path rust/Cargo.toml
 use link_cli::engine::replication::{ReplicatedLog, Synchronization};
 use link_cli::engine::{
-    DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog, SerializableValidation,
+    ConcurrencyControl, DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog,
+    SerializableValidation,
 };
 use link_cli::{FileTransitionLog, LinksStorage, TransitionLogStore};
 
 fn durable<L: TransitionLogStore>(
     log: L,
     validation: SerializableValidation,
+    concurrency: ConcurrencyControl,
 ) -> anyhow::Result<()> {
     let persistent = Engine::<u64, _>::open(
         log,
         EngineOptions {
             require_durable_flush: true,
             serializable_validation: validation,
+            concurrency,
             ..Default::default()
         },
     )?;
@@ -26,6 +29,11 @@ fn durable<L: TransitionLogStore>(
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
+    let concurrency = if args.iter().any(|arg| arg == "--pessimistic") {
+        ConcurrencyControl::Pessimistic
+    } else {
+        ConcurrencyControl::Optimistic
+    };
     let validation = if args.iter().any(|arg| arg == "--read-set") {
         SerializableValidation::ReadSet
     } else {
@@ -45,6 +53,7 @@ fn main() -> anyhow::Result<()> {
         EngineOptions {
             history: HistoryPolicy::All,
             serializable_validation: validation,
+            concurrency,
             ..Default::default()
         },
     )?;
@@ -72,6 +81,13 @@ fn main() -> anyhow::Result<()> {
         let mut two = db.begin()?;
         one.set_name(id, Some("profile one".into()))?;
         two.set_name(other, Some("profile two".into()))?;
+        if concurrency == ConcurrencyControl::Pessimistic {
+            let mut blocked = db.begin()?;
+            let cause = blocked.set_name(id, None).unwrap_err();
+            assert!(cause.to_string().contains("busy"));
+            println!("competing point write rejected: {cause}");
+            blocked.rollback();
+        }
         one.commit()?;
         two.commit()?;
         println!("independent serializable point edits both committed");
@@ -82,9 +98,9 @@ fn main() -> anyhow::Result<()> {
     if let Some(path) = args.iter().find(|arg| !arg.starts_with("--")) {
         let log = FileTransitionLog::open_exclusive(path)?;
         if args.iter().any(|arg| arg == "--delta") {
-            durable(DeltaLog::new(log, 128)?, validation)?;
+            durable(DeltaLog::new(log, 128)?, validation, concurrency)?;
         } else {
-            durable(log, validation)?;
+            durable(log, validation, concurrency)?;
         }
     }
     Ok(())

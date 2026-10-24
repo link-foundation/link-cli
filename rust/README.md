@@ -200,3 +200,7 @@ immutable history, constraints and replaceable revision logs. See
 [engine strategies](../docs/ENGINE-STRATEGIES.md) for configuration, costs,
 distributed ownership, guarantees and examples. The existing bare store remains
 available for cache workloads without these layers.
+
+Select `ConcurrencyControl::Pessimistic` for overlapping sessions that reserve
+written addresses and immediately reject competing writes. Isolation and history
+remain independent options. See [ownership, retry rules and costs](../docs/ENGINE-PESSIMISTIC.md).

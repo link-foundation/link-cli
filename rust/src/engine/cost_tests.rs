@@ -20,6 +20,7 @@ fn replay_and_nonoverlapping_sessions_need_no_generations() {
     for concurrency in [
         ConcurrencyControl::Optimistic,
         ConcurrencyControl::Exclusive,
+        ConcurrencyControl::Pessimistic,
     ] {
         for isolation in [
             IsolationLevel::Serializable,
@@ -137,12 +138,13 @@ fn point_read_sets_are_selected_and_reclaimed_with_generations() {
     for concurrency in [
         ConcurrencyControl::Optimistic,
         ConcurrencyControl::Exclusive,
+        ConcurrencyControl::Pessimistic,
     ] {
         for validation in [
             SerializableValidation::Revision,
             SerializableValidation::ReadSet,
         ] {
-            let selected = concurrency == ConcurrencyControl::Optimistic
+            let selected = concurrency != ConcurrencyControl::Exclusive
                 && validation == SerializableValidation::ReadSet;
             let db = seed(EngineOptions {
                 concurrency,
@@ -202,4 +204,55 @@ fn a_poisoned_read_set_closes_and_releases_the_session_without_publishing() {
     let mut fresh = db.begin().unwrap();
     fresh.update_link(1, 3, 2).unwrap();
     fresh.commit().unwrap();
+}
+
+#[test]
+fn point_write_ownership_is_selected_and_released_on_every_terminal_path() {
+    for concurrency in [
+        ConcurrencyControl::Optimistic,
+        ConcurrencyControl::Exclusive,
+        ConcurrencyControl::Pessimistic,
+    ] {
+        let db = seed(EngineOptions {
+            concurrency,
+            isolation: IsolationLevel::Snapshot,
+            ..Default::default()
+        });
+        let mut tx = db.begin().unwrap();
+        assert_eq!(
+            tx.locks.is_some(),
+            concurrency == ConcurrencyControl::Pessimistic
+        );
+        assert!(db.state.lock().unwrap().write_owners.is_empty());
+        tx.update_link(1, 2, 3).unwrap();
+        tx.set_name(1, Some("same key".into())).unwrap();
+        assert_eq!(
+            db.state.lock().unwrap().write_owners.len(),
+            usize::from(concurrency == ConcurrencyControl::Pessimistic)
+        );
+        tx.commit().unwrap();
+        assert!(tx.locks.is_none());
+        assert!(db.state.lock().unwrap().write_owners.is_empty());
+    }
+    let db = seed(EngineOptions {
+        concurrency: ConcurrencyControl::Pessimistic,
+        ..Default::default()
+    });
+    let mut first = db.begin().unwrap();
+    let mut pending = db.begin().unwrap();
+    first.update_link(1, 1, 0).unwrap();
+    pending.update_link(2, 2, 0).unwrap();
+    assert_eq!(db.state.lock().unwrap().write_owners.len(), 2);
+    assert!(db
+        .with_log::<()>(|_| Err(error("injected unknown log outcome")))
+        .is_err());
+    assert!(first.commit().is_err());
+    assert!(first.closed);
+    assert!(first.locks.is_none());
+    assert_eq!(db.state.lock().unwrap().write_owners.len(), 1);
+    pending.rollback();
+    let state = db.state.lock().unwrap();
+    assert!(state.write_owners.is_empty());
+    assert_eq!(state.active, 0);
+    assert!(state.changed.is_empty());
 }

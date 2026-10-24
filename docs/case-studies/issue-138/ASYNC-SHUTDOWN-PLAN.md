@@ -10,7 +10,7 @@ mapped stores remain in use.
 - [x] Join the worker before shutdown completion, serialize callers and reject self-join.
 - [x] Verify focused tests, corrupt-construction disposal, full Debug/Release coverage, formatting and release metadata.
 - [x] Document ownership and callback completion requirements; preserve evidence.
-- [ ] Verify fresh exact-SHA CI after publication.
+- [x] Verify fresh exact-SHA CI after publication (b37c4c5: all nine workflows pass).
 
 The lifetime test holds a callback behind a fifteen-second finite gate and checks
 shutdown after six seconds, beyond its existing five-second join. Its finally

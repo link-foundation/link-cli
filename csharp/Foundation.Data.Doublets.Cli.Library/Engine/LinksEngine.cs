@@ -4,7 +4,7 @@ using Platform.Data.Doublets;
 
 namespace Foundation.Data.Doublets.Cli.Engine;
 
-public enum ConcurrencyControl { Optimistic, Exclusive }
+public enum ConcurrencyControl { Optimistic, Exclusive, Pessimistic }
 public enum IsolationLevel { ReadCommitted, Snapshot, Serializable }
 public enum SerializableValidation { Revision, ReadSet }
 public enum EngineConstraint { References, UniquePairs, UniqueNames }
@@ -42,6 +42,7 @@ public sealed partial class LinksEngine<T>
     internal readonly EngineOptions Options;
     internal EngineSnapshot<T> Current = new(0, new());
     internal Dictionary<T, ulong>? Changed;
+    internal Dictionary<T, object>? WriteOwners;
     internal BigInteger Next = BigInteger.One;
     internal BigInteger CommittedNext = BigInteger.One;
     internal int Active;
@@ -111,18 +112,11 @@ public sealed partial class LinksEngine<T>
             catch { Poisoned = true; throw; }
         }
     }
-    internal T Allocate()
-    {
-        CheckReady();
-        T id = T.CreateChecked(Next);
-        Advance(BigInteger.CreateChecked(id));
-        return id;
-    }
-    internal void Advance(BigInteger id)
+    internal BigInteger NextAfter(BigInteger id)
     {
         var next = BigInteger.Max(Next, id + 1);
         if (next > BigInteger.CreateChecked(UInt128.MaxValue)) throw new OverflowException("Address space exhausted.");
-        Next = next;
+        return next;
     }
     internal void Publish(SortedDictionary<T, EngineRow<T>> rows, IEnumerable<T> writes)
     {
@@ -135,7 +129,8 @@ public sealed partial class LinksEngine<T>
             Poisoned = true;
             throw new IOException("Indeterminate commit; reopen the engine to discover the outcome.", error);
         }
-        if (Active > 0 && Options.Concurrency == ConcurrencyControl.Optimistic && (Options.Isolation != IsolationLevel.Serializable || Options.SerializableValidation == SerializableValidation.ReadSet))
+        if (Active > 0 && (Options.Concurrency == ConcurrencyControl.Pessimistic
+            || (Options.Concurrency == ConcurrencyControl.Optimistic && (Options.Isolation != IsolationLevel.Serializable || Options.SerializableValidation == SerializableValidation.ReadSet))))
             foreach (var id in writes) (Changed ??= new())[id] = snapshot.Revision;
         Current = snapshot;
         CommittedNext = Next;

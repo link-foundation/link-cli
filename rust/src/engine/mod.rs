@@ -17,6 +17,7 @@ pub mod etcd;
 mod journal;
 mod named;
 pub mod partitioned;
+mod pessimistic;
 pub mod replication;
 mod transaction;
 mod validation;
@@ -38,6 +39,8 @@ pub enum ConcurrencyControl {
     Optimistic,
     /// A second transaction fails immediately rather than blocking indefinitely.
     Exclusive,
+    /// Reserve written addresses until session end; competing writes fail fast.
+    Pessimistic,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -81,9 +84,10 @@ pub struct EngineOptions {
 
 impl EngineOptions {
     fn tracks_generations(&self) -> bool {
-        self.concurrency == ConcurrencyControl::Optimistic
-            && (self.isolation != IsolationLevel::Serializable
-                || self.serializable_validation == SerializableValidation::ReadSet)
+        self.concurrency == ConcurrencyControl::Pessimistic
+            || (self.concurrency == ConcurrencyControl::Optimistic
+                && (self.isolation != IsolationLevel::Serializable
+                    || self.serializable_validation == SerializableValidation::ReadSet))
     }
 }
 
@@ -116,6 +120,7 @@ struct State<T, L> {
     current: Snapshot<T>,
     history: BTreeMap<u64, Snapshot<T>>,
     changed: BTreeMap<T, u64>,
+    write_owners: BTreeMap<T, Arc<()>>,
     next: u128,
     committed_next: u128,
     active: usize,
@@ -161,6 +166,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             },
             history: BTreeMap::new(),
             changed: BTreeMap::new(),
+            write_owners: BTreeMap::new(),
             next: 1,
             committed_next: 1,
             active: 0,
@@ -235,8 +241,10 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             closed: false,
             isolation: state.options.isolation,
             reads: (state.options.serializable_validation == SerializableValidation::ReadSet
-                && state.options.concurrency == ConcurrencyControl::Optimistic)
+                && state.options.concurrency != ConcurrencyControl::Exclusive)
                 .then(|| Mutex::new(validation::ReadSet::default())),
+            locks: (state.options.concurrency == ConcurrencyControl::Pessimistic)
+                .then(pessimistic::WriteLocks::default),
         })
     }
     /// Run a caller's replication/catch-up/diagnostics operation under the same

@@ -23,3 +23,11 @@ Official complete WASM LLVM totals:
 WASM wrapper: 331/331 lines, 68/68 functions, 16/16 branches, 505/505 regions.
 Pinned tools and generic-instantiation metric semantics: COVERAGE-METHOD.md.
 Complete native/WASM coverage remains below 100%; no exclusions were added.
+
+Exact-SHA CI closure for a236c498158f359ab2a9b1c99f14464325d8df72:
+all nine workflows pass; 37 checks successful, ten skipped, one neutral.
+Runs created 2026-10-24 21:09:16 UTC. Broken Link Checker 40132953482
+attempt 1 returned GitHub HTTP 502 for the existing release index (downloaded
+log lines 290-291, 311 and 315). A fresh direct request returned HTTP 200;
+unchanged attempt 2 passed at 21:17:40 UTC. No link exclusions or accepted
+HTTP errors were added. Both attempts' full logs remain under ci-logs/.

@@ -16,6 +16,7 @@ class Store {
 export async function clusterConformance(binding) {
   const store = new Store(); const first = new ClusterEngine(binding, store); const second = new ClusterEngine(binding, store);
   assert.throws(() => new ClusterEngine(binding, store, { concurrency: 'exclusive' }), /optimistic/);
+  assert.throws(() => new ClusterEngine(binding, store, { concurrency: 'pessimistic' }), /optimistic/);
   assert.throws(() => new ClusterEngine(binding, store, { isolation: 'snapshot' }), /serializable/);
   assert.throws(() => new ClusterEngine(binding, store, { requireDurableFlush: true }), /durable/);
   const seed = await first.begin(['a', 'b']);
