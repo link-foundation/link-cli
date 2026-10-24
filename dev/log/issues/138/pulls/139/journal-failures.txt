@@ -1,0 +1,195 @@
+Issue 138 / PR 139: observed cascades and journal failures
+Baseline: bd195a69c1247933ee31b43de3477635ff264dee
+
+Bounded fixtures: at most four live data rows; one-shot append/rollback marker faults.
+No power-loss or process-crash claim. No retries of unknown appends as fresh writes.
+
+=== mapped-observer-before.log ===
+6: test mapped_uniqueness_merge_rolls_back_every_row ... FAILED
+7: test mapped_cascading_delete_rolls_back_every_row ... FAILED
+14: dependent row must be observed
+20: dependent row must be observed
+27: test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+=== mapped-observer-after.log ===
+6: test mapped_cascading_delete_rolls_back_every_row ... FAILED
+14: assertion `left == right` failed
+15:   left: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 0, target: 0 }, GenericLink { index: 3, source: 2, target: 2 }]
+16:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+23: test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+
+=== mapped-observer-and-journal-before.log ===
+18: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+23: test automatic_first_append_before ... FAILED
+24: test automatic_first_append_after ... FAILED
+25: test automatic_second_append_after ... FAILED
+26: test automatic_second_append_before ... FAILED
+27: test commit_rejected_after_first_before ... FAILED
+28: test commit_rejected_after_first_after ... FAILED
+29: test explicit_first_append_after ... FAILED
+30: test explicit_first_append_before ... FAILED
+31: test commit_rejected_after_second_after ... FAILED
+32: test commit_rejected_after_second_before ... FAILED
+41: assertion `left == right` failed: explicit=false after=false fail_at=1
+42:   left: [GenericLink { index: 1, source: 0, target: 0 }]
+43:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+49: assertion `left == right` failed: explicit=false after=true fail_at=1
+50:   left: [GenericLink { index: 1, source: 0, target: 0 }]
+51:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+56: assertion `left == right` failed: explicit=false after=true fail_at=2
+57:   left: [GenericLink { index: 1, source: 0, target: 0 }]
+58:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+63: assertion `left == right` failed: explicit=false after=false fail_at=2
+64:   left: [GenericLink { index: 1, source: 0, target: 0 }]
+65:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+70: incomplete journal must not acknowledge commit
+75: incomplete journal must not acknowledge commit
+80: assertion `left == right` failed: explicit=true after=true fail_at=1
+81:   left: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }]
+82:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+87: assertion `left == right` failed: explicit=true after=false fail_at=1
+88:   left: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }]
+89:  right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+94: incomplete journal must not acknowledge commit
+99: incomplete journal must not acknowledge commit
+114: test result: FAILED. 2 passed; 10 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.05s
+
+=== journal-failure-csharp-observed-before.log ===
+11: [xUnit.net 00:00:02.03]     Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: True, failAt: 2, rejectCommit: True) [FAIL]
+12: [xUnit.net 00:00:02.32]     Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: False, failAt: 2, rejectCommit: True) [FAIL]
+13: [xUnit.net 00:00:02.79]     Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: False, failAt: 1, rejectCommit: True) [FAIL]
+14:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: True, failAt: 2, rejectCommit: True) [106 ms]
+16:    Assert.Throws() Failure: No exception was thrown
+17: Expected: typeof(System.InvalidOperationException)
+19:      at Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Boolean explicitTransaction, Boolean after, Int32 failAt, Boolean rejectCommit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionJournalFailureTests.cs:line 64
+20:    at InvokeStub_TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Object, Span`1)
+22:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: False, failAt: 2, rejectCommit: True) [146 ms]
+24:    Assert.Throws() Failure: No exception was thrown
+25: Expected: typeof(System.InvalidOperationException)
+27:      at Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Boolean explicitTransaction, Boolean after, Int32 failAt, Boolean rejectCommit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionJournalFailureTests.cs:line 64
+28:    at InvokeStub_TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Object, Span`1)
+30:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: False, failAt: 1, rejectCommit: True) [271 ms]
+32:    Assert.Throws() Failure: No exception was thrown
+33: Expected: typeof(System.InvalidOperationException)
+35:      at Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Boolean explicitTransaction, Boolean after, Int32 failAt, Boolean rejectCommit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionJournalFailureTests.cs:line 64
+36:    at InvokeStub_TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Object, Span`1)
+38: [xUnit.net 00:00:03.10]     Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: True, failAt: 1, rejectCommit: True) [FAIL]
+39:   Failed Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: True, failAt: 1, rejectCommit: True) [128 ms]
+41:    Assert.Throws() Failure: No exception was thrown
+42: Expected: typeof(System.InvalidOperationException)
+44:      at Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Boolean explicitTransaction, Boolean after, Int32 failAt, Boolean rejectCommit) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionJournalFailureTests.cs:line 64
+45:    at InvokeStub_TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(Object, Span`1)
+48: Failed!  - Failed:     4, Passed:     8, Skipped:     0, Total:    12, Duration: 2 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+The initial mapped adapter uses the single-row observer default, so second-append
+faults cannot fire. The isolated observer cases fail before journal fault injection.
+Forwarding upstream callbacks fixes the merge. Delete rollback additionally needs
+to restore contents of slots allocated while restoring a higher address.
+After those fixes, journal faults are reached at either append: ten Rust cases
+fail and two pass. C# observes both affected addresses; four commit-rejection
+cases fail and eight rollback cases already pass.
+
+The fix prepares every observed undo record before journal I/O, marks incomplete
+transactions rollback-only, attempts automatic rollback and retains failed cleanup
+for retry. C# adds decorator.Rollback() for automatic cleanup without a handle.
+
+
+=== journal-csharp-focused.log ===
+12: Passed!  - Failed:     0, Passed:    18, Skipped:     0, Total:    18, Duration: 3 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+=== journal-final-native-focused.log ===
+9: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+27: test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+53: test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.28s
+65: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+76: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+=== journal-rust-full.log ===
+34: test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+40: test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+52: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+74: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+94: test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+103: test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+113: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+121: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+130: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 67.92s
+137: test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+147: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+163: test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+180: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+188: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+196: test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.38s
+198:      Running tests/diagnostic_stdout.rs (rust/target/llvm-cov-target/debug/deps/diagnostic_stdout-ecd96e45f912634a)
+199: stdout diagnostic subprocess: passed
+210: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+218: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+244: test result: ok. 15 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.06s
+259: test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.05s
+267: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+278: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+292: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+306: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+320: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+348: test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+362: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+375: test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+384: test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+395: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+405: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+415: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+447: test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+458: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+469: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+480: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+494: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+508: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+525: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+534: test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+564: test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.65s
+588: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+602: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+616: test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+651: test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+675: test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+691: test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+711: test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.62s
+745: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+755: test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+777: test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+789: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.84s
+809: test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.84s
+817: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+835: test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+861: test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.32s
+873: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+881: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+892: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+903: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+920: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+939: test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.04s
+
+=== journal-rust-clippy.log ===
+2:     Finished `dev` profile [unoptimized] target(s) in 13.53s
+
+=== journal-csharp-Debug-full.log ===
+12: Passed!  - Failed:     0, Passed:   745, Skipped:     0, Total:   745, Duration: 23 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+=== journal-csharp-Release-full.log ===
+12: Passed!  - Failed:     0, Passed:   745, Skipped:     0, Total:   745, Duration: 19 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+=== journal-wasm-coverage.log ===
+5:     Finished `test` profile [unoptimized] target(s) in 9.88s
+19: test result: ok. 9 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.12s
+33: test result: ok. 8 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.10s
+36:     Finished report saved to /tmp/gh-issue-solver-1792854251187/experiments/issue-138/wasm-coverage.json
+
+=== journal-wasm-clippy.log ===
+3:     Finished `dev` profile [unoptimized] target(s) in 2.82s
+
+Rust: 9030/10005 lines, 1449/1840 branches.
+C# Debug: 5844/6505 lines, 2557/3084 branches.
+C# Release: 4435/4855 lines, 2536/3065 branches.
+Actual WASM wrappers: 331/331 lines, 16/16 branches.
+Actual WASM including linked core: 2729/9179 lines, 392/1293 branches.
+No added source exclusions; project-wide 100% remains unfinished.

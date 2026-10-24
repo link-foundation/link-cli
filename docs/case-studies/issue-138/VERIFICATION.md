@@ -507,3 +507,48 @@ Rust and WASM production sources are unchanged from the preceding verified step.
 
 See [CONSTRUCTOR-PLAN.md](CONSTRUCTOR-PLAN.md) and
 `dev/log/issues/138/pulls/139/constructor-failure.txt` for reproduction and scope.
+
+## Mapped cascades and journal append failures
+
+Two no-fault Rust regressions first reproduce the mapped adapter omitting
+dependent-row callbacks during cascading deletion and uniqueness merging.
+Forwarding the upstream observations fixes the merge; deletion also exposes
+empty intermediate slots allocated while undoing a higher address. Undo now
+restores original contents even when such a slot already exists. Both tests
+verify the complete baseline before and after persistent reopening.
+
+With those adapter defects corrected, a two-row cascade reproduces ten Rust
+journal-failure cases; two cases already pass. The independent C# fixture
+observes both affected addresses and reproduces four missing commit-rejection
+cases, with eight existing rollback cases passing. Both recorders now retain
+the complete undo batch before attempting journal writes. An append error
+requires rollback before further writes or commit. Automatic operations attempt
+cleanup immediately; failed cleanup stays pending and can be retried through
+the decorator, including the new C# `Rollback()` method.
+
+The final focused fixtures cover 20 Rust journal cases, two mapped-observer
+cases and 18 C# journal cases. They inject one failure before or after the first
+or second append, check single-row allocation/update paths, and reject unsafe
+commits. Rollback-marker failures retain admission until retry succeeds. State
+assertions precede any redundant cleanup, so automatic rollback is verified
+directly. Tests use at most four live rows and check subsequent writes and
+persistent reopening where applicable.
+
+The full Rust suite passes 510 standard tests and the separate stdout harness,
+with four child entry points ignored. Coverage measures 9,030/10,005 lines
+(90.25%), 1,449/1,840 branches (78.75%), 1,218/1,380 functions and
+13,681/15,763 regions. C# Debug and Release each pass 745 tests. Debug measures
+5,844/6,505 lines (89.84%) and 2,557/3,084 branches (82.91%); Release measures
+4,435/4,855 lines (91.35%) and 2,536/3,065 branches (82.74%).
+
+See [JOURNAL-FAILURE-PLAN.md](JOURNAL-FAILURE-PLAN.md) and curated before/after
+evidence in `dev/log/issues/138/pulls/139/journal-failures.txt`. These tests verify
+reported in-process failures under the observer contract; they do not establish
+legacy crash atomicity for an unlogged mutation. The project-wide 100% coverage
+criterion remains open, with no added source exclusions.
+
+All 17 actual WASM tests pass. Wrapper source measures 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. Including linked
+core, the complete report measures 2,729/9,179 lines (29.73%), 392/1,293 branches
+(30.32%), 347/1,316 functions and 3,943/14,408 regions. Native/WASM Clippy deny
+warnings; Rust and C# formatting verification passes.

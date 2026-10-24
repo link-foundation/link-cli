@@ -310,6 +310,16 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         return Task.FromResult(BeginTransaction());
     }
 
+    /// <summary>Rolls back the current transaction, including retrying cleanup
+    /// after an automatic write's rollback failed. A failure keeps it pending.</summary>
+    public virtual void Rollback()
+    {
+        lock (_lock)
+        {
+            if (_current is not null) OnRollback(_current);
+        }
+    }
+
     // Write API (wraps the user's handler so we observe before/after) -------
 
     public override TLinkAddress Create(IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
@@ -348,6 +358,10 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             }
             else
             {
+                if (_current.IsRollbackOnly)
+                {
+                    throw new InvalidOperationException("Journal failure requires rollback before further writes.");
+                }
                 ownsTransaction = false;
             }
             transaction = _current;
@@ -384,12 +398,14 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
         void RecordObservedChanges()
         {
-            foreach (var key in observedOrder)
+            try
             {
-                var state = observed[key];
-                var before = state.Before ?? default;
-                var after = state.After ?? default;
-                RecordTransition(transaction, kind, before, after);
+                RecordTransitions(transaction, kind, observedOrder.Select(key => observed[key]));
+            }
+            catch
+            {
+                if (ownsTransaction) transaction.Rollback();
+                throw;
             }
         }
 
@@ -437,23 +453,35 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     private static TLinkAddress NullHandler(IList<TLinkAddress>? before, IList<TLinkAddress>? after) => TLinkAddress.Zero;
 
-    private void RecordTransition(Transaction transaction, TransitionKind kind, Link<TLinkAddress> before, Link<TLinkAddress> after)
+    private void RecordTransitions(Transaction transaction, TransitionKind kind,
+        IEnumerable<(Link<TLinkAddress>? Before, Link<TLinkAddress>? After)> observed)
     {
-        Transition<TLinkAddress> transition;
         lock (_lock)
         {
-            var sequence = ++_sequenceCounter;
-            transition = new Transition<TLinkAddress>(
-              transaction.Id,
-              sequence,
-              DateTimeOffset.UtcNow,
-              kind,
-              before,
-              after);
-            transaction.AddTransition(transition);
-            _log.Add(transition);
-            WriteTransitionToLog(transition);
-            Trace($"Recorded {kind} seq={sequence} tx={transaction.Id:N}: ({before.Index},{before.Source},{before.Target}) -> ({after.Index},{after.Source},{after.Target}).");
+            var prepared = new List<Transition<TLinkAddress>>();
+            // Keep the complete undo set before the first journal write can fail.
+            foreach (var state in observed)
+            {
+                var transition = new Transition<TLinkAddress>(
+                    transaction.Id, ++_sequenceCounter, DateTimeOffset.UtcNow,
+                    kind, state.Before ?? default, state.After ?? default);
+                transaction.AddTransition(transition);
+                _log.Add(transition);
+                prepared.Add(transition);
+            }
+            try
+            {
+                foreach (var transition in prepared)
+                {
+                    WriteTransitionToLog(transition);
+                    Trace($"Recorded {kind} seq={transition.Sequence} tx={transaction.Id:N}: ({transition.Before.Index},{transition.Before.Source},{transition.Before.Target}) -> ({transition.After.Index},{transition.After.Source},{transition.After.Target}).");
+                }
+            }
+            catch
+            {
+                transaction.MarkRollbackOnly();
+                throw;
+            }
         }
     }
 
@@ -519,6 +547,10 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_lock)
         {
             if (transaction.IsCommitted || transaction.IsRolledBack) return;
+            if (transaction.IsRollbackOnly)
+            {
+                throw new InvalidOperationException("Cannot commit after a journal failure; rollback is required.");
+            }
             WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
             _flushLog();
             _committed.Add(transaction.Id);
@@ -865,6 +897,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         private readonly List<Transition<TLinkAddress>> _transitions = new();
         private readonly bool _autoCommit;
         private int _state; // 0 = open, 1 = committed, 2 = rolled back
+        public bool IsRollbackOnly { get; private set; }
 
         public Transaction(TransactionsDecorator<TLinkAddress> owner, bool autoCommit)
         {
@@ -883,6 +916,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         internal void AddTransition(Transition<TLinkAddress> transition) => _transitions.Add(transition);
         internal void MarkCommitted() => _state = 1;
         internal void MarkRolledBack() => _state = 2;
+        internal void MarkRollbackOnly() => IsRollbackOnly = true;
 
         public void Commit() => _owner.OnCommit(this, forceAsync: false);
 

@@ -135,9 +135,10 @@ where
                 }
             }
             TransitionKind::Delete => {
-                if transition.before.index != zero
-                    && !self.inner.link_exists(transition.before.index)
-                {
+                if transition.before.index != zero {
+                    // Restoring a higher mapped address can allocate this
+                    // address as an empty intermediate slot. Existence alone
+                    // does not mean its original contents were restored.
                     self.inner
                         .ensure_link_created(transition.before.index)
                         .and_then(|_| {

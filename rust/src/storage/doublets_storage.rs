@@ -312,6 +312,38 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         Ok(before)
     }
 
+    fn update_link_observed(
+        &mut self,
+        index: T,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
+        let before = self
+            .get_link(index)
+            .ok_or_else(|| LinkError::not_found(index))?;
+        Doublets::update_with(&mut self.store, index, source, target, |before, after| {
+            observer(before.into(), after.into());
+            Flow::Continue
+        })?;
+        Ok(before)
+    }
+
+    fn delete_link_observed(
+        &mut self,
+        index: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
+        let before = self
+            .get_link(index)
+            .ok_or_else(|| LinkError::not_found(index))?;
+        Doublets::delete_with(&mut self.store, index, |before, after| {
+            observer(before.into(), after.into());
+            Flow::Continue
+        })?;
+        Ok(before)
+    }
+
     fn all_links(&self) -> Vec<GenericLink<T>> {
         let mut links = Vec::new();
         Doublets::each(&self.store, |link| {

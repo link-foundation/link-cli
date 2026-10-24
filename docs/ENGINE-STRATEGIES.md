@@ -263,3 +263,14 @@ C# named, typed and simple file constructors release their owned data handle
 if names construction fails. A failed constructor over a caller-supplied store
 leaves that store usable. Partially initialized names mappings are released on
 both raw-facade and names-content errors; no GC/finalizer wait is required.
+
+The legacy transaction decorators retain every observed undo record before
+appending a logical operation's journal batch. An append failure makes an
+explicit transaction rollback-only: roll it back before writing again. Automatic
+operations attempt rollback immediately. If cleanup fails, the error remains
+visible and the transaction stays pending; retry `Rollback()` on the C# decorator
+or `rollback()` in Rust after repairing the storage failure. Rust mapped stores
+forward upstream cascade callbacks, including uniqueness merges and dependent
+deletes. These in-process undo guarantees do not close the legacy crash window
+between in-place mutation and its journal append; use the staged engine when
+unpublished mutations must stay outside the authoritative store.

@@ -10,7 +10,7 @@ cleanup when the latter cannot open, while preserving ownership of borrowed data
 - [x] Verify immediate exclusive reopening and successful construction after repair.
 - [x] Run the nine focused cases.
 - [x] Run full C# coverage suites and formatting.
-- [ ] Publish and inspect exact-SHA CI.
+- [x] Publish and inspect exact-SHA CI.
 
 No GC forcing or allocation stress. Each fixture opens at most two mapped stores;
 FileShare.None tests owned-handle release without relying on process termination.
@@ -29,3 +29,9 @@ All nine focused cases now pass. The quota-backed names test confirms its
 exception originates in UnicodeStringStorage, after the raw facade exists, and
 checks disposal before its own final cleanup. The unavailable-memory case
 throws before native pointer access and verifies direct mapping cleanup.
+
+All checks for `bd195a69c1247933ee31b43de3477635ff264dee` finish with 36
+successes, 11 skips and one neutral CodeQL aggregate. Recent runs have matching
+head SHA and creation time 2026-10-24T19:37:12Z, including the C# workflow
+40126123807 and Rust workflow 40126123818. The platform tests pass, including
+Windows; release-only jobs are skipped on this pull request.

@@ -40,3 +40,7 @@ absent state across repeated allocation/update callbacks.
 
 Release owned data handles and partially initialized names mappings when a
 constructor fails; leave borrowed data usable after failed construction.
+
+Retain the complete observed undo batch before journal writes. Reject commit and
+further writes after an append failure, roll back automatic failures, and expose
+Rollback() on the decorator to retry cleanup when an implicit rollback fails.
