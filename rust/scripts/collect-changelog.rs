@@ -3,6 +3,7 @@
 //!
 //! This script collects all .md files from changelog.d/ (except README.md)
 //! and prepends them to CHANGELOG.md, then removes the processed fragments.
+//! A fragment without a description is an error instead of being skipped.
 //!
 //! Supports both single-language and multi-language repository structures:
 //! - Single-language: Cargo.toml and changelog.d/ in repository root
@@ -23,7 +24,9 @@ use std::fs;
 use std::path::Path;
 use std::process::exit;
 
-const INSERT_MARKER: &str = "<!-- changelog-insert-here -->";
+// Shared with version-and-commit.rs, so both write identical entries.
+#[path = "release-changelog.rs"]
+mod release_changelog;
 
 fn get_arg(name: &str) -> Option<String> {
     let args: Vec<String> = env::args().collect();
@@ -94,117 +97,6 @@ fn get_version_from_cargo(cargo_toml_path: &str) -> Result<String, String> {
     }
 }
 
-fn strip_frontmatter(content: &str) -> String {
-    let re = Regex::new(r"(?s)^---\s*\n.*?\n---\s*\n(.*)$").unwrap();
-    if let Some(caps) = re.captures(content) {
-        caps.get(1).unwrap().as_str().trim().to_string()
-    } else {
-        content.trim().to_string()
-    }
-}
-
-fn collect_fragments(changelog_dir: &str) -> String {
-    let dir_path = Path::new(changelog_dir);
-    if !dir_path.exists() {
-        return String::new();
-    }
-
-    let mut files: Vec<_> = match fs::read_dir(dir_path) {
-        Ok(entries) => entries
-            .filter_map(|e| e.ok())
-            .map(|e| e.path())
-            .filter(|p| {
-                p.extension().map_or(false, |ext| ext == "md")
-                    && p.file_name().map_or(false, |name| name != "README.md")
-            })
-            .collect(),
-        Err(_) => return String::new(),
-    };
-
-    files.sort();
-
-    let mut fragments = Vec::new();
-    for file in &files {
-        if let Ok(raw_content) = fs::read_to_string(file) {
-            let content = strip_frontmatter(&raw_content);
-            if !content.is_empty() {
-                fragments.push(content);
-            }
-        }
-    }
-
-    fragments.join("\n\n")
-}
-
-fn update_changelog(changelog_file: &str, version: &str, fragments: &str) {
-    let date_str = Utc::now().format("%Y-%m-%d").to_string();
-    let new_entry = format!("\n## [{}] - {}\n\n{}\n", version, date_str, fragments);
-
-    if Path::new(changelog_file).exists() {
-        let mut content = fs::read_to_string(changelog_file).unwrap_or_default();
-
-        if content.contains(INSERT_MARKER) {
-            content = content.replace(INSERT_MARKER, &format!("{}{}", INSERT_MARKER, new_entry));
-        } else {
-            // Insert after the first ## heading
-            let lines: Vec<&str> = content.lines().collect();
-            let mut insert_index = None;
-
-            for (i, line) in lines.iter().enumerate() {
-                if line.starts_with("## [") {
-                    insert_index = Some(i);
-                    break;
-                }
-            }
-
-            if let Some(idx) = insert_index {
-                let mut new_lines: Vec<String> =
-                    lines[..idx].iter().map(|s| s.to_string()).collect();
-                new_lines.push(new_entry.clone());
-                new_lines.extend(lines[idx..].iter().map(|s| s.to_string()));
-                content = new_lines.join("\n");
-            } else {
-                // Append after the main heading
-                content.push_str(&new_entry);
-            }
-        }
-
-        fs::write(changelog_file, content).expect("Failed to write changelog");
-    } else {
-        let content = format!(
-            "# Changelog\n\n\
-            All notable changes to this project will be documented in this file.\n\n\
-            The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\n\
-            and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n\
-            {}\n{}\n",
-            INSERT_MARKER, new_entry
-        );
-        fs::write(changelog_file, content).expect("Failed to write changelog");
-    }
-
-    println!("Updated CHANGELOG.md with version {}", version);
-}
-
-fn remove_fragments(changelog_dir: &str) {
-    let dir_path = Path::new(changelog_dir);
-    if !dir_path.exists() {
-        return;
-    }
-
-    if let Ok(entries) = fs::read_dir(dir_path) {
-        for entry in entries.filter_map(|e| e.ok()) {
-            let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "md")
-                && path.file_name().map_or(false, |name| name != "README.md")
-            {
-                if fs::remove_file(&path).is_ok() {
-                    println!("Removed {}", path.display());
-                }
-            }
-        }
-    }
-}
-
 fn main() {
     let rust_root = get_rust_root();
     let cargo_toml = get_cargo_toml_path(&rust_root);
@@ -221,15 +113,23 @@ fn main() {
 
     println!("Collecting changelog fragments for version {}", version);
 
-    let fragments = collect_fragments(&changelog_dir);
-
-    if fragments.is_empty() {
-        println!("No changelog fragments found");
-        exit(0);
+    let date_str = Utc::now().format("%Y-%m-%d").to_string();
+    match release_changelog::collect_changelog_with_date(
+        &changelog_dir,
+        &changelog_file,
+        &version,
+        &date_str,
+    ) {
+        Ok(0) => {
+            println!("No changelog fragments found");
+            exit(0);
+        }
+        Ok(_) => println!("Updated {} with version {}", changelog_file, version),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            exit(1);
+        }
     }
-
-    update_changelog(&changelog_file, &version, &fragments);
-    remove_fragments(&changelog_dir);
 
     println!("Changelog collection complete");
 }
