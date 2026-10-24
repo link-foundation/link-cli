@@ -13,3 +13,7 @@ extra blank line on every release.
 The NuGet and GitHub release lookups that decide whether to release now retry
 network failures, 429 and 5xx with backoff and report the network cause, so a
 single dropped connection no longer fails the release.
+
+A changeset whose bump type cannot be parsed now fails the release with an
+"Invalid changeset" error naming the file. It used to be skipped with a
+warning and then deleted, so its bump and description were silently lost.
