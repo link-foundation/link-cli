@@ -1,7 +1,6 @@
 # Dependencies run 40084225032 on 0653ed0 (pull request), job 'Dependencies are on their latest versions'
-# gh run view 40084225032 --repo link-foundation/link-cli --log | tail -4
+# gh run view 40084225032 --repo link-foundation/link-cli --log | grep -A2 'Checked 102'
 # The run on 5d5a3d6 minutes earlier (40083969955) passed with the same dependencies.
-2026-10-24T10:01:18.3448343Z Removing includeIf entries pointing to credentials config files
-2026-10-24T10:01:18.3456978Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-10-24T10:01:18.3499944Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-﻿2026-10-24T10:01:18.3907897Z Cleaning up orphan processes
+2026-10-24T10:01:18.1444080Z Checked 102 declared versions and the Cargo.lock files.
+2026-10-24T10:01:18.1446879Z Could not check csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj: coverlet.collector: fetch failed
+2026-10-24T10:01:18.1631963Z ##[error]Process completed with exit code 1.
