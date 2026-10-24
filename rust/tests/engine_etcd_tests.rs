@@ -22,6 +22,12 @@ fn peer(replies: Vec<Option<Value>>) -> (String, thread::JoinHandle<Vec<Value>>)
     )
 }
 fn peer_raw(replies: Vec<Option<String>>) -> (String, thread::JoinHandle<Vec<Value>>) {
+    peer_raw_headers(replies, vec![])
+}
+fn peer_raw_headers(
+    replies: Vec<Option<String>>,
+    expected_headers: Vec<&'static str>,
+) -> (String, thread::JoinHandle<Vec<Value>>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let endpoint = format!("http://{}", listener.local_addr().unwrap());
     listener.set_nonblocking(true).unwrap();
@@ -55,6 +61,14 @@ fn peer_raw(replies: Vec<Option<String>>) -> (String, thread::JoinHandle<Vec<Val
                 assert!(bytes.len() < 8192);
             }
             let header = String::from_utf8(bytes).unwrap();
+            for expected in &expected_headers {
+                assert!(
+                    header
+                        .lines()
+                        .any(|line| line.eq_ignore_ascii_case(expected)),
+                    "missing fixture header {expected}"
+                );
+            }
             let length: usize = header
                 .lines()
                 .find_map(|line| {
@@ -118,10 +132,19 @@ fn malformed_snapshot_shapes_and_payloads_are_rejected_on_the_wire() {
 
 #[test]
 fn cas_reply_generations_are_strict_and_success_is_reported() {
-    let mut replies: Vec<_> = ["", "0", "01", "-1", "+1", "1 ", "18446744073709551616"]
-        .into_iter()
-        .map(|revision| Some(json!({"header":{"revision":revision},"succeeded":true})))
-        .collect();
+    let mut replies: Vec<_> = [
+        "",
+        "0",
+        "01",
+        "-1",
+        "+1",
+        "1 ",
+        "9223372036854775808",
+        "18446744073709551616",
+    ]
+    .into_iter()
+    .map(|revision| Some(json!({"header":{"revision":revision},"succeeded":true})))
+    .collect();
     replies.push(Some(json!({"header":{"revision":"1"},"succeeded":true})));
     let count = replies.len();
     let (endpoint, handle) = peer(replies);
@@ -136,6 +159,36 @@ fn cas_reply_generations_are_strict_and_success_is_reported() {
         .compare_exchange(&["a".into()], &[JournalVersion::default()], &[None])
         .unwrap());
     assert_eq!(handle.join().unwrap().len(), count);
+}
+
+#[test]
+fn configured_headers_are_sent_and_invalid_headers_fail_locally() {
+    let (endpoint, handle) = peer_raw_headers(
+        vec![Some(
+            json!({"succeeded":true,"responses":[{"response_range":{}}]}).to_string(),
+        )],
+        vec!["Authorization: fixture-token", "X-Tenant: fixture-tenant"],
+    );
+    let mut store = EtcdJournalStore::new(vec![endpoint], "/test/".into()).unwrap();
+    store.headers = vec![
+        ("Authorization".into(), "fixture-token".into()),
+        ("X-Tenant".into(), "fixture-tenant".into()),
+    ];
+    assert_eq!(
+        store.read(&["a".into()]).unwrap(),
+        [JournalVersion::default()]
+    );
+    assert_eq!(handle.join().unwrap().len(), 1);
+    // No peer accepts these requests; malformed headers fail before network I/O.
+    for header in [
+        ("bad name", "value"),
+        ("X-Tenant", "value\r\nInjected: value"),
+    ] {
+        let mut store =
+            EtcdJournalStore::new(vec!["http://127.0.0.1:1".into()], "/test/".into()).unwrap();
+        store.headers = vec![(header.0.into(), header.1.into())];
+        assert!(store.read(&["a".into()]).is_err());
+    }
 }
 
 #[test]

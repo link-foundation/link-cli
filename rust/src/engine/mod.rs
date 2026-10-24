@@ -4,6 +4,8 @@
 //! Unlike the legacy undo decorator, no underlying mapped data is modified
 //! while a transaction is open. A complete checksummed revision is flushed
 //! before it becomes visible. The log is the authoritative storage.
+#[cfg(test)]
+mod boundary_tests;
 mod branch;
 pub mod cluster;
 mod commit;
@@ -136,6 +138,13 @@ impl<T, L> Clone for Engine<T, L> {
 
 fn error(message: &str) -> LinkError {
     LinkError::Transaction(message.into())
+}
+
+// Diagnostic output must not turn a durable publication into a panic or poison
+// its commit mutex. In particular, stderr can fail with ENOSPC or a broken pipe.
+fn trace(message: std::fmt::Arguments<'_>) {
+    use std::io::Write;
+    let _ = writeln!(std::io::stderr().lock(), "{message}");
 }
 
 impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {

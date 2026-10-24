@@ -58,16 +58,18 @@ impl<P: TransitionLogStore, R: TransitionLogStore> ReplicatedLog<P, R> {
                 Ok(()) => acknowledgements += 1,
                 Err(cause) => {
                     if self.trace {
-                        eprintln!("[Replication] replica={index} unavailable: {cause}");
+                        super::trace(format_args!(
+                            "[Replication] replica={index} unavailable: {cause}"
+                        ));
                     }
                 }
             }
         }
         if self.trace {
-            eprintln!(
+            super::trace(format_args!(
                 "[Replication] acknowledgements={acknowledgements}/{}",
                 self.replicas.len() + 1
-            );
+            ));
         }
         Ok(acknowledgements)
     }

@@ -319,8 +319,49 @@ reach 100% lines/branches in both configurations; project coverage remains below
 100%. Formatting, release example and TypeScript checks pass. JS remains 95 tests
 across 17 production modules with 100% lines/branches/functions.
 
+Exact-SHA CI for `e2e714f` finishes with 37 successful checks, ten skipped and
+one neutral. This verifies the read-set commit independently of earlier runs.
+
 See [validation choices and costs](../../ENGINE-VALIDATION.md),
 [pinned FoundationDB source observations](RESEARCH.md),
 [execution plan](READSET-PLAN.md), and the committed acceptance probe under
 `experiments/issue-138/readset-contention.mjs`. Full-state O(N) work, conservative
 scans and the separate distributed shard conflict boundary remain explicit limits.
+
+## Diagnostic faults and finite recovery boundaries
+
+The next boundary probe reproduces a separate defect on `e2e714f`: directing
+stderr to `/dev/full` makes Rust engine commit and replica catch-up children
+exit 101 after the first revision is already persisted. `eprintln!` can panic
+after successful storage work and poison the engine mutex. Best-effort writes
+now preserve the storage outcome. Both subprocesses complete two commits and
+the reopened journals contain two rows. The failing destination is immediate
+and bounded; the test does not fill a disk. It runs on Linux, while the other
+boundary tests remain portable.
+
+New native cases reject individually valid but noncontiguous/backwards journals
+and forged branch merge bases; check UInt128/u128 allocator and revision limits
+without long loops; verify log-operation fencing and closed read visibility;
+and exercise poisoned-mutex recovery. Bounded network tests check custom header
+forwarding and malformed headers, wrong object prefixes and unavailable object
+staging without catalog publication. Default trait and real adapter contracts
+check filtering, observation/error callbacks, search/get-or-create, sidecar
+external changes, flush retry and deterministic pinned addresses.
+
+The full native suites pass 462 Rust tests (three subprocess helper entry points
+ignored) and 656 C# tests in each of Debug and Release. Rust measures
+8,760/9,774 lines (89.63%), 1,409/1,806 branches (78.02%), 1,193/1,360 functions
+and 13,345/15,446 regions. C# Debug measures 5,746/6,435 lines (89.29%) and
+2,495/3,060 branches (81.54%); Release measures 4,377/4,810 lines (91.00%) and
+2,474/3,041 branches (81.35%). Configuration denominators remain separate.
+
+All 17 actual WASM tests pass. Wrapper source remains 331/331 lines,
+68/68 functions, 16/16 reported branches and 505/505 regions. The complete report,
+including linked core, measures 2,725/8,948 lines (30.45%) and 392/1,261 branches
+(31.09%); the unused native paths included in that report are not newly excluded.
+Native and WASM Clippy deny warnings; Rust and C# formatting verification passes.
+
+The execution checklist and platform scope are recorded in
+[BOUNDARY-PLAN.md](BOUNDARY-PLAN.md), with curated before/after evidence in
+`dev/log/issues/138/pulls/139/diagnostic-boundaries.txt`. Coverage inclusions are
+unchanged; the 100% acceptance criterion remains open.

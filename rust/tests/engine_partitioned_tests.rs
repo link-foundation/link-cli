@@ -310,6 +310,7 @@ fn malformed_snapshot_arity_and_pointer_coordinates_fail_closed() {
     }
     for address in [
         "../bad",
+        "other-0000000000000000",
         "blob1-000000000000000G",
         "blob1-0000000000000000\n",
     ] {
@@ -336,6 +337,24 @@ fn malformed_snapshot_arity_and_pointer_coordinates_fail_closed() {
     assert!(store
         .compare_exchange(&keys, &[pointer], &[Some(vec!["other".into()])])
         .is_err());
+}
+
+#[test]
+fn unavailable_object_staging_never_publishes_a_catalog_pointer() {
+    let (catalog, a, _, mut store) = fixture();
+    let keys = vec!["a".into()];
+    let expected = store.read(&keys).unwrap();
+    a.0.lock().unwrap().fail = true;
+    assert!(store
+        .compare_exchange(&keys, &expected, &[Some(vec!["new".into()])])
+        .is_err());
+    assert!(catalog.0.lock().unwrap().values.is_empty());
+    assert!(a.0.lock().unwrap().values.is_empty());
+    a.0.lock().unwrap().fail = false;
+    assert!(store
+        .compare_exchange(&keys, &expected, &[Some(vec!["new".into()])])
+        .unwrap());
+    assert_eq!(store.read(&keys).unwrap()[0].entries, ["new"]);
 }
 
 #[test]

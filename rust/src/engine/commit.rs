@@ -46,7 +46,9 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
         self.committed_next = self.next;
         self.retain();
         if self.options.trace {
-            eprintln!("[Engine] committed revision={revision} writes={count}");
+            super::trace(format_args!(
+                "[Engine] committed revision={revision} writes={count}"
+            ));
         }
         Ok(snapshot)
     }
