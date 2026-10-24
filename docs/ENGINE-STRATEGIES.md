@@ -205,6 +205,10 @@ large or frequently written database.
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
 | RocksDB pessimistic transactions | Pessimistic point writes + selected isolation | Immediate busy errors, engine-local ownership and snapshot validation; no waiting, deadlock detector, range locks, LSM tree or performance equivalence. |
+| InnoDB synchronous redo/group commit | Durable staged journal with explicit flush | No group commit, page WAL, buffer pool or doublewrite repair. Optional delta encoding reduces bytes, not the full-state CPU cost. |
+| MongoDB durable write concern | Synchronous durable replica acknowledgements + outcome discovery | No MongoDB election/oplog protocol, tagged concerns or causal replica reads. A lost acknowledgement can follow a committed write. |
+| Cassandra ordinary quorum writes | Fixed-primary synchronous replica log | No leaderless writes, timestamp reconciliation, hints or anti-entropy. Counting replicas does not provide these guarantees. |
+| Cassandra Accord transactions | Selected-shard atomic catalog publication | One catalog serialization point, without Accord's dependency/epoch protocol or WAN latency properties. |
 | Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
 | Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
 | etcd consensus transactions | ClusterEngine + EtcdJournalStore | Linearizable selected-shard snapshots and atomic CAS; etcd supplies consensus. Full journals in one group limit data/write scale. |
