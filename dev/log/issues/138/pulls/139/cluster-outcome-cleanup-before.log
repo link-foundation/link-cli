@@ -1,0 +1,47 @@
+✔ etcd snapshot reads all selected journals atomically and compares modification generations (127.813408ms)
+✔ read failover is bounded while an uncertain commit is never replayed (3.435317ms)
+✔ malformed, oversized and rejected coordinator responses fail closed (12.842946ms)
+✔ invalid cluster coordinates are rejected before network I/O (1.107135ms)
+✔ close waits for an in-flight commit and frees every workspace after cleanup failure (4.784794ms)
+✔ cluster validates configuration and snapshots before creating private engines (1.722652ms)
+✔ cluster freezes its expected snapshot, rejects stale groups, and classifies custom store I/O (3.909261ms)
+✔ etcd rejects every malformed wire field and validates CAS inputs without sending (9.48937ms)
+✔ cluster publishes changed journals, retains explicit adapter outcomes and disposes asynchronously (12.831984ms)
+✖ cleanup errors cannot replace an unknown commit outcome (2.247963ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 9
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 429.711017
+
+✖ failing tests:
+
+test at js/client/test/cluster.test.mjs:177:1
+✖ cleanup errors cannot replace an unknown commit outcome (2.247963ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: free failed
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:183:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: free failed
+        at Object.free (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:72:172)
+        at WasmTransport.close (file:///tmp/gh-issue-solver-1792854251187/js/client/src/wasm.js:87:40)
+        at async EngineClient.close (file:///tmp/gh-issue-solver-1792854251187/js/client/src/client.js:204:5)
+        at async #dispose (file:///tmp/gh-issue-solver-1792854251187/js/client/src/cluster.js:192:13)
+        at async #commit (file:///tmp/gh-issue-solver-1792854251187/js/client/src/cluster.js:187:41)
+        at async waitForActual (node:assert:615:5)
+        at async strict.rejects (node:assert:738:25)
+        at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:183:3)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:974:7),
+    operator: 'rejects',
+    diff: 'simple'
+  }

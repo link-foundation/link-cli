@@ -271,3 +271,37 @@ export class MessageReader {
   push(chunk: Uint8Array): string[];
   readonly midMessage: boolean;
 }
+
+
+export interface JournalVersion { generation: string; entries: string[] }
+export interface AtomicJournalStore {
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+export interface EtcdJournalStoreOptions {
+  prefix?: string;
+  fetch?: typeof globalThis.fetch;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  maxRequestBytes?: number;
+  maxResponseBytes?: number;
+}
+export class EtcdJournalStore implements AtomicJournalStore {
+  constructor(endpoints: string[], options?: EtcdJournalStoreOptions);
+  readonly supportsDurableFlush: true;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+export class ClusterEngine {
+  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStore, options?: EngineOptions);
+  begin(keys: string[]): Promise<ClusterTransaction>;
+}
+export class ClusterTransaction {
+  private constructor();
+  shard(key: string): LinksClient;
+  commit(): Promise<void>;
+  rollback(): Promise<void>;
+  close(): Promise<void>;
+  [Symbol.asyncDispose](): Promise<void>;
+}

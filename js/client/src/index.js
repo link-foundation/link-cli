@@ -24,3 +24,5 @@ export {
 export { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './framing.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
 export { ANY, toAddress } from './operations.js';
+
+export { ClusterEngine, ClusterTransaction, EtcdJournalStore } from './cluster.js';

@@ -163,7 +163,8 @@ large or frequently written database.
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
 | Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
 | Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
-| etcd / TiKV consensus transactions | No equivalent configuration yet | Raft leadership/fencing/membership, distributed recovery and cross-shard coordination are separate unfinished work. |
+| etcd consensus transactions | ClusterEngine + EtcdJournalStore | Linearizable selected-shard snapshots and atomic CAS; etcd supplies consensus. Full journals in one group limit data/write scale. |
+| TiKV distributed transactions | Selected-shard atomic groups | Independent consensus groups, LSM storage and distributed shard recovery remain unfinished. |
 
 See [the pinned source study](case-studies/issue-138/RESEARCH.md),
 [acceptance inventory](case-studies/issue-138/REQUIREMENTS.md), and
@@ -207,3 +208,11 @@ undefined. A Promise cannot provide this boundary and is rejected. Browser
 IndexedDB and other asynchronous storage require a server-side engine or a
 separate asynchronous transaction interface; an exported in-memory journal is
 not a durable commit. Caller-owned adapters outlive all sessions that use them.
+
+## Coordinated network groups
+
+[ClusterEngine](ENGINE-CLUSTERS.md) composes the same links API with an atomic
+journal store. The optional etcd adapter supplies linearizable snapshots, atomic
+publication across selected shards, and consensus failover. It bounds network
+payloads and preserves unknown outcomes. Full journals in one coordinator group
+limit scale; see the deployment and costs guide before choosing this backend.

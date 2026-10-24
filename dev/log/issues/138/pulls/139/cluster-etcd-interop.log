@@ -1,0 +1,7 @@
+PASS real etcd: atomic multi-shard CAS and read-only dependency conflict
+PASS real etcd: dropped response discovers both committed shards without replay
+PASS Rust HTTP: both shard journals committed atomically
+PASS C# HTTP: both shard journals committed atomically
+PASS real etcd: killed leader n2; surviving majority elected and committed
+PASS real etcd: majority loss refuses a fresh linearizable snapshot
+etcd evidence: /tmp/gh-issue-solver-1792854251187/experiments/issue-138/etcd/run-pJtvsH

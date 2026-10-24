@@ -77,3 +77,64 @@ impl<L: TransitionLogStore> NamedTypeLinks for EngineTransaction<u32, L> {
         Ok(())
     }
 }
+
+impl NamedTypeLinks for super::cluster::ShardSession<u32> {
+    fn create(&mut self, source: u32, target: u32) -> u32 {
+        NamedTypeLinks::create(&mut self.session, source, target)
+    }
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        NamedTypeLinks::try_create(&mut self.session, source, target)
+    }
+    fn ensure_created(&mut self, id: u32) -> u32 {
+        NamedTypeLinks::ensure_created(&mut self.session, id)
+    }
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        NamedTypeLinks::try_ensure_created(&mut self.session, id)
+    }
+    fn get_link(&mut self, id: u32) -> Option<Link> {
+        NamedTypeLinks::get_link(&mut self.session, id)
+    }
+    fn exists(&mut self, id: u32) -> bool {
+        NamedTypeLinks::exists(&mut self.session, id)
+    }
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: crate::link_storage::ChangeObserver<'_>,
+    ) -> Result<Link> {
+        NamedTypeLinks::update_observed(&mut self.session, id, source, target, observer)
+    }
+    fn delete_observed(
+        &mut self,
+        id: u32,
+        observer: crate::link_storage::ChangeObserver<'_>,
+    ) -> Result<Link> {
+        NamedTypeLinks::delete_observed(&mut self.session, id, observer)
+    }
+    fn all_links(&mut self) -> Vec<Link> {
+        NamedTypeLinks::all_links(&mut self.session)
+    }
+    fn search(&mut self, source: u32, target: u32) -> Option<u32> {
+        NamedTypeLinks::search(&mut self.session, source, target)
+    }
+    fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
+        NamedTypeLinks::get_or_create(&mut self.session, source, target)
+    }
+    fn get_name(&mut self, id: u32) -> Result<Option<String>> {
+        NamedTypeLinks::get_name(&mut self.session, id)
+    }
+    fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
+        NamedTypeLinks::set_name(&mut self.session, id, name)
+    }
+    fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
+        NamedTypeLinks::get_by_name(&mut self.session, name)
+    }
+    fn remove_name(&mut self, id: u32) -> Result<()> {
+        NamedTypeLinks::remove_name(&mut self.session, id)
+    }
+    fn save(&mut self) -> Result<()> {
+        NamedTypeLinks::save(&mut self.session)
+    }
+}

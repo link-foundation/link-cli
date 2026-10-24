@@ -38,3 +38,14 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   resumed.merge();
   return engine.snapshot(revision);
 }
+
+import { ClusterEngine, EtcdJournalStore, type JournalVersion, type AtomicJournalStore } from '../types/index.js';
+async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]) {
+  const store: AtomicJournalStore = new EtcdJournalStore(['https://localhost:2379'], { headers: { Authorization: 'token' }, timeoutMs: 1000 });
+  const versions: JournalVersion[] = await store.read(['a']);
+  await store.compareExchange(['a'], versions, [null]);
+  const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
+  await using transaction = await engine.begin(['a', 'b']);
+  const links: Links = transaction.shard('a');
+  await links.create(0, 0); await transaction.commit();
+}

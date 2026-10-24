@@ -166,13 +166,36 @@ jobs:
             ${{ runner.os }}-js-client-cargo-
 
       - name: Build the Rust server
-        run: cargo build --release --manifest-path rust/Cargo.toml --bin clink
+        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd --bin clink --example cluster
 
       - name: Build the C# server
         run: dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
 
       - name: Build the WebAssembly store
         run: wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
+
+      - name: Build native coordinated example
+        run: dotnet build examples/cluster-csharp --configuration Release
+
+      - name: Verify actual consensus and language interoperability
+        env:
+          ETCD_BIN: ${{ github.workspace }}/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd
+          CLUSTER_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/cluster
+          CLUSTER_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
+        run: |
+          mkdir -p experiments/issue-138/etcd
+          curl --fail --location --retry 3 --output experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.7.3/etcd-v3.7.3-linux-amd64.tar.gz
+          printf '%s  %s\n' '5dfa9cc3b3ce3b4b491fbcc2057d3daa166bcc6676f743fcd20f8e5760cb9775' 'experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz' | sha256sum --check
+          tar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd
+          node experiments/issue-138/etcd-cluster.mjs
+
+      - name: Preserve consensus member logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: issue-138-etcd-logs
+          path: experiments/issue-138/etcd/run-*/*.log
+          if-no-files-found: ignore
 
       - name: Conformance on Node.js
         working-directory: js/client

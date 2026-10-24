@@ -43,7 +43,7 @@ build job and reduced debug information under a 2.92 GiB container limit.
   CI 40109831578 rejected the bootstrap root `.gitkeep`; removing it makes the
   repository layout tests pass in run 40110429487.
 
-## Local measurements (2026-10-24)
+## Local measurements before coordinated engines (2026-10-24, aef41c7)
 
 | Surface | Check | Result and limits |
 | --- | --- | --- |
@@ -66,6 +66,39 @@ prove the filesystem/controller's persistence guarantees.
 
 ## Acceptance gaps
 
-The 100% coverage requirement is unmet. Routed network clusters, consensus
-failover and cross-shard coordination also remain unfinished. Fixed-primary replica acknowledgements do not establish consensus.
+The 100% coverage requirement is unmet. The optional etcd backend now supplies routed named-shard groups, consensus
+failover and atomic cross-shard coordination. The three-member experiment passes
+with native Rust/C# and actual WASM writers, lost responses, leader termination
+and majority loss. Independent consensus groups and bulk data scaling remain
+unfinished. Fixed-primary replica acknowledgements do not establish consensus.
 See REQUIREMENTS.md and ENGINE-STRATEGIES.md for the implementation boundary.
+
+
+## Coordinated network verification
+
+`engine_cluster_tests.rs`, `EngineClusterTests.cs`, and actual-WASM cluster
+conformance cover all-or-nothing groups, read-only dependency validation,
+independent concurrent shard commits, rollback and fresh discovery of uncertain
+commits. Native HTTP tests and JS fetch tests cover gateway serialization,
+strict generations, default false omission, safe read failover, one-attempt
+mutations, malformed replies and byte limits. JS lifecycle regression tests
+reproduce early close and missing custom-I/O outcome classification before fixes.
+The JS cluster module measures 100% lines, branches and functions in unit tests.
+That module measurement does not establish 100% project coverage.
+
+`experiments/issue-138/etcd-cluster.mjs` launches three actual etcd v3.7.3
+members with bounded quotas and memory targets. `cluster-etcd-interop.log` records
+successful native Rust, C# and actual WASM writes into the same namespace,
+a rejected stale group, lost-response outcome discovery, elected leader loss
+with a surviving-majority commit, and refusal of fresh reads after majority loss.
+CI runs this same experiment after verifying the official release archive hash.
+No other node's local filesystem is shared by these three members.
+
+
+The coordinated-engine change passes the full Rust suite (401 unit/integration
+checks plus six documentation checks, two subprocess helpers and one doc example
+ignored) and two additional named-API/constraint regression tests. The current
+C# suite passes 604 tests, measuring 5,539/6,247 lines (88.66%) and 2,283/2,880
+branches (79.27%). Actual WASM conformance, including coordinated groups, passes
+on Node, Bun and Deno. Native and WASM Clippy, formatting and TypeScript checks
+pass. These measurements still leave the project-wide 100% requirement unmet.

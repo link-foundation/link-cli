@@ -5,7 +5,10 @@
 //! while a transaction is open. A complete checksummed revision is flushed
 //! before it becomes visible. The log is the authoritative storage.
 mod branch;
+pub mod cluster;
 mod commit;
+#[cfg(feature = "etcd")]
+pub mod etcd;
 mod journal;
 mod named;
 pub mod replication;
