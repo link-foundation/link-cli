@@ -53,3 +53,7 @@ entry point returns, including failure while constructing a later layer.
 
 Reject exhausted legacy transaction sequence space before mutation and retain
 complete pending undo when a cascade exceeds remaining sequence capacity.
+
+Wait for active asynchronous checkpoints before transaction shutdown returns,
+serialize concurrent shutdown callers and reject callback self-joins. Preserve
+borrowed-store ownership and journal recovery for cancelled/failed checkpoints.

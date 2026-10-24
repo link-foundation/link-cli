@@ -174,3 +174,13 @@ isolation, immutable history, constraints and revision-log storage are selected
 at construction. See [engine strategies](../docs/ENGINE-STRATEGIES.md) for costs,
 file/replication ownership, guarantee limits and runnable examples. The existing
 bare links store remains available for cache workloads.
+
+`TransactionsDecorator` borrows its data and journal stores. Finish foreground
+operations, dispose the decorator, then dispose those stores. `Shutdown()` and
+`Dispose()` wait for the active asynchronous checkpoint to finish; concurrent
+shutdown callers all wait for the same completion. Persistence callbacks must
+return for shutdown to complete. Calls from active background callbacks (including
+`Task.Run` descendants), or while holding the decorator's storage lock, throw
+`InvalidOperationException` to prevent joining their own work. Cancelled queued
+checkpoint work and failed checkpoints remain recoverable from committed journal
+records on reopen. Shutdown does not dispose the borrowed stores.

@@ -1,0 +1,43 @@
+C# asynchronous checkpoint ownership regression
+
+Before fix (four tests; finite gates, always release/join worker in finally):
+  EveryShutdownCallerWaitsForInFlightStorageUse(callers: 1) FAIL
+    Assert.All: Shutdown returned while borrowed storage was still in use.
+    Worker flush remained gated after the old five-second Shutdown join.
+  EveryShutdownCallerWaitsForInFlightStorageUse(callers: 2) FAIL
+    Both shutdown tasks had completed while the same callback remained active.
+  WorkerCallbackCannotJoinItsOwnShutdown(fromChildTask: False) FAIL
+  WorkerCallbackCannotJoinItsOwnShutdown(fromChildTask: True) FAIL
+    Expected InvalidOperationException; actual null after five-second self-join.
+  Failed: 4, Passed: 0, Total: 4, duration 22 s.
+
+After fix: all seven focused tests pass, zero failures, duration 12 s.
+Additional controls: synchronous callback rejects shutdown while holding the
+storage lock; detached Task.Run context can call completed shutdown; a failed
+async checkpoint retains unapplied committed records and reopens successfully.
+The low-level Create return value is a handler status; the recovery fixture
+uses CreateAndUpdate inside an explicit transaction to capture a link address.
+
+Shutdown serializes all callers and waits for the worker before disposing its
+queue/token. It does not own borrowed stores. Active worker context propagates
+to Task.Run descendants and expires when work finishes. The storage lock is
+never held while joining. Queue cancellation remains recoverable; callbacks
+must return for shutdown to complete. Optional failure tracing defaults off.
+
+Shared query/storage commit 972d5c802603161ee6726ab919e0656f099a45d4 passes all
+exact-SHA CI checks: 37 successful, ten skipped and one neutral. Runs were
+created 2026-10-24 20:53:23 UTC; Linux, Windows, macOS and actual WASM pass.
+
+Full regression control found five corrupt-recovery construction cases failing
+with NullReferenceException in Shutdown before _backgroundWorker assignment.
+The base links facade can retain a failed instance; initializing it to a completed
+Task keeps that no-worker path safe. All 16 focused shutdown/ACID cases now pass.
+
+Full C# Debug: 878 passed, 0 failed; 5,961/6,508 lines, 2,681/3,108 branches.
+Full C# Release: 878 passed, 0 failed; 4,521/4,856 lines, 2,660/3,089 branches.
+
+.NET format --verify-no-changes and changeset validation pass. Main commit
+eb7074aa504e87e50106ad9ecd46d7422e61c9a8 is an ancestor of this branch.
+2026-10-24 feedback refresh: no issue comments/sub-issues/inline comments/reviews;
+one Codecov bot comment read completely (patch 95.35865%, 44 missing lines).
+No requested work is removed; the full issue's acceptance gaps remain open.

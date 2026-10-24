@@ -225,13 +225,17 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     private readonly INamedTypesLinks<TLinkAddress> _logStore;
     private readonly bool _trace;
     private readonly object _lock = new();
+    private readonly object _shutdownLock = new();
+    private readonly AsyncLocal<BackgroundWorkContext?> _backgroundWork = new();
     private readonly List<Transition<TLinkAddress>> _log = new();
     private readonly HashSet<Guid> _committed = new();
     private readonly HashSet<Guid> _rolledBack = new();
     private readonly HashSet<long> _applied = new();
     private readonly BlockingCollection<Func<Task>> _asyncQueue = new();
     private readonly CancellationTokenSource _backgroundCts = new();
-    private readonly Task _backgroundWorker;
+    // The base facade can retain this object if recovery fails construction.
+    // Disposal must also be safe before a real worker has been started.
+    private readonly Task _backgroundWorker = Task.CompletedTask;
     private readonly Action _flushData;
     private readonly Action _flushLog;
 
@@ -487,25 +491,36 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     }
 
     /// <summary>
-    /// Stops the background worker. Kept as a named method for backwards
-    /// compatibility; <see cref="Dispose()"/> delegates to it.
+    /// Stops and joins the background worker before borrowed stores may close.
+    /// Concurrent callers all wait for completion. Queued checkpoint work may
+    /// be cancelled; committed journal records remain recoverable on reopen.
+    /// Callers must finish foreground operations first and callbacks must return.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Called from active background work or while holding the storage lock.
+    /// Such a caller cannot wait for worker completion without risking deadlock.
+    /// </exception>
     public virtual void Shutdown()
     {
-        if (_disposed) return;
-        _disposed = true;
-        try
+        // Check before the shutdown mutex: an external caller may already hold
+        // it while waiting for this callback (or its Task.Run descendant).
+        var work = _backgroundWork.Value;
+        if ((work is not null && Volatile.Read(ref work.Active) != 0) || Monitor.IsEntered(_lock))
         {
+            throw new InvalidOperationException("Shutdown must run outside active storage callbacks.");
+        }
+        lock (_shutdownLock)
+        {
+            if (_disposed) return;
             _asyncQueue.CompleteAdding();
             _backgroundCts.Cancel();
-            _backgroundWorker.Wait(TimeSpan.FromSeconds(5));
+            // A timed join cannot establish that borrowed mappings are unused.
+            // Never hold the storage lock while waiting for its current owner.
+            _backgroundWorker.GetAwaiter().GetResult();
+            _asyncQueue.Dispose();
+            _backgroundCts.Dispose();
+            _disposed = true;
         }
-        catch
-        {
-            // best-effort shutdown
-        }
-        _asyncQueue.Dispose();
-        _backgroundCts.Dispose();
     }
 
     // Commit / rollback paths -----------------------------------------------
@@ -821,9 +836,9 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
                     _flushLog();
                 }
             }
-            catch
+            catch (Exception error)
             {
-                // Recovery on next open will resume.
+                Trace($"Asynchronous checkpoint failed; recovery will resume on reopen: {error.Message}");
             }
         }
 
@@ -834,13 +849,28 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         await Task.CompletedTask;
     }
 
+    private sealed class BackgroundWorkContext
+    {
+        // Descendant tasks can retain the ExecutionContext after work finishes.
+        // Shared state prevents a stale AsyncLocal value from rejecting them.
+        public int Active = 1;
+    }
+
     private void RunBackgroundWorker()
     {
         try
         {
             foreach (var work in _asyncQueue.GetConsumingEnumerable(_backgroundCts.Token))
             {
-                try { work().GetAwaiter().GetResult(); } catch { /* ignored */ }
+                var context = new BackgroundWorkContext();
+                _backgroundWork.Value = context;
+                try { work().GetAwaiter().GetResult(); }
+                catch (Exception error) { Trace($"Background checkpoint failed: {error.Message}"); }
+                finally
+                {
+                    Volatile.Write(ref context.Active, 0);
+                    _backgroundWork.Value = null;
+                }
             }
         }
         catch (OperationCanceledException) { /* expected */ }

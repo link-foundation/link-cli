@@ -8,7 +8,7 @@ Continue R7/R8 with existing native semantic assertions and supported backends.
 - [x] Keep filesystem persistence and revision checks native and unchanged.
 - [x] Verify actual WASM tests and official complete LLVM coverage.
 - [x] Verify focused/full native tests, Clippy and formatting.
-- [ ] Preserve evidence and verify exact-SHA CI after publication.
+- [x] Preserve evidence and verify exact-SHA CI after publication.
 
 The native constructors and temporary-file ownership stay equivalent to their
 existing fixtures. WASM chooses the already-supported in-memory implementation.

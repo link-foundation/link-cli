@@ -740,3 +740,35 @@ See [WASM-STORAGE-PLAN.md](WASM-STORAGE-PLAN.md) and curated evidence in
 Shared-contract commit `71a8e980613615956efb058030dc28af6b7b7de0` passes all exact-SHA
 CI checks: 37 successful, ten skipped and one neutral. Runs were created
 2026-10-24 20:46:58 UTC; native Linux/Windows/macOS and actual WASM pass.
+
+Shared query/storage commit `972d5c802603161ee6726ab919e0656f099a45d4` passes all
+exact-SHA CI checks: 37 successful, ten skipped and one neutral. Runs were
+created 2026-10-24 20:53:23 UTC; Linux, Windows, macOS and actual WASM pass.
+
+
+## C# asynchronous shutdown and borrowed storage
+
+Four bounded regressions first fail: one/two callers return while a persistence
+callback remains active, and direct/Task.Run callbacks silently wait five seconds
+trying to join their own worker. Shutdown now serializes callers and joins actual
+work before returning or disposing its queue/token. It never holds the storage
+lock while joining. Active worker context follows Task.Run descendants, and its
+shared token expires after work so detached tasks may later shut down normally.
+Calls from active worker context or a caller holding the storage lock throw
+InvalidOperationException rather than waiting for their own work.
+
+Seven focused lifetime/recovery controls pass, plus nine existing ACID-readiness
+cases. Full validation caught five existing corrupt-recovery cases whose retained
+facade disposed a partly constructed decorator; an initialized completed worker
+makes that path safe before recovery has started real work. Full Debug and Release
+each pass 878 tests. Debug measures 5,961/6,508 lines (91.59%) and 2,681/3,108
+branches (86.26%); Release measures 4,521/4,856 lines (93.10%) and 2,660/3,089
+branches (86.11%). These different sequence points retain the measurement method
+already recorded above; project-wide coverage is still below 100%.
+
+The decorator continues to borrow its stores. Callers finish foreground work,
+stop the decorator, then close stores. Callbacks must return for shutdown to
+complete. Cancelled queued work and failed checkpoints remain recoverable from
+committed journal records; shutdown does not promise to drain cancelled work.
+See [ASYNC-SHUTDOWN-PLAN.md](ASYNC-SHUTDOWN-PLAN.md), `csharp/README.md` and
+`dev/log/issues/138/pulls/139/async-shutdown.txt` for evidence and ownership.
