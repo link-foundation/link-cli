@@ -17,8 +17,9 @@ import {
   existsSync,
   unlinkSync,
 } from 'fs';
-import { join } from 'path';
-import { execSync } from 'child_process';
+import { join, resolve } from 'path';
+import { execFileSync, execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 // Package name must match the package name in the changeset files
 const PACKAGE_NAME = 'Foundation.Data.Doublets.Cli';
@@ -266,6 +267,34 @@ function processChangesets() {
   };
 }
 
+const CHANGELOG_HEADER = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+`;
+
+/**
+ * Insert a release entry above the newest one, separated by exactly one blank
+ * line. Splicing an entry that started with "\n" after the existing blank
+ * lines used to add one more empty line below the header on every release.
+ * @param {string | null} changelog existing CHANGELOG.md content, or null
+ * @param {string} entry the "## [version] - date" section
+ * @returns {string}
+ */
+export function insertChangelogEntry(changelog, entry) {
+  const section = entry.trim();
+  const content = changelog ?? CHANGELOG_HEADER;
+  const match = /^## \[/m.exec(content);
+  if (!match) {
+    return `${content.trimEnd()}\n\n${section}\n`;
+  }
+  const before = content.slice(0, match.index).trimEnd();
+  const after = content.slice(match.index);
+  return `${before}\n\n${section}\n\n${after}`;
+}
+
 /**
  * Update CHANGELOG.md with new version entry
  * @param {string} version
@@ -273,44 +302,10 @@ function processChangesets() {
  */
 function updateChangelog(version, descriptions) {
   const dateStr = new Date().toISOString().split('T')[0];
-  const content = descriptions.join('\n\n');
-  const newEntry = `\n## [${version}] - ${dateStr}\n\n${content}\n`;
-
-  if (existsSync(CHANGELOG_FILE)) {
-    let changelog = readFileSync(CHANGELOG_FILE, 'utf-8');
-    const lines = changelog.split('\n');
-    let insertIndex = -1;
-
-    // Find the first version entry
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith('## [')) {
-        insertIndex = i;
-        break;
-      }
-    }
-
-    if (insertIndex >= 0) {
-      lines.splice(insertIndex, 0, newEntry);
-      changelog = lines.join('\n');
-    } else {
-      // No existing version entries, append after header
-      changelog += newEntry;
-    }
-
-    writeFileSync(CHANGELOG_FILE, changelog, 'utf-8');
-    console.log(`Updated CHANGELOG.md with version ${version}`);
-  } else {
-    // Create new changelog file
-    const newChangelog = `# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-${newEntry}`;
-    writeFileSync(CHANGELOG_FILE, newChangelog, 'utf-8');
-    console.log(`Created CHANGELOG.md with version ${version}`);
-  }
+  const entry = `## [${version}] - ${dateStr}\n\n${descriptions.join('\n\n')}`;
+  const existing = existsSync(CHANGELOG_FILE) ? readFileSync(CHANGELOG_FILE, 'utf-8') : null;
+  writeFileSync(CHANGELOG_FILE, insertChangelogEntry(existing, entry), 'utf-8');
+  console.log(`${existing === null ? 'Created' : 'Updated'} CHANGELOG.md with version ${version}`);
 }
 
 /**
@@ -325,10 +320,137 @@ function removeChangesetFiles() {
   }
 }
 
-try {
+/**
+ * Not every failed `git push` is a lost race: a repository ruleset rejection
+ * also says "rejected", and rebasing against a policy refusal can never
+ * succeed, so the failure is classified before retrying (same patterns as the
+ * AI driven development pipeline templates).
+ */
+const REPOSITORY_RULE_PATTERNS = [
+  'gh006',
+  'gh013',
+  'repository rule violations',
+  'changes must be made through a pull request',
+  'protected branch',
+  'push declined',
+];
+const NON_FAST_FORWARD_PATTERNS = [
+  '[rejected]',
+  'non-fast-forward',
+  'fetch first',
+  'updates were rejected',
+];
+
+/**
+ * @param {string} output combined git push output
+ * @returns {'repository-rules' | 'lost-race' | 'other'}
+ */
+export function classifyPushFailure(output) {
+  const haystack = String(output).toLowerCase();
+  if (REPOSITORY_RULE_PATTERNS.some((pattern) => haystack.includes(pattern))) {
+    return 'repository-rules';
+  }
+  if (NON_FAST_FORWARD_PATTERNS.some((pattern) => haystack.includes(pattern))) {
+    return 'lost-race';
+  }
+  return 'other';
+}
+
+/**
+ * Run git without a shell, so release descriptions containing quotes,
+ * backticks or `$(...)` are passed verbatim instead of being expanded.
+ * @param {string[]} gitArgs
+ * @returns {string}
+ */
+function git(gitArgs) {
+  if (process.env.VERSION_AND_COMMIT_DEBUG) {
+    console.error(`[debug] git ${gitArgs.join(' ')}`);
+  }
+  return execFileSync('git', gitArgs, { encoding: 'utf-8', stdio: 'pipe' }).trim();
+}
+
+/** @param {unknown} error */
+function gitErrorOutput(error) {
+  const e = /** @type {{stdout?: string, stderr?: string, message?: string}} */ (error);
+  return [e.stderr, e.stdout, e.message].filter(Boolean).join('\n');
+}
+
+/**
+ * Sync with the remote before any file is touched: `git rebase` refuses a
+ * dirty index, and the bump must start from the newest state of the branch
+ * (the Rust release may have pushed its own version commit meanwhile).
+ * @param {string} branch
+ */
+function syncWithRemote(branch) {
+  try {
+    git(['fetch', 'origin', branch]);
+  } catch (error) {
+    console.warn(`Warning: could not fetch origin/${branch}: ${gitErrorOutput(error)}`);
+    return;
+  }
+  const behind = Number(git(['rev-list', '--count', `HEAD..origin/${branch}`]));
+  if (behind > 0) {
+    console.log(`Local branch is behind origin/${branch} by ${behind} commit(s), rebasing...`);
+    git(['rebase', `origin/${branch}`]);
+  }
+}
+
+/**
+ * Push the release commit, retrying only genuine non-fast-forward races.
+ * @param {string} branch
+ * @param {number} maxAttempts
+ */
+function pushReleaseCommit(branch, maxAttempts = 3) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      git(['push', 'origin', `HEAD:${branch}`]);
+      return;
+    } catch (error) {
+      const output = gitErrorOutput(error);
+      const kind = classifyPushFailure(output);
+      if (kind === 'repository-rules') {
+        throw new Error(
+          `The push to '${branch}' was declined by a repository rule (GH006/GH013). ` +
+            `Rebasing cannot change repository policy: allow the release bot to push to '${branch}' ` +
+            `or release through a pull request.\n${output}`
+        );
+      }
+      if (kind === 'other' || attempt >= maxAttempts) {
+        throw new Error(`git push failed after ${attempt} attempt(s):\n${output}`);
+      }
+      console.log(
+        `Push rejected as non-fast-forward (attempt ${attempt}/${maxAttempts}); pulling with rebase and retrying...`
+      );
+      try {
+        git(['pull', '--rebase', 'origin', branch]);
+      } catch (rebaseError) {
+        try {
+          git(['rebase', '--abort']);
+        } catch {
+          // Nothing to abort.
+        }
+        throw new Error(`git pull --rebase failed:\n${gitErrorOutput(rebaseError)}`);
+      }
+    }
+  }
+}
+
+function main() {
   // Configure git
-  exec('git config user.name "github-actions[bot]"');
-  exec('git config user.email "github-actions[bot]@users.noreply.github.com"');
+  git(['config', 'user.name', 'github-actions[bot]']);
+  git(['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+
+  // A detached checkout reports "HEAD"; fall back to the workflow's branch.
+  let branch = '';
+  try {
+    branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
+  } catch {
+    // Unborn or detached HEAD: use the fallback below.
+  }
+  if (!branch || branch === 'HEAD') {
+    branch = process.env.GITHUB_REF_NAME || 'main';
+  }
+  syncWithRemote(branch);
 
   let bumpType;
   let descriptions = [];
@@ -340,7 +462,7 @@ try {
       console.log('No changesets to process, exiting');
       setOutput('version_committed', 'false');
       setOutput('already_released', 'false');
-      process.exit(0);
+      return;
     }
     bumpType = result.bumpType;
     descriptions = result.descriptions;
@@ -363,13 +485,14 @@ try {
 
   const current = getCurrentVersion();
   const newVersion = calculateNewVersion(current, bumpType);
+  const tagName = `csharp-v${newVersion}`;
 
   // Check if this version was already released
   if (checkTagExists(newVersion)) {
-    console.log(`Tag csharp-v${newVersion} already exists`);
+    console.log(`Tag ${tagName} already exists`);
     setOutput('already_released', 'true');
     setOutput('new_version', newVersion);
-    process.exit(0);
+    return;
   }
 
   // Update version in csproj
@@ -385,47 +508,58 @@ try {
     removeChangesetFiles();
   }
 
-  // Stage all changed files
-  const stagedPaths = [CSPROJ_PATH, CHANGELOG_FILE, `${CHANGESET_DIR}/`];
+  // Stage all changed files; `-A` also records the removed changesets.
+  const stagedPaths = [CSPROJ_PATH];
+  if (existsSync(CHANGELOG_FILE)) {
+    stagedPaths.push(CHANGELOG_FILE);
+  }
   if (existsSync(LIBRARY_CSPROJ_PATH)) {
     stagedPaths.push(LIBRARY_CSPROJ_PATH);
   }
-  exec(`git add ${stagedPaths.join(' ')}`);
+  git(['add', '--', ...stagedPaths]);
+  git(['add', '-A', '--', CHANGESET_DIR]);
 
-  // Check if there are changes to commit
-  try {
-    exec('git diff --cached --quiet', true);
-    // No changes to commit
-    console.log('No changes to commit');
-    setOutput('version_committed', 'false');
-    setOutput('new_version', newVersion);
-    process.exit(0);
-  } catch {
-    // There are changes to commit (git diff exits with 1 when there are differences)
+  // The csproj bump always changes a file, so an empty index means the
+  // release write was lost: fail instead of publishing an uncommitted version.
+  const staged = git(['diff', '--cached', '--name-only']);
+  if (!staged) {
+    throw new Error(
+      `Nothing was staged for ${tagName}; refusing to publish a version that is not committed`
+    );
   }
+  console.log(`Staged release files:\n${staged}`);
 
   // Commit changes
   const commitMsg = description
     ? `chore(csharp): release v${newVersion}\n\n${description}`
     : `chore(csharp): release v${newVersion}`;
-  exec(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`);
+  git(['commit', '-m', commitMsg]);
   console.log(`Committed version ${newVersion}`);
 
-  // Create tag
+  pushReleaseCommit(branch);
+
+  // Tag only after the commit reached the remote, so a rebase retry can never
+  // leave the tag on an orphaned commit, and push exactly this tag.
   const tagMsg = description
     ? `C# Release v${newVersion}\n\n${description}`
     : `C# Release v${newVersion}`;
-  exec(`git tag -a csharp-v${newVersion} -m "${tagMsg.replace(/"/g, '\\"')}"`);
-  console.log(`Created tag csharp-v${newVersion}`);
-
-  // Push changes and tag
-  exec('git push');
-  exec('git push --tags');
-  console.log('Pushed changes and tags');
+  git(['tag', '-a', tagName, '-m', tagMsg]);
+  console.log(`Created tag ${tagName}`);
+  git(['push', 'origin', tagName]);
+  console.log(`Pushed release commit and tag ${tagName}`);
 
   setOutput('version_committed', 'true');
   setOutput('new_version', newVersion);
-} catch (error) {
-  console.error('Error:', error.message);
-  process.exit(1);
+}
+
+const invokedDirectly =
+  process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+
+if (invokedDirectly) {
+  try {
+    main();
+  } catch (error) {
+    console.error(`::error title=C# release failed::${gitErrorOutput(error)}`);
+    process.exit(1);
+  }
 }

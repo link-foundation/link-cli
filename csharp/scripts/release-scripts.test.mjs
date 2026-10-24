@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFile, execFileSync } from 'node:child_process';
 import {
+  chmodSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -26,6 +28,10 @@ import {
   buildReleasePayload,
   prependNugetBadges,
 } from './create-github-release.mjs';
+import {
+  classifyPushFailure,
+  insertChangelogEntry,
+} from './version-and-commit.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -342,6 +348,154 @@ test('version-and-commit creates a C# release commit when the next tag is missin
   assert.match(outputs, /^new_version=2\.4\.0$/m);
   assert.match(runGit(['rev-parse', '--verify', 'csharp-v2.4.0'], work), /[a-f0-9]{40}/);
   assert.match(runGit(['ls-remote', '--tags', 'origin', 'csharp-v2.4.0'], work), /csharp-v2\.4\.0/);
+});
+
+/**
+ * Build a work clone with a bare origin holding a minimal C# project and one
+ * changeset, as the release job sees it after checkout.
+ */
+function createCsharpReleaseSandbox(prefix) {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
+  const remote = join(dir, 'remote.git');
+  const work = join(dir, 'work');
+  mkdirSync(work, { recursive: true });
+  runGit(['init', '--bare', '--initial-branch=main', remote], dir);
+  runGit(['init', '-b', 'main'], work);
+  runGit(['config', 'user.name', 'Test User'], work);
+  runGit(['config', 'user.email', 'test@example.com'], work);
+  const projectDir = join(work, 'csharp', 'Foundation.Data.Doublets.Cli');
+  const changesetDir = join(work, 'csharp', '.changeset');
+  mkdirSync(projectDir, { recursive: true });
+  mkdirSync(changesetDir, { recursive: true });
+  writeFileSync(
+    join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'),
+    '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><Version>2.3.0</Version></PropertyGroup></Project>\n'
+  );
+  writeFileSync(
+    join(changesetDir, 'release.md'),
+    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFix release automation.\n"
+  );
+  runGit(['add', '.'], work);
+  runGit(['commit', '-m', 'initial'], work);
+  runGit(['remote', 'add', 'origin', remote], work);
+  runGit(['push', '-u', 'origin', 'main'], work);
+  return { dir, remote, work, outputFile: join(dir, 'github-output.txt') };
+}
+
+function writeHook(path, body) {
+  writeFileSync(path, `#!/bin/sh\n${body}\n`);
+  chmodSync(path, 0o755);
+}
+
+test('insertChangelogEntry keeps exactly one blank line around entries (issue #134)', () => {
+  const header = '# Changelog\n\nIntro.\n\n## [1.0.0] - 2026-01-01\n\nFirst.\n';
+  const once = insertChangelogEntry(header, '## [1.0.1] - 2026-01-02\n\nSecond.');
+  const twice = insertChangelogEntry(once, '## [1.0.2] - 2026-01-03\n\nThird.');
+
+  assert.equal(
+    twice,
+    '# Changelog\n\nIntro.\n\n## [1.0.2] - 2026-01-03\n\nThird.\n\n' +
+      '## [1.0.1] - 2026-01-02\n\nSecond.\n\n## [1.0.0] - 2026-01-01\n\nFirst.\n'
+  );
+  assert.doesNotMatch(twice, /\n\n\n/);
+});
+
+test('insertChangelogEntry collapses blank lines accumulated by earlier releases', () => {
+  const grown = `# Changelog\n\nIntro.\n${'\n'.repeat(12)}## [4.0.5] - 2026-10-01\n\nFix.\n`;
+  const updated = insertChangelogEntry(grown, '## [4.0.6] - 2026-10-24\n\nNext.');
+
+  assert.equal(
+    updated,
+    '# Changelog\n\nIntro.\n\n## [4.0.6] - 2026-10-24\n\nNext.\n\n## [4.0.5] - 2026-10-01\n\nFix.\n'
+  );
+});
+
+test('insertChangelogEntry creates the header for a missing changelog', () => {
+  const created = insertChangelogEntry(null, '## [1.0.0] - 2026-01-01\n\nFirst.\n');
+
+  assert.match(created, /^# Changelog\n\n/);
+  assert.match(created, /Semantic Versioning\]\(https:\/\/semver\.org\/spec\/v2\.0\.0\.html\)\.\n\n## \[1\.0\.0\] - 2026-01-01\n\nFirst\.\n$/);
+});
+
+test('classifyPushFailure separates repository rules from lost races', () => {
+  assert.equal(
+    classifyPushFailure(
+      'remote: error: GH013: Repository rule violations found for refs/heads/main.\n ! [remote rejected] HEAD -> main (push declined due to repository rule violations)'
+    ),
+    'repository-rules'
+  );
+  assert.equal(
+    classifyPushFailure('remote: error: GH006: Protected branch update failed for refs/heads/main.'),
+    'repository-rules'
+  );
+  assert.equal(
+    classifyPushFailure(
+      " ! [rejected]        HEAD -> main (fetch first)\nerror: failed to push some refs\nhint: Updates were rejected because the remote contains work that you do not have locally."
+    ),
+    'lost-race'
+  );
+  assert.equal(classifyPushFailure('fatal: unable to access remote: Could not resolve host'), 'other');
+});
+
+test('version-and-commit rebases and retries when another release pushed first', () => {
+  const { dir, remote, work, outputFile } = createCsharpReleaseSandbox('link-cli-csharp-race-');
+  const rival = join(dir, 'rival');
+  runGit(['clone', remote, rival], dir);
+  runGit(['config', 'user.name', 'Rival'], rival);
+  runGit(['config', 'user.email', 'rival@example.com'], rival);
+  // Right after the release commit is created, a concurrent workflow (e.g. the
+  // Rust release) lands its own commit on main, so the first push loses the race.
+  const marker = join(dir, 'raced');
+  writeHook(
+    join(work, '.git', 'hooks', 'post-commit'),
+    `[ -e "${marker}" ] && exit 0\ntouch "${marker}"\n` +
+      `cd "${rival}" && echo rust > rust.txt && git add rust.txt && ` +
+      `git commit -q -m "chore: release rust-v1.0.9" && git push -q origin main`
+  );
+
+  const stdout = runNode('csharp/scripts/version-and-commit.mjs', ['--mode', 'changeset'], {
+    cwd: work,
+    env: { GITHUB_OUTPUT: outputFile },
+  });
+
+  assert.ok(existsSync(marker), 'the concurrent push must have happened');
+  assert.match(stdout, /Push rejected as non-fast-forward \(attempt 1\/3\)/);
+  assert.match(stdout, /Pushed release commit and tag csharp-v2\.3\.1/);
+  const log = runGit(['--git-dir', remote, 'log', '--format=%s', 'main'], dir).trim().split('\n');
+  assert.deepEqual(log, ['chore(csharp): release v2.3.1', 'chore: release rust-v1.0.9', 'initial']);
+  // The tag points at the rebased commit that actually reached main.
+  assert.equal(
+    runGit(['--git-dir', remote, 'rev-parse', 'csharp-v2.3.1^{commit}'], dir),
+    runGit(['--git-dir', remote, 'rev-parse', 'main'], dir)
+  );
+  assert.equal(runGit(['status', '--porcelain'], work), '');
+  assert.match(readFileSync(outputFile, 'utf8'), /^version_committed=true$/m);
+});
+
+test('version-and-commit fails fast without tagging when a repository rule declines the push', () => {
+  const { dir, remote, work, outputFile } = createCsharpReleaseSandbox('link-cli-csharp-rules-');
+  const attempts = join(dir, 'attempts');
+  writeHook(
+    join(remote, 'hooks', 'pre-receive'),
+    `echo attempt >> "${attempts}"\n` +
+      'echo "error: GH013: Repository rule violations found for refs/heads/main." >&2\nexit 1'
+  );
+
+  let failure;
+  try {
+    runNode('csharp/scripts/version-and-commit.mjs', ['--mode', 'changeset'], {
+      cwd: work,
+      env: { GITHUB_OUTPUT: outputFile },
+    });
+  } catch (error) {
+    failure = error;
+  }
+
+  assert.ok(failure, 'the release must fail');
+  assert.match(failure.stderr, /::error title=C# release failed::.*repository rule/);
+  assert.equal(readFileSync(attempts, 'utf8').trim().split('\n').length, 1);
+  assert.equal(runGit(['--git-dir', remote, 'tag', '--list'], dir), '');
+  assert.equal(existsSync(outputFile), false, 'no release outputs may be written');
 });
 
 test('check-release-needed decide(): changesets take the normal release path', () => {
