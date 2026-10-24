@@ -9,9 +9,8 @@
 //! All three keep their links in memory and rewrite the whole database
 //! file on [`LinksStorage::flush`], so **`flush` (or the inherent `save`)
 //! is required for durability**: nothing reaches the disk before it. The
-//! rewrite truncates the existing file in place rather than renaming a
-//! temporary over it, so the inode is preserved and other processes that
-//! already opened the database keep pointing at the same file.
+//! rewrite atomically replaces the file, syncs it and (on Unix) its parent
+//! directory. Other processes must reload after acquiring their advisory lock.
 
 use doublets::data::LinkReference;
 
@@ -147,6 +146,18 @@ impl_in_memory_links_storage!(
     |storage: &mut LinkStorage, source, target| storage.create(source, target),
     |storage: &mut LinkStorage| {
         storage.save().map_err(storage_error)?;
+        if !storage.is_in_memory() {
+            std::fs::File::open(storage.database_path())?.sync_all()?;
+            #[cfg(unix)]
+            std::fs::File::open(
+                storage
+                    .database_path()
+                    .parent()
+                    .filter(|p| !p.as_os_str().is_empty())
+                    .unwrap_or_else(|| std::path::Path::new(".")),
+            )?
+            .sync_all()?;
+        }
         storage.refresh_observed_revision()
     },
     |storage: &LinkStorage| {
@@ -159,10 +170,7 @@ impl_in_memory_links_storage!(
 impl_in_memory_links_storage!(
     PinnedTypesDecorator,
     |storage: &mut PinnedTypesDecorator, source, target| storage.create(source, target),
-    |storage: &mut PinnedTypesDecorator| {
-        storage.save().map_err(storage_error)?;
-        storage.links_mut().refresh_observed_revision()
-    },
+    |storage: &mut PinnedTypesDecorator| { storage.links_mut().flush() },
     |storage: &PinnedTypesDecorator| storage.links().has_external_changes(),
     |storage: &mut PinnedTypesDecorator| storage.links_mut().reload()
 );
@@ -171,9 +179,8 @@ impl_in_memory_links_storage!(
     NamedTypesDecorator,
     |storage: &mut NamedTypesDecorator, source, target| storage.create(source, target),
     |storage: &mut NamedTypesDecorator| {
-        storage.save().map_err(storage_error)?;
-        storage.links_mut().refresh_observed_revision()?;
-        storage.names_links_mut().refresh_observed_revision()
+        storage.links_mut().flush()?;
+        storage.names_links_mut().flush()
     },
     |storage: &NamedTypesDecorator| {
         Ok(storage.links().has_external_changes()?

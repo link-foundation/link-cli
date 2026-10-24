@@ -1,0 +1,56 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.37]     Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "rollback:bad-id") [FAIL]
+[xUnit.net 00:00:01.42]     Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "commit:bad-id") [FAIL]
+[xUnit.net 00:00:01.46]     Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "applied:0") [FAIL]
+[xUnit.net 00:00:01.50]     Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "applied:bad") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "rollback:bad-id") [387 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.<>c__DisplayClass0_0.<CorruptMarkersFailRecovery>b__0(NamedTypesDecorator`1 data, NamedTypesDecorator`1 log) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 18
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.WithStore(Action`2 action) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(String suffix) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 14
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "commit:bad-id") [64 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.<>c__DisplayClass0_0.<CorruptMarkersFailRecovery>b__0(NamedTypesDecorator`1 data, NamedTypesDecorator`1 log) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 18
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.WithStore(Action`2 action) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(String suffix) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 14
+   at InvokeStub_AcidReadinessTests.CorruptMarkersFailRecovery(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "applied:0") [43 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.<>c__DisplayClass0_0.<CorruptMarkersFailRecovery>b__0(NamedTypesDecorator`1 data, NamedTypesDecorator`1 log) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 18
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.WithStore(Action`2 action) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(String suffix) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 14
+   at InvokeStub_AcidReadinessTests.CorruptMarkersFailRecovery(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(suffix: "applied:bad") [30 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.<>c__DisplayClass0_0.<CorruptMarkersFailRecovery>b__0(NamedTypesDecorator`1 data, NamedTypesDecorator`1 log) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 18
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.WithStore(Action`2 action) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 84
+   at Foundation.Data.Doublets.Cli.Tests.AcidReadinessTests.CorruptMarkersFailRecovery(String suffix) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AcidReadinessTests.cs:line 14
+   at InvokeStub_AcidReadinessTests.CorruptMarkersFailRecovery(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     4, Passed:     0, Skipped:     0, Total:     4, Duration: 582 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

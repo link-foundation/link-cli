@@ -92,6 +92,7 @@ use types::{COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX
 
 /// Pending state of a transaction (used by the explicit transaction
 /// handle and by per-write auto-transactions).
+#[derive(Clone)]
 struct PendingTransaction<T> {
     id: u128,
     transitions: Vec<GenericTransition<T>>,
@@ -598,12 +599,18 @@ where
     }
 
     fn commit_current(&mut self) -> Result<(), LinkError> {
-        let pending = match self.current.take() {
-            Some(p) => p,
-            None => return Ok(()),
+        let Some(current) = self.current.as_ref() else {
+            return Ok(());
         };
+        let id = current.id;
+        self.write_marker(&format!("{COMMIT_MARKER_PREFIX}{id:032x}"))?;
+        // A links-backed log buffers appends; a commit is durable only after
+        // its explicit flush, even if FileTransitionLog syncs each append.
+        self.log_store.flush_log()?;
+        let pending = self.current.take().expect("transaction is still open");
         self.committed.insert(pending.id);
-        self.write_marker(&format!("{COMMIT_MARKER_PREFIX}{:032x}", pending.id))?;
+        // Never persist an applied marker before its data is durable.
+        self.inner.flush()?;
         if self.trace {
             eprintln!(
                 "[Transactions] Committed tx {:032x} (mode={:?}, transitions={}).",
@@ -617,22 +624,29 @@ where
         }
         let _ = pending.auto_commit;
         let _ = pending.started_ms;
+        self.log_store.flush_log()?;
         self.enforce_retention()?;
         Ok(())
     }
 
     pub fn rollback(&mut self) -> Result<(), LinkError> {
-        let pending = match self.current.take() {
+        let pending = match self.current.clone() {
             Some(p) => p,
             None => return Ok(()),
         };
-        self.rolled_back.insert(pending.id);
         self.replaying = true;
-        for transition in pending.transitions.iter().rev() {
-            self.try_revert_transition(transition);
-        }
+        let result = pending
+            .transitions
+            .iter()
+            .rev()
+            .try_for_each(|transition| self.try_revert_transition(transition));
         self.replaying = false;
+        result?;
+        self.inner.flush()?;
         self.write_marker(&format!("{ROLLBACK_MARKER_PREFIX}{:032x}", pending.id))?;
+        self.log_store.flush_log()?;
+        self.rolled_back.insert(pending.id);
+        self.current = None;
         if self.trace {
             eprintln!(
                 "[Transactions] Rolled back tx {:032x} ({} transitions).",

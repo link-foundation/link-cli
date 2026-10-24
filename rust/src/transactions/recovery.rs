@@ -30,30 +30,33 @@ where
 {
     /// Public helper for higher-level decorators (e.g. version control)
     /// — applies a single transition without writing a new log entry.
-    pub fn apply_transition(&mut self, transition: &GenericTransition<T>) {
+    pub fn apply_transition(&mut self, transition: &GenericTransition<T>) -> Result<(), LinkError> {
         self.replaying = true;
-        self.try_apply_transition(transition, false);
+        let result = self.try_apply_transition(transition, false);
         self.replaying = false;
+        result
     }
 
-    /// Public helper for higher-level decorators (e.g. version control)
-    /// — reverts a single transition without writing a new log entry.
-    pub fn revert_transition(&mut self, transition: &GenericTransition<T>) {
+    /// Reverts one transition, reporting storage errors to the caller.
+    pub fn revert_transition(
+        &mut self,
+        transition: &GenericTransition<T>,
+    ) -> Result<(), LinkError> {
         self.replaying = true;
-        self.try_revert_transition(transition);
+        let result = self.try_revert_transition(transition);
         self.replaying = false;
+        result
     }
 
     pub(super) fn try_apply_transition(
         &mut self,
         transition: &GenericTransition<T>,
         record_applied: bool,
-    ) {
+    ) -> Result<(), LinkError> {
         let zero = T::from_byte(0);
         let result: Result<(), LinkError> = match transition.kind {
             TransitionKind::Create => {
-                if transition.after.index != zero && !self.inner.link_exists(transition.after.index)
-                {
+                if transition.after.index != zero {
                     self.inner
                         .ensure_link_created(transition.after.index)
                         .and_then(|_| {
@@ -93,20 +96,19 @@ where
                 }
             }
         };
-        if let Err(e) = result {
-            if self.trace {
-                eprintln!(
-                    "[Transactions] Failed to apply transition seq={}: {e}",
-                    transition.sequence
-                );
-            }
-        }
+        result?;
         if record_applied {
-            let _ = self.mark_applied(transition);
+            self.inner.flush()?;
+            self.mark_applied(transition)?;
+            self.log_store.flush_log()?;
         }
+        Ok(())
     }
 
-    pub(super) fn try_revert_transition(&mut self, transition: &GenericTransition<T>) {
+    pub(super) fn try_revert_transition(
+        &mut self,
+        transition: &GenericTransition<T>,
+    ) -> Result<(), LinkError> {
         let zero = T::from_byte(0);
         let result: Result<(), LinkError> = match transition.kind {
             TransitionKind::Create => {
@@ -152,22 +154,16 @@ where
                 }
             }
         };
-        if let Err(e) = result {
-            if self.trace {
-                eprintln!(
-                    "[Transactions] Failed to revert transition seq={}: {e}",
-                    transition.sequence
-                );
-            }
-        }
+        result
     }
 
     pub(super) fn mark_applied(
         &mut self,
         transition: &GenericTransition<T>,
     ) -> Result<(), LinkError> {
-        if self.applied.insert(transition.sequence) {
+        if !self.applied.contains(&transition.sequence) {
             self.write_marker(&format!("{APPLIED_MARKER_PREFIX}{}", transition.sequence))?;
+            self.applied.insert(transition.sequence);
             if transition.sequence > self.applied_sequence {
                 self.applied_sequence = transition.sequence;
             }
@@ -180,12 +176,9 @@ where
     /// Rebuilds the in-memory log and marker tables from the sidecar
     /// log store and re-applies committed-but-unapplied side-effects.
     ///
-    /// Entries that cannot be parsed are skipped: an append-only log
-    /// can end in the partial entry of a crashed write, and the
-    /// links-backed log can hold names that belong to other features.
-    /// An entry whose addresses do not fit into `T` is *not* skipped —
-    /// that means the log was written by a wider address type and
-    /// silently dropping it would corrupt the recovered state.
+    /// Unrelated names are ignored. Recognized transaction records that cannot
+    /// be parsed fail recovery; FileTransitionLog already discards torn tails.
+    /// Silently skipping a complete record could lose committed data.
     pub fn recover(&mut self) -> Result<(), LinkError> {
         self.log.clear();
         self.committed.clear();
@@ -206,61 +199,67 @@ where
                     Err(LinkError::AddressOutOfRange(value)) => {
                         return Err(LinkError::AddressOutOfRange(value))
                     }
-                    Err(error) => {
-                        if self.trace {
-                            eprintln!("[Transactions] Skipping unreadable log entry: {error}");
-                        }
-                    }
+                    Err(error) => return Err(error),
                 }
             } else if let Some(rest) = entry.strip_prefix(COMMIT_MARKER_PREFIX) {
-                if let Ok(tx_id) = u128::from_str_radix(rest, 16) {
-                    self.committed.insert(tx_id);
-                }
+                let tx_id = u128::from_str_radix(rest, 16)
+                    .map_err(|_| LinkError::InvalidFormat("invalid commit marker".into()))?;
+                self.committed.insert(tx_id);
             } else if let Some(rest) = entry.strip_prefix(ROLLBACK_MARKER_PREFIX) {
-                if let Ok(tx_id) = u128::from_str_radix(rest, 16) {
-                    self.rolled_back.insert(tx_id);
-                }
+                let tx_id = u128::from_str_radix(rest, 16)
+                    .map_err(|_| LinkError::InvalidFormat("invalid rollback marker".into()))?;
+                self.rolled_back.insert(tx_id);
             } else if let Some(rest) = entry.strip_prefix(APPLIED_MARKER_PREFIX) {
-                if let Ok(seq) = rest.parse::<i64>() {
-                    self.applied.insert(seq);
-                    if seq > self.applied_sequence {
-                        self.applied_sequence = seq;
-                    }
+                let seq = rest
+                    .parse::<i64>()
+                    .map_err(|_| LinkError::InvalidFormat("invalid applied marker".into()))?;
+                if seq <= 0 {
+                    return Err(LinkError::InvalidFormat(
+                        "nonpositive applied sequence".into(),
+                    ));
                 }
+                self.applied.insert(seq);
+                self.applied_sequence = self.applied_sequence.max(seq);
             }
         }
 
         // Re-apply committed-but-not-applied transitions (crash mid-async).
         let log_snapshot: Vec<GenericTransition<T>> = self.log.clone();
         self.replaying = true;
-        for transition in &log_snapshot {
-            if !self.committed.contains(&transition.transaction_id) {
-                continue;
+        let result = (|| -> Result<Vec<u128>, LinkError> {
+            for transition in &log_snapshot {
+                if !self.committed.contains(&transition.transaction_id) {
+                    continue;
+                }
+                if self.applied.contains(&transition.sequence) {
+                    continue;
+                }
+                self.try_apply_transition(transition, true)?;
             }
-            if self.applied.contains(&transition.sequence) {
-                continue;
+            // Auto-rollback transitions written but never committed and never rolled back (R10).
+            let mut pending_tx_ids: Vec<u128> = Vec::new();
+            for transition in log_snapshot.iter().rev() {
+                if self.committed.contains(&transition.transaction_id) {
+                    continue;
+                }
+                if self.rolled_back.contains(&transition.transaction_id) {
+                    continue;
+                }
+                self.try_revert_transition(transition)?;
+                if !pending_tx_ids.contains(&transition.transaction_id) {
+                    pending_tx_ids.push(transition.transaction_id);
+                }
             }
-            self.try_apply_transition(transition, true);
-        }
-        // Auto-rollback transitions written but never committed and never rolled back (R10).
-        let mut pending_tx_ids: Vec<u128> = Vec::new();
-        for transition in log_snapshot.iter().rev() {
-            if self.committed.contains(&transition.transaction_id) {
-                continue;
-            }
-            if self.rolled_back.contains(&transition.transaction_id) {
-                continue;
-            }
-            self.try_revert_transition(transition);
-            if !pending_tx_ids.contains(&transition.transaction_id) {
-                pending_tx_ids.push(transition.transaction_id);
-            }
-        }
+            Ok(pending_tx_ids)
+        })();
         self.replaying = false;
+        let pending_tx_ids = result?;
+        self.inner.flush()?;
         for tx_id in pending_tx_ids {
             self.rolled_back.insert(tx_id);
             self.write_marker(&format!("{ROLLBACK_MARKER_PREFIX}{tx_id:032x}"))?;
         }
+        self.log_store.flush_log()?;
         Ok(())
     }
 
@@ -283,8 +282,9 @@ where
             let head = self.log[0];
             if !self.applied.contains(&head.sequence) {
                 self.replaying = true;
-                self.try_apply_transition(&head, true);
+                let result = self.try_apply_transition(&head, true);
                 self.replaying = false;
+                result?;
                 if !self.applied.contains(&head.sequence) {
                     break; // R7: never drop an un-applied transition.
                 }
@@ -316,8 +316,9 @@ where
         for transition in &chunk {
             if !self.applied.contains(&transition.sequence) {
                 self.replaying = true;
-                self.try_apply_transition(transition, true);
+                let result = self.try_apply_transition(transition, true);
                 self.replaying = false;
+                result?;
                 if !self.applied.contains(&transition.sequence) {
                     return Ok(()); // never drop un-applied
                 }

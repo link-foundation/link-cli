@@ -37,6 +37,12 @@ pub trait TransitionLogStore {
 
     /// Makes every appended entry durable.
     fn flush_log(&mut self) -> Result<(), LinkError>;
+
+    /// Whether flush requests persistent storage. Custom/volatile logs default
+    /// to false; this describes an adapter, not the reliability of its hardware.
+    fn supports_durable_flush(&self) -> bool {
+        false
+    }
 }
 
 fn storage_error(error: anyhow::Error) -> LinkError {
@@ -44,6 +50,9 @@ fn storage_error(error: anyhow::Error) -> LinkError {
 }
 
 impl TransitionLogStore for NamedTypesDecorator {
+    fn supports_durable_flush(&self) -> bool {
+        !self.links().database_path().as_os_str().is_empty()
+    }
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
         // Always allocate a fresh link so entries never overwrite one
         // another (mirrors C# `CreateAndUpdate(Null, Null)`).
@@ -65,7 +74,7 @@ impl TransitionLogStore for NamedTypesDecorator {
     }
 
     fn flush_log(&mut self) -> Result<(), LinkError> {
-        NamedTypesDecorator::save(self).map_err(storage_error)
+        crate::LinksStorage::flush(self)
     }
 }
 
@@ -94,6 +103,7 @@ pub struct FileTransitionLog {
     path: PathBuf,
     file: File,
     sync_on_append: bool,
+    _lock: Option<crate::FileLock>,
 }
 
 impl FileTransitionLog {
@@ -118,11 +128,30 @@ impl FileTransitionLog {
         truncate_torn_tail(&repair)?;
         drop(repair);
         let file = OpenOptions::new().read(true).append(true).open(&path)?;
+        #[cfg(unix)]
+        File::open(
+            path.parent()
+                .filter(|p| !p.as_os_str().is_empty())
+                .unwrap_or(Path::new(".")),
+        )?
+        .sync_all()?;
         Ok(Self {
             path,
             file,
             sync_on_append: true,
+            _lock: None,
         })
+    }
+
+    /// Holds the conventional sidecar lock until drop. Contention fails fast;
+    /// all writers must follow the same advisory locking convention.
+    pub fn open_exclusive<P: AsRef<Path>>(path: P) -> Result<Self, LinkError> {
+        let lock =
+            crate::FileLock::try_acquire(crate::lock_file_path(&path), crate::LockMode::Exclusive)?
+                .ok_or_else(|| LinkError::Lock("journal writer is busy".into()))?;
+        let mut log = Self::open(path)?;
+        log._lock = Some(lock);
+        Ok(log)
     }
 
     /// Path of the backing file.
@@ -142,6 +171,9 @@ impl FileTransitionLog {
 }
 
 impl TransitionLogStore for FileTransitionLog {
+    fn supports_durable_flush(&self) -> bool {
+        true
+    }
     fn append_log_entry(&mut self, entry: &str) -> Result<(), LinkError> {
         if entry.contains('\n') || entry.contains('\r') {
             return Err(LinkError::InvalidFormat(

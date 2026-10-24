@@ -147,7 +147,10 @@ public readonly record struct Transition<TLinkAddress>(
         if (!Guid.TryParseExact(parts[1], "N", out var txId)) return false;
         if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq)) return false;
         if (!long.TryParse(parts[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out var ms)) return false;
-        if (!int.TryParse(parts[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kindValue)) return false;
+        if (!int.TryParse(parts[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kindValue)
+            || !Enum.IsDefined((TransitionKind)kindValue)) return false;
+        if (ms < DateTimeOffset.MinValue.ToUnixTimeMilliseconds()
+            || ms > DateTimeOffset.MaxValue.ToUnixTimeMilliseconds()) return false;
         if (!TryParseLink(parts[5], out var before)) return false;
         if (!TryParseLink(parts[6], out var after)) return false;
         transition = new Transition<TLinkAddress>(
@@ -210,7 +213,7 @@ public interface ITransactionsLinks<TLinkAddress> : INamedTypesLinks<TLinkAddres
 /// retention policies, and crash recovery. Optional — no behavioural
 /// change if not opted in (R8).
 /// </summary>
-public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, ITransactionsLinks<TLinkAddress>, IDisposable
+public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, ITransactionsLinks<TLinkAddress>, IDisposable
   where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
     internal const string CommitMarkerPrefix = "__transactions:commit:";
@@ -229,6 +232,11 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     private readonly BlockingCollection<Func<Task>> _asyncQueue = new();
     private readonly CancellationTokenSource _backgroundCts = new();
     private readonly Task _backgroundWorker;
+    private readonly Action _flushData;
+    private readonly Action _flushLog;
+
+    /// <summary>True when both data and journal have explicit stable-storage flushes.</summary>
+    public bool SupportsDurableCommit { get; }
     private Transaction? _current;
     private long _sequenceCounter;
     private long _appliedSequence;
@@ -242,7 +250,9 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
       INamedTypesLinks<TLinkAddress> logStore,
       LogRetentionPolicy? retentionPolicy = null,
       CommitMode commitMode = CommitMode.Sync,
-      bool trace = false)
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
       : base(inner)
     {
         _inner = inner;
@@ -250,8 +260,14 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         _retentionPolicy = retentionPolicy ?? LogRetentionPolicy.Default;
         _commitMode = commitMode;
         _trace = trace;
-        _backgroundWorker = Task.Run(RunBackgroundWorker);
+        var durableData = inner as IDurableLinks;
+        var durableLog = logStore as IDurableLinks;
+        SupportsDurableCommit = (flushData is not null || durableData?.SupportsDurableFlush == true)
+            && (flushLog is not null || durableLog?.SupportsDurableFlush == true);
+        _flushData = flushData ?? (durableData?.SupportsDurableFlush == true ? durableData.Flush : static () => { });
+        _flushLog = flushLog ?? (durableLog?.SupportsDurableFlush == true ? durableLog.Flush : static () => { });
         Recover();
+        _backgroundWorker = Task.Run(RunBackgroundWorker);
     }
 
     public CommitMode CommitMode
@@ -433,106 +449,6 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     public virtual TLinkAddress GetByName(string name) => _inner.GetByName(name);
     public virtual void RemoveName(TLinkAddress link) => _inner.RemoveName(link);
 
-    // Recovery --------------------------------------------------------------
-
-    public virtual void Recover()
-    {
-        lock (_lock)
-        {
-            _log.Clear();
-            _committed.Clear();
-            _rolledBack.Clear();
-            _applied.Clear();
-            _sequenceCounter = 0;
-            _appliedSequence = 0;
-
-            var any = _logStore.Constants.Any;
-            var anyLink = new Link<TLinkAddress>(any, any, any);
-            foreach (var raw in _logStore.All(anyLink))
-            {
-                var link = new Link<TLinkAddress>(raw);
-                var name = _logStore.GetName(link.Index);
-                if (string.IsNullOrEmpty(name)) continue;
-
-                if (name.StartsWith(TransitionNamePrefix, StringComparison.Ordinal))
-                {
-                    var payload = name.Substring(TransitionNamePrefix.Length);
-                    if (Transition<TLinkAddress>.TryParse(payload, out var transition))
-                    {
-                        InsertOrdered(_log, transition);
-                        if (transition.Sequence > _sequenceCounter)
-                        {
-                            _sequenceCounter = transition.Sequence;
-                        }
-                    }
-                }
-                else if (name.StartsWith(CommitMarkerPrefix, StringComparison.Ordinal))
-                {
-                    if (Guid.TryParseExact(name.Substring(CommitMarkerPrefix.Length), "N", out var txId))
-                    {
-                        _committed.Add(txId);
-                    }
-                }
-                else if (name.StartsWith(RollbackMarkerPrefix, StringComparison.Ordinal))
-                {
-                    if (Guid.TryParseExact(name.Substring(RollbackMarkerPrefix.Length), "N", out var txId))
-                    {
-                        _rolledBack.Add(txId);
-                    }
-                }
-                else if (name.StartsWith(AppliedMarkerPrefix, StringComparison.Ordinal))
-                {
-                    var rest = name.Substring(AppliedMarkerPrefix.Length);
-                    if (long.TryParse(rest, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
-                    {
-                        _applied.Add(seq);
-                        if (seq > _appliedSequence) _appliedSequence = seq;
-                    }
-                }
-            }
-
-            _replaying = true;
-            try
-            {
-                // Re-apply committed transitions whose side-effects were lost
-                // (e.g. async crash before checkpoint). Only those not yet
-                // recorded as applied are touched.
-                foreach (var transition in _log)
-                {
-                    if (!_committed.Contains(transition.TransactionId)) continue;
-                    if (_applied.Contains(transition.Sequence)) continue;
-                    TryApplyTransition(transition, recordApplied: true);
-                }
-
-                // Auto-rollback transitions written but never committed and never
-                // rolled back: this is the crash-mid-transaction case (R10).
-                foreach (var transition in _log.OrderByDescending(t => t.Sequence))
-                {
-                    if (_committed.Contains(transition.TransactionId)) continue;
-                    if (_rolledBack.Contains(transition.TransactionId)) continue;
-                    TryRevertTransition(transition);
-                }
-
-                // Mark recovered-but-incomplete transactions as rolled back so
-                // we don't try to revert them on the next open.
-                var pendingTxIds = _log
-                  .Where(t => !_committed.Contains(t.TransactionId) && !_rolledBack.Contains(t.TransactionId))
-                  .Select(t => t.TransactionId)
-                  .Distinct()
-                  .ToList();
-                foreach (var txId in pendingTxIds)
-                {
-                    _rolledBack.Add(txId);
-                    WriteMarker(RollbackMarkerPrefix + txId.ToString("N"));
-                }
-            }
-            finally
-            {
-                _replaying = false;
-            }
-        }
-    }
-
     // Disposal --------------------------------------------------------------
 
     /// <summary>
@@ -588,9 +504,10 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         lock (_lock)
         {
             if (transaction.IsCommitted || transaction.IsRolledBack) return;
+            WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
+            _flushLog();
             _committed.Add(transaction.Id);
             transaction.MarkCommitted();
-            WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
             if (_current == transaction) _current = null;
             runAsync = forceAsync || _commitMode == CommitMode.Async;
             transitions = transaction.Transitions.ToArray();
@@ -605,10 +522,12 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         {
             lock (_lock)
             {
+                _flushData();
                 foreach (var transition in transitions)
                 {
                     MarkApplied(transition);
                 }
+                _flushLog();
                 EnforceRetentionLocked();
             }
         }
@@ -619,8 +538,6 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         lock (_lock)
         {
             if (transaction.IsCommitted || transaction.IsRolledBack) return;
-            transaction.MarkRolledBack();
-            _rolledBack.Add(transaction.Id);
             _replaying = true;
             try
             {
@@ -633,7 +550,11 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
             {
                 _replaying = false;
             }
+            _flushData();
             WriteMarker(RollbackMarkerPrefix + transaction.Id.ToString("N"));
+            _flushLog();
+            transaction.MarkRolledBack();
+            _rolledBack.Add(transaction.Id);
             if (_current == transaction) _current = null;
             Trace($"Rolled back tx {transaction.Id:N} ({transaction.Transitions.Count} transitions).");
             EnforceRetentionLocked();
@@ -656,6 +577,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         catch (Exception ex)
         {
             Trace($"Failed to revert transition seq={transition.Sequence}: {ex.Message}");
+            throw;
         }
     }
 
@@ -718,20 +640,24 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 
             if (recordApplied)
             {
+                _flushData();
                 MarkApplied(transition);
+                _flushLog();
             }
         }
         catch (Exception ex)
         {
             Trace($"Failed to apply transition seq={transition.Sequence}: {ex.Message}");
+            throw;
         }
     }
 
     private void MarkApplied(Transition<TLinkAddress> transition)
     {
-        if (_applied.Add(transition.Sequence))
+        if (!_applied.Contains(transition.Sequence))
         {
             WriteMarker(AppliedMarkerPrefix + transition.Sequence.ToString(CultureInfo.InvariantCulture));
+            _applied.Add(transition.Sequence);
             if (transition.Sequence > _appliedSequence) _appliedSequence = transition.Sequence;
         }
     }
@@ -860,7 +786,9 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
                 {
                     // Side-effects normally already applied (inner store ran
                     // them inline). Re-apply only if needed and mark applied.
+                    _flushData();
                     MarkApplied(transition);
+                    _flushLog();
                 }
             }
             catch
@@ -974,14 +902,16 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 /// </remarks>
 public class TransactionsDecorator : TransactionsDecorator<uint>
 {
-    /// <inheritdoc cref="TransactionsDecorator{TLinkAddress}(INamedTypesLinks{TLinkAddress}, INamedTypesLinks{TLinkAddress}, LogRetentionPolicy, CommitMode, bool)"/>
+    /// <inheritdoc cref="TransactionsDecorator{TLinkAddress}(INamedTypesLinks{TLinkAddress}, INamedTypesLinks{TLinkAddress}, LogRetentionPolicy, CommitMode, bool, Action, Action)"/>
     public TransactionsDecorator(
       INamedTypesLinks<uint> inner,
       INamedTypesLinks<uint> logStore,
       LogRetentionPolicy? retentionPolicy = null,
       CommitMode commitMode = CommitMode.Sync,
-      bool trace = false)
-      : base(inner, logStore, retentionPolicy, commitMode, trace)
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
+      : base(inner, logStore, retentionPolicy, commitMode, trace, flushData, flushLog)
     {
     }
 }

@@ -15,7 +15,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable
+    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable, IDurableLinks
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -29,6 +29,24 @@ namespace Foundation.Data.Doublets.Cli
         public readonly string NamedLinksDatabaseFileName;
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
+        private readonly string? _dataDatabaseFilename;
+
+        public bool SupportsDurableFlush => _dataDatabaseFilename is not null;
+
+        public virtual void Flush()
+        {
+            if (_dataDatabaseFilename is null)
+                throw new InvalidOperationException("A caller-owned store needs an explicit flush callback.");
+            FlushFile(_dataDatabaseFilename);
+            FlushFile(NamedLinksDatabaseFileName);
+        }
+
+        private static void FlushFile(string path)
+        {
+            using var file = new FileStream(path, FileMode.Open, FileAccess.ReadWrite,
+                FileShare.ReadWrite | FileShare.Delete);
+            file.Flush(flushToDisk: true);
+        }
 
         [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "Ownership of the links facade is transferred to the caller, which releases it through " + nameof(Dispose) + ".")]
@@ -70,6 +88,7 @@ namespace Foundation.Data.Doublets.Cli
         public NamedTypesDecorator(string databaseFilename, bool tracingEnabled = false)
             : this(MakeLinks(databaseFilename), MakeNamesDatabaseFilename(databaseFilename), tracingEnabled)
         {
+            _dataDatabaseFilename = databaseFilename;
         }
 
         public void Dispose()

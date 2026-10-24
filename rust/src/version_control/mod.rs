@@ -406,14 +406,14 @@ impl VersionControlDecorator {
         let to_revert: Vec<i64> = current_path[common..].iter().rev().copied().collect();
         for seq in to_revert {
             if let Some(transition) = self.find_transition(seq) {
-                self.transactions.revert_transition(&transition);
+                self.transactions.revert_transition(&transition)?;
             }
         }
         // Apply transitions that are new on the path.
         let to_apply: Vec<i64> = target_path[common..].to_vec();
         for seq in to_apply {
             if let Some(transition) = self.find_transition(seq) {
-                self.transactions.apply_transition(&transition);
+                self.transactions.apply_transition(&transition)?;
             }
         }
 
