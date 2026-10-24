@@ -492,7 +492,8 @@ impl VersionControlDecorator {
         let existing = self.transactions.last_logged_sequence();
         if !self.branches.contains_key(DEFAULT_BRANCH_NAME) {
             // Pre-existing transitions are attributed to the default branch.
-            for s in 1..=existing {
+            for transition in self.transactions.log() {
+                let s = transition.sequence;
                 if let std::collections::btree_map::Entry::Vacant(entry) =
                     self.transition_branches.entry(s)
                 {

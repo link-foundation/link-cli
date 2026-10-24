@@ -210,3 +210,7 @@ rollback finish that commit's branch metadata. They preserve the committed data.
 Failed metadata publication retains admission and rejects further writes until
 retry succeeds. Retried transition markers are idempotent, including when the
 original metadata write took effect before reporting an error.
+
+Initial version history visits retained journal records. Gaps in sequence
+numbers do not create checkout targets, and the final signed sequence remains
+publishable before later writes are rejected as exhausted.

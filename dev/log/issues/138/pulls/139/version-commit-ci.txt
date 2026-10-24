@@ -1,0 +1,20 @@
+Version publication retry CI closure
+
+Head fa0838229e18184b677582b34483607dc2f76648
+All nine workflows were created 2026-10-24T22:00:13Z, after publication,
+and concluded success. No mismatched-SHA or older runs count.
+
+Workflows: 40136658841 success
+Broken Link Checker: 40136658856 success
+Dependencies: 40136658901 success
+Docs: 40136658933 success
+JS client CI: 40136658832 success
+C# CI/CD Pipeline: 40136658890 success
+Security: 40136658893 success
+Rust CI/CD Pipeline: 40136658914 success
+WebAssembly CI: 40136658925 success
+
+C# passes all 976 tests on Windows, Linux and macOS, plus packaging,
+formatting and fresh-merge checks. Native Rust, actual WASM, JS, docs,
+dependency, security and workflow checks pass. This verifies publication
+retry changes; complete coverage and later changes remain unfinished.

@@ -18,7 +18,7 @@ before fallible branch writes, which needs a separate retry audit.
 - [x] Verify metadata-write faults separately, including after-effect controls,
   exact branch/head recovery, rewind/forward checkout and subsequent transactions.
 - [x] Run focused/full Debug/Release, coverage, formatting and release metadata.
-- [ ] Commit/push and close fresh exact-SHA CI, preserving any failed logs.
+- [x] Commit/push and close fresh exact-SHA CI, preserving any failed logs.
 
 The original 18 checkpoint cases all fail: transaction, version-owner and graph
 disposal leave head 2 after durable commit 4. Adding six version-metadata phases
@@ -33,3 +33,7 @@ recovered head/data, unique transition markers, rewind/forward checkout, exclusi
 file reopening and a following committed/tagged transaction. The matrix and all
 31 existing rollback/lifetime controls pass. Commit/metadata errors still reach
 the caller; cleanup preserves the known committed outcome and retries metadata.
+
+Published head `fa0838229e18184b677582b34483607dc2f76648` passes all nine
+workflows, including all 976 C# tests on Windows/Linux/macOS and fresh-merge
+checks. See `dev/log/issues/138/pulls/139/version-commit-ci.txt`.

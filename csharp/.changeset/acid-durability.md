@@ -75,3 +75,6 @@ including a failure reported after rollback completes.
 Finish committed version publication after checkpoint or metadata errors through
 transaction/owner disposal and rollback. Keep write and metadata admission fenced
 until publication succeeds, and avoid duplicate transition markers on retry.
+
+Publish the final signed version sequence without wrapping. Initialize version
+history from retained journal records, avoiding phantom versions across gaps.

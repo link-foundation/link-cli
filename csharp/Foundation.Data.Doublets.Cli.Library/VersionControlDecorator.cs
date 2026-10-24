@@ -185,8 +185,9 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         var afterSeq = _transactions.LastLoggedSequence;
         if (afterSeq <= beforeSeq) return;
 
-        for (var s = beforeSeq + 1; s <= afterSeq; s++)
+        for (var s = beforeSeq; s < afterSeq;)
         {
+            ++s;
             _transitionBranches[s] = branchName;
             WriteImmutableMarker($"{TransitionPrefix}{s.ToString(CultureInfo.InvariantCulture)}:branch={branchName}");
         }
@@ -419,8 +420,9 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
             if (!_branches.ContainsKey(DefaultBranchName))
             {
                 // Pre-existing transitions are attributed to the default branch.
-                for (var s = 1L; s <= existing; s++)
+                foreach (var transition in _transactions.Log)
                 {
+                    var s = transition.Sequence;
                     if (!_transitionBranches.ContainsKey(s))
                     {
                         _transitionBranches[s] = DefaultBranchName;
