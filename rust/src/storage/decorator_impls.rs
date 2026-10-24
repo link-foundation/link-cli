@@ -147,7 +147,13 @@ impl_in_memory_links_storage!(
     |storage: &mut LinkStorage| {
         storage.save().map_err(storage_error)?;
         if !storage.is_in_memory() {
-            std::fs::File::open(storage.database_path())?.sync_all()?;
+            // FlushFileBuffers on Windows requires a writable handle, even
+            // though flushing does not itself modify the file's contents.
+            std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(storage.database_path())?
+                .sync_all()?;
             #[cfg(unix)]
             std::fs::File::open(
                 storage
