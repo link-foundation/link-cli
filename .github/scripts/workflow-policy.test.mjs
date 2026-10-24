@@ -53,6 +53,11 @@ function readJobs(text) {
   return jobs.map((job) => ({ name: job.name, body: job.body.join('\n') }));
 }
 
+/** A job that pushes to the repository or publishes to a registry or Pages. */
+function isWriterJob(body) {
+  return /^ {6}(?:contents|pages|id-token|packages): write$/m.test(body);
+}
+
 const trustedPublishingAuth = /^\s*uses:\s*rust-lang\/crates-io-auth-action@/m;
 
 /** Splits a workflow into `{ first, last, text }` entries, one per job step. */
@@ -179,6 +184,27 @@ for (const workflow of workflows) {
       assert.ok(
         hasWorkflowLevel || /^ {4}concurrency:$/m.test(job.body),
         `job "${job.name}" in ${workflow.name} has no concurrency group`,
+      );
+    }
+  });
+
+  // A workflow-level group holds the whole run, release and registry wait
+  // included, so on main a third push cancelled the queued second run, and a
+  // cancellable one would interrupt a writer that already pushed (issue #134).
+  // Writers own a never-cancelled group instead.
+  test(`${workflow.name}: writer jobs own a never-cancelled concurrency group`, () => {
+    const writers = readJobs(workflow.text).filter((job) => isWriterJob(job.body));
+    if (writers.length === 0) return;
+    assert.doesNotMatch(
+      workflow.text,
+      /^concurrency:$/m,
+      `${workflow.name} has writer jobs (${writers.map((job) => job.name).join(', ')}) but a workflow-level concurrency group`,
+    );
+    for (const job of writers) {
+      assert.match(
+        job.body,
+        /^ {4}concurrency:\n {6}group: [^\n]+\n {6}cancel-in-progress: false$/m,
+        `writer job "${job.name}" in ${workflow.name} needs its own concurrency group with cancel-in-progress: false`,
       );
     }
   });

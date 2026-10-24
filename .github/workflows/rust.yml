@@ -33,12 +33,10 @@ on:
         required: false
         type: string
 
-# Reader runs (PR validation) are cancelled when superseded; runs on main are
-# writers - they publish to crates.io and push version commits, so cancelling
-# one mid-flight would leave a half-published release behind (issue #96).
-concurrency:
-  group: rust-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# Concurrency is set per job (issue #134): superseded read-only checks are
+# cancelled on pull requests, while writer jobs share a never-cancelled
+# group. A workflow-level group held the whole run, including the release
+# and the registry wait, so a third push to main cancelled the queued run.
 
 # Least privilege by default; the publishing jobs opt into more below.
 permissions:
@@ -54,6 +52,9 @@ jobs:
     name: Detect Changes
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     if: github.event_name != 'workflow_dispatch'
     outputs:
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
@@ -91,6 +92,9 @@ jobs:
     name: Changelog Fragment Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-changelog
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
@@ -119,6 +123,9 @@ jobs:
     name: Lint and Format Check
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: |
       !cancelled() && (
@@ -202,6 +209,9 @@ jobs:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes, changelog]
     if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
@@ -247,6 +257,9 @@ jobs:
     name: Simulate Fresh Merge
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     if: github.event_name == 'pull_request'
     needs: [detect-changes]
     steps:
@@ -286,6 +299,9 @@ jobs:
     name: Build Package
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [lint, test]
     if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:

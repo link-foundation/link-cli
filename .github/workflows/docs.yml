@@ -41,9 +41,10 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: docs-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# Concurrency is set per job (issue #134): superseded read-only checks are
+# cancelled on pull requests, while writer jobs share a never-cancelled
+# group. A workflow-level group held the whole run, including the release
+# and the registry wait, so a third push to main cancelled the queued run.
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -56,6 +57,9 @@ jobs:
     name: Build documentation
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v7
         with:

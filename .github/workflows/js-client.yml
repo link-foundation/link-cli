@@ -27,10 +27,10 @@ on:
       - 'docs/protocol/**'
   workflow_dispatch:
 
-# Never cancel a run on main: its release job may already have published.
-concurrency:
-  group: js-client-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# Concurrency is set per job (issue #134): superseded read-only checks are
+# cancelled on pull requests, while writer jobs share a never-cancelled
+# group. A workflow-level group held the whole run, including the release
+# and the registry wait, so a third push to main cancelled the queued run.
 
 # Least privilege by default; the release job opts into more below.
 permissions:
@@ -41,6 +41,9 @@ jobs:
     name: Unit tests and types
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-unit
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     defaults:
       run:
         working-directory: js/client
@@ -69,6 +72,9 @@ jobs:
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-conformance
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     env:
       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
       CLINK_CSHARP: ${{ github.workspace }}/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
@@ -155,6 +161,10 @@ jobs:
     needs: [unit, conformance]
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Writer group: never cancel a publish that may already be under way.
+    concurrency:
+      group: npm-writer-${{ github.repository }}
+      cancel-in-progress: false
     permissions:
       contents: read
       # Trusted publishing and npm provenance use a GitHub OIDC token.
