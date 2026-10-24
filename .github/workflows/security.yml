@@ -17,10 +17,18 @@ on:
 permissions:
   contents: read
 
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   codeql:
     name: CodeQL (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}
@@ -72,7 +80,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-dependency-review
@@ -93,7 +101,7 @@ jobs:
 
   cargo-audit:
     name: Cargo audit (${{ matrix.manifest }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-cargo-audit-${{ matrix.manifest }}
@@ -116,7 +124,7 @@ jobs:
 
   npm-audit:
     name: Audit npm lock
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit
@@ -143,7 +151,7 @@ jobs:
   # are skipped.
   secrets-scan:
     name: Scan for committed secrets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-secrets-scan

@@ -28,10 +28,18 @@ on:
 permissions:
   contents: read
 
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test

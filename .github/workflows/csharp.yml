@@ -43,10 +43,16 @@ on:
 permissions:
   contents: read
 
+# The GIT_CONFIG_* entries provide Git config to actions/checkout itself;
+# checkout runs git init before any workflow step can configure Git, which
+# otherwise prints the default-branch hint into every log.
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 defaults:
   run:
@@ -56,7 +62,7 @@ jobs:
   # === DETECT CHANGES - determines which jobs should run ===
   detect-changes:
     name: Detect Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
@@ -95,7 +101,7 @@ jobs:
   # === CHANGESET CHECK - only runs on PRs with code changes ===
   changeset-check:
     name: Changeset Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
@@ -136,7 +142,7 @@ jobs:
   # === LINT AND FORMAT CHECK ===
   lint:
     name: Lint and Format Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
@@ -203,7 +209,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-26, windows-2025]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -224,7 +230,7 @@ jobs:
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-24.04'
         uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: false
@@ -236,7 +242,7 @@ jobs:
   # tip of the base branch and rebuilds and retests that tree.
   fresh-merge:
     name: Simulate Fresh Merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
@@ -268,7 +274,7 @@ jobs:
   # === BUILD PACKAGE ===
   build:
     name: Build Package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
@@ -305,7 +311,7 @@ jobs:
     name: Release
     needs: [lint, test, build]
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
     # package or a version commit.
@@ -530,7 +536,7 @@ jobs:
     name: Instant Release
     needs: [lint, test, build]
     if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'instant' && needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Writer group: never cancel a release that may already have pushed a
     # package or a version commit.
@@ -686,7 +692,7 @@ jobs:
   changeset-pr:
     name: Create Changeset PR
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'changeset-pr'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a run that may already have pushed a branch.
     concurrency:

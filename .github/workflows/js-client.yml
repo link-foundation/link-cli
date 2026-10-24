@@ -36,10 +36,18 @@ on:
 permissions:
   contents: read
 
+# Provide Git config to actions/checkout itself; checkout runs git init before
+# any workflow step can configure Git, which otherwise prints the
+# default-branch hint into every log.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
 jobs:
   unit:
     name: Unit tests and types
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-unit
@@ -70,7 +78,7 @@ jobs:
 
   conformance:
     name: Conformance on Node.js, Bun and Deno
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-conformance
@@ -159,7 +167,7 @@ jobs:
   release:
     name: Release to npm
     needs: [unit, conformance]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Writer group: never cancel a publish that may already be under way.
     concurrency:

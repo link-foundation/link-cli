@@ -46,16 +46,22 @@ permissions:
 # group. A workflow-level group held the whole run, including the release
 # and the registry wait, so a third push to main cancelled the queued run.
 
+# The GIT_CONFIG_* entries provide Git config to actions/checkout itself;
+# checkout runs git init before any workflow step can configure Git, which
+# otherwise prints the default-branch hint into every log.
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   CARGO_TERM_COLOR: always
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
 
 jobs:
   build:
     name: Build documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
@@ -184,7 +190,7 @@ jobs:
       cancel-in-progress: false
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Only the deployment needs to write Pages and mint an OIDC token
     # (zizmor excessive-permissions); the build job stays read-only.

@@ -298,6 +298,30 @@ for (const workflow of workflows) {
     });
     assert.deepEqual(offenders, [], `${workflow.name} has required choice inputs without a default`);
   });
+
+  // `ubuntu-latest` moved these jobs to Ubuntu 26.04 mid-rollout while the
+  // runner-images README still documented it as 24.04, with no diff in this
+  // repository (issue #134). Runner OS upgrades belong in a dedicated PR.
+  test(`${workflow.name}: hosted runners use pinned OS labels`, () => {
+    const offenders = workflow.text
+      .split('\n')
+      .map((line, index) => ({ line: line.replace(/#.*$/, ''), number: index + 1 }))
+      .filter(({ line }) => /\b(?:ubuntu|macos|windows)-latest\b/.test(line))
+      .map(({ number }) => number);
+    assert.deepEqual(offenders, [], `${workflow.name} uses a -latest runner label at lines ${offenders}`);
+  });
+
+  // actions/checkout runs `git init` before any step can configure Git, so
+  // only the environment reaches it; without it every checkout printed the
+  // "Using 'master' as the name for the initial branch" hint (issue #134).
+  test(`${workflow.name}: provides init.defaultBranch to actions/checkout`, () => {
+    if (!/uses: actions\/checkout@/.test(workflow.text)) return;
+    assert.match(
+      workflow.text,
+      /^env:\n(?: {2}.*\n)*? {2}GIT_CONFIG_KEY_0: init\.defaultBranch$/m,
+      `${workflow.name} does not set init.defaultBranch through GIT_CONFIG_* env`,
+    );
+  });
 }
 
 // GitHub Pages serves a single site per repository, so two workflows that both
