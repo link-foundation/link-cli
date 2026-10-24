@@ -43,7 +43,7 @@ use regex::Regex;
 use std::env;
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{exit, Command};
 
 #[path = "rust-paths.rs"]
@@ -571,6 +571,7 @@ fn main() {
 mod tests {
     use super::*;
     use release_changelog::insert_changelog_entry;
+    use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn temp_dir(name: &str) -> PathBuf {

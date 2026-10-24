@@ -16,6 +16,11 @@
 //!   2. CLI argument: --rust-root <path>
 //!   3. Environment variable: `RUST_ROOT`
 //!   4. Auto-detection: Check ./Cargo.toml first, then ./rust/Cargo.toml
+//!
+//! ```cargo
+//! [dependencies]
+//! regex = "1"
+//! ```
 
 #![allow(dead_code)]
 

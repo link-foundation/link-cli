@@ -10,6 +10,7 @@ on:
       - 'csharp/**'
       - 'csharp/scripts/**'
       - '.github/workflows/csharp.yml'
+      - '.github/scripts/coverage*'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -20,6 +21,11 @@ on:
         options:
           - instant
           - changeset-pr
+          - verify-trusted-publishing
+      nuget_user:
+        description: 'NuGet account for authentication-only verification (defaults to NUGET_USER)'
+        required: false
+        type: string
       bump_type:
         description: 'Version bump type'
         required: true
@@ -59,6 +65,43 @@ defaults:
     working-directory: csharp
 
 jobs:
+  # Authenticate without a version commit, tag, or package upload. The input
+  # allows verification before setting NUGET_USER (which enables OIDC releases).
+  verify-trusted-publishing:
+    name: Verify NuGet trusted publishing
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'verify-trusted-publishing'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - name: Validate NuGet account
+        working-directory: .
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER || inputs.nuget_user }}
+        run: |
+          if [ -z "$NUGET_USER" ]; then
+            echo '::error::Supply nuget_user or set NUGET_USER to the account owning the trusted publishing policy on nuget.org.'
+            exit 1
+          fi
+
+      - name: NuGet login (OIDC)
+        id: auth
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER || inputs.nuget_user }}
+
+      - name: Confirm short-lived credential
+        working-directory: .
+        env:
+          NUGET_API_KEY: ${{ steps.auth.outputs.NUGET_API_KEY }}
+        run: |
+          test -n "$NUGET_API_KEY"
+          echo 'NuGet OIDC authentication succeeded; the temporary push key expires in one hour.' >> "$GITHUB_STEP_SUMMARY"
+
   # === DETECT CHANGES - determines which jobs should run ===
   detect-changes:
     name: Detect Changes
@@ -149,7 +192,7 @@ jobs:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: |
-      !cancelled() && (
+      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -205,7 +248,10 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes, changeset-check]
-    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -229,61 +275,43 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
-      # Codecov accepts tokenless uploads only from fork pull requests, so
-      # every upload from this repository failed with "Token required - not
-      # valid tokenless upload" behind `fail_ci_if_error: false`, and the
-      # repository never received a report (issue #134). Upload only when the
-      # token exists and then fail loudly; the codecov-token job below turns
-      # main red while it is missing.
-      - name: Check Codecov token
+      - name: Setup Node.js for coverage
+        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Write coverage summary
+        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        working-directory: .
+        run: node .github/scripts/coverage.mjs summary csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
+
+      - name: Retain Cobertura reports
+        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: csharp-coverage
+          path: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: error
+
+      # Only an explicitly inactive/missing Codecov repository relaxes upload
+      # errors. The preflight prints the reason as a warning; once activated,
+      # failed uploads fail CI. Coverage is retained independently above.
+      - name: Check Codecov activation
         id: codecov
         if: matrix.os == 'ubuntu-24.04'
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: |
-          if [ -n "$CODECOV_TOKEN" ]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::CODECOV_TOKEN is not configured, so no coverage is uploaded; the Codecov Token job fails on main until it is."
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          fi
+        working-directory: .
+        run: node .github/scripts/coverage.mjs codecov
 
-      # The search used to pick up rust/tests/issue62_review_coverage_tests.rs
-      # as a coverage report because of its name, and the gcov, xcode and
-      # coverage.py plugins only logged that their tools were missing. Read
-      # the Cobertura reports of `dotnet test` and nothing else.
-      - name: Upload coverage to Codecov
-        if: steps.codecov.outputs.available == 'true'
+      - name: Upload coverage to Codecov (OIDC)
+        if: matrix.os == 'ubuntu-24.04'
         timeout-minutes: 5
         uses: codecov/codecov-action@v7
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           directory: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
           plugins: noop
-          fail_ci_if_error: true
-
-  # Coverage needs a secret only a maintainer can add, so pull requests pass
-  # without it while main fails here with what to do. No release job needs
-  # this one, so a missing token never blocks a release.
-  codecov-token:
-    name: Codecov Token
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-codecov-token
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Require CODECOV_TOKEN on main
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        working-directory: .
-        run: |
-          if [ -z "$CODECOV_TOKEN" ]; then
-            echo "::error title=CODECOV_TOKEN is missing::C# coverage is never uploaded. Activate link-foundation/link-cli on https://app.codecov.io/gh/link-foundation and add its upload token as the CODECOV_TOKEN repository secret, or remove the Codecov steps from csharp.yml."
-            exit 1
-          fi
-          echo "CODECOV_TOKEN is configured."
+          fail_ci_if_error: ${{ steps.codecov.outputs.required }}
 
   # === SEMANTIC MERGE CONFLICT CHECK ===
   # The jobs above test the pull request head. Two pull requests that each pass

@@ -20,6 +20,7 @@ on:
         options:
           - instant
           - changelog-pr
+          - verify-trusted-publishing
       bump_type:
         description: 'Version bump type'
         required: true
@@ -54,6 +55,30 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  # Authenticate without a version commit, tag, or package upload. This lets
+  # maintainers verify the registry policy before retiring the token fallback.
+  verify-trusted-publishing:
+    name: Verify crates.io trusted publishing
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_mode == 'verify-trusted-publishing'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - name: Authenticate with crates.io (trusted publishing)
+        id: auth
+        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
+
+      - name: Confirm short-lived credential
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          test -n "$CARGO_REGISTRY_TOKEN"
+          echo 'crates.io OIDC authentication succeeded; the action revokes its temporary token when this job ends.' >> "$GITHUB_STEP_SUMMARY"
+
   # === DETECT CHANGES - determines which jobs should run ===
   detect-changes:
     name: Detect Changes
@@ -135,7 +160,7 @@ jobs:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes]
     if: |
-      !cancelled() && (
+      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.rs-changed == 'true' ||
@@ -190,6 +215,9 @@ jobs:
       # workflow re-checks their output; their own test suites are the gate
       # (issue #134: a silently failing `git add` released 1.0.6-1.0.8
       # without ever committing the version bump).
+      - name: Compile release scripts (non-test, warnings denied)
+        run: bash rust/scripts/check-scripts.sh
+
       - name: Test release scripts
         run: bash rust/scripts/test-scripts.sh
 
@@ -220,7 +248,7 @@ jobs:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
     needs: [detect-changes, changelog]
-    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:

@@ -55,7 +55,8 @@ function readJobs(text) {
 
 /** A job that pushes to the repository or publishes to a registry or Pages. */
 function isWriterJob(body) {
-  return /^ {6}(?:contents|pages|id-token|packages): write$/m.test(body);
+  // Coverage uses OIDC too, but does not mutate the repository or release.
+  return /^ {6}(?:contents|pages|packages): write$/m.test(body) || /npm publish/.test(body);
 }
 
 const trustedPublishingAuth = /^\s*uses:\s*rust-lang\/crates-io-auth-action@/m;
@@ -229,7 +230,8 @@ for (const workflow of workflows) {
   // Trusted publishing that is not configured on crates.io fails with
   // "No Trusted Publishing config found", so it must only run once it is.
   test(`${workflow.name}: crates.io trusted publishing runs only when enabled`, () => {
-    for (const step of readSteps(workflow.text).filter((s) => trustedPublishingAuth.test(s.text))) {
+    const releaseJobs = readJobs(workflow.text).filter(({ name }) => name !== 'verify-trusted-publishing');
+    for (const step of releaseJobs.flatMap(({ body }) => readSteps(body)).filter((s) => trustedPublishingAuth.test(s.text))) {
       assert.match(
         step.text,
         /^\s*if: vars\.CRATES_IO_TRUSTED_PUBLISHING == 'true' && /m,
@@ -421,21 +423,59 @@ test('every cargo audit invocation denies warnings', () => {
   assert.deepEqual(offenders, []);
 });
 
-// Codecov rejects tokenless uploads from this repository, and the upload ran
-// with `fail_ci_if_error: false`, so it failed on every run without anyone
-// noticing; its file search also uploaded a Rust test file whose name
-// contains "coverage" (issue #134).
-test('every Codecov upload uses a token, reads only its reports and fails loudly', () => {
-  const uploads = workflows.flatMap(({ name, text }) =>
-    readSteps(text)
-      .filter((step) => /uses: codecov\/codecov-action@/.test(step.text))
-      .map((step) => ({ ...step, name })),
-  );
-  for (const { name, first, text } of uploads) {
-    assert.match(text, /^\s*token: \$\{\{ secrets\.CODECOV_TOKEN \}\}$/m, `${name}:${first} uploads without a token`);
-    assert.match(text, /^\s*fail_ci_if_error: true$/m, `${name}:${first} hides a failed upload`);
-    assert.match(text, /^\s*(?:directory|files):/m, `${name}:${first} searches the whole tree for reports`);
+// Issue #136: Codecov is optional, with OIDC instead of a repository secret.
+// Only an explicitly inactive/missing repository may relax upload errors;
+// malformed responses and operational failures remain errors.
+test('coverage uploads use OIDC and retain reports without requiring Codecov', () => {
+  let uploads = 0;
+  for (const { name, text } of workflows) {
+    assert.doesNotMatch(text, /secrets\.CODECOV_TOKEN|^  codecov-token:/m, `${name} requires a Codecov secret`);
+    for (const job of readJobs(text)) {
+      for (const step of readSteps(job.body).filter(({ text }) => /uses: codecov\/codecov-action@/.test(text))) {
+        uploads += 1;
+        assert.match(step.text, /uses: codecov\/codecov-action@v7/);
+        assert.match(step.text, /^\s*use_oidc: true$/m);
+        assert.match(job.body, /^ {6}id-token: write$/m);
+        assert.match(step.text, /^\s*fail_ci_if_error: \$\{\{ steps\.codecov\.outputs\.required \}\}$/m);
+        assert.match(job.body, /node .github\/scripts\/coverage\.mjs codecov/);
+        assert.match(step.text, /^\s*(?:directory|files):/m);
+        assert.match(step.text, /^\s*plugins: noop$/m);
+        assert.match(job.body, /node .github\/scripts\/coverage\.mjs summary/);
+        assert.match(job.body, /uses: actions\/upload-artifact@/);
+        assert.match(job.body, /if-no-files-found: error/);
+      }
+    }
   }
+  assert.ok(uploads > 0, 'coverage uploading was removed');
+});
+
+test('Rust PR lint compiles release helpers without executing them', () => {
+  const rust = workflows.find(({ name }) => name === 'rust.yml');
+  const lint = readJobs(rust.text).find(({ name }) => name === 'lint');
+  assert.match(lint.body, /run: bash rust\/scripts\/check-scripts\.sh/);
+});
+
+test('registry trust can be verified without versioning or publishing a release', () => {
+  for (const name of ['rust.yml', 'csharp.yml']) {
+    const workflow = workflows.find((candidate) => candidate.name === name);
+    assert.ok(readChoiceOptions(workflow.text, 'release_mode').includes('verify-trusted-publishing'));
+    const verify = readJobs(workflow.text).find(({ name }) => name === 'verify-trusted-publishing');
+    assert.ok(verify, `${name} needs an authentication-only verification job`);
+    assert.match(verify.body, /github.event_name == 'workflow_dispatch'.*release_mode == 'verify-trusted-publishing'/);
+    assert.match(verify.body, /^ {6}id-token: write$/m);
+    assert.doesNotMatch(verify.body, /secrets\.|cargo publish|nuget push|version-and-commit|contents: write/);
+    assert.match(verify.body, name === 'rust.yml' ? trustedPublishingAuth : /uses: NuGet\/login@/);
+    for (const job of readJobs(workflow.text).filter(({ name }) => ['lint', 'test'].includes(name))) {
+      assert.match(job.body, /inputs.release_mode != 'verify-trusted-publishing'/, `${name}: authentication-only dispatch must not start or cancel ${job.name}`);
+    }
+  }
+  const npm = workflows.find(({ name }) => name === 'js-client.yml');
+  const verify = readJobs(npm.text).find(({ name }) => name === 'verify-trusted-publishing');
+  assert.match(verify.body, /github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing/);
+  assert.match(verify.body, /^ {6}id-token: write$/m);
+  assert.match(verify.body, /node .github\/scripts\/verify-npm-trust.mjs/);
+  assert.doesNotMatch(verify.body, /secrets\.|npm publish/);
+  assert.doesNotMatch(npm.text, /secrets\.NPM_TOKEN|NODE_AUTH_TOKEN/, 'verified npm OIDC publishing must not fall back to a long-lived token');
 });
 
 test('Dependabot watches every directory the dependency check reads', () => {
