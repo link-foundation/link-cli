@@ -211,31 +211,42 @@ for (const workflow of workflows) {
 
   // `continue-on-error` turns a real failure into a green run - the exact
   // false negative that hid the Windows test failures reported in issue #96.
-  // The one exception is the crates.io trusted publishing exchange: when it
-  // fails, the publish step falls back to the token secret, and it still fails
-  // when neither credential works, so nothing is masked.
+  // The crates.io trusted publishing exchange used to be the one exception,
+  // but its expected failure left a red annotation on every green release
+  // (issue #134), so it is now gated on a repository variable instead.
   test(`${workflow.name}: does not mask failures with continue-on-error`, () => {
-    const steps = readSteps(workflow.text);
-    workflow.text.split('\n').forEach((line, index) => {
-      if (!/continue-on-error/.test(line)) return;
-      const number = index + 1;
-      const step = steps.find(({ first, last }) => first <= number && number <= last);
-      assert.ok(
-        step && trustedPublishingAuth.test(step.text),
-        `${workflow.name}:${number} uses continue-on-error, which masks real failures`,
+    const offenders = workflow.text
+      .split('\n')
+      .map((line, index) => ({ line, number: index + 1 }))
+      .filter(({ line }) => /^\s*continue-on-error:/.test(line));
+    assert.deepEqual(
+      offenders.map(({ number }) => `${workflow.name}:${number}`),
+      [],
+      'continue-on-error masks real failures',
+    );
+  });
+
+  // Trusted publishing that is not configured on crates.io fails with
+  // "No Trusted Publishing config found", so it must only run once it is.
+  test(`${workflow.name}: crates.io trusted publishing runs only when enabled`, () => {
+    for (const step of readSteps(workflow.text).filter((s) => trustedPublishingAuth.test(s.text))) {
+      assert.match(
+        step.text,
+        /^\s*if: vars\.CRATES_IO_TRUSTED_PUBLISHING == 'true' && /m,
+        `${workflow.name}:${step.first} exchanges a trusted publishing token without checking that it is configured`,
       );
       const id = /^\s*id:\s*(\S+)\s*$/m.exec(step.text)?.[1];
-      assert.ok(id, `${workflow.name}:${number}: the trusted publishing step needs an id`);
+      assert.ok(id, `${workflow.name}:${step.first}: the trusted publishing step needs an id`);
       const consumers = workflow.text.split('\n').filter((other) => other.includes(`steps.${id}.outputs.token`));
       assert.ok(consumers.length > 0, `${workflow.name}: nothing reads steps.${id}.outputs.token`);
       for (const consumer of consumers) {
         assert.match(
           consumer,
           new RegExp(`steps\\.${id}\\.outputs\\.token \\|\\| secrets\\.`),
-          `${workflow.name}: "${consumer.trim()}" has no token secret fallback for a failed exchange`,
+          `${workflow.name}: "${consumer.trim()}" has no token secret for runs without trusted publishing`,
         );
       }
-    });
+    }
   });
 
   // In YAML a leading `!` starts a tag, so `if: !cancelled() && ...` is a
