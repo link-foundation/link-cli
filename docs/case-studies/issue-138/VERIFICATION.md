@@ -74,6 +74,33 @@ journals into independent data groups. Native/WASM coverage and efficient
 delta/LSM storage remain unfinished. Fixed-primary replica acknowledgements do not establish consensus.
 See REQUIREMENTS.md and ENGINE-STRATEGIES.md for the implementation boundary.
 
+## Actual WASM coverage and object-only configuration
+
+The expanded `wasm-bindgen-test` suite runs 15 tests inside actual WebAssembly,
+including JavaScript adapter throws and unexpected asynchronous return values,
+uncertain commit recovery, option validation, branch conflicts, and protocol
+operations. It reproduced a configuration inconsistency: Serde's struct decoder
+accepted `[]` as default options. The public engine binding now requires a JSON
+object before decoding its policies; native and WASM regression tests reject
+positional arrays.
+
+`experiments/issue-138/wasm-coverage.sh` collects LLVM execution coverage, including
+branch instrumentation. The three wrapper source modules measure 327/327 lines,
+68/68 functions and 16/16 reported branch outcomes. Regions measure 499/499;
+reported branches do not cover every Rust match arm or every generated binding.
+The report also includes linked core code, which remains substantially below
+100%. Wrapper coverage must not be presented as whole-engine coverage. The
+WebAssembly workflow now preserves the complete JSON report independently of
+the normal stable-toolchain build and its Node/Bun/Deno integration tests.
+
+The coverage runtime has a version constraint: `wasm-bindgen-test` 0.3.79 pins
+`minicov` 0.3.8, which uses LLVM 22's profile layout. LLVM 23 instrumentation
+reproduced a WASM runtime memory access error when capturing coverage. Only the
+coverage script pins Rust 1.98.0 / LLVM 22, and the cdylib links minicov only under
+the experimental coverage cfg. Normal production builds continue using stable.
+See the [wasm-bindgen coverage guide](https://wasm-bindgen.github.io/wasm-bindgen/wasm-bindgen-test/coverage.html)
+and [the pinned test runtime manifest](https://docs.rs/crate/wasm-bindgen-test/0.3.79/source/Cargo.toml.orig).
+
 
 ## Coordinated network verification
 
@@ -182,3 +209,11 @@ C# measures 5,621/6,313 lines (89.03%) and 2,366/2,938 branches (80.53%).
 measures 98.87% lines and 100% branches. Project coverage still falls short of
 100%; these module results do not remove that acceptance gap. The 168 workflow
 policy tests, native Clippy and formatting checks pass.
+
+The subsequent strict Rust etcd wire tests raise the full-suite count to 419 and
+coverage to 8,299/9,509 lines (87.28%), 1,299/1,708 branches (76.05%) and
+1,115/1,326 functions (84.09%). The etcd adapter measures 194/199 lines and 45/48
+branches. Malformed JSON/protobuf shapes, noncanonical base64, missing values,
+generation bounds and constructor validation use bounded real TCP peers. Actual
+release WASM conformance passes Node, Bun and Deno after the options fix. Native
+wrapper tests, native/target WASM Clippy and all 168 workflow policy tests pass.

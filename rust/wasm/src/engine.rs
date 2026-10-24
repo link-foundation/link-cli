@@ -20,7 +20,13 @@ struct Options {
     require_durable_flush: bool,
 }
 fn options(text: &str) -> Result<EngineOptions, String> {
-    let parsed: Options = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    // Serde structs also accept positional arrays. The public binding accepts
+    // a JSON options object, matching the JS client rather than silently
+    // treating [] (or a positional policy array) as configuration.
+    let object: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let parsed: Options = serde_json::from_value(serde_json::Value::Object(object))
+        .map_err(|error| error.to_string())?;
     Ok(EngineOptions {
         concurrency: match parsed.concurrency.as_deref() {
             None | Some("optimistic") => ConcurrencyControl::Optimistic,
@@ -238,6 +244,7 @@ mod tests {
     #[test]
     fn invalid_policies_are_not_silently_ignored() {
         for text in [
+            "[]",
             r#"{"isolation":"dirty"}"#,
             r#"{"concurrency":"none"}"#,
             r#"{"history":0}"#,

@@ -14,6 +14,14 @@ use std::{
 
 // A bounded wire-level peer: no runtime, real sockets, finite deadlines, tiny bodies.
 fn peer(replies: Vec<Option<Value>>) -> (String, thread::JoinHandle<Vec<Value>>) {
+    peer_raw(
+        replies
+            .into_iter()
+            .map(|reply| reply.map(|value| value.to_string()))
+            .collect(),
+    )
+}
+fn peer_raw(replies: Vec<Option<String>>) -> (String, thread::JoinHandle<Vec<Value>>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let endpoint = format!("http://{}", listener.local_addr().unwrap());
     listener.set_nonblocking(true).unwrap();
@@ -60,13 +68,113 @@ fn peer(replies: Vec<Option<Value>>) -> (String, thread::JoinHandle<Vec<Value>>)
             stream.read_exact(&mut body).unwrap();
             requests.push(serde_json::from_slice(&body).unwrap());
             if let Some(reply) = reply {
-                let text = reply.to_string();
+                let text = reply;
                 write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{text}", text.len()).unwrap();
             }
         }
         requests
     });
     (endpoint, handle)
+}
+
+#[test]
+fn malformed_snapshot_shapes_and_payloads_are_rejected_on_the_wire() {
+    let key = STANDARD.encode("/test/a");
+    let valid = json!({"key":key,"mod_revision":"1","value":STANDARD.encode("[]")});
+    let ranges = [
+        json!(false),
+        json!({"more":true}),
+        json!({"more":null}),
+        json!({"kvs":{}}),
+        json!({"kvs":[valid.clone(), valid.clone()]}),
+        json!({"kvs":[{"key":"wrong","mod_revision":"1","value":STANDARD.encode("[]")}]}),
+        json!({"kvs":[{"key":key,"mod_revision":1,"value":STANDARD.encode("[]")}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1"}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1","value":17}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1","value":"!"}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1","value":"W10=\n"}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1","value":STANDARD.encode("not json")}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1","value":STANDARD.encode("null")}]}),
+        json!({"kvs":[{"key":key,"mod_revision":"1","value":STANDARD.encode("[null]")}]}),
+    ];
+    let mut replies: Vec<_> = ranges
+        .into_iter()
+        .map(|range| Some(json!({"succeeded":true,"responses":[{"response_range":range}]})))
+        .collect();
+    replies.extend([
+        Some(json!({"succeeded":false,"responses":[{"response_range":{}}]})),
+        Some(json!({"succeeded":true,"responses":[]})),
+        Some(json!({"succeeded":true,"responses":[{}]})),
+        Some(json!({"succeeded":true,"responses":null})),
+    ]);
+    let count = replies.len();
+    let (endpoint, handle) = peer(replies);
+    let mut store = EtcdJournalStore::new(vec![endpoint], "/test/".into()).unwrap();
+    for index in 0..count {
+        assert!(store.read(&["a".into()]).is_err(), "reply {index}");
+    }
+    assert_eq!(handle.join().unwrap().len(), count);
+}
+
+#[test]
+fn cas_reply_generations_are_strict_and_success_is_reported() {
+    let mut replies: Vec<_> = ["", "0", "01", "-1", "+1", "1 ", "18446744073709551616"]
+        .into_iter()
+        .map(|revision| Some(json!({"header":{"revision":revision},"succeeded":true})))
+        .collect();
+    replies.push(Some(json!({"header":{"revision":"1"},"succeeded":true})));
+    let count = replies.len();
+    let (endpoint, handle) = peer(replies);
+    let mut store = EtcdJournalStore::new(vec![endpoint], "/test/".into()).unwrap();
+    assert!(store.supports_durable_flush());
+    for _ in 0..count - 1 {
+        assert!(store
+            .compare_exchange(&["a".into()], &[JournalVersion::default()], &[None])
+            .is_err());
+    }
+    assert!(store
+        .compare_exchange(&["a".into()], &[JournalVersion::default()], &[None])
+        .unwrap());
+    assert_eq!(handle.join().unwrap().len(), count);
+}
+
+#[test]
+fn invalid_configuration_and_json_fail_before_an_outcome_is_assumed() {
+    for endpoint in [
+        "relative",
+        "http://localhost/?query=1",
+        "http://[invalid",
+        "file:///tmp/a",
+    ] {
+        assert!(EtcdJournalStore::new(vec![endpoint.into()], "/test/".into()).is_err());
+    }
+    for prefix in ["", "/", "without-slash"] {
+        assert!(EtcdJournalStore::new(vec!["https://localhost".into()], prefix.into()).is_err());
+    }
+    let mut store =
+        EtcdJournalStore::new(vec!["https://localhost".into()], "/test/".into()).unwrap();
+    assert!(store.compare_exchange(&["a".into()], &[], &[None]).is_err());
+    assert!(store
+        .compare_exchange(&["a".into()], &[JournalVersion::default()], &[])
+        .is_err());
+    assert!(store
+        .compare_exchange(
+            &["a".into()],
+            &[JournalVersion {
+                generation: u64::MAX,
+                entries: vec![]
+            }],
+            &[None]
+        )
+        .is_err());
+    let (endpoint, handle) = peer_raw(vec![Some("{".into())]);
+    let mut store = EtcdJournalStore::new(vec![endpoint], "/test/".into()).unwrap();
+    assert!(store
+        .read(&["a".into()])
+        .unwrap_err()
+        .to_string()
+        .contains("invalid coordinator response"));
+    handle.join().unwrap();
 }
 #[test]
 fn etcd_snapshot_and_cas_check_every_selected_generation_and_accept_omitted_false() {

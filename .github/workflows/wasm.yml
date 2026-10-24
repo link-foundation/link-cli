@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - '.github/workflows/wasm.yml'
+      - 'experiments/issue-138/wasm-coverage.sh'
       - 'js/**'
       - 'rust/**'
   pull_request:
@@ -16,6 +17,7 @@ on:
       - main
     paths:
       - '.github/workflows/wasm.yml'
+      - 'experiments/issue-138/wasm-coverage.sh'
       - 'js/**'
       - 'rust/**'
   workflow_dispatch:
@@ -104,6 +106,41 @@ jobs:
         with:
           name: link-cli-web
           path: dist/
+
+  coverage:
+    name: WASM coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-coverage
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Setup matching WASM coverage tools
+        # minicov 0.3.8 and wasm-bindgen-test 0.3.79 use LLVM 22's profile
+        # layout. This pin applies only to coverage; production uses stable.
+        run: |
+          rustup toolchain install 1.98.0 --profile minimal --no-self-update --target wasm32-unknown-unknown --component llvm-tools-preview
+          cargo install cargo-llvm-cov --version 0.9.1 --locked
+          cargo install wasm-bindgen-cli --version 0.2.129 --locked
+
+      - name: Measure actual WebAssembly tests
+        run: bash experiments/issue-138/wasm-coverage.sh
+
+      - name: Preserve WASM coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: wasm-coverage
+          path: experiments/issue-138/wasm-coverage.json
+          if-no-files-found: error
 
   # GitHub Pages is published by docs.yml alone: it assembles this workbench
   # together with the C# and Rust API references into a single artifact. This

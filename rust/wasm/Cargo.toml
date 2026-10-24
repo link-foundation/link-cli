@@ -23,6 +23,14 @@ serde_json = "1.0.154"
 [dev-dependencies]
 wasm-bindgen-test = "0.3.79"
 
+# The cdylib is linked before the test executable. It therefore needs the
+# profiling runtime itself when collecting experimental WASM coverage.
+[target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
+minicov = "=0.3.8"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
+
 [dependencies.web-sys]
 version = "0.3.106"
 features = [

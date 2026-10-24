@@ -6,6 +6,9 @@ use link_cli::{Link, LinkStorage, QueryProcessor};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+#[cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))]
+extern crate minicov;
+
 mod engine;
 mod engine_log;
 pub use engine::{StagedEngine, StagedSession};
@@ -185,12 +188,11 @@ fn parse_options(options_json: &str) -> Result<ClinkOptions> {
     serde_json::from_str(trimmed).map_err(|error| anyhow::anyhow!("Invalid options JSON: {error}"))
 }
 
-fn to_json<T: Serialize>(value: &T) -> String {
-    serde_json::to_string(value).unwrap_or_else(|error| {
-        format!(
-            r#"{{"success":false,"output":"","error":"Failed to serialize result: {error}","links":[]}}"#
-        )
-    })
+fn to_json(value: &ClinkResult) -> String {
+    // This concrete reply contains only strings, integers, options and vectors;
+    // none can fail JSON serialization. Keep the invariant explicit rather than
+    // constructing an unescaped error JSON document in an unreachable fallback.
+    serde_json::to_string(value).expect("ClinkResult contains only JSON-compatible values")
 }
 
 fn set_panic_hook() {

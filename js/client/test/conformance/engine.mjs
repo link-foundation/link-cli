@@ -33,7 +33,7 @@ export async function engineConformance(binding) {
   assert.throws(() => exclusive.begin(), /exclusive/);
   await held.close();
   await exclusive.begin().close(); exclusive.close();
-  for (const options of [{ isolation: 'unknown' }, { history: 0 }, { constraints: ['unknown'] }])
+  for (const options of [[], ['optimistic'], null, { isolation: 'unknown' }, { history: 0 }, { constraints: ['unknown'] }])
     assert.throws(() => new WasmEngine(binding, options));
   const vectors = JSON.parse(readFileSync(new URL('../../../../docs/protocol/engine-revision-vectors.json', import.meta.url), 'utf8'));
   const portable = new WasmEngine(binding, { history: 'all' }, vectors.valid);
