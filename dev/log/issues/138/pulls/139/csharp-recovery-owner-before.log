@@ -1,0 +1,58 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.24]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.68]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.74]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.06]     Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(versionOwner: True) [FAIL]
+[xUnit.net 00:00:01.07]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.07]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.07]       Stack Trace:
+[xUnit.net 00:00:01.07]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs(19,0): at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.<>c__DisplayClass0_0.<RecoveryPreservesOpenTransactionOwner>b__0(VersionControlDecorator vc, TransactionsDecorator tx, NamedTypesDecorator`1 _)
+[xUnit.net 00:00:01.07]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs(370,0): at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RunWithVc(Action`3 action)
+[xUnit.net 00:00:01.07]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs(15,0): at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(Boolean versionOwner)
+[xUnit.net 00:00:01.07]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:01.07]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.18]     Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(versionOwner: False) [FAIL]
+[xUnit.net 00:00:01.18]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.18]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.18]       Stack Trace:
+[xUnit.net 00:00:01.18]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs(20,0): at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.<>c__DisplayClass0_0.<RecoveryPreservesOpenTransactionOwner>b__0(VersionControlDecorator vc, TransactionsDecorator tx, NamedTypesDecorator`1 _)
+[xUnit.net 00:00:01.18]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs(370,0): at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RunWithVc(Action`3 action)
+[xUnit.net 00:00:01.18]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs(15,0): at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(Boolean versionOwner)
+[xUnit.net 00:00:01.18]            at InvokeStub_VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(Object, Span`1)
+[xUnit.net 00:00:01.18]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.19]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(versionOwner: True) [238 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.<>c__DisplayClass0_0.<RecoveryPreservesOpenTransactionOwner>b__0(VersionControlDecorator vc, TransactionsDecorator tx, NamedTypesDecorator`1 _) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs:line 19
+   at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RunWithVc(Action`3 action) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs:line 370
+   at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(Boolean versionOwner) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs:line 15
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(versionOwner: False) [120 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.<>c__DisplayClass0_0.<RecoveryPreservesOpenTransactionOwner>b__0(VersionControlDecorator vc, TransactionsDecorator tx, NamedTypesDecorator`1 _) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs:line 20
+   at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RunWithVc(Action`3 action) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs:line 370
+   at Foundation.Data.Doublets.Cli.Tests.Tests.VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(Boolean versionOwner) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionControlDecoratorTests.cs:line 15
+   at InvokeStub_VersionControlDecoratorTests.RecoveryPreservesOpenTransactionOwner(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Test Run Failed.
+Total tests: 2
+     Failed: 2
+ Total time: 2.2060 Seconds

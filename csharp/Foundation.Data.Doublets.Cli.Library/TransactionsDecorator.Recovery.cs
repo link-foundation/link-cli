@@ -12,6 +12,10 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
     {
         lock (_lock)
         {
+            if (_current is not null)
+            {
+                throw new InvalidOperationException("Cannot recover while a transaction is open.");
+            }
             _log.Clear();
             _committed.Clear();
             _rolledBack.Clear();

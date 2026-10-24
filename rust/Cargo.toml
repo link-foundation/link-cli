@@ -32,6 +32,8 @@ harness = false
 [dependencies]
 thiserror = "2.0.21"
 anyhow = "1.0.104"
+# Native std::time semantics, JavaScript Date.now for browser/Node WASM.
+web-time = "1.1.0"
 # Issue 67 Rust basis crates:
 # Source: http://github.com/linksplatform/doublets-rs
 doublets = "0.8.0"

@@ -5,18 +5,21 @@
 
 use anyhow::Result;
 use link_cli::transactions::DoubletLink;
-use link_cli::{
-    CommitMode, LogRetentionPolicy, NamedTypesDecorator, TransactionsDecorator, Transition,
-    TransitionKind,
-};
+#[cfg(not(target_arch = "wasm32"))]
+use link_cli::NamedTypesDecorator;
+use link_cli::{CommitMode, LogRetentionPolicy, TransactionsDecorator, Transition, TransitionKind};
 use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
 use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-fn make_tx() -> (TransactionsDecorator, Vec<NamedTempFile>) {
-    let data_file = NamedTempFile::new().expect("create temp file");
-    let log_file = NamedTempFile::new().expect("create temp file");
-    let data_links = NamedTypesDecorator::new(data_file.path(), false).expect("open data links");
-    let log_links = NamedTypesDecorator::new(log_file.path(), false).expect("open log links");
+fn make_tx() -> (TransactionsDecorator, Vec<test_store::NamedFiles>) {
+    let (data_files, data_links) = test_store::named().expect("open data links");
+    let (log_files, log_links) = test_store::named().expect("open log links");
     let tx = TransactionsDecorator::new(
         data_links,
         log_links,
@@ -25,11 +28,11 @@ fn make_tx() -> (TransactionsDecorator, Vec<NamedTempFile>) {
         false,
     )
     .expect("open transactions decorator");
-    // Keep the temp files alive for the duration of the test.
-    (tx, vec![data_file, log_file])
+    (tx, vec![data_files, log_files])
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn auto_transaction_records_create_and_update() -> Result<()> {
     let (mut tx, _guards) = make_tx();
 
@@ -48,7 +51,8 @@ fn auto_transaction_records_create_and_update() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn rollback_undoes_create() -> Result<()> {
     let (mut tx, _guards) = make_tx();
 
@@ -64,7 +68,8 @@ fn rollback_undoes_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn commit_persists_create() -> Result<()> {
     let (mut tx, _guards) = make_tx();
 
@@ -77,7 +82,8 @@ fn commit_persists_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn rollback_undoes_update() -> Result<()> {
     let (mut tx, _guards) = make_tx();
 
@@ -99,7 +105,8 @@ fn rollback_undoes_update() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn rollback_undoes_delete() -> Result<()> {
     let (mut tx, _guards) = make_tx();
 
@@ -120,7 +127,8 @@ fn rollback_undoes_delete() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn sized_retention_drops_oldest_after_applied() -> Result<()> {
     let (mut tx, _guards) = make_tx();
     tx.set_retention_policy(LogRetentionPolicy::Sized { max_transitions: 3 });
@@ -137,6 +145,7 @@ fn sized_retention_drops_oldest_after_applied() -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn chunked_retention_archives_oldest() -> Result<()> {
     let archive_dir = std::env::temp_dir().join(format!(
@@ -175,7 +184,8 @@ fn chunked_retention_archives_oldest() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn retention_policy_parses_specs() {
     assert!(matches!(
         LogRetentionPolicy::parse("infinite").unwrap(),
@@ -200,7 +210,8 @@ fn retention_policy_parses_specs() {
     assert!(LogRetentionPolicy::parse("garbage").is_err());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn transition_round_trips_through_serialize() {
     let t = Transition {
         transaction_id: 0xabcdef1234567890u128,
@@ -215,7 +226,8 @@ fn transition_round_trips_through_serialize() {
     assert_eq!(t, parsed);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn async_commit_marks_applied() -> Result<()> {
     // Rust port runs sync; the contract that `applied_sequence` reaches
     // `last_logged_sequence` after commit still holds.
@@ -231,17 +243,18 @@ fn async_commit_marks_applied() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn no_behaviour_change_when_not_opted_in() -> Result<()> {
     // R8: bare NamedTypesDecorator behaves identically whether or not
     // the TransactionsDecorator is wrapped above it.
-    let data_file = NamedTempFile::new()?;
-    let mut data_links = NamedTypesDecorator::new(data_file.path(), false)?;
+    let (_files, mut data_links) = test_store::named()?;
     let id = data_links.get_or_create(0, 0);
     assert!(data_links.exists(id));
     Ok(())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn recovery_reapplies_committed_transitions() -> Result<()> {
     // After dropping the decorator and reopening with the same store
@@ -285,7 +298,8 @@ fn recovery_reapplies_committed_transitions() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn make_transitions_database_filename_returns_sibling_path() {
     let path = TransactionsDecorator::make_transitions_database_filename("/var/data/db.links");
     assert_eq!(path, PathBuf::from("/var/data/db.transitions.links"));
@@ -294,7 +308,8 @@ fn make_transitions_database_filename_returns_sibling_path() {
     assert_eq!(path, PathBuf::from("db.transitions.links"));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn nested_transactions_are_rejected() -> Result<()> {
     let (mut tx, _guards) = make_tx();
     tx.begin_transaction()?;

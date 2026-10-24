@@ -174,6 +174,10 @@ A runnable, self-checking version of this is
   syncs). In-memory stores keep everything in memory until `flush`/`save`.
   Recovery runs when the decorator is created: committed-but-unapplied
   transitions are replayed, uncommitted ones are rolled back.
+  A known durable commit retains ownership after a checkpoint error: retry
+  `commit`, `rollback` or `save` before writing again. Public `recover` rejects
+  an open transaction. In-memory transactions also run in browser/Node WASM;
+  timestamps use its wall clock and do not provide distributed ordering.
 - **Multi-process access.** `storage::lock` locks a `<database>.lock` sidecar,
   shared for readers and exclusive for writers, through
   `DoubletsStorage::open_shared` / `open_exclusive` / `try_open_exclusive`.

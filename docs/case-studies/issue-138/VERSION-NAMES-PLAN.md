@@ -12,7 +12,7 @@ ancestry must round-trip exactly without changing the public API.
   records, legacy reopening, and exact branch/tag/checkout behavior.
 - [x] Run focused tests then complete native/C# suites, coverage, formatting,
   strict lint and release metadata checks; keep full logs in experiments.
-- [ ] Commit/push, review exact-SHA CI and preserve failed logs.
+- [x] Commit/push, review exact-SHA CI and preserve failed logs.
 
 The staged engine already serializes complete names in checksummed revisions.
 This audit concerns the existing native legacy version-control sidecar format.
@@ -32,3 +32,7 @@ C# Debug/Release each pass 990 tests. Actual WASM passes 279 tests and retains
 complete wrapper coverage. Exact totals and before/after evidence are in
 `dev/log/issues/138/pulls/139/version-metadata-names.txt`. Full coverage remains
 below 100%; no exclusions or source-coordinate substitutes were added.
+
+All nine workflows passed for exact head `7a91a70`, created 22:32:18 UTC.
+Run URLs and timestamp checks are preserved in
+`dev/log/issues/138/pulls/139/version-metadata-names-ci.txt`.

@@ -107,6 +107,17 @@ operation fails. Automatic operations undo those observations; explicit
 transactions keep them for caller rollback. This requires the adapter's change
 callbacks. Rust panic unwinding and unobserved mutations are outside this contract.
 
+After a Rust legacy journal commit is known durable, a failed checkpoint keeps
+the transaction open and blocks later writes. Retry `commit`, `rollback` or
+`save` to finish the checkpoint; rollback cannot undo that durable decision.
+Explicit version owners likewise retain admission until branch publication
+succeeds, including named writes. This retry contract does not establish atomic
+publication across a process exit between journal commit and version sidecars.
+Both Rust and C# reject public recovery while an open transaction owns live
+state; finish its cleanup first. Legacy in-memory transactions and history also
+run in browser/Node WASM, using the JS wall clock for timestamps. File-backed
+adapters and chunk archives still require a supported filesystem.
+
 Explicit-address allocation through the legacy Rust transactions/version APIs
 is a logged write, including any intermediate placeholders retained by the
 backend. Rollback and checkout undo those rows; automatic allocation flushes

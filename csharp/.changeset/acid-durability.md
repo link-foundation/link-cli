@@ -81,3 +81,6 @@ history from retained journal records, avoiding phantom versions across gaps.
 
 Persist branch and parent names with an unambiguous versioned marker, retaining
 legacy reads. Recover tag names containing equals signs without truncation.
+
+Fence named writes while committed version publication is pending. Reject
+public journal or version recovery while an open transaction owns live state.

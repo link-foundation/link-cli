@@ -70,6 +70,7 @@ pub struct VersionControlDecorator {
 
 #[derive(Debug, Clone)]
 struct VersionControlTransactionState {
+    id: u128,
     branch_name: String,
     before_sequence: i64,
 }
@@ -137,6 +138,9 @@ impl VersionControlDecorator {
     }
 
     pub fn save(&mut self) -> Result<()> {
+        if self.has_committed_transaction() {
+            self.commit()?;
+        }
         self.transactions.save()?;
         self.branches_store.save()?;
         Ok(())
@@ -162,6 +166,7 @@ impl VersionControlDecorator {
         let branch_name = self.current_branch.clone();
         let handle = self.transactions.begin_transaction()?;
         self.active_transaction = Some(VersionControlTransactionState {
+            id: handle.id,
             branch_name,
             before_sequence,
         });
@@ -175,12 +180,16 @@ impl VersionControlDecorator {
             .cloned()
             .ok_or_else(|| anyhow::anyhow!("No version-control transaction is open."))?;
         self.transactions.commit()?;
-        self.active_transaction = None;
         self.attribute_new_transitions_for_branch(state.before_sequence, &state.branch_name)?;
+        self.active_transaction = None;
         Ok(())
     }
 
     pub fn rollback(&mut self) -> Result<()> {
+        if self.has_committed_transaction() {
+            // A checkpoint failure cannot turn a durable commit into an abort.
+            return self.commit();
+        }
         self.active_transaction
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("No version-control transaction is open."))?;
@@ -192,6 +201,7 @@ impl VersionControlDecorator {
     // -- Write API (attribute new transitions to the current branch) ----
 
     pub fn create(&mut self, source: u32, target: u32) -> Result<u32> {
+        self.ensure_write_allowed()?;
         let before_seq = self.transactions.last_logged_sequence();
         let id = self.transactions.create(source, target)?;
         if self.active_transaction.is_none() {
@@ -214,6 +224,7 @@ impl VersionControlDecorator {
         target: u32,
         observer: ChangeObserver<'_>,
     ) -> Result<Link> {
+        self.ensure_write_allowed()?;
         let before_seq = self.transactions.last_logged_sequence();
         let result = self
             .transactions
@@ -232,6 +243,7 @@ impl VersionControlDecorator {
     /// [`Self::delete`], reporting every change the decorator stack made —
     /// cascaded deletions of usages included.
     pub fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
+        self.ensure_write_allowed()?;
         let before_seq = self.transactions.last_logged_sequence();
         let result = self.transactions.delete_observed(id, observer)?;
         if self.active_transaction.is_none() {
@@ -242,6 +254,7 @@ impl VersionControlDecorator {
     }
 
     pub fn create_and_update(&mut self, source: u32, target: u32) -> Result<u32> {
+        self.ensure_write_allowed()?;
         let before_seq = self.transactions.last_logged_sequence();
         let id = self.transactions.create_and_update(source, target)?;
         if self.active_transaction.is_none() {
@@ -268,6 +281,7 @@ impl VersionControlDecorator {
     }
 
     pub fn get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        self.ensure_write_allowed()?;
         if let Some(existing) = self.transactions.search(source, target) {
             return Ok(existing);
         }
@@ -281,6 +295,7 @@ impl VersionControlDecorator {
 
     /// Fallible explicit-address allocation, attributed like other writes.
     pub fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        self.ensure_write_allowed()?;
         let before_seq = self.transactions.last_logged_sequence();
         let created = self.transactions.ensure_created(id)?;
         if self.active_transaction.is_none() {
@@ -443,6 +458,21 @@ impl VersionControlDecorator {
         Ok(())
     }
 
+    fn has_committed_transaction(&self) -> bool {
+        self.active_transaction
+            .as_ref()
+            .is_some_and(|state| self.transactions.is_transaction_committed(state.id))
+    }
+
+    pub(crate) fn ensure_write_allowed(&self) -> Result<()> {
+        if self.has_committed_transaction() {
+            bail!(
+                "Version publication is incomplete; retry commit, rollback or save before writing."
+            );
+        }
+        Ok(())
+    }
+
     fn build_branch_seqs(&self, branch_name: &str) -> Vec<i64> {
         let mut visited: HashSet<String> = HashSet::new();
         self.build_branch_seqs_inner(branch_name, &mut visited)
@@ -577,12 +607,16 @@ impl VersionControlDecorator {
     }
 
     fn write_immutable_marker(&mut self, name: &str) -> Result<()> {
+        if self.branches_store.get_by_name(name)?.is_some() {
+            return Ok(());
+        }
         let link = self.branches_store.create(0, 0);
         self.branches_store.set_name(link, name)?;
         Ok(())
     }
 
     pub fn recover(&mut self) -> Result<()> {
+        self.ensure_no_open_transaction("recover")?;
         self.branches.clear();
         self.tags.clear();
         self.transition_branches.clear();

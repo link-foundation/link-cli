@@ -166,10 +166,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            if (_activeTransaction?.Inner.IsCommitted == true)
-            {
-                throw new InvalidOperationException("Retry committed version publication before writing.");
-            }
+            EnsureWriteAllowedLocked();
             var beforeSeq = _transactions.LastLoggedSequence;
             var result = innerWrite();
             if (_activeTransaction is null)
@@ -178,6 +175,12 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
             }
             return result;
         }
+    }
+
+    private void EnsureWriteAllowedLocked()
+    {
+        if (_activeTransaction?.Inner.IsCommitted == true)
+            throw new InvalidOperationException("Retry committed version publication before writing.");
     }
 
     private void AttributeNewTransitionsLocked(long beforeSeq, string branchName)
@@ -580,6 +583,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            EnsureNoOpenTransactionLocked("Recover");
             _branches.Clear();
             _tags.Clear();
             _transitionBranches.Clear();
@@ -652,9 +656,23 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     // -- INamedTypes forwarding -------------------------------------------
 
     public virtual string? GetName(uint link) => _transactions.GetName(link);
-    public virtual uint SetName(uint link, string name) => _transactions.SetName(link, name);
+    public virtual uint SetName(uint link, string name)
+    {
+        lock (_lock)
+        {
+            EnsureWriteAllowedLocked();
+            return _transactions.SetName(link, name);
+        }
+    }
     public virtual uint GetByName(string name) => _transactions.GetByName(name);
-    public virtual void RemoveName(uint link) => _transactions.RemoveName(link);
+    public virtual void RemoveName(uint link)
+    {
+        lock (_lock)
+        {
+            EnsureWriteAllowedLocked();
+            _transactions.RemoveName(link);
+        }
+    }
 
     // -- Convenience ------------------------------------------------------
 

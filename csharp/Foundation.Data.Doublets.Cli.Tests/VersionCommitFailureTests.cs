@@ -5,6 +5,45 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class VersionCommitFailureTests
 {
+    [Theory]
+    [InlineData("set")]
+    [InlineData("remove")]
+    public void NamedWritesWaitForCommittedVersionPublication(string operation)
+    {
+        var directory = Directory.CreateTempSubdirectory("version-name-fence-").FullName;
+        try
+        {
+            var fault = new Fault();
+            using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
+            using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
+            using var branches = new NamedTypesDecorator<uint>(Path.Combine(directory, "branches.links"));
+            using var tx = new TransactionsDecorator(data, log,
+                flushData: () => { data.Flush(); fault.Check("data-after"); });
+            using var vc = new VersionControlDecorator(tx, branches);
+            var baseline = vc.CreateAndUpdate(11u, 12u);
+            vc.SetName(baseline, "original");
+            using var pending = vc.BeginTransaction();
+            vc.CreateAndUpdate(21u, 22u);
+            fault.Point = "data-after";
+            Assert.Throws<IOException>(pending.Commit);
+            Assert.True(pending.IsCommitted);
+            var sequence = tx.LastLoggedSequence;
+            if (operation == "set")
+                Assert.Throws<InvalidOperationException>(() => vc.SetName(baseline, "changed"));
+            else
+                Assert.Throws<InvalidOperationException>(() => vc.RemoveName(baseline));
+            Assert.Equal("original", vc.GetName(baseline));
+            Assert.Equal(baseline, vc.GetByName("original"));
+            Assert.Equal(sequence, tx.LastLoggedSequence);
+            pending.Dispose();
+            vc.SetName(baseline, "changed");
+            Assert.Equal("changed", vc.GetName(baseline));
+            vc.RemoveName(baseline);
+            Assert.Null(vc.GetName(baseline));
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
     private sealed class Fault
     {
         public string? Point;

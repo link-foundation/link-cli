@@ -1,0 +1,17 @@
+Published version-name and source-study validation
+Head: 7a91a702d55d33250610b0cc58a79f7e5fceef52
+Checked: 2026-10-24 22:37 UTC
+All runs created at 2026-10-24T22:32:18Z, after publication of this exact head.
+
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40138989646
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40138989686
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40138989658
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40138989687
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40138989669
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40138989652
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40138989680
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40138989671
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40138989711
+
+All nine workflows passed. No failed logs exist for this head.
+Earlier-head CI results were not used as evidence for these changes.

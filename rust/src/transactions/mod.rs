@@ -73,7 +73,7 @@ mod types;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use doublets::data::LinkReference;
 
@@ -246,6 +246,12 @@ where
         self.sequence_counter
     }
 
+    /// Higher layers must distinguish a durable decision from a failed
+    /// checkpoint before deciding whether cleanup may undo the transaction.
+    pub(crate) fn is_transaction_committed(&self, id: u128) -> bool {
+        self.committed.contains(&id)
+    }
+
     /// Returns a snapshot of the transitions log in sequence order.
     pub fn log(&self) -> Vec<GenericTransition<T>> {
         self.log.clone()
@@ -273,6 +279,13 @@ where
 
     /// Makes both the data store and the transitions log durable.
     pub fn flush(&mut self) -> Result<(), LinkError> {
+        if self
+            .current
+            .as_ref()
+            .is_some_and(|pending| self.committed.contains(&pending.id))
+        {
+            return self.commit_current();
+        }
         self.inner.flush()?;
         self.log_store.flush_log()?;
         Ok(())
@@ -539,6 +552,15 @@ where
     }
 
     fn ensure_open_transaction(&mut self) -> Result<bool, LinkError> {
+        if self
+            .current
+            .as_ref()
+            .is_some_and(|pending| self.committed.contains(&pending.id))
+        {
+            return Err(LinkError::Transaction(
+                "Retry committed transaction checkpoint before further writes.".into(),
+            ));
+        }
         if self.current.as_ref().is_some_and(|tx| tx.rollback_only) {
             return Err(LinkError::Transaction(
                 "Transaction requires rollback before further writes.".into(),
@@ -744,14 +766,18 @@ where
             ));
         }
         let id = current.id;
-        self.write_marker(&format!("{COMMIT_MARKER_PREFIX}{id:032x}"))?;
-        // A links-backed log buffers appends; a commit is durable only after
-        // its explicit flush, even if FileTransitionLog syncs each append.
-        self.log_store.flush_log()?;
+        if !self.committed.contains(&id) {
+            self.write_marker(&format!("{COMMIT_MARKER_PREFIX}{id:032x}"))?;
+            // A links-backed log buffers appends; a commit is durable only
+            // after its explicit flush, even if FileTransitionLog syncs appends.
+            self.log_store.flush_log()?;
+            self.committed.insert(id);
+        }
         let pending = self.current.take().expect("transaction is still open");
-        self.committed.insert(pending.id);
-        // Never persist an applied marker before its data is durable.
-        self.inner.flush()?;
+        if let Err(error) = self.finish_commit_checkpoint(&pending.transitions) {
+            self.current = Some(pending);
+            return Err(error);
+        }
         if self.trace {
             crate::diagnostics::stderr!(
                 "[Transactions] Committed tx {:032x} (mode={:?}, transitions={}).",
@@ -760,17 +786,33 @@ where
                 pending.transitions.len()
             );
         }
-        for transition in &pending.transitions {
-            self.mark_applied(transition)?;
-        }
         let _ = pending.auto_commit;
         let _ = pending.started_ms;
-        self.log_store.flush_log()?;
-        self.enforce_retention()?;
         Ok(())
     }
 
+    fn finish_commit_checkpoint(
+        &mut self,
+        transitions: &[GenericTransition<T>],
+    ) -> Result<(), LinkError> {
+        // Never persist an applied marker before its data is durable.
+        self.inner.flush()?;
+        for transition in transitions {
+            self.mark_applied(transition)?;
+        }
+        self.log_store.flush_log()?;
+        self.enforce_retention()
+    }
+
     pub fn rollback(&mut self) -> Result<(), LinkError> {
+        if self
+            .current
+            .as_ref()
+            .is_some_and(|pending| self.committed.contains(&pending.id))
+        {
+            // A durable commit decision survives a failed checkpoint.
+            return self.commit_current();
+        }
         // Once undo begins, an error can leave the data partially restored.
         // Keep the abort decision until every rollback step succeeds.
         if let Some(current) = self.current.as_mut() {

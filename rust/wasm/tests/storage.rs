@@ -42,3 +42,15 @@ mod link_storage;
 
 #[path = "../../tests/named_types_decorator_tests.rs"]
 mod named_types_decorator;
+
+#[path = "../../tests/transactions_portable_clock_tests.rs"]
+mod transactions_portable_clock;
+
+#[path = "../../tests/transactions_decorator_tests.rs"]
+mod transactions_decorator;
+
+#[path = "../../tests/version_control_decorator_tests.rs"]
+mod version_control_decorator;
+
+#[path = "../../tests/transactions_commit_failure_tests.rs"]
+mod transactions_commit_failure;

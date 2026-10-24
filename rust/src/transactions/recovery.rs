@@ -181,6 +181,11 @@ where
     /// be parsed fail recovery; FileTransitionLog already discards torn tails.
     /// Silently skipping a complete record could lose committed data.
     pub fn recover(&mut self) -> Result<(), LinkError> {
+        if self.current.is_some() {
+            return Err(LinkError::Transaction(
+                "Cannot recover while a transaction is open.".into(),
+            ));
+        }
         self.log.clear();
         self.committed.clear();
         self.rolled_back.clear();

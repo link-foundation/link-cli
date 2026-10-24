@@ -7,6 +7,31 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
 {
     public class VersionControlDecoratorTests
     {
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void RecoveryPreservesOpenTransactionOwner(bool versionOwner)
+        {
+            RunWithVc((vc, tx, _) =>
+            {
+                using var pending = versionOwner ? vc.BeginTransaction() : tx.BeginTransaction();
+                var created = versionOwner ? vc.CreateAndUpdate(11u, 12u) : tx.CreateAndUpdate(11u, 12u);
+                if (versionOwner) Assert.Throws<InvalidOperationException>(vc.Recover);
+                else Assert.Throws<InvalidOperationException>(tx.Recover);
+                pending.Commit();
+                var head = vc.CurrentSequence;
+                if (versionOwner)
+                {
+                    vc.Recover();
+                    Assert.Equal(head, vc.CurrentSequence);
+                }
+                else tx.Recover();
+                Assert.True(tx.Exists(created));
+                Assert.Equal(11u, tx.GetSource(created));
+                Assert.Equal(12u, tx.GetTarget(created));
+            });
+        }
+
         [Fact]
         public void DefaultBranchExistsOnFirstOpen()
         {
