@@ -399,6 +399,23 @@ test('every cargo audit invocation denies warnings', () => {
   assert.deepEqual(offenders, []);
 });
 
+// Codecov rejects tokenless uploads from this repository, and the upload ran
+// with `fail_ci_if_error: false`, so it failed on every run without anyone
+// noticing; its file search also uploaded a Rust test file whose name
+// contains "coverage" (issue #134).
+test('every Codecov upload uses a token, reads only its reports and fails loudly', () => {
+  const uploads = workflows.flatMap(({ name, text }) =>
+    readSteps(text)
+      .filter((step) => /uses: codecov\/codecov-action@/.test(step.text))
+      .map((step) => ({ ...step, name })),
+  );
+  for (const { name, first, text } of uploads) {
+    assert.match(text, /^\s*token: \$\{\{ secrets\.CODECOV_TOKEN \}\}$/m, `${name}:${first} uploads without a token`);
+    assert.match(text, /^\s*fail_ci_if_error: true$/m, `${name}:${first} hides a failed upload`);
+    assert.match(text, /^\s*(?:directory|files):/m, `${name}:${first} searches the whole tree for reports`);
+  }
+});
+
 test('Dependabot watches every directory the dependency check reads', () => {
   const config = readFileSync(join(repoRoot, '.github', 'dependabot.yml'), 'utf8');
   const watched = (ecosystem) => {

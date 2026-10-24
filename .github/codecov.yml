@@ -1,0 +1,5 @@
+# Codecov configuration (https://docs.codecov.com/docs/codecov-yaml). Without
+# a config file the uploader logs "No config file could be found. Ignoring
+# config." on every run (issue #134); these are Codecov's defaults, spelled out.
+codecov:
+  require_ci_to_pass: true

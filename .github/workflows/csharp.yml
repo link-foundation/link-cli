@@ -229,11 +229,61 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
-      - name: Upload coverage to Codecov
+      # Codecov accepts tokenless uploads only from fork pull requests, so
+      # every upload from this repository failed with "Token required - not
+      # valid tokenless upload" behind `fail_ci_if_error: false`, and the
+      # repository never received a report (issue #134). Upload only when the
+      # token exists and then fail loudly; the codecov-token job below turns
+      # main red while it is missing.
+      - name: Check Codecov token
+        id: codecov
         if: matrix.os == 'ubuntu-24.04'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          if [ -n "$CODECOV_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::CODECOV_TOKEN is not configured, so no coverage is uploaded; the Codecov Token job fails on main until it is."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The search used to pick up rust/tests/issue62_review_coverage_tests.rs
+      # as a coverage report because of its name, and the gcov, xcode and
+      # coverage.py plugins only logged that their tools were missing. Read
+      # the Cobertura reports of `dotnet test` and nothing else.
+      - name: Upload coverage to Codecov
+        if: steps.codecov.outputs.available == 'true'
+        timeout-minutes: 5
         uses: codecov/codecov-action@v7
         with:
-          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
+          plugins: noop
+          fail_ci_if_error: true
+
+  # Coverage needs a secret only a maintainer can add, so pull requests pass
+  # without it while main fails here with what to do. No release job needs
+  # this one, so a missing token never blocks a release.
+  codecov-token:
+    name: Codecov Token
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-codecov-token
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Require CODECOV_TOKEN on main
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        working-directory: .
+        run: |
+          if [ -z "$CODECOV_TOKEN" ]; then
+            echo "::error title=CODECOV_TOKEN is missing::C# coverage is never uploaded. Activate link-foundation/link-cli on https://app.codecov.io/gh/link-foundation and add its upload token as the CODECOV_TOKEN repository secret, or remove the Codecov steps from csharp.yml."
+            exit 1
+          fi
+          echo "CODECOV_TOKEN is configured."
 
   # === SEMANTIC MERGE CONFLICT CHECK ===
   # The jobs above test the pull request head. Two pull requests that each pass
