@@ -247,7 +247,16 @@ jobs:
       # Pull requests check what would be published, without a token.
       - name: Dry-run the release
         if: github.event_name != 'push' || github.ref != 'refs/heads/main'
-        run: npm publish --dry-run --access public
+        env:
+          PUBLISHED: ${{ steps.check.outputs.published }}
+        run: |
+          # npm publish --dry-run still rejects an existing registry version.
+          # Validate the tarball on those PRs without trying to republish it.
+          if [ "$PUBLISHED" == 'true' ]; then
+            npm pack --dry-run
+          else
+            npm publish --dry-run --access public
+          fi
 
       # The package's OIDC policy is verified through the authentication-only
       # dispatch above (issue #136). No long-lived publishing token is used.
