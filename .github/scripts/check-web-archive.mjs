@@ -20,11 +20,13 @@
  *
  * Exit codes:
  *   - 0: All broken links have web archive versions (or no broken links)
- *   - 1: Some broken links have no web archive version
+ *   - 1: Some broken links have no web archive version, or the Web Archive
+ *        could not be asked about them
  */
 
 import { readFileSync, appendFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { setTimeout as sleep } from 'timers/promises';
 import { fileURLToPath } from 'url';
 
 const WAYBACK_API = 'https://archive.org/wayback/available?url=';
@@ -106,29 +108,64 @@ function extractBrokenLinks(content) {
  * Check if a URL has an archived version in the Wayback Machine
  * Uses the Wayback Machine Availability API:
  * https://archive.org/help/wayback_api.php
+ *
+ * Network errors, timeouts, 429 and 5xx are retried with backoff. When they
+ * persist the result carries `error`, so the report says the lookup failed
+ * instead of claiming that the link has no archived version (issue #134).
  * @param {string} url - The URL to check
- * @returns {Promise<{available: boolean, archiveUrl: string|null, timestamp: string|null}>}
+ * @param {object} [options]
+ * @param {typeof fetch} [options.fetchImpl]
+ * @param {number} [options.attempts]
+ * @param {number} [options.delayMs] - wait before the second attempt, doubled after
+ * @param {number} [options.timeoutMs] - per request
+ * @returns {Promise<{available: boolean, archiveUrl: string|null, timestamp: string|null, error?: string}>}
  */
-async function checkWaybackMachine(url) {
+export async function checkWaybackMachine(
+  url,
+  { fetchImpl = fetch, attempts = 3, delayMs = 2000, timeoutMs = 10000 } = {}
+) {
   const apiUrl = `${WAYBACK_API}${encodeURIComponent(url)}`;
+  const notArchived = { available: false, archiveUrl: null, timestamp: null };
+  let failure = '';
 
-  const controller = new AbortController();
-  const timeoutId = globalThis.setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(apiUrl, {
-      headers: {
-        'User-Agent': 'broken-link-checker/1.0 (GitHub Actions CI)',
-      },
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      console.warn(`  Wayback API returned ${response.status} for ${url}`);
-      return { available: false, archiveUrl: null, timestamp: null };
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    if (attempt > 1) {
+      console.log(
+        `  Retrying the Wayback API (attempt ${attempt} of ${attempts}) after: ${failure}`
+      );
+      await sleep(delayMs * 2 ** (attempt - 2));
     }
 
-    const data = await response.json();
+    let response;
+    try {
+      response = await fetchImpl(apiUrl, {
+        headers: {
+          'User-Agent': 'broken-link-checker/1.0 (GitHub Actions CI)',
+        },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (error) {
+      // fetch() rejects with a bare "fetch failed" and keeps the reason in cause.
+      const cause = error.cause?.code ?? error.cause?.message;
+      failure = cause ? `${error.message}: ${cause}` : error.message;
+      continue;
+    }
+
+    if (response.status === 429 || response.status >= 500) {
+      failure = `HTTP ${response.status}`;
+      continue;
+    }
+    if (!response.ok) {
+      return { ...notArchived, error: `HTTP ${response.status}` };
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      failure = `unreadable answer: ${error.message}`;
+      continue;
+    }
 
     if (data.archived_snapshots?.closest?.available === true) {
       const snapshot = data.archived_snapshots.closest;
@@ -140,15 +177,10 @@ async function checkWaybackMachine(url) {
       };
     }
 
-    return { available: false, archiveUrl: null, timestamp: null };
-  } catch (error) {
-    console.warn(
-      `  Failed to check Wayback Machine for ${url}: ${error.message}`
-    );
-    return { available: false, archiveUrl: null, timestamp: null };
-  } finally {
-    globalThis.clearTimeout(timeoutId);
+    return notArchived;
   }
+
+  return { ...notArchived, error: `${failure} (after ${attempts} attempts)` };
 }
 
 /**
@@ -218,6 +250,7 @@ async function main() {
 
   const withArchive = [];
   const withoutArchive = [];
+  const unchecked = [];
 
   for (const url of brokenUrls) {
     console.log(`Checking: ${url}`);
@@ -227,6 +260,9 @@ async function main() {
       const date = formatTimestamp(result.timestamp);
       console.log(`  ✓ Archived on ${date}: ${result.archiveUrl}`);
       withArchive.push({ url, archiveUrl: result.archiveUrl, date });
+    } else if (result.error) {
+      console.log(`  ✗ Web Archive lookup failed: ${result.error}`);
+      unchecked.push({ url, error: result.error });
     } else {
       console.log('  ✗ Not found in Web Archive');
       withoutArchive.push(url);
@@ -283,8 +319,26 @@ async function main() {
     }
   }
 
+  if (unchecked.length > 0) {
+    console.log(
+      `✗ ${unchecked.length} broken link(s) could not be checked against the Web Archive:`
+    );
+    for (const { url, error } of unchecked) {
+      console.log(`  ${url}: ${error}`);
+      console.log(
+        `::error title=Broken link - Web Archive lookup failed::` +
+          `Broken link detected: ${url}\n` +
+          `The Wayback Machine could not be asked whether it has a snapshot: ${error}\n` +
+          `How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.`
+      );
+    }
+    console.log('');
+  }
+
   const allArchived =
-    withoutArchive.length === 0 && unarchivableLinks.length === 0;
+    withoutArchive.length === 0 &&
+    unarchivableLinks.length === 0 &&
+    unchecked.length === 0;
   setOutput('all_archived', allArchived ? 'true' : 'false');
 
   if (!allArchived) {
