@@ -201,7 +201,7 @@ impl QueryProcessor {
         };
 
         if let Some(name) = &definition.name {
-            storage.set_name(id, name)?;
+            storage.set_name(id, crate::query_parser::name(name))?;
         }
         Ok(id)
     }
@@ -252,13 +252,13 @@ impl QueryProcessor {
                     self.ensure_indexed_link(storage, num, source_id, target_id, changes)?
                 } else if id == "*" || Self::is_variable(id) {
                     self.ensure_doublet(storage, source_id, target_id, changes)
-                } else if let Some(named) = storage.get_by_name(id)? {
+                } else if let Some(named) = storage.get_by_name(crate::query_parser::name(id))? {
                     self.ensure_indexed_link(storage, named, source_id, target_id, changes)?
                 } else {
                     // A doublet is unique, so a new name for an existing
                     // `(source, target)` names that link instead of copying it.
                     let named = self.ensure_doublet(storage, source_id, target_id, changes);
-                    storage.set_name(named, id)?;
+                    storage.set_name(named, crate::query_parser::name(id))?;
                     named
                 }
             } else {
@@ -369,10 +369,10 @@ impl QueryProcessor {
         name: &str,
         changes: &mut Changes,
     ) -> Result<u32> {
-        if let Some(named) = storage.get_by_name(name)? {
+        if let Some(named) = storage.get_by_name(crate::query_parser::name(name))? {
             return Ok(named);
         }
-        let created = storage.get_or_create_named(name)?;
+        let created = storage.get_or_create_named(crate::query_parser::name(name))?;
         changes.push((None, storage.get_link(created)));
         Ok(created)
     }

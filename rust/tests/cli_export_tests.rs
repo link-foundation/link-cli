@@ -38,6 +38,42 @@ fn export_alias_writes_named_references() -> Result<()> {
 }
 
 #[test]
+fn quoted_query_names_round_trip_through_export_and_query() -> Result<()> {
+    let directory = tempdir()?;
+    let source = directory.path().join("source.links");
+    let text = directory.path().join("export.lino");
+    let replay = directory.path().join("replay.lino");
+    ensure_success(&run_query(&source, "() ((a: a a) (b: b b))")?)?;
+    ensure_success(&run_clink(
+        &source,
+        "() ((zero: x \"0\") (one: x \"1\") (two: x '2') (large: x '99') (address: x 1))",
+        true,
+        &text,
+    )?)?;
+    let exported = std::fs::read_to_string(text)?;
+    for expected in [
+        "(zero: x '0')",
+        "(one: x '1')",
+        "(two: x '2')",
+        "(large: x '99')",
+        "(address: x a)",
+    ] {
+        assert!(
+            exported.contains(expected),
+            "missing {expected}: {exported}"
+        );
+    }
+    ensure_success(&run_clink(
+        &directory.path().join("destination.links"),
+        &format!("() ({exported})"),
+        false,
+        &replay,
+    )?)?;
+    assert_eq!(exported, std::fs::read_to_string(replay)?);
+    Ok(())
+}
+
+#[test]
 fn structure_option_renders_left_branch_with_indexes() -> Result<()> {
     let temp_dir = tempdir()?;
     let db_path = temp_dir.path().join("structure.links");

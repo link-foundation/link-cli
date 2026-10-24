@@ -87,7 +87,7 @@ impl LinkReferenceValidator {
                 let missing = &plan.missing_references[0];
                 return Err(LinkError::QueryError(format!(
                     "Invalid reference to non-existent link '{}' in {} pattern. Link '{}' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.",
-                    missing.identifier, missing.pattern_type, missing.identifier
+                    crate::query_parser::name(&missing.identifier), missing.pattern_type, crate::query_parser::name(&missing.identifier)
                 ))
                 .into());
             }
@@ -268,7 +268,9 @@ impl LinkReferenceValidator {
             return Ok(());
         }
 
-        if storage.get_by_name(identifier)?.is_none()
+        if storage
+            .get_by_name(crate::query_parser::name(identifier))?
+            .is_none()
             && !plan.names_to_be_created.contains(identifier)
         {
             plan.add_missing_reference(MissingLinkReference {
@@ -340,14 +342,17 @@ impl LinkReferenceValidator {
         named_references.dedup();
 
         for name in named_references {
-            if storage.get_by_name(&name)?.is_some() {
+            if storage
+                .get_by_name(crate::query_parser::name(&name))?
+                .is_some()
+            {
                 continue;
             }
 
             self.trace_msg(&format!(
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing named reference '{name}' as point link."
             ));
-            let link_id = storage.get_or_create_named(&name)?;
+            let link_id = storage.get_or_create_named(crate::query_parser::name(&name))?;
             created.push((None, storage.get_link(link_id)));
         }
 

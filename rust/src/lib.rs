@@ -53,6 +53,7 @@ pub mod persistent_transformations;
 pub mod pinned_types;
 pub mod protocol;
 pub mod query_options;
+mod query_parser;
 pub mod query_processor;
 pub mod query_processor_substitution;
 pub mod query_types;

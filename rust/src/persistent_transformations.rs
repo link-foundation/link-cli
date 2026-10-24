@@ -44,9 +44,9 @@ use anyhow::{anyhow, Result};
 use crate::link::Link;
 use crate::link_storage::ChangeObserver;
 use crate::lino_link::LinoLink;
-use crate::named_type_links::{escape_lino_reference, NamedTypeLinks};
+use crate::named_type_links::NamedTypeLinks;
 use crate::named_types::NamedTypesDecorator;
-use crate::parser::Parser;
+use crate::query_parser::format_identifier;
 use crate::query_processor::QueryProcessor;
 
 /// Prefix of the internal names used for stored condition and substitution
@@ -113,7 +113,7 @@ impl PersistentTransformationQuery {
     /// Both the wrapped form `((condition) (substitution))` and the bare form
     /// `(condition) (substitution)` are accepted, matching the C# parser.
     pub fn parse(query: &str) -> Result<Self> {
-        let parsed = Parser::new().parse(query)?;
+        let parsed = crate::query_parser::parse(query)?;
         let outer = parsed.first().ok_or_else(|| anyhow!(MISSING_PARTS))?;
 
         let (condition, substitution) = match outer.values.as_deref() {
@@ -147,7 +147,7 @@ fn format_lino(link: &LinoLink) -> String {
         return if id.is_empty() {
             "()".to_string()
         } else {
-            escape_lino_reference(id)
+            format_identifier(id)
         };
     }
 
@@ -156,7 +156,7 @@ fn format_lino(link: &LinoLink) -> String {
     if id.is_empty() {
         format!("({rendered})")
     } else {
-        format!("({}: {})", escape_lino_reference(id), rendered)
+        format!("({}: {})", format_identifier(id), rendered)
     }
 }
 

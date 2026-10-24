@@ -12,7 +12,6 @@ use crate::link::Link;
 use crate::link_reference_validator::LinkReferenceValidator;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
-use crate::parser::Parser;
 use crate::query_types::{Pattern, ResolvedLink};
 
 // Pattern matching lives in a submodule; see query_processor/matching.rs.
@@ -70,8 +69,7 @@ impl QueryProcessor {
             return Ok(vec![]);
         }
 
-        let parser = Parser::new();
-        let parsed_links = parser.parse(query)?;
+        let parsed_links = crate::query_parser::parse(query)?;
 
         self.trace_msg(&format!(
             "[ProcessQuery] Parser returned {} top-level link(s).",
@@ -415,7 +413,9 @@ impl QueryProcessor {
         if let Ok(parsed) = identifier.parse::<u32>() {
             return Ok(parsed);
         }
-        Ok(storage.get_by_name(identifier)?.unwrap_or(default_value))
+        Ok(storage
+            .get_by_name(crate::query_parser::name(identifier))?
+            .unwrap_or(default_value))
     }
 
     fn resolve_patterns(
@@ -549,7 +549,9 @@ impl QueryProcessor {
         if create_named_leaf {
             return self.ensure_named_point_link(storage, identifier, changes);
         }
-        Ok(storage.get_by_name(identifier)?.unwrap_or(default_value))
+        Ok(storage
+            .get_by_name(crate::query_parser::name(identifier))?
+            .unwrap_or(default_value))
     }
 
     fn determine_operations(
@@ -654,7 +656,7 @@ impl QueryProcessor {
                         changes.push((Some(stored), Some(stored)));
                     }
                     if let Some(name) = &after.name {
-                        storage.set_name(before.index, name)?;
+                        storage.set_name(before.index, crate::query_parser::name(name))?;
                     }
                 } else {
                     self.apply_operation(storage, Some(before), None, changes)?;

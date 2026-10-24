@@ -13,6 +13,11 @@ transformation triggers, transactions and version control.
 The WebAssembly wrapper crate lives in `rust/wasm/` and depends on this
 package.
 
+Quoted query references always resolve by name: `"0"`, `'1'`, and reference
+literals such as `~1{31}` are names, while bare `1` is an address. This applies
+to the CLI, library, and WebAssembly query engine, including definitions,
+restrictions, updates, and deletions.
+
 ## Install
 
 ```bash
