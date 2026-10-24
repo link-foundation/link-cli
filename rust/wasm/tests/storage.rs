@@ -54,3 +54,9 @@ mod version_control_decorator;
 
 #[path = "../../tests/transactions_commit_failure_tests.rs"]
 mod transactions_commit_failure;
+
+#[path = "../../tests/transactions_recovery_order_tests.rs"]
+mod transactions_recovery_order;
+
+#[path = "../../tests/transactions_recovery_fault_tests.rs"]
+mod transactions_recovery_fault;

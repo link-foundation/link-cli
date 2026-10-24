@@ -1144,3 +1144,53 @@ in-process retry and fencing after a known durable commit. Noncontiguous async
 applied markers, uncertain commit-decision flushes and abrupt-exit legacy version
 sidecar publication are separate unfinished audits. It does not establish
 power-loss semantics outside the adapter's persistence contract.
+
+## Ordered recovery and retention after applied gaps
+
+Before: all 39 corrected C# recovery cases fail. Three real failed asynchronous
+checkpoints are followed by a later applied update, deletion or recreation;
+reopening overwrites the latest value, resurrects a deleted row or loses the
+recreated row. Thirty-six mapped interruption cases additionally check failures
+before/after older redo, newer redo, pending undo, data flush, applied-marker
+append and journal flush. Each opens the actual files twice after the fault.
+Only corrected fixture runs form this baseline; setup/harness errors were
+resolved before retaining it. Logs are csharp-recovery-order-before.log.
+
+Four portable Rust contracts fail before the change; two deletion controls
+pass because replay skips an update to an absent row. Shared contracts now
+exercise three complete journal histories and 32 finite interruption schedules
+from distinct durable data/journal images on native and actual WASM. Every
+injected phase must execute; reopening twice verifies the latest committed row,
+pending undo, applied marker and rollback marker.
+
+Recovery starts at the first committed transition missing an applied marker,
+replays every later committed transition in order, undoes pending work, and
+flushes the complete final data before filling the gap. The old gap remains a
+restart anchor until that final state is durable, including failures while redo
+or undo is in progress. Normal already-checkpointed histories do not get redone.
+
+Six additional C# regressions fail with sized/chunked live retention while the
+39 ordered-recovery controls pass. Retention replayed an older failed async
+checkpoint over a later commit and then closed its gap, making that loss
+permanent on reopening. It now checkpoints current inline effects without
+redoing old writes. The same six cases check live state, archive creation where
+selected, exact markers and two persistent reopens. Ordinary async workers use
+the same checkpoint helper. Existing rollback, version, ownership and shutdown
+contracts remain in the full suites.
+
+Full C# Debug/Release: 1,151 pass each; zero skips.
+Full native Rust: 607 standard tests and the custom stdout harness pass;
+four child entry points remain ignored by the ordinary harness.
+Actual WASM: all 321 tests pass. All three wrapper modules remain 100% in
+lines/functions/reported branches. Strict native/WASM Clippy, formatting,
+release metadata and combined source-size checks pass.
+Debug: 6,146/6,636 lines (92.62%), 2,816/3,216 branches (87.56%)
+Release: 4,655/4,953 lines (93.98%), 2,794/3,197 branches (87.39%)
+native: 9,478/10,300 lines (92.02%), 1,567/1,908 branches (82.13%), 1,266/1,407 functions (89.98%)
+wasm: 6,577/9,909 lines (66.37%), 1,096/1,613 branches (67.95%), 903/1,391 functions (64.92%)
+
+Project-wide coverage remains below the requested 100%. These tests verify the
+adapter's flush contract and recovery interruptions; they do not establish
+power-loss semantics outside it. Uncertain commit-decision append/first-flush
+outcomes and abrupt-exit legacy sidecar publication are separate unfinished
+audits. Broader algorithm/component and coverage requirements remain open.

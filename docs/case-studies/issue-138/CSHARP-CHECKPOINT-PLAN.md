@@ -14,10 +14,10 @@ version retry tests establish branch publication, not generic checkpoint retry.
 - [x] Verify exact checkpoint completion, no new decision marker, following
       committed edits and persistent reopening.
 - [x] Preserve asynchronous policy and shutdown contracts in the full suite.
-- [ ] Separately audit out-of-order applied-marker recovery after asynchronous
+- [x] Separately audit out-of-order applied-marker recovery after asynchronous
       checkpoint faults; see RECOVERY-ORDER-PLAN.md.
 - [x] Run focused and complete suites, lint/format and coverage.
-- [ ] Commit, push and verify fresh exact-SHA CI.
+- [x] Commit, push and verify fresh exact-SHA CI.
 
 Do not infer abrupt-exit sidecar atomicity or power-loss ordering from cleanup
 retry tests. Tests need finite schedules and existing mapped-store fixtures.
@@ -31,4 +31,5 @@ Complete local verification passes: C# Debug/Release 1,106 each, native Rust
 601 standard tests plus stdout harness, and actual WASM 315. Strict lint,
 formatting, changeset and source-size checks pass. Exact coverage and retained
 before-fix evidence are in `dev/log/issues/138/pulls/139/checkpoint-owner.txt`.
-Fresh exact-SHA CI remains pending for this batch.
+All nine workflows pass on SHA `8429c53`; exact run URLs are retained in
+`dev/log/issues/138/pulls/139/checkpoint-owner-ci.txt`.

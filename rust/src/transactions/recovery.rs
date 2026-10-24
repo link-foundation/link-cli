@@ -229,18 +229,23 @@ where
             }
         }
 
-        // Re-apply committed-but-not-applied transitions (crash mid-async).
+        // An older failed checkpoint can precede a later applied commit. Redo
+        // the whole committed suffix in order, including already-applied rows.
         let log_snapshot: Vec<GenericTransition<T>> = self.log.clone();
+        let replay_from = log_snapshot
+            .iter()
+            .position(|transition| {
+                self.committed.contains(&transition.transaction_id)
+                    && !self.applied.contains(&transition.sequence)
+            })
+            .unwrap_or(log_snapshot.len());
         self.replaying = true;
         let result = (|| -> Result<Vec<u128>, LinkError> {
-            for transition in &log_snapshot {
+            for transition in &log_snapshot[replay_from..] {
                 if !self.committed.contains(&transition.transaction_id) {
                     continue;
                 }
-                if self.applied.contains(&transition.sequence) {
-                    continue;
-                }
-                self.try_apply_transition(transition, true)?;
+                self.try_apply_transition(transition, false)?;
             }
             // Auto-rollback transitions written but never committed and never rolled back (R10).
             let mut pending_tx_ids: Vec<u128> = Vec::new();
@@ -261,6 +266,13 @@ where
         self.replaying = false;
         let pending_tx_ids = result?;
         self.inner.flush()?;
+        // The gap must remain a restart anchor until the complete final state
+        // (including undo) is durable, even if a later marker append fails.
+        for transition in &log_snapshot[replay_from..] {
+            if self.committed.contains(&transition.transaction_id) {
+                self.mark_applied(transition)?;
+            }
+        }
         for tx_id in pending_tx_ids {
             self.rolled_back.insert(tx_id);
             self.write_marker(&format!("{ROLLBACK_MARKER_PREFIX}{tx_id:032x}"))?;

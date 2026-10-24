@@ -592,7 +592,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             _replaying = true;
             try
             {
-                TryApplyTransition(transition, recordApplied: false);
+                TryApplyTransition(transition);
             }
             finally
             {
@@ -601,7 +601,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         }
     }
 
-    private void TryApplyTransition(Transition<TLinkAddress> transition, bool recordApplied)
+    private void TryApplyTransition(Transition<TLinkAddress> transition)
     {
         try
         {
@@ -614,12 +614,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
                 RestoreLink(transition.After);
             }
 
-            if (recordApplied)
-            {
-                _flushData();
-                MarkApplied(transition);
-                _flushLog();
-            }
         }
         catch (Exception ex)
         {
@@ -636,6 +630,15 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             _applied.Add(transition.Sequence);
             if (transition.Sequence > _appliedSequence) _appliedSequence = transition.Sequence;
         }
+    }
+
+    private void CheckpointTransition(Transition<TLinkAddress> transition)
+    {
+        // Writes run inline. Replaying an older uncheckpointed record here
+        // could overwrite newer committed or still-pending foreground data.
+        _flushData();
+        MarkApplied(transition);
+        _flushLog();
     }
 
     private void RestoreLink(Link<TLinkAddress> link)
@@ -709,7 +712,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             {
                 if (!_committed.Contains(head.TransactionId)) break;
                 // R7: never drop an un-applied transition.
-                TryApplyTransition(head, recordApplied: true);
+                CheckpointTransition(head);
                 if (!_applied.Contains(head.Sequence)) break;
             }
             _log.RemoveAt(0);
@@ -731,7 +734,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             if (!_applied.Contains(transition.Sequence))
             {
                 if (!_committed.Contains(transition.TransactionId)) return;
-                TryApplyTransition(transition, recordApplied: true);
+                CheckpointTransition(transition);
                 if (!_applied.Contains(transition.Sequence)) return; // never drop unapplied
             }
         }
@@ -771,11 +774,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             {
                 lock (_lock)
                 {
-                    // Side-effects normally already applied (inner store ran
-                    // them inline). Re-apply only if needed and mark applied.
-                    _flushData();
-                    MarkApplied(transition);
-                    _flushLog();
+                    CheckpointTransition(transition);
                 }
             }
             catch (Exception error)

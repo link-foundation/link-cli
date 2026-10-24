@@ -72,17 +72,19 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                 }
             }
 
+            // An older async checkpoint can fail before a later commit has
+            // already been applied. Redo the whole suffix in sequence so the
+            // older state cannot overwrite that later durable result.
+            var replayFrom = _log.FindIndex(t => _committed.Contains(t.TransactionId) && !_applied.Contains(t.Sequence));
+            if (replayFrom < 0) replayFrom = _log.Count;
             _replaying = true;
             try
             {
-                // Re-apply committed transitions whose side-effects were lost
-                // (e.g. async crash before checkpoint). Only those not yet
-                // recorded as applied are touched.
-                foreach (var transition in _log)
+                for (var index = replayFrom; index < _log.Count; index++)
                 {
+                    var transition = _log[index];
                     if (!_committed.Contains(transition.TransactionId)) continue;
-                    if (_applied.Contains(transition.Sequence)) continue;
-                    TryApplyTransition(transition, recordApplied: true);
+                    TryApplyTransition(transition);
                 }
 
                 // Auto-rollback transitions written but never committed and never
@@ -102,6 +104,14 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                   .Distinct()
                   .ToList();
                 _flushData();
+                // Keep the first gap as a restart anchor until both the later
+                // redo and pending undo are durable. Marking it sooner could
+                // make an interrupted recovery skip the newer committed state.
+                for (var index = replayFrom; index < _log.Count; index++)
+                {
+                    var transition = _log[index];
+                    if (_committed.Contains(transition.TransactionId)) MarkApplied(transition);
+                }
                 foreach (var txId in pendingTxIds)
                 {
                     _rolledBack.Add(txId);

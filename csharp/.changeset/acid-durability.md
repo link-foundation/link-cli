@@ -90,3 +90,10 @@ Retry them through Commit, CommitAsync, Rollback or transaction disposal before
 releasing foreground admission or publishing version metadata. Fence row and
 named writes during incomplete commit/rollback cleanup; preserve queued async
 policy and borrowed-store shutdown semantics.
+
+Recover the ordered committed suffix after an applied-marker gap. Persist the
+complete redo and pending undo before closing that gap, so interrupted recovery
+cannot overwrite later committed updates, deletions or recreated rows.
+
+Checkpoint current inline effects when sized/chunked retention encounters an
+older failed async checkpoint; preserve newer updates, deletion and recreation.

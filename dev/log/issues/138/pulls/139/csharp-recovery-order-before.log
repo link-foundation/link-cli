@@ -1,0 +1,341 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.17]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "log-after") [FAIL]
+[xUnit.net 00:00:01.20]     Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(operation: "update") [FAIL]
+[xUnit.net 00:00:01.22]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "log-before") [FAIL]
+[xUnit.net 00:00:01.27]     Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(operation: "recreate") [FAIL]
+[xUnit.net 00:00:01.27]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "marker-after") [FAIL]
+[xUnit.net 00:00:01.31]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "data-after") [FAIL]
+[xUnit.net 00:00:01.35]     Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(operation: "delete") [FAIL]
+[xUnit.net 00:00:01.36]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "undo-after") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "log-after") [234 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(operation: "update") [252 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRecoveryOrderingTests.cs:line 73
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "log-before") [63 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(operation: "recreate") [99 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRecoveryOrderingTests.cs:line 72
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "marker-after") [51 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "data-after") [40 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(operation: "delete") [75 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.AsyncRecoveryOrderingTests.LaterAppliedCommitSurvivesOlderFailedCheckpoint(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/AsyncRecoveryOrderingTests.cs:line 69
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:01.40]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "marker-after") [FAIL]
+[xUnit.net 00:00:01.45]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "new-after") [FAIL]
+[xUnit.net 00:00:01.48]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "undo-after") [FAIL]
+[xUnit.net 00:00:01.52]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "new-before") [FAIL]
+[xUnit.net 00:00:01.57]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "old-after") [FAIL]
+[xUnit.net 00:00:01.62]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "marker-before") [FAIL]
+[xUnit.net 00:00:01.67]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "data-after") [FAIL]
+[xUnit.net 00:00:01.75]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "old-before") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "undo-after") [48 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+                                              ↓ (pos 9)
+Collection: [···, [···], [···], [···], [···], [···]]
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "marker-after") [40 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "new-after") [43 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "undo-after") [29 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+                                              ↓ (pos 9)
+Collection: [···, [···], [···], [···], [···], [···]]
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "new-before") [37 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "old-after") [51 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "marker-before") [44 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "data-after") [57 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "old-before") [72 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:01.80]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "log-before") [FAIL]
+[xUnit.net 00:00:01.85]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "new-after") [FAIL]
+[xUnit.net 00:00:01.92]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "marker-before") [FAIL]
+[xUnit.net 00:00:02.01]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "data-before") [FAIL]
+[xUnit.net 00:00:02.06]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "new-before") [FAIL]
+[xUnit.net 00:00:02.09]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "undo-before") [FAIL]
+[xUnit.net 00:00:02.15]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "log-after") [FAIL]
+[xUnit.net 00:00:02.22]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "new-before") [FAIL]
+[xUnit.net 00:00:02.29]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "old-after") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "log-before") [53 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "new-after") [50 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "marker-before") [67 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "data-before") [89 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "new-before") [41 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "undo-before") [37 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+                                              ↓ (pos 9)
+Collection: [···, [···], [···], [···], [···], [···]]
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "log-after") [59 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "new-before") [60 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "old-after") [68 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.34]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "log-before") [FAIL]
+[xUnit.net 00:00:02.38]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "undo-before") [FAIL]
+[xUnit.net 00:00:02.44]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "marker-before") [FAIL]
+[xUnit.net 00:00:02.48]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "undo-after") [FAIL]
+[xUnit.net 00:00:02.51]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "marker-after") [FAIL]
+[xUnit.net 00:00:02.55]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "old-before") [FAIL]
+[xUnit.net 00:00:02.59]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "new-after") [FAIL]
+[xUnit.net 00:00:02.64]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "data-before") [FAIL]
+[xUnit.net 00:00:02.67]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "data-before") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "log-before") [57 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "undo-before") [33 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+                                              ↓ (pos 9)
+Collection: [···, [···], [···], [···], [···], [···]]
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "marker-before") [63 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "undo-after") [34 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+                                              ↓ (pos 9)
+Collection: [···, [···], [···], [···], [···], [···]]
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "marker-after") [35 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "old-before") [39 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "new-after") [38 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 118
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "update", point: "data-before") [43 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 31
+Actual:   21
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "data-before") [32 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.70]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "old-before") [FAIL]
+[xUnit.net 00:00:02.74]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "data-after") [FAIL]
+[xUnit.net 00:00:02.77]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "old-after") [FAIL]
+[xUnit.net 00:00:02.79]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "undo-before") [FAIL]
+[xUnit.net 00:00:02.82]     Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "log-after") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "old-before") [31 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "data-after") [33 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "recreate", point: "old-after") [33 ms]
+  Error Message:
+   System.NullReferenceException : Object reference not set to an instance of an object.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 137
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "undo-before") [17 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Filter matched in collection
+                                              ↓ (pos 9)
+Collection: [···, [···], [···], [···], [···], [···]]
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 126
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(operation: "delete", point: "log-after") [27 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.RecoveryInterruptionTests.ReopenAfterInterruptedRecoveryPreservesLatestCommitAndPendingUndo(String operation, String point) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/RecoveryInterruptionTests.cs:line 134
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:    39, Passed:     0, Skipped:     0, Total:    39, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

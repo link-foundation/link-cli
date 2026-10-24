@@ -52,13 +52,14 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
 
 ## Current failure-audit sequence
 
-1. Finish C# known-commit checkpoint ownership and native named-write fencing;
-   preserve the 112 C# and six Rust before-fix failures, full-suite evidence and
-   exact-SHA CI. See CSHARP-CHECKPOINT-PLAN.md.
-2. Reproduce recovery with an older failed asynchronous checkpoint followed by
-   a later applied commit. Preserve a recovery anchor until the entire ordered
-   suffix is durable, including interruption of recovery itself. See
-   RECOVERY-ORDER-PLAN.md.
+1. C# known-commit checkpoint ownership and native named-write fencing are
+   verified locally and in all nine exact-SHA workflows at `8429c53`. The 112
+   C# and six Rust before-fix failures are retained. See
+   CSHARP-CHECKPOINT-PLAN.md and checkpoint-owner-ci.txt under the PR evidence.
+2. Ordered recovery and live retention regressions pass in full native, C#
+   Debug/Release and actual-WASM suites. Recovery keeps an anchor until the
+   complete committed suffix and pending undo are durable. Commit/push this
+   batch and verify exact-SHA CI; see RECOVERY-ORDER-PLAN.md.
 3. Audit commit-marker append/first flush errors whose delivery is uncertain.
    A possibly durable commit must not be silently undone by cleanup. Exercise
    automatic/explicit and version-owner cleanup in both native languages.

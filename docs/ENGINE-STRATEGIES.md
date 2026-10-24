@@ -101,7 +101,9 @@ sessions include names in atomic revisions. Named-write admission fences do not
 add names to that legacy journal.
 Sized and chunked retention discard completed rollback records without replaying
 their writes. Chunk archives contain committed changes only; pending records
-remain in the live log. Retention limits the in-memory list, while the durable
+remain in the live log. Live C# retention checkpoints current inline effects
+when an older committed record lacks an applied marker, preserving newer edits.
+Retention limits the in-memory list, while the durable
 sidecar still keeps recovery markers. Optional diagnostic I/O failures preserve
 the operation's outcome; storage and journal errors retain their error semantics.
 
@@ -121,6 +123,10 @@ continues to release admission once the durable decision is queued.
 Explicit version owners likewise retain admission until their checkpoint and
 branch publication succeed, including named writes. This retry contract does not establish atomic
 publication across a process exit between journal commit and version sidecars.
+Recovery replays the complete committed suffix after its first missing applied
+marker, including later records that already have markers. It flushes the final
+redo and pending undo before filling that gap, keeping an anchor for another
+restart if recovery fails before the final data flush.
 Both Rust and C# reject public recovery while an open transaction owns live
 state; finish its cleanup first. Legacy in-memory transactions and history also
 run in browser/Node WASM, using the JS wall clock for timestamps. File-backed
