@@ -1,0 +1,10 @@
+# node scripts/release-needed-transient-fetch.mjs <csharp template 4cc372e>/scripts/check-release-needed.mjs
+Fetching https://api.nuget.org/v3-flatcontainer/example/index.json
+FAILED after 1 request(s): fetch failed
+exit=1
+
+# node scripts/release-needed-transient-fetch.mjs csharp/scripts/check-release-needed.mjs (link-cli 622610a)
+Fetching https://api.nuget.org/v3-flatcontainer/example/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/example/index.json (attempt 2 of 4)
+OK after 2 request(s): ["1.0.0"]
+exit=0
