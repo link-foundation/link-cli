@@ -26,7 +26,11 @@ internal static class QueryParser
             && !name.StartsWith('~')
             && !name.Any(character => char.IsWhiteSpace(character) || char.IsControl(character)
                 || "():\"'`".Contains(character));
-        return safeBareName ? name : ReferenceLiteral.Encode(name);
+        if (safeBareName) return name;
+        if (name.Length == 0 || name == "*" || name.StartsWith('$')) return ReferenceLiteral.Encode(name);
+        // Preserve established trigger text for ordinary quoted names: stored
+        // trigger identity compares this text, including when removing one.
+        return LinoDatabaseOutput.EscapeReference(name);
     }
 
     internal static IList<LinoLink> Parse(string query)
@@ -49,13 +53,9 @@ internal static class QueryParser
             }
 
             var start = position;
-            var quoted = current is '\'' or '"' or '`';
-            string value;
-            if (quoted)
-            {
-                value = ReadQuoted(text, ref position);
-            }
-            else
+            var value = string.Empty;
+            var quoted = (current is '\'' or '"' or '`') && TryReadQuoted(text, ref position, out value);
+            if (!quoted)
             {
                 while (position < text.Length && !" \t\r\n(:)".Contains(text[position])) position++;
                 value = text[start..position];
@@ -75,7 +75,7 @@ internal static class QueryParser
 
     // Match the notation library's N-delimiter rules, including doubled delimiters
     // and the empty-reference fallback for an even opening run. Backslashes are literal.
-    private static string ReadQuoted(string text, ref int position)
+    private static bool TryReadQuoted(string text, ref int position, out string reference)
     {
         var start = position;
         var quote = text[position];
@@ -96,16 +96,19 @@ internal static class QueryParser
             {
                 if (count % 2 == 0 && !IsSubstantive(value.ToString())) break;
                 position += count;
-                return value.ToString();
+                reference = value.ToString();
+                return true;
             }
             else
             {
                 value.Append(text[position++]);
             }
         }
-        // Original syntax was already validated; an even run can be an empty name.
-        position = start + count;
-        return string.Empty;
+        // An even run can be an empty name. An unmatched odd prefix falls back
+        // to a bare word in the notation grammar, with the quote in its name.
+        position = start + (count % 2 == 0 ? count : 0);
+        reference = string.Empty;
+        return count % 2 == 0;
     }
 
     private static bool IsSubstantive(string text)

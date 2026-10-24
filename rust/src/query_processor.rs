@@ -257,7 +257,7 @@ impl QueryProcessor {
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
     ) -> Result<Changes> {
-        LinkReferenceValidator::new(self.trace, self.auto_create_missing_references)
+        LinkReferenceValidator::for_query(self.trace, self.auto_create_missing_references)
             .validate_links_exist_or_will_be_created(
                 storage,
                 restriction_patterns,

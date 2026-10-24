@@ -32,8 +32,18 @@ pub(crate) fn format_identifier(identifier: &str) -> String {
         });
     if safe_bare_name {
         value.to_string()
-    } else {
+    } else if value.trim().is_empty()
+        || value == "*"
+        || value.starts_with(['$', '#', '~'])
+        || value.contains('`')
+        || value.chars().any(char::is_control)
+        || (value.contains('\'') && value.contains('"'))
+    {
         encode_reference_literal(value)
+    } else {
+        // Trigger identity is stored as text. Keep the established quoting for
+        // ordinary names so existing stored triggers can still be removed.
+        crate::named_type_links::escape_lino_reference(value)
     }
 }
 
@@ -55,11 +65,17 @@ pub(crate) fn parse(query: &str) -> Result<Vec<LinoLink>, LinkError> {
             continue;
         }
         let start = position;
-        let quoted = b"\"'`".contains(&current);
-        if quoted {
-            position = quoted_reference_end(&text, start)
-                .ok_or_else(|| LinkError::ParseError("Invalid quoted reference".into()))?;
+        let quoted_end = if b"\"'`".contains(&current) {
+            quoted_reference_end(&text, start)
         } else {
+            None
+        };
+        let quoted = quoted_end.is_some();
+        if let Some(end) = quoted_end {
+            position = end;
+        } else {
+            // The notation grammar falls back to a bare word for an unmatched
+            // odd quote prefix; that quote is part of the name.
             while position < text.len() && !b" \t\r\n(:)".contains(&text.as_bytes()[position]) {
                 position += 1;
             }

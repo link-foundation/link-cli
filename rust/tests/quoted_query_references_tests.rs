@@ -1,5 +1,7 @@
 use anyhow::Result;
-use link_cli::{LinkStorage, QueryProcessor};
+use link_cli::{
+    link_reference_validator::LinkReferenceValidator, LinkStorage, LinoLink, QueryProcessor,
+};
 use tempfile::NamedTempFile;
 
 #[test]
@@ -137,6 +139,9 @@ fn query_quotes_follow_notation_delimiter_rules() -> Result<()> {
         ("''a''''b''", "a''b"),
         ("'line\nnext'", "line\nnext"),
         ("'# literal'", "# literal"),
+        ("'unclosed", "'unclosed"),
+        ("\"unclosed", "\"unclosed"),
+        ("`unclosed", "`unclosed"),
     ] {
         let file = NamedTempFile::new()?;
         let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
@@ -187,5 +192,35 @@ fn normalized_trigger_query_keeps_quoted_names_and_bare_addresses() -> Result<()
     );
     let r = storage.get_by_name("r").unwrap();
     assert_eq!(storage.get(r).unwrap().target, 1);
+    Ok(())
+}
+
+#[test]
+fn trigger_normalization_preserves_existing_named_query_text() -> Result<()> {
+    let condition = "((p: 'source name' \"target's name\"))";
+    let substitution = "((p: 'source name' \"next's name\"))";
+    let parsed =
+        link_cli::PersistentTransformationQuery::parse(&format!("{condition} {substitution}"))?;
+    // Stored trigger identity compares this text, including when removing one.
+    assert_eq!(condition, parsed.condition);
+    assert_eq!(substitution, parsed.substitution);
+    Ok(())
+}
+
+#[test]
+fn public_validator_preserves_literal_quotes_in_parsed_names() -> Result<()> {
+    let file = NamedTempFile::new()?;
+    let mut storage = LinkStorage::new(file.path().to_str().unwrap(), false)?;
+    let name = "\"one\"";
+    storage.get_or_create_named(name);
+    // Public callers supply already-decoded identifiers, without the query
+    // parser's internal envelopes. Quote characters here belong to the name.
+    let reference = LinoLink::new(Some(name.to_string()));
+    LinkReferenceValidator::new(false, false).validate_links_exist_or_will_be_created(
+        &mut storage,
+        &[reference],
+        &[],
+    )?;
+    assert_eq!(storage.get_by_name("one"), None);
     Ok(())
 }

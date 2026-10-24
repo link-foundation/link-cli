@@ -123,6 +123,9 @@ public partial class AdvancedMixedQueryProcessor
     [InlineData("''a''''b''", "a''b")]
     [InlineData("'line\nnext'", "line\nnext")]
     [InlineData("'# literal'", "# literal")]
+    [InlineData("'unclosed", "'unclosed")]
+    [InlineData("\"unclosed", "\"unclosed")]
+    [InlineData("`unclosed", "`unclosed")]
     public void QueryQuotesFollowNotationDelimiterRules(string reference, string name)
     {
         RunTestWithLinks(links =>
@@ -162,5 +165,16 @@ public partial class AdvancedMixedQueryProcessor
             Assert.Equal(links.GetByName("1"), new DoubletLink(links.GetLink(links.GetByName("q"))).Target);
             Assert.Equal(1u, new DoubletLink(links.GetLink(links.GetByName("r"))).Target);
         });
+    }
+
+    [Fact]
+    public void TriggerNormalizationPreservesExistingNamedQueryText()
+    {
+        const string condition = "((p: 'source name' \"target's name\"))";
+        const string substitution = "((p: 'source name' \"next's name\"))";
+        var parsed = PersistentTransformationDecorator.PersistentTransformationQuery.Parse($"{condition} {substitution}");
+        // Stored trigger identity compares this text, including when removing one.
+        Assert.Equal(condition, parsed.Condition);
+        Assert.Equal(substitution, parsed.Substitution);
     }
 }
