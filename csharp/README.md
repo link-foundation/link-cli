@@ -51,6 +51,11 @@ transformation triggers with `--always`, `--once`, `--never`, `--triggers`,
 the public library, so other .NET applications can call into the same
 processors directly.
 
+LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
+`LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before
+writing. Invalid input leaves existing links and names unchanged, without
+requiring `--transactions`.
+
 LiNo import/export preserves backslashes literally in quoted names, including
 Windows paths and a backslash immediately before the closing delimiter. Names
 with newlines or both quote kinds export as the notation library's lossless

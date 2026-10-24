@@ -37,6 +37,10 @@ clink '() ((1 1))' --changes --after
 
 ### Optional lookup indexes for named imports
 
+LiNo input is fully parsed and validated before any links or names change,
+including nested definitions. Invalid input leaves the store unchanged through
+both the CLI aliases and `import_lino_text`/`import_lino_file` library APIs.
+
 For thousands of named links, enable the Rust lookup-index decorator:
 
 ```bash
