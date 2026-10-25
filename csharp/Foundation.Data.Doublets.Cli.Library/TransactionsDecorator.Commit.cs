@@ -69,10 +69,13 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             try
             {
                 if (transaction.Image is not null) RestoreImage(transaction.Image);
-                else foreach (var transition in transaction.Records.AsEnumerable().Reverse())
+                else
+                {
+                    foreach (var transition in transaction.Records.AsEnumerable().Reverse())
                     {
                         TryRevertRecord(transition);
                     }
+                }
             }
             finally
             {

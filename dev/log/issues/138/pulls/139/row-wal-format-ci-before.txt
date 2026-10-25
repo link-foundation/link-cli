@@ -1,0 +1,32 @@
+C# formatting failure on fa03b5f, run 40205855501
+
+1977: Lint and Format Check	Verify formatting	2026-10-25T15:13:13.6475105Z   DOTNET_ROOT: /usr/share/dotnet
+1978: Lint and Format Check	Verify formatting	2026-10-25T15:13:13.6475482Z ##[endgroup]
+1979: Lint and Format Check	Verify formatting	2026-10-25T15:13:13.8675905Z The dotnet runtime version is '10.0.13'.
+1980: Lint and Format Check	Verify formatting	2026-10-25T15:13:13.8739253Z Formatting code files in workspace '/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.sln'.
+1981: Lint and Format Check	Verify formatting	2026-10-25T15:13:13.8740353Z Loading workspace.
+1982: Lint and Format Check	Verify formatting	2026-10-25T15:13:14.9807236Z   Determining projects to restore...
+1983: Lint and Format Check	Verify formatting	2026-10-25T15:13:14.9808168Z   All projects are up-to-date for restore.
+1984: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4282690Z Project Foundation.Data.Doublets.Cli.Tests is using configuration from '/home/runner/work/link-cli/link-cli/csharp/.editorconfig'.
+1985: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4286369Z Project Foundation.Data.Doublets.Cli.Tests is using configuration from '/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Tests/obj/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.GeneratedMSBuildEditorConfig.editorconfig'.
+1986: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4290388Z Project Foundation.Data.Doublets.Cli.Tests is using configuration from '/usr/share/dotnet/sdk/10.0.402/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig'.
+1987: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4292940Z Project Foundation.Data.Doublets.Cli is using configuration from '/home/runner/work/link-cli/link-cli/csharp/.editorconfig'.
+1988: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4296135Z Project Foundation.Data.Doublets.Cli is using configuration from '/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli/obj/Debug/net10.0/Foundation.Data.Doublets.Cli.GeneratedMSBuildEditorConfig.editorconfig'.
+1989: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4299631Z Project Foundation.Data.Doublets.Cli is using configuration from '/usr/share/dotnet/sdk/10.0.402/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig'.
+1990: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4302122Z Project Foundation.Data.Doublets.Cli.Library is using configuration from '/home/runner/work/link-cli/link-cli/csharp/.editorconfig'.
+1991: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4305475Z Project Foundation.Data.Doublets.Cli.Library is using configuration from '/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/obj/Debug/net10.0/Foundation.Data.Doublets.Cli.Library.GeneratedMSBuildEditorConfig.editorconfig'.
+1992: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4309436Z Project Foundation.Data.Doublets.Cli.Library is using configuration from '/usr/share/dotnet/sdk/10.0.402/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig'.
+1993: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4311030Z Complete in 4554ms.
+1994: Lint and Format Check	Verify formatting	2026-10-25T15:13:18.4311600Z Determining formattable files.
+1995: Lint and Format Check	Verify formatting	2026-10-25T15:13:19.2343049Z Complete in 806ms.
+1996: Lint and Format Check	Verify formatting	2026-10-25T15:13:19.2343442Z Running formatters.
+1997: Lint and Format Check	Verify formatting	2026-10-25T15:13:20.9316449Z ##[error]/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Commit.cs(73,17): error WHITESPACE: Fix whitespace formatting. Delete 4 characters. [/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj]
+1998: Lint and Format Check	Verify formatting	2026-10-25T15:13:20.9327966Z ##[error]/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Commit.cs(74,21): error WHITESPACE: Fix whitespace formatting. Delete 4 characters. [/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj]
+1999: Lint and Format Check	Verify formatting	2026-10-25T15:13:20.9331692Z ##[error]/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Commit.cs(75,17): error WHITESPACE: Fix whitespace formatting. Delete 4 characters. [/home/runner/work/link-cli/link-cli/csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj]
+2000: Lint and Format Check	Verify formatting	2026-10-25T15:13:21.4623874Z Running Code Style analysis.
+2001: Lint and Format Check	Verify formatting	2026-10-25T15:13:21.4633144Z Determining diagnostics...
+
+All three platform test jobs and the fresh-merge simulation passed.
+Local SDK: 10.0.112; CI SDK: 10.0.402. The newer formatter rejects
+the indentation of an else/foreach body. Use an explicit else block
+to remove that ambiguous layout; behavior is unchanged.
