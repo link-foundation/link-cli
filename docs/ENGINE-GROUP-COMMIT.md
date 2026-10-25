@@ -61,8 +61,9 @@ file commit logs already separate append from durable flush. Set
 durability is required. Memory adapters remain volatile.
 
 Optional delta encoding composes outside the selected file/replicated log.
-Each independent revision remains decodable; a delta references its preceding
-revision. Fixed-primary synchronous replication flushes the primary once, copies
+Reopening replays the complete logical prefix. A physical delta references its
+preceding full image; logical change records pass through unchanged and retain
+their exact predecessor dependency. Fixed-primary synchronous replication flushes the primary once, copies
 the complete missing prefix and flushes each follower once before counting it.
 Explicit catch-up still flushes the primary before reading its prefix. Replica
 acknowledgements retain their existing unknown-outcome and membership semantics.
@@ -83,14 +84,17 @@ For K accepted writes, the default flat representation copies each candidate's
 N_i rows, then applies W_i ordered-map updates. Optional
 [shared state](ENGINE-SHARED-STATE.md) retains the root and copies changed paths,
 with O(W_i log N_i) update work. Both choices still validate selected constraints
-and encode every complete revision, including its name bytes. Preparation copies
+and encode every selected logical revision. Default snapshot encoding includes
+all name bytes; optional [change records](ENGINE-CHANGE-RECORDS.md) serialize
+changed rows and names only. Preparation copies
 retained history and conflict/ownership metadata, and buffers
 the K logical records until publication. C# also pins each accepted member's
 snapshot so its closed handle retains ordinary committed-read behavior. The
-extra memory therefore includes full encoded revisions and retained snapshots,
+extra memory therefore includes selected encoded revisions and retained snapshots,
 not just K small queue entries. Use bounded groups; there is one serialization
 gate through preparation, append, flush and publication. This reduces flush
-calls; it does not remove full-state CPU work, implement parallel validation,
+calls; selected constraints and metadata can still require full-state work. It
+does not implement parallel validation,
 compact journals, or promise a throughput multiplier.
 
 Portable contracts cover separate revisions, constraints, conflicts, read

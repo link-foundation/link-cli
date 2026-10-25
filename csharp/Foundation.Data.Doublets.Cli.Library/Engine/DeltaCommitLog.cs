@@ -4,7 +4,7 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 
 /// <summary>Optional single-span physical compression of complete revisions.
 /// Reopen through this decorator; one writer owns the inner log and its fencing.
-/// Engine cloning and replay still process full revisions. Resources remain caller-owned.</summary>
+/// Logical changes pass through unchanged. Resources remain caller-owned.</summary>
 public sealed class DeltaCommitLog : ICommitLog
 {
     private readonly ICommitLog _inner;
@@ -13,7 +13,7 @@ public sealed class DeltaCommitLog : ICommitLog
     private ulong _streak;
     private bool _ready;
     private bool _poisoned;
-    private sealed record Frame(ulong Revision, string Next, string Rows, string Hash);
+    private sealed record Frame(ulong Revision, string Next, string Rows, string Hash, bool Complete);
 
     /// <param name="inner">Caller-owned, exclusively fenced physical log.</param>
     /// <param name="checkpointInterval">At most interval-1 consecutive deltas; 1 writes only full records.</param>
@@ -51,11 +51,19 @@ public sealed class DeltaCommitLog : ICommitLog
     private static Frame Full(string record)
     {
         var fields = Verified(record);
-        if (fields.Length != 5 || fields[0] != "engine1") throw new InvalidDataException("Expected a complete engine1 revision.");
+        bool complete = fields[0] switch
+        {
+            "engine1" when fields.Length == 5 => true,
+            "engine2" when fields.Length == 6 => false,
+            _ => throw new InvalidDataException("Expected an engine revision.")
+        };
+        int offset = complete ? 0 : 1;
         ulong revision = (ulong)Decimal(fields[1], ulong.MaxValue);
-        if (revision == 0 || Decimal(fields[2], UInt128.MaxValue) == 0)
+        if (revision == 0 || Decimal(fields[2 + offset], UInt128.MaxValue) == 0)
             throw new InvalidDataException("Invalid delta journal revision or allocator.");
-        return new(revision, fields[2], fields[3], fields[4]);
+        if (!complete && Decimal(fields[2], ulong.MaxValue) != revision - 1)
+            throw new InvalidDataException("Invalid logical change base.");
+        return new(revision, fields[2 + offset], fields[3 + offset], fields[4 + offset], complete);
     }
     private static void Contiguous(Frame? before, Frame after)
     {
@@ -69,6 +77,7 @@ public sealed class DeltaCommitLog : ICommitLog
         var fields = Verified(record);
         if (fields.Length != 9) throw new InvalidDataException("Invalid delta journal envelope.");
         var previous = before ?? throw new InvalidDataException("Delta journal base is missing.");
+        if (!previous.Complete) throw new InvalidDataException("Delta requires a complete snapshot base.");
         if (fields[1] != previous.Hash) throw new InvalidDataException("Delta journal base checksum mismatch.");
         var prefix = Decimal(fields[4], uint.MaxValue);
         var suffix = Decimal(fields[5], uint.MaxValue);
@@ -113,7 +122,7 @@ public sealed class DeltaCommitLog : ICommitLog
         if (!_ready) Read();
         var parsed = Full(record);
         Contiguous(_previous, parsed);
-        string physical = _previous is not null && _streak + 1 < _interval ? Compress(_previous, parsed, record) : record;
+        string physical = _previous is { Complete: true } && parsed.Complete && _streak + 1 < _interval ? Compress(_previous, parsed, record) : record;
         try { _inner.Append(physical); }
         catch { _poisoned = true; throw; }
         _streak = physical.StartsWith("delta1|", StringComparison.Ordinal) ? _streak + 1 : 0;

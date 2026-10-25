@@ -11,10 +11,13 @@ public enum SerializableValidation { Revision, ReadSet }
 public enum EngineConstraint { References, UniquePairs, UniqueNames }
 /// <summary>Independent in-memory representation; journal format is unchanged.</summary>
 public enum StateStructure { Flat, Shared }
+/// <summary>Logical payload, independent of physical log/delta encoding.</summary>
+public enum RevisionEncoding { Snapshot, Changes }
 
 public sealed record EngineOptions
 {
     public StateStructure StateStructure { get; init; } = StateStructure.Flat;
+    public RevisionEncoding RevisionEncoding { get; init; } = RevisionEncoding.Snapshot;
     public ConcurrencyControl Concurrency { get; init; } = ConcurrencyControl.Optimistic;
     public IsolationLevel Isolation { get; init; } = IsolationLevel.Serializable;
     public SerializableValidation SerializableValidation { get; init; } = SerializableValidation.Revision;
@@ -67,6 +70,7 @@ public sealed partial class LinksEngine<T>
         if (Options.HistoryLimit < 0 || !Enum.IsDefined(Options.Isolation) || !Enum.IsDefined(Options.Concurrency)
             || !Enum.IsDefined(Options.SerializableValidation)
             || !Enum.IsDefined(Options.StateStructure)
+            || !Enum.IsDefined(Options.RevisionEncoding)
             || (Options.SerializableValidation == SerializableValidation.ReadSet && Options.Isolation != IsolationLevel.Serializable)
             || Options.Constraints.Any(c => !Enum.IsDefined(c)))
             throw new ArgumentException("Invalid engine strategy.", nameof(options));
@@ -78,11 +82,9 @@ public sealed partial class LinksEngine<T>
         Retain();
         foreach (var record in log.Read())
         {
-            var (snapshot, next) = RevisionJournal<T>.Decode(record);
-            if (snapshot.Revision != checked(Current.Revision + 1) || next < Next)
-                throw new InvalidDataException("Journal revision or allocator moved backwards.");
+            var (snapshot, next) = RevisionJournal<T>.DecodeAfter(record, Current, Next, Options.StateStructure);
             Validate(snapshot.Rows);
-            Current = snapshot.Adapt(Options.StateStructure, Current);
+            Current = snapshot;
             Next = next;
             CommittedNext = next;
             Retain();
@@ -134,7 +136,13 @@ public sealed partial class LinksEngine<T>
     {
         Validate(rows);
         var snapshot = EngineSnapshot<T>.Create(checked(Current.Revision + 1), rows);
-        var record = RevisionJournal<T>.Encode(snapshot, Next);
+        string record;
+        if (Options.RevisionEncoding == RevisionEncoding.Changes)
+        {
+            writes = writes.ToArray();
+            record = ChangeRevisionJournal<T>.Encode(snapshot, Next, Current, writes);
+        }
+        else record = RevisionJournal<T>.Encode(snapshot, Next);
         try { _log.Append(record); _log.Flush(); }
         catch (Exception error)
         {

@@ -6,6 +6,26 @@ import { DeltaCommitLog, MemoryCommitLog, ReplicatedCommitLog } from '../src/ind
 const vectors = JSON.parse(readFileSync(new URL('../../../docs/protocol/engine-delta-vectors.json', import.meta.url), 'utf8'));
 const [sequence] = vectors.validSequences;
 
+test('mixed logical change records pass through and reset complete-snapshot delta bases', () => {
+  const fixture = JSON.parse(readFileSync(new URL('../../../docs/protocol/engine-change-vectors.json', import.meta.url), 'utf8')).physicalMixed;
+  const raw = new MemoryCommitLog(); const log = new DeltaCommitLog(raw);
+  for (const record of fixture.logical) log.append(record);
+  assert.deepEqual(JSON.parse(raw.read()), fixture.physical);
+  assert.deepEqual(JSON.parse(log.read()), fixture.logical);
+});
+
+test('invalid mixed-format bases reject before append and during physical replay', () => {
+  const fixture = JSON.parse(readFileSync(new URL('../../../docs/protocol/engine-change-vectors.json', import.meta.url), 'utf8'));
+  for (const { case: label, records } of fixture.invalidPhysical) {
+    const raw = new MemoryCommitLog(); const log = new DeltaCommitLog(raw);
+    for (const record of records.slice(0, -1)) log.append(record);
+    const before = raw.read();
+    assert.throws(() => log.append(records.at(-1)), undefined, label);
+    assert.equal(raw.read(), before);
+    assert.throws(() => new DeltaCommitLog(new MemoryCommitLog(records)).read(), undefined, label);
+  }
+});
+
 test('delta journals replay shared vectors and reject every complete corrupt sequence', () => {
   for (const { physical, logical } of vectors.validSequences) {
     const log = new DeltaCommitLog(new MemoryCommitLog(physical));

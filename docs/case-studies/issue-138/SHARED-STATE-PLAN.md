@@ -94,4 +94,5 @@ remains below the requested target and no timing claim is made.
 Complete local suites, coverage, all three runtime checks and cross-language
 examples pass; see shared-state.txt for exact official totals and limits.
 
-9. [ ] Review, commit, push and verify every fresh exact-head workflow.
+9. [x] Review, commit, push and verify every fresh exact-head workflow.
+   All nine workflows pass on `3960c25`; see shared-state-ci.txt.

@@ -25,13 +25,14 @@ public class EngineGroupExitTests
         }
     }
 
-    private static EngineOptions Options => new() { Isolation = IsolationLevel.Snapshot, HistoryLimit = null, RequireDurableFlush = true };
-    internal static int Child(string path, string point, bool delta)
+    private static EngineOptions Options(RevisionEncoding encoding, StateStructure structure) => new()
+    { Isolation = IsolationLevel.Snapshot, HistoryLimit = null, RequireDurableFlush = true, RevisionEncoding = encoding, StateStructure = structure };
+    internal static int Child(string path, string point, bool delta, RevisionEncoding encoding = RevisionEncoding.Snapshot, StateStructure structure = StateStructure.Flat)
     {
         using var file = new FileCommitLog(path);
         ICommitLog log = new ExitLog(file, point);
         if (delta) log = new DeltaCommitLog(log);
-        var engine = new LinksEngine<uint>(log, Options);
+        var engine = new LinksEngine<uint>(log, Options(encoding, structure));
         using var a = engine.Begin(); a.CreateLink(0, 0); a.SetName(1, "first 雪");
         using var b = engine.Begin(); b.CreateLink(1, 0); b.SetName(2, "second");
         Assert.Equal(new[] { new GroupCommitOutcome(GroupCommitStatus.Committed, 1), new GroupCommitOutcome(GroupCommitStatus.Committed, 2) }, engine.CommitGroup(new[] { a, b }));
@@ -40,9 +41,15 @@ public class EngineGroupExitTests
     }
 
     [Theory(Timeout = 90000)]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task AbruptGroupExitsRecoverExactPrefixesAndFollowingCommits(bool delta)
+    [InlineData(false, RevisionEncoding.Snapshot, StateStructure.Flat)]
+    [InlineData(true, RevisionEncoding.Snapshot, StateStructure.Flat)]
+    [InlineData(false, RevisionEncoding.Snapshot, StateStructure.Shared)]
+    [InlineData(true, RevisionEncoding.Snapshot, StateStructure.Shared)]
+    [InlineData(false, RevisionEncoding.Changes, StateStructure.Flat)]
+    [InlineData(true, RevisionEncoding.Changes, StateStructure.Flat)]
+    [InlineData(false, RevisionEncoding.Changes, StateStructure.Shared)]
+    [InlineData(true, RevisionEncoding.Changes, StateStructure.Shared)]
+    public async Task AbruptGroupExitsRecoverExactPrefixesAndFollowingCommits(bool delta, RevisionEncoding encoding, StateStructure structure)
     {
         foreach (var (point, expected) in new[] { ("before-append", 0ul), ("after-append", 1ul), ("before-flush", 2ul), ("after-flush", 2ul), ("acknowledged", 2ul) })
         {
@@ -53,6 +60,8 @@ public class EngineGroupExitTests
                 var info = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true };
                 info.Environment["DOTNET_GCHeapHardLimit"] = "0x10000000";
                 foreach (var argument in new[] { typeof(EngineGroupExitTests).Assembly.Location, "group-exit", path, point, delta.ToString() }) info.ArgumentList.Add(argument);
+                if (encoding != RevisionEncoding.Snapshot || structure != StateStructure.Flat)
+                    foreach (var argument in new[] { encoding.ToString(), structure.ToString() }) info.ArgumentList.Add(argument);
                 using var child = Process.Start(info)!;
                 var stdout = child.StandardOutput.ReadToEndAsync(); var stderr = child.StandardError.ReadToEndAsync();
                 using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
@@ -62,7 +71,8 @@ public class EngineGroupExitTests
                 for (int reopen = 0; reopen < 2; reopen++)
                 {
                     using var file = new FileCommitLog(path);
-                    var engine = new LinksEngine<uint>(delta ? new DeltaCommitLog(file) : file, Options);
+                    var selected = reopen == 0 ? (encoding == RevisionEncoding.Snapshot ? RevisionEncoding.Changes : RevisionEncoding.Snapshot) : encoding;
+                    var engine = new LinksEngine<uint>(delta ? new DeltaCommitLog(file) : file, Options(selected, structure));
                     ulong revision = expected + (reopen == 0 ? 0ul : 1ul);
                     Assert.Equal(revision, engine.Snapshot().Revision); Assert.Equal((int)revision, engine.Snapshot().Rows.Count);
                     if (expected > 0) Assert.Equal("first 雪", engine.SnapshotAt(1).Rows[1].Name);

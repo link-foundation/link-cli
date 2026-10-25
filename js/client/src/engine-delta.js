@@ -22,10 +22,13 @@ const verified = (record) => {
 };
 const frame = (record) => {
   const fields = verified(record);
-  if (fields.length !== 5 || fields[0] !== 'engine1') throw Error('expected a complete engine1 revision');
+  const full = fields[0] === 'engine1' && fields.length === 5;
+  if (!full && !(fields[0] === 'engine2' && fields.length === 6)) throw Error('expected an engine revision');
+  const offset = full ? 0 : 1;
   const revision = decimal(fields[1], U64);
-  if (revision === 0n || decimal(fields[2], U128) === 0n) throw Error('invalid delta journal revision or allocator');
-  return { revision, next: fields[2], rows: fields[3], hash: fields[4] };
+  if (revision === 0n || decimal(fields[2 + offset], U128) === 0n) throw Error('invalid delta journal revision or allocator');
+  if (!full && decimal(fields[2], U64) !== revision - 1n) throw Error('invalid logical change base');
+  return { revision, next: fields[2 + offset], rows: fields[3 + offset], hash: fields[4 + offset], full };
 };
 const contiguous = (before, after) => {
   const expected = before === null ? 1n : before.revision + 1n;
@@ -37,6 +40,7 @@ const expand = (before, record) => {
   if (fields.length !== 9) throw Error('invalid delta journal envelope');
   if (before === null) throw Error('delta journal base is missing');
   const base = before;
+  if (!base.full) throw Error('delta requires a complete snapshot base');
   if (fields[1] !== base.hash) throw Error('delta journal base checksum mismatch');
   const prefix = Number(decimal(fields[4], U32));
   const suffix = Number(decimal(fields[5], U32));
@@ -56,7 +60,7 @@ const complete = (value) => {
   if (value !== undefined) throw TypeError('log operations must complete synchronously and return undefined');
 };
 
-/** Single-span compression; engine cloning/replay remain O(N), without compaction. */
+/** Compress full snapshots; logical change records pass through, without compaction. */
 export class DeltaCommitLog {
   #inner;
   #interval;
@@ -93,7 +97,7 @@ export class DeltaCommitLog {
     if (!this.#ready) this.read();
     const parsed = frame(record);
     contiguous(this.#previous, parsed);
-    const physical = this.#previous !== null && this.#streak + 1 < this.#interval ? compress(this.#previous, parsed, record) : record;
+    const physical = this.#previous !== null && this.#previous.full && parsed.full && this.#streak + 1 < this.#interval ? compress(this.#previous, parsed, record) : record;
     try { complete(this.#inner.append(physical)); }
     catch (error) { this.#poisoned = true; throw error; }
     this.#streak = physical.startsWith('delta1|') ? this.#streak + 1 : 0;

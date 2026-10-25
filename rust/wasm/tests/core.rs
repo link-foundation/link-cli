@@ -43,3 +43,12 @@ mod group_commit;
 
 #[path = "../../tests/engine_shared_state_tests.rs"]
 mod shared_state;
+
+#[path = "../../tests/engine_change_replay_tests.rs"]
+mod change_replay;
+
+#[path = "../../tests/engine_changes_tests.rs"]
+mod changes;
+
+#[path = "../../tests/engine_changes_fault_tests.rs"]
+mod changes_fault;

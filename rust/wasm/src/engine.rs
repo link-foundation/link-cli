@@ -2,8 +2,8 @@
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
     Branch, ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction,
-    GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, SerializableValidation,
-    StateStructure,
+    GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, RevisionEncoding,
+    SerializableValidation, StateStructure,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
@@ -14,6 +14,7 @@ use wasm_bindgen::prelude::*;
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
     state_structure: Option<String>,
+    revision_encoding: Option<String>,
     concurrency: Option<String>,
     isolation: Option<String>,
     serializable_validation: Option<String>,
@@ -31,6 +32,11 @@ fn options(text: &str) -> Result<EngineOptions, String> {
     let parsed: Options = serde_json::from_value(serde_json::Value::Object(object))
         .map_err(|error| error.to_string())?;
     Ok(EngineOptions {
+        revision_encoding: match parsed.revision_encoding.as_deref() {
+            None | Some("snapshot") => RevisionEncoding::Snapshot,
+            Some("changes") => RevisionEncoding::Changes,
+            _ => return Err("unknown revision encoding".into()),
+        },
         state_structure: match parsed.state_structure.as_deref() {
             None | Some("flat") => StateStructure::Flat,
             Some("shared") => StateStructure::Shared,
@@ -86,7 +92,7 @@ pub struct StagedEngine {
 }
 #[wasm_bindgen]
 impl StagedEngine {
-    /// journal_json is an array of engine1 records ("[]" for an empty store).
+    /// journal_json is an array of engine1/engine2 records ("[]" for an empty store).
     #[wasm_bindgen(constructor)]
     pub fn new(options_json: &str, journal_json: &str) -> Result<StagedEngine, String> {
         let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;

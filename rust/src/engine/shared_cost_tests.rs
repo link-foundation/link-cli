@@ -18,10 +18,20 @@ fn unmaterialized(snapshot: &Snapshot<u64>) {
 
 #[test]
 fn internal_reads_commits_recovery_and_branches_do_not_materialize_compatibility_maps() {
+    for encoding in [RevisionEncoding::Snapshot, RevisionEncoding::Changes] {
+        internal_read_boundaries(encoding);
+    }
+}
+
+fn internal_read_boundaries(encoding: RevisionEncoding) {
+    let options = || EngineOptions {
+        revision_encoding: encoding,
+        ..shared()
+    };
     fn send_sync<T: Send + Sync>() {}
     send_sync::<Engine<u64, MemoryLog>>();
     send_sync::<Snapshot<u64>>();
-    let db = Engine::<u64, _>::open(MemoryLog::default(), shared()).unwrap();
+    let db = Engine::<u64, _>::open(MemoryLog::default(), options()).unwrap();
     let mut seed = db.begin().unwrap();
     for id in 1..=64 {
         seed.ensure_link_created(id).unwrap();
@@ -56,7 +66,7 @@ fn internal_reads_commits_recovery_and_branches_do_not_materialize_compatibility
     discarded.rollback();
     assert!(Arc::ptr_eq(&current.rows, &db.snapshot().unwrap().rows));
     let log = db.with_log(|log| Ok(log.clone())).unwrap();
-    let reopened = Engine::<u64, _>::open(log, shared()).unwrap();
+    let reopened = Engine::<u64, _>::open(log, options()).unwrap();
     let a = reopened.snapshot_at(1).unwrap();
     let b = reopened.snapshot_at(2).unwrap();
     unmaterialized(&a);
@@ -65,11 +75,11 @@ fn internal_reads_commits_recovery_and_branches_do_not_materialize_compatibility
         std::ptr::eq(a.get(64).unwrap(), b.get(64).unwrap()),
         "replayed retained revisions share unchanged entries"
     );
-    let branch = reopened.fork(MemoryLog::default(), shared()).unwrap();
+    let branch = reopened.fork(MemoryLog::default(), options()).unwrap();
     unmaterialized(&branch.engine().snapshot().unwrap());
     let base = branch.merge_base_record();
     let log = branch.into_engine().into_log().ok().unwrap();
-    let mut resumed = reopened.resume_branch(log, shared(), &base).unwrap();
+    let mut resumed = reopened.resume_branch(log, options(), &base).unwrap();
     resumed.merge().unwrap();
     unmaterialized(&reopened.snapshot().unwrap());
 }

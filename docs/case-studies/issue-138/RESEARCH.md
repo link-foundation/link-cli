@@ -131,3 +131,37 @@ controls and independent state oracles verify this distinction. See
 [the shared-state recipe](../../ENGINE-SHARED-STATE.md) and
 [implementation plan](SHARED-STATE-PLAN.md). Page WAL, LSM layout and physical
 page repair remain separate open designs.
+
+
+## Logical write-batch serialization (2026-10-25)
+
+Shared roots remove complete candidate copies, but engine1 encoding still visits
+every row/name. A finite actual-WASM control with 256 named rows and sixteen
+one-row commits encodes 4,096 update rows / 966,063 bytes under either map.
+The physical byte-delta decorator cannot remove serialization already performed.
+
+RocksDB's [basic operations](https://github.com/facebook/rocksdb/wiki/Basic-Operations)
+exposes atomic write batches. Its pinned
+[db_impl_write.cc](https://github.com/facebook/rocksdb/blob/ea313605367281013c2c81158069e88411516357/db/db_impl/db_impl_write.cc)
+collects accepted batches in `MergeBatch` at lines 1350–1435, serializes their
+contents/checksum before `AddRecord`, and assigns write-group sequences before
+optional synchronization at lines 2290–2435. Downloaded source SHA-256 is
+`a839471e7904eeeed224a45b519d8369fcd96a431df047fbaa4e8ba245db9442`.
+
+Inference for our publish seam: encode the selected changed addresses against
+the current immutable root, then retain the existing append/flush/publication
+boundary. Reuse our journal checksum and selected persistent map components; no
+RocksDB code or physical format is copied. Default complete snapshots remain
+available; selected engine2 records bind changes to the exact preceding revision
+and preserve allocator progression, group outcomes and branch attribution.
+
+SQLite's [WAL](https://www.sqlite.org/wal.html) and
+[file format](https://www.sqlite.org/fileformat.html) describe page frames and
+checkpoint ordering, which our logical redo does not supply. Changes alone add
+no page recovery, torn-write repair, LSM, compaction or power-loss verification.
+After implementation, the same finite control encodes sixteen update rows /
+4,246 bytes under both map choices, preserving pins and exact reopening. This
+measures logical bytes, without timing or physical durability claims. See
+[canonical protocol](../../protocol/engine-changes.md),
+[configuration/costs](../../ENGINE-CHANGE-RECORDS.md) and
+[execution plan](CHANGE-RECORDS-PLAN.md).

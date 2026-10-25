@@ -13,6 +13,9 @@ internal static class ProbeProgram
         {
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
             if (args is ["group-exit", var groupPath, var groupPoint, var delta]) return EngineGroupExitTests.Child(groupPath, groupPoint, bool.Parse(delta));
+            if (args is ["group-exit", var encodedPath, var encodedPoint, var physicalDelta, var encoding, var structure])
+                return EngineGroupExitTests.Child(encodedPath, encodedPoint, bool.Parse(physicalDelta),
+                    Enum.Parse<Engine.RevisionEncoding>(encoding), Enum.Parse<Engine.StateStructure>(structure));
             if (args is ["row-wal-exit", var rowDirectory, var rowOperation, var rowExplicit])
                 return TransactionRowWalExitTests.Child(rowDirectory, rowOperation, bool.Parse(rowExplicit));
             if (args is ["deep-ancestry", var operation, var ancestryDirectory]) return VersionAncestryDepthTests.Child(operation, ancestryDirectory);

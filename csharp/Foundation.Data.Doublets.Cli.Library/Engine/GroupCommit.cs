@@ -14,7 +14,7 @@ public sealed partial class LinksEngine<T>
     /// revisions and flush once before publication. This is not an atomic batch.
     /// Unknown I/O outcomes fence this engine and preserve its old visible state.
     /// Duplicate, null or foreign members fail before consuming any session.
-    /// Preparation retains metadata and complete accepted revision records;
+    /// Preparation retains metadata and selected logical revision records;
     /// ordinary commits do not acquire this additional state.</summary>
     public IReadOnlyList<GroupCommitOutcome> CommitGroup(IEnumerable<EngineSession<T>> sessions)
     {

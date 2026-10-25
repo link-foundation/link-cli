@@ -9,8 +9,8 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 internal static class RevisionJournal<T>
     where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
 {
-    private static readonly UTF8Encoding Utf8 = new(false, true);
-    private static string Number<TNumber>(TNumber value) where TNumber : IFormattable => value.ToString(null, CultureInfo.InvariantCulture);
+    internal static readonly UTF8Encoding Utf8 = new(false, true);
+    internal static string Number<TNumber>(TNumber value) where TNumber : IFormattable => value.ToString(null, CultureInfo.InvariantCulture);
     internal static ulong Checksum(string text)
     {
         ulong hash = 0xcbf29ce484222325;
@@ -26,17 +26,30 @@ internal static class RevisionJournal<T>
     }
     private static string Decimal(string text) => text.Length > 0 && text.All(c => c is >= '0' and <= '9')
         ? text : throw new FormatException("Expected ASCII decimal digits.");
-    private static T Address(string text) => T.CreateChecked(UInt128.Parse(Decimal(text), NumberStyles.None, CultureInfo.InvariantCulture));
+    internal static T Address(string text) => T.CreateChecked(UInt128.Parse(Decimal(text), NumberStyles.None, CultureInfo.InvariantCulture));
+    internal static string CheckedText(string record)
+    {
+        int separator = record.LastIndexOf('|');
+        if (separator < 0 || record.Length - separator != 17 || !record[(separator + 1)..].All(char.IsAsciiHexDigit))
+            throw new FormatException("Missing or invalid checksum.");
+        string text = record[..separator];
+        if (ulong.Parse(record[(separator + 1)..], NumberStyles.HexNumber, CultureInfo.InvariantCulture) != Checksum(text))
+            throw new FormatException("Checksum mismatch.");
+        return text;
+    }
+    internal static (EngineSnapshot<T>, BigInteger) DecodeAfter(string record, EngineSnapshot<T> previous, BigInteger previousNext, StateStructure structure)
+    {
+        var (snapshot, next) = record.StartsWith("engine2|", StringComparison.Ordinal)
+            ? ChangeRevisionJournal<T>.Decode(record, previous, structure) : Decode(record);
+        if (previous.Revision == ulong.MaxValue || snapshot.Revision != previous.Revision + 1 || next < previousNext)
+            throw new InvalidDataException("Journal revision or allocator moved backwards.");
+        return (snapshot.Adapt(structure, previous), next);
+    }
     internal static (EngineSnapshot<T>, BigInteger) Decode(string record)
     {
         try
         {
-            int separator = record.LastIndexOf('|');
-            if (separator < 0 || record.Length - separator != 17 || !record[(separator + 1)..].All(char.IsAsciiHexDigit))
-                throw new FormatException("Missing or invalid checksum.");
-            string text = record[..separator];
-            if (ulong.Parse(record[(separator + 1)..], NumberStyles.HexNumber, CultureInfo.InvariantCulture) != Checksum(text))
-                throw new FormatException("Checksum mismatch.");
+            string text = CheckedText(record);
             var parts = text.Split('|');
             if (parts.Length != 4 || parts[0] != "engine1") throw new FormatException("Unsupported journal format.");
             ulong revision = ulong.Parse(Decimal(parts[1]), NumberStyles.None, CultureInfo.InvariantCulture);

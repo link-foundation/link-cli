@@ -1,5 +1,5 @@
 //! Independent branch journals and atomic, row-level three-way merges.
-use super::{error, journal, ConcurrencyControl, Engine, EngineOptions, Snapshot};
+use super::{error, journal, ConcurrencyControl, Engine, EngineOptions, Rows, Snapshot};
 use crate::{LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::collections::BTreeSet;
@@ -55,12 +55,20 @@ impl<T: LinkReference, P: TransitionLogStore> Engine<T, P> {
         drop(self.lock()?);
         let (mut base, next) = journal::decode::<T>(merge_base_record)?;
         let mut found = false;
+        let mut previous = Snapshot {
+            revision: 0,
+            rows: std::sync::Arc::new(Rows::new(options.state_structure)),
+        };
+        let mut previous_next = 1;
         for record in log.read_log_entries()? {
-            let (snapshot, allocator) = journal::decode::<T>(&record)?;
+            let (snapshot, allocator) =
+                journal::decode_after(&record, &previous, previous_next, options.state_structure)?;
             if snapshot.revision == base.revision && snapshot.rows == base.rows && allocator == next
             {
                 found = true;
             }
+            previous = snapshot;
+            previous_next = allocator;
         }
         if !found {
             return Err(error("merge base is not a committed branch revision"));

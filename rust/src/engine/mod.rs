@@ -2,11 +2,12 @@
 //! replaceable commit log. See `docs/ENGINE-STRATEGIES.md` for costs and limits.
 //!
 //! Unlike the legacy undo decorator, no underlying mapped data is modified
-//! while a transaction is open. A complete checksummed revision is flushed
+//! while a transaction is open. A checksummed logical revision is flushed
 //! before it becomes visible. The log is the authoritative storage.
 #[cfg(test)]
 mod boundary_tests;
 mod branch;
+mod changes;
 pub mod cluster;
 mod commit;
 #[cfg(test)]
@@ -49,6 +50,16 @@ pub enum StateStructure {
     Shared,
 }
 
+/// Logical journal payload, independent of the physical log's encoding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RevisionEncoding {
+    /// Existing complete engine1 revisions.
+    #[default]
+    Snapshot,
+    /// Canonical engine2 changed-row records bound to the preceding revision.
+    Changes,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ConcurrencyControl {
     #[default]
@@ -89,6 +100,7 @@ pub enum Constraint {
 #[derive(Debug, Clone, Default)]
 pub struct EngineOptions {
     pub state_structure: StateStructure,
+    pub revision_encoding: RevisionEncoding,
     pub concurrency: ConcurrencyControl,
     pub isolation: IsolationLevel,
     pub serializable_validation: SerializableValidation,
@@ -199,26 +211,15 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         };
         state.retain();
         for entry in entries {
-            let (mut snapshot, next) = journal::decode::<T>(&entry)?;
-            if snapshot.revision
-                != state
-                    .current
-                    .revision
-                    .checked_add(1)
-                    .ok_or_else(|| error("revision overflow"))?
-            {
-                return Err(error("journal revisions are not contiguous"));
-            }
+            let (snapshot, next) = journal::decode_after(
+                &entry,
+                &state.current,
+                state.next,
+                state.options.state_structure,
+            )?;
             state.validate(&snapshot.rows)?;
-            if next < state.next {
-                return Err(error("journal allocator moved backwards"));
-            }
             state.next = next;
             state.committed_next = next;
-            snapshot.rows = Arc::new(
-                Arc::unwrap_or_clone(snapshot.rows)
-                    .adapt(state.options.state_structure, Some(&state.current.rows)),
-            );
             state.current = snapshot;
             state.retain();
         }

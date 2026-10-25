@@ -32,10 +32,11 @@ adding a worker, queue, timer or new durability guarantee.
 
 ## Composition and compatibility
 
-Both representations write the same complete `engine1` revisions. Existing
-journals reopen under either choice. During shared recovery, the full decoded
-revision is compared with the preceding revision; unchanged entries reuse its
-root paths. Recovery still reads, decodes and compares complete revisions.
+Both representations default to complete `engine1` revisions; independently
+selected [change records](ENGINE-CHANGE-RECORDS.md) encode changed rows. Existing
+journals reopen under either choice. Full-snapshot shared recovery compares each
+decoded revision with its predecessor and reuses unchanged entries. Change-record
+recovery retains the preceding root and applies changed paths directly.
 
 History retention and active snapshot pinning remain separate choices. A
 read-only commit publishes no new root. Rollback discards the candidate. A
@@ -75,8 +76,10 @@ journal encoder and optional constraints have their own costs.
 | Apply W writes to candidate | O(W log N) | O(W log N) path copies and changed entries |
 | Scan / name lookup | Copies a complete candidate, then scans | Shares a root, overlays W writes, then scans |
 | Retain H small-edit revisions | Up to O(HN) map entries | Initial O(N), then O(W log N) additional paths per revision |
-| Encode a committed revision | O(B) | O(B) |
-| Recover a revision | Complete decode | Complete decode/comparison plus changed paths |
+| Encode a default snapshot revision | O(B) | O(B) |
+| Recover a snapshot revision | Complete decode | Complete decode/comparison plus changed paths |
+| Encode selected change records | Changed addresses/bytes | Changed addresses/bytes |
+| Recover change records | Full candidate copy, then changed rows | Retain root, apply changed paths |
 | First native Rust `rows()` | Existing borrowed map | O(N) compatibility copy, including row names |
 
 Rust uses the maintained MIT-licensed `rpds` ordered Arc-based map. Unchanged
@@ -90,15 +93,15 @@ nodes and indirection; for tiny or write-heavy disposable
 states, the flat choice can be cheaper. No timing advantage is asserted without
 a workload measurement.
 
-Complete journal serialization and selected constraint scans remain O(N/B).
+Default complete journal serialization and selected constraint scans remain O(N/B).
 The delta decorator reduces physical bytes through a complete-record comparison;
 it does not turn this engine into a page WAL or LSM tree. Group preparation also
-buffers complete accepted records and copies history/conflict metadata. Sharing
+buffers selected accepted records and copies history/conflict metadata. Sharing
 does not remove those costs or add physical torn-page repair.
 
 ## Runnable checks and evidence
 
-Add `--shared` to the existing examples, independently of `--delta`, `--read-set`
+Add `--shared` to the existing examples, independently of `--changes`, `--delta`, `--read-set`
 and `--pessimistic`:
 
 ```sh

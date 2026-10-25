@@ -1,8 +1,8 @@
 # Optional delta journals
 
 `DeltaLog` (Rust), `DeltaCommitLog` (C#) and `DeltaCommitLog` (JS/TS) decorate
-the existing synchronous commit-log contract. The engine still commits a complete
-logical revision. This optional adapter stores a smaller physical record when a
+the existing synchronous commit-log contract. With default snapshot encoding,
+this optional adapter stores a smaller physical record when a
 single changed span is shorter than the full revision. Bare stores and engines
 without the adapter pay no compression cost.
 
@@ -77,15 +77,22 @@ span bounds before slicing. The first logical revision is 1; subsequent revision
 must increase by exactly one. The engine also validates rows, allocator
 monotonicity, address range and configured constraints.
 
+Selected [logical change records](ENGINE-CHANGE-RECORDS.md) pass through unchanged
+and reset the complete-image compression chain. The next `engine1` starts a new
+chain. A `delta1` after an `engine2` base is invalid. Independent mixed-stream
+vectors are in [engine-change-vectors.json](protocol/engine-change-vectors.json).
+
 ## Costs and runnable evidence
 
 Compression scans the old and new row payloads for the longest common prefix,
 then a nonoverlapping common suffix, capped at u32 spans. It retains one full
 record and constructs one candidate delta: O(N) time and transient space. The
-engine still encodes full states; optional [shared state](ENGINE-SHARED-STATE.md)
+default engine still encodes full states; optional [shared state](ENGINE-SHARED-STATE.md)
 avoids the default full row-map cloning. Reading expands every retained revision
 and remains O(total logical history); checkpointing does not compact history or
 implement an LSM tree. Distant edits can copy the large span between them.
+Selected change records avoid complete-state encoding and pass through this
+decorator without a full-payload comparison. Their costs are documented separately.
 
 Run the existing examples with `--delta` and use the flag every time that journal
 is reopened:

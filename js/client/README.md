@@ -226,6 +226,10 @@ flush. Results report `committed`, `aborted` or `indeterminate` per member.
 An uncertain member requires reopening to discover the persisted prefix; the
 group is not one atomic transaction. See [group commit, ownership and costs](../../docs/ENGINE-GROUP-COMMIT.md).
 
+Use `{ revisionEncoding: 'changes' }` to serialize changed rows independently of
+`stateStructure`, history and physical log choice. Default `snapshot` encoding
+remains available; both reopen mixed journals. See [change records and costs](../../docs/ENGINE-CHANGE-RECORDS.md).
+
 See [engine configurations, guarantees, costs and runnable examples](../../docs/ENGINE-STRATEGIES.md).
 A custom synchronous commit log selects storage; `MemoryCommitLog` and
 `ReplicatedCommitLog` compose portable adapters. Optional `DeltaCommitLog` wraps

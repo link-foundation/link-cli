@@ -26,7 +26,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
     /// Foreign sessions cause an outer error before I/O; consumed sessions are
     /// rolled back on that path. A log that syncs on every append still performs
     /// those syncs; select buffered append with durable flush to amortize them.
-    /// Private preparation retains history/map metadata and full accepted
+    /// Private preparation retains history/map metadata and selected logical
     /// revision records until publication. Ordinary commits keep their own path.
     pub fn commit_group(
         &self,

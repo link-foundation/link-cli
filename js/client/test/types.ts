@@ -27,6 +27,12 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   // @ts-expect-error Unknown state structures must not silently select a policy.
   const invalidStructure: EngineOptions = { stateStructure: 'mutable' };
   void invalidStructure;
+  const changeOptions: EngineOptions = { revisionEncoding: 'changes', stateStructure: 'shared' };
+  const snapshotOptions: EngineOptions = { revisionEncoding: 'snapshot' };
+  void changeOptions; void snapshotOptions;
+  // @ts-expect-error Unknown mandatory encodings must not select a fallback.
+  const invalidEncoding: EngineOptions = { revisionEncoding: 'delta' };
+  void invalidEncoding;
   new WasmEngine(binding, pointOptions).close();
   // @ts-expect-error unknown validator
   const invalidValidation: EngineOptions = { serializableValidation: 'none' };

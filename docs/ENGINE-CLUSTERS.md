@@ -73,7 +73,8 @@ and monitor growth. No concurrent garbage collector is supplied.
 
 The catalog carries O(selected shards) bounded metadata per operation. Bulk
 journal writes and storage capacity are distributed across independent data
-groups; each journal still stores and transfers complete revisions and history.
+groups; each journal still transfers its complete sequence of selected logical
+revision records and history, including changes when configured.
 Catalog metadata throughput and each individual data group's request/quota limits
 remain constraints. Split unrelated transaction domains into independent catalogs
 to scale metadata throughput; one transaction cannot span independent catalogs.

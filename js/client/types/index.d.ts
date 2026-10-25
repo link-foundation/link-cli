@@ -3,6 +3,8 @@ import type { LinoDocument } from './lino.js';
 export interface EngineOptions {
   /** In-memory immutable state; independent of journal and isolation. */
   stateStructure?: 'flat' | 'shared';
+  /** Logical journal records; independent of the physical delta decorator. */
+  revisionEncoding?: 'snapshot' | 'changes';
   concurrency?: 'optimistic' | 'exclusive' | 'pessimistic';
   isolation?: 'read-committed' | 'snapshot' | 'serializable';
   /** Serializable point dependencies; scans conservatively validate the revision. */

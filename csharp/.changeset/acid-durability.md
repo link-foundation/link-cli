@@ -178,3 +178,9 @@ Select structurally shared immutable ordered engine state independently of
 isolation, history and journal settings. Preserve flat-map defaults and portable
 revision records; share unchanged nodes across live and recovered revisions,
 scans, group preparation and branches without copying complete row maps.
+
+Select canonical changed-row revision encoding independently of state structure
+and other engine policies. Preserve complete-snapshot defaults, mixed journal
+recovery, saved branch bases, shared group flush and physical delta composition.
+Apply selected change records against immutable predecessor roots and validate
+base, allocator, row/name operations and checksums before publication.

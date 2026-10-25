@@ -1,6 +1,6 @@
 //! Portable full-revision journal. The checksum detects accidental corruption;
 //! it is not authentication. FileTransitionLog handles newline framing/torn tails.
-use super::{error, Row, Rows, Snapshot};
+use super::{changes, error, Row, Rows, Snapshot, StateStructure};
 use crate::{GenericLink, LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::collections::BTreeMap;
@@ -27,10 +27,10 @@ pub(super) fn checksum(text: &str) -> u64 {
         (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
     })
 }
-fn hex(bytes: &[u8]) -> String {
+pub(super) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
-fn unhex(text: &str) -> Result<String, LinkError> {
+pub(super) fn unhex(text: &str) -> Result<String, LinkError> {
     if !text.len().is_multiple_of(2) || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(error("invalid journal name encoding"));
     }
@@ -63,7 +63,7 @@ pub(super) fn encode<T: LinkReference>(snapshot: &Snapshot<T>, next: u128) -> St
     let text = format!("engine1|{}|{next}|{payload}", snapshot.revision);
     format!("{text}|{:016x}", checksum(&text))
 }
-fn address<T: LinkReference>(text: &str) -> Result<T, LinkError> {
+pub(super) fn address<T: LinkReference>(text: &str) -> Result<T, LinkError> {
     if text.is_empty() || !text.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err(error("invalid journal address"));
     }
@@ -73,7 +73,7 @@ fn address<T: LinkReference>(text: &str) -> Result<T, LinkError> {
     T::try_from(value).map_err(|_| LinkError::AddressOutOfRange(value))
 }
 
-pub(super) fn decode<T: LinkReference>(entry: &str) -> Result<(Snapshot<T>, u128), LinkError> {
+pub(super) fn checked_text(entry: &str) -> Result<&str, LinkError> {
     let (text, hash) = entry
         .rsplit_once('|')
         .ok_or_else(|| error("missing journal checksum"))?;
@@ -83,6 +83,40 @@ pub(super) fn decode<T: LinkReference>(entry: &str) -> Result<(Snapshot<T>, u128
     {
         return Err(error("journal checksum mismatch"));
     }
+    Ok(text)
+}
+
+/// Replays either format against its exact predecessor. Merge-base exports use
+/// standalone decode instead, so a dependent record cannot masquerade as a base.
+pub(super) fn decode_after<T: LinkReference>(
+    entry: &str,
+    previous: &Snapshot<T>,
+    previous_next: u128,
+    structure: StateStructure,
+) -> Result<(Snapshot<T>, u128), LinkError> {
+    let (mut snapshot, next) = if entry.starts_with("engine2|") {
+        changes::decode(entry, previous)?
+    } else {
+        decode(entry)?
+    };
+    if snapshot.revision
+        != previous
+            .revision
+            .checked_add(1)
+            .ok_or_else(|| error("revision overflow"))?
+    {
+        return Err(error("journal revisions are not contiguous"));
+    }
+    if next < previous_next {
+        return Err(error("journal allocator moved backwards"));
+    }
+    snapshot.rows =
+        Arc::new(Arc::unwrap_or_clone(snapshot.rows).adapt(structure, Some(&previous.rows)));
+    Ok((snapshot, next))
+}
+
+pub(super) fn decode<T: LinkReference>(entry: &str) -> Result<(Snapshot<T>, u128), LinkError> {
+    let text = checked_text(entry)?;
     let parts = text.split('|').collect::<Vec<_>>();
     if parts.len() != 4 || parts[0] != "engine1" {
         return Err(error("unsupported journal format"));

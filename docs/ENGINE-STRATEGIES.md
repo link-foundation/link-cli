@@ -15,15 +15,16 @@ transaction algorithm.
 | Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
 | Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
-| Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed complete revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
+| Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed logical revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Bounded time travel | Set Rust `HistoryPolicy::Last(n)`, C# `HistoryLimit = n`, JS `history: n` | Retain up to n revisions including current. Active sessions and previously returned snapshots pin their versions independently. |
 | Complete time travel | Rust `HistoryPolicy::All`, C# `HistoryLimit = null`, JS `history: 'all'` | Every replayed/committed revision remains addressable in memory. |
 | Independent branch | Rust `Engine::fork`, C# `LinksEngine.Fork`, JS `WasmEngine.fork` | Seed and flush a separate journal; edit privately and merge committed changes atomically into the parent. |
 | Asynchronous copies | Wrap a log with replicated log, async policy | Commit waits for primary only. Call synchronize under the engine's log mutex to catch up followers. A primary loss can lose uncopied commits. |
 | Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
 | Serializable independent point edits | Select `SerializableValidation::ReadSet` / `SerializableValidation.ReadSet` / `serializableValidation: 'read-set'` | Track observed addresses and validate concurrent changes at commit; scans still check the whole revision. [Recipe and costs](ENGINE-VALIDATION.md). |
-| Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Store a checksummed changed span between periodic full checkpoints; complete encoding and replay remain O(N). See [format, composition and examples](ENGINE-DELTA.md). |
-| Retain small-edit immutable states | Select shared state independently of the other options | Path-copy changed entries instead of cloning a complete row map. Full revision encoding remains; see [costs and examples](ENGINE-SHARED-STATE.md). |
+| Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Compress consecutive complete snapshots with a checksummed changed span; logical change records pass through. See [format, composition and examples](ENGINE-DELTA.md). |
+| Retain small-edit immutable states | Select shared state independently of the other options | Path-copy changed entries instead of cloning a complete row map. See [costs and examples](ENGINE-SHARED-STATE.md). |
+| Serialize small edits | Select change records independently | Encode changed rows plus base/allocator metadata. Combine with shared state to avoid full candidate copies; see [costs and protocol](ENGINE-CHANGE-RECORDS.md). |
 | Independent commits sharing a flush | Opt-in `commit_group` / `CommitGroup` / `commitGroup` | Preserve each accepted session's revision and share one durability boundary. [Ownership, failure outcomes and costs](ENGINE-GROUP-COMMIT.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
@@ -70,12 +71,13 @@ their established merge and cascading behavior.
 
 ## Commit, recovery and errors
 
-A write commit encodes the complete next revision, appends its record, flushes
+A write commit encodes the next logical revision, appends its record, flushes
 the log, then publishes the immutable state. The log is authoritative; there
 is no separately acknowledged data checkpoint. This avoids mixed mapped data
 and journal visibility. Full revision records are deliberately simple, not a
 space-efficient WAL implementation. The optional [delta journal](ENGINE-DELTA.md)
-compresses physical records without changing this logical commit boundary.
+compresses consecutive full snapshots. Optional [change records](ENGINE-CHANGE-RECORDS.md)
+serialize changed rows. Both preserve this logical commit boundary.
 
 An append or flush error is an **indeterminate commit**: data may have reached
 the log even if the caller got an error. The engine then rejects further
@@ -279,7 +281,7 @@ independent branches must allocate without collisions.
 Merge compares each changed complete row with its saved base and the current
 parent. Disjoint changes combine; identical changes converge; divergent edits,
 delete/update conflicts and name changes to the same row conflict. The parent
-validates its constraints and flushes one complete revision before publishing any
+validates its constraints and flushes one selected logical revision before publishing any
 merged rows. Exclusive admission and existing session conflict checks still
 apply. Repeating an unchanged successful merge adds no revision. A three-way
 merge validates its resulting state, but does not retroactively serialize the
@@ -331,12 +333,12 @@ from a replicated in-memory test.
 
 The default flat representation clones current rows for each write commit and
 writes a complete logical revision. Candidate creation costs O(N); applying W
-writes costs O(W log N), followed by complete revision encoding. Flat scans
+writes costs O(W log N), followed by the selected revision encoding. Flat scans
 materialize their view and history can retain O(HN) map entries. Optional
 [shared immutable state](ENGINE-SHARED-STATE.md) replaces those map copies with
 an O(1) root and O(W log N) changed paths, preserving earlier snapshots and
-sharing unchanged entries during recovery. Complete encoding, selected
-constraints and scans still visit the full state. The allocator is shared. Optimistic read-committed
+sharing unchanged entries during recovery. Optional [change records](ENGINE-CHANGE-RECORDS.md)
+serialize changed rows. Selected constraints and scans still visit the full state. The allocator is shared. Optimistic read-committed
 and snapshot sessions, plus serializable read-set sessions, track per-address changes only while another session can
 be stale, retaining deleted-address tombstones to detect delete/recreate races.
 The final session validates before reclaiming that map. Opening an engine,
@@ -347,16 +349,17 @@ tracks reserved write addresses and generations under all isolation levels; its
 [separate cost description](ENGINE-PESSIMISTIC.md) explains ownership and cleanup.
 Recovery reads the full log; retention bounds in-memory history, not log size.
 Optional single-span delta encoding reduces physical bytes for localized changes
-and adds an O(N) comparison; it does not compact history or remove full-state work.
-Replication catch-up compares prefixes and copies missing complete revisions.
+and adds an O(N) comparison for full records; changes pass through without that
+comparison. Neither compacts history. Replication catch-up compares prefixes
+and copies missing logical records.
 Optional [caller-selected group commit](ENGINE-GROUP-COMMIT.md) shares one flush
-across independent sessions while buffering their complete logical records.
+across independent sessions while buffering their selected logical records.
 There is no automatic grouping scheduler or background compaction. These limits
 matter for a large or frequently written database.
 
 | Competitor configuration | Closest available configuration | Material difference |
 | --- | --- | --- |
-| SQLite WAL with synchronous commit | Exclusive file log + staged engine, serializable | Full-state records instead of page WAL, conservative validation, no SQLite locking/checkpoint implementation or performance equivalence. |
+| SQLite WAL with synchronous commit | Exclusive file log + staged engine, serializable | Logical snapshot/change records instead of page WAL, conservative validation, no SQLite locking/checkpoint implementation or performance equivalence. |
 | PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
@@ -366,7 +369,7 @@ matter for a large or frequently written database.
 | MongoDB durable write concern | Synchronous durable replica acknowledgements + outcome discovery | No MongoDB election/oplog protocol, tagged concerns or causal replica reads. A lost acknowledgement can follow a committed write. |
 | Cassandra ordinary quorum writes | Fixed-primary synchronous replica log | No leaderless writes, timestamp reconciliation, hints or anti-entropy. Counting replicas does not provide these guarantees. |
 | Cassandra Accord transactions | Selected-shard atomic catalog publication | One catalog serialization point, without Accord's dependency/epoch protocol or WAN latency properties. |
-| Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete revisions; no Redis network/replication service. |
+| Redis asynchronous replication | Async replicated log | Explicit caller scheduling and complete journal prefixes; no Redis network/replication service. |
 | Redis WAIT / WAITAOF style acknowledgement | Synchronous copies with durable adapters | Acknowledgements count flushes according to adapter contract, not consensus or automatic failover. |
 | etcd consensus transactions | ClusterEngine + EtcdJournalStore | Linearizable selected-shard snapshots and atomic CAS; etcd supplies consensus. Full journals in one group limit data/write scale. |
 | TiKV distributed transactions | Selected-shard atomic groups + partitioned journal stores | Independent data groups and atomic catalog publication; no TiKV lock/timestamp protocol, LSM storage or Region rebalancing. |
@@ -390,11 +393,11 @@ node js/client/examples/engine.mjs /existing-directory/links.journal
 
 Add `--read-set` to any of these engine examples to select serializable point
 validation and demonstrate two independent edits committing. It composes with
-`--delta` and the optional journal path.
+`--delta`, `--shared`, `--changes`, `--pessimistic` and the optional journal path.
 
 Use a separate journal per simultaneously running writer. To verify portable
 recovery, stop one example before opening its journal with another language.
-Every implementation uses the same `engine1` records; u32 consumers reject
+Every implementation accepts the same `engine1` and selected `engine2` records; u32 consumers reject
 addresses outside their range. C# and Rust support wider unsigned addresses.
 
 The JS filesystem adapter is imported separately from

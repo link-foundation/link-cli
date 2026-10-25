@@ -163,9 +163,18 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     Shared immutable state now has finite pre-implementation allocation evidence
     and passing focused native/C#/actual-WASM contracts. The representation is
     independent of other strategy choices; old wire and public map interfaces
-    remain compatible. Complete shared-state suites, examples and coverage are
-    running; see SHARED-STATE-PLAN.md. Full record encoding and physical page
-    designs remain separate costs and open requirements.
+    remain compatible. Complete shared-state suites, examples and coverage pass, and all nine
+    workflows pass on `3960c25`; see SHARED-STATE-PLAN.md and shared-state-ci.txt.
+
+12. Incremental logical revision encoding now has runnable before failures,
+    independent vectors and passing focused native/C#/actual-WASM-boundary
+    controls. Serialization visits changed rows; shared recovery retains prior
+    roots. Mixed encodings, branch attribution, groups, uncertain durable prefixes
+    and forty bounded process exits per native language preserve prior behavior.
+    Complete compatibility/coverage and all eight persistent cross-language
+    configurations pass; changes.txt records the official totals. Publication
+    and fresh exact-head CI follow under CHANGE-RECORDS-PLAN.md. Page WAL/repair, finer composition,
+    full-project coverage and wider cluster/competitor criteria remain open.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

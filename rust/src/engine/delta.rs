@@ -4,6 +4,7 @@ use super::{error, journal::checksum};
 use crate::{LinkError, TransitionLogStore};
 
 struct Frame {
+    complete: bool,
     revision: u64,
     next: String,
     rows: String,
@@ -39,18 +40,25 @@ fn verified(entry: &str) -> Result<Vec<&str>, LinkError> {
 }
 fn frame(entry: &str) -> Result<Frame, LinkError> {
     let fields = verified(entry)?;
-    if fields.len() != 5 || fields[0] != "engine1" {
-        return Err(error("expected a complete engine1 revision"));
-    }
+    let complete = match (fields[0], fields.len()) {
+        ("engine1", 5) => true,
+        ("engine2", 6) => false,
+        _ => return Err(error("expected an engine revision")),
+    };
+    let offset = usize::from(!complete);
     let revision = decimal(fields[1], u128::from(u64::MAX))? as u64;
-    if revision == 0 || decimal(fields[2], u128::MAX)? == 0 {
+    if revision == 0 || decimal(fields[2 + offset], u128::MAX)? == 0 {
         return Err(error("invalid delta journal revision or allocator"));
     }
+    if !complete && decimal(fields[2], u128::from(u64::MAX))? != u128::from(revision - 1) {
+        return Err(error("invalid logical change base"));
+    }
     Ok(Frame {
+        complete,
         revision,
-        next: fields[2].into(),
-        rows: fields[3].into(),
-        hash: fields[4].into(),
+        next: fields[2 + offset].into(),
+        rows: fields[3 + offset].into(),
+        hash: fields[4 + offset].into(),
     })
 }
 fn contiguous(before: Option<&Frame>, after: &Frame) -> Result<(), LinkError> {
@@ -72,6 +80,9 @@ fn expand(before: Option<&Frame>, entry: &str) -> Result<String, LinkError> {
         return Err(error("invalid delta journal envelope"));
     }
     let before = before.ok_or_else(|| error("delta journal base is missing"))?;
+    if !before.complete {
+        return Err(error("delta requires a complete snapshot base"));
+    }
     if fields[1] != before.hash {
         return Err(error("delta journal base checksum mismatch"));
     }
@@ -121,7 +132,7 @@ fn compress(a: &Frame, b: &Frame, full: &str) -> String {
 }
 
 /// Single-span delta encoding with at most interval-1 consecutive deltas.
-/// This reduces physical bytes for localized edits; engine work is still O(N).
+/// Compress complete snapshots; logical change records pass through unchanged.
 /// Inner resources/fencing remain caller-owned. Mutation errors require reopen.
 pub struct DeltaLog<L> {
     inner: L,
@@ -200,7 +211,11 @@ impl Codec {
         let parsed = frame(entry)?;
         contiguous(self.previous.as_ref(), &parsed)?;
         let physical = match &self.previous {
-            Some(before) if self.streak + 1 < u64::from(self.interval) => {
+            Some(before)
+                if before.complete
+                    && parsed.complete
+                    && self.streak + 1 < u64::from(self.interval) =>
+            {
                 compress(before, &parsed, entry)
             }
             _ => entry.into(),

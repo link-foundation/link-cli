@@ -1,7 +1,8 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/engine-csharp -- [journal-path] [--shared] [--delta] [--read-set] [--pessimistic] [--exit]
+// dotnet run --project examples/engine-csharp -- [journal-path] [--shared] [--changes] [--delta] [--read-set] [--pessimistic] [--exit]
 var structure = args.Contains("--shared") ? StateStructure.Shared : StateStructure.Flat;
+var encoding = args.Contains("--changes") ? RevisionEncoding.Changes : RevisionEncoding.Snapshot;
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal));
 using var file = path is not null ? new FileCommitLog(path) : null;
 ICommitLog log = file ?? (ICommitLog)new MemoryCommitLog();
@@ -10,6 +11,7 @@ var engine = new LinksEngine<ulong>(log, new()
 {
     HistoryLimit = null,
     StateStructure = structure,
+    RevisionEncoding = encoding,
     Concurrency = args.Contains("--pessimistic") ? ConcurrencyControl.Pessimistic : ConcurrencyControl.Optimistic,
     SerializableValidation = args.Contains("--read-set") ? SerializableValidation.ReadSet : SerializableValidation.Revision,
     RequireDurableFlush = file is not null
@@ -25,7 +27,7 @@ rolledBack.CreateLink(0, 0);
 if (args.Contains("--exit")) Environment.Exit(0); // Recovery probe: bypass disposal.
 rolledBack.Rollback();
 
-var fork = engine.Fork(new MemoryCommitLog(), new() { StateStructure = structure });
+var fork = engine.Fork(new MemoryCommitLog(), new() { StateStructure = structure, RevisionEncoding = encoding });
 using var edit = fork.Engine.Begin();
 edit.SetName(id, "edited independently");
 edit.Commit();

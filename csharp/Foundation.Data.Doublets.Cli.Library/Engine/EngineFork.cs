@@ -26,8 +26,15 @@ public sealed partial class LinksEngine<T>
     {
         lock (Gate) CheckReady();
         var (snapshot, next) = RevisionJournal<T>.Decode(mergeBaseRecord);
-        if (!log.Read().Select(RevisionJournal<T>.Decode).Any(record => record.Item1.Revision == snapshot.Revision
-            && record.Item2 == next && record.Item1.Rows.SequenceEqual(snapshot.Rows)))
+        var structure = options?.StateStructure ?? StateStructure.Flat;
+        var previous = EngineSnapshot<T>.Create(0, new(structure)); var previousNext = BigInteger.One; bool found = false;
+        foreach (var record in log.Read())
+        {
+            var (current, allocator) = RevisionJournal<T>.DecodeAfter(record, previous, previousNext, structure);
+            if (current.Revision == snapshot.Revision && allocator == next && current.Rows.SequenceEqual(snapshot.Rows)) found = true;
+            previous = current; previousNext = allocator;
+        }
+        if (!found)
             throw new InvalidDataException("Merge base is not a committed branch revision.");
         var engine = new LinksEngine<T>(log, options);
         return new(this, engine, snapshot.Adapt(engine.Options.StateStructure), next);

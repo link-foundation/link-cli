@@ -2181,3 +2181,76 @@ and group record buffers remain costs. Structural sharing does not implement
 page WAL, LSM layout, physical torn-page repair or real power-loss verification.
 Finer composition and wider competitor/cluster requirements remain open. The
 native issue goal stays active; fresh exact-head CI is required after publication.
+
+
+## Incremental logical revision records
+
+Snapshot remains the default encoding. Independently selected Changes emits
+canonical engine2 records containing the exact predecessor revision, allocator,
+sorted complete puts/deletes and checksum. Mixed engine1/engine2 streams reopen
+under either future encoding. Shared recovery applies immutable changed paths
+without constructing a full decoded row map; Flat retains its copy cost.
+
+Runnable pre-implementation replay failures and finite serialization baselines
+are preserved in changes-before.txt. These fail on unsupported engine2 records,
+separately from any missing-option compile failure. With 256 named rows and
+sixteen one-row commits, both earlier Flat and Shared serialize 4,096 rows /
+966,063 bytes. Changes serializes sixteen rows / 4,246 bytes under either map.
+The reusable revision-record-probe.mjs checks old pins and exact reopening with
+a 128 MiB Node heap; no timing or physical-durability measurement is claimed.
+
+Independent Python-authored vectors contain valid, mixed and 41 malformed u32
+streams, plus valid/invalid physical delta composition. Native Rust, C# and
+actual WASM consume the same fixture. Tests verify canonical grammar, null/empty/
+Unicode/NUL/newline names, exhausted allocators, read-only invalid-input rejection
+and unchanged supplied logs. Older readers reject the mandatory format tag.
+Branch exports remain standalone engine1 images; mixed branch replay attributes
+saved bases after history eviction. Logical change records pass unchanged through
+the physical delta decorator and reset its full-image comparison base.
+
+Seven new portable native tests also execute in actual WASM. Contracts exercise
+all map/encoding choices, admission/isolation/validation combinations, selected
+constraints, histories, no-op/transient effects, maximum addresses, mixed branches,
+groups, following edits and reopening. Empty operations preserve accepted identical
+results and allocator-only revisions without erasing conflict/ABA information.
+Each native language tests 32 independent durable group images and forty bounded
+actual child exits across map/encoding/physical choices. Opposite-encoding reopen,
+following writes and a second reopen verify that outcomes remain discoverable.
+Child deadlines and guaranteed reaping bound these experiments.
+
+Complete suites run sequentially within the 2.92 GiB container:
+- Native Rust all-features LLVM branch coverage: 840 standard passes, zero failed;
+  twelve ignored child entries are exercised by bounded parents. Custom stdout
+  harness passes.
+- C# Debug and Release with Coverlet: 1,946 each, zero failed/skipped.
+- Actual WASM with coverage: 496 pass, zero failed/ignored.
+- JS: 113 tests; all 17 production modules reach enforced 100% line, branch and
+  function thresholds. Strict TS and 217 repository checks pass.
+- Formatting, strict native/WASM Clippy, source sizes, release fragments and
+  whitespace pass.
+- Actual generated-WASM conformance passes Node, Bun and Deno, including mixed
+  encodings, malformed records and public option validation.
+- Persistent Rust -> C# -> JS examples reopen the exact same journal under all
+  eight Flat/Shared x Snapshot/Changes x plain/delta combinations, with read-set
+  validation and pessimistic admission. Existing group examples and both ordinary
+  undo-policy examples also pass.
+- Container OOM/OOM-kill counters remain zero.
+
+Official complete-run totals; no filtered denominator or diagnostic union:
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,394/12,252 (93.00%) | 2,049/2,462 (83.23%) | 1,467/1,609 (91.17%) |
+| Actual WASM, complete linked source | 8,636/11,811 (73.12%) | 1,619/2,173 (74.51%) | 1,129/1,588 (71.10%) |
+| C# Debug | 7,109/7,624 (93.25%) | 3,643/4,078 (89.33%) | Not reported by this collector |
+| C# Release | 5,460/5,780 (94.46%) | 3,612/4,055 (89.08%) | Not reported by this collector |
+
+All three WASM wrappers measure 100% lines/branches/functions. Whole native,
+linked-WASM and C# coverage remains below 100%. Selected constraint scans,
+conflict/history metadata, complete-record physical delta comparisons and group
+buffers remain costs. Dependent records require their complete logical journal
+prefix; no checkpoint truncation or automatic compaction is supplied. Logical
+redo does not implement a physical pager, doublewrite, LSM, torn-page repair or
+real power-loss verification. Finer independent decorator composition and wider
+competitor/cluster requirements remain open. The native issue goal stays active;
+fresh exact-head CI is required after publication.

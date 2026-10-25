@@ -2,7 +2,7 @@
 use link_cli::engine::replication::{ReplicatedLog, Synchronization};
 use link_cli::engine::{
     ConcurrencyControl, DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog,
-    SerializableValidation, StateStructure,
+    RevisionEncoding, SerializableValidation, StateStructure,
 };
 use link_cli::{FileTransitionLog, LinksStorage, TransitionLogStore};
 
@@ -11,6 +11,7 @@ fn durable<L: TransitionLogStore>(
     validation: SerializableValidation,
     concurrency: ConcurrencyControl,
     state_structure: StateStructure,
+    revision_encoding: RevisionEncoding,
 ) -> anyhow::Result<()> {
     let persistent = Engine::<u64, _>::open(
         log,
@@ -19,6 +20,7 @@ fn durable<L: TransitionLogStore>(
             serializable_validation: validation,
             concurrency,
             state_structure,
+            revision_encoding,
             ..Default::default()
         },
     )?;
@@ -31,6 +33,11 @@ fn durable<L: TransitionLogStore>(
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
+    let revision_encoding = if args.iter().any(|arg| arg == "--changes") {
+        RevisionEncoding::Changes
+    } else {
+        RevisionEncoding::Snapshot
+    };
     let state_structure = if args.iter().any(|arg| arg == "--shared") {
         StateStructure::Shared
     } else {
@@ -62,6 +69,7 @@ fn main() -> anyhow::Result<()> {
             serializable_validation: validation,
             concurrency,
             state_structure,
+            revision_encoding,
             ..Default::default()
         },
     )?;
@@ -77,6 +85,7 @@ fn main() -> anyhow::Result<()> {
         MemoryLog::default(),
         EngineOptions {
             state_structure,
+            revision_encoding,
             ..Default::default()
         },
     )?;
@@ -117,9 +126,16 @@ fn main() -> anyhow::Result<()> {
                 validation,
                 concurrency,
                 state_structure,
+                revision_encoding,
             )?;
         } else {
-            durable(log, validation, concurrency, state_structure)?;
+            durable(
+                log,
+                validation,
+                concurrency,
+                state_structure,
+                revision_encoding,
+            )?;
         }
     }
     Ok(())
