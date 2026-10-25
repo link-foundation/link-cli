@@ -155,3 +155,8 @@ and retention, until retry completes recovery before following writes or replay.
 Construct branch paths iteratively without stack growth per ancestor, scanning
 transition attribution once. Preserve nested fork cutoffs, per-branch heads and
 root-to-leaf replay order, including empty histories and subsequent edits.
+
+Commit caller-selected groups of independent sessions with separate revisions
+and one shared durability flush. Preserve input-order validation, known aborts
+and indeterminate prefix recovery without publishing uncertain state. Avoid
+flushing the primary twice during synchronous replica acknowledgement.

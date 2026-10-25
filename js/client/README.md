@@ -220,6 +220,12 @@ Use `{ concurrency: 'pessimistic' }` to reserve written addresses until the
 session ends. Independent writes can proceed; a competing write returns busy
 immediately. See [ownership, retries and costs](../../docs/ENGINE-PESSIMISTIC.md).
 
+`await engine.commitGroup([first, second])` drains and consumes independent
+sessions, preserving each accepted write's revision while sharing one adapter
+flush. Results report `committed`, `aborted` or `indeterminate` per member.
+An uncertain member requires reopening to discover the persisted prefix; the
+group is not one atomic transaction. See [group commit, ownership and costs](../../docs/ENGINE-GROUP-COMMIT.md).
+
 See [engine configurations, guarantees, costs and runnable examples](../../docs/ENGINE-STRATEGIES.md).
 A custom synchronous commit log selects storage; `MemoryCommitLog` and
 `ReplicatedCommitLog` compose portable adapters. Optional `DeltaCommitLog` wraps

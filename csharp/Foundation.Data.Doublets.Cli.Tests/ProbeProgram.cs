@@ -12,6 +12,7 @@ internal static class ProbeProgram
         try
         {
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
+            if (args is ["group-exit", var groupPath, var groupPoint, var delta]) return EngineGroupExitTests.Child(groupPath, groupPoint, bool.Parse(delta));
             if (args is ["deep-ancestry", var operation, var ancestryDirectory]) return VersionAncestryDepthTests.Child(operation, ancestryDirectory);
             if (args is ["version-exit", var directory, var mode, var automatic])
                 return VersionExitProbe.Run(directory, mode, bool.Parse(automatic));

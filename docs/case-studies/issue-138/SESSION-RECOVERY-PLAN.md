@@ -14,7 +14,7 @@ no additional required sub-issues exist as of this session's initial refresh.
 - [x] Review recovered ancestry implementation and test bounds; run focused
       native, C# Debug/Release and actual-WASM checks, then full local checks.
 - [x] Record exact results and coverage; finish release notes and ancestry plan.
-- [ ] Commit useful steps after local checks, update PR 139, push only
+- [x] Commit useful steps after local checks, update PR 139, push only
       `issue-138-adc2aa56c4cb`, and verify all exact-head CI runs and feedback.
 - [ ] Continue legacy name/history atomicity, independent composition, competitor
       strategy implementations and full native/linked-WASM/C# coverage per R1–R12.

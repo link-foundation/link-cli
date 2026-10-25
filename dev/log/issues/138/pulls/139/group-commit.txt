@@ -1,0 +1,86 @@
+Independent-session group commit (2026-10-25)
+
+Reproduction:
+The new group API was first implemented temporarily by calling ordinary commit
+for each member. Rust and C# two-session tests fail: expected one flush, actual
+two. This is a prototype baseline, not an older production group API.
+Preserved: group-commit-rust-before.txt, group-commit-csharp-before.txt.
+Separately, existing synchronous replication flushes the primary twice during
+one flush call. All three implementations fail before the correction; preserved
+in group-replication-{rust,csharp,js}-before.txt.
+
+Implementation/guarantee:
+Validate existing sessions in input order against private tentative state;
+append each accepted writer's own revision, flush once, then publish under the
+engine gate. Known aborts stay aborted. Unknown append/flush outcomes fence the
+engine and leave its old visible state; every provisionally accepted member is
+indeterminate. Reopening discovers a valid prefix. The group is not atomic.
+Ordinary commits acquire no timer, worker, queue or automatic delay.
+Synchronous replication now flushes each copy once; explicit catch-up still
+flushes the primary. Buffered append is necessary to amortize per-append fsyncs.
+
+Reproduce/verify focused:
+cargo test --manifest-path rust/Cargo.toml --test engine_group_commit_tests --test engine_group_durability_tests --test engine_group_exit_tests
+cargo test --manifest-path rust/Cargo.toml --lib engine::group
+dotnet test csharp --filter FullyQualifiedName~EngineGroup
+node --test js/client/test/engine.test.mjs js/client/test/engine-logs.test.mjs
+
+Complete fresh source validation:
+bash experiments/issue-138/validate-group-commit.sh
+All stages pass. Sequential builds use Cargo jobs=1, reduced debug data and
+C# GC cap 0x28000000. Native Rust stable 1.99.0; instrumented actual-WASM uses
+Rust 1.98.0/LLVM 22 with matching minicov and wasm-bindgen 0.2.129.
+Container memory reclaim occurred; OOM and OOM-kill counters remain zero.
+
+Full native: 784 standard tests pass, zero failures, eleven ignored child
+entry points run by bounded parents, plus the successful custom stdout harness.
+Full C# Debug: 1,722 pass, zero failures/skips.
+Full C# Release: 1,722 pass, zero failures/skips.
+Actual WASM: 446 pass, zero failures/ignored.
+JS: 111 pass, strict TypeScript passes.
+All seventeen production JS modules: 100% lines, branches, functions.
+All three actual-WASM wrapper files: 100% lines, branches, functions.
+Repository/workflow/release helpers: 217 pass.
+Native/WASM strict Clippy, both Rust formats, C# formatting, release metadata,
+source sizes and git diff --check pass.
+
+Ten portable group functions include twelve independent-image fault schedules,
+all isolation modes, read/scan dependencies, constraints, known aborts, history,
+names, allocator gaps, admission release and point ownership. Four finite ABA
+controls vary read/write validation and ordinary/grouped intervening commits.
+Two native durability functions verify real exclusive files, delta logs, two
+replica flush counts, following commits and a five-second publication gate.
+Ten actual abrupt child exits per native language cover five points each with
+snapshot/delta logs: before first append, after first append, before flush,
+after flush and acknowledged control. Fifteen-second parents kill/reap; C#
+child GC is capped at 256 MiB. Two real reopenings verify exact prefixes,
+history/names, reserved allocation gaps and a following ordinary commit.
+These process exits do not simulate lost OS caches or physical power loss.
+
+Three actual-WASM binding functions cover ownership/free/foreign/closed cases,
+accepted/aborted outcomes and twelve JS-journal faults. JS unit tests verify
+queue draining, ownership transfer, concurrent close and failure cleanup.
+Generated uninstrumented wasm-bindgen glue passes conformance under Node
+26.12.1, Bun and Deno, including the actual group coordinator. Each runtime's
+protocol suite reports eight passes and four backend-inapplicable skips; staged
+engine/read-set/pessimistic/cluster/group contracts pass separately.
+Rust, C# and JS runnable examples successively open the same physical journal,
+acknowledging revisions 1 through 6 in snapshot and delta formats separately.
+
+Official LLVM totals (covered / total), no coordinate-union substitution:
+Native lines 10,276/11,096 = 92.61%; branches 1,792/2,170 = 82.58%;
+functions 1,339/1,477 = 90.66%.
+Complete linked WASM lines 7,446/10,650 = 69.92%; branches 1,352/1,881 = 71.88%;
+functions 991/1,457 = 68.02%.
+Coverlet integer totals, percentages rounded from counts:
+Debug lines 6,607/7,096 = 93.11%; branches 3,168/3,584 = 88.39%.
+Release lines 5,060/5,361 = 94.39%; branches 3,143/3,565 = 88.16%.
+The case-insensitive Coverlet gap helper now recognizes branch="True";
+previous root counts were correct but its partial-branch diagnostic was empty.
+Project-wide 100% coverage remains unfinished.
+
+Raw logs and JSON/XML reports are in experiments/issue-138 locally. Final full
+validation used the committed production/test source; later edits only record
+evidence, documentation and planning. All nine ancestry workflows pass at
+preceding aa601e2. This new publication requires fresh exact-head CI.
+Broader acceptance criteria remain open; this batch does not finish issue 138.

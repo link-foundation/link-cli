@@ -18,8 +18,9 @@ See [the recovered plan](DEEP-ANCESTRY-PLAN.md).
 
 All nine workflows for prior recovery-validation commit `0e95c81` completed
 successfully. Each run was created at 2026-10-25 04:03:39 UTC. This resolves the
-previous plan's pending CI entry; ancestry changes require their own exact-head
-runs. No new issue comments, inline PR comments, reviews or required sub-issues
+previous plan's pending CI entry. All nine workflows also pass for recovered
+ancestry head `aa601e2`; deep-ancestry-ci.txt records the exact runs. No new
+issue comments, inline PR comments, reviews or required sub-issues
 were present on the initial refresh. Conversation feedback and the Codecov
 coverage report remain part of the acceptance inventory.
 

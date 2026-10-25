@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EngineClient, WasmEngine, createWasmClient, UnsupportedError, LinksError } from '../src/index.js';
+import { WasmTransport, transferHandle, canTransferHandle } from '../src/wasm.js';
 
 test('transaction controls run after queued requests and failures do not break the queue', async () => {
   const events = [];
@@ -148,4 +149,106 @@ test('snapshot without a revision requests the current native state', () => {
   }
   const engine = new WasmEngine({ StagedEngine: Native });
   assert.deepEqual(engine.snapshot(), { revision: 0n, rows: [] }); engine.close();
+});
+
+function groupBinding(events, { failAllocate = false, failAdd = false, failCommit = false } = {}) {
+  return { StagedEngine: class {
+    begin() {
+      return {
+        request(text) { events.push(text); return '(count: 0)'; },
+        commit() { events.push('individual commit'); return 1n; },
+        rollback() { events.push('rollback'); },
+        free() { events.push('session free'); },
+      };
+    }
+    group() {
+      if (failAllocate) throw new Error('allocation failed');
+      let members = [];
+      return {
+        add(session) {
+          events.push('add'); members.push(session);
+          if (failAdd) throw new Error('add failed');
+        },
+        commit() {
+          events.push('group commit');
+          if (failCommit) throw new Error('group failed');
+          return JSON.stringify(members.map((_, i) => i === 0 ? { status: 'committed', revision: '9007199254740993' }
+            : i === 1 ? { status: 'aborted', error: 'conflict' } : { status: 'indeterminate', error: 'reopen' }));
+        },
+        free() { events.push('group free'); for (const member of members) member.free(); members = []; },
+      };
+    }
+    free() { events.push('engine free'); }
+  } };
+}
+
+test('group commit drains prior queues, reserves members and owns native handles through engine close', async () => {
+  const events = [];
+  const engine = new WasmEngine(groupBinding(events));
+  const a = engine.begin(), b = engine.begin(), c = engine.begin();
+  // Both successful and failed queued requests settle before transfer.
+  const pending = a.count();
+  const invalid = b.requestText('count', { signal: AbortSignal.abort() });
+  const result = engine.commitGroup([a, b, c]);
+  await assert.rejects(engine.commitGroup([a]), /open sessions/);
+  await assert.rejects(a.count(), (error) => error.outcome === 'not-sent');
+  await assert.rejects(a.commit(), (error) => error.outcome === 'not-sent');
+  const closing = a.close();
+  engine.close();
+  assert.equal(await pending, 0n); await assert.rejects(invalid);
+  assert.deepEqual(await result, [
+    { status: 'committed', revision: 9007199254740993n },
+    { status: 'aborted', error: 'conflict' },
+    { status: 'indeterminate', error: 'reopen' },
+  ]);
+  await closing; await b.close(); await c.close();
+  assert.ok(events.indexOf('(count: ())') < events.indexOf('add'));
+  assert.equal(events.filter((event) => event === 'session free').length, 3);
+  assert.equal(events.filter((event) => event === 'group free').length, 1);
+  assert.ok(!events.includes('individual commit'));
+  await assert.rejects(engine.commitGroup([]), /closed/);
+});
+
+test('group validation rejects invalid and closing members before consuming any handle', async () => {
+  const events = [];
+  const engine = new WasmEngine(groupBinding(events));
+  const other = new WasmEngine(groupBinding(events));
+  const local = engine.begin(), foreign = other.begin();
+  const closed = engine.begin(); await closed.close();
+  const closing = engine.begin(); const close = closing.close();
+  for (const invalid of [null, {}, [local, local], [foreign], [closed], [closing], [local, null], [local, ,]]) {
+    await assert.rejects(engine.commitGroup(invalid), TypeError);
+  }
+  await close;
+  assert.equal(await local.commit(), 1n);
+  assert.equal(await foreign.commit(), 1n);
+  assert.deepEqual(await engine.commitGroup([]), []);
+  await local.close(); await foreign.close(); engine.close(); other.close();
+});
+
+test('allocation errors preserve sessions, while add and commit errors clean up every consumed handle', async () => {
+  for (const flag of ['failAllocate', 'failAdd', 'failCommit']) {
+    const events = [];
+    const engine = new WasmEngine(groupBinding(events, { [flag]: true }));
+    const a = engine.begin(), b = engine.begin();
+    await assert.rejects(engine.commitGroup([a, b]), /failed/);
+    if (flag === 'failAllocate') assert.equal(await a.commit(), 1n);
+    else await assert.rejects(a.commit(), /commit group/);
+    await a.close(); await b.close(); engine.close();
+    assert.equal(events.filter((event) => event === 'session free').length, 2);
+    assert.equal(events.filter((event) => event === 'group free').length, flag === 'failAllocate' ? 0 : 1);
+  }
+});
+
+test('internal transfers require ownership and cannot repeat', async () => {
+  const session = { request: () => '(count: 0)', free() {} };
+  const borrowed = new WasmTransport(session);
+  assert.equal(borrowed[canTransferHandle](), false);
+  assert.throws(() => borrowed[transferHandle](), /closed or already transferred/);
+  await borrowed.close();
+  const owned = new WasmTransport(session, { owned: true });
+  const handle = await owned[transferHandle]();
+  assert.equal(handle, session);
+  assert.throws(() => owned[transferHandle](), /closed or already transferred/);
+  await owned.close();
 });

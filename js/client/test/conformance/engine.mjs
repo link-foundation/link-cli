@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog } from '../../src/index.js';
+import { groupCommitConformance } from './group-commit.mjs';
 
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
+  await groupCommitConformance(binding);
   await pessimisticConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin(); const observer = engine.begin();

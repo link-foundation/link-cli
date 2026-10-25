@@ -88,3 +88,15 @@ test('replicated reads return the authoritative primary journal before catch-up'
   const log = new ReplicatedCommitLog(primary, [new MemoryCommitLog()]);
   assert.equal(log.read(), '["committed"]');
 });
+
+test('synchronous replication shares one primary flush and explicit catch-up still flushes', () => {
+  class CountedLog extends MemoryCommitLog { flushes = 0; flush() { this.flushes++; } }
+  const primary = new CountedLog(), follower = new CountedLog();
+  const log = new ReplicatedCommitLog(primary, [follower], { acknowledgements: 2 });
+  log.append('first'); log.append('second'); log.flush();
+  assert.equal(primary.flushes, 1); assert.equal(follower.flushes, 1);
+  assert.equal(follower.read(), primary.read());
+  assert.equal(log.synchronize(), 2);
+  assert.equal(primary.flushes, 2); assert.equal(follower.flushes, 2);
+  assert.equal(follower.read(), '["first","second"]');
+});

@@ -25,7 +25,7 @@ configuration; do not claim a WASM overflow reproduction.
   movement-fault controls, deep following writes, and actual WASM.
 - [x] Document selected-wrapper costs and release metadata, run all local suites,
   coverage, strict lint, formatting, types and source-size checks sequentially.
-- [ ] Self-review, atomic commit, push only the prepared branch, update PR 139,
+- [x] Self-review, atomic commit, push only the prepared branch, update PR 139,
   read fresh feedback and verify all nine exact-head workflows and failure logs.
 
 The descendant fork limit and each branch's own head have distinct roles:
@@ -33,3 +33,6 @@ ancestor heads must not truncate records inherited through that ancestor.
 Legacy unknown/cyclic path truncation must remain compatible; movement validation
 continues to reject broken topology before replay. Bare stores do no path work.
 This finite audit does not finish broader issue requirements or complete coverage.
+
+All nine workflows pass on `aa601e2`; see deep-ancestry-ci.txt. Later code needs
+fresh exact-head checks.

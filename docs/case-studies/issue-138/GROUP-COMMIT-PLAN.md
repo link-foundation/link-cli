@@ -6,25 +6,25 @@ The present engine holds its publication mutex through each append and flush,
 so a log wrapper alone cannot combine those commits. Several edits in one
 transaction do not supply this strategy.
 
-- [ ] Reproduce the existing two-session/two-flush behavior with an instrumented
+- [x] Reproduce the existing two-session/two-flush behavior with an instrumented
       log; add a contract requiring separate contiguous revisions and one flush.
-- [ ] Add an opt-in group coordinator around existing sessions. Validate in input
+- [x] Add an opt-in group coordinator around existing sessions. Validate in input
       order against private tentative state; retain ordinary isolation, constraints,
       conflict generations, allocator state and pessimistic ownership rules.
-- [ ] Append each accepted revision separately, flush once, then publish while
+- [x] Append each accepted revision separately, flush once, then publish while
       holding the existing engine gate. An empty or entirely aborted group must
       perform no journal I/O. Ordinary commits must preserve their current path.
-- [ ] Keep known aborts separate from uncertain append/flush outcomes. After an
+- [x] Keep known aborts separate from uncertain append/flush outcomes. After an
       uncertain outcome, retain the old visible state, fence the engine and
       discover the valid committed prefix through reopening. Do not claim that
       the group is one atomic transaction or that an I/O error reverses a prefix.
-- [ ] Verify constraints, conflicting/disjoint/read-only sessions, stale point
+- [x] Verify constraints, conflicting/disjoint/read-only sessions, stale point
       reads and scans, history, names, allocator gaps, closed/foreign sessions,
       admission release, repeated cleanup and following commits. Use finite
       before/after append/flush faults and independently captured durable images.
-- [ ] Implement matching C# and Rust-backed JS/WASM surfaces, with actual-WASM
+- [x] Implement matching C# and Rust-backed JS/WASM surfaces, with actual-WASM
       binding tests, shared portable contracts and precise TypeScript types.
-- [ ] Add recipes for buffered append plus durable flush, delta encoding and
+- [x] Add recipes for buffered append plus durable flush, delta encoding and
       fixed-primary acknowledgement; document selected coordinator memory costs
       and the single serialization point. This does not add an automatic timer
       or scheduler, page repair, anti-entropy or a leaderless consensus protocol.

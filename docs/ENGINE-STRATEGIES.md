@@ -23,6 +23,7 @@ transaction algorithm.
 | Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
 | Serializable independent point edits | Select `SerializableValidation::ReadSet` / `SerializableValidation.ReadSet` / `serializableValidation: 'read-set'` | Track observed addresses and validate concurrent changes at commit; scans still check the whole revision. [Recipe and costs](ENGINE-VALIDATION.md). |
 | Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Store a checksummed changed span between periodic full checkpoints; engine cloning and replay remain O(N). See [format, composition and examples](ENGINE-DELTA.md). |
+| Independent commits sharing a flush | Opt-in `commit_group` / `CommitGroup` / `commitGroup` | Preserve each accepted session's revision and share one durability boundary. [Ownership, failure outcomes and costs](ENGINE-GROUP-COMMIT.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
 an adapter contract. Memory logs declare false. An unknown adapter defaults to
@@ -339,8 +340,10 @@ Recovery reads the full log; retention bounds in-memory history, not log size.
 Optional single-span delta encoding reduces physical bytes for localized changes
 and adds an O(N) comparison; it does not compact history or remove full-state work.
 Replication catch-up compares prefixes and copies missing complete revisions.
-There is no background compaction or group commit. These limits matter for a
-large or frequently written database.
+Optional [caller-selected group commit](ENGINE-GROUP-COMMIT.md) shares one flush
+across independent sessions while buffering their complete logical records.
+There is no automatic grouping scheduler or background compaction. These limits
+matter for a large or frequently written database.
 
 | Competitor configuration | Closest available configuration | Material difference |
 | --- | --- | --- |
@@ -350,7 +353,7 @@ large or frequently written database.
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
 | RocksDB pessimistic transactions | Pessimistic point writes + selected isolation | Immediate busy errors, engine-local ownership and snapshot validation; no waiting, deadlock detector, range locks, LSM tree or performance equivalence. |
-| InnoDB synchronous redo/group commit | Durable staged journal with explicit flush | No group commit, page WAL, buffer pool or doublewrite repair. Optional delta encoding reduces bytes, not the full-state CPU cost. |
+| InnoDB synchronous redo/group commit | Durable staged journal + opt-in independent-session group commit | Shared flush with separate revisions; no page WAL, buffer pool, automatic grouping scheduler or doublewrite repair. Optional delta encoding reduces bytes, not the full-state CPU cost. |
 | MongoDB durable write concern | Synchronous durable replica acknowledgements + outcome discovery | No MongoDB election/oplog protocol, tagged concerns or causal replica reads. A lost acknowledgement can follow a committed write. |
 | Cassandra ordinary quorum writes | Fixed-primary synchronous replica log | No leaderless writes, timestamp reconciliation, hints or anti-entropy. Counting replicas does not provide these guarantees. |
 | Cassandra Accord transactions | Selected-shard atomic catalog publication | One catalog serialization point, without Accord's dependency/epoch protocol or WAN latency properties. |

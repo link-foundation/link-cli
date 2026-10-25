@@ -117,15 +117,18 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    pass on exact published head 0e95c81 (2026-10-25 04:03:39 UTC creation).
    The interrupted ancestry work was preserved in f5af989 and recovered without
    rewriting history. Continue DEEP-ANCESTRY-PLAN.md and SESSION-RECOVERY-PLAN.md;
-   ancestry changes pass full local checks and require their own exact-head CI.
+   ancestry changes pass full local checks and all nine workflows on aa601e2;
+   see deep-ancestry-ci.txt.
    Full suites pass: 770 native, 433 actual WASM, 1,695 C# per configuration,
    106 JS and 217 repository tests. See deep-ancestry.txt for exact coverage.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.
-8. Implement the independent-session shared-flush strategy in GROUP-COMMIT-PLAN.md.
-   Preserve per-session revisions and known aborts; uncertain outcomes require
-   prefix discovery rather than claiming an atomic batch. Continue the
+8. The independent-session shared-flush strategy now passes full local checks:
+   784 native, 446 actual WASM, 1,722 C# per configuration, 111 JS and 217
+   repository tests. Separate revisions, known aborts, prefix discovery after
+   unknown I/O, real files and twenty native process exits are verified. Publish
+   and verify exact-head CI under GROUP-COMMIT-PLAN.md. Continue the
    source-backed algorithm/component comparison, efficient journal
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.

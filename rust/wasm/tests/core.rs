@@ -37,3 +37,6 @@ mod portable_recovery;
 
 #[path = "../../tests/engine_pessimistic_tests.rs"]
 mod pessimistic;
+
+#[path = "../../tests/engine_group_commit_tests.rs"]
+mod group_commit;

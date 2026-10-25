@@ -1,0 +1,39 @@
+✔ async catch-up is idempotent and rejects divergent prefixes (2.732198ms)
+✔ synchronous acknowledgements survive fault recovery without duplicate records (2.280725ms)
+✔ durability capabilities and membership validation are explicit (0.711539ms)
+✔ malformed records and asynchronous adapters cannot count as acknowledgements (0.853683ms)
+✔ commit I/O errors are marked unknown while conflicts are failed (3.038839ms)
+✔ diagnostic callback failures cannot change replication results (0.382163ms)
+✔ replicated reads return the authoritative primary journal before catch-up (0.333322ms)
+✖ synchronous replication shares one primary flush and explicit catch-up still flushes (1.587032ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 189.404482
+
+✖ failing tests:
+
+test at js/client/test/engine-logs.test.mjs:92:1
+✖ synchronous replication shares one primary flush and explicit catch-up still flushes (1.587032ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792924568628/js/client/test/engine-logs.test.mjs:97:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -14,6 +14,7 @@ mod cost_tests;
 mod delta;
 #[cfg(feature = "etcd")]
 pub mod etcd;
+mod group;
 mod journal;
 mod named;
 pub mod partitioned;
@@ -29,6 +30,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 pub use branch::Branch;
 pub use delta::DeltaLog;
+pub use group::GroupCommitOutcome;
 pub use journal::MemoryLog;
 pub use transaction::EngineTransaction;
 pub use validation::SerializableValidation;

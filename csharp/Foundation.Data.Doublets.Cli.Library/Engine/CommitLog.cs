@@ -136,12 +136,16 @@ public sealed class ReplicatedCommitLog : ICommitLog
     public void Flush()
     {
         _primary.Flush();
-        if (_acknowledgements is { } required && Synchronize() < required)
+        if (_acknowledgements is { } required && SynchronizeFlushed() < required)
             throw new IOException("Indeterminate replication outcome; reopen the engine.");
     }
     public int Synchronize()
     {
         _primary.Flush();
+        return SynchronizeFlushed();
+    }
+    private int SynchronizeFlushed()
+    {
         var records = _primary.Read();
         int count = 1;
         foreach (var replica in _replicas)

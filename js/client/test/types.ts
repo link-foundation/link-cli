@@ -34,6 +34,13 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   await using owned = session;
   await session.create(0n, 0n);
   const revision: bigint = await session.commit();
+  const grouped = await engine.commitGroup([engine.begin(), engine.begin()]);
+  for (const outcome of grouped) {
+    if (outcome.status === 'committed') { const n: bigint = outcome.revision; void n; }
+    else { const message: string = outcome.error; void message; }
+  }
+  // @ts-expect-error one session is not an array
+  engine.commitGroup(session);
   using fork = engine.fork({ history: 1 }, new MemoryCommitLog());
   const branchSession: EngineClient = fork.engine.begin();
   await branchSession.close();

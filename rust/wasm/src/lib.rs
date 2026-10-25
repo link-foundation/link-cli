@@ -11,7 +11,7 @@ extern crate minicov;
 
 mod engine;
 mod engine_log;
-pub use engine::{StagedEngine, StagedSession};
+pub use engine::{StagedCommitGroup, StagedEngine, StagedSession};
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default, rename_all = "camelCase")]

@@ -2,7 +2,7 @@
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
     Branch, ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction,
-    HistoryPolicy, IsolationLevel, MemoryLog, SerializableValidation,
+    GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, SerializableValidation,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
@@ -104,6 +104,14 @@ impl StagedEngine {
             inner: self.inner.begin().map_err(|e| e.to_string())?,
         })
     }
+    /// Own the group handle before transferring sessions from their JS queues.
+    pub fn group(&self) -> StagedCommitGroup {
+        StagedCommitGroup {
+            engine: self.inner.clone(),
+            sessions: Vec::new(),
+            closed: false,
+        }
+    }
     pub fn fork(&self, options_json: &str, journal_json: &str) -> Result<StagedBranch, String> {
         let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
         self.fork_log(options_json, BindingLog::Memory(MemoryLog { entries }))
@@ -160,6 +168,49 @@ impl StagedEngine {
             serde_json::json!({"revision": snapshot.revision.to_string(), "rows": rows})
                 .to_string(),
         )
+    }
+}
+
+#[wasm_bindgen]
+pub struct StagedCommitGroup {
+    engine: Engine<u32, BindingLog>,
+    sessions: Vec<EngineTransaction<u32, BindingLog>>,
+    closed: bool,
+}
+#[wasm_bindgen]
+impl StagedCommitGroup {
+    /// Consumes the handle; freeing an uncommitted group rolls back its members.
+    pub fn add(&mut self, session: StagedSession) -> Result<(), String> {
+        if self.closed {
+            return Err("commit group is closed".into());
+        }
+        self.sessions.push(session.inner);
+        Ok(())
+    }
+    pub fn commit(&mut self) -> Result<String, String> {
+        if self.closed {
+            return Err("commit group is closed".into());
+        }
+        self.closed = true;
+        let outcomes = self
+            .engine
+            .commit_group(std::mem::take(&mut self.sessions))
+            .map_err(|e| e.to_string())?;
+        let values: Vec<_> = outcomes
+            .into_iter()
+            .map(|outcome| match outcome {
+                GroupCommitOutcome::Committed(revision) => {
+                    serde_json::json!({"status":"committed", "revision":revision.to_string()})
+                }
+                GroupCommitOutcome::Aborted(error) => {
+                    serde_json::json!({"status":"aborted", "error":error})
+                }
+                GroupCommitOutcome::Indeterminate(error) => {
+                    serde_json::json!({"status":"indeterminate", "error":error})
+                }
+            })
+            .collect();
+        Ok(serde_json::Value::Array(values).to_string())
     }
 }
 

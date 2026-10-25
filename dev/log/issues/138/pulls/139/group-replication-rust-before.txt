@@ -1,0 +1,24 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.66s
+     Running tests/engine_group_commit_tests.rs (rust/target/debug/deps/engine_group_commit_tests-5d0b2cec074dc963)
+
+running 1 test
+test synchronous_replication_flushes_each_copy_once_and_explicit_catchup_still_flushes ... FAILED
+
+failures:
+
+---- synchronous_replication_flushes_each_copy_once_and_explicit_catchup_still_flushes stdout ----
+
+thread 'synchronous_replication_flushes_each_copy_once_and_explicit_catchup_still_flushes' (70736) panicked at tests/engine_group_commit_tests.rs:41:5:
+assertion `left == right` failed
+  left: 2
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    synchronous_replication_flushes_each_copy_once_and_explicit_catchup_still_flushes
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test engine_group_commit_tests`

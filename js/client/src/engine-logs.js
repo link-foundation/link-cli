@@ -43,11 +43,14 @@ export class ReplicatedCommitLog {
   append(record) { complete(this.#primary.append(record)); }
   flush() {
     complete(this.#primary.flush());
-    if (this.#acknowledgements !== null && this.synchronize() < this.#acknowledgements)
+    if (this.#acknowledgements !== null && this.#synchronizeFlushed() < this.#acknowledgements)
       throw new Error('indeterminate replication outcome; reopen the engine');
   }
   synchronize() {
     complete(this.#primary.flush());
+    return this.#synchronizeFlushed();
+  }
+  #synchronizeFlushed() {
     const records = entries(this.#primary);
     let count = 1;
     for (const replica of this.#replicas) {

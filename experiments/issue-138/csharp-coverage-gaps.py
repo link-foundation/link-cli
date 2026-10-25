@@ -12,7 +12,7 @@ for cls in report.findall('.//class'):
     for line in cls.findall('./lines/line'):
         state = files.setdefault(filename, {}).setdefault(int(line.attrib['number']), [0, []])
         state[0] += int(line.attrib['hits'])
-        if line.attrib.get('branch') == 'true':
+        if line.attrib.get('branch', '').lower() == 'true':
             state[1].append((cls.attrib['name'], line.attrib.get('condition-coverage', '')))
 for filename, lines in sorted(files.items()):
     path = Path(filename)

@@ -44,6 +44,7 @@ export interface StagedSessionLike extends ClinkLike {
 }
 export interface StagedEngineLike {
   begin(): StagedSessionLike;
+  group(): StagedCommitGroupLike;
   snapshot(revision?: bigint): string;
   journal(): string;
   fork(options: string, journal: string): StagedBranchLike;
@@ -52,6 +53,15 @@ export interface StagedEngineLike {
   resumeWithLog(options: string, log: CommitLog, base: string): StagedBranchLike;
   free(): void;
 }
+export interface StagedCommitGroupLike {
+  /** Takes ownership of the native session handle. */
+  add(session: StagedSessionLike): void;
+  commit(): string;
+  free(): void;
+}
+export type GroupCommitOutcome =
+  | { status: 'committed'; revision: bigint }
+  | { status: 'aborted' | 'indeterminate'; error: string };
 export interface StagedBranchLike {
   engine(): StagedEngineLike;
   merge(): bigint;
@@ -66,6 +76,8 @@ export class EngineClient extends LinksClient {
 export class WasmEngine {
   constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
   begin(): EngineClient;
+  /** Drains queued requests, consumes all members and shares one flush. */
+  commitGroup(sessions: EngineClient[]): Promise<GroupCommitOutcome[]>;
   fork(options?: EngineOptions, journal?: string[] | CommitLog): WasmBranch;
   resumeBranch(journal: string[] | CommitLog, mergeBaseRecord: string, options?: EngineOptions): WasmBranch;
   snapshot(revision?: AddressInput): { revision: bigint; rows: (Link & { name: string | null })[] };

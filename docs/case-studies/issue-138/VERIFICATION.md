@@ -1871,5 +1871,83 @@ was changed. Container OOM and OOM-kill counters remain zero.
 Rust figures use official LLVM exported totals, not coordinate-union diagnostics.
 C# percentages above are rounded from the integer counts; Coverlet's root rates
 truncate some ratios. Complete coverage, other legacy mutation audits, independent
-composition and wider competitor strategies remain unfinished. This recovered
-batch needs its own exact-head CI before closing its publication checklist.
+composition and wider competitor strategies remain unfinished. All nine workflows
+pass for published ancestry head aa601e2, created 2026-10-25 11:08:29 UTC after
+that commit; deep-ancestry-ci.txt preserves every run URL and exact head.
+
+
+## Independent-session shared flush
+
+The group-commit API is new. Temporary baseline coordinators that called ordinary
+commit once per member first fail the two-session contract in Rust and C#:
+their logs observe two flushes instead of one. These are prototype comparisons,
+not claims that an older production group API existed. A separate regression
+against the existing synchronous replica decorator first observes two primary
+flushes in each of Rust, C# and JS. The committed group-commit-*-before.txt and
+group-replication-*-before.txt files retain those failures.
+
+The selected coordinator validates against private state in input order,
+appends each accepted write's own revision, performs one physical flush and
+publishes while retaining the existing engine gate. Ordinary commits keep their
+path. Known validation aborts remain separate from unknown append/flush outcomes;
+the latter fence the engine and preserve its old published view. Recovery may
+find any valid accepted prefix. This is independent-session group commit, not
+one atomic batch. Replication no longer flushes the primary twice; explicit
+catch-up still flushes it before reading.
+
+Shared portable contracts cover all selected isolation modes, write conflicts,
+point reads and scans, reference/name/pair constraints, read-only and closed
+members, bounded retention, allocator gaps and admission/point ownership release.
+Four finite generation controls change and restore a row through ordinary or
+grouped commits before stale write or read validation, preventing ABA acceptance.
+Twelve before/after append/flush schedules use independent durable images and
+write-through controls, then verify fencing, exact reopening and following writes.
+Actual-WASM binding tests additionally exercise native handle consumption,
+freeing unfinished groups, foreign members, closing the engine wrapper and
+synchronous JS journal errors. JS rejects invalid groups before transfer,
+drains already queued work and makes subsequent requests explicitly not-sent.
+
+Native filesystem tests compose buffered append, delta encoding and two durable
+fixed-primary replicas. A bounded blocked flush proves readers cannot observe
+private publication before acknowledgement. Ten actual abrupt child exits per
+native language cover five points in each snapshot/delta encoding. Parents kill
+and reap after fifteen seconds; C# children cap their GC heap at 256 MiB. Two
+actual reopenings verify exact prefixes, retained names/history, reserved-address
+gaps and a following ordinary commit. Process loss leaves the OS running and
+does not model loss of the OS page cache or physical device power.
+
+The reusable sequential full command is
+`bash experiments/issue-138/validate-group-commit.sh`. It builds fresh C# Debug
+and Release binaries, uses Cargo jobs=1 and reduced debug information, executes
+actual-WASM coverage, enforces all JS coverage thresholds and runs real generated
+glue under Node, Bun and Deno. Runnable Rust, C# and JS examples successively open
+the same journal and acknowledge revisions 1 through 6, separately for snapshot
+and delta formats. See [the recipe and selected costs](../../ENGINE-GROUP-COMMIT.md).
+
+The Coverlet gap diagnostic now accepts its capitalized `branch="True"`
+attribute. Its former case-sensitive listing omitted partial branches; root
+integer coverage counts were unaffected. An empty diagnostic listing has never
+substituted for a collector's official summary.
+
+
+Final full suites pass: 784 standard native Rust tests plus the custom stdout
+harness, with eleven ignored child entries executed by bounded parents; 446
+actual-WASM tests; C# Debug and Release with 1,722 tests each and no skips; and
+111 JS tests plus strict TypeScript. All seventeen production JS modules and all
+three WASM wrapper files retain 100% measured lines, branches and functions.
+All 217 repository tests, strict native/WASM Clippy, both Rust formatting checks,
+C# formatting, release fragments, source sizes and whitespace checks pass.
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 10,276/11,096 (92.61%) | 1,792/2,170 (82.58%) | 1,339/1,477 (90.66%) |
+| Actual WASM, complete linked source | 7,446/10,650 (69.92%) | 1,352/1,881 (71.88%) | 991/1,457 (68.02%) |
+| C# Debug | 6,607/7,096 (93.11%) | 3,168/3,584 (88.39%) | Not reported by this collector |
+| C# Release | 5,060/5,361 (94.39%) | 3,143/3,565 (88.16%) | Not reported by this collector |
+
+The figures use official LLVM summary counts and Coverlet integer totals,
+rounded to two decimals. Container OOM and OOM-kill counters remain zero; memory
+reclaim at the configured container limit did occur. Complete native/C#/linked-
+WASM coverage, legacy name/history atomicity, independent composition and wider
+competitor strategies remain unfinished. Exact-head CI is required for this
+new publication; preceding ancestry head aa601e2 passes all nine workflows.

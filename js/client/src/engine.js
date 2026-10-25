@@ -1,11 +1,12 @@
 // The engine is compiled from the Rust core, so native and browser sessions
 // use identical isolation, history, constraints and journal validation.
 import { LinksClient } from './client.js';
-import { WasmTransport } from './wasm.js';
+import { WasmTransport, canTransferHandle, transferHandle } from './wasm.js';
 import { toAddress } from './operations.js';
 import { ConnectionClosedError, LinksError } from './errors.js';
 
 const nativeHandle = Symbol('native engine handle');
+const sessionOwners = new WeakMap();
 function capabilities(journal) {
   const durable = !Array.isArray(journal) && journal.supportsDurableFlush === true;
   return { durableFlush: durable, persistent: durable };
@@ -47,7 +48,39 @@ export class WasmEngine {
   #check() {
     if (this.#closed) throw new ConnectionClosedError('the engine is closed', { outcome: 'not-sent' });
   }
-  begin() { this.#check(); return new EngineClient(this.#native.begin(), this.#capabilities); }
+  begin() {
+    this.#check();
+    const client = new EngineClient(this.#native.begin(), this.#capabilities);
+    sessionOwners.set(client, this);
+    return client;
+  }
+  /** Consumes sessions after draining queued requests. Results retain input
+   * order; each accepted write has its own revision and shares one log flush. */
+  async commitGroup(sessions) {
+    this.#check();
+    if (!Array.isArray(sessions)) throw new TypeError('group members must be an array');
+    const members = [...sessions];
+    if (new Set(members).size !== members.length || members.some((client) =>
+      sessionOwners.get(client) !== this || !client.transport[canTransferHandle]())) {
+      throw new TypeError('group members must be distinct open sessions of this engine');
+    }
+    // Allocate first: allocation failure leaves every member usable. This
+    // native handle also keeps the engine alive if close runs while draining.
+    const group = this.#native.group();
+    const handles = [];
+    try {
+      // Reservations happen synchronously before the first await. Each transfer
+      // waits only on its own queue, whose errors cannot break the tail.
+      const transferred = await Promise.all(members.map((client) => client.transport[transferHandle]()));
+      handles.push(...transferred);
+      while (handles.length) group.add(handles.shift());
+      return JSON.parse(group.commit()).map((outcome) => outcome.status === 'committed'
+        ? { status: outcome.status, revision: BigInt(outcome.revision) } : outcome);
+    } finally {
+      for (const handle of handles) handle.free();
+      group.free();
+    }
+  }
   fork(options = {}, journal = []) {
     this.#check();
     const selected = capabilities(journal);

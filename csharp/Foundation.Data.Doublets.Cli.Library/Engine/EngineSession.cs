@@ -129,45 +129,50 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         lock (_engine.Gate)
             return View().Values.FirstOrDefault(row => row.Name == name).Link.Index;
     }
+    internal LinksEngine<T> Owner => _engine;
+    internal EngineSnapshot<T> BaseSnapshot { get => _base; set => _base = value; }
     public ulong Commit()
     {
-        lock (_engine.Gate)
+        lock (_engine.Gate) return CommitLocked(_engine);
+    }
+    // Caller holds the owning engine gate; group preparation supplies private
+    // tentative state with the same policies and a memory journal.
+    internal ulong CommitLocked(LinksEngine<T> target)
+    {
+        if (_closed) throw new InvalidOperationException("Transaction is closed.");
+        _closed = true;
+        target.Active--;
+        try
         {
-            if (_closed) throw new InvalidOperationException("Transaction is closed.");
-            _closed = true;
-            _engine.Active--;
-            try
-            {
-                _engine.CheckReady();
-                var writes = _writes.ToArray();
-                _writes.Clear();
-                if (_engine.Options.Isolation == IsolationLevel.Serializable
-                    && (_engine.Options.SerializableValidation == SerializableValidation.Revision || _scanned)
-                    && _engine.Current.Revision != _base.Revision)
-                    throw new InvalidOperationException("Conflict: database revision changed.");
-                if (_reads is { } reads && _engine.Changed is { } generations
-                    && reads.Any(id => generations.TryGetValue(id, out var revision) && revision > _base.Revision))
-                    throw new InvalidOperationException("Conflict: a read link changed since begin.");
-                if (_engine.Changed is { } changed && writes.Any(write => changed.TryGetValue(write.Key, out var revision) && revision > _base.Revision))
-                    throw new InvalidOperationException("Conflict: a written link changed since begin.");
-                if (writes.Length == 0) return _engine.Current.Revision;
-                var rows = new SortedDictionary<T, EngineRow<T>>(_engine.Current.Rows.ToDictionary());
-                foreach (var (id, row) in writes)
-                { if (row is { } present) rows[id] = present; else rows.Remove(id); }
-                _engine.Publish(rows, writes.Select(write => write.Key));
-                _base = _engine.Current;
-                return _base.Revision;
-            }
-            finally
-            {
-                _locks?.Release(_engine);
-                _locks = null;
-                _writes.Clear();
-                _reads = null;
-                // Validate the last committer before reclaiming generations,
-                // including delete/recreate changes that restore identical rows.
-                if (_engine.Active == 0) _engine.Changed = null;
-            }
+            target.CheckReady();
+            var writes = _writes.ToArray();
+            _writes.Clear();
+            if (target.Options.Isolation == IsolationLevel.Serializable
+                && (target.Options.SerializableValidation == SerializableValidation.Revision || _scanned)
+                && target.Current.Revision != _base.Revision)
+                throw new InvalidOperationException("Conflict: database revision changed.");
+            if (_reads is { } reads && target.Changed is { } generations
+                && reads.Any(id => generations.TryGetValue(id, out var revision) && revision > _base.Revision))
+                throw new InvalidOperationException("Conflict: a read link changed since begin.");
+            if (target.Changed is { } changed && writes.Any(write => changed.TryGetValue(write.Key, out var revision) && revision > _base.Revision))
+                throw new InvalidOperationException("Conflict: a written link changed since begin.");
+            if (writes.Length == 0) return target.Current.Revision;
+            var rows = new SortedDictionary<T, EngineRow<T>>(target.Current.Rows.ToDictionary());
+            foreach (var (id, row) in writes)
+            { if (row is { } present) rows[id] = present; else rows.Remove(id); }
+            target.Publish(rows, writes.Select(write => write.Key));
+            _base = target.Current;
+            return _base.Revision;
+        }
+        finally
+        {
+            _locks?.Release(target);
+            _locks = null;
+            _writes.Clear();
+            _reads = null;
+            // Validate the last committer before reclaiming generations,
+            // including delete/recreate changes that restore identical rows.
+            if (target.Active == 0) target.Changed = null;
         }
     }
     public void Rollback()

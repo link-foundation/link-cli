@@ -41,6 +41,11 @@ impl<P: TransitionLogStore, R: TransitionLogStore> ReplicatedLog<P, R> {
     /// Retries never append duplicates. Divergent replicas require operator repair.
     pub fn synchronize(&mut self) -> Result<usize, LinkError> {
         self.primary.flush_log()?;
+        self.synchronize_flushed()
+    }
+    // flush_log already established this boundary; explicit catch-up must do
+    // it itself. Neither path acknowledges an unflushed primary prefix.
+    fn synchronize_flushed(&mut self) -> Result<usize, LinkError> {
         let entries = self.primary.read_log_entries()?;
         let mut acknowledgements = 1;
         for (index, replica) in self.replicas.iter_mut().enumerate() {
@@ -97,7 +102,7 @@ impl<P: TransitionLogStore, R: TransitionLogStore> TransitionLogStore for Replic
     fn flush_log(&mut self) -> Result<(), LinkError> {
         self.primary.flush_log()?;
         if let Synchronization::Synchronous { acknowledgements } = self.policy {
-            let actual = self.synchronize()?;
+            let actual = self.synchronize_flushed()?;
             if actual < acknowledgements {
                 return Err(error(&format!("indeterminate replication outcome: {actual}/{acknowledgements} acknowledgements")));
             }

@@ -1,5 +1,6 @@
 use super::{
     error, validation::ReadSet, Engine, IsolationLevel, Row, SerializableValidation, Snapshot,
+    State,
 };
 use crate::{GenericLink, LinkError, LinksStorage, TransitionLogStore};
 use doublets::data::LinkReference;
@@ -133,6 +134,16 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
                 return Err(cause);
             }
         };
+        self.commit_locked(&mut state)
+    }
+
+    // Group preparation uses the same validation against private tentative
+    // state, with a memory journal instead of the engine's physical log.
+    pub(super) fn commit_locked<M: TransitionLogStore>(
+        &mut self,
+        state: &mut State<T, M>,
+    ) -> Result<u64, LinkError> {
+        self.check_open()?;
         // Every commit attempt ends this session, including conflicts/failures.
         state.active -= 1;
         self.closed = true;
@@ -140,7 +151,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         // acquire released addresses yet. Release before fallible callbacks
         // also avoids retaining ownership if a custom log panics.
         if let Some(mut locks) = self.locks.take() {
-            locks.release(&mut state);
+            locks.release(state);
         }
         let writes = std::mem::take(&mut self.writes);
         let reads = self.reads.take().map(Mutex::into_inner);
