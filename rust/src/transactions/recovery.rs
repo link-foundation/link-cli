@@ -384,18 +384,38 @@ where
             ))
         })?;
         let timestamp = now_unix_ms();
-        let file_name = format!(
-            "transitions-chunk-{timestamp}-{:032x}.log",
-            new_transaction_id()
-        );
-        let path = archive_directory.join(file_name);
+        // Independent journals may share this directory and restart their
+        // counters at the same realtime. Claim the path in the open itself;
+        // an existence check followed by create could still replace a writer.
+        let (mut file, path) = loop {
+            let file_name = format!(
+                "transitions-chunk-{timestamp}-{:032x}.log",
+                new_transaction_id()
+            );
+            let path = archive_directory.join(file_name);
+            match std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&path)
+            {
+                Ok(file) => break (file, path),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                    if self.trace {
+                        crate::diagnostics::stderr!(
+                            "[Transactions] Archive entry already owned: {}.",
+                            path.display()
+                        );
+                    }
+                }
+                Err(error) => {
+                    return Err(LinkError::StorageError(format!(
+                        "failed to create archive file {}: {error}",
+                        path.display()
+                    )))
+                }
+            }
+        };
         use std::io::Write;
-        let mut file = std::fs::File::create(&path).map_err(|error| {
-            LinkError::StorageError(format!(
-                "failed to create archive file {}: {error}",
-                path.display()
-            ))
-        })?;
         for transition in &archived {
             writeln!(file, "{}", transition.serialize())?;
         }

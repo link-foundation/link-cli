@@ -1656,3 +1656,65 @@ All nine workflows pass on transaction identity head `6d231fa`, with runs
 created 2026-10-25 at 03:04:52 UTC after its commit/push. Native platform,
 fresh-merge, package, release, JS and actual-WASM checks pass. Exact URLs are
 in `transaction-identity-ci.txt`. Later code requires fresh exact-head CI.
+
+## Exclusive chunk archive ownership
+
+Root cause: a candidate timestamp/counter filename was opened with truncating
+creation. Two fresh processes with independent journals and a shared archive
+directory acknowledge commits, but the second replaces the first archive.
+The original finite probe preserves only one file instead of two. Four native
+regressions first fail for an existing file, symlink, dangling symlink and
+directory. The C# writer, extracted with behavior unchanged, first fails three
+occupied-path contracts; its directory rejection is a passing control. These
+C# cases exercise supplied paths rather than asserting random GUID reuse.
+Preserved before logs exclude incidental fixture build/framework mistakes.
+
+Rust now atomically claims an absent archive path with create_new and retries
+AlreadyExists using successive candidates, without following symlinks or
+truncating existing entries. Other open errors retain their storage error.
+Normal allocation adds no directory scan; K collisions cost O(K) additional
+opens, and bare stores incur no work. Default-off tracing identifies occupied
+entries. C# uses FileMode.CreateNew: a rejected optional archive preserves
+records in the live log, and a later retention attempt chooses a new GUID.
+Its existing optional-error behavior, public API and record encoding remain.
+
+Four bounded Linux restart contracts now pass with independent journals,
+repeated collisions, following commits and two actual reopenings per database.
+Every child has a ten-second monotonic deadline, 512 MiB address-space limit and
+8 MiB stack limit. An unrelated native filesystem error control verifies known
+commit ownership, admission fences, repeated cleanup failure, successful retry,
+following writes and two reopenings. The original public-API probe now retains
+two complete archives and the first file's original bytes.
+
+C# verifies four occupied entry types, source records not consumed on rejected
+creation, a following distinct archive, eight competing writers with one complete
+owner, and sync/async optional-error retries followed by repeated reopening.
+All 21 focused ownership/retention cases pass. Symlink controls execute on Linux;
+Windows privileges are not assumed. Full native platform CI remains necessary.
+
+Full local native Rust: 742 standard tests plus the custom stdout harness pass;
+nine ignored child entries execute through bounded parents. Actual WASM: 408
+pass. C# Debug/Release: 1,580 each, zero skips. JS: 106 plus TypeScript checks
+pass, with all seventeen production modules at 100% lines/branches/functions
+and all three thresholds enforced. The three WASM wrappers retain 100% measured
+coverage. Formatting, strict native/WASM Clippy, release metadata and source
+sizes pass. No container OOM occurred.
+
+Both runnable CLI examples also pass, including an independent second database
+sharing the archive directory. Each requires additional archive entries and
+compares every previous file byte for byte. Commands:
+  bash examples/transactions/run-rust.sh
+  bash examples/transactions/run-csharp.sh
+These examples demonstrate ordinary use; frozen-clock and occupied-path fault
+contracts are separate automated regressions.
+Debug: 6,507/6,995 lines (93.02%), 3,111/3,528 branches (88.18%)
+Release: 4,964/5,264 lines (94.30%), 3,083/3,509 branches (87.86%)
+native: 10,085/10,911 lines (92.43%), 1,754/2,134 branches (82.19%), 1,327/1,465 functions (90.58%)
+wasm: 7,241/10,473 lines (69.14%), 1,309/1,839 branches (71.18%), 976/1,445 functions (67.54%)
+
+Live journals remain the recovery authority. Exclusive ownership does not make
+archive contents atomically published after partial writes, prove power-loss
+durability, eliminate duplicate exports after recovery, provide globally unique
+transaction IDs, or add native filesystem support to WASM. Other legacy audits,
+full project coverage and the wider issue remain unfinished. This batch requires
+fresh exact-head CI before its publication checklist can be completed.

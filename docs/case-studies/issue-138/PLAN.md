@@ -107,8 +107,11 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    pass on 6d231fa; see TRANSACTION-IDENTITY-PLAN.md and transaction-identity-ci.txt.
    A separate finite probe reproduces two databases overwriting a shared chunk
    archive. Four native and three C# occupied-path cases first fail; exclusive
-   creation now passes focused tests and runs full validation. See
-   ARCHIVE-OWNERSHIP-PLAN.md.
+   creation now passes full local validation and both shared-archive CLI examples.
+   See ARCHIVE-OWNERSHIP-PLAN.md and archive-ownership.txt. Fresh exact-head CI
+   remains pending for this batch. Next, reproduce contradictory transaction
+   journals and admission after failed live recovery before changing production;
+   preserve valid idempotent records and retained sequence floors.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.

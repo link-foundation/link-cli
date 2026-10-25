@@ -141,3 +141,7 @@ Retain exclusive replay ownership through row, metadata and flush failures;
 finish exact positions on reopen, fence queued asynchronous checkpoints and
 preserve retry after failed startup construction. Reject contradictory movement
 metadata and retain sequence allocation floors after journal payload eviction.
+
+Claim chunk archive paths with exclusive creation, preserving existing archives
+and symlink targets. Keep rejected optional archives in the live journal for a
+later retention attempt, using a fresh random candidate.

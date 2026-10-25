@@ -769,10 +769,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             var fileName = Path.Combine(
               chunked.ArchiveDirectory,
               $"transitions-chunk-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{Guid.NewGuid():N}.log");
-            using (var writer = new StreamWriter(fileName, append: false))
-            {
-                foreach (var t in archived) writer.WriteLine(t.Serialize());
-            }
+            ChunkArchive.Write(fileName, archived.Select(t => t.Serialize()));
             Trace($"Archived {archived.Count} transitions to {fileName}.");
         }
         catch (Exception ex)

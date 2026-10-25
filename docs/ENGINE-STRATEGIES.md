@@ -124,6 +124,17 @@ are skipped; no database scan, extra retained index or random dependency is adde
 These are journal-local identities. This check does not repair older journals
 already containing reused IDs or conflicting decisions.
 
+Native chunk archives claim a previously absent path atomically. Rust advances
+its candidate counter and retries occupied names, including existing symlinks;
+K collisions cost O(K) additional opens without scanning the directory. Other
+filesystem errors retain committed cleanup for retry. C# uses random GUID names
+and exclusive creation too; a rejected optional archive leaves its records in
+the live log, with a new candidate on a later retention attempt. Existing entries
+and symlink targets remain untouched. Both adapters keep the live journal as
+recovery authority. Archive contents are not atomically published after a partial
+write, and these checks do not establish archive power-loss durability. Native
+filesystem archives are unavailable in the linked WASM backend.
+
 Legacy Rust/C# transaction wrappers retain observed partial writes when a storage
 operation fails. Automatic operations undo those observations; explicit
 transactions keep them for caller rollback. This requires the adapter's change
