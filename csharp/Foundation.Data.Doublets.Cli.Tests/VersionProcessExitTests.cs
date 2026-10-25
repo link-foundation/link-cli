@@ -7,11 +7,11 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class VersionProcessExitTests
 {
-    internal static async Task<(uint Id, long Original, long Attempted)> ExitChild(string directory, string mode, bool automatic)
+    internal static async Task<(uint Id, long Original, long Attempted)> ExitChild(string directory, string mode, bool automatic, string probe = "version-exit")
     {
         var info = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true };
         info.ArgumentList.Add(typeof(VersionProcessExitTests).Assembly.Location);
-        foreach (var argument in new[] { "version-exit", directory, mode, automatic.ToString() }) info.ArgumentList.Add(argument);
+        foreach (var argument in new[] { probe, directory, mode, automatic.ToString() }) info.ArgumentList.Add(argument);
         using var process = Process.Start(info)!;
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();

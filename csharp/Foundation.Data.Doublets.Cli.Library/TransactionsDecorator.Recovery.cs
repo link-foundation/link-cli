@@ -12,7 +12,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
     {
         lock (_lock)
         {
-            if (_current is not null)
+            if (_current is not null || _versionReplay)
             {
                 throw new InvalidOperationException("Cannot recover while a transaction is open.");
             }
@@ -67,6 +67,9 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                     {
                         _applied.Add(seq);
                         if (seq > _appliedSequence) _appliedSequence = seq;
+                        // Retention can remove the newest transition while its
+                        // durable checkpoint still reserves that sequence.
+                        if (seq > _sequenceCounter) _sequenceCounter = seq;
                     }
                     else throw new InvalidDataException("Malformed applied marker in journal.");
                 }

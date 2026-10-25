@@ -90,6 +90,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
 
     private void EnsureWriteAllowedLocked()
     {
+        EnsureNoVersionReplayLocked();
         if (_current?.IsCommitAttempted == true)
         {
             throw new InvalidOperationException("Transaction commit requires retry before further writes; its outcome may be unknown.");

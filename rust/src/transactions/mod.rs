@@ -70,6 +70,7 @@ mod log;
 mod commit;
 mod recovery;
 mod types;
+mod version_replay;
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -168,6 +169,7 @@ where
     retention_policy: LogRetentionPolicy,
     commit_mode: CommitMode,
     replaying: bool,
+    version_replay: bool,
     trace: bool,
 }
 
@@ -204,6 +206,7 @@ where
             retention_policy,
             commit_mode,
             replaying: false,
+            version_replay: false,
             trace,
         };
         decorator.recover()?;
@@ -259,7 +262,7 @@ where
     }
 
     pub(crate) fn has_open_transaction(&self) -> bool {
-        self.current.is_some()
+        self.current.is_some() || self.version_replay
     }
 
     pub(crate) fn must_finish_commit(&self, id: u128) -> bool {
@@ -297,6 +300,7 @@ where
 
     /// Makes both the data store and the transitions log durable.
     pub fn flush(&mut self) -> Result<(), LinkError> {
+        self.ensure_no_version_replay()?;
         if self
             .current
             .as_ref()
@@ -324,7 +328,7 @@ where
     /// Re-reads the wrapped store and rebuilds the transactions state
     /// from the log — the recovery path after another process wrote.
     pub fn reload(&mut self) -> Result<(), LinkError> {
-        if self.current.is_some() {
+        if self.has_open_transaction() {
             return Err(LinkError::Transaction(
                 "Cannot reload while a transaction is open.".to_string(),
             ));
@@ -570,6 +574,7 @@ where
     }
 
     pub(crate) fn ensure_write_allowed(&self) -> Result<(), LinkError> {
+        self.ensure_no_version_replay()?;
         if self
             .current
             .as_ref()
@@ -757,6 +762,7 @@ where
     // ----- Transaction handle --------------------------------------------
 
     pub fn begin_transaction(&mut self) -> Result<TransactionHandle, LinkError> {
+        self.ensure_no_version_replay()?;
         if self.current.is_some() {
             return Err(LinkError::Transaction(
                 "Nested transactions are not supported.".to_string(),

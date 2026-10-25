@@ -1533,7 +1533,66 @@ wasm: 6,928/10,149 lines (68.26%), 1,195/1,703 branches (70.17%), 947/1,418 func
 
 Complete project coverage remains below 100%. This change repairs file framing;
 it does not settle uncertain engine commits or simulate device power loss.
-All nine workflows pass on preceding replay-owner head 31a50a0 (including a
-successful retry after an external Bun-download HTTP 502). This tail correction
-requires fresh exact-head CI. Atomic legacy checkout recovery, ordinary name
-history and the wider algorithm/composition requirements remain unfinished.
+All nine workflows pass on journal-tail head 7826d95; see live-tail-ci.txt.
+The earlier replay-owner head 31a50a0 also passes, including a successful retry
+after an external Bun-download HTTP 502. Later code needs fresh exact-head CI.
+Ordinary name history and the wider algorithm/composition requirements remain
+unfinished; the movement audit below addresses checkout recovery.
+
+## Durable legacy checkout and branch movement
+
+Six cases per native language first fail behaviorally: checkout/switch with
+before/after applied-marker faults or absent persistence. Additional before
+logs reproduce accepted malformed/duplicate metadata, broken ancestry, sequence
+reuse after payload eviction, C# wire timestamp precision and unreachable
+cleanup ownership after constructor failure. Initial fixture compile failures
+are excluded from behavioral reproduction evidence.
+
+The optional version layer resolves all changed undo/redo before touching rows,
+then retains exclusive inner replay ownership and a checksummed portable intent.
+It flushes data before publishing target current/applied markers, flushes those
+markers before removing the intent, and retries uncertain cleanup. Startup
+validates paths, retained payloads, commit decisions and metadata before replay.
+An intent retains payloads evicted from the journal; applied markers reserve
+the sequence allocation floor. C# retains a failed constructor's recovery
+callback on its borrowed inner owner, keeping retries reachable and writes
+fenced. Async checkpoints cannot race movement replay.
+
+C#: 102 movement cases and two UTF-16 compatibility cases pass. The movement
+cases include 34 metadata failure schedules, twelve row/data/log fault
+schedules with repeated whole-graph cleanup, 18 real child exits (including two failed async checkpoints), 25 recovery scenarios, twelve
+failed-constructor/retry cases and shared wire vectors. Rust: 34 metadata fault
+schedules and 25 recovery scenarios pass, with all shared contracts also running
+in actual WASM. Native Rust parents cover sixteen original real process exits
+and 24 additional recovery interruptions, exact repeated reopening and following
+edits. Shared fixtures provide five common valid and 21 malformed inputs, plus
+two unpaired-code-unit intents accepted by C# and rejected by Rust. Native
+codecs verify every input; actual WASM exercises all 27 recognized-prefix cases
+through recovery (the unrelated-prefix vector is outside movement recovery).
+These cover canonical encoding, Unicode, corruption, overflow and payload
+shapes. Prior publication tests pass. Runtime-created C# code-unit regressions
+first fail under overly strict new Unicode validation, then preserve existing
+branch/tag history and exact reopening, including two additional real exit
+probes. Attribute string arguments replace unpaired units; the initial attribute control is not reproduction evidence.
+
+Full local C# Debug/Release: 1,573 each, zero skips. Full native Rust: 733 standard
+tests plus the custom stdout harness pass; seven ignored child entries execute
+through bounded parents. Actual WASM: 404 pass. JS: 106 pass and TypeScript checks
+pass, with all seventeen production modules at 100% measured lines, branches
+and functions. Three WASM wrappers retain 100% measured coverage. Formatting,
+source sizes, release checks and strict native/WASM Clippy pass. The initial
+WASM lint failure identified duplicate fixture modules and an unused import;
+one shared WASM fixture module fixes both without suppressing lint rules.
+Debug: 6,501/6,993 lines (92.96%), 3,112/3,528 branches (88.21%)
+Release: 4,959/5,262 lines (94.24%), 3,083/3,509 branches (87.86%)
+native: 10,056/10,888 lines (92.36%), 1,745/2,120 branches (82.31%), 1,325/1,465 functions (90.44%)
+wasm: 7,231/10,450 lines (69.20%), 1,301/1,825 branches (71.29%), 975/1,445 functions (67.47%)
+
+Retained state/wire size are O(changed history); preparation indexes the retained
+journal and traverses paths in O(N + V) temporary time/memory. It does not clone
+database rows; bare stores pay none of this cost. Legacy reads remain live;
+failed movement has an uncertain outcome until retry/reopen. Process exits do
+not simulate device power loss. Complete project coverage, ordinary legacy
+name/history logging and the wider algorithm/composition criteria remain open.
+All nine workflows pass on preceding journal-tail head 7826d95. This movement
+change needs fresh exact-head CI and does not complete the overall issue.

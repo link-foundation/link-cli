@@ -1,0 +1,156 @@
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.30]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.08]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.15]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[VersionControl] Prepared version publication 14c43d9dfd1a430f9eeecd2d6b5abb77: 0..1 on 'main'.
+[VersionControl] Published committed version tx 14c43d9dfd1a430f9eeecd2d6b5abb77 on 'main'.
+[VersionControl] Prepared version publication bf037a55a6cb4985a0d0bd22a382f54c: 1..2 on 'main'.
+[VersionControl] Published committed version tx bf037a55a6cb4985a0d0bd22a382f54c on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication f3857cfe993e4f1a9dd519cf7f6078d3: 2..3 on 'main'.
+[VersionControl] Published committed version tx f3857cfe993e4f1a9dd519cf7f6078d3 on 'main'.
+[VersionControl] Prepared version publication 0c0e12eb305e4378a9e994848518366a: 3..4 on 'main'.
+[VersionControl] Published committed version tx 0c0e12eb305e4378a9e994848518366a on 'main'.
+[xUnit.net 00:00:01.64]     Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: False, point: "applied-after") [FAIL]
+[xUnit.net 00:00:01.64]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.64]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.64]       Stack Trace:
+[xUnit.net 00:00:01.64]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(48,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1()
+[xUnit.net 00:00:01.64]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point)
+[xUnit.net 00:00:01.64]         --- End of stack trace from previous location ---
+[VersionControl] Prepared version publication d691d2f8a7614e40ba70e631623d7095: 0..1 on 'main'.
+[VersionControl] Published committed version tx d691d2f8a7614e40ba70e631623d7095 on 'main'.
+[VersionControl] Prepared version publication 7be2eb04b2e74bff82210767f8ea31eb: 1..2 on 'main'.
+[VersionControl] Published committed version tx 7be2eb04b2e74bff82210767f8ea31eb on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication dc80ce0849e947b49072506dc4bf4b68: 2..3 on 'main'.
+[VersionControl] Published committed version tx dc80ce0849e947b49072506dc4bf4b68 on 'main'.
+[VersionControl] Prepared version publication 7f083d0122e94d79b507dd70e753b794: 3..4 on 'main'.
+[VersionControl] Published committed version tx 7f083d0122e94d79b507dd70e753b794 on 'main'.
+[xUnit.net 00:00:01.74]     Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: False, point: "applied-before") [FAIL]
+[xUnit.net 00:00:01.74]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.74]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.74]       Stack Trace:
+[xUnit.net 00:00:01.74]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(48,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1()
+[xUnit.net 00:00:01.74]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point)
+[xUnit.net 00:00:01.74]         --- End of stack trace from previous location ---
+[VersionControl] Prepared version publication 2e26d496636c4d8e8d0efb5e1e8a7be0: 0..1 on 'main'.
+[VersionControl] Published committed version tx 2e26d496636c4d8e8d0efb5e1e8a7be0 on 'main'.
+[VersionControl] Prepared version publication 00b74b64f4464b1d9fa30c7067896930: 1..2 on 'main'.
+[VersionControl] Published committed version tx 00b74b64f4464b1d9fa30c7067896930 on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication b722ae199e0a4d34b0ad0f5960dddf04: 2..3 on 'main'.
+[VersionControl] Published committed version tx b722ae199e0a4d34b0ad0f5960dddf04 on 'main'.
+[VersionControl] Prepared version publication a0f6a9d87e9d43809822fce5106a7c69: 3..4 on 'original'.
+[VersionControl] Published committed version tx a0f6a9d87e9d43809822fce5106a7c69 on 'original'.
+[xUnit.net 00:00:01.84]     Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: True, point: "applied-after") [FAIL]
+[xUnit.net 00:00:01.84]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.84]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:01.84]       Stack Trace:
+[xUnit.net 00:00:01.84]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(48,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1()
+[xUnit.net 00:00:01.84]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point)
+[xUnit.net 00:00:01.84]         --- End of stack trace from previous location ---
+[VersionControl] Prepared version publication 89e510a879a443f6ba96586834996d4f: 0..1 on 'main'.
+[VersionControl] Published committed version tx 89e510a879a443f6ba96586834996d4f on 'main'.
+[VersionControl] Prepared version publication 1a983e5936af483fba86731353bddbac: 1..2 on 'main'.
+[VersionControl] Published committed version tx 1a983e5936af483fba86731353bddbac on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication cc5ec6be175a4166b9f6bc02712aed38: 2..3 on 'main'.
+[VersionControl] Published committed version tx cc5ec6be175a4166b9f6bc02712aed38 on 'main'.
+[VersionControl] Checked out seq 2 on branch 'main'.
+[xUnit.net 00:00:01.93]     Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: False, point: "flush-before") [FAIL]
+[xUnit.net 00:00:01.93]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:01.93]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:01.93]       Stack Trace:
+[xUnit.net 00:00:01.93]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(40,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point)
+[xUnit.net 00:00:01.93]         --- End of stack trace from previous location ---
+[VersionControl] Prepared version publication 3ece51710d364eb7ad4244830dae5e9f: 0..1 on 'main'.
+[VersionControl] Published committed version tx 3ece51710d364eb7ad4244830dae5e9f on 'main'.
+[VersionControl] Prepared version publication b23991a18db24e1c8167fd5abf2aa2ac: 1..2 on 'main'.
+[VersionControl] Published committed version tx b23991a18db24e1c8167fd5abf2aa2ac on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication 889e1b3a49e34925b5109311d178c2ef: 2..3 on 'main'.
+[VersionControl] Published committed version tx 889e1b3a49e34925b5109311d178c2ef on 'main'.
+[VersionControl] Prepared version publication 4af897a0fa2844e8acb304b4232b03f4: 3..4 on 'original'.
+[VersionControl] Published committed version tx 4af897a0fa2844e8acb304b4232b03f4 on 'original'.
+[xUnit.net 00:00:02.08]     Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: True, point: "applied-before") [FAIL]
+[xUnit.net 00:00:02.08]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:02.08]       Expected: typeof(System.InvalidOperationException)
+[xUnit.net 00:00:02.08]       Stack Trace:
+[xUnit.net 00:00:02.08]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(48,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1()
+[xUnit.net 00:00:02.08]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(66,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point)
+[xUnit.net 00:00:02.08]         --- End of stack trace from previous location ---
+[VersionControl] Prepared version publication 7cf6d121697148a099843a34b2105388: 0..1 on 'main'.
+[VersionControl] Published committed version tx 7cf6d121697148a099843a34b2105388 on 'main'.
+[VersionControl] Prepared version publication 8ba152bd90a3413e958576fcfc95b451: 1..2 on 'main'.
+[VersionControl] Published committed version tx 8ba152bd90a3413e958576fcfc95b451 on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication de8c40ee2817421c97f2881750b4e8b1: 2..3 on 'main'.
+[VersionControl] Published committed version tx de8c40ee2817421c97f2881750b4e8b1 on 'main'.
+[VersionControl] Switched to branch 'original' at seq 2.
+[xUnit.net 00:00:02.19]     Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: True, point: "flush-before") [FAIL]
+[xUnit.net 00:00:02.19]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:02.19]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:02.19]       Stack Trace:
+[xUnit.net 00:00:02.19]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs(40,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point)
+[xUnit.net 00:00:02.19]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.20]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: False, point: "applied-after") [387 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 48
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 66
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: False, point: "applied-before") [111 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 48
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 66
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: True, point: "applied-after") [98 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 48
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 66
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: False, point: "flush-before") [84 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 40
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: True, point: "applied-before") [149 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.<>c__DisplayClass0_2.<MovementRetainsAdmissionUntilDurable>g__Fences|1() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 48
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 66
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(branchSwitch: True, point: "flush-before") [106 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementFailureTests.MovementRetainsAdmissionUntilDurable(Boolean branchSwitch, String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementFailureTests.cs:line 40
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 6
+     Failed: 6
+ Total time: 3.2809 Seconds

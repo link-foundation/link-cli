@@ -1,0 +1,226 @@
+//! Real bounded child exits leave durable movement ownership for reopening.
+#![cfg(not(target_arch = "wasm32"))]
+use anyhow::{bail, Result};
+use link_cli::{
+    CommitMode, GenericVersionControlDecorator, LogRetentionPolicy, NamedTypesDecorator,
+    TransactionsDecorator, VersionControlDecorator,
+};
+use std::{
+    cell::RefCell,
+    path::Path,
+    process::{Command, Stdio},
+    rc::Rc,
+    time::{Duration, Instant},
+};
+#[path = "common/version_metadata.rs"]
+mod metadata_fault;
+use metadata_fault::{Fault, Metadata};
+const TOPIC: &str = "topic|雪\0🚀";
+
+fn data(directory: &Path) -> Result<NamedTypesDecorator> {
+    NamedTypesDecorator::new(directory.join("data/data.links"), false)
+}
+fn log(directory: &Path) -> Result<NamedTypesDecorator> {
+    NamedTypesDecorator::new(directory.join("log.links"), false)
+}
+fn branches(directory: &Path) -> Result<NamedTypesDecorator> {
+    NamedTypesDecorator::new(directory.join("branches/branches.links"), false)
+}
+fn tx(directory: &Path) -> Result<TransactionsDecorator> {
+    Ok(TransactionsDecorator::new(
+        data(directory)?,
+        log(directory)?,
+        LogRetentionPolicy::Infinite,
+        CommitMode::Sync,
+        false,
+    )?)
+}
+
+fn verify(point: &str, switch: bool, recovery_fault: Option<&str>) -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    std::fs::create_dir(directory.path().join("data"))?;
+    std::fs::create_dir(directory.path().join("branches"))?;
+    let mut child = Command::new(std::env::current_exe()?)
+        .args(["--exact", "movement_exit_child", "--ignored", "--nocapture"])
+        .env("LINK_MOVEMENT_EXIT_DIRECTORY", directory.path())
+        .env("LINK_MOVEMENT_EXIT_POINT", point)
+        .env("LINK_MOVEMENT_EXIT_SWITCH", switch.to_string())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+        if child.try_wait()?.is_some() {
+            break;
+        }
+        if Instant::now() >= deadline {
+            child.kill()?;
+            child.wait()?;
+            bail!("Finite movement child did not stop.");
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    let output = child.wait_with_output()?;
+    assert!(
+        output.status.success(),
+        "{point}/{switch}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let manifest = std::fs::read_to_string(directory.path().join("manifest"))?;
+    let fields: Vec<_> = manifest.split(',').collect();
+    let id: u32 = fields[0].parse()?;
+    let original: i64 = fields[1].parse()?;
+    let attempted: i64 = fields[2].parse()?;
+    if let Some(point) = recovery_fault {
+        let fault = Rc::new(RefCell::new(Fault {
+            point: Some(point.into()),
+            flushes: 1,
+            on_check: None,
+        }));
+        let outcome = GenericVersionControlDecorator::new(
+            tx(directory.path())?,
+            Metadata {
+                inner: branches(directory.path())?,
+                fault: fault.clone(),
+                intent: 0,
+            },
+            true,
+        );
+        assert!(outcome
+            .err()
+            .expect("Recovery omitted its fault phase")
+            .to_string()
+            .contains(point));
+        assert!(fault.borrow().point.is_none());
+    }
+    let selected = if switch { TOPIC } else { "main" };
+    let mut following = 0;
+    for reopen in 0..2 {
+        let mut vc = VersionControlDecorator::new(
+            tx(directory.path())?,
+            branches(directory.path())?,
+            false,
+        )?;
+        assert_eq!(vc.current_branch(), selected, "{point}/{switch}");
+        assert_eq!(
+            vc.current_sequence(),
+            if reopen == 0 { original } else { following }
+        );
+        assert_eq!(
+            vc.get(id).unwrap().source,
+            if reopen == 0 { 11 } else { 31 }
+        );
+        assert_eq!(
+            vc.transactions().last_logged_sequence(),
+            if reopen == 0 { attempted } else { following }
+        );
+        if reopen == 0 {
+            vc.switch_branch("main")?;
+            vc.checkout(attempted)?;
+            assert_eq!(vc.get(id).unwrap().source, 21);
+            if switch {
+                vc.switch_branch(TOPIC)?;
+            } else {
+                vc.checkout(original)?;
+            }
+            vc.update(id, 31, 32)?;
+            following = vc.current_sequence();
+        }
+        vc.save()?;
+    }
+    Ok(())
+}
+
+#[test]
+fn checkout_survives_exit_at_every_persisted_movement_phase() -> Result<()> {
+    for point in [
+        "intent-flush-after",
+        "current-before",
+        "current-after",
+        "applied-after",
+        "publication-flush-after",
+        "intent-remove-after",
+        "intent-delete-after",
+        "cleanup-flush-after",
+    ] {
+        verify(point, false, None)?;
+    }
+    Ok(())
+}
+#[test]
+fn switch_survives_exit_at_every_persisted_movement_phase() -> Result<()> {
+    for point in [
+        "intent-flush-after",
+        "current-before",
+        "current-after",
+        "applied-after",
+        "publication-flush-after",
+        "intent-remove-after",
+        "intent-delete-after",
+        "cleanup-flush-after",
+    ] {
+        verify(point, true, None)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn interrupted_recovery_reopens_at_every_metadata_phase() -> Result<()> {
+    for phase in [
+        "current",
+        "applied",
+        "publication-flush",
+        "intent-remove",
+        "intent-delete",
+        "cleanup-flush",
+    ] {
+        for edge in ["before", "after"] {
+            for switch in [false, true] {
+                verify(
+                    "intent-flush-after",
+                    switch,
+                    Some(&format!("{phase}-{edge}")),
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+#[test]
+#[ignore = "Executed only by bounded movement parents"]
+fn movement_exit_child() -> Result<()> {
+    let directory = std::env::var("LINK_MOVEMENT_EXIT_DIRECTORY")?;
+    let directory = Path::new(&directory);
+    let fault = Rc::new(RefCell::new(Fault::default()));
+    let mut vc = GenericVersionControlDecorator::new(
+        tx(directory)?,
+        Metadata {
+            inner: branches(directory)?,
+            fault: fault.clone(),
+            intent: 0,
+        },
+        false,
+    )?;
+    let id = vc.create_and_update(11, 12)?;
+    let original = vc.current_sequence();
+    vc.branch(TOPIC, None)?;
+    vc.update(id, 21, 22)?;
+    let attempted = vc.current_sequence();
+    vc.save()?;
+    std::fs::write(
+        directory.join("manifest"),
+        format!("{id},{original},{attempted}"),
+    )?;
+    fault.borrow_mut().flushes = 0;
+    fault.borrow_mut().on_check = Some(|point| {
+        if std::env::var("LINK_MOVEMENT_EXIT_POINT").as_deref() == Ok(point) {
+            std::process::exit(0);
+        }
+    });
+    if std::env::var("LINK_MOVEMENT_EXIT_SWITCH")? == "true" {
+        vc.switch_branch(TOPIC)?;
+    } else {
+        vc.checkout(original)?;
+    }
+    bail!("Movement did not reach its requested exit point.")
+}

@@ -1,0 +1,118 @@
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.25]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.88]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:00.98]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:02.39]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "invalid-branch") [FAIL]
+[xUnit.net 00:00:02.39]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:02.39]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:02.39]       Stack Trace:
+[xUnit.net 00:00:02.39]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(125,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:02.39]         --- End of stack trace from previous location ---
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate") [389 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "unreachable-from") [108 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-applied") [129 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "cyclic-parent") [259 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate-applied") [98 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-from") [110 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-payload") [110 ms]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "invalid-branch") [107 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 125
+--- End of stack trace from previous location ---
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "checksum") [125 ms]
+[xUnit.net 00:00:02.79]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "evicted-record") [FAIL]
+[xUnit.net 00:00:02.79]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:02.79]       Expected: 3
+[xUnit.net 00:00:02.79]       Actual:   2
+[xUnit.net 00:00:02.79]       Stack Trace:
+[xUnit.net 00:00:02.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(118,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:02.79]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.30]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "invalid-attribution") [FAIL]
+[xUnit.net 00:00:03.30]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:03.30]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:03.30]       Stack Trace:
+[xUnit.net 00:00:03.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(125,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:03.30]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.42]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate-current") [FAIL]
+[xUnit.net 00:00:03.42]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:03.42]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:03.42]       Stack Trace:
+[xUnit.net 00:00:03.42]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(125,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:03.42]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.54]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "invalid-applied") [FAIL]
+[xUnit.net 00:00:03.54]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:03.54]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:03.54]       Stack Trace:
+[xUnit.net 00:00:03.54]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(125,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:03.54]         --- End of stack trace from previous location ---
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "valid") [142 ms]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "evicted-record") [139 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 3
+Actual:   2
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 118
+--- End of stack trace from previous location ---
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-parent") [83 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-decision") [123 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate-branch") [107 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-to") [94 ms]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "invalid-attribution") [97 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 125
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate-current") [125 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 125
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "invalid-applied") [114 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 125
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.85]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate-attribution") [FAIL]
+[xUnit.net 00:00:03.85]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:03.85]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:03.85]       Stack Trace:
+[xUnit.net 00:00:03.85]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs(125,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario)
+[xUnit.net 00:00:03.85]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.25]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "extra-redo") [98 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "unreachable-to") [94 ms]
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "duplicate-attribution") [112 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(String scenario) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRecoveryTests.cs:line 125
+--- End of stack trace from previous location ---
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "impossible-publication") [103 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "missing-undo") [92 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "wrong-current") [95 ms]
+  Passed Foundation.Data.Doublets.Cli.Tests.VersionMovementRecoveryTests.RecoveryValidatesBeforeReplayAndRetainsResolvedPayloads(scenario: "overlap") [99 ms]
+
+Test Run Failed.
+Total tests: 25
+     Passed: 19
+     Failed: 6
+ Total time: 5.1973 Seconds

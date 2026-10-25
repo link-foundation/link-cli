@@ -90,6 +90,7 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
         VersionControlTransaction? active;
         lock (_lock)
         {
+            FinishMovementLocked();
             active = _activeTransaction;
         }
         active?.Dispose();
@@ -118,8 +119,18 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
         SupportsDurablePublication = transactions.SupportsDurableCommit
             && (flushBranches is not null || durable?.SupportsDurableFlush == true);
         _flushBranches = flushBranches ?? (durable?.SupportsDurableFlush == true ? durable.Flush : static () => { });
-        Recover();
-        EnsureDefaultBranch();
+        try
+        {
+            _transactions.ResumeVersionReplayRecovery();
+            Recover();
+            EnsureDefaultBranch();
+        }
+        catch
+        {
+            if (_activeMovement is not null)
+                _transactions.RetainVersionReplayRecovery(() => { lock (_lock) FinishMovementLocked(); });
+            throw;
+        }
     }
 
     public virtual string CurrentBranch { get { lock (_lock) return _currentBranch; } }
@@ -144,7 +155,7 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
     {
         lock (_lock)
         {
-            if (_activeTransaction is not null)
+            if (_activeTransaction is not null || _activeMovement is not null)
             {
                 throw new InvalidOperationException("Nested version-control transactions are not supported.");
             }
@@ -209,7 +220,7 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
 
     private void EnsureWriteAllowedLocked()
     {
-        if (_activeTransaction?.AfterSequence is not null || _activeTransaction?.Inner.IsCommitted == true)
+        if (_activeMovement is not null || _activeTransaction?.AfterSequence is not null || _activeTransaction?.Inner.IsCommitted == true)
             throw new InvalidOperationException("Retry committed version publication before writing.");
     }
 
@@ -328,39 +339,12 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
 
     private void ApplyDiffToLocked(List<long> targetPath, string newBranch)
     {
-        var currentPath = BuildBranchSeqsLocked(_currentBranch)
-          .Where(s => s <= _currentApplied)
-          .ToList();
-
-        var common = 0;
-        var max = Math.Min(currentPath.Count, targetPath.Count);
-        while (common < max && currentPath[common] == targetPath[common]) common++;
-
-        if (common < currentPath.Count || common < targetPath.Count)
-        {
-            // Validate both suffixes before undoing even one row. Retention
-            // can remove a later-needed redo while the current undo survives.
-            var available = _transactions.Log.ToDictionary(t => t.Sequence);
-            Transition<uint> Required(long sequence) => available.TryGetValue(sequence, out var transition)
-                ? transition : throw new InvalidOperationException($"Transition {sequence} is no longer retained; checkout requires complete changed history.");
-            var undo = currentPath.Skip(common).Reverse().Select(Required).ToArray();
-            var redo = targetPath.Skip(common).Select(Required).ToArray();
-            foreach (var transition in undo) _transactions.RevertTransition(transition);
-            foreach (var transition in redo) _transactions.ApplyTransition(transition);
-        }
-
-        if (!ReferenceEquals(newBranch, _currentBranch))
-        {
-            _currentBranch = newBranch;
-            SetCurrentBranchLocked(newBranch);
-        }
-        _currentApplied = targetPath.Count == 0 ? 0 : targetPath[^1];
-        SetAppliedLocked(_currentApplied);
+        StartMovementLocked(targetPath, newBranch);
     }
 
     private void EnsureNoOpenTransactionLocked(string operation)
     {
-        if (_activeTransaction is not null || _transactions.HasOpenTransaction)
+        if (_activeTransaction is not null || _activeMovement is not null || _transactions.HasOpenTransaction)
         {
             throw new InvalidOperationException($"{operation} is not allowed while a version-control transaction is open.");
         }
@@ -634,6 +618,8 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
             _appliedLink = 0;
             _currentApplied = 0;
             var pending = new List<(uint Link, PublicationIntent Intent)>();
+            var movements = new List<(uint Link, MovementIntent Intent)>();
+            var ambiguousMovementMetadata = false;
 
             var any = _branchesStore.Constants.Any;
             var anyLink = new DoubletLink(any, any, any);
@@ -643,7 +629,13 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
                 var name = _branchesStore.GetName(link.Index);
                 if (string.IsNullOrEmpty(name)) continue;
 
-                if (name.StartsWith(PublicationPrefix, StringComparison.Ordinal))
+                if (name.StartsWith(MovementPrefix, StringComparison.Ordinal))
+                {
+                    if (!TryDecodeMovement(name, out var movement))
+                        throw new InvalidDataException("Invalid version movement intent.");
+                    movements.Add((link.Index, movement));
+                }
+                else if (name.StartsWith(PublicationPrefix, StringComparison.Ordinal))
                 {
                     if (!TryDecodePublicationMarker(name, out var intent))
                         throw new InvalidDataException("Invalid version publication intent.");
@@ -653,12 +645,15 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
                 {
                     if (TryDecodeBranchMarker(name, out var info))
                     {
+                        ambiguousMovementMetadata |= _branches.ContainsKey(info.Name);
                         _branches[info.Name] = info;
                         _branchLinks[info.Name] = link.Index;
                     }
+                    else ambiguousMovementMetadata = true;
                 }
                 else if (name.StartsWith(CurrentPrefix, StringComparison.Ordinal))
                 {
+                    ambiguousMovementMetadata |= _currentBranchLink != 0;
                     _currentBranch = name.Substring(CurrentPrefix.Length);
                     _currentBranchLink = link.Index;
                 }
@@ -667,9 +662,11 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
                     var rest = name.Substring(AppliedPrefix.Length);
                     if (long.TryParse(rest, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
                     {
+                        ambiguousMovementMetadata |= _appliedLink != 0 || seq < 0;
                         _currentApplied = seq;
                         _appliedLink = link.Index;
                     }
+                    else ambiguousMovementMetadata = true;
                 }
                 else if (name.StartsWith(TagPrefix, StringComparison.Ordinal))
                 {
@@ -695,11 +692,18 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
                         if (uncommitted.Contains(seq))
                             throw new InvalidDataException($"Version metadata references uncommitted transition {seq}.");
                         var branchName = rest.Substring(colon + ":branch=".Length);
+                        ambiguousMovementMetadata |= seq <= 0 || _transitionBranches.ContainsKey(seq);
                         _transitionBranches[seq] = branchName;
                     }
+                    else ambiguousMovementMetadata = true;
                 }
             }
+            if (pending.Count != 0 && movements.Count != 0)
+                throw new InvalidDataException("Version publication and movement intents overlap.");
+            if (movements.Count != 0 && (ambiguousMovementMetadata || _currentBranchLink == 0 || _appliedLink == 0))
+                throw new InvalidDataException("Ambiguous version movement metadata.");
             RecoverPublicationsLocked(pending);
+            RecoverMovementsLocked(movements);
         }
     }
 

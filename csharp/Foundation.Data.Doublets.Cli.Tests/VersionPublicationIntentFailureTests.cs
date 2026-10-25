@@ -10,8 +10,10 @@ public class VersionPublicationIntentFailureTests
     {
         internal string? Point;
         internal int Flushes;
+        internal Action<string>? OnCheck;
         internal void Check(string point)
         {
+            OnCheck?.Invoke(point);
             if (Point != point) return;
             Point = null;
             throw new IOException("injected " + point);
@@ -24,14 +26,15 @@ public class VersionPublicationIntentFailureTests
         public override string? GetName(uint link)
         {
             var name = base.GetName(link);
-            if (name?.StartsWith("__vc:pending:", StringComparison.Ordinal) == true) _intent = link;
+            if ((name?.StartsWith("__vc:pending:", StringComparison.Ordinal) == true || name?.StartsWith("__vc:move:", StringComparison.Ordinal) == true)) _intent = link;
             return name;
         }
         public override uint SetName(uint link, string name)
         {
-            var phase = name.StartsWith("__vc:pending:", StringComparison.Ordinal) ? "intent-write"
+            var phase = (name.StartsWith("__vc:pending:", StringComparison.Ordinal) || name.StartsWith("__vc:move:", StringComparison.Ordinal)) ? "intent-write"
                 : name.StartsWith("__vc:trans:", StringComparison.Ordinal) ? "transition"
                 : name.StartsWith("__vc:branch:", StringComparison.Ordinal) ? "head"
+                : name.StartsWith("__vc:current=", StringComparison.Ordinal) ? "current"
                 : name.StartsWith("__vc:applied=", StringComparison.Ordinal) ? "applied" : null;
             if (phase == "intent-write") _intent = link;
             if (phase is not null) fault.Check(phase + "-before");
@@ -48,7 +51,8 @@ public class VersionPublicationIntentFailureTests
         }
         public override void RemoveName(uint link)
         {
-            var intent = GetName(link)?.StartsWith("__vc:pending:", StringComparison.Ordinal) == true;
+            var name = GetName(link);
+            var intent = name?.StartsWith("__vc:pending:", StringComparison.Ordinal) == true || name?.StartsWith("__vc:move:", StringComparison.Ordinal) == true;
             if (intent) fault.Check("intent-remove-before");
             base.RemoveName(link);
             if (intent) fault.Check("intent-remove-after");

@@ -4,6 +4,9 @@
 #[path = "../../tests/common/storage.rs"]
 mod test_store;
 
+#[path = "../../tests/common/version_metadata.rs"]
+mod version_metadata;
+
 #[path = "../../tests/query_processor_tests.rs"]
 mod query_processor;
 
@@ -75,6 +78,12 @@ mod version_publication_failure;
 
 #[path = "../../tests/version_retained_history_tests.rs"]
 mod version_retained_history;
+
+#[path = "../../tests/version_movement_failure_tests.rs"]
+mod version_movement_failure;
+
+#[path = "../../tests/version_movement_recovery_tests.rs"]
+mod version_movement_recovery;
 
 #[path = "../../tests/transactions_replay_owner_tests.rs"]
 mod transactions_replay_owner;

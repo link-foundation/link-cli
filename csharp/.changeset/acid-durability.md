@@ -135,3 +135,9 @@ ordinary unlogged version replay after ownership is released.
 Repair partial file-journal writes before reusing the same writer for read,
 append or flush. Retain the repair requirement across repeated I/O failures,
 preserve complete records after uncertain writes and use bounded tail scanning.
+
+Persist resolved checkout/branch-switch replay intents before changing rows.
+Retain exclusive replay ownership through row, metadata and flush failures;
+finish exact positions on reopen, fence queued asynchronous checkpoints and
+preserve retry after failed startup construction. Reject contradictory movement
+metadata and retain sequence allocation floors after journal payload eviction.

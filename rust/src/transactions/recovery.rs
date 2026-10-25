@@ -53,7 +53,7 @@ where
     }
 
     fn ensure_replay_allowed(&self) -> Result<(), LinkError> {
-        if self.current.is_some() {
+        if self.has_open_transaction() {
             return Err(LinkError::Transaction(
                 "Complete the current transaction or its cleanup before unlogged replay.".into(),
             ));
@@ -194,7 +194,7 @@ where
     /// be parsed fail recovery; FileTransitionLog already discards torn tails.
     /// Silently skipping a complete record could lose committed data.
     pub fn recover(&mut self) -> Result<(), LinkError> {
-        if self.current.is_some() {
+        if self.has_open_transaction() {
             return Err(LinkError::Transaction(
                 "Cannot recover while a transaction is open.".into(),
             ));
@@ -239,6 +239,9 @@ where
                 }
                 self.applied.insert(seq);
                 self.applied_sequence = self.applied_sequence.max(seq);
+                // Checkpoints reserve their sequences even when retention has
+                // removed the corresponding transition payloads.
+                self.sequence_counter = self.sequence_counter.max(seq);
             }
         }
 

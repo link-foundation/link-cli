@@ -300,7 +300,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     public long AppliedSequence { get { lock (_lock) return _appliedSequence; } }
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
-    internal bool HasOpenTransaction { get { lock (_lock) return _current is not null; } }
+    internal bool HasOpenTransaction { get { lock (_lock) return _current is not null || _versionReplay; } }
     internal bool IsTransactionCommitted(Guid id) { lock (_lock) return _committed.Contains(id); }
     internal bool IsTransactionRolledBack(Guid id) { lock (_lock) return _rolledBack.Contains(id); }
 
@@ -308,6 +308,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     {
         lock (_lock)
         {
+            EnsureNoVersionReplayLocked();
             if (_current is not null)
             {
                 throw new InvalidOperationException("Nested transactions are not supported.");
@@ -357,15 +358,12 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
       Func<WriteHandler<TLinkAddress>, TLinkAddress> innerCall,
       WriteHandler<TLinkAddress>? userHandler)
     {
-        if (_replaying)
-        {
-            return innerCall(userHandler ?? NullHandler);
-        }
-
         Transaction transaction;
         bool ownsTransaction;
         lock (_lock)
         {
+            EnsureWriteAllowedLocked();
+            if (_replaying) return innerCall(userHandler ?? NullHandler);
             if (_sequenceCounter == long.MaxValue)
                 throw new InvalidOperationException("Transaction sequence space is exhausted.");
             if (_current is null)
@@ -375,7 +373,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             }
             else
             {
-                EnsureWriteAllowedLocked();
                 ownsTransaction = false;
             }
             transaction = _current;
@@ -534,6 +531,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_shutdownLock)
         {
             if (_disposed) return;
+            lock (_lock) { EnsureNoVersionReplayLocked(); }
             _asyncQueue.Writer.TryComplete();
             _backgroundCts.Cancel();
             // A timed join cannot establish that borrowed mappings are unused.
@@ -617,7 +615,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     private void EnsureReplayAllowedLocked()
     {
-        if (_current is not null)
+        if (_current is not null || _versionReplay)
             throw new InvalidOperationException("Complete the current transaction or its cleanup before unlogged replay.");
     }
 
@@ -794,6 +792,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             {
                 lock (_lock)
                 {
+                    if (_versionReplay) continue;
                     CheckpointTransition(transition);
                 }
             }
@@ -805,7 +804,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
         lock (_lock)
         {
-            EnforceRetentionLocked();
+            if (!_versionReplay) EnforceRetentionLocked();
         }
     }
 

@@ -88,15 +88,19 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
 7. Truncated history checkout now rejects missing changed records before any
    undo or redo. Three reproductions per native language and actual-WASM shared
    contracts pass; native reopen and available suffix/no-op controls pass. See
-   RETAINED-HISTORY-PLAN.md. Atomic replay failures remain a separate audit.
+   RETAINED-HISTORY-PLAN.md. The subsequent movement audit covers durable
+   replay ownership and restart recovery; see VERSION-MOVEMENT-PLAN.md.
    Public unlogged replay now rejects pending and failed commit/undo owners.
    Six before/after cases per native language, existing version controls and
    full native/C#/actual-WASM suites pass. See REPLAY-OWNER-PLAN.md; all nine workflows pass on replay-owner
    head 31a50a0. Same-handle file-journal reuse after partial append now has
    six failing before schedules per native/JS adapter. Track framing until
    repair and its flush finish, then validate reopening and repeated faults;
-   see INPROCESS-TAIL-PLAN.md. Full local native/C#/actual-WASM/JS validation passes; publish the
-   correction and verify fresh exact-head CI.
+   see INPROCESS-TAIL-PLAN.md. All nine workflows pass on journal-tail head
+   7826d95; see live-tail-ci.txt. Durable checkout/branch movement now preserves
+   exclusive ownership and a portable intent through failures. Focused tests
+   cover metadata, data/flush faults, restart, corrupt topology, evicted payloads
+   and repeated constructor recovery; full validation and fresh CI are pending.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.

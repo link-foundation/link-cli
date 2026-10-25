@@ -21,8 +21,10 @@ use crate::link_storage::ChangeObserver;
 use crate::named_type_links::NamedTypeLinks;
 use crate::named_types::NamedTypesDecorator;
 
+mod movement;
 mod publication;
 use crate::transactions::{TransactionHandle, TransactionsDecorator};
+use movement::{MovementIntent, MovementState, MOVEMENT_PREFIX};
 use publication::{PublicationIntent, PUBLICATION_PREFIX};
 
 /// Default name of the initial branch (analogous to git's `main`).
@@ -73,6 +75,7 @@ pub struct GenericVersionControlDecorator<B: NamedTypeLinks> {
     current_branch: String,
     current_applied: i64,
     active_transaction: Option<VersionControlTransactionState>,
+    active_movement: Option<MovementState>,
     trace: bool,
 }
 
@@ -104,6 +107,7 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
             current_branch: DEFAULT_BRANCH_NAME.to_string(),
             current_applied: 0,
             active_transaction: None,
+            active_movement: None,
             trace,
         };
         decorator.recover()?;
@@ -148,6 +152,7 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
     }
 
     pub fn save(&mut self) -> Result<()> {
+        self.finish_movement()?;
         if self.has_pending_publication() {
             self.commit()?;
         }
@@ -169,7 +174,7 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
     }
 
     pub fn begin_transaction(&mut self) -> Result<TransactionHandle> {
-        if self.active_transaction.is_some() {
+        if self.active_transaction.is_some() || self.active_movement.is_some() {
             bail!("Nested version-control transactions are not supported.");
         }
         let before_sequence = self.transactions.last_logged_sequence();
@@ -438,61 +443,14 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
     // -- Path / diff helpers -----------------------------------------
 
     fn apply_diff_to(&mut self, target_path: Vec<i64>, new_branch: &str) -> Result<()> {
-        let current_branch_name = self.current_branch.clone();
-        let current_path: Vec<i64> = self
-            .build_branch_seqs(&current_branch_name)
-            .into_iter()
-            .filter(|s| *s <= self.current_applied)
-            .collect();
-
-        let mut common = 0usize;
-        let max_common = current_path.len().min(target_path.len());
-        while common < max_common && current_path[common] == target_path[common] {
-            common += 1;
-        }
-
-        if common < current_path.len() || common < target_path.len() {
-            // Validate both suffixes before undoing even one row. Retention
-            // can remove a later-needed redo while the current undo survives.
-            let available: HashMap<_, _> = self
-                .transactions
-                .log()
-                .into_iter()
-                .map(|transition| (transition.sequence, transition))
-                .collect();
-            let required = |sequence: &i64| {
-                available.get(sequence).copied().ok_or_else(|| {
-                    anyhow::anyhow!("Transition {sequence} is no longer retained; checkout requires complete changed history.")
-                })
-            };
-            let undo: Vec<_> = current_path[common..]
-                .iter()
-                .rev()
-                .map(required)
-                .collect::<Result<_>>()?;
-            let redo: Vec<_> = target_path[common..]
-                .iter()
-                .map(required)
-                .collect::<Result<_>>()?;
-            for transition in undo {
-                self.transactions.revert_transition(&transition)?;
-            }
-            for transition in redo {
-                self.transactions.apply_transition(&transition)?;
-            }
-        }
-
-        if new_branch != self.current_branch {
-            self.current_branch = new_branch.to_string();
-            self.set_current_branch(new_branch)?;
-        }
-        self.current_applied = target_path.last().copied().unwrap_or(0);
-        self.set_applied(self.current_applied)?;
-        Ok(())
+        self.start_movement(target_path, new_branch)
     }
 
     fn ensure_no_open_transaction(&self, operation: &str) -> Result<()> {
-        if self.active_transaction.is_some() || self.transactions.has_open_transaction() {
+        if self.active_transaction.is_some()
+            || self.active_movement.is_some()
+            || self.transactions.has_open_transaction()
+        {
             bail!("{operation} is not allowed while a version-control transaction is open.");
         }
         Ok(())
@@ -512,7 +470,7 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
     }
 
     pub(crate) fn ensure_write_allowed(&self) -> Result<()> {
-        if self.has_pending_publication() {
+        if self.has_pending_publication() || self.active_movement.is_some() {
             bail!(
                 "Version publication is incomplete; retry commit, rollback or save before writing."
             );
@@ -684,13 +642,21 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
         self.current_applied = 0;
 
         let mut pending = Vec::new();
+        let mut movements = Vec::new();
+        let mut ambiguous_movement_metadata = false;
         let links = self.branches_store.all_links();
         for link in &links {
             let name = match self.branches_store.get_name(link.index)? {
                 Some(value) => value,
                 None => continue,
             };
-            if name.starts_with(PUBLICATION_PREFIX) {
+            if name.starts_with(MOVEMENT_PREFIX) {
+                movements.push((
+                    link.index,
+                    MovementIntent::decode(&name)
+                        .ok_or_else(|| anyhow::anyhow!("Invalid version movement intent."))?,
+                ));
+            } else if name.starts_with(PUBLICATION_PREFIX) {
                 pending.push((
                     link.index,
                     PublicationIntent::decode(&name)
@@ -698,16 +664,23 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
                 ));
             } else if name.starts_with(BRANCH_PREFIX) {
                 if let Some(info) = try_decode_branch_marker(&name) {
+                    ambiguous_movement_metadata |= self.branches.contains_key(&info.name);
                     self.branches.insert(info.name.clone(), info.clone());
                     self.branch_links.insert(info.name.clone(), link.index);
+                } else {
+                    ambiguous_movement_metadata = true;
                 }
             } else if let Some(rest) = name.strip_prefix(CURRENT_PREFIX) {
+                ambiguous_movement_metadata |= self.current_branch_link != 0;
                 self.current_branch = rest.to_string();
                 self.current_branch_link = link.index;
             } else if let Some(rest) = name.strip_prefix(APPLIED_PREFIX) {
                 if let Ok(seq) = rest.parse::<i64>() {
+                    ambiguous_movement_metadata |= self.applied_link != 0 || seq < 0;
                     self.current_applied = seq;
                     self.applied_link = link.index;
+                } else {
+                    ambiguous_movement_metadata = true;
                 }
             } else if let Some(rest) = name.strip_prefix(TAG_PREFIX) {
                 if let Some(eq) = rest.rfind('=').filter(|&index| index > 0) {
@@ -718,19 +691,35 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
                     }
                 }
             } else if let Some(rest) = name.strip_prefix(TRANSITION_PREFIX) {
+                let mut valid = false;
                 if let Some(colon) = rest.find(":branch=") {
                     if let Ok(seq) = rest[..colon].parse::<i64>() {
                         if uncommitted.contains(&seq) {
                             bail!("Version metadata references uncommitted transition {seq}.");
                         }
                         let branch_name = &rest[colon + ":branch=".len()..];
+                        ambiguous_movement_metadata |=
+                            seq <= 0 || self.transition_branches.contains_key(&seq);
                         self.transition_branches
                             .insert(seq, branch_name.to_string());
+                        valid = true;
                     }
                 }
+                ambiguous_movement_metadata |= !valid;
             }
         }
-        self.recover_publications(pending)
+        if !pending.is_empty() && !movements.is_empty() {
+            bail!("Version publication and movement intents overlap.");
+        }
+        if !movements.is_empty()
+            && (ambiguous_movement_metadata
+                || self.current_branch_link == 0
+                || self.applied_link == 0)
+        {
+            bail!("Ambiguous version movement metadata.");
+        }
+        self.recover_publications(pending)?;
+        self.recover_movements(movements)
     }
 
     fn trace(&self, message: &str) {

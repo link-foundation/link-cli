@@ -70,6 +70,22 @@ public class VersionMetadataNamesTests
     private static JsonDocument Vectors() => JsonDocument.Parse(File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "Protocol", "version-metadata-vectors.json")));
 
+    [Theory(Timeout = 30000)]
+    [InlineData(0xD800)]
+    [InlineData(0xDFFF)]
+    public async Task UnpairedCodeUnitsRemainUsableForBranchMovement(int codeUnit)
+    {
+        await Task.CompletedTask;
+        // Attribute strings encode as UTF-8, replacing unpaired surrogates.
+        // Construct the actual .NET code unit at execution time instead.
+        var unit = ((char)codeUnit).ToString();
+        Assert.True(char.IsSurrogate(unit[0]));
+        DelimiterAndUnicodeNamesSurviveBranchHistoryReopening(
+            "unit" + unit + ":parent=", "tag" + unit + "=tag", false);
+        await new VersionMovementExitTests().ExitAtEveryPersistedPhaseRecoversExactPosition(
+            codeUnit == 0xD800 ? "unpaired-high-current-before" : "unpaired-low-current-before", true);
+    }
+
     [Fact]
     public void SharedBranchWireVectorsPreserveExactNamesAndLegacyRecords()
     {

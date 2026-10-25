@@ -1,0 +1,366 @@
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.32]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.11]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.19]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:02.13]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "current-before") [FAIL]
+[xUnit.net 00:00:02.13]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:02.13]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:02.13]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:02.13]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:02.14]       Stack Trace:
+[xUnit.net 00:00:02.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:02.14]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.14]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:02.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:02.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:02.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:02.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:02.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:02.73]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-after") [FAIL]
+[xUnit.net 00:00:02.73]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:02.73]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:02.73]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:02.73]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:02.73]       Stack Trace:
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:02.73]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.73]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:02.73]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "current-before") [847 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-after") [593 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+[xUnit.net 00:00:03.26]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "current-after") [FAIL]
+[xUnit.net 00:00:03.26]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:03.26]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:03.26]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:03.26]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:03.26]       Stack Trace:
+[xUnit.net 00:00:03.26]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:03.26]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.26]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:03.26]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:03.26]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:03.26]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:03.26]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:03.26]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:03.78]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-before") [FAIL]
+[xUnit.net 00:00:03.78]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:03.78]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:03.78]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:03.78]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:03.78]       Stack Trace:
+[xUnit.net 00:00:03.78]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:03.78]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.78]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:03.78]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:03.78]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:03.78]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:03.78]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:03.78]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:04.30]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-remove-after") [FAIL]
+[xUnit.net 00:00:04.30]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:04.30]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:04.30]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:04.30]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:04.30]       Stack Trace:
+[xUnit.net 00:00:04.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:04.30]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.30]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:04.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:04.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:04.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:04.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:04.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "current-after") [534 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-before") [510 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-remove-after") [522 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+[xUnit.net 00:00:04.78]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-after") [FAIL]
+[xUnit.net 00:00:04.79]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:04.79]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:04.79]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:04.79]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:04.79]       Stack Trace:
+[xUnit.net 00:00:04.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:04.79]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:04.79]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:04.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:04.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:04.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:04.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:04.79]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:05.30]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "applied-before") [FAIL]
+[xUnit.net 00:00:05.30]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:05.30]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:05.30]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:05.30]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:05.30]       Stack Trace:
+[xUnit.net 00:00:05.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:05.30]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:05.30]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:05.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:05.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:05.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:05.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:05.30]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:05.81]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "applied-after") [FAIL]
+[xUnit.net 00:00:05.81]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:05.81]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:05.81]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:05.81]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:05.81]       Stack Trace:
+[xUnit.net 00:00:05.82]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:05.82]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:05.82]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:05.82]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:05.82]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:05.82]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:05.82]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:05.82]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-delete-after") [482 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "applied-before") [507 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "applied-after") [513 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+[xUnit.net 00:00:06.43]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "cleanup-flush-before") [FAIL]
+[xUnit.net 00:00:06.43]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:06.43]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:06.43]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:06.43]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:06.43]       Stack Trace:
+[xUnit.net 00:00:06.43]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:06.43]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:06.43]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:06.43]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:06.43]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:06.43]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:06.43]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:06.43]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:07.02]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-remove-before") [FAIL]
+[xUnit.net 00:00:07.02]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:07.02]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:07.02]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:07.02]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:07.02]       Stack Trace:
+[xUnit.net 00:00:07.02]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:07.02]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:07.02]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:07.02]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:07.02]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:07.02]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:07.02]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:07.02]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "cleanup-flush-before") [610 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "intent-remove-before") [592 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+[xUnit.net 00:00:07.57]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "cleanup-flush-after") [FAIL]
+[xUnit.net 00:00:07.57]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:07.57]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:07.57]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:07.57]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:07.57]       Stack Trace:
+[xUnit.net 00:00:07.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:07.57]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:07.57]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:07.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:07.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:07.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:07.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:07.57]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:08.14]     Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-before") [FAIL]
+[xUnit.net 00:00:08.14]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:08.14]       Expected: typeof(System.IO.IOException)
+[xUnit.net 00:00:08.14]       Actual:   typeof(System.InvalidOperationException)
+[xUnit.net 00:00:08.14]       ---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+[xUnit.net 00:00:08.14]       Stack Trace:
+[xUnit.net 00:00:08.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point)
+[xUnit.net 00:00:08.14]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:08.14]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:08.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(339,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation)
+[xUnit.net 00:00:08.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(597,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover()
+[xUnit.net 00:00:08.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(122,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace)
+[xUnit.net 00:00:08.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs(103,0): at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace)
+[xUnit.net 00:00:08.14]         <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs(41,0): at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4()
+[xUnit.net 00:00:08.16]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "cleanup-flush-after") [537 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(point: "publication-flush-before") [574 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.IOException)
+Actual:   typeof(System.InvalidOperationException)
+---- System.InvalidOperationException : Recover is not allowed while a version-control transaction is open.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.FailedConstructorKeepsRecoveryOwnerReachable(String point) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.EnsureNoOpenTransactionLocked(String operation) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 339
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Recover() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 597
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Action flushBranches, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 122
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator..ctor(TransactionsDecorator transactions, INamedTypesLinks`1 branchesStore, Boolean trace) in <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs:line 103
+   at Foundation.Data.Doublets.Cli.Tests.VersionMovementRestartFailureTests.<>c__DisplayClass2_0.<FailedConstructorKeepsRecoveryOwnerReachable>b__4() in <workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/VersionMovementRestartFailureTests.cs:line 41
+
+Test Run Failed.
+Total tests: 12
+     Failed: 12
+ Total time: 9.1717 Seconds
