@@ -20,7 +20,9 @@ The audit established these failures before changing attribution.
       history remains a separate unfinished audit.
 - [x] Run the full relevant suites, strict checks and measured coverage.
 - [x] Publish the atomic change and inspect every exact-head workflow.
-- [ ] Resolve C# Windows async scheduling failures and verify fresh CI.
+- [x] Resolve C# Windows async scheduling failures and verify fresh CI; a bounded
+      child proves worker starvation and all nine workflows pass on 24554b0.
+      See ASYNC-WORKER-PLAN.md and async-worker-ci.txt.
 
 This audit is independent of abrupt exit between a journal decision and legacy
 sidecar publication. That durability window needs a persisted publication intent

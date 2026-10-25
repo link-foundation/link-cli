@@ -29,5 +29,6 @@ limits never change in the ordinary testhost. Existing wait timeouts are unchang
 - [x] Run full C# validation; 1,308 tests pass in both configurations, with
       formatting, release metadata, source-size and measured-coverage evidence
       retained in async-worker.txt and csharp-async-worker-before.log.
-- [ ] Verify fresh exact-head Windows/Linux/macOS CI after publishing this fix;
-      preserve failed logs and specific before/after evidence.
+- [x] Verify fresh exact-head Windows/Linux/macOS CI after publishing this fix;
+      all nine workflows pass on 24554b0. See async-worker-ci.txt for timestamps
+      and permanent run URLs; historical failed logs remain preserved.

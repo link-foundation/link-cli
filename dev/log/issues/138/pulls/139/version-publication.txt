@@ -1,0 +1,54 @@
+Durable legacy version publication (R1/R3/R7/R8)
+
+A real process exit after journal commit could retain the updated row but lose
+its branch attribution: expected head 3, recovered head 2. Before the fix, both
+C# checkpoint-error cases fail; Rust also fails both acknowledged-commit cases.
+Pending and rollback controls pass. Complete behavioral before logs are retained.
+The finite children exit without disposal/destructors; native Rust restores its
+injected directory rename before exiting. Deadlines kill and reap a stuck child.
+
+The version layer now durably prepares one versioned intent with transaction
+identity, selected branch and frozen (before, after] range before committing the
+journal. It flushes committed attribution/head/applied metadata, then removes and
+flushes the intent. Every fallible phase retains admission and cleanup retry.
+Startup first completes transaction redo/undo, then publishes a committed intent
+or clears an aborted one. Existing no-intent metadata remains compatible.
+Rust metadata is replaceable through NamedTypeLinks; the default public alias
+retains its existing backend/API. C# accepts an explicit metadata-flush callback
+and reports SupportsDurablePublication. A separate constructor overload preserves
+existing compiled calls; a reflection regression first fails against the draft.
+An eight-combination capability matrix covers all selected stores, and the caller
+callback contract verifies exact intent/decision/publication/cleanup ordering and
+persistent checkout. Trace output remains optional/off by default.
+
+Six real process cases per native language now pass: success/checkpoint errors
+for explicit/automatic owners, plus pending and rollback controls. All verify
+exact recovered data, branch heads, checkout and a following committed edit.
+Ninety C# cases and 108 portable Rust fault schedules cover nine publication
+phases, before/after effects, repeated cleanup errors and every existing entry
+point. Fourteen interrupted recovery schedules per language verify two actual
+reopenings. Shared exact/malformed wire vectors and nine contradictory schedules
+per language verify rejection without rewriting sidecars. Native checks preserve
+committed rows after rejection. Portable fault/vector/contradiction contracts run
+in actual WASM; filesystem/process checks retain native coverage.
+
+Full C# Debug/Release: 1,440 pass each, zero skips.
+Full native Rust: 672 standard tests and the custom stdout harness pass;
+five ignored child entry points are invoked only by their finite parent tests.
+Actual WASM: 356 pass; all three wrapper modules remain 100% in measured lines,
+functions and reported branches. Formatting, release metadata, strict native/WASM
+Clippy and combined source-size checks pass. An initial Clippy test-module-order
+violation was corrected; it is not a behavioral regression or baseline result.
+Debug: 6,273/6,764 lines (92.74%), 2,940/3,346 branches (87.87%)
+Release: 4,763/5,063 lines (94.07%), 2,920/3,327 branches (87.77%)
+native: 9,696/10,518 lines (92.18%), 1,645/1,994 branches (82.50%), 1,292/1,432 functions (90.22%)
+wasm: 6,904/10,110 lines (68.29%), 1,190/1,699 branches (70.04%), 945/1,415 functions (66.78%)
+
+The added cost is one temporary named metadata link and three ordered sidecar
+flushes per version commit, with more flushes on retry. Bare cache/transaction
+paths do not select this cost. Removing an intent does not compact interned names.
+Durability requires truthful adapter flushes and available storage. Process exit
+is not device power loss; in-memory WASM is not a filesystem durability test.
+Truncated referenced history, legacy name logging, broader strategy/composition
+work and complete project coverage remain unfinished. All nine workflows pass
+on the preceding scheduling SHA 24554b0; new exact-head CI is required after push.

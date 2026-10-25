@@ -52,3 +52,32 @@ C# and the Rust CLIs expose the same flag surface.
 When neither `--vc` nor any version-control flag is used the bare CLI
 behaviour is unchanged: no `versioncontrol.links` sidecar is created
 (R17).
+
+## Interrupted commits
+
+Keep the data, transaction journal, version sidecar and their names files
+together when reopening a store. A version commit now persists its selected
+branch and exact transition range before the inner journal decision. If the
+process exits after that decision, reopening the same paths completes journal
+recovery and restores the committed branch head. Pending or rolled-back work
+does not become a version.
+
+A commit error can still represent durable work. After repairing an I/O failure,
+retry cleanup on the same owner: Rust `commit`, `rollback` or `save`; C#
+transaction/owner disposal or rollback. New mutations remain fenced until that
+work finishes. C# `SupportsDurablePublication` reports whether both the inner
+decision and sidecar have a durable flush. Custom metadata adapters must supply
+the corresponding flush behavior.
+
+The finite process tests exercise this scenario without running destructors:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test version_process_exit_tests
+dotnet test csharp --filter FullyQualifiedName~VersionProcessExitTests
+```
+
+They verify exact recovered rows, branch heads, checkout and a following edit,
+with pending and rollback controls. These are process-exit tests; device power
+loss remains a separate storage guarantee. The
+[metadata protocol](../../docs/protocol/version-metadata.md#pending-transaction-publication)
+describes compatibility and the three extra sidecar flushes per version commit.

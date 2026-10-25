@@ -254,6 +254,10 @@ where
         self.committed.contains(&id)
     }
 
+    pub(crate) fn is_transaction_rolled_back(&self, id: u128) -> bool {
+        self.rolled_back.contains(&id)
+    }
+
     pub(crate) fn has_open_transaction(&self) -> bool {
         self.current.is_some()
     }

@@ -69,3 +69,6 @@ mod version_initial_abort;
 
 #[path = "../../tests/version_automatic_contract_tests.rs"]
 mod version_automatic_contract;
+
+#[path = "../../tests/version_publication_failure_tests.rs"]
+mod version_publication_failure;

@@ -18,8 +18,12 @@ use anyhow::{bail, Result};
 
 use crate::link::Link;
 use crate::link_storage::ChangeObserver;
-use crate::named_types::{NamedTypes, NamedTypesDecorator};
+use crate::named_type_links::NamedTypeLinks;
+use crate::named_types::NamedTypesDecorator;
+
+mod publication;
 use crate::transactions::{TransactionHandle, TransactionsDecorator, Transition};
+use publication::{PublicationIntent, PUBLICATION_PREFIX};
 
 /// Default name of the initial branch (analogous to git's `main`).
 pub const DEFAULT_BRANCH_NAME: &str = "main";
@@ -52,9 +56,13 @@ impl BranchInfo {
 
 /// Decorator that adds *time travel*, *branching*, and *tagging* over the
 /// transitions log produced by a [`TransactionsDecorator`].
-pub struct VersionControlDecorator {
+pub type VersionControlDecorator = GenericVersionControlDecorator<NamedTypesDecorator>;
+
+/// Version control over a replaceable metadata store using the common links API.
+/// The default alias keeps the existing mapped metadata store and public API.
+pub struct GenericVersionControlDecorator<B: NamedTypeLinks> {
     transactions: TransactionsDecorator,
-    branches_store: NamedTypesDecorator,
+    branches_store: B,
     branches: HashMap<String, BranchInfo>,
     tags: BTreeMap<String, i64>,
     transition_branches: BTreeMap<i64, String>,
@@ -73,12 +81,14 @@ struct VersionControlTransactionState {
     id: u128,
     branch_name: String,
     before_sequence: i64,
+    after_sequence: Option<i64>,
+    intent_link: u32,
 }
 
-impl VersionControlDecorator {
+impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
     pub fn new(
         transactions: TransactionsDecorator,
-        branches_store: NamedTypesDecorator,
+        branches_store: B,
         trace: bool,
     ) -> Result<Self> {
         let mut decorator = Self {
@@ -138,7 +148,7 @@ impl VersionControlDecorator {
     }
 
     pub fn save(&mut self) -> Result<()> {
-        if self.has_pending_commit() {
+        if self.has_pending_publication() {
             self.commit()?;
         }
         self.transactions.save()?;
@@ -154,7 +164,7 @@ impl VersionControlDecorator {
         &mut self.transactions
     }
 
-    pub fn branches_store(&self) -> &NamedTypesDecorator {
+    pub fn branches_store(&self) -> &B {
         &self.branches_store
     }
 
@@ -169,6 +179,8 @@ impl VersionControlDecorator {
             id: handle.id,
             branch_name,
             before_sequence,
+            after_sequence: None,
+            intent_link: 0,
         });
         Ok(handle)
     }
@@ -179,8 +191,18 @@ impl VersionControlDecorator {
             .as_ref()
             .cloned()
             .ok_or_else(|| anyhow::anyhow!("No version-control transaction is open."))?;
+        if self.transactions.is_transaction_rolled_back(state.id) {
+            return self.finish_aborted_publication(&state);
+        }
+        let state = self.prepare_publication()?;
         self.transactions.commit()?;
-        self.attribute_new_transitions_for_branch(state.before_sequence, &state.branch_name)?;
+        self.attribute_new_transitions_for_branch(
+            state.before_sequence,
+            state.after_sequence.expect("publication range is frozen"),
+            &state.branch_name,
+        )?;
+        self.branches_store.save()?;
+        self.clear_publication_intent(state.intent_link)?;
         self.active_transaction = None;
         Ok(())
     }
@@ -190,12 +212,16 @@ impl VersionControlDecorator {
             // An uncertain/durable decision must finish before publication.
             return self.commit();
         }
-        self.active_transaction
+        let state = self
+            .active_transaction
             .as_ref()
+            .cloned()
             .ok_or_else(|| anyhow::anyhow!("No version-control transaction is open."))?;
-        self.transactions.rollback()?;
-        self.active_transaction = None;
-        Ok(())
+        let outcome = self.transactions.rollback();
+        if outcome.is_ok() || self.transactions.is_transaction_rolled_back(state.id) {
+            self.finish_aborted_publication(&state)?;
+        }
+        Ok(outcome?)
     }
 
     // -- Write API (attribute new transitions to the current branch) ----
@@ -306,9 +332,9 @@ impl VersionControlDecorator {
     fn attribute_new_transitions_for_branch(
         &mut self,
         before_seq: i64,
+        after_seq: i64,
         branch_name: &str,
     ) -> Result<()> {
-        let after_seq = self.transactions.last_logged_sequence();
         if after_seq <= before_seq {
             return Ok(());
         }
@@ -462,8 +488,15 @@ impl VersionControlDecorator {
             .is_some_and(|state| self.transactions.must_finish_commit(state.id))
     }
 
+    fn has_pending_publication(&self) -> bool {
+        self.active_transaction
+            .as_ref()
+            .is_some_and(|state| state.after_sequence.is_some())
+            || self.has_pending_commit()
+    }
+
     pub(crate) fn ensure_write_allowed(&self) -> Result<()> {
-        if self.has_pending_commit() {
+        if self.has_pending_publication() {
             bail!(
                 "Version publication is incomplete; retry commit, rollback or save before writing."
             );
@@ -569,7 +602,7 @@ impl VersionControlDecorator {
         let link = match self.branch_links.get(&info.name).copied() {
             Some(link) => link,
             None => {
-                let new_link = self.branches_store.create(0, 0);
+                let new_link = self.branches_store.try_create(0, 0)?;
                 self.branch_links.insert(info.name.clone(), new_link);
                 new_link
             }
@@ -583,7 +616,7 @@ impl VersionControlDecorator {
         let link = match self.tag_links.get(name).copied() {
             Some(link) => link,
             None => {
-                let new_link = self.branches_store.create(0, 0);
+                let new_link = self.branches_store.try_create(0, 0)?;
                 self.tag_links.insert(name.to_string(), new_link);
                 new_link
             }
@@ -595,7 +628,7 @@ impl VersionControlDecorator {
     fn set_current_branch(&mut self, name: &str) -> Result<()> {
         self.current_branch = name.to_string();
         if self.current_branch_link == 0 {
-            self.current_branch_link = self.branches_store.create(0, 0);
+            self.current_branch_link = self.branches_store.try_create(0, 0)?;
         }
         let link = self.current_branch_link;
         let marker = format!("{CURRENT_PREFIX}{name}");
@@ -605,7 +638,7 @@ impl VersionControlDecorator {
 
     fn set_applied(&mut self, seq: i64) -> Result<()> {
         if self.applied_link == 0 {
-            self.applied_link = self.branches_store.create(0, 0);
+            self.applied_link = self.branches_store.try_create(0, 0)?;
         }
         let link = self.applied_link;
         let marker = format!("{APPLIED_PREFIX}{seq}");
@@ -617,7 +650,7 @@ impl VersionControlDecorator {
         if self.branches_store.get_by_name(name)?.is_some() {
             return Ok(());
         }
-        let link = self.branches_store.create(0, 0);
+        let link = self.branches_store.try_create(0, 0)?;
         self.branches_store.set_name(link, name)?;
         Ok(())
     }
@@ -641,13 +674,20 @@ impl VersionControlDecorator {
         self.applied_link = 0;
         self.current_applied = 0;
 
-        let links: Vec<Link> = self.branches_store.all().into_iter().copied().collect();
+        let mut pending = Vec::new();
+        let links = self.branches_store.all_links();
         for link in &links {
             let name = match self.branches_store.get_name(link.index)? {
                 Some(value) => value,
                 None => continue,
             };
-            if name.starts_with(BRANCH_PREFIX) {
+            if name.starts_with(PUBLICATION_PREFIX) {
+                pending.push((
+                    link.index,
+                    PublicationIntent::decode(&name)
+                        .ok_or_else(|| anyhow::anyhow!("Invalid version publication intent."))?,
+                ));
+            } else if name.starts_with(BRANCH_PREFIX) {
                 if let Some(info) = try_decode_branch_marker(&name) {
                     self.branches.insert(info.name.clone(), info.clone());
                     self.branch_links.insert(info.name.clone(), link.index);
@@ -681,7 +721,7 @@ impl VersionControlDecorator {
                 }
             }
         }
-        Ok(())
+        self.recover_publications(pending)
     }
 
     fn trace(&self, message: &str) {

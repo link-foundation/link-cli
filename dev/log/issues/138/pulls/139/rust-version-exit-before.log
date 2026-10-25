@@ -1,0 +1,45 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+    Finished `test` profile [unoptimized] target(s) in 8.19s
+     Running tests/version_process_exit_tests.rs (rust/target/debug/deps/version_process_exit_tests-8b1b131c4bf3f811)
+
+running 7 tests
+
+thread 'explicit_commit_checkpoint_error_survives_exit' (968233) panicked at tests/version_process_exit_tests.rs:48:5:
+assertion `left == right` failed: lost checkpoint/false publication
+  left: 2
+ right: 3
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test explicit_commit_checkpoint_error_survives_exit ... FAILED
+test version_exit_child ... ignored, finite child process entry point
+
+thread 'automatic_commit_checkpoint_error_survives_exit' (968232) panicked at tests/version_process_exit_tests.rs:48:5:
+assertion `left == right` failed: lost checkpoint/true publication
+  left: 2
+ right: 3
+test automatic_commit_checkpoint_error_survives_exit ... FAILED
+
+thread 'successful_automatic_commit_survives_exit' (968236) panicked at tests/version_process_exit_tests.rs:48:5:
+assertion `left == right` failed: lost success/true publication
+  left: 2
+ right: 3
+test successful_automatic_commit_survives_exit ... FAILED
+
+thread 'successful_explicit_commit_survives_exit' (968237) panicked at tests/version_process_exit_tests.rs:48:5:
+assertion `left == right` failed: lost success/false publication
+  left: 2
+ right: 3
+test successful_explicit_commit_survives_exit ... FAILED
+test pending_exit_does_not_publish_an_aborted_version ... ok
+test rollback_exit_does_not_publish_an_aborted_version ... ok
+
+failures:
+
+failures:
+    automatic_commit_checkpoint_error_survives_exit
+    explicit_commit_checkpoint_error_survives_exit
+    successful_automatic_commit_survives_exit
+    successful_explicit_commit_survives_exit
+
+test result: FAILED. 2 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.39s
+
+error: test failed, to rerun pass `--test version_process_exit_tests`

@@ -107,4 +107,6 @@ pub use transactions::{
     TransitionKind, TransitionLogStore,
 };
 pub use unicode_string_storage::UnicodeStringStorage;
-pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};
+pub use version_control::{
+    BranchInfo, GenericVersionControlDecorator, VersionControlDecorator, DEFAULT_BRANCH_NAME,
+};

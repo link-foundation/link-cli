@@ -144,8 +144,18 @@ and C# owner/graph disposal, retry this retained work. Existing/no-op allocation
 and lookup do not create an owner or decision; C# asynchronous commits retain
 their selected queue policy. This adds the same version-owner bookkeeping as an
 explicit operation, without selecting a stronger inner checkpoint policy.
-This retry contract does not establish atomic
-publication across a process exit between journal commit and version sidecars.
+The version layer also persists a publication intent before the inner decision.
+Startup resolves it after journal redo/undo, restoring the exact committed branch
+head or clearing an aborted attempt. Committed attribution is flushed before the
+intent is removed and flushed. Every failure retains admission until cleanup
+finishes. This adds one temporary metadata link and three ordered metadata
+flushes per version commit; bare transaction/cache paths pay no such cost.
+C# exposes `SupportsDurablePublication` and accepts an explicit `flushBranches`
+callback. Rust's default metadata adapter flushes its files; custom adapters
+must honor `NamedTypeLinks::save`. In-memory WASM tests verify logical behavior,
+while native finite child tests verify actual process exit without destructors.
+Neither establishes device power-loss behavior. See the
+[intent protocol](protocol/version-metadata.md#pending-transaction-publication).
 Creating the legacy version layer over an existing transaction journal attributes
 only committed records. Rolled-back and recovered pending sequences are not
 versions and do not advance the initial branch head. Construct/recover the layer

@@ -302,6 +302,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
     internal bool HasOpenTransaction { get { lock (_lock) return _current is not null; } }
     internal bool IsTransactionCommitted(Guid id) { lock (_lock) return _committed.Contains(id); }
+    internal bool IsTransactionRolledBack(Guid id) { lock (_lock) return _rolledBack.Contains(id); }
 
     public virtual ITransaction<TLinkAddress> BeginTransaction()
     {

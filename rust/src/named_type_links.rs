@@ -405,23 +405,25 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 }
 
-impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
+impl<B: NamedTypeLinks> NamedTypeLinks
+    for crate::version_control::GenericVersionControlDecorator<B>
+{
     fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
-        crate::version_control::VersionControlDecorator::create(self, source, target)
+        crate::version_control::GenericVersionControlDecorator::create(self, source, target)
     }
 
     fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
         validate_ensure_address(id)?;
-        crate::version_control::VersionControlDecorator::try_ensure_created(self, id)
+        crate::version_control::GenericVersionControlDecorator::try_ensure_created(self, id)
     }
 
     fn create(&mut self, source: u32, target: u32) -> u32 {
-        crate::version_control::VersionControlDecorator::create(self, source, target)
+        crate::version_control::GenericVersionControlDecorator::create(self, source, target)
             .expect("VersionControlDecorator::create failed in NamedTypeLinks bridge")
     }
 
     fn ensure_created(&mut self, id: u32) -> u32 {
-        crate::version_control::VersionControlDecorator::ensure_created(self, id)
+        crate::version_control::GenericVersionControlDecorator::ensure_created(self, id)
     }
 
     fn get_link(&mut self, id: u32) -> Option<Link> {
@@ -429,7 +431,7 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
     }
 
     fn exists(&mut self, id: u32) -> bool {
-        crate::version_control::VersionControlDecorator::exists(self, id)
+        crate::version_control::GenericVersionControlDecorator::exists(self, id)
     }
 
     fn update_observed(
@@ -439,13 +441,13 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
         target: u32,
         observer: ChangeObserver<'_>,
     ) -> Result<Link> {
-        crate::version_control::VersionControlDecorator::update_observed(
+        crate::version_control::GenericVersionControlDecorator::update_observed(
             self, id, source, target, observer,
         )
     }
 
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
-        crate::version_control::VersionControlDecorator::delete_observed(self, id, observer)
+        crate::version_control::GenericVersionControlDecorator::delete_observed(self, id, observer)
     }
 
     fn all_links(&mut self) -> Vec<Link> {
@@ -453,11 +455,11 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
     }
 
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
-        crate::version_control::VersionControlDecorator::search(self, source, target)
+        crate::version_control::GenericVersionControlDecorator::search(self, source, target)
     }
 
     fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
-        crate::version_control::VersionControlDecorator::get_or_create(self, source, target)
+        crate::version_control::GenericVersionControlDecorator::get_or_create(self, source, target)
             .expect("VersionControlDecorator::get_or_create failed in NamedTypeLinks bridge")
     }
 
@@ -480,7 +482,7 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
     }
 
     fn save(&mut self) -> Result<()> {
-        crate::version_control::VersionControlDecorator::save(self)
+        crate::version_control::GenericVersionControlDecorator::save(self)
     }
 }
 

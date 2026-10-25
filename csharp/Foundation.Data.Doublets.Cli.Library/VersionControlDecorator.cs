@@ -38,7 +38,7 @@ public interface IVersionControlLinks : INamedTypesLinks<uint>
 /// (<see cref="Tag"/>) over the transitions log. Optional — when not
 /// instantiated the underlying transactions decorator behaves identically.
 /// </summary>
-public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
+public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
 {
     /// <summary>Default name of the initial branch (analogous to git's <c>main</c>).</summary>
     public const string DefaultBranchName = "main";
@@ -63,6 +63,10 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     private long _currentApplied;
     private VersionControlTransaction? _activeTransaction;
     private readonly bool _trace;
+    private readonly Action _flushBranches;
+
+    /// <summary>Both the transaction decision and version sidecar have explicit stable-storage flushes.</summary>
+    public bool SupportsDurablePublication { get; }
 
     /// <summary>
     /// Completes a committed version publication or rolls back an open transaction.
@@ -95,11 +99,25 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
       TransactionsDecorator transactions,
       INamedTypesLinks<uint> branchesStore,
       bool trace = false)
+      : this(transactions, branchesStore, null, trace)
+    {
+    }
+
+    /// <summary>Uses an explicit stable-storage flush for caller-owned metadata.</summary>
+    public VersionControlDecorator(
+      TransactionsDecorator transactions,
+      INamedTypesLinks<uint> branchesStore,
+      Action? flushBranches,
+      bool trace = false)
       : base(transactions)
     {
         _transactions = transactions ?? throw new ArgumentNullException(nameof(transactions));
         _branchesStore = branchesStore ?? throw new ArgumentNullException(nameof(branchesStore));
         _trace = trace;
+        var durable = branchesStore as IDurableLinks;
+        SupportsDurablePublication = transactions.SupportsDurableCommit
+            && (flushBranches is not null || durable?.SupportsDurableFlush == true);
+        _flushBranches = flushBranches ?? (durable?.SupportsDurableFlush == true ? durable.Flush : static () => { });
         Recover();
         EnsureDefaultBranch();
     }
@@ -191,13 +209,12 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void EnsureWriteAllowedLocked()
     {
-        if (_activeTransaction?.Inner.IsCommitted == true)
+        if (_activeTransaction?.AfterSequence is not null || _activeTransaction?.Inner.IsCommitted == true)
             throw new InvalidOperationException("Retry committed version publication before writing.");
     }
 
-    private void AttributeNewTransitionsLocked(long beforeSeq, string branchName)
+    private void AttributeNewTransitionsLocked(long beforeSeq, long afterSeq, string branchName)
     {
-        var afterSeq = _transactions.LastLoggedSequence;
         if (afterSeq <= beforeSeq) return;
 
         for (var s = beforeSeq; s < afterSeq;)
@@ -357,12 +374,25 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            if (!ReferenceEquals(_activeTransaction, transaction))
+            {
+                transaction.Inner.Commit();
+                return;
+            }
+            if (transaction.Inner.IsRolledBack)
+            {
+                FinishAbortedPublicationLocked(transaction);
+                return;
+            }
+            PreparePublicationLocked(transaction);
             // IsCommitted reports the durable decision; a failed data checkpoint
             // can still need retry before publishing the branch metadata.
             transaction.Inner.Commit();
             if (ReferenceEquals(_activeTransaction, transaction))
             {
-                AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.BranchName);
+                AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.AfterSequence!.Value, transaction.BranchName);
+                _flushBranches();
+                ClearPublicationIntentLocked(transaction.IntentLink);
                 _activeTransaction = null;
                 if (_trace) Trace($"Published committed version tx {transaction.Id:N} on '{transaction.BranchName}'.");
             }
@@ -393,7 +423,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                 if (transaction.Inner.IsRolledBack
                     && ReferenceEquals(_activeTransaction, transaction))
                 {
-                    _activeTransaction = null;
+                    FinishAbortedPublicationLocked(transaction);
                 }
             }
         }
@@ -616,6 +646,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
             _currentBranchLink = 0;
             _appliedLink = 0;
             _currentApplied = 0;
+            var pending = new List<(uint Link, PublicationIntent Intent)>();
 
             var any = _branchesStore.Constants.Any;
             var anyLink = new DoubletLink(any, any, any);
@@ -625,7 +656,13 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                 var name = _branchesStore.GetName(link.Index);
                 if (string.IsNullOrEmpty(name)) continue;
 
-                if (name.StartsWith(BranchPrefix, StringComparison.Ordinal))
+                if (name.StartsWith(PublicationPrefix, StringComparison.Ordinal))
+                {
+                    if (!TryDecodePublicationMarker(name, out var intent))
+                        throw new InvalidDataException("Invalid version publication intent.");
+                    pending.Add((link.Index, intent));
+                }
+                else if (name.StartsWith(BranchPrefix, StringComparison.Ordinal))
                 {
                     if (TryDecodeBranchMarker(name, out var info))
                     {
@@ -675,6 +712,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                     }
                 }
             }
+            RecoverPublicationsLocked(pending);
         }
     }
 
@@ -734,6 +772,8 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         internal ITransaction<uint> Inner { get; }
         internal string BranchName { get; }
         internal long BeforeSequence { get; }
+        internal long? AfterSequence { get; set; }
+        internal uint IntentLink { get; set; }
 
         public Guid Id => Inner.Id;
         public DateTimeOffset StartedAt => Inner.StartedAt;
@@ -760,7 +800,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                 // Finish version publication without undoing that commit.
                 _owner.CommitVersionTransaction(this);
             }
-            else if (!Inner.IsRolledBack)
+            else
             {
                 _owner.RollbackVersionTransaction(this);
             }

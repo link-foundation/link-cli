@@ -76,11 +76,13 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    A finite isolated child reproduces idle ThreadPool worker starvation; an
    asynchronous channel wait fixes it while preserving ordered checkpoints,
    joining, cancellation and callback self-join guards. Full C# Debug/Release
-   suites pass 1,308 tests each. Publish and verify fresh exact-head CI; see
-   ASYNC-WORKER-PLAN.md and async-worker.txt.
-6. Persist a publication intent for abrupt process exit between journal decision
-   and branch-sidecar publication. Establish finite real child-process failures
-   first; see VERSION-PUBLICATION-PLAN.md. Graceful cleanup is not this guarantee.
+   suites pass 1,308 tests each. All nine exact-head workflows pass on
+   24554b0; see ASYNC-WORKER-PLAN.md, async-worker.txt and async-worker-ci.txt.
+6. Persisted publication intents now resolve exact branch attribution after
+   abrupt process exit. Six real child cases per native language first reproduce
+   the missing head; publication/recovery faults and contradictory vectors pass
+   full native/C#/actual-WASM validation. Publish and verify fresh exact-head CI;
+   see VERSION-PUBLICATION-PLAN.md and version-publication.txt.
 7. Reproduce ordinary legacy named writes across rollback/history/reopen and
    truncated history across checkout. Their admission fence is distinct from
    logging names atomically; staged sessions already keep names in revisions.

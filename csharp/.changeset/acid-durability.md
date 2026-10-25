@@ -116,3 +116,9 @@ Wait asynchronously for background checkpoint work instead of occupying a
 ThreadPool thread for every idle transaction owner. Apply admitted batches in
 order without another pool dispatch, while preserving cancellation, actual
 worker joining and callback self-join rejection during shutdown.
+
+Persist a version-publication intent before journal commit and durably publish
+the exact branch/range before clearing it. Recover committed or aborted intents
+after abrupt process exit, retain admission through every metadata/flush failure,
+and reject malformed or contradictory intents without rewriting their sidecar.
+Expose the metadata flush callback and durable-publication capability.
