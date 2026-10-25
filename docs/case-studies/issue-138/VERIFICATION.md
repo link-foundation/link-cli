@@ -1331,3 +1331,38 @@ in-memory owner only establishes graceful cleanup retry. Truncated referenced
 history, broader strategies and complete coverage remain open. C# CI at the
 preceding SHA failed two Windows async waits; full logs are preserved and worker
 scheduling is being audited separately. Fresh exact-head CI is required after push.
+
+## Async checkpoint worker scheduling
+
+The old worker occupies one ThreadPool thread per idle transaction owner,
+including synchronous owners. Async commits queue another pool task from that
+blocking worker, then wait for it. In an isolated child limited to two workers,
+four tiny owners prevent an unrelated canary and a committed checkpoint from
+running. The ordinary automated regression first fails with responsive=False,
+checkpoint=False; its complete behavioral before log is retained beside this
+report. The initial multiple-entry-point compiler fixture correction is not
+counted as a behavioral failure.
+
+A Channel now suspends the single consumer while idle. That consumer executes
+admitted checkpoint batches directly and in order, without another pool task.
+Shutdown completes admission, cancels queued work, joins actual in-flight work
+outside the storage lock and releases queued references. Existing durable
+decisions remain recoverable. Active callback/descendant self-join rejection,
+concurrent/repeated shutdown and borrowed mapping ownership remain intact.
+Neither the old Windows waits nor their timeouts were increased.
+
+The portable child bounds waits and is killed and reaped if it exceeds its
+deadline; it never changes the ordinary testhost's global pool configuration.
+All 39 focused transaction/async/lifetime contracts pass, including the new
+starvation regression. Full C# Debug and Release suites pass 1,308 tests each,
+with zero failures/skips. Formatting verification, release metadata and combined
+source-size checks pass. Rust and WASM production sources did not change in
+this scheduling batch; their preceding full suites pass 653 and 345 tests.
+Debug: 6,173/6,664 lines (92.63%), 2,836/3,238 branches (87.58%)
+Release: 4,680/4,979 lines (93.99%), 2,816/3,219 branches (87.48%)
+
+The preceding SHA's C# workflow also passes the full suite on all three
+platforms, demonstrating that the historical Windows failures were
+intermittent. The finite child independently establishes starvation and verifies
+this change. Fresh exact-head CI is still required after publication. Complete
+project coverage and the remaining requirement inventory stay unfinished.

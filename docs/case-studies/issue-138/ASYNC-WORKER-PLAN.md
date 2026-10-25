@@ -12,15 +12,22 @@ The current transaction constructor schedules a synchronous blocking consumer on
 the shared ThreadPool for every owner, including idle synchronous owners. Async
 commits then enqueue another Task.Run from that consumer and block on it. These
 workers can occupy the pool while checkpoint tasks and test continuations wait.
-This is a hypothesis to establish with a finite isolated-process reproduction,
-not a reason to increase test timeouts.
+The isolated process regression establishes this starvation: four tiny owners
+with a two-thread pool prevent both a canary callback and the async checkpoint
+from running. Its three-second observation fails before the change, then passes
+with an asynchronous channel wait and direct, ordered checkpoint execution.
+The parent kills and waits for a child that exceeds its finite deadline; pool
+limits never change in the ordinary testhost. Existing wait timeouts are unchanged.
 
-- [ ] Reproduce idle-owner starvation in a child with a two-worker pool and four
+- [x] Reproduce idle-owner starvation in a child with a two-worker pool and four
       tiny stores; bound waits and join all workers before releasing mappings.
-- [ ] Use an asynchronous queue wait, with ordered single-consumer checkpoint
+- [x] Use an asynchronous queue wait, with ordered single-consumer checkpoint
       execution and no extra pool dispatch per queued batch.
-- [ ] Preserve cancellation, in-flight joining, repeated/concurrent shutdown,
+- [x] Preserve cancellation, in-flight joining, repeated/concurrent shutdown,
       callback self-join rejection and failed-checkpoint recovery.
-- [ ] Retain a portable automated child regression in the ordinary test suite.
-- [ ] Run full C# validation and exact-head Windows/Linux/macOS CI; preserve
-      failed logs and specific before/after evidence.
+- [x] Retain a portable automated child regression in the ordinary test suite.
+- [x] Run full C# validation; 1,308 tests pass in both configurations, with
+      formatting, release metadata, source-size and measured-coverage evidence
+      retained in async-worker.txt and csharp-async-worker-before.log.
+- [ ] Verify fresh exact-head Windows/Linux/macOS CI after publishing this fix;
+      preserve failed logs and specific before/after evidence.

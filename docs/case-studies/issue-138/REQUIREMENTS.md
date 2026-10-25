@@ -18,6 +18,12 @@ comments and all three PR comment/review endpoints were empty.
 | R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus and cross-shard coordination implemented. Efficient WAL/LSM structures and other listed algorithm gaps remain unfinished. |
 | R12 | Deep case study / collect data / plan + execute one PR | This directory, preserved original issue, plan, requirements, source research and test evidence; PR 139 with positive closing reference. | In progress |
 
+The C# scheduling audit also reproduces starvation with four tiny owners and a
+two-worker isolated ThreadPool. An asynchronous channel wait and ordered direct
+execution fix it without extending existing timeouts. All 39 focused contracts
+and 1,308 Debug/Release tests pass; exact-head CI is required after publishing
+this batch. The preceding automatic-owner SHA passes all nine workflows.
+
 An exhaustive survey of all current/future successful DBMS is not a finite
 verification target. The research inventory is explicit; unsupported algorithms
 and unverified guarantees remain unfinished rather than being implied by tests

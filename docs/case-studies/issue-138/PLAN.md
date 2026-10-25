@@ -71,9 +71,13 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    initial-history-ci.txt; resolve the scheduling root cause before finalization.
 5. Automatic version writes now retain an implicit owner through failed decisions,
    checkpoints and metadata publication. Full local native/C#/actual-WASM suites
-   pass, including pre-commit undo, async and no-op controls. Publish and verify
-   fresh exact-head CI; see AUTOMATIC-VERSION-PLAN.md. Reproduce idle ThreadPool
-   worker starvation in a finite isolated child; see ASYNC-WORKER-PLAN.md.
+   pass, including pre-commit undo, async and no-op controls. All nine workflows
+   pass on 86891b7; see AUTOMATIC-VERSION-PLAN.md and automatic-version-ci.txt.
+   A finite isolated child reproduces idle ThreadPool worker starvation; an
+   asynchronous channel wait fixes it while preserving ordered checkpoints,
+   joining, cancellation and callback self-join guards. Full C# Debug/Release
+   suites pass 1,308 tests each. Publish and verify fresh exact-head CI; see
+   ASYNC-WORKER-PLAN.md and async-worker.txt.
 6. Persist a publication intent for abrupt process exit between journal decision
    and branch-sidecar publication. Establish finite real child-process failures
    first; see VERSION-PUBLICATION-PLAN.md. Graceful cleanup is not this guarantee.

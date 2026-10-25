@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using System.Threading.Channels;
 using System.Globalization;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -234,7 +234,11 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     private readonly HashSet<Guid> _committed = new();
     private readonly HashSet<Guid> _rolledBack = new();
     private readonly HashSet<long> _applied = new();
-    private readonly BlockingCollection<Func<Task>> _asyncQueue = new();
+    private readonly Channel<Action> _asyncQueue = Channel.CreateUnbounded<Action>(new UnboundedChannelOptions
+    {
+        SingleReader = true,
+        AllowSynchronousContinuations = false,
+    });
     private readonly CancellationTokenSource _backgroundCts = new();
     // The base facade can retain this object if recovery fails construction.
     // Disposal must also be safe before a real worker has been started.
@@ -274,7 +278,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         _flushData = flushData ?? (durableData?.SupportsDurableFlush == true ? durableData.Flush : static () => { });
         _flushLog = flushLog ?? (durableLog?.SupportsDurableFlush == true ? durableLog.Flush : static () => { });
         Recover();
-        _backgroundWorker = Task.Run(RunBackgroundWorker);
+        _backgroundWorker = RunBackgroundWorkerAsync();
     }
 
     public CommitMode CommitMode
@@ -529,12 +533,12 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_shutdownLock)
         {
             if (_disposed) return;
-            _asyncQueue.CompleteAdding();
+            _asyncQueue.Writer.TryComplete();
             _backgroundCts.Cancel();
             // A timed join cannot establish that borrowed mappings are unused.
             // Never hold the storage lock while waiting for its current owner.
             _backgroundWorker.GetAwaiter().GetResult();
-            _asyncQueue.Dispose();
+            while (_asyncQueue.Reader.TryRead(out _)) { }
             _backgroundCts.Dispose();
             _disposed = true;
         }
@@ -769,7 +773,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         _log.RemoveRange(0, chunk.Count);
     }
 
-    private async Task ApplyTransitionsAsync(IReadOnlyList<Transition<TLinkAddress>> transitions)
+    private void ApplyTransitions(IReadOnlyList<Transition<TLinkAddress>> transitions)
     {
         foreach (var transition in transitions)
         {
@@ -790,7 +794,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         {
             EnforceRetentionLocked();
         }
-        await Task.CompletedTask;
     }
 
     private sealed class BackgroundWorkContext
@@ -800,15 +803,18 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         public int Active = 1;
     }
 
-    private void RunBackgroundWorker()
+    private async Task RunBackgroundWorkerAsync()
     {
         try
         {
-            foreach (var work in _asyncQueue.GetConsumingEnumerable(_backgroundCts.Token))
+            // Waiting for work must not occupy a shared ThreadPool thread.
+            // A single reader also checkpoints batches in admission order.
+            await foreach (var work in _asyncQueue.Reader.ReadAllAsync(_backgroundCts.Token).ConfigureAwait(false))
             {
+                _backgroundCts.Token.ThrowIfCancellationRequested();
                 var context = new BackgroundWorkContext();
                 _backgroundWork.Value = context;
-                try { work().GetAwaiter().GetResult(); }
+                try { work(); }
                 catch (Exception error) { Trace($"Background checkpoint failed: {error.Message}"); }
                 finally
                 {

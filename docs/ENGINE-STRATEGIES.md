@@ -120,6 +120,12 @@ retries an automatic operation's checkpoint. Cleanup finishes the durable
 commit decision; it cannot undo it. C# `IsCommitted` reports that decision even
 when checkpoint persistence still needs retry. Its normal asynchronous policy
 continues to release admission once the durable decision is queued.
+C# transaction owners wait asynchronously for background work, so idle owners
+do not reserve ThreadPool threads. One consumer checkpoints queued batches in
+order without another pool dispatch. Shutdown cancels queued work and joins
+in-flight work before borrowed stores may close; cancelled durable decisions
+remain recoverable on reopening. The queue and awaitable worker are allocated
+only when this transaction decorator is selected.
 An error during the commit-marker append or its first flush can also leave a
 durable decision. The owner retains that attempt and fences further writes;
 the same cleanup entry points resolve it as a commit instead of undoing it.

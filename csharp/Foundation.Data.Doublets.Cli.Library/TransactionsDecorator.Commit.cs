@@ -37,7 +37,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             if (runAsync)
             {
                 var transitions = transaction.Transitions.ToArray();
-                _asyncQueue.Add(() => Task.Run(() => ApplyTransitionsAsync(transitions)));
+                if (!_asyncQueue.Writer.TryWrite(() => ApplyTransitions(transitions)))
+                    throw new InvalidOperationException("Background checkpoint queue is closed.");
             }
             else
             {

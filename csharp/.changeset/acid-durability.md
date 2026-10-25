@@ -111,3 +111,8 @@ Retain an implicit version owner for automatic writes through failed commit and
 metadata publication. Retry committed work through cleanup, preserve ordinary
 pre-commit undo (including failed undo retry), and fence all new mutations until
 the original branch publication finishes. Preserve no-op and async policies.
+
+Wait asynchronously for background checkpoint work instead of occupying a
+ThreadPool thread for every idle transaction owner. Apply admitted batches in
+order without another pool dispatch, while preserving cancellation, actual
+worker joining and callback self-join rejection during shutdown.

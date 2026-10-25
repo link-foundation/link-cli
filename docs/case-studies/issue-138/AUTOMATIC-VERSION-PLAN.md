@@ -21,7 +21,7 @@ a separate path from the already tested explicit version transactions.
 - [x] Preserve normal asynchronous policy, no-op operations, explicit ownership
       and existing query/CLI behavior in full native/C#/actual-WASM suites.
 - [x] Run strict checks and measured coverage.
-- [ ] Publish the atomic fix and verify all exact-head workflows.
+- [x] Publish the atomic fix and verify all exact-head workflows.
 
 Before-fix evidence: all 32 C# cases fail, including accepted writes after a
 sidecar failure and missing cleanup through owner/graph disposal. All eleven
@@ -32,7 +32,8 @@ the ownership change and added controls, 153 focused C# contracts and 59 focused
 Rust contracts pass. Full C# Debug/Release each pass 1,307 tests, native Rust
 passes 653 standard tests plus the stdout harness, and actual WASM passes 345.
 Strict checks and measured coverage are preserved in automatic-version.txt.
-Project-wide coverage remains below 100%; fresh exact-head CI is required.
+All nine exact-head workflows pass on `86891b7`; see automatic-version-ci.txt.
+Project-wide coverage remains below 100%.
 Abrupt process exit after a durable decision still requires a persisted
 publication intent and real finite child-process tests. Graceful cleanup of an
 implicit owner does not establish that separate crash contract.

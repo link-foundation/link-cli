@@ -1,0 +1,13 @@
+Exact-head CI: 86891b79508d839ea1938ce56cd4380c9b530365
+Commit created: 2026-10-25T00:11:02Z
+All nine workflows passed; run timestamps follow the commit.
+
+Broken Link Checker: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145705999
+Workflows: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706019
+Dependencies: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706010
+Docs: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706038
+Security: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706048
+JS client CI: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706352
+C# CI/CD Pipeline: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706012
+WebAssembly CI: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145706224
+Rust CI/CD Pipeline: success; created 2026-10-25T00:11:10Z; https://github.com/link-foundation/link-cli/actions/runs/40145705998
