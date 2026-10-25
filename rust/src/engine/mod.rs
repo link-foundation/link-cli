@@ -24,6 +24,8 @@ pub mod replication;
 mod rows;
 #[cfg(test)]
 mod shared_cost_tests;
+#[cfg(all(feature = "sqlite", not(target_arch = "wasm32")))]
+pub mod sqlite;
 mod transaction;
 mod validation;
 

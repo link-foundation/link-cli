@@ -25,7 +25,7 @@ The issue's wider coverage, physical storage and distributed criteria stay open.
    through the actual binding. Add cross-language example flags and byte controls.
 8. [x] Run complete local compatibility/coverage suites, all runtime conformance
    and persistent eight-configuration cross-language examples sequentially.
-9. [ ] Review all changes, commit, push only the prepared branch, update PR 139,
+9. [x] Review all changes, commit, push only the prepared branch, update PR 139,
    and verify every fresh exact-head workflow after publication.
 
 Baseline: 256 named rows, sixteen one-row commits encode 4,096 rows / 966,063
@@ -42,3 +42,5 @@ does not complete issue #138.
 
 Complete local validation passes; changes.txt records exact official totals,
 all runtime/examples checks and the remaining acceptance gaps.
+
+All nine workflows pass on dd22de1; changes-ci.txt preserves SHA, timestamps and links.

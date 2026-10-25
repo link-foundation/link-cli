@@ -17,6 +17,7 @@ updates:
     directories:
       - /csharp
       - /examples/lino-structure-probe
+      - /examples/sqlite-csharp
       - /docs/case-studies/issue-100/evidence/csharp-merge-usages
       - /docs/case-studies/issue-100/evidence/external-range/csharp
     schedule:

@@ -184,3 +184,9 @@ and other engine policies. Preserve complete-snapshot defaults, mixed journal
 recovery, saved branch bases, shared group flush and physical delta composition.
 Apply selected change records against immutable predecessor roots and validate
 base, allocator, row/name operations and checksums before publication.
+
+Select an optional provider-neutral SQLite physical page-WAL journal. Preserve
+staged reads, atomic group flushes and uncertain outcomes; fence stale owners,
+validate schema/UTF-8/sequences, enforce WAL/FULL and expose bounded checkpoints.
+Keep the core free of a mandatory SQLite NuGet provider and bound explicit
+provider command retries.

@@ -19,6 +19,16 @@ async function main(links: Links) {
 
 import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog, type EngineOptions, type StagedEngineLike, type CommitLog } from '../types/index.js';
 import { FileCommitLog } from '../types/engine-file-log.js';
+import { SqliteCommitLog, type SqliteConnection } from '../types/engine-sqlite-log.js';
+function sqliteTypes(connection: SqliteConnection) {
+  using log = new SqliteCommitLog(connection, { busyTimeoutMs: 0, autoCheckpointPages: 0 });
+  const commitLog: CommitLog = log;
+  commitLog.append('opaque'); commitLog.flush();
+  const busy: number = log.checkpoint('truncate').busy;
+  // @ts-expect-error Invalid maintenance modes must not silently choose one.
+  log.checkpoint('invalid');
+  return busy;
+}
 async function engineTypes(binding: { StagedEngine: { new(options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }) {
   const pointOptions: EngineOptions = { serializableValidation: 'read-set' };
   const sharedOptions: EngineOptions = { stateStructure: 'shared' };

@@ -18,7 +18,9 @@ on:
       - 'csharp/**'
       - 'docs/protocol/**'
       - 'examples/cluster-csharp/**'
+      - 'examples/sqlite-csharp/**'
       - 'experiments/issue-138/etcd-*.mjs'
+      - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
   pull_request:
     branches:
       - main
@@ -30,7 +32,9 @@ on:
       - 'csharp/**'
       - 'docs/protocol/**'
       - 'examples/cluster-csharp/**'
+      - 'examples/sqlite-csharp/**'
       - 'experiments/issue-138/etcd-*.mjs'
+      - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -217,6 +221,33 @@ jobs:
       - name: Conformance on Deno
         working-directory: js/client
         run: deno run --allow-all test/conformance/run.mjs
+
+      - name: SQLite journal providers and cross-language reopening
+        env:
+          CLINK_WASM: ${{ github.workspace }}/js/pkg
+        run: |
+          node experiments/issue-138/sqlite-adapter-contracts.mjs
+          bun experiments/issue-138/sqlite-adapter-contracts.mjs
+          deno run --allow-all experiments/issue-138/sqlite-adapter-contracts.mjs
+          cargo build --release --manifest-path rust/Cargo.toml --features sqlite --example engine_sqlite
+          dotnet build examples/sqlite-csharp --configuration Release
+          sqlite_data=$(mktemp -d)
+          for structure in shared flat; do
+            for encoding in changes snapshot; do
+              for physical in plain delta; do
+                flags=()
+                if [[ "$structure" == flat ]]; then flags+=(--flat); fi
+                if [[ "$encoding" == snapshot ]]; then flags+=(--snapshot); fi
+                if [[ "$physical" == delta ]]; then flags+=(--delta); fi
+                database="$sqlite_data/$structure-$encoding-$physical.db"
+                rust/target/release/examples/engine_sqlite "$database" "${flags[@]}"
+                dotnet examples/sqlite-csharp/bin/Release/net10.0/SqliteExample.dll "$database" "${flags[@]}"
+                node js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                bun js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                deno run --allow-all js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+              done
+            done
+          done
 
       # A small run of the acceptance benchmark: it exits non-zero unless a
       # fresh client reads back exactly what was written. Full-size numbers

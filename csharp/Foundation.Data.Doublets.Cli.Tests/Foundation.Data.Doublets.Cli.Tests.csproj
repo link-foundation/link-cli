@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../docs/protocol/sqlite-log-vectors.json" Link="Protocol/sqlite-log-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/engine-change-vectors.json" Link="Protocol/engine-change-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/transaction-undo-vectors.json" Link="Protocol/transaction-undo-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/transaction-name-vectors.json" Link="Protocol/transaction-name-vectors.json" CopyToOutputDirectory="PreserveNewest" />
@@ -23,6 +24,7 @@
     <None Include="../../docs/protocol/version-publication-vectors.json" Link="Protocol/version-publication-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="coverlet.collector" Version="10.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>

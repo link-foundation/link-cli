@@ -16,6 +16,7 @@ transaction algorithm.
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
 | Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed logical revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
+| Physical page WAL | Staged engine + optional SQLite log, require durable flush | SQLite supplies WAL/FULL and checkpoints; one engine owns its connection and cache. [Providers, maintenance, costs and examples](ENGINE-SQLITE.md). |
 | Bounded time travel | Set Rust `HistoryPolicy::Last(n)`, C# `HistoryLimit = n`, JS `history: n` | Retain up to n revisions including current. Active sessions and previously returned snapshots pin their versions independently. |
 | Complete time travel | Rust `HistoryPolicy::All`, C# `HistoryLimit = null`, JS `history: 'all'` | Every replayed/committed revision remains addressable in memory. |
 | Independent branch | Rust `Engine::fork`, C# `LinksEngine.Fork`, JS `WasmEngine.fork` | Seed and flush a separate journal; edit privately and merge committed changes atomically into the parent. |
@@ -78,6 +79,8 @@ and journal visibility. Full revision records are deliberately simple, not a
 space-efficient WAL implementation. The optional [delta journal](ENGINE-DELTA.md)
 compresses consecutive full snapshots. Optional [change records](ENGINE-CHANGE-RECORDS.md)
 serialize changed rows. Both preserve this logical commit boundary.
+The optional [SQLite journal](ENGINE-SQLITE.md) stores those records inside
+SQLite page-WAL transactions and exposes physical checkpoint maintenance.
 
 An append or flush error is an **indeterminate commit**: data may have reached
 the log even if the caller got an error. The engine then rejects further
@@ -359,13 +362,13 @@ matter for a large or frequently written database.
 
 | Competitor configuration | Closest available configuration | Material difference |
 | --- | --- | --- |
-| SQLite WAL with synchronous commit | Exclusive file log + staged engine, serializable | Logical snapshot/change records instead of page WAL, conservative validation, no SQLite locking/checkpoint implementation or performance equivalence. |
+| SQLite WAL with synchronous commit | Optional SQLite log + staged engine, selected isolation | Reuses SQLite page WAL/FULL and checkpointing; logical links revisions still replay the retained journal. No SQL planner or independent-engine MVCC/performance equivalence. |
 | PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
 | RocksDB optimistic transactions | Optimistic admission + snapshot/serializable | No LSM tree, key-range locks, parallel validation, compaction or RocksDB performance parity. |
 | RocksDB pessimistic transactions | Pessimistic point writes + selected isolation | Immediate busy errors, engine-local ownership and snapshot validation; no waiting, deadlock detector, range locks, LSM tree or performance equivalence. |
-| InnoDB synchronous redo/group commit | Durable staged journal + opt-in independent-session group commit | Shared flush with separate revisions; no page WAL, buffer pool, automatic grouping scheduler or doublewrite repair. Optional delta encoding reduces bytes, not the full-state CPU cost. |
+| InnoDB synchronous redo/group commit | Durable staged journal + opt-in independent-session group commit | Shared flush with separate revisions; optional SQLite supplies its pager/WAL. No InnoDB buffer pool, automatic grouping scheduler or doublewrite repair. Shared state and change encoding independently reduce localized copy/serialization costs. |
 | MongoDB durable write concern | Synchronous durable replica acknowledgements + outcome discovery | No MongoDB election/oplog protocol, tagged concerns or causal replica reads. A lost acknowledgement can follow a committed write. |
 | Cassandra ordinary quorum writes | Fixed-primary synchronous replica log | No leaderless writes, timestamp reconciliation, hints or anti-entropy. Counting replicas does not provide these guarantees. |
 | Cassandra Accord transactions | Selected-shard atomic catalog publication | One catalog serialization point, without Accord's dependency/epoch protocol or WAN latency properties. |

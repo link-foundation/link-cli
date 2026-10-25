@@ -240,6 +240,11 @@ For a filesystem journal use
 the separate `./engine-file-log` entry point. It repairs incomplete final lines
 on open and before reuse after an I/O error, retaining complete records for
 outcome discovery. An engine with an uncertain commit still requires reopening.
+For a physical page WAL use the separate `./engine-sqlite-log` entry with a
+dedicated synchronous Node/Bun/Deno SQLite connection. It imports no provider
+into the universal entry. The adapter requires SQLite >= 3.51.3, enforces WAL/FULL,
+groups pending appends into one SQL COMMIT and exposes checkpoint counters.
+See [ownership, maintenance and interoperability examples](../../docs/ENGINE-SQLITE.md).
 Durability is an explicit backend capability; replication acknowledgements do
 not provide consensus or failover.
 

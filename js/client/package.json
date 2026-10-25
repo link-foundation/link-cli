@@ -42,6 +42,10 @@
       "default": "./src/lino.js"
     },
     "./package.json": "./package.json",
+    "./engine-sqlite-log": {
+      "types": "./types/engine-sqlite-log.d.ts",
+      "default": "./src/engine-sqlite-log.js"
+    },
     "./engine-file-log": {
       "types": "./types/engine-file-log.d.ts",
       "default": "./src/engine-file-log.js"

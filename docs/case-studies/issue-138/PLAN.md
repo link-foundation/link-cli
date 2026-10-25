@@ -172,9 +172,20 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     roots. Mixed encodings, branch attribution, groups, uncertain durable prefixes
     and forty bounded process exits per native language preserve prior behavior.
     Complete compatibility/coverage and all eight persistent cross-language
-    configurations pass; changes.txt records the official totals. Publication
-    and fresh exact-head CI follow under CHANGE-RECORDS-PLAN.md. Page WAL/repair, finer composition,
+    configurations pass; changes.txt records the official totals. All nine workflows pass on dd22de1; changes-ci.txt records SHA, timestamps
+    and links. See CHANGE-RECORDS-PLAN.md. Page WAL/repair, finer composition,
     full-project coverage and wider cluster/competitor criteria remain open.
+
+13. The optional SQLite journal now has pre-implementation adapter contracts,
+    independently authored BLOB/schema vectors and passing focused native/JS
+    controls. The selected component supplies physical WAL/FULL and explicit
+    checkpoints while preserving existing logical encodings and default builds.
+    Complete local suites pass: 852 native, 1,989 C# per configuration, 496 actual
+    WASM, 168 JS and 217 repository tests. All eight SQLite configurations pass
+    Rust -> C# -> Node -> Bun -> Deno persistent reopening; sqlite.txt records
+    official coverage. Fresh exact-head CI is required after publication. See
+    SQLITE-JOURNAL-PLAN.md. Legacy page repair, LSM, complete
+    coverage and wider cluster/competitor criteria stay open.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

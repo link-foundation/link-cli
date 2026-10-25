@@ -16,6 +16,9 @@ internal static class ProbeProgram
             if (args is ["group-exit", var encodedPath, var encodedPoint, var physicalDelta, var encoding, var structure])
                 return EngineGroupExitTests.Child(encodedPath, encodedPoint, bool.Parse(physicalDelta),
                     Enum.Parse<Engine.RevisionEncoding>(encoding), Enum.Parse<Engine.StateStructure>(structure));
+            if (args is ["sqlite-exit", var sqlitePath, var sqlitePoint, var sqliteDelta, var sqliteEncoding, var sqliteStructure])
+                return EngineSqliteExitTests.Child(sqlitePath, sqlitePoint, bool.Parse(sqliteDelta),
+                    Enum.Parse<Engine.RevisionEncoding>(sqliteEncoding), Enum.Parse<Engine.StateStructure>(sqliteStructure));
             if (args is ["row-wal-exit", var rowDirectory, var rowOperation, var rowExplicit])
                 return TransactionRowWalExitTests.Child(rowDirectory, rowOperation, bool.Parse(rowExplicit));
             if (args is ["deep-ancestry", var operation, var ancestryDirectory]) return VersionAncestryDepthTests.Child(operation, ancestryDirectory);

@@ -165,3 +165,43 @@ measures logical bytes, without timing or physical durability claims. See
 [canonical protocol](../../protocol/engine-changes.md),
 [configuration/costs](../../ENGINE-CHANGE-RECORDS.md) and
 [execution plan](CHANGE-RECORDS-PLAN.md).
+
+## Reusing a physical SQLite journal component
+
+The separate [SQLite adapter](../../ENGINE-SQLITE.md) reuses the maintained pager,
+WAL and checkpoint code at the ordered-log seam. Rust selects rusqlite 0.41.0
+(audited tag `a60e76b5e86ee60442213efe79758a6c2ca8cf3d`) with bundled
+libsqlite3-sys 0.39.1 / SQLite 3.54.1. C# accepts an owned `DbConnection` without
+adding a core provider dependency. JS accepts a synchronous connection from
+Node, Bun or Deno through a separate entry point; native SQLite is excluded
+from the WASM build. This is component reuse, without copied SQLite sources.
+
+Final C# execution selects Microsoft.Data.Sqlite 10.0.14; the persistent example
+reports SQLite 3.53.3. The repository's latest-dependency policy also requires
+System.CommandLine 2.0.14. Both C# configurations pass with those versions; the
+core library remains independent of a SQLite provider package.
+
+The reviewed 3.54.1 amalgamation has SHA-256
+`0c657666d819f261cc4007526ad57e1669de9949df7a8ea847aa284a2bf0ee52`.
+`walFrames` / `sqlite3WalFrames` at lines 70996–71247 checksums frames and handles FULL commit
+sync before publishing the WAL-index header. The checkpoint restart path at
+69185–69248 checks WAL salts under the reader lock. Primary contracts are
+[WAL](https://www.sqlite.org/wal.html),
+[synchronous](https://www.sqlite.org/pragma.html#pragma_synchronous) and
+[checkpoint](https://www.sqlite.org/pragma.html#pragma_wal_checkpoint).
+Require runtime >= 3.51.3 for the documented WAL-reset race fix. Current CI's
+Node 24.22.1 [bundled header](https://github.com/nodejs/node/blob/v24.22.1/deps/sqlite/sqlite3.h#L144)
+specifies 3.53.4; the adapter checks the actual runtime rather than assuming a
+Node version always supplies a particular SQLite version.
+
+Inference for this seam: put a pending record group inside BEGIN IMMEDIATE /
+COMMIT, retain exact UTF-8 BLOB bytes across providers, and check the expected
+tail while holding write ownership. SQLite locking does not invalidate another
+engine's cached immutable state; stale owners must reopen. A COMMIT error can
+follow success, so the adapter fences and preserves discovery rather than
+retrying blindly. Provider-specific finite retries remain explicit, especially
+Microsoft.Data.Sqlite's independent command timeout. Database/checkpoint work
+now has a selected physical implementation; legacy mapped page repair, LSM,
+doublewrite and physical power-loss testing remain distinct open criteria.
+See [protocol/vectors](../../protocol/sqlite-log.md) and
+[execution plan](SQLITE-JOURNAL-PLAN.md) for tests and exact provider scope.

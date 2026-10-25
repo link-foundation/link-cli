@@ -22,7 +22,7 @@ complete the original R1–R12 acceptance criteria.
 | R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 496 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 73.12% lines / 74.51% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
 | R9 | Document each scenario | Runnable cache, durable store and replicated/sharded examples with failure semantics, ownership and persistence settings. | docs/ENGINE-STRATEGIES.md, docs/ENGINE-CLUSTERS.md and Rust/C#/JS examples cover implemented options, including consensus-backed shard groups. Further deployment strategies need their own recipes. |
 | R10 | Horizontal cluster, shared and shared-nothing options | TCP/advisory shared stores, independent shard namespaces, replicated logs and consensus-backed atomic shard groups. | Shared coordination and immutable journals on independently routed data groups implemented in all languages. Real leader failover, data-group outage, atomic pointer publication and native/WASM interoperability verified. Catalog throughput, whole-journal transfers and object retention limit scale; automatic balancing and multi-catalog transactions are not supplied. |
-| R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus and cross-shard coordination implemented. Efficient WAL/LSM structures and other listed algorithm gaps remain unfinished. |
+| R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus, cross-shard coordination and a selected SQLite pager/WAL component are implemented. Legacy physical repair, LSM and other listed algorithm gaps remain unfinished. |
 | R12 | Deep case study / collect data / plan + execute one PR | This directory, preserved original issue, plan, requirements, source research and test evidence; PR 139 with positive closing reference. | In progress |
 
 The C# scheduling audit also reproduces starvation with four tiny owners and a
@@ -209,5 +209,21 @@ bytes, retaining pins and exact reopening. Full local suites pass: 840 native,
 496 actual WASM, 1,946 C# per configuration, 113 JS and 217 repository checks.
 All runtime conformance and eight persistent cross-language configurations pass.
 See CHANGE-RECORDS-PLAN.md, changes-before.txt, changes.txt and the protocol/recipe.
-Fresh exact-head CI is required for publication. Complete coverage, physical
+All nine workflows pass on dd22de1; see changes-ci.txt. Complete coverage, physical
 page storage, finer composition and wider competitor/cluster criteria stay open.
+
+The selected SQLite component (R1/R5/R6/R7/R8/R9/R11) adds physical page WAL,
+WAL/FULL SQL group commits and explicit checkpoint counters at the existing log
+seam. Bundled optional Rust, provider-neutral C# and separately exported JS
+adapters preserve the default dependency paths. Independent schema/BLOB vectors,
+stale/busy owners, commit faults, bounded storage-full, pinned readers and copied
+WAL damage controls pass focused tests. Both native languages exercise forty
+bounded child exits across map/logical/physical encodings. Full local suites pass:
+852 native, 1,989 C# per configuration, 496 actual WASM, 168 JS and 217 repository
+checks. All eight configurations pass Rust -> C# -> Node -> Bun -> Deno persistent
+reopening. Four before-failing C# missing-result controls and nine before-failing
+existing JS Unicode controls now pass. See SQLITE-JOURNAL-PLAN.md, sqlite-before.txt
+and sqlite.txt for official coverage. Fresh exact-head CI remains required after
+publication. This component addresses a selected physical page-WAL
+path; legacy torn mapped pages, doublewrite, LSM, real power loss, complete
+coverage and the remaining distributed/competitor requirements stay unfinished.

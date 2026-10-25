@@ -2254,3 +2254,64 @@ redo does not implement a physical pager, doublewrite, LSM, torn-page repair or
 real power-loss verification. Finer independent decorator composition and wider
 competitor/cluster requirements remain open. The native issue goal stays active;
 fresh exact-head CI is required after publication.
+
+
+## Optional SQLite physical journal and Unicode preservation
+
+The selected SQLite component supplies a maintained physical pager, checksummed
+page WAL, WAL/FULL commit and explicit checkpoint counters at the replaceable
+ordered-log boundary. Rust selects an optional bundled component; C# owns an
+application-selected DbConnection; JS exports a separate provider-neutral entry.
+The bare/default Rust, universal JS and actual WASM paths import no SQLite
+provider. One engine owns cached state; stale independent owners reject rather
+than claiming cross-engine MVCC. The [recipe](../../ENGINE-SQLITE.md) documents
+same-host VFS assumptions, sidecar ownership, finite provider retries and costs.
+
+First-authored adapter contracts precede implementation. Independent schema,
+sequence and UTF-8 BLOB fixtures, pending/committed visibility, stale/busy owners,
+pinned SQL readers, setting drift, malformed payloads, constructor/close cleanup,
+finite storage-full and before/after COMMIT faults verify exact committed prefixes.
+Forty finite real child exits per native language cover both maps, logical
+encodings and physical delta settings; opposite-encoding reopen and following
+writes pass. Intact/torn/checksum-damaged WAL copies compare actual recovery,
+quick_check and following commits. These do not simulate physical power loss.
+
+The work also reproduced nine existing JS payload regressions before changing
+TextDecoder: a leading U+FEFF was stripped from literals, whole/fragmented framing
+and file journals. ignoreBOM:true preserves accepted opaque data and fatal UTF-8
+validation remains. Four new-adapter C# controls first expose missing numeric
+provider rows silently converted to zero; explicit rejection, owned cleanup,
+reopening and following writes now pass. Before evidence is in sqlite-before.txt.
+
+Complete sequential suites pass: 852 native Rust standard tests plus the custom
+stdout harness, 1,989 C# tests in each Debug/Release configuration, 496 actual-WASM
+tests, 168 JS tests, strict TS and 217 repository checks. Formatting, strict
+native/WASM Clippy, source sizes, release fragments, actionlint/ShellCheck and
+latest-dependency checks pass. All eighteen JS production modules and three
+WASM wrapper files reach 100% measured lines/branches/functions. OOM counters
+remain zero. The final C# reruns include all 43 focused SQLite cases and the
+10.0.14 provider; earlier C# totals are not substituted for these final results.
+
+Generated WASM conformance passes Node, Bun and Deno. Existing persistent group,
+ordinary name/undo and eight cross-language engine configurations pass. All eight
+SQLite configurations also reopen the same database in Rust -> C# -> Node -> Bun
+-> Deno order, checking prior names/rows/revisions, following independent group
+commits, pins and checkpointing. Actual versions are recorded in sqlite.txt.
+
+Official complete-run coverage, without denominator filtering or diagnostic unions:
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,643/12,506 (93.10%) | 2,099/2,524 (83.16%) | 1,496/1,638 (91.33%) |
+| Actual WASM, complete linked source | 8,636/11,811 (73.12%) | 1,619/2,173 (74.51%) | 1,129/1,588 (71.10%) |
+| C# Debug | 7,248/7,763 (93.37%) | 3,751/4,190 (89.52%) | Not reported by this collector |
+| C# Release | 5,578/5,898 (94.57%) | 3,718/4,165 (89.27%) | Not reported by this collector |
+
+The selected native SQLite component measures 98.03% lines / 80.65% branches /
+100% functions. C# SQLite lines reach 100%, with its Debug class reporting 96.42%
+branches. Full native, linked-WASM and C# coverage remains below 100%. SQLite
+retains complete logical journals and does not repair legacy mapped files.
+Doublewrite, LSM, real power loss, finer independent composition and wider
+cluster/competitor requirements remain open. See SQLITE-JOURNAL-PLAN.md and the
+acceptance inventory. Fresh exact-head CI is required after publication; the
+native issue goal remains active and PR 139 stays draft.
