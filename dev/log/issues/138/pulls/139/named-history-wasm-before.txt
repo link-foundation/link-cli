@@ -14,9 +14,9 @@ failures:
         assertion `left == right` failed
           left: Some("changed")
          right: Some("first 雪|\0\n")
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpPQMKc5/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpPQMKc5/wasm-bindgen-test.js:675:18)
@@ -28,9 +28,9 @@ failures:
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[3441]:0x244c70)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[6018]:0x2b8102)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[20048]:0x357376)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[21424]:0x3599e3)
@@ -50,9 +50,9 @@ failures:
         assertion `left == right` failed
           left: None
          right: Some("first 雪|\0\n")
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpPQMKc5/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpPQMKc5/wasm-bindgen-test.js:675:18)
@@ -64,9 +64,9 @@ failures:
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[3441]:0x244c70)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[6018]:0x2b8102)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[20048]:0x357376)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[21424]:0x3599e3)
@@ -86,9 +86,9 @@ failures:
         assertion `left == right` failed
           left: None
          right: Some("second")
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpPQMKc5/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpPQMKc5/wasm-bindgen-test.js:675:18)
@@ -100,9 +100,9 @@ failures:
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[3441]:0x244c70)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[6018]:0x2b8102)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[20048]:0x357376)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[21424]:0x3599e3)
@@ -122,9 +122,9 @@ failures:
         assertion `left == right` failed
           left: None
          right: Some("first 雪|\0\n")
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpPQMKc5/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpPQMKc5/wasm-bindgen-test.js:675:18)
@@ -136,9 +136,9 @@ failures:
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[3441]:0x244c70)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[6018]:0x2b8102)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[20048]:0x357376)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[21424]:0x3599e3)
@@ -158,9 +158,9 @@ failures:
         assertion `left == right` failed
           left: None
          right: Some("first 雪|\0\n")
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpPQMKc5/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpPQMKc5/wasm-bindgen-test.js:675:18)
@@ -172,9 +172,9 @@ failures:
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[3441]:0x244c70)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[6018]:0x2b8102)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[20048]:0x357376)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[21424]:0x3599e3)
@@ -192,9 +192,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_named_history_tests.rs:78:5:
         a name-only write must advance version history
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpPQMKc5/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpPQMKc5/wasm-bindgen-test.js:675:18)
@@ -206,9 +206,9 @@ failures:
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[3441]:0x244c70)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[6018]:0x2b80d4)
             at storage-d279bf10a77f2bc4.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[20048]:0x357376)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-d279bf10a77f2bc4.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-d279bf10a77f2bc4.wasm-026a997a:wasm-function[21424]:0x3599e3)

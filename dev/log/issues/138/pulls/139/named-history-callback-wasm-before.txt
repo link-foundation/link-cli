@@ -52,9 +52,9 @@
 491-        assertion `left == right` failed
 492-          left: "original"
 493-         right: "updated 雪"
-494-        
+494-
 495-        Stack:
-496-        
+496-
 497-        Error
 498-            at /tmp/.tmpGvjAKF/wasm-bindgen-test.js:390:25
 499-            at logError (/tmp/.tmpGvjAKF/wasm-bindgen-test.js:957:18)
@@ -66,9 +66,9 @@
 505-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_with_hook (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4498]:0x303cb3)
 506-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[8770]:0x3b0381)
 507-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::sys::backtrace::__rust_end_short_backtrace::<std[2b356c9112ee3216]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[25292]:0x460f0b)
-508-        
-509-        
-510-    
+508-
+509-
+510-
 511-    JS exception that was thrown:
 512-        RuntimeError: unreachable
 513-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::__rust_abort (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[26584]:0x4633b8)
@@ -86,9 +86,9 @@
 525-    error output:
 526-        panicked at tests/../../tests/transaction_name_failure_tests.rs:378:9:
 527-        assertion failed: tx.update(id, 21, 22).is_err()
-528-        
+528-
 529-        Stack:
-530-        
+530-
 531-        Error
 532-            at /tmp/.tmpGvjAKF/wasm-bindgen-test.js:390:25
 533-            at logError (/tmp/.tmpGvjAKF/wasm-bindgen-test.js:957:18)
@@ -100,9 +100,9 @@
 539-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_with_hook (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4498]:0x303cb3)
 540-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[8770]:0x3b0353)
 541-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::sys::backtrace::__rust_end_short_backtrace::<std[2b356c9112ee3216]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[25292]:0x460f0b)
-542-        
-543-        
-544-    
+542-
+543-
+544-
 545-    JS exception that was thrown:
 546-        RuntimeError: unreachable
 547-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::__rust_abort (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[26584]:0x4633b8)
