@@ -128,8 +128,17 @@ abort. Uncertain retries scan the journal to avoid duplicate decision markers;
 normal commits and known-checkpoint retries do not pay that O(journal length)
 read cost. A failed retry read retains ownership too. C# retries finish
 synchronously even through `CommitAsync`.
-Explicit version owners likewise retain admission until their checkpoint and
-branch publication succeed, including named writes. This retry contract does not establish atomic
+Explicit and automatic version owners retain admission until their checkpoint
+and branch publication succeed, including named writes. Automatic row writes
+create an implicit version owner before mutation. Pre-commit write/callback/log
+errors undo through that owner; a failed undo keeps it for cleanup retry. After
+a commit attempt, cleanup resolves that attempt and finishes publication instead
+of undoing a possibly durable decision. Rust `commit`, `rollback` and `save`,
+and C# owner/graph disposal, retry this retained work. Existing/no-op allocation
+and lookup do not create an owner or decision; C# asynchronous commits retain
+their selected queue policy. This adds the same version-owner bookkeeping as an
+explicit operation, without selecting a stronger inner checkpoint policy.
+This retry contract does not establish atomic
 publication across a process exit between journal commit and version sidecars.
 Creating the legacy version layer over an existing transaction journal attributes
 only committed records. Rolled-back and recovered pending sequences are not

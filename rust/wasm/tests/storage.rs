@@ -66,3 +66,6 @@ mod transactions_commit_decision;
 
 #[path = "../../tests/version_initial_abort_tests.rs"]
 mod version_initial_abort;
+
+#[path = "../../tests/version_automatic_contract_tests.rs"]
+mod version_automatic_contract;

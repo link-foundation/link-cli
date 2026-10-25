@@ -1285,3 +1285,49 @@ failure retention, abrupt-exit sidecar publication, history truncated before a
 referenced transition, broader strategies and complete coverage remain open.
 Rejecting previously invalid attribution does not repair data already changed
 by an earlier aborted checkout. Fresh exact-head CI is required after push.
+
+## Automatic version ownership
+
+Before: all 32 C# cases and eleven Rust functions fail. Automatic writes have
+no facade transaction after an inner commit/publication error. C# owner/graph
+cleanup cannot publish the branch; Rust commit/rollback report no version owner,
+and save leaves head 2 instead of committed head 3. Complete behavioral before
+logs are retained; fixture and assertion corrections are excluded from baseline.
+
+Automatic row writes now create the same facade owner as explicit transactions.
+It retains the original branch and transition range until commit and publication
+succeed. Pre-commit write/callback/journal errors undo automatically; failed undo
+retains the owner for retry. Cleanup after a commit attempt resolves that decision
+and finishes publication, without undoing a possibly durable commit. Existing and
+zero-address allocation and existing lookup remain no-ops. Explicit ownership and
+C# normal asynchronous checkpoint policy are preserved.
+
+C# covers eight persistence phases before/after errors with owner/graph cleanup,
+repeated publication failure, five row/name write fences plus metadata fences,
+exact branch heads, checkout, actual mapped reopening and a following commit.
+Eighteen pre-commit controls cover callback/transition faults, automatic undo and
+failed undo retry; an async control observes its checkpoint then joins shutdown.
+All 153 focused C# cases pass. Eleven Rust functions cover 22 real filesystem
+fault schedules (decision flush and checkpoint), commit/rollback/save cleanup,
+every existing write entry point, exact markers, checkout, reopening and following
+automatic edits. Four portable controls check no-ops, ordinary errors, explicit
+undo ownership and automatic entry points; they also run on actual WASM. All
+59 focused Rust contracts pass. Filesystem faults are not represented as WASM I/O.
+
+Full C# Debug/Release: 1,307 pass each; zero skips.
+Full native Rust: 653 standard tests and the custom stdout harness pass;
+four child entry points remain ignored by the ordinary harness.
+Actual WASM: 345 pass. All three wrapper modules remain 100% in measured lines,
+functions and reported branches. Strict native/WASM Clippy, formatting,
+release metadata and combined source-size checks pass.
+Debug: 6,169/6,659 lines (92.64%), 2,835/3,236 branches (87.61%)
+Release: 4,677/4,975 lines (94.01%), 2,814/3,217 branches (87.47%)
+native: 9,518/10,331 lines (92.13%), 1,582/1,922 branches (82.31%), 1,274/1,414 functions (90.10%)
+wasm: 6,727/9,940 lines (67.68%), 1,122/1,627 branches (68.96%), 925/1,398 functions (66.17%)
+
+Project-wide coverage remains below the required 100%. Abrupt-exit sidecar
+publication needs a persisted intent and real finite process-exit tests; an
+in-memory owner only establishes graceful cleanup retry. Truncated referenced
+history, broader strategies and complete coverage remain open. C# CI at the
+preceding SHA failed two Windows async waits; full logs are preserved and worker
+scheduling is being audited separately. Fresh exact-head CI is required after push.

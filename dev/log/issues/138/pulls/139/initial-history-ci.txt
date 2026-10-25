@@ -1,0 +1,59 @@
+Initial committed-history batch exact-head CI
+SHA: 1c1ef38b321877d7bc0021944ea729efb03c7e07
+Created: 2026-10-24T23:54:49Z (after push of that commit)
+
+Workflows: success — https://github.com/link-foundation/link-cli/actions/runs/40144628353
+Broken Link Checker: success — https://github.com/link-foundation/link-cli/actions/runs/40144628318
+Dependencies: success — https://github.com/link-foundation/link-cli/actions/runs/40144628363
+Docs: success — https://github.com/link-foundation/link-cli/actions/runs/40144628342
+JS client CI: success — https://github.com/link-foundation/link-cli/actions/runs/40144628322
+C# CI/CD Pipeline: failure — https://github.com/link-foundation/link-cli/actions/runs/40144628358
+Security: success — https://github.com/link-foundation/link-cli/actions/runs/40144628317
+WebAssembly CI: success — https://github.com/link-foundation/link-cli/actions/runs/40144628300
+Rust CI/CD Pipeline: success — https://github.com/link-foundation/link-cli/actions/runs/40144628296
+
+C# Windows failed two existing async waits; eight other workflows passed.
+Complete logs downloaded to ci-logs/csharp-40144628358.log (12,760 lines).
+Failure excerpts below retain source line references. The first timed out joining
+worker cleanup at AsyncShutdownTests.cs:61; the second expected applied 2 but
+observed 0 after its five-second wait. Do not represent this SHA as all green.
+See ASYNC-WORKER-PLAN.md for the finite worker-starvation investigation.
+8490: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3496384Z [xUnit.net 00:00:16.97]     Foundation.Data.Doublets.Cli.Tests.AsyncShutdownTests.EveryShutdownCallerWaitsForInFlightStorageUse(callers: 1) [FAIL]
+8491: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3522099Z [xUnit.net 00:00:16.97]       System.TimeoutException : The operation has timed out.
+8492: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3522674Z [xUnit.net 00:00:16.97]       Stack Trace:
+8493: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3524435Z [xUnit.net 00:00:16.97]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\AsyncShutdownTests.cs(61,0): at Foundation.Data.Doublets.Cli.Tests.AsyncShutdownTests.EveryShutdownCallerWaitsForInFlightStorageUse(Int32 callers)
+8494: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3525859Z [xUnit.net 00:00:16.97]         --- End of stack trace from previous location ---
+8495: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3944543Z   Passed Foundation.Data.Doublets.Cli.Tests.Tests.AdvancedMixedQueryProcessor.QuotedAndEncodedReferencesPreserveLiteralNames(name: "\"one\"") [13 ms]
+8496: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3946431Z   Passed Foundation.Data.Doublets.Cli.Tests.LinksUniquenessAndUsagesRepointingResolverTests.AUsageOfTheMergedLinkInBothHalvesIsRepointedInOneUpdate [10 ms]
+8497: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3948039Z   Failed Foundation.Data.Doublets.Cli.Tests.AsyncShutdownTests.EveryShutdownCallerWaitsForInFlightStorageUse(callers: 1) [11 s]
+8498: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3949512Z   Error Message:
+8499: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3949760Z    System.TimeoutException : The operation has timed out.
+8500: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3950001Z   Stack Trace:
+8501: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3950777Z      at Foundation.Data.Doublets.Cli.Tests.AsyncShutdownTests.EveryShutdownCallerWaitsForInFlightStorageUse(Int32 callers) in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\AsyncShutdownTests.cs:line 61
+8502: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3951869Z --- End of stack trace from previous location ---
+8503: Test (windows-2025)	Run tests	2026-10-24T23:56:43.3952628Z   Passed Foundation.Data.Doublets.Cli.Tests.TransactionRetentionRollbackTests.BackgroundRetentionLeavesPendingTransactionsUnapplied(chunked: False) [4 s]
+9872: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6438427Z [xUnit.net 00:01:43.26]     Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.AsyncCommitEventuallyMarksApplied [FAIL]
+9873: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6439484Z [xUnit.net 00:01:43.26]       Assert.Equal() Failure: Values differ
+9874: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6440015Z [xUnit.net 00:01:43.27]       Expected: 2
+9875: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6440320Z [xUnit.net 00:01:43.27]       Actual:   0
+9876: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6440819Z [xUnit.net 00:01:43.27]       Stack Trace:
+9877: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6441983Z [xUnit.net 00:01:43.27]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\TransactionsDecoratorTests.cs(215,0): at Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.<>c.<AsyncCommitEventuallyMarksApplied>b__10_0(TransactionsDecorator tx, NamedTypesDecorator`1 _)
+9878: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6443559Z [xUnit.net 00:01:43.27]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\TransactionsDecoratorTests.cs(253,0): at Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.RunWithTransactions(Action`2 action)
+9879: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6444941Z [xUnit.net 00:01:43.27]         D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\TransactionsDecoratorTests.cs(199,0): at Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.AsyncCommitEventuallyMarksApplied()
+9880: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6446130Z [xUnit.net 00:01:43.27]            at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+9881: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6446940Z [xUnit.net 00:01:43.27]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+9882: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6489440Z   Passed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "log-after", automatic: False, cleanup: "commit") [510 ms]
+9883: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6491052Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.RetryPublishesCommittedVersionAfterCheckpointFailure(point: "log-after", entry: "rollback") [457 ms]
+9884: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6492286Z   Passed Foundation.Data.Doublets.Cli.Tests.TransactionCommitCheckpointFailureTests.RetryFinishesKnownCommitBeforeFollowingEdit(point: "marker-after", automatic: False, cleanup: "rollback") [543 ms]
+9885: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6493693Z   Passed Foundation.Data.Doublets.Cli.Tests.TransactionJournalFailureTests.CascadingWritesRemainReversibleAfterJournalFailure(explicitTransaction: True, after: True, failAt: 1, rejectCommit: False, cleanupFailure: False) [827 ms]
+9886: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6495149Z   Passed Foundation.Data.Doublets.Cli.Tests.VersionCommitFailureTests.RetryPublishesCommittedVersionAfterCheckpointFailure(point: "vc-transition-after", entry: "graph") [517 ms]
+9887: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6496286Z   Failed Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.AsyncCommitEventuallyMarksApplied [5 s]
+9888: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6496749Z   Error Message:
+9889: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6496936Z    Assert.Equal() Failure: Values differ
+9890: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6497127Z Expected: 2
+9891: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6497258Z Actual:   0
+9892: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6497384Z   Stack Trace:
+9893: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6498277Z      at Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.<>c.<AsyncCommitEventuallyMarksApplied>b__10_0(TransactionsDecorator tx, NamedTypesDecorator`1 _) in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\TransactionsDecoratorTests.cs:line 215
+9894: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6499910Z    at Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.RunWithTransactions(Action`2 action) in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\TransactionsDecoratorTests.cs:line 253
+9895: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6501181Z    at Foundation.Data.Doublets.Cli.Tests.Tests.TransactionsDecoratorTests.AsyncCommitEventuallyMarksApplied() in D:\a\link-cli\link-cli\csharp\Foundation.Data.Doublets.Cli.Tests\TransactionsDecoratorTests.cs:line 199
+9896: Test (windows-2025)	Run tests	2026-10-24T23:58:09.6502279Z    at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)

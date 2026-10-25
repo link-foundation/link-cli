@@ -64,20 +64,23 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    suites in both native languages and actual WASM. Ordinary explicit/automatic
    owners and explicit version cleanup are covered. All nine workflows pass on
    `7c0da30`. See COMMIT-OUTCOME-PLAN.md and commit-decision-ci.txt.
-4. Initial version histories now exclude explicit/recovered aborts, reject
-   previously invalid attribution and reject a live inner owner. Nine cases per
-   native language first fail; full local suites and actual WASM pass. Publish
-   and verify exact-head CI; see INITIAL-HISTORY-PLAN.md.
-5. Audit automatic version writes whose inner commit/publication fails, then
-   abrupt process exit between a journal commit and branch-sidecar publication.
-   Automatic writes currently attribute only after success and may lack a
-   retained facade owner. Reproduce before changing it, and use finite real
-   subprocess faults in addition to graceful disposal/reopen tests. Prepared
-   ignored fixtures are described in AUTOMATIC-VERSION-PLAN.md.
-6. Reproduce ordinary legacy named writes across rollback/history/reopen. Their
-   admission fence is distinct from logging names atomically; staged sessions
-   already keep names in their immutable revisions.
-7. Continue the source-backed algorithm/component comparison, efficient journal
+4. Initial version histories exclude explicit/recovered aborts, reject invalid
+   attribution and reject a live inner owner. Nine cases per native language
+   first fail; full local suites and actual WASM pass. Eight workflows pass on
+   1c1ef38; C# Windows fails two async waits. See INITIAL-HISTORY-PLAN.md and
+   initial-history-ci.txt; resolve the scheduling root cause before finalization.
+5. Automatic version writes now retain an implicit owner through failed decisions,
+   checkpoints and metadata publication. Full local native/C#/actual-WASM suites
+   pass, including pre-commit undo, async and no-op controls. Publish and verify
+   fresh exact-head CI; see AUTOMATIC-VERSION-PLAN.md. Reproduce idle ThreadPool
+   worker starvation in a finite isolated child; see ASYNC-WORKER-PLAN.md.
+6. Persist a publication intent for abrupt process exit between journal decision
+   and branch-sidecar publication. Establish finite real child-process failures
+   first; see VERSION-PUBLICATION-PLAN.md. Graceful cleanup is not this guarantee.
+7. Reproduce ordinary legacy named writes across rollback/history/reopen and
+   truncated history across checkout. Their admission fence is distinct from
+   logging names atomically; staged sessions already keep names in revisions.
+8. Continue the source-backed algorithm/component comparison, efficient journal
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.
 

@@ -19,7 +19,8 @@ The audit established these failures before changing attribution.
       intact; do not claim to repair already altered data. Missing retained
       history remains a separate unfinished audit.
 - [x] Run the full relevant suites, strict checks and measured coverage.
-- [ ] Publish the atomic change and verify every exact-head workflow.
+- [x] Publish the atomic change and inspect every exact-head workflow.
+- [ ] Resolve C# Windows async scheduling failures and verify fresh CI.
 
 This audit is independent of abrupt exit between a journal decision and legacy
 sidecar publication. That durability window needs a persisted publication intent
@@ -38,4 +39,5 @@ All nine new C# cases pass within 78 focused contracts. Full C# Debug/Release
 each pass 1,256 tests, native Rust passes 638 standard tests plus the stdout
 harness, and actual WASM passes 341. Strict checks pass. Measured coverage and
 limits are preserved in initial-history.txt; complete project coverage remains
-below 100%. Fresh exact-head CI is pending after publication.
+below 100%. Eight exact-head workflows pass at 1c1ef38; C# Windows fails two async waits.
+See initial-history-ci.txt and ASYNC-WORKER-PLAN.md; this is not an all-green SHA.

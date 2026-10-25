@@ -201,14 +201,7 @@ impl VersionControlDecorator {
     // -- Write API (attribute new transitions to the current branch) ----
 
     pub fn create(&mut self, source: u32, target: u32) -> Result<u32> {
-        self.ensure_write_allowed()?;
-        let before_seq = self.transactions.last_logged_sequence();
-        let id = self.transactions.create(source, target)?;
-        if self.active_transaction.is_none() {
-            let branch = self.current_branch.clone();
-            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
-        }
-        Ok(id)
+        self.run_version_write(|transactions| transactions.create(source, target))
     }
 
     pub fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
@@ -224,16 +217,9 @@ impl VersionControlDecorator {
         target: u32,
         observer: ChangeObserver<'_>,
     ) -> Result<Link> {
-        self.ensure_write_allowed()?;
-        let before_seq = self.transactions.last_logged_sequence();
-        let result = self
-            .transactions
-            .update_observed(id, source, target, observer)?;
-        if self.active_transaction.is_none() {
-            let branch = self.current_branch.clone();
-            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
-        }
-        Ok(result)
+        self.run_version_write(|transactions| {
+            transactions.update_observed(id, source, target, observer)
+        })
     }
 
     pub fn delete(&mut self, id: u32) -> Result<Link> {
@@ -243,25 +229,11 @@ impl VersionControlDecorator {
     /// [`Self::delete`], reporting every change the decorator stack made —
     /// cascaded deletions of usages included.
     pub fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
-        self.ensure_write_allowed()?;
-        let before_seq = self.transactions.last_logged_sequence();
-        let result = self.transactions.delete_observed(id, observer)?;
-        if self.active_transaction.is_none() {
-            let branch = self.current_branch.clone();
-            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
-        }
-        Ok(result)
+        self.run_version_write(|transactions| transactions.delete_observed(id, observer))
     }
 
     pub fn create_and_update(&mut self, source: u32, target: u32) -> Result<u32> {
-        self.ensure_write_allowed()?;
-        let before_seq = self.transactions.last_logged_sequence();
-        let id = self.transactions.create_and_update(source, target)?;
-        if self.active_transaction.is_none() {
-            let branch = self.current_branch.clone();
-            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
-        }
-        Ok(id)
+        self.run_version_write(|transactions| transactions.create_and_update(source, target))
     }
 
     pub fn exists(&self, id: u32) -> bool {
@@ -296,13 +268,39 @@ impl VersionControlDecorator {
     /// Fallible explicit-address allocation, attributed like other writes.
     pub fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
         self.ensure_write_allowed()?;
-        let before_seq = self.transactions.last_logged_sequence();
-        let created = self.transactions.ensure_created(id)?;
-        if self.active_transaction.is_none() {
-            let branch = self.current_branch.clone();
-            self.attribute_new_transitions_for_branch(before_seq, &branch)?;
+        // Existing and zero addresses remain read-only no-ops: do not open a
+        // transaction or write a decision marker for them.
+        if id == 0 || self.transactions.exists(id) {
+            return Ok(id);
         }
-        Ok(created)
+        self.run_version_write(|transactions| transactions.ensure_created(id))
+    }
+
+    fn run_version_write<T>(
+        &mut self,
+        write: impl FnOnce(&mut TransactionsDecorator) -> std::result::Result<T, crate::LinkError>,
+    ) -> Result<T> {
+        self.ensure_write_allowed()?;
+        let automatic = self.active_transaction.is_none();
+        if automatic {
+            self.begin_transaction()?;
+        }
+        let result = match write(&mut self.transactions) {
+            Ok(result) => result,
+            Err(error) => {
+                // Pre-commit failures still undo automatic effects. An undo
+                // failure leaves the facade owner available for retry.
+                if automatic {
+                    self.rollback()?;
+                }
+                return Err(error.into());
+            }
+        };
+        // Never undo a commit error: its decision may already be durable.
+        if automatic {
+            self.commit()?;
+        }
+        Ok(result)
     }
 
     fn attribute_new_transitions_for_branch(

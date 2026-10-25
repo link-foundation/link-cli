@@ -106,3 +106,8 @@ ownership when cleanup resolves an uncertain inner commit.
 Exclude aborted and recovered pending records from initial version history and
 its branch head. Reject existing sidecars that attribute a known uncommitted
 record, and reject version construction/recovery over a live inner transaction.
+
+Retain an implicit version owner for automatic writes through failed commit and
+metadata publication. Retry committed work through cleanup, preserve ordinary
+pre-commit undo (including failed undo retry), and fence all new mutations until
+the original branch publication finishes. Preserve no-op and async policies.

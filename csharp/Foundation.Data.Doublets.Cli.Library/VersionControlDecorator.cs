@@ -167,12 +167,24 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         lock (_lock)
         {
             EnsureWriteAllowedLocked();
-            var beforeSeq = _transactions.LastLoggedSequence;
-            var result = innerWrite();
-            if (_activeTransaction is null)
+            // An automatic write needs the same publication owner as an
+            // explicit transaction, including when its commit throws.
+            var automatic = _activeTransaction is null ? BeginTransaction() : null;
+            uint result;
+            try
             {
-                AttributeNewTransitionsLocked(beforeSeq, _currentBranch);
+                result = innerWrite();
             }
+            catch
+            {
+                // Errors before commit still undo an automatic write. Failed
+                // undo retains this owner for a subsequent Dispose retry.
+                automatic?.Rollback();
+                throw;
+            }
+            // Keep this outside the undo catch: an attempted commit can be
+            // durable even when it reports an error, and must be completed.
+            automatic?.Commit();
             return result;
         }
     }

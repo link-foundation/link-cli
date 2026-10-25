@@ -1,0 +1,74 @@
+   Compiling link-cli v1.0.9 (<repository>/rust)
+    Finished `test` profile [unoptimized] target(s) in 6.70s
+     Running tests/version_automatic_failure_tests.rs (rust/target/debug/deps/version_automatic_failure_tests-bfe8a561702525ef)
+
+running 11 tests
+test get_or_create_waits_for_automatic_publication ... FAILED
+test composite_waits_for_automatic_publication ... FAILED
+test delete_waits_for_automatic_publication ... FAILED
+test create_waits_for_automatic_publication ... FAILED
+test commit_finishes_automatic_publication ... FAILED
+test ensure_waits_for_automatic_publication ... FAILED
+test rollback_finishes_automatic_publication ... FAILED
+test remove_name_waits_for_automatic_publication ... FAILED
+test set_name_waits_for_automatic_publication ... FAILED
+test update_waits_for_automatic_publication ... FAILED
+test save_finishes_automatic_publication ... FAILED
+
+failures:
+
+---- get_or_create_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- composite_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- delete_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- create_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- commit_finishes_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- ensure_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- rollback_finishes_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- remove_name_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- set_name_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- update_waits_for_automatic_publication stdout ----
+Error: No version-control transaction is open.
+
+---- save_finishes_automatic_publication stdout ----
+
+thread 'save_finishes_automatic_publication' (927815) panicked at tests/version_automatic_failure_tests.rs:66:9:
+assertion `left == right` failed: automatic publication lost through save at data
+  left: 2
+ right: 3
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    commit_finishes_automatic_publication
+    composite_waits_for_automatic_publication
+    create_waits_for_automatic_publication
+    delete_waits_for_automatic_publication
+    ensure_waits_for_automatic_publication
+    get_or_create_waits_for_automatic_publication
+    remove_name_waits_for_automatic_publication
+    rollback_finishes_automatic_publication
+    save_finishes_automatic_publication
+    set_name_waits_for_automatic_publication
+    update_waits_for_automatic_publication
+
+test result: FAILED. 0 passed; 11 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+error: test failed, to rerun pass `--test version_automatic_failure_tests`
