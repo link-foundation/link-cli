@@ -7,4 +7,3 @@ test version_ancestry_semantics::nested_ancestry_preserves_cutoffs_order_and_fol
 test version_ancestry_semantics::finite_deep_ancestry_and_following_writes_in_actual_wasm ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 278 filtered out; finished in 4.65s
-

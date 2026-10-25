@@ -13,7 +13,7 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:02.03]     Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "checkout") [FAIL]
 [xUnit.net 00:00:02.03]       Finite child checkout exited 134:
 [xUnit.net 00:00:02.03]       Constructed 2049 valid branches; checkout
-[xUnit.net 00:00:02.03]       
+[xUnit.net 00:00:02.03]
 [xUnit.net 00:00:02.03]       Stack overflow.
 [xUnit.net 00:00:02.03]       Repeated 799 times:
 [xUnit.net 00:00:02.03]       --------------------------------
@@ -24,14 +24,14 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
 [xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
 [xUnit.net 00:00:02.03]          at System.Threading.Thread.StartCallback()
-[xUnit.net 00:00:02.03]       
+[xUnit.net 00:00:02.03]
 [xUnit.net 00:00:02.03]       Stack Trace:
 [xUnit.net 00:00:02.03]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs(51,0): at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation)
 [xUnit.net 00:00:02.03]         --- End of stack trace from previous location ---
 [xUnit.net 00:00:02.65]     Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "fork") [FAIL]
 [xUnit.net 00:00:02.65]       Finite child fork exited 134:
 [xUnit.net 00:00:02.65]       Constructed 2049 valid branches; fork
-[xUnit.net 00:00:02.65]       
+[xUnit.net 00:00:02.65]
 [xUnit.net 00:00:02.65]       Stack overflow.
 [xUnit.net 00:00:02.65]       Repeated 798 times:
 [xUnit.net 00:00:02.65]       --------------------------------
@@ -45,7 +45,7 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
 [xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
 [xUnit.net 00:00:02.65]          at System.Threading.Thread.StartCallback()
-[xUnit.net 00:00:02.65]       
+[xUnit.net 00:00:02.65]
 [xUnit.net 00:00:02.65]       Stack Trace:
 [xUnit.net 00:00:02.65]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs(51,0): at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation)
 [xUnit.net 00:00:02.65]         --- End of stack trace from previous location ---
@@ -93,7 +93,7 @@ Repeated 798 times:
 [xUnit.net 00:00:03.21]     Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "switch") [FAIL]
 [xUnit.net 00:00:03.21]       Finite child switch exited 134:
 [xUnit.net 00:00:03.21]       Constructed 2049 valid branches; switch
-[xUnit.net 00:00:03.21]       
+[xUnit.net 00:00:03.21]
 [xUnit.net 00:00:03.21]       Stack overflow.
 [xUnit.net 00:00:03.21]       Repeated 798 times:
 [xUnit.net 00:00:03.21]       --------------------------------
@@ -106,7 +106,7 @@ Repeated 798 times:
 [xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
 [xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
 [xUnit.net 00:00:03.21]          at System.Threading.Thread.StartCallback()
-[xUnit.net 00:00:03.21]       
+[xUnit.net 00:00:03.21]
 [xUnit.net 00:00:03.21]       Stack Trace:
 [xUnit.net 00:00:03.21]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs(51,0): at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation)
 [xUnit.net 00:00:03.21]         --- End of stack trace from previous location ---

@@ -8,7 +8,7 @@ Changeset Validation	Validate changeset	2026-10-24T16:04:25.2712055Z ##[error]Mu
 Changeset Validation	Validate changeset	2026-10-24T16:04:25.2728567Z ##[error]Found changeset files added by this PR:
 Changeset Validation	Validate changeset	2026-10-24T16:04:25.2732034Z   acid-durability.md
 Changeset Validation	Validate changeset	2026-10-24T16:04:25.2733181Z   staged-engine-strategies.md
-Changeset Validation	Validate changeset	2026-10-24T16:04:25.2733941Z 
+Changeset Validation	Validate changeset	2026-10-24T16:04:25.2733941Z
 Changeset Validation	Validate changeset	2026-10-24T16:04:25.2736816Z ##[error]Please combine these into a single changeset or remove the extras.
 Changeset Validation	Validate changeset	2026-10-24T16:04:25.2745673Z ##[error]Process completed with exit code 1.
 Changeset Validation	Post Run actions/checkout@v7	﻿2026-10-24T16:04:25.3100074Z Post job cleanup.

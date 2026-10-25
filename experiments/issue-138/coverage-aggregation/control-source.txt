@@ -14,4 +14,3 @@
    11|      1|    assert_eq!(select::<u32>(true), 11);
    12|      1|    assert_eq!(select::<u32>(false), 22);
    13|      1|}
-

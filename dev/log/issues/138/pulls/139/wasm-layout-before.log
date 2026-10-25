@@ -5,15 +5,15 @@ Test	Test JavaScript	2026-10-24T16:07:54.4462799Z ℹ cancelled 0
 Test	Test JavaScript	2026-10-24T16:07:54.4462928Z ℹ skipped 0
 Test	Test JavaScript	2026-10-24T16:07:54.4463051Z ℹ todo 0
 Test	Test JavaScript	2026-10-24T16:07:54.4463190Z ℹ duration_ms 1193.883245
-Test	Test JavaScript	2026-10-24T16:07:54.4467460Z 
+Test	Test JavaScript	2026-10-24T16:07:54.4467460Z
 Test	Test JavaScript	2026-10-24T16:07:54.4467624Z ✖ failing tests:
-Test	Test JavaScript	2026-10-24T16:07:54.4467746Z 
+Test	Test JavaScript	2026-10-24T16:07:54.4467746Z
 Test	Test JavaScript	2026-10-24T16:07:54.4467918Z test at test/repositoryLayout.test.mjs:27:1
 Test	Test JavaScript	2026-10-24T16:07:54.4468472Z ✖ language code package manifests and generated evidence stay out of the root folder (1.260305ms)
 Test	Test JavaScript	2026-10-24T16:07:54.4468923Z   AssertionError [ERR_ASSERTION]: .gitkeep should live under the package-specific project tree or case-study evidence
-Test	Test JavaScript	2026-10-24T16:07:54.4469227Z   
+Test	Test JavaScript	2026-10-24T16:07:54.4469227Z
 Test	Test JavaScript	2026-10-24T16:07:54.4469338Z   true !== false
-Test	Test JavaScript	2026-10-24T16:07:54.4469521Z   
+Test	Test JavaScript	2026-10-24T16:07:54.4469521Z
 Test	Test JavaScript	2026-10-24T16:07:54.4470007Z       at TestContext.<anonymous> (file:///home/runner/work/link-cli/link-cli/js/test/repositoryLayout.test.mjs:42:12)
 Test	Test JavaScript	2026-10-24T16:07:54.4470581Z       at Test.runInAsyncScope (node:async_hooks:227:14)
 Test	Test JavaScript	2026-10-24T16:07:54.4470946Z       at Test.run (node:internal/test_runner/test:1402:25)

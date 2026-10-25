@@ -13,7 +13,7 @@ failures:
 ---- deep_checkout_uses_bounded_stack stdout ----
 
 thread 'deep_checkout_uses_bounded_stack' (1365415) panicked at tests/version_ancestry_depth_tests.rs:65:5:
-Finite child checkout: 
+Finite child checkout:
 running 1 test
 Constructed 2049 valid branches; checkout
 
@@ -26,7 +26,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ---- deep_fork_validation_uses_bounded_stack stdout ----
 
 thread 'deep_fork_validation_uses_bounded_stack' (1365419) panicked at tests/version_ancestry_depth_tests.rs:65:5:
-Finite child fork: 
+Finite child fork:
 running 1 test
 Constructed 2049 valid branches; fork
 
@@ -38,7 +38,7 @@ fatal runtime error: stack overflow, aborting
 ---- deep_switch_uses_bounded_stack stdout ----
 
 thread 'deep_switch_uses_bounded_stack' (1365438) panicked at tests/version_ancestry_depth_tests.rs:65:5:
-Finite child switch: 
+Finite child switch:
 running 1 test
 Constructed 2049 valid branches; switch
 

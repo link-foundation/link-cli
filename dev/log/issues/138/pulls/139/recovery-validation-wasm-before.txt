@@ -38,9 +38,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_fault_tests.rs:281:13:
         update/read-before/recover: failed recovery released admission
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -52,9 +52,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -72,9 +72,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_fault_tests.rs:281:13:
         recreate/read-before/recover: failed recovery released admission
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -86,9 +86,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -106,9 +106,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_fault_tests.rs:281:13:
         delete/read-before/recover: failed recovery released admission
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -120,9 +120,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -140,9 +140,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:72:9:
         failed recovery released admission
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -154,9 +154,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -174,9 +174,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:72:9:
         failed recovery released admission
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -188,9 +188,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -208,9 +208,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:72:9:
         failed recovery released admission
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -222,9 +222,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -244,9 +244,9 @@ failures:
         assertion `left == right` failed: one logical sequence despite idempotent retries
           left: 3
          right: 1
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -258,9 +258,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -280,9 +280,9 @@ failures:
         assertion `left == right` failed: one logical sequence despite idempotent retries
           left: 3
          right: 1
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -294,9 +294,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -316,9 +316,9 @@ failures:
         assertion `left == right` failed: one logical sequence despite idempotent retries
           left: 3
          right: 1
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -330,9 +330,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -350,9 +350,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         zero-sequence: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -364,9 +364,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -384,9 +384,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         zero-owner: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -398,9 +398,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -418,9 +418,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         zero-commit: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -432,9 +432,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -452,9 +452,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         zero-abort: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -466,9 +466,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -486,9 +486,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         payloads: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -500,9 +500,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -520,9 +520,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         owners: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -534,9 +534,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -554,9 +554,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         retained-contradiction: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -568,9 +568,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -588,9 +588,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         negative-sequence: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -602,9 +602,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -622,9 +622,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         timestamp: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -636,9 +636,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -656,9 +656,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         commit-abort: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -670,9 +670,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
@@ -690,9 +690,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
         abort-commit: contradictory journal accepted
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
@@ -704,9 +704,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)

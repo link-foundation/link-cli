@@ -13,9 +13,9 @@ failures:
     error output:
         panicked at tests/../../tests/transactions_recovery_fault_tests.rs:430:13:
         reload-before/recover: skipped failed reload
-        
+
         Stack:
-        
+
         Error
             at /tmp/.tmpIGXclZ/wasm-bindgen-test.js:336:25
             at logError (/tmp/.tmpIGXclZ/wasm-bindgen-test.js:675:18)
@@ -27,9 +27,9 @@ failures:
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[3348]:0x230ca8)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[5847]:0x2a065c)
             at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[19471]:0x33b685)
-        
-        
-    
+
+
+
     JS exception that was thrown:
         RuntimeError: unreachable
             at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[20817]:0x33dc16)
