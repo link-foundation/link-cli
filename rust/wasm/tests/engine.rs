@@ -69,6 +69,8 @@ fn validates_every_binding_option_and_journal_before_opening() {
         r#"{"history":"last"}"#,
         r#"{"history":true}"#,
         r#"{"constraints":["invalid"]}"#,
+        r#"{"constraintValidation":"invalid"}"#,
+        r#"{"constraintValidation":42}"#,
         r#"{"requireDurableFlush":true}"#,
     ] {
         assert!(StagedEngine::new(options, "[]").is_err(), "{options}");
@@ -79,6 +81,8 @@ fn validates_every_binding_option_and_journal_before_opening() {
     for options in [
         "{}",
         r#"{"stateStructure":"flat"}"#,
+        r#"{"constraintValidation":"scan"}"#,
+        r#"{"constraintValidation":"indexed","constraints":["references","unique-pairs","unique-names"]}"#,
         r#"{"stateStructure":"shared"}"#,
         r#"{"revisionEncoding":"snapshot"}"#,
         r#"{"revisionEncoding":"changes","stateStructure":"shared"}"#,

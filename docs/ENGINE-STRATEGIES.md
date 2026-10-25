@@ -26,6 +26,7 @@ transaction algorithm.
 | Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Compress consecutive complete snapshots with a checksummed changed span; logical change records pass through. See [format, composition and examples](ENGINE-DELTA.md). |
 | Retain small-edit immutable states | Select shared state independently of the other options | Path-copy changed entries instead of cloning a complete row map. See [costs and examples](ENGINE-SHARED-STATE.md). |
 | Serialize small edits | Select change records independently | Encode changed rows plus base/allocator metadata. Combine with shared state to avoid full candidate copies; see [costs and protocol](ENGINE-CHANGE-RECORDS.md). |
+| Validate small constrained edits | Select indexed constraint validation independently | Maintain persistent indexes only for selected constraints; see [ownership, costs and examples](ENGINE-CONSTRAINT-INDEX.md). |
 | Independent commits sharing a flush | Opt-in `commit_group` / `CommitGroup` / `commitGroup` | Preserve each accepted session's revision and share one durability boundary. [Ownership, failure outcomes and costs](ENGINE-GROUP-COMMIT.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
@@ -65,7 +66,9 @@ These properties do not apply to independent writers or direct mutation of an
 adapter behind the engine. Retry conflicts with a **new** session. A failed
 commit attempt closes its session and discards its staged writes. Allocations
 can leave gaps after rollback. An optional references, unique pairs or unique
-names constraint validates the whole proposed state at commit. Raw mutation
+names constraint validates the final proposed state at commit. Default scans
+visit all rows; optional [indexed validation](ENGINE-CONSTRAINT-INDEX.md) checks
+changed addresses against persistent indexes. Raw mutation
 never silently merges duplicate pairs or cascades deletes: select an existing
 usages/uniqueness decorator if that policy is wanted. Legacy CLI backends retain
 their established merge and cascading behavior.

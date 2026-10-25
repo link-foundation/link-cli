@@ -135,6 +135,10 @@ Rust -> C# -> Node -> Bun -> Deno reopen the same database. Run
 then `dotnet run --project examples/sqlite-csharp -- engine.db`, then each runtime
 with `js/client/examples/engine-sqlite.mjs engine.db` and `CLINK_WASM` set. Add
 `--flat`, `--snapshot` or `--delta` consistently to select all eight compositions.
+Add `--references` consistently for scanned reference validation, or
+`--indexed-constraints` for indexed reference validation. Both validators enforce
+references in the sixteen compositions exercised across all five providers. Repeated
+provider names/pairs are intentionally unconstrained in this example.
 The JS integration workflow executes the provider and interoperability controls.
 Complete local/CI evidence and the wider unfinished criteria remain tracked in
 the [active plan](case-studies/issue-138/SQLITE-JOURNAL-PLAN.md).

@@ -1,7 +1,7 @@
 using Foundation.Data.Doublets.Cli.Engine;
 using Microsoft.Data.Sqlite;
 
-// dotnet run --project examples/sqlite-csharp -- <database> [--delta] [--flat] [--snapshot]
+// dotnet run --project examples/sqlite-csharp -- <database> [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal)) ?? throw new ArgumentException("Provide a dedicated SQLite database path.");
 using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Pooling = false, DefaultTimeout = 1 }.ToString());
 connection.Open();
@@ -12,7 +12,9 @@ var engine = new LinksEngine<ulong>(log, new()
 {
     Isolation = Foundation.Data.Doublets.Cli.Engine.IsolationLevel.Snapshot, HistoryLimit = null, RequireDurableFlush = true,
     StateStructure = args.Contains("--flat") ? StateStructure.Flat : StateStructure.Shared,
-    RevisionEncoding = args.Contains("--snapshot") ? RevisionEncoding.Snapshot : RevisionEncoding.Changes
+    RevisionEncoding = args.Contains("--snapshot") ? RevisionEncoding.Snapshot : RevisionEncoding.Changes,
+    ConstraintValidation = args.Contains("--indexed-constraints") ? ConstraintValidation.Indexed : ConstraintValidation.Scan,
+    Constraints = args.Contains("--references") || args.Contains("--indexed-constraints") ? new[] { EngineConstraint.References } : Array.Empty<EngineConstraint>()
 });
 static void Require(bool condition) { if (!condition) throw new InvalidDataException("SQLite interoperability invariant failed."); }
 var before = engine.Snapshot(); Require(before.Revision == (ulong)before.Rows.Count);

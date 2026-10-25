@@ -9,6 +9,7 @@ public enum ConcurrencyControl { Optimistic, Exclusive, Pessimistic }
 public enum IsolationLevel { ReadCommitted, Snapshot, Serializable }
 public enum SerializableValidation { Revision, ReadSet }
 public enum EngineConstraint { References, UniquePairs, UniqueNames }
+public enum ConstraintValidation { Scan, Indexed }
 /// <summary>Independent in-memory representation; journal format is unchanged.</summary>
 public enum StateStructure { Flat, Shared }
 /// <summary>Logical payload, independent of physical log/delta encoding.</summary>
@@ -24,6 +25,7 @@ public sealed record EngineOptions
     /// <summary>Zero disables history, null retains all, a positive limit includes current.</summary>
     public int? HistoryLimit { get; init; } = 0;
     public IReadOnlyList<EngineConstraint> Constraints { get; init; } = Array.Empty<EngineConstraint>();
+    public ConstraintValidation ConstraintValidation { get; init; } = ConstraintValidation.Scan;
     public bool RequireDurableFlush { get; init; }
     public Action<string>? Trace { get; init; }
 }
@@ -62,6 +64,7 @@ public sealed partial class LinksEngine<T>
     internal bool Poisoned;
     private readonly ICommitLog _log;
     private readonly SortedDictionary<ulong, EngineSnapshot<T>> _history = new();
+    internal ConstraintIndex<T>? ConstraintIndex;
 
     public LinksEngine(ICommitLog log, EngineOptions? options = null)
     {
@@ -71,6 +74,7 @@ public sealed partial class LinksEngine<T>
             || !Enum.IsDefined(Options.SerializableValidation)
             || !Enum.IsDefined(Options.StateStructure)
             || !Enum.IsDefined(Options.RevisionEncoding)
+            || !Enum.IsDefined(Options.ConstraintValidation)
             || (Options.SerializableValidation == SerializableValidation.ReadSet && Options.Isolation != IsolationLevel.Serializable)
             || Options.Constraints.Any(c => !Enum.IsDefined(c)))
             throw new ArgumentException("Invalid engine strategy.", nameof(options));
@@ -90,6 +94,7 @@ public sealed partial class LinksEngine<T>
             Retain();
         }
         // No session predates open; recovered rows need no conflict generations.
+        ConstraintIndex = global::Foundation.Data.Doublets.Cli.Engine.ConstraintIndex<T>.Build(Options, Current.Rows);
     }
 
     internal void CheckReady()
@@ -134,12 +139,14 @@ public sealed partial class LinksEngine<T>
     }
     internal void Publish(EngineRows<T> rows, IEnumerable<T> writes)
     {
-        Validate(rows);
+        if (ConstraintIndex is not null || Options.RevisionEncoding == RevisionEncoding.Changes) writes = writes.ToArray();
+        ConstraintIndex<T>? candidateIndex = null;
+        if (ConstraintIndex is not null) candidateIndex = ConstraintIndex.Prepare(Current.Rows, rows, (T[])writes);
+        else Validate(rows);
         var snapshot = EngineSnapshot<T>.Create(checked(Current.Revision + 1), rows);
         string record;
         if (Options.RevisionEncoding == RevisionEncoding.Changes)
         {
-            writes = writes.ToArray();
             record = ChangeRevisionJournal<T>.Encode(snapshot, Next, Current, writes);
         }
         else record = RevisionJournal<T>.Encode(snapshot, Next);
@@ -153,6 +160,7 @@ public sealed partial class LinksEngine<T>
             || (Options.Concurrency == ConcurrencyControl.Optimistic && (Options.Isolation != IsolationLevel.Serializable || Options.SerializableValidation == SerializableValidation.ReadSet))))
             foreach (var id in writes) (Changed ??= new())[id] = snapshot.Revision;
         Current = snapshot;
+        ConstraintIndex = candidateIndex;
         CommittedNext = Next;
         Retain();
         EngineDiagnostics.Trace(Options.Trace, $"Committed revision={snapshot.Revision}");

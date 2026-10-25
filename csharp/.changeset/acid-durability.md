@@ -190,3 +190,8 @@ staged reads, atomic group flushes and uncertain outcomes; fence stale owners,
 validate schema/UTF-8/sequences, enforce WAL/FULL and expose bounded checkpoints.
 Keep the core free of a mandatory SQLite NuGet provider and bound explicit
 provider command retries.
+
+Select optional persistent constraint indexes independently of map, encoding and
+other engine policies. Allocate only selected pair/name/reference indexes, allow
+atomic swaps, count incoming references and publish roots only after flush.
+Preserve scan defaults, historical replay validation and uncertain group outcomes.

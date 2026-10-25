@@ -52,3 +52,6 @@ mod changes;
 
 #[path = "../../tests/engine_changes_fault_tests.rs"]
 mod changes_fault;
+
+#[path = "../../tests/engine_constraint_index_tests.rs"]
+mod constraint_index;

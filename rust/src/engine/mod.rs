@@ -11,6 +11,9 @@ mod changes;
 pub mod cluster;
 mod commit;
 #[cfg(test)]
+mod constraint_cost_tests;
+mod constraint_index;
+#[cfg(test)]
 mod cost_tests;
 mod delta;
 #[cfg(feature = "etcd")]
@@ -99,6 +102,16 @@ pub enum Constraint {
     UniqueNames,
 }
 
+/// Constraint maintenance, independent of concurrency and serializable reads.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ConstraintValidation {
+    /// Scan the complete candidate; no retained constraint indexes.
+    #[default]
+    Scan,
+    /// Retain immutable indexes only for selected constraints; update changed rows.
+    Indexed,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct EngineOptions {
     pub state_structure: StateStructure,
@@ -108,6 +121,7 @@ pub struct EngineOptions {
     pub serializable_validation: SerializableValidation,
     pub history: HistoryPolicy,
     pub constraints: Vec<Constraint>,
+    pub constraint_validation: ConstraintValidation,
     pub trace: bool,
     /// Reject volatile or unknown log adapters, rather than claiming durability.
     pub require_durable_flush: bool,
@@ -163,6 +177,7 @@ struct State<T, L> {
     active: usize,
     poisoned: bool,
     options: EngineOptions,
+    constraint_index: Option<constraint_index::ConstraintIndex<T>>,
 }
 
 /// Share clones of this handle across threads. All writes must use its sessions;
@@ -209,6 +224,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             active: 0,
             poisoned: false,
             options,
+            constraint_index: None,
             log,
         };
         state.retain();
@@ -227,6 +243,12 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         }
         // No transaction predates open, so recovered rows need no conflict
         // generations. Track only changes made while a session can be stale.
+        if state.options.constraint_validation == ConstraintValidation::Indexed {
+            state.constraint_index = constraint_index::ConstraintIndex::build(
+                &state.options.constraints,
+                &state.current.rows,
+            )?;
+        }
         Ok(Self {
             state: Arc::new(Mutex::new(state)),
         })

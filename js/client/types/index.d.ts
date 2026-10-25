@@ -1,6 +1,8 @@
 import type { LinoDocument } from './lino.js';
 
 export interface EngineOptions {
+  /** Default full scans, or persistent indexes for only the selected constraints. */
+  constraintValidation?: 'scan' | 'indexed';
   /** In-memory immutable state; independent of journal and isolation. */
   stateStructure?: 'flat' | 'shared';
   /** Logical journal records; independent of the physical delta decorator. */

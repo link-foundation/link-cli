@@ -4,10 +4,12 @@ import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog } from
 import { groupCommitConformance } from './group-commit.mjs';
 import { sharedStateConformance } from './shared-state.mjs';
 import { changeRecordConformance } from './change-records.mjs';
+import { constraintIndexConformance } from './constraint-index.mjs';
 
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
   await sharedStateConformance(binding);
+  await constraintIndexConformance(binding);
   await changeRecordConformance(binding);
   await groupCommitConformance(binding);
   await pessimisticConformance(binding);

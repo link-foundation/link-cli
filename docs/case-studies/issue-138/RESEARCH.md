@@ -205,3 +205,25 @@ now has a selected physical implementation; legacy mapped page repair, LSM,
 doublewrite and physical power-loss testing remain distinct open criteria.
 See [protocol/vectors](../../protocol/sqlite-log.md) and
 [execution plan](SQLITE-JOURNAL-PLAN.md) for tests and exact provider scope.
+
+
+## Incremental constraint validation (2026-10-25)
+
+PostgreSQL's [constraint documentation](https://www.postgresql.org/docs/current/ddl-constraints.html)
+explains unique indexes and the separate cost of finding referencing rows during
+referenced-row changes. At pinned commit `126976a8ffcfa47f40d3df09243ebf4606001912`,
+[`ri_triggers.c:430–540`](https://github.com/postgres/postgres/blob/126976a8ffcfa47f40d3df09243ebf4606001912/src/backend/utils/adt/ri_triggers.c#L430)
+builds an endpoint existence query with key-share locking; its
+[`ri_restrict:795–915`](https://github.com/postgres/postgres/blob/126976a8ffcfa47f40d3df09243ebf4606001912/src/backend/utils/adt/ri_triggers.c#L795)
+queries referencing rows for an old key. Downloaded source SHA-256 is
+`a47eef6d2e94ae3921feb6539f5663147c655a2856eab71b65c74c90b37f297c`.
+
+Inference for this engine: existence checks on changed rows alone cannot detect
+unchanged incoming references to a deleted row. A selected address/count index
+can detect them under the existing engine gate. Pair/name owner indexes remove
+complete uniqueness scans. Reuse the already audited rpds/.NET persistent trees,
+remove all changed old keys before inserting new keys, and publish private roots
+with committed rows. This implements local final-transaction constraints, without
+copying PostgreSQL code, SQL trigger semantics, key-share locks or distributed
+foreign keys. Recovery retains complete historical validation. See
+[configuration and measured costs](../../ENGINE-CONSTRAINT-INDEX.md).

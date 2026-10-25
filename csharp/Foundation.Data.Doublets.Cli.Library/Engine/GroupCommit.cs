@@ -35,7 +35,8 @@ public sealed partial class LinksEngine<T>
                 CommittedNext = CommittedNext,
                 Active = Active,
                 Changed = Changed is null ? null : new(Changed),
-                WriteOwners = WriteOwners is null ? null : new(WriteOwners)
+                WriteOwners = WriteOwners is null ? null : new(WriteOwners),
+                ConstraintIndex = ConstraintIndex
             };
             working._history.Clear();
             foreach (var (revision, snapshot) in _history) working._history.Add(revision, snapshot);
@@ -73,6 +74,7 @@ public sealed partial class LinksEngine<T>
                 return outcomes;
             }
             Current = working.Current;
+            ConstraintIndex = working.ConstraintIndex;
             CommittedNext = working.CommittedNext;
             Changed = working.Changed;
             _history.Clear();

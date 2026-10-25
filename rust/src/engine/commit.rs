@@ -11,7 +11,23 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
         changed: impl IntoIterator<Item = T>,
     ) -> Result<Snapshot<T>, LinkError> {
         let rows = rows.adapt(self.options.state_structure, None);
-        self.validate(&rows)?;
+        let mut changed = changed.into_iter();
+        // The same bounded address buffer serves incremental constraints and
+        // logical encoding. Unselected engines retain their iterator-only path.
+        let buffered = (self.constraint_index.is_some()
+            || self.options.revision_encoding == RevisionEncoding::Changes)
+            .then(|| changed.by_ref().collect::<Vec<_>>());
+        let candidate_index = match &self.constraint_index {
+            Some(index) => Some(index.prepare(
+                &self.current.rows,
+                &rows,
+                buffered.as_ref().expect("indexed changes"),
+            )?),
+            None => {
+                self.validate(&rows)?;
+                None
+            }
+        };
         let revision = self
             .current
             .revision
@@ -21,14 +37,14 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
             revision,
             rows: Arc::new(rows),
         };
-        let mut changed = changed.into_iter();
-        // Retain addresses only for the selected incremental encoder. The
-        // default full-image path keeps its existing iterator/cost behavior.
-        let encoded = (self.options.revision_encoding == RevisionEncoding::Changes)
-            .then(|| changed.by_ref().collect::<Vec<_>>());
-        let record = match &encoded {
-            Some(writes) => changes::encode(&snapshot, self.next, &self.current, writes),
-            None => journal::encode(&snapshot, self.next),
+        let record = match self.options.revision_encoding {
+            RevisionEncoding::Changes => changes::encode(
+                &snapshot,
+                self.next,
+                &self.current,
+                buffered.as_ref().expect("encoded changes"),
+            ),
+            RevisionEncoding::Snapshot => journal::encode(&snapshot, self.next),
         };
         // Failure can follow a completed write. Reopen to discover its outcome.
         if let Err(cause) = self
@@ -44,7 +60,7 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
         let track = self.active > 0 && self.options.tracks_generations();
         let mut count = 0;
         if track || self.options.trace {
-            for id in encoded.iter().flatten().copied().chain(changed) {
+            for id in buffered.iter().flatten().copied().chain(changed) {
                 if track {
                     self.changed.insert(id, revision);
                 }
@@ -52,6 +68,7 @@ impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
             }
         }
         self.current = snapshot.clone();
+        self.constraint_index = candidate_index;
         self.committed_next = self.next;
         self.retain();
         if self.options.trace {

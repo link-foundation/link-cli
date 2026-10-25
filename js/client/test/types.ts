@@ -31,6 +31,12 @@ function sqliteTypes(connection: SqliteConnection) {
 }
 async function engineTypes(binding: { StagedEngine: { new(options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }) {
   const pointOptions: EngineOptions = { serializableValidation: 'read-set' };
+  const indexedOptions: EngineOptions = { constraintValidation: 'indexed', constraints: ['references', 'unique-pairs', 'unique-names'] };
+  const scanOptions: EngineOptions = { constraintValidation: 'scan' };
+  void indexedOptions; void scanOptions;
+  // @ts-expect-error Unknown constraint algorithms must not silently fall back.
+  const invalidConstraints: EngineOptions = { constraintValidation: 'disabled' };
+  void invalidConstraints;
   const sharedOptions: EngineOptions = { stateStructure: 'shared' };
   const flatOptions: EngineOptions = { stateStructure: 'flat' };
   void sharedOptions; void flatOptions;

@@ -1,9 +1,9 @@
 //! JS uses the native engine through WASM, rather than reimplementing isolation.
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
-    Branch, ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction,
-    GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, RevisionEncoding,
-    SerializableValidation, StateStructure,
+    Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine, EngineOptions,
+    EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
+    RevisionEncoding, SerializableValidation, StateStructure,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
@@ -20,6 +20,7 @@ struct Options {
     serializable_validation: Option<String>,
     history: Option<serde_json::Value>,
     constraints: Vec<String>,
+    constraint_validation: Option<String>,
     trace: bool,
     require_durable_flush: bool,
 }
@@ -32,6 +33,11 @@ fn options(text: &str) -> Result<EngineOptions, String> {
     let parsed: Options = serde_json::from_value(serde_json::Value::Object(object))
         .map_err(|error| error.to_string())?;
     Ok(EngineOptions {
+        constraint_validation: match parsed.constraint_validation.as_deref() {
+            None | Some("scan") => ConstraintValidation::Scan,
+            Some("indexed") => ConstraintValidation::Indexed,
+            _ => return Err("unknown constraint validation".into()),
+        },
         revision_encoding: match parsed.revision_encoding.as_deref() {
             None | Some("snapshot") => RevisionEncoding::Snapshot,
             Some("changes") => RevisionEncoding::Changes,
@@ -325,6 +331,7 @@ mod tests {
             r#"{"stateStructure":42}"#,
             r#"{"history":0}"#,
             r#"{"constraints":["unknown"]}"#,
+            r#"{"constraintValidation":"unknown"}"#,
             r#"{"durable":true}"#,
         ] {
             assert!(StagedEngine::new(text, "[]").is_err(), "{text}");

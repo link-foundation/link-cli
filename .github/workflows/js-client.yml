@@ -232,19 +232,22 @@ jobs:
           cargo build --release --manifest-path rust/Cargo.toml --features sqlite --example engine_sqlite
           dotnet build examples/sqlite-csharp --configuration Release
           sqlite_data=$(mktemp -d)
-          for structure in shared flat; do
-            for encoding in changes snapshot; do
-              for physical in plain delta; do
-                flags=()
-                if [[ "$structure" == flat ]]; then flags+=(--flat); fi
-                if [[ "$encoding" == snapshot ]]; then flags+=(--snapshot); fi
-                if [[ "$physical" == delta ]]; then flags+=(--delta); fi
-                database="$sqlite_data/$structure-$encoding-$physical.db"
-                rust/target/release/examples/engine_sqlite "$database" "${flags[@]}"
-                dotnet examples/sqlite-csharp/bin/Release/net10.0/SqliteExample.dll "$database" "${flags[@]}"
-                node js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
-                bun js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
-                deno run --allow-all js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+          for validation in scan indexed; do
+            for structure in shared flat; do
+              for encoding in changes snapshot; do
+                for physical in plain delta; do
+                  flags=(--references)
+                  if [[ "$validation" == indexed ]]; then flags+=(--indexed-constraints); fi
+                  if [[ "$structure" == flat ]]; then flags+=(--flat); fi
+                  if [[ "$encoding" == snapshot ]]; then flags+=(--snapshot); fi
+                  if [[ "$physical" == delta ]]; then flags+=(--delta); fi
+                  database="$sqlite_data/$validation-$structure-$encoding-$physical.db"
+                  rust/target/release/examples/engine_sqlite "$database" "${flags[@]}"
+                  dotnet examples/sqlite-csharp/bin/Release/net10.0/SqliteExample.dll "$database" "${flags[@]}"
+                  node js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                  bun js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                  deno run --allow-all js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                done
               done
             done
           done

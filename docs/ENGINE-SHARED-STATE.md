@@ -94,6 +94,9 @@ states, the flat choice can be cheaper. No timing advantage is asserted without
 a workload measurement.
 
 Default complete journal serialization and selected constraint scans remain O(N/B).
+Choose [change records](ENGINE-CHANGE-RECORDS.md) and
+[indexed constraints](ENGINE-CONSTRAINT-INDEX.md) independently to avoid those
+complete visits during small local commits.
 The delta decorator reduces physical bytes through a complete-record comparison;
 it does not turn this engine into a page WAL or LSM tree. Group preparation also
 buffers selected accepted records and copies history/conflict metadata. Sharing

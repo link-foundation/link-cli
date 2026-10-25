@@ -1,0 +1,15 @@
+SQLite exact-head CI
+Commit: 3322f36aa838c7a6c01d1b7e0d7d30adb78f56dd
+Commit timestamp: 2026-10-25T18:36:00Z
+
+Broken Link Checker: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:36:21Z; https://github.com/link-foundation/link-cli/actions/runs/40222027532
+Workflows: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:36:24Z; https://github.com/link-foundation/link-cli/actions/runs/40222027494
+Dependencies: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:36:37Z; https://github.com/link-foundation/link-cli/actions/runs/40222027540
+Docs: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:38:58Z; https://github.com/link-foundation/link-cli/actions/runs/40222027570
+Security: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:39:25Z; https://github.com/link-foundation/link-cli/actions/runs/40222027625
+JS client CI: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:41:41Z; https://github.com/link-foundation/link-cli/actions/runs/40222027622
+C# CI/CD Pipeline: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:43:14Z; https://github.com/link-foundation/link-cli/actions/runs/40222027565
+WebAssembly CI: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:49:10Z; https://github.com/link-foundation/link-cli/actions/runs/40222027489
+Rust CI/CD Pipeline: success; created 2026-10-25T18:36:09Z; completed 2026-10-25T18:54:07Z; https://github.com/link-foundation/link-cli/actions/runs/40222027487
+
+All nine workflows pass for this commit. Later changes require fresh CI.

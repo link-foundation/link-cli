@@ -1,7 +1,7 @@
 //! Finite independent durable images; no assumption that failed flush lost writes.
 use link_cli::engine::{
-    DeltaLog, Engine, EngineOptions, GroupCommitOutcome, HistoryPolicy, IsolationLevel,
-    RevisionEncoding, StateStructure,
+    Constraint, ConstraintValidation, DeltaLog, Engine, EngineOptions, GroupCommitOutcome,
+    HistoryPolicy, IsolationLevel, RevisionEncoding, StateStructure,
 };
 use link_cli::{LinkError, LinksStorage, TransitionLogStore};
 use std::{cell::RefCell, rc::Rc};
@@ -51,12 +51,15 @@ fn schedule<L: TransitionLogStore>(
     structure: StateStructure,
     mode: &'static str,
     prefix: usize,
+    validation: ConstraintValidation,
 ) {
     let options = EngineOptions {
         revision_encoding: RevisionEncoding::Changes,
         state_structure: structure,
         isolation: IsolationLevel::ReadCommitted,
         history: HistoryPolicy::All,
+        constraint_validation: validation,
+        constraints: vec![Constraint::UniqueNames],
         ..Default::default()
     };
     let db = Engine::<u32, _>::open(log, options.clone()).unwrap();
@@ -142,18 +145,21 @@ fn uncertain_change_groups_recover_each_possible_durable_prefix_without_publishi
         for delta in [false, true] {
             for (mode, max_prefix) in [("append-before", 1), ("append-after", 2), ("flush", 2)] {
                 for prefix in 0..=max_prefix {
-                    let image = Rc::new(RefCell::new(Image::default()));
-                    let log = Log(image.clone());
-                    if delta {
-                        schedule(
-                            DeltaLog::new(log, 128).unwrap(),
-                            image,
-                            structure,
-                            mode,
-                            prefix,
-                        );
-                    } else {
-                        schedule(log, image, structure, mode, prefix);
+                    for validation in [ConstraintValidation::Scan, ConstraintValidation::Indexed] {
+                        let image = Rc::new(RefCell::new(Image::default()));
+                        let log = Log(image.clone());
+                        if delta {
+                            schedule(
+                                DeltaLog::new(log, 128).unwrap(),
+                                image,
+                                structure,
+                                mode,
+                                prefix,
+                                validation,
+                            );
+                        } else {
+                            schedule(log, image, structure, mode, prefix, validation);
+                        }
                     }
                 }
             }

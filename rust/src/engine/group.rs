@@ -52,6 +52,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             active: state.active,
             poisoned: false,
             options,
+            constraint_index: state.constraint_index.clone(),
         };
         let mut outcomes = Vec::with_capacity(sessions.len());
         for tx in &mut sessions {
@@ -91,6 +92,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             return Ok(outcomes);
         }
         state.current = working.current;
+        state.constraint_index = working.constraint_index;
         state.history = working.history;
         state.changed = working.changed;
         state.committed_next = working.committed_next;

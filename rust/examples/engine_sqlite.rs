@@ -1,9 +1,9 @@
 //! Reopen the same SQLite database from Rust, C# and Node/Bun/Deno.
-//! cargo run --manifest-path rust/Cargo.toml --features sqlite --example engine_sqlite -- <database> [--delta] [--flat] [--snapshot]
+//! cargo run --manifest-path rust/Cargo.toml --features sqlite --example engine_sqlite -- <database> [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
 use link_cli::engine::sqlite::{CheckpointMode, SqliteLog, SqliteOptions};
 use link_cli::engine::{
-    DeltaLog, Engine, EngineOptions, GroupCommitOutcome, HistoryPolicy, IsolationLevel,
-    RevisionEncoding, StateStructure,
+    Constraint, ConstraintValidation, DeltaLog, Engine, EngineOptions, GroupCommitOutcome,
+    HistoryPolicy, IsolationLevel, RevisionEncoding, StateStructure,
 };
 use link_cli::{LinksStorage, TransitionLogStore};
 
@@ -55,6 +55,21 @@ fn main() -> anyhow::Result<()> {
         .find(|arg| !arg.starts_with("--"))
         .ok_or_else(|| anyhow::anyhow!("provide a dedicated SQLite database path"))?;
     let options = EngineOptions {
+        constraint_validation: if args.iter().any(|arg| arg == "--indexed-constraints") {
+            ConstraintValidation::Indexed
+        } else {
+            ConstraintValidation::Scan
+        },
+        // Repeated providers deliberately reuse pairs/names; only references
+        // are constrained in this interoperability example.
+        constraints: if args
+            .iter()
+            .any(|arg| arg == "--references" || arg == "--indexed-constraints")
+        {
+            vec![Constraint::References]
+        } else {
+            vec![]
+        },
         isolation: IsolationLevel::Snapshot,
         history: HistoryPolicy::All,
         require_durable_flush: true,

@@ -183,9 +183,21 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     Complete local suites pass: 852 native, 1,989 C# per configuration, 496 actual
     WASM, 168 JS and 217 repository tests. All eight SQLite configurations pass
     Rust -> C# -> Node -> Bun -> Deno persistent reopening; sqlite.txt records
-    official coverage. Fresh exact-head CI is required after publication. See
+    official coverage. All nine workflows pass on `3322f36`; sqlite-ci.txt records
+    exact SHA, timestamps and links. See
     SQLITE-JOURNAL-PLAN.md. Legacy page repair, LSM, complete
     coverage and wider cluster/competitor criteria stay open.
+
+14. Independently selected persistent constraint indexes now preserve scan
+    defaults and allocate only selected pair/name/reference maps. Pre-feature
+    contracts fail before implementation; bounded independent oracles, root
+    sharing, rejected candidates, group prefixes, branches and independent
+    admission/read validation pass. Full local suites pass: 859 native, 2,003 C#
+    per configuration, 502 actual WASM, 168 JS and 217 repository tests. All
+    sixteen SQLite configurations use the same References policy and reopen
+    through all five providers. Official coverage and finite allocation evidence
+    are recorded in constraint-index.txt. Publication and fresh exact-head CI
+    remain; see CONSTRAINT-INDEX-PLAN.md. Wider criteria remain open.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.
