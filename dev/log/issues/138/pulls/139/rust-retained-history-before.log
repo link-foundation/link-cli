@@ -1,0 +1,36 @@
+   Compiling link-cli v1.0.9 (rust)
+    Finished `test` profile [unoptimized] target(s) in 12.36s
+     Running tests/version_retained_history_tests.rs (rust/target/debug/deps/version_retained_history_tests-4a1f365e5c1347f6)
+
+running 3 tests
+test branch_switch_rejects_missing_undo_before_mutation ... FAILED
+test checkout_rejects_missing_undo_before_mutation ... FAILED
+test branch_switch_rejects_missing_redo_before_undoing_current_branch ... FAILED
+
+failures:
+
+---- branch_switch_rejects_missing_undo_before_mutation stdout ----
+
+thread 'branch_switch_rejects_missing_undo_before_mutation' (1018495) panicked at tests/version_retained_history_tests.rs:42:5:
+incomplete history was silently accepted
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- checkout_rejects_missing_undo_before_mutation stdout ----
+
+thread 'checkout_rejects_missing_undo_before_mutation' (1018496) panicked at tests/version_retained_history_tests.rs:42:5:
+incomplete history was silently accepted
+
+---- branch_switch_rejects_missing_redo_before_undoing_current_branch stdout ----
+
+thread 'branch_switch_rejects_missing_redo_before_undoing_current_branch' (1018494) panicked at tests/version_retained_history_tests.rs:42:5:
+incomplete history was silently accepted
+
+
+failures:
+    branch_switch_rejects_missing_redo_before_undoing_current_branch
+    branch_switch_rejects_missing_undo_before_mutation
+    checkout_rejects_missing_undo_before_mutation
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+
+error: test failed, to rerun pass `--test version_retained_history_tests`

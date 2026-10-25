@@ -81,3 +81,22 @@ with pending and rollback controls. These are process-exit tests; device power
 loss remains a separate storage guarantee. The
 [metadata protocol](../../docs/protocol/version-metadata.md#pending-transaction-publication)
 describes compatibility and the three extra sidecar flushes per version commit.
+
+## Bounded transaction history
+
+A branch or tag can outlive the transition payloads retained by a sized or chunked
+journal. Checkout and branch switching now reject a move if any required undo or
+redo record is missing, before changing rows, the selected branch or branch heads.
+Keep sufficient transaction history for the versions you need to visit.
+
+An unavailable shared prefix does not prevent a move that only replays an
+available suffix. No-op checkout also remains valid. These regressions exercise
+missing undo and redo, following edits, and native save/close/reopen:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test version_retained_history_tests
+dotnet test csharp --filter FullyQualifiedName~VersionRetainedHistoryTests
+```
+
+This check prevents partial replay caused by unavailable records. Atomic recovery
+from an I/O failure while applying available records remains a separate guarantee.

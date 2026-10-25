@@ -72,3 +72,6 @@ mod version_automatic_contract;
 
 #[path = "../../tests/version_publication_failure_tests.rs"]
 mod version_publication_failure;
+
+#[path = "../../tests/version_retained_history_tests.rs"]
+mod version_retained_history;

@@ -122,3 +122,8 @@ the exact branch/range before clearing it. Recover committed or aborted intents
 after abrupt process exit, retain admission through every metadata/flush failure,
 and reject malformed or contradictory intents without rewriting their sidecar.
 Expose the metadata flush callback and durable-publication capability.
+
+Resolve every changed undo and redo transition before checkout or branch
+switching. Reject missing retained history without changing rows or metadata,
+while preserving no-op and available-suffix moves over an unavailable shared
+prefix. Index the retained journal once instead of rescanning it per transition.

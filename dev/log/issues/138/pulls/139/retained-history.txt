@@ -1,0 +1,35 @@
+Missing retained history during checkout (R1/R3/R7/R8)
+
+All three regressions per native language first fail: checkout and branch
+switching silently skip unavailable undo records; another branch move can undo
+an available record before discovering its missing redo. A one-transition sized
+journal reproduces all three. Complete before logs are retained beside this file.
+
+Both implementations now snapshot/index the retained log once and resolve all
+changed undo and redo records before the first mutation. They reject unavailable
+records without changing rows, branch selection, current head or branch inventory.
+No-op checkout and available suffix moves over an unavailable shared prefix
+remain valid. Following edits and actual native save/close/reopen preserve exact
+rows and heads. The same Rust contracts run in actual WASM.
+
+Lookup costs O(N + V) time and temporary memory for N retained records and V
+changed records, replacing repeated O(N * V) log scans/clones. Bare paths do not
+select this work. Retention still does not promise every historical version is
+replayable. This preflight addresses unavailable records; atomic recovery from
+failure while applying available records is a separate unfinished audit.
+
+Full C# Debug/Release: 1,443 pass each, zero skips.
+Full native Rust: 675 standard tests plus the custom stdout harness pass;
+five ignored child entry points run only through finite parent tests.
+Actual WASM: 359 pass; all three wrapper modules remain 100% in measured lines,
+functions and reported branches. Formatting, release metadata, strict native/WASM
+Clippy and combined source-size checks pass.
+Debug: 6,261/6,751 lines (92.74%), 2,941/3,344 branches (87.95%)
+Release: 4,760/5,059 lines (94.09%), 2,921/3,325 branches (87.85%)
+native: 9,710/10,530 lines (92.21%), 1,648/1,994 branches (82.65%), 1,293/1,433 functions (90.23%)
+wasm: 6,918/10,122 lines (68.35%), 1,193/1,699 branches (70.22%), 946/1,416 functions (66.81%)
+
+Complete project coverage remains below the requested 100%. The publication
+SHA 2a1c9e3 exposes ten Windows preservation-fixture sharing violations; byte
+comparisons now run outside all mapped-store lifetimes. Fresh exact-head CI must
+verify that correction as well as the retention change after publication.

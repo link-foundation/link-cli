@@ -22,7 +22,7 @@ use crate::named_type_links::NamedTypeLinks;
 use crate::named_types::NamedTypesDecorator;
 
 mod publication;
-use crate::transactions::{TransactionHandle, TransactionsDecorator, Transition};
+use crate::transactions::{TransactionHandle, TransactionsDecorator};
 use publication::{PublicationIntent, PUBLICATION_PREFIX};
 
 /// Default name of the initial branch (analogous to git's `main`).
@@ -451,17 +451,33 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
             common += 1;
         }
 
-        // Revert transitions that are no longer on the path.
-        let to_revert: Vec<i64> = current_path[common..].iter().rev().copied().collect();
-        for seq in to_revert {
-            if let Some(transition) = self.find_transition(seq) {
+        if common < current_path.len() || common < target_path.len() {
+            // Validate both suffixes before undoing even one row. Retention
+            // can remove a later-needed redo while the current undo survives.
+            let available: HashMap<_, _> = self
+                .transactions
+                .log()
+                .into_iter()
+                .map(|transition| (transition.sequence, transition))
+                .collect();
+            let required = |sequence: &i64| {
+                available.get(sequence).copied().ok_or_else(|| {
+                    anyhow::anyhow!("Transition {sequence} is no longer retained; checkout requires complete changed history.")
+                })
+            };
+            let undo: Vec<_> = current_path[common..]
+                .iter()
+                .rev()
+                .map(required)
+                .collect::<Result<_>>()?;
+            let redo: Vec<_> = target_path[common..]
+                .iter()
+                .map(required)
+                .collect::<Result<_>>()?;
+            for transition in undo {
                 self.transactions.revert_transition(&transition)?;
             }
-        }
-        // Apply transitions that are new on the path.
-        let to_apply: Vec<i64> = target_path[common..].to_vec();
-        for seq in to_apply {
-            if let Some(transition) = self.find_transition(seq) {
+            for transition in redo {
                 self.transactions.apply_transition(&transition)?;
             }
         }
@@ -539,13 +555,6 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
         own.sort();
         seqs.extend(own);
         seqs
-    }
-
-    fn find_transition(&self, sequence: i64) -> Option<Transition> {
-        self.transactions
-            .log()
-            .into_iter()
-            .find(|t| t.sequence == sequence)
     }
 
     // -- Persistence helpers -----------------------------------------

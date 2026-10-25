@@ -336,21 +336,17 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
         var max = Math.Min(currentPath.Count, targetPath.Count);
         while (common < max && currentPath[common] == targetPath[common]) common++;
 
-        for (var i = currentPath.Count - 1; i >= common; i--)
+        if (common < currentPath.Count || common < targetPath.Count)
         {
-            var transition = FindTransition(currentPath[i]);
-            if (transition is not null)
-            {
-                _transactions.RevertTransition(transition.Value);
-            }
-        }
-        for (var i = common; i < targetPath.Count; i++)
-        {
-            var transition = FindTransition(targetPath[i]);
-            if (transition is not null)
-            {
-                _transactions.ApplyTransition(transition.Value);
-            }
+            // Validate both suffixes before undoing even one row. Retention
+            // can remove a later-needed redo while the current undo survives.
+            var available = _transactions.Log.ToDictionary(t => t.Sequence);
+            Transition<uint> Required(long sequence) => available.TryGetValue(sequence, out var transition)
+                ? transition : throw new InvalidOperationException($"Transition {sequence} is no longer retained; checkout requires complete changed history.");
+            var undo = currentPath.Skip(common).Reverse().Select(Required).ToArray();
+            var redo = targetPath.Skip(common).Select(Required).ToArray();
+            foreach (var transition in undo) _transactions.RevertTransition(transition);
+            foreach (var transition in redo) _transactions.ApplyTransition(transition);
         }
 
         if (!ReferenceEquals(newBranch, _currentBranch))
@@ -449,15 +445,6 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
           .OrderBy(s => s);
         seqs.AddRange(own);
         return seqs;
-    }
-
-    private Transition<uint>? FindTransition(long sequence)
-    {
-        foreach (var t in _transactions.Log)
-        {
-            if (t.Sequence == sequence) return t;
-        }
-        return null;
     }
 
     // -- Persistence helpers ----------------------------------------------

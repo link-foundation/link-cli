@@ -163,8 +163,14 @@ after an existing transaction finishes. Startup also rejects a sidecar that
 attributes a known uncommitted record, including older incorrect attribution;
 it leaves those files intact rather than guessing a repair of already altered
 data. This validation scans the retained journal and stores its uncommitted
-sequence numbers during metadata recovery. Truncated history that no longer
-contains a referenced record still needs its separate retention audit.
+sequence numbers during metadata recovery. Checkout and branch switching resolve
+all changed undo and redo records before mutating rows. If bounded retention has
+removed one, they reject the move and preserve rows, branch selection and heads.
+An unavailable shared prefix needs no replay, so moves over an available suffix
+still work. Resolution snapshots the retained log once and indexes it by sequence:
+O(N + V) time and O(N + V) temporary memory for N retained records and V changed
+records. Retention does not promise that every stored version remains replayable.
+Failures while applying an available diff still require a separate atomicity audit.
 Recovery replays the complete committed suffix after its first missing applied
 marker, including later records that already have markers. It flushes the final
 redo and pending undo before filling that gap, keeping an anchor for another

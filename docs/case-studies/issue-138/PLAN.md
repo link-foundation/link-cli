@@ -81,11 +81,17 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
 6. Persisted publication intents now resolve exact branch attribution after
    abrupt process exit. Six real child cases per native language first reproduce
    the missing head; publication/recovery faults and contradictory vectors pass
-   full native/C#/actual-WASM validation. Publish and verify fresh exact-head CI;
-   see VERSION-PUBLICATION-PLAN.md and version-publication.txt.
-7. Reproduce ordinary legacy named writes across rollback/history/reopen and
-   truncated history across checkout. Their admission fence is distinct from
-   logging names atomically; staged sessions already keep names in revisions.
+   full native/C#/actual-WASM validation. Fresh CI exposes ten Windows preservation
+   fixtures reading files while exclusive mappings are live. Move byte snapshots
+   outside mapped lifetimes and verify new exact-head CI; see
+   VERSION-PUBLICATION-PLAN.md and PUBLICATION-WINDOWS-PLAN.md.
+7. Truncated history checkout now rejects missing changed records before any
+   undo or redo. Three reproductions per native language and actual-WASM shared
+   contracts pass; native reopen and available suffix/no-op controls pass. See
+   RETAINED-HISTORY-PLAN.md. Atomic replay failures remain a separate audit.
+   Reproduce ordinary legacy named writes across rollback/history/reopen. Their
+   admission fence is distinct from logging names atomically; staged sessions
+   already keep names in revisions.
 8. Continue the source-backed algorithm/component comparison, efficient journal
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.
