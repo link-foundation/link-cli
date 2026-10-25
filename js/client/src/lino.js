@@ -17,7 +17,7 @@ const NEEDS_QUOTES = /[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u2
 const CONTROL = /[\u0000-\u001f\u007f]/u;
 const LITERAL_PREFIX = /^~[0-9]+\{/;
 const encoder = new TextEncoder();
-const decoder = new TextDecoder('utf-8', { fatal: true });
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /** A link without an id: `(a b)`. */
 export function group(values) {

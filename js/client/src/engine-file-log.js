@@ -3,7 +3,7 @@ import { openSync, closeSync, readSync, writeSync, fstatSync, ftruncateSync, fsy
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 
-const decode = new TextDecoder('utf-8', { fatal: true });
+const decode = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 const encode = new TextEncoder();
 
 function readExactly(fd, bytes, length, position) {
