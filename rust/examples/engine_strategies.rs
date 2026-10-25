@@ -2,7 +2,7 @@
 use link_cli::engine::replication::{ReplicatedLog, Synchronization};
 use link_cli::engine::{
     ConcurrencyControl, DeltaLog, Engine, EngineOptions, HistoryPolicy, MemoryLog,
-    SerializableValidation,
+    SerializableValidation, StateStructure,
 };
 use link_cli::{FileTransitionLog, LinksStorage, TransitionLogStore};
 
@@ -10,6 +10,7 @@ fn durable<L: TransitionLogStore>(
     log: L,
     validation: SerializableValidation,
     concurrency: ConcurrencyControl,
+    state_structure: StateStructure,
 ) -> anyhow::Result<()> {
     let persistent = Engine::<u64, _>::open(
         log,
@@ -17,6 +18,7 @@ fn durable<L: TransitionLogStore>(
             require_durable_flush: true,
             serializable_validation: validation,
             concurrency,
+            state_structure,
             ..Default::default()
         },
     )?;
@@ -29,6 +31,11 @@ fn durable<L: TransitionLogStore>(
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
+    let state_structure = if args.iter().any(|arg| arg == "--shared") {
+        StateStructure::Shared
+    } else {
+        StateStructure::Flat
+    };
     let concurrency = if args.iter().any(|arg| arg == "--pessimistic") {
         ConcurrencyControl::Pessimistic
     } else {
@@ -54,6 +61,7 @@ fn main() -> anyhow::Result<()> {
             history: HistoryPolicy::All,
             serializable_validation: validation,
             concurrency,
+            state_structure,
             ..Default::default()
         },
     )?;
@@ -65,7 +73,13 @@ fn main() -> anyhow::Result<()> {
     assert!(db.snapshot_at(0)?.links().is_empty());
     println!("committed revision {}, link {id}", db.snapshot()?.revision);
 
-    let mut branch = db.fork(MemoryLog::default(), EngineOptions::default())?;
+    let mut branch = db.fork(
+        MemoryLog::default(),
+        EngineOptions {
+            state_structure,
+            ..Default::default()
+        },
+    )?;
     let mut edit = branch.engine().begin()?;
     edit.set_name(id, Some("edited independently".into()))?;
     edit.commit()?;
@@ -98,9 +112,14 @@ fn main() -> anyhow::Result<()> {
     if let Some(path) = args.iter().find(|arg| !arg.starts_with("--")) {
         let log = FileTransitionLog::open_exclusive(path)?;
         if args.iter().any(|arg| arg == "--delta") {
-            durable(DeltaLog::new(log, 128)?, validation, concurrency)?;
+            durable(
+                DeltaLog::new(log, 128)?,
+                validation,
+                concurrency,
+                state_structure,
+            )?;
         } else {
-            durable(log, validation, concurrency)?;
+            durable(log, validation, concurrency, state_structure)?;
         }
     }
     Ok(())

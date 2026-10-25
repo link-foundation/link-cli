@@ -49,7 +49,8 @@ continuously overlapping population can keep many generations alive; there is
 no oldest-reader pruning yet. Default revision validation tracks no point reads
 and uses one revision comparison. Exclusive read-set selection skips both maps.
 
-The implementation still clones O(N) rows and encodes a complete logical
+The default flat representation still clones O(N) rows; optional
+[shared state](ENGINE-SHARED-STATE.md) path-copies changed entries. Both encode a complete logical
 revision per write commit. Optional delta encoding changes physical journal
 bytes, not these CPU/memory costs. There is no per-key lock, range index,
 FoundationDB resolver, SSI dependency graph or distributed read-set protocol.

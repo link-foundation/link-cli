@@ -22,7 +22,8 @@ transaction algorithm.
 | Asynchronous copies | Wrap a log with replicated log, async policy | Commit waits for primary only. Call synchronize under the engine's log mutex to catch up followers. A primary loss can lose uncopied commits. |
 | Synchronous copies | Replicated log, acknowledgements k including primary | Commit waits for primary and enough successful follower flushes. Failure can leave a committed primary or partial set of copies; outcome discovery is mandatory. |
 | Serializable independent point edits | Select `SerializableValidation::ReadSet` / `SerializableValidation.ReadSet` / `serializableValidation: 'read-set'` | Track observed addresses and validate concurrent changes at commit; scans still check the whole revision. [Recipe and costs](ENGINE-VALIDATION.md). |
-| Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Store a checksummed changed span between periodic full checkpoints; engine cloning and replay remain O(N). See [format, composition and examples](ENGINE-DELTA.md). |
+| Localized journal edits | Optional `DeltaLog` / `DeltaCommitLog` around the selected log | Store a checksummed changed span between periodic full checkpoints; complete encoding and replay remain O(N). See [format, composition and examples](ENGINE-DELTA.md). |
+| Retain small-edit immutable states | Select shared state independently of the other options | Path-copy changed entries instead of cloning a complete row map. Full revision encoding remains; see [costs and examples](ENGINE-SHARED-STATE.md). |
 | Independent commits sharing a flush | Opt-in `commit_group` / `CommitGroup` / `commitGroup` | Preserve each accepted session's revision and share one durability boundary. [Ownership, failure outcomes and costs](ENGINE-GROUP-COMMIT.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is
@@ -299,7 +300,8 @@ overlap conflicts conservatively. An append/flush error during merge has an
 unknown outcome and poisons the parent; reopen it before outcome discovery or
 retry. Failure to seed a branch leaves the parent untouched, but the branch log
 may contain the seed and must be inspected/reopened rather than blindly reused.
-Fork and merge currently copy full states and use the same O(N) record format.
+Fork and merge use the receiving engine's selected flat/shared map and the same
+O(N) record format. Mixed representation forks convert their initial rows.
 
 ## Distributed ownership and horizontal scale
 
@@ -327,10 +329,14 @@ from a replicated in-memory test.
 
 ## Costs and comparison
 
-The staged implementation clones the current rows for each write commit and
-writes a complete logical revision: O(N + W) memory/work plus O(N) journal bytes for N
-rows and W staged writes. A scan currently materializes its view. History adds
-up to O(HN) retained row memory. The allocator is shared. Optimistic read-committed
+The default flat representation clones current rows for each write commit and
+writes a complete logical revision. Candidate creation costs O(N); applying W
+writes costs O(W log N), followed by complete revision encoding. Flat scans
+materialize their view and history can retain O(HN) map entries. Optional
+[shared immutable state](ENGINE-SHARED-STATE.md) replaces those map copies with
+an O(1) root and O(W log N) changed paths, preserving earlier snapshots and
+sharing unchanged entries during recovery. Complete encoding, selected
+constraints and scans still visit the full state. The allocator is shared. Optimistic read-committed
 and snapshot sessions, plus serializable read-set sessions, track per-address changes only while another session can
 be stale, retaining deleted-address tombstones to detect delete/recreate races.
 The final session validates before reclaiming that map. Opening an engine,

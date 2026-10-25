@@ -40,13 +40,13 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         var snapshot = !_closed && _engine.Options.Isolation == IsolationLevel.ReadCommitted ? _engine.Current : _base;
         return snapshot.Rows.TryGetValue(id, out var row) ? row : null;
     }
-    private SortedDictionary<T, EngineRow<T>> View()
+    private EngineRows<T> View()
     {
         if (!_closed && _reads is not null) _scanned = true;
         var snapshot = !_closed && _engine.Options.Isolation == IsolationLevel.ReadCommitted ? _engine.Current : _base;
-        var rows = new SortedDictionary<T, EngineRow<T>>(snapshot.Rows.ToDictionary());
+        var rows = new EngineRows<T>(snapshot.Rows, _engine.Options.StateStructure);
         foreach (var (id, row) in _writes)
-        { if (row is { } present) rows[id] = present; else rows.Remove(id); }
+        { if (row is { } present) rows.Set(id, present); else rows.Remove(id); }
         return rows;
     }
     public T CreateLink(T source, T target)
@@ -157,9 +157,9 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             if (target.Changed is { } changed && writes.Any(write => changed.TryGetValue(write.Key, out var revision) && revision > _base.Revision))
                 throw new InvalidOperationException("Conflict: a written link changed since begin.");
             if (writes.Length == 0) return target.Current.Revision;
-            var rows = new SortedDictionary<T, EngineRow<T>>(target.Current.Rows.ToDictionary());
+            var rows = new EngineRows<T>(target.Current.Rows, target.Options.StateStructure);
             foreach (var (id, row) in writes)
-            { if (row is { } present) rows[id] = present; else rows.Remove(id); }
+            { if (row is { } present) rows.Set(id, present); else rows.Remove(id); }
             target.Publish(rows, writes.Select(write => write.Key));
             _base = target.Current;
             return _base.Revision;

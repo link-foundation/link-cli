@@ -173,3 +173,8 @@ Retain preparation and cleanup ownership, validate mandatory metadata before
 mutation and reconcile unreported effects before committed history/publication.
 Preserve the default observer policy and original constructor signatures; recover
 unknown allocations and redo later committed checkpoints after image restoration.
+
+Select structurally shared immutable ordered engine state independently of
+isolation, history and journal settings. Preserve flat-map defaults and portable
+revision records; share unchanged nodes across live and recovered revisions,
+scans, group preparation and branches without copying complete row maps.

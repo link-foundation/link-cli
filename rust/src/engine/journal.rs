@@ -1,6 +1,6 @@
 //! Portable full-revision journal. The checksum detects accidental corruption;
 //! it is not authentication. FileTransitionLog handles newline framing/torn tails.
-use super::{error, Row, Snapshot};
+use super::{error, Row, Rows, Snapshot};
 use crate::{GenericLink, LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
 use std::collections::BTreeMap;
@@ -132,7 +132,7 @@ pub(super) fn decode<T: LinkReference>(entry: &str) -> Result<(Snapshot<T>, u128
     Ok((
         Snapshot {
             revision,
-            rows: Arc::new(rows),
+            rows: Arc::new(Rows::Flat(rows)),
         },
         next,
     ))

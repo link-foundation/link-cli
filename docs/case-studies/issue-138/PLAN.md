@@ -30,7 +30,7 @@ finite test suite proves all failure modes or that all DBMS have been surveyed.
 - [ ] Fetch/merge latest main; push only issue-138-adc2aa56c4cb.
 - [ ] Update PR title/body with reproduction, tests, evidence, limits, and Fixes #138.
 - [ ] Review gh pr diff, feature preservation, fresh feedback, and clean git status.
-- [ ] List recent CI runs with timestamps/SHAs; save failed logs under ci-logs;
+- [ ] List recent CI runs with timestamps/SHAs; save failed logs under experiments/issue-138/ci-logs;
       investigate actual errors and verify fixes against new runs.
 - [ ] Verify all relevant CI on final SHA and mark PR 139 ready when implementation is complete.
 
@@ -157,6 +157,15 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     row-wal-ci.txt. IMAGE-REPLAY-PLAN.md extends replay compatibility and coverage.
     See ROW-WAL-PLAN.md; physical page durability/repair and efficient state
     structures remain distinct follow-up requirements.
+
+11. Undo-image compatibility controls pass full local suites and all nine
+    workflows on `71cad1c`; see IMAGE-REPLAY-PLAN.md and image-replay-ci.txt.
+    Shared immutable state now has finite pre-implementation allocation evidence
+    and passing focused native/C#/actual-WASM contracts. The representation is
+    independent of other strategy choices; old wire and public map interfaces
+    remain compatible. Complete shared-state suites, examples and coverage are
+    running; see SHARED-STATE-PLAN.md. Full record encoding and physical page
+    designs remain separate costs and open requirements.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

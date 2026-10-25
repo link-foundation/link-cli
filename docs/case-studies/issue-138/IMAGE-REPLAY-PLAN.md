@@ -16,7 +16,7 @@ row-image coverage run leaves that final verification failure unexecuted.
 - [x] Investigate any reproduced failure before changing production code.
       These new compatibility controls pass without a behavior correction.
 - [x] Run focused checks then required complete suites and document exact coverage.
-- [ ] Review, commit, push and inspect all fresh exact-head workflows.
+- [x] Review, commit, push and inspect all fresh exact-head workflows.
 
 Focused checks pass: 20 native Rust tests (one bounded child entry ignored in
 direct enumeration), 112 C# cases and 19 actual-WASM cases. The Rust sparse
@@ -24,9 +24,13 @@ control also covers selected unnamed owners. Complete local suites pass: 823
 native, 481 actual WASM, 1,909 C# per Debug/Release configuration, 111 JS and 217
 repository tests. Formatting, lints, types, source sizes, release metadata, runtime
 conformance and persistent examples pass. See image-replay.txt for official
-coverage; exact-head publication and CI remain pending.
+coverage; exact-head publication and all nine workflows pass on `71cad1c`.
 
 Logical images require compatible replay and readable storage. These tests do
 not establish physical page repair or power-loss safety. Complete coverage,
 efficient WAL/state structures, finer composition and wider strategies remain
 active acceptance criteria.
+
+All nine workflows pass on `71cad1c5f4f948fc7e326cc06604e303732c67ed`;
+all were created at 2026-10-25 15:51:07 UTC, after the commit. See
+image-replay-ci.txt. Later shared-state code needs its own exact-head checks.

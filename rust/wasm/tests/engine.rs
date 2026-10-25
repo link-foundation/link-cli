@@ -54,6 +54,8 @@ fn validates_every_binding_option_and_journal_before_opening() {
         "[]",
         r#"{"unknown":true}"#,
         r#"{"concurrency":"invalid"}"#,
+        r#"{"stateStructure":"mutable"}"#,
+        r#"{"stateStructure":42}"#,
         r#"{"isolation":"invalid"}"#,
         r#"{"serializableValidation":"invalid"}"#,
         r#"{"serializableValidation":42}"#,
@@ -74,6 +76,8 @@ fn validates_every_binding_option_and_journal_before_opening() {
     }
     for options in [
         "{}",
+        r#"{"stateStructure":"flat"}"#,
+        r#"{"stateStructure":"shared"}"#,
         r#"{"history":null}"#,
         r#"{"serializableValidation":"revision"}"#,
         r#"{"serializableValidation":"read-set"}"#,

@@ -82,7 +82,8 @@ monotonicity, address range and configured constraints.
 Compression scans the old and new row payloads for the longest common prefix,
 then a nonoverlapping common suffix, capped at u32 spans. It retains one full
 record and constructs one candidate delta: O(N) time and transient space. The
-engine still clones/encodes full states. Reading expands every retained revision
+engine still encodes full states; optional [shared state](ENGINE-SHARED-STATE.md)
+avoids the default full row-map cloning. Reading expands every retained revision
 and remains O(total logical history); checkpointing does not compact history or
 implement an LSM tree. Distant edits can copy the large span between them.
 

@@ -79,9 +79,12 @@ handles before another implementation opens the same journal.
 
 ## Costs and verification
 
-For K accepted writes, preparation still clones/validates/encodes each full
-revision: O(sum(N_i + W_i)) work plus existing ordered-map costs and encoded name
-bytes. It copies retained history and conflict/ownership metadata, and buffers
+For K accepted writes, the default flat representation copies each candidate's
+N_i rows, then applies W_i ordered-map updates. Optional
+[shared state](ENGINE-SHARED-STATE.md) retains the root and copies changed paths,
+with O(W_i log N_i) update work. Both choices still validate selected constraints
+and encode every complete revision, including its name bytes. Preparation copies
+retained history and conflict/ownership metadata, and buffers
 the K logical records until publication. C# also pins each accepted member's
 snapshot so its closed handle retains ordinary committed-read behavior. The
 extra memory therefore includes full encoded revisions and retained snapshots,

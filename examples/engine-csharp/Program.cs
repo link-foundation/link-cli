@@ -1,6 +1,7 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/engine-csharp -- [journal-path] [--delta] [--read-set] [--pessimistic] [--exit]
+// dotnet run --project examples/engine-csharp -- [journal-path] [--shared] [--delta] [--read-set] [--pessimistic] [--exit]
+var structure = args.Contains("--shared") ? StateStructure.Shared : StateStructure.Flat;
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal));
 using var file = path is not null ? new FileCommitLog(path) : null;
 ICommitLog log = file ?? (ICommitLog)new MemoryCommitLog();
@@ -8,6 +9,7 @@ if (args.Contains("--delta")) log = new DeltaCommitLog(log);
 var engine = new LinksEngine<ulong>(log, new()
 {
     HistoryLimit = null,
+    StateStructure = structure,
     Concurrency = args.Contains("--pessimistic") ? ConcurrencyControl.Pessimistic : ConcurrencyControl.Optimistic,
     SerializableValidation = args.Contains("--read-set") ? SerializableValidation.ReadSet : SerializableValidation.Revision,
     RequireDurableFlush = file is not null
@@ -23,7 +25,7 @@ rolledBack.CreateLink(0, 0);
 if (args.Contains("--exit")) Environment.Exit(0); // Recovery probe: bypass disposal.
 rolledBack.Rollback();
 
-var fork = engine.Fork(new MemoryCommitLog());
+var fork = engine.Fork(new MemoryCommitLog(), new() { StateStructure = structure });
 using var edit = fork.Engine.Begin();
 edit.SetName(id, "edited independently");
 edit.Commit();

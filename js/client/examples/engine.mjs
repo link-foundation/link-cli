@@ -1,17 +1,22 @@
-// node js/client/examples/engine.mjs [journal-path] [--delta] [--read-set] [--pessimistic]
+// node js/client/examples/engine.mjs [journal-path] [--shared] [--delta] [--read-set] [--pessimistic]
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import * as binding from '../../../js/pkg/clink_wasm.js';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { WasmEngine, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog } from '../src/index.js';
 import { FileCommitLog } from '../src/engine-file-log.js';
 
-binding.initSync({ module: readFileSync(new URL('../../../js/pkg/clink_wasm_bg.wasm', import.meta.url)) });
+const moduleUrl = process.env.CLINK_WASM ? pathToFileURL(join(process.env.CLINK_WASM, 'clink_wasm.js')) : new URL('../../../js/pkg/clink_wasm.js', import.meta.url);
+const binding = await import(moduleUrl.href);
+binding.initSync({ module: readFileSync(new URL('clink_wasm_bg.wasm', moduleUrl)) });
+const stateStructure = process.argv.includes('--shared') ? 'shared' : 'flat';
 const path = process.argv.slice(2).find(arg => !arg.startsWith('--'));
 const file = path ? new FileCommitLog(path) : null;
 const follower = new MemoryCommitLog();
 const baseLog = file ?? new ReplicatedCommitLog(new MemoryCommitLog(), [follower], { acknowledgements: 2 });
 const log = process.argv.includes('--delta') ? new DeltaCommitLog(baseLog) : baseLog;
 const engine = new WasmEngine(binding, { history: 'all', requireDurableFlush: file !== null,
+  stateStructure,
   concurrency: process.argv.includes('--pessimistic') ? 'pessimistic' : 'optimistic',
   serializableValidation: process.argv.includes('--read-set') ? 'read-set' : 'revision' }, log);
 const session = engine.begin();
@@ -21,7 +26,7 @@ try {
   console.log('before commit', engine.snapshot());
   console.log('revision', await session.commit());
   console.log('after commit', engine.snapshot());
-  const branch = engine.fork();
+  const branch = engine.fork({ stateStructure });
   const edit = branch.engine.begin();
   try {
     await edit.setName(link.index, 'edited independently');

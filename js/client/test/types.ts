@@ -21,6 +21,12 @@ import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, DeltaCo
 import { FileCommitLog } from '../types/engine-file-log.js';
 async function engineTypes(binding: { StagedEngine: { new(options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }) {
   const pointOptions: EngineOptions = { serializableValidation: 'read-set' };
+  const sharedOptions: EngineOptions = { stateStructure: 'shared' };
+  const flatOptions: EngineOptions = { stateStructure: 'flat' };
+  void sharedOptions; void flatOptions;
+  // @ts-expect-error Unknown state structures must not silently select a policy.
+  const invalidStructure: EngineOptions = { stateStructure: 'mutable' };
+  void invalidStructure;
   new WasmEngine(binding, pointOptions).close();
   // @ts-expect-error unknown validator
   const invalidValidation: EngineOptions = { serializableValidation: 'none' };

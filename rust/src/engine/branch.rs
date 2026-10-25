@@ -53,7 +53,7 @@ impl<T: LinkReference, P: TransitionLogStore> Engine<T, P> {
         merge_base_record: &str,
     ) -> Result<Branch<T, P, L>, LinkError> {
         drop(self.lock()?);
-        let (base, next) = journal::decode::<T>(merge_base_record)?;
+        let (mut base, next) = journal::decode::<T>(merge_base_record)?;
         let mut found = false;
         for record in log.read_log_entries()? {
             let (snapshot, allocator) = journal::decode::<T>(&record)?;
@@ -65,7 +65,10 @@ impl<T: LinkReference, P: TransitionLogStore> Engine<T, P> {
         if !found {
             return Err(error("merge base is not a committed branch revision"));
         }
+        let structure = options.state_structure;
         let engine = Engine::open(log, options)?;
+        base.rows =
+            std::sync::Arc::new(std::sync::Arc::unwrap_or_clone(base.rows).adapt(structure, None));
         Ok(Branch {
             parent: self.clone(),
             engine,

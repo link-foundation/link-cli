@@ -2108,3 +2108,76 @@ readable storage, compatible replay and truthful flushes. These controls do not
 establish physical page repair or real power-loss safety. Efficient WAL/state
 structures, finer composition and wider competitor/cluster requirements remain
 unfinished. Fresh exact-head CI is required after publication.
+
+
+## Optional shared immutable state and retained paths
+
+Flat remains the default. The independently selected Shared strategy uses
+rpds 1.2.1's Arc-based ordered map in Rust and the existing .NET immutable sorted
+dictionary in C#. Rust-backed JS/TS/WASM exposes stateStructure: 'shared'. The
+existing engine1 wire and public snapshot interfaces remain compatible.
+
+Reproduce the finite allocation control:
+CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 cargo run --manifest-path rust/Cargo.toml --example engine_state_copy
+
+Before implementation, the existing flat engine shares zero of 4,080 unchanged
+row references across 256 named rows and sixteen one-row commits. Afterward,
+Flat still shares 0/4,080 and Shared shares 4,080/4,080. Every step verifies row
+values and the pinned original. C# independently counts immutable AVL nodes,
+requiring unchanged subtrees across live and replayed revisions. These controls
+measure identity, rather than elapsed time or complete-process allocation.
+Feature contracts were written before the option existed; the missing-API
+compile failure is separate from the runnable pre-implementation cost baseline.
+
+Focused validation: eight native portable semantic/cost cases, two native
+private root/cache/capability checks, eighteen C# cases and the same eight
+portable cases in actual WASM. Public WASM option-validation also passes.
+Independent 96-step row/name oracles retain every earlier snapshot. Contracts
+cover all supported admission/isolation/validation combinations, all selected
+constraints, no/one/all history, no-op/rollback, zero/maximum and sparse addresses,
+append/flush uncertainty, mixed parent/branch choices, saved-base resume, grouped
+commits, following edits and existing portable revision vectors.
+
+Internal Rust reads, validation, encoding, branches and WASM export never request
+the lazy public BTreeMap compatibility copy. Explicit materialization remains
+O(N), shared only by clones of that snapshot; new candidates start uncached.
+Readonly commit/rollback preserves the original root. C# exposes the immutable
+IReadOnlyDictionary directly, with frozen candidates rejecting later mutation.
+Native Send/Sync controls pass. The resolved rpds tree source has the exact
+SHA-256 of the pinned primary source in RESEARCH.md; both locked dependency
+graphs pass metadata validation. No minimum-compiler run is claimed.
+
+Complete suites run sequentially within the 2.92 GiB container:
+- Native Rust all-features LLVM branch coverage: 833 standard passes, zero fail;
+  twelve ignored child entries are exercised by bounded parents. Custom stdout
+  harness passes.
+- C# Debug and Release with Coverlet: 1,927 each, zero failed/skipped.
+- Actual WASM with coverage: 489 pass, zero failed/ignored.
+- JS: 111 tests; all 17 production modules reach enforced 100% line, branch and
+  function thresholds. Strict TS and 217 repository checks pass.
+- Formatting, strict native/WASM Clippy, source sizes, release fragments,
+  dependency lock metadata and whitespace pass.
+- Generated actual-WASM conformance passes Node, Bun and Deno, including
+  flat/shared snapshot/delta reopening, group outcomes, mixed resumed branches
+  and invalid option types.
+- Persistent Rust -> C# -> JS examples reopen the same journals under all four
+  flat/shared and snapshot/delta combinations with read-set/pessimistic options.
+  Existing group examples and both ordinary undo-policy examples also pass.
+- Container OOM/OOM-kill counters remain zero.
+
+Official complete-run totals; no filtered denominator or diagnostic union:
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,227/12,088 (92.88%) | 2,002/2,414 (82.93%) | 1,450/1,590 (91.19%) |
+| Actual WASM, complete linked source | 8,471/11,643 (72.76%) | 1,574/2,125 (74.07%) | 1,112/1,569 (70.87%) |
+| C# Debug | 7,019/7,534 (93.16%) | 3,536/3,972 (89.02%) | Not reported by this collector |
+| C# Release | 5,390/5,710 (94.40%) | 3,511/3,953 (88.82%) | Not reported by this collector |
+
+All three WASM wrappers measure 100% lines/branches/functions. Complete native,
+linked-WASM and C# coverage remains below 100%. Full revision encoding, selected
+constraint scans, complete-record delta comparison, history/conflict metadata
+and group record buffers remain costs. Structural sharing does not implement
+page WAL, LSM layout, physical torn-page repair or real power-loss verification.
+Finer composition and wider competitor/cluster requirements remain open. The
+native issue goal stays active; fresh exact-head CI is required after publication.

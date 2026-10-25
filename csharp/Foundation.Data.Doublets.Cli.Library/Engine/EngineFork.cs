@@ -16,7 +16,7 @@ public sealed partial class LinksEngine<T>
         {
             if (engine.Current.Revision != 0) throw new ArgumentException("Fork requires an empty branch journal.", nameof(log));
             engine.Next = next;
-            engine.Publish(new(snapshot.Rows.ToDictionary()), snapshot.Rows.Keys);
+            engine.Publish(new(snapshot.Rows, engine.Options.StateStructure), snapshot.Rows.Keys);
         }
         return new(this, engine, engine.Current, next);
     }
@@ -29,7 +29,8 @@ public sealed partial class LinksEngine<T>
         if (!log.Read().Select(RevisionJournal<T>.Decode).Any(record => record.Item1.Revision == snapshot.Revision
             && record.Item2 == next && record.Item1.Rows.SequenceEqual(snapshot.Rows)))
             throw new InvalidDataException("Merge base is not a committed branch revision.");
-        return new(this, new(log, options), snapshot, next);
+        var engine = new LinksEngine<T>(log, options);
+        return new(this, engine, snapshot.Adapt(engine.Options.StateStructure), next);
     }
 }
 
@@ -61,7 +62,7 @@ public sealed class EngineFork<T>
                 _parent.CheckReady();
                 if (_parent.Options.Concurrency == ConcurrencyControl.Exclusive && _parent.Active > 0)
                     throw new InvalidOperationException("Busy: an exclusive transaction is active.");
-                var rows = new SortedDictionary<T, EngineRow<T>>(_parent.Current.Rows.ToDictionary());
+                var rows = new EngineRows<T>(_parent.Current.Rows, _parent.Options.StateStructure);
                 var changes = new List<T>();
                 foreach (var id in _base.Rows.Keys.Concat(incoming.Rows.Keys).Distinct().Order())
                 {
@@ -74,7 +75,7 @@ public sealed class EngineFork<T>
                     if (current == after) continue;
                     if (_parent.WriteOwners?.ContainsKey(id) == true)
                         throw new InvalidOperationException("Busy: another transaction owns this write address.");
-                    if (after is { } value) rows[id] = value; else rows.Remove(id);
+                    if (after is { } value) rows.Set(id, value); else rows.Remove(id);
                     changes.Add(id);
                 }
                 _parent.Next = BigInteger.Max(_parent.Next, next);

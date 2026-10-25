@@ -40,3 +40,6 @@ mod pessimistic;
 
 #[path = "../../tests/engine_group_commit_tests.rs"]
 mod group_commit;
+
+#[path = "../../tests/engine_shared_state_tests.rs"]
+mod shared_state;

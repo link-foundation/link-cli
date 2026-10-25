@@ -1,6 +1,6 @@
 use super::{
-    error, validation::ReadSet, Engine, IsolationLevel, Row, SerializableValidation, Snapshot,
-    State,
+    error, validation::ReadSet, Engine, IsolationLevel, Row, Rows, SerializableValidation,
+    Snapshot, State,
 };
 use crate::{GenericLink, LinkError, LinksStorage, TransitionLogStore};
 use doublets::data::LinkReference;
@@ -58,7 +58,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         }
         self.base.rows.get(&id).cloned()
     }
-    fn view(&self) -> BTreeMap<T, Row<T>> {
+    fn view(&self) -> Rows<T> {
         if !self.closed {
             if let Some(reads) = &self.reads {
                 reads.lock().expect("read-set mutex poisoned").scanned = true;

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.Numerics;
 using Platform.Data.Doublets;
 
@@ -8,9 +9,12 @@ public enum ConcurrencyControl { Optimistic, Exclusive, Pessimistic }
 public enum IsolationLevel { ReadCommitted, Snapshot, Serializable }
 public enum SerializableValidation { Revision, ReadSet }
 public enum EngineConstraint { References, UniquePairs, UniqueNames }
+/// <summary>Independent in-memory representation; journal format is unchanged.</summary>
+public enum StateStructure { Flat, Shared }
 
 public sealed record EngineOptions
 {
+    public StateStructure StateStructure { get; init; } = StateStructure.Flat;
     public ConcurrencyControl Concurrency { get; init; } = ConcurrencyControl.Optimistic;
     public IsolationLevel Isolation { get; init; } = IsolationLevel.Serializable;
     public SerializableValidation SerializableValidation { get; init; } = SerializableValidation.Revision;
@@ -31,6 +35,12 @@ public sealed class EngineSnapshot<T>
     public IReadOnlyDictionary<T, EngineRow<T>> Rows { get; }
     internal EngineSnapshot(ulong revision, SortedDictionary<T, EngineRow<T>> rows)
     { Revision = revision; Rows = new ReadOnlyDictionary<T, EngineRow<T>>(rows); }
+    private EngineSnapshot(ulong revision, EngineRows<T> rows)
+    { Revision = revision; Rows = rows.Freeze(); }
+    internal static EngineSnapshot<T> Create(ulong revision, EngineRows<T> rows) => new(revision, rows);
+    internal EngineSnapshot<T> Adapt(StateStructure structure, EngineSnapshot<T>? previous = null)
+        => (Rows is ImmutableSortedDictionary<T, EngineRow<T>>) == (structure == StateStructure.Shared)
+            ? this : Create(Revision, new(Rows, structure, previous?.Rows));
 }
 
 /// <summary>Optional isolated engine. The revision log is authoritative; all writes
@@ -40,7 +50,7 @@ public sealed partial class LinksEngine<T>
 {
     internal readonly object Gate = new();
     internal readonly EngineOptions Options;
-    internal EngineSnapshot<T> Current = new(0, new());
+    internal EngineSnapshot<T> Current;
     internal Dictionary<T, ulong>? Changed;
     internal Dictionary<T, object>? WriteOwners;
     internal BigInteger Next = BigInteger.One;
@@ -56,6 +66,7 @@ public sealed partial class LinksEngine<T>
         Options = options ?? new();
         if (Options.HistoryLimit < 0 || !Enum.IsDefined(Options.Isolation) || !Enum.IsDefined(Options.Concurrency)
             || !Enum.IsDefined(Options.SerializableValidation)
+            || !Enum.IsDefined(Options.StateStructure)
             || (Options.SerializableValidation == SerializableValidation.ReadSet && Options.Isolation != IsolationLevel.Serializable)
             || Options.Constraints.Any(c => !Enum.IsDefined(c)))
             throw new ArgumentException("Invalid engine strategy.", nameof(options));
@@ -63,6 +74,7 @@ public sealed partial class LinksEngine<T>
             throw new ArgumentException("Selected log does not support durable flush.", nameof(log));
         // Freeze caller-owned collections before using them as policy.
         Options = Options with { Constraints = Options.Constraints.ToArray() };
+        Current = EngineSnapshot<T>.Create(0, new(Options.StateStructure));
         Retain();
         foreach (var record in log.Read())
         {
@@ -70,7 +82,7 @@ public sealed partial class LinksEngine<T>
             if (snapshot.Revision != checked(Current.Revision + 1) || next < Next)
                 throw new InvalidDataException("Journal revision or allocator moved backwards.");
             Validate(snapshot.Rows);
-            Current = snapshot;
+            Current = snapshot.Adapt(Options.StateStructure, Current);
             Next = next;
             CommittedNext = next;
             Retain();
@@ -118,10 +130,10 @@ public sealed partial class LinksEngine<T>
         if (next > BigInteger.CreateChecked(UInt128.MaxValue)) throw new OverflowException("Address space exhausted.");
         return next;
     }
-    internal void Publish(SortedDictionary<T, EngineRow<T>> rows, IEnumerable<T> writes)
+    internal void Publish(EngineRows<T> rows, IEnumerable<T> writes)
     {
         Validate(rows);
-        var snapshot = new EngineSnapshot<T>(checked(Current.Revision + 1), rows);
+        var snapshot = EngineSnapshot<T>.Create(checked(Current.Revision + 1), rows);
         var record = RevisionJournal<T>.Encode(snapshot, Next);
         try { _log.Append(record); _log.Flush(); }
         catch (Exception error)

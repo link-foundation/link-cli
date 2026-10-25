@@ -20,6 +20,9 @@ mod named;
 pub mod partitioned;
 mod pessimistic;
 pub mod replication;
+mod rows;
+#[cfg(test)]
+mod shared_cost_tests;
 mod transaction;
 mod validation;
 
@@ -32,8 +35,19 @@ pub use branch::Branch;
 pub use delta::DeltaLog;
 pub use group::GroupCommitOutcome;
 pub use journal::MemoryLog;
+use rows::Rows;
 pub use transaction::EngineTransaction;
 pub use validation::SerializableValidation;
+
+/// In-memory revision representation, independent of durability and isolation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum StateStructure {
+    /// Clone complete sorted rows for each changed revision (the existing path).
+    #[default]
+    Flat,
+    /// Share immutable entries and path-copy an ordered tree for changed rows.
+    Shared,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ConcurrencyControl {
@@ -74,6 +88,7 @@ pub enum Constraint {
 
 #[derive(Debug, Clone, Default)]
 pub struct EngineOptions {
+    pub state_structure: StateStructure,
     pub concurrency: ConcurrencyControl,
     pub isolation: IsolationLevel,
     pub serializable_validation: SerializableValidation,
@@ -103,7 +118,7 @@ pub struct Row<T> {
 #[derive(Debug, Clone)]
 pub struct Snapshot<T> {
     pub revision: u64,
-    rows: Arc<BTreeMap<T, Row<T>>>,
+    rows: Arc<Rows<T>>,
 }
 impl<T: LinkReference> Snapshot<T> {
     pub fn links(&self) -> Vec<GenericLink<T>> {
@@ -112,8 +127,14 @@ impl<T: LinkReference> Snapshot<T> {
     pub fn get(&self, id: T) -> Option<&Row<T>> {
         self.rows.get(&id)
     }
+    /// Legacy sorted-map view. Shared snapshots lazily copy O(N) rows/names on
+    /// the first call; snapshot clones share that cache. Prefer `iter` or `get`.
     pub fn rows(&self) -> &BTreeMap<T, Row<T>> {
-        &self.rows
+        self.rows.materialize()
+    }
+    /// Sorted borrowed rows without materializing the legacy BTreeMap view.
+    pub fn iter(&self) -> impl Iterator<Item = (&T, &Row<T>)> {
+        self.rows.iter()
     }
 }
 
@@ -164,7 +185,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         let mut state = State {
             current: Snapshot {
                 revision: 0,
-                rows: Arc::new(BTreeMap::new()),
+                rows: Arc::new(Rows::new(options.state_structure)),
             },
             history: BTreeMap::new(),
             changed: BTreeMap::new(),
@@ -178,7 +199,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         };
         state.retain();
         for entry in entries {
-            let (snapshot, next) = journal::decode::<T>(&entry)?;
+            let (mut snapshot, next) = journal::decode::<T>(&entry)?;
             if snapshot.revision
                 != state
                     .current
@@ -188,12 +209,16 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             {
                 return Err(error("journal revisions are not contiguous"));
             }
-            state.validate(snapshot.rows())?;
+            state.validate(&snapshot.rows)?;
             if next < state.next {
                 return Err(error("journal allocator moved backwards"));
             }
             state.next = next;
             state.committed_next = next;
+            snapshot.rows = Arc::new(
+                Arc::unwrap_or_clone(snapshot.rows)
+                    .adapt(state.options.state_structure, Some(&state.current.rows)),
+            );
             state.current = snapshot;
             state.retain();
         }
@@ -293,7 +318,7 @@ impl<T: LinkReference, L> State<T, L> {
             }
         }
     }
-    fn validate(&self, rows: &BTreeMap<T, Row<T>>) -> Result<(), LinkError> {
+    fn validate(&self, rows: &Rows<T>) -> Result<(), LinkError> {
         let zero = T::from_byte(0);
         for constraint in &self.options.constraints {
             match constraint {

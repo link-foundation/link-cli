@@ -3,6 +3,7 @@ use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
     Branch, ConcurrencyControl, Constraint, Engine, EngineOptions, EngineTransaction,
     GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, SerializableValidation,
+    StateStructure,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
 use link_cli::{LinksStorage, QueryProcessor, TransitionLogStore};
@@ -12,6 +13,7 @@ use wasm_bindgen::prelude::*;
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
+    state_structure: Option<String>,
     concurrency: Option<String>,
     isolation: Option<String>,
     serializable_validation: Option<String>,
@@ -29,6 +31,11 @@ fn options(text: &str) -> Result<EngineOptions, String> {
     let parsed: Options = serde_json::from_value(serde_json::Value::Object(object))
         .map_err(|error| error.to_string())?;
     Ok(EngineOptions {
+        state_structure: match parsed.state_structure.as_deref() {
+            None | Some("flat") => StateStructure::Flat,
+            Some("shared") => StateStructure::Shared,
+            _ => return Err("unknown state structure".into()),
+        },
         concurrency: match parsed.concurrency.as_deref() {
             None | Some("optimistic") => ConcurrencyControl::Optimistic,
             Some("exclusive") => ConcurrencyControl::Exclusive,
@@ -161,7 +168,7 @@ impl StagedEngine {
             None => self.inner.snapshot(),
         }
         .map_err(|e| e.to_string())?;
-        let rows: Vec<_> = snapshot.rows().values().map(|row| serde_json::json!({
+        let rows: Vec<_> = snapshot.iter().map(|(_, row)| serde_json::json!({
             "index": row.link.index.to_string(), "source": row.link.source.to_string(), "target": row.link.target.to_string(), "name": row.name,
         })).collect();
         Ok(
@@ -308,6 +315,8 @@ mod tests {
             r#"{"serializableValidation":42}"#,
             r#"{"isolation":"snapshot","serializableValidation":"read-set"}"#,
             r#"{"concurrency":"none"}"#,
+            r#"{"stateStructure":"mutable"}"#,
+            r#"{"stateStructure":42}"#,
             r#"{"history":0}"#,
             r#"{"constraints":["unknown"]}"#,
             r#"{"durable":true}"#,

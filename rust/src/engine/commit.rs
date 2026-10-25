@@ -1,15 +1,16 @@
-use super::{error, journal, Row, Snapshot, State};
+use super::{error, journal, Rows, Snapshot, State};
 use crate::{LinkError, TransitionLogStore};
 use doublets::data::LinkReference;
-use std::{collections::BTreeMap, sync::Arc};
+use std::sync::Arc;
 
 impl<T: LinkReference, L: TransitionLogStore> State<T, L> {
     /// Caller holds the engine mutex. Used by sessions and atomic branch merges.
     pub(super) fn publish(
         &mut self,
-        rows: BTreeMap<T, Row<T>>,
+        rows: Rows<T>,
         changed: impl IntoIterator<Item = T>,
     ) -> Result<Snapshot<T>, LinkError> {
+        let rows = rows.adapt(self.options.state_structure, None);
         self.validate(&rows)?;
         let revision = self
             .current

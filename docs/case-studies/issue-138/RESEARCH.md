@@ -94,3 +94,40 @@ reconciliation costs; it does not implement SQLite's page/sector protocol.
 Physical torn-page recovery and efficient page undo remain separate open work.
 See [configuration, assumptions and costs](../../TRANSACTION-UNDO.md) and
 [the row-barrier plan](ROW-WAL-PLAN.md). No SQLite implementation was copied.
+
+## Immutable ordered state components (2026-10-25)
+
+The existing flat maps copy every row into a transaction view or committed
+candidate. A bounded baseline with 256 named rows and sixteen one-row commits
+shares zero of 4,080 unchanged Rust row references. Evaluate reusable components
+before introducing a second balancing-tree implementation:
+
+| Component / pinned primary source | Observed implementation | Selection and limits |
+| --- | --- | --- |
+| [`rpds` 1.2.1](https://github.com/orium/rpds/blob/50a486ec8e4fade33a286af4bc35c2728b1f268f/Cargo.toml), MIT | [`red_black_tree_map/mod.rs`](https://github.com/orium/rpds/blob/50a486ec8e4fade33a286af4bc35c2728b1f268f/src/map/red_black_tree_map/mod.rs): node cloning at 130–142 shares entries/children; mutation at 839–887 copies affected paths; map cloning at 1001–1008 retains the root. | Select `RedBlackTreeMapSync`, whose Arc-based ownership preserves native Send/Sync. The default Rc map would change those capabilities. Version 1.2.1 declares Rust 1.85, below this project's 1.89 floor. Actual native/WASM compilation verifies supported targets; this is not a complete minimum-compiler test. |
+| [.NET 10 immutable sorted dictionary](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Collections.Immutable/src/System/Collections/Immutable/ImmutableSortedDictionary_2.Node.cs), MIT | Frozen AVL nodes are sealed recursively at 429–439; `Mutate` and balancing at 745–777 copy frozen paths while preserving other children. | Reuse the existing target's `System.Collections.Immutable`; no new NuGet package. The public `IReadOnlyDictionary` interface can expose the immutable map directly. |
+| [`im-rs`](https://github.com/bodil/im-rs), MPL-2.0 | Repository metadata reports archived, with last source push 2024-08-19. | Prefer the maintained MIT component. No code from this alternative is copied. |
+
+Downloaded source SHA-256 values are `71189099680f42428692abb21eb19c6afe96da0e4695634f2866fb021a009e69`
+for the rpds tree, `0a977678da90c4b602dc1ae4a78371a3841c04b3372d15287fb79c496939ff70`
+for its manifest, and `ac0e39edb1414c7ddfd6f8bce7cd808f27f9f228a45c781558ae87069bbb5611`
+for the .NET node source. Component versions and source commits are distinct:
+the commit above identifies the published rpds 1.2.1 source, rather than an
+unpinned development branch.
+
+Locked native and WASM dependency graphs both resolve `rpds` 1.2.1 and `archery`
+1.2.3 (MIT, declared Rust 1.85), `triomphe` 0.1.17 (MIT/Apache-2.0, declared
+Rust 1.85), and `smallvec` 1.16.4 (MIT/Apache-2.0, no declared compiler floor).
+Both `cargo metadata --locked` checks pass. Those declarations and successful
+current-target builds do not substitute for running the entire project under
+its minimum compiler.
+
+The selected implementation preserves the existing complete `engine1` wire.
+It changes candidate and retained-snapshot allocation costs; it does not make
+the full revision encoder, constraint scans or delta comparison incremental.
+Rust's existing `rows() -> &BTreeMap` requires a lazy O(N) compatibility copy;
+borrowed `get`/`iter` and internal operations avoid it. Finite entry/node identity
+controls and independent state oracles verify this distinction. See
+[the shared-state recipe](../../ENGINE-SHARED-STATE.md) and
+[implementation plan](SHARED-STATE-PLAN.md). Page WAL, LSM layout and physical
+page repair remain separate open designs.
