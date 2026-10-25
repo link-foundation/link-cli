@@ -211,7 +211,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -264,7 +264,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Restore dependencies
         run: dotnet restore
@@ -336,7 +336,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       # The script rewrites the working tree (detached checkout + merge), so it
       # has to run from the repository root, not from the csharp/ default.
@@ -367,7 +367,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Restore dependencies
         run: dotnet restore
@@ -410,7 +410,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -636,7 +636,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7

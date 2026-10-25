@@ -1,0 +1,39 @@
+2026-10-25: exact-head CI investigation, commit 3843e00a0c124f1f51fff4aad99bea959c0888c8
+
+The four failed workflows all stopped in actions/setup-dotnet@v6 before tests:
+Docs 40225695942 (attempts 1 and 2), JS 40225695971, C# 40225695950,
+Security 40225695989. Created 2026-10-25T19:22:06Z, after that commit.
+Downloaded complete logs remain in experiments/issue-138/ci-logs/ (ignored).
+Specific evidence, 1-based log lines:
+docs-40225695942-rerun.log:186-195: SDK 10.0.403 HTTP 409, setup failure.
+js-client-40225695971.log:598-606: SDK HTTP 409, conformance setup failure.
+csharp-40225695950.log:1812,2878,3101,3319: SDK failures on the lint,
+macOS, Windows and Linux runners. Missing coverage artifacts follow setup failure.
+security-40225695989.log:2753-2761: SDK HTTP 409, CodeQL C# setup failure.
+
+Root cause: the channel's aka.ms redirect selects the private
+dotnetorigin.blob.core.windows.net storage account. Its response is HTTP 409,
+"Public access is not permitted on this storage account." Repeating Docs on
+the same SHA reproduced the same failure; no test failure was masked/retried.
+
+Read the action and installer at the actual v6 revision
+a98b56852c35b8e3190ac28c8c2271da59106c68:
+https://github.com/actions/setup-dotnet/blob/a98b56852c35b8e3190ac28c8c2271da59106c68/src/installer.ts
+https://github.com/actions/setup-dotnet/blob/a98b56852c35b8e3190ac28c8c2271da59106c68/externals/install-dotnet.sh
+Installer lines 1397-1408 skip aka.ms for explicit versions; channel installs
+never try alternate feeds after a valid redirect's payload download fails.
+
+Selected SDK 10.0.403 explicitly in all nine setup steps. This uses the public
+builds.dotnet.microsoft.com feed, retains the maintained setup action and keeps
+the same SDK version originally selected by the broken redirect. HEAD requests
+returned HTTP 200 with nonempty archive lengths for Linux x64, macOS arm64 and
+Windows x64 at that feed. The official installer's --version 10.0.403 --dry-run
+confirmed the public builds URL and ci.dot.net fallback. No SDK archive needed
+to be installed in this memory-constrained container.
+
+Before change: all four dotnet-download-policy.test.mjs cases failed on 10.0.x.
+After change: all 221 repository tests passed; actionlint with ShellCheck and
+git diff --check passed. Tests permit future explicit SDK updates.
+The action still attempts its nonfatal LTS runtime prepass; the selected SDK
+contains its own runtime. Exact-head CI must verify the actual installation.
+No dependency, coverage or test check was disabled.

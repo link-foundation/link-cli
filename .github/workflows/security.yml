@@ -68,7 +68,7 @@ jobs:
         if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       # With build-mode set here the action builds the database itself, so the
       # deprecated github/codeql-action/autobuild step is no longer needed.
