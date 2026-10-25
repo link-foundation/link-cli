@@ -178,7 +178,7 @@ public partial class VersionControlDecorator
     {
         var visited = new HashSet<string>(StringComparer.Ordinal);
         string? current = branch;
-        // Check the chain before BuildBranchSeqsLocked recurses through it.
+        // Reject broken ancestry before resolving the movement paths.
         while (current is not null)
         {
             if (!visited.Add(current) || !_branches.TryGetValue(current, out var info)

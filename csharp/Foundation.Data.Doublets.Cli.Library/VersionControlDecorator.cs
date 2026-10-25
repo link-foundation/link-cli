@@ -411,24 +411,34 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
 
     private List<long> BuildBranchSeqsLocked(string branchName)
     {
-        return BuildBranchSeqsLocked(branchName, new HashSet<string>(StringComparer.Ordinal));
-    }
-
-    private List<long> BuildBranchSeqsLocked(string branchName, HashSet<string> visited)
-    {
-        if (!_branches.TryGetValue(branchName, out var info)) return new List<long>();
-        if (!visited.Add(branchName)) return new List<long>();
-        var seqs = new List<long>();
-        if (info.Parent is not null && _branches.ContainsKey(info.Parent))
+        // Only descendant fork points constrain inherited records. Each own
+        // head applies separately, preserving root-to-leaf history grouping.
+        var positions = new Dictionary<string, int>(StringComparer.Ordinal);
+        var chain = new List<(long Limit, List<long> Sequences)>();
+        string? current = branchName;
+        var cutoff = long.MaxValue;
+        while (current is not null && _branches.TryGetValue(current, out var info)
+            && positions.TryAdd(current, chain.Count))
         {
-            seqs.AddRange(BuildBranchSeqsLocked(info.Parent, visited).Where(s => s <= info.ForkSeq));
+            chain.Add((Math.Min(cutoff, info.Head), new List<long>()));
+            cutoff = Math.Min(cutoff, info.ForkSeq);
+            current = info.Parent;
         }
-        var own = _transitionBranches
-          .Where(p => p.Value == branchName && p.Key <= info.Head)
-          .Select(p => p.Key)
-          .OrderBy(s => s);
-        seqs.AddRange(own);
-        return seqs;
+        // Partition in one attribution scan; only selected buckets need sorting.
+        foreach (var (sequence, owner) in _transitionBranches)
+            if (positions.TryGetValue(owner, out var position))
+            {
+                var entry = chain[position];
+                if (sequence <= entry.Limit) entry.Sequences.Add(sequence);
+            }
+        var result = new List<long>();
+        for (var position = chain.Count - 1; position >= 0; --position)
+        {
+            var sequences = chain[position].Sequences;
+            sequences.Sort();
+            result.AddRange(sequences);
+        }
+        return result;
     }
 
     // -- Persistence helpers ----------------------------------------------

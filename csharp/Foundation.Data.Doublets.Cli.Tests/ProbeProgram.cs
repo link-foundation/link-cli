@@ -12,6 +12,7 @@ internal static class ProbeProgram
         try
         {
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
+            if (args is ["deep-ancestry", var operation, var ancestryDirectory]) return VersionAncestryDepthTests.Child(operation, ancestryDirectory);
             if (args is ["version-exit", var directory, var mode, var automatic])
                 return VersionExitProbe.Run(directory, mode, bool.Parse(automatic));
             if (args is ["movement-exit", var movementDirectory, var point, var branchSwitch])

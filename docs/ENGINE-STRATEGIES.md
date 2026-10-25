@@ -205,7 +205,21 @@ An unavailable shared prefix needs no replay, so moves over an available suffix
 still work. Resolution snapshots the retained log once and indexes it by sequence:
 O(N + V) time and O(N + V) temporary memory for N retained records and V changed
 records. Retention does not promise that every stored version remains replayable.
-Failures while applying an available diff still require a separate atomicity audit.
+The durable movement intent described below retains ownership during failed replay.
+Legacy branch path construction walks ancestors iteratively and scans transition
+attribution once, rather than recursing and rescanning for every parent. With D
+ancestors, A attributed transitions and P selected records, native Rust takes
+expected O(D + A + P) time; C# additionally sorts selected per-branch buckets,
+with O(P log P) worst-case sorting. Both use O(D + P) temporary memory and
+constant call-stack space. Each branch's own head and all descendant fork
+cutoffs still apply; records remain grouped root to leaf, then ascending within
+each branch. These costs apply only to the selected legacy version wrapper;
+there is no persistent extra index or work on bare cache paths. The separate
+retained-journal diff-resolution cost above still applies. Finite stack tests
+use a metadata-only adapter to isolate traversal; real-name semantic tests
+verify actual native reopenings. WASM controls verify logical behavior without
+claiming a native stack overflow or filesystem durability there.
+
 Recovery replays the complete committed suffix after its first missing applied
 marker, including later records that already have markers. It flushes the final
 redo and pending undo before filling that gap, keeping an anchor for another

@@ -58,6 +58,9 @@ mod transactions_decorator;
 #[path = "../../tests/version_control_decorator_tests.rs"]
 mod version_control_decorator;
 
+#[path = "../../tests/version_ancestry_semantics_tests.rs"]
+mod version_ancestry_semantics;
+
 #[path = "../../tests/transactions_commit_failure_tests.rs"]
 mod transactions_commit_failure;
 

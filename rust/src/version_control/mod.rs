@@ -22,6 +22,8 @@ use crate::named_type_links::NamedTypeLinks;
 use crate::named_types::NamedTypesDecorator;
 
 mod movement;
+#[cfg(test)]
+mod path_contract_tests;
 mod publication;
 use crate::transactions::{TransactionHandle, TransactionsDecorator};
 use movement::{MovementIntent, MovementState, MOVEMENT_PREFIX};
@@ -480,39 +482,39 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
     }
 
     fn build_branch_seqs(&self, branch_name: &str) -> Vec<i64> {
-        let mut visited: HashSet<String> = HashSet::new();
-        self.build_branch_seqs_inner(branch_name, &mut visited)
-    }
-
-    fn build_branch_seqs_inner(
-        &self,
-        branch_name: &str,
-        visited: &mut HashSet<String>,
-    ) -> Vec<i64> {
-        let info = match self.branches.get(branch_name) {
-            Some(info) => info,
-            None => return Vec::new(),
-        };
-        if !visited.insert(branch_name.to_string()) {
-            return Vec::new();
+        // Walk leaf to root with the minimum descendant fork cutoff. A branch's
+        // head limits its own records, not the records inherited from its parent.
+        let mut positions = HashMap::new();
+        let mut chain: Vec<(i64, Vec<i64>)> = Vec::new();
+        let mut current = Some(branch_name);
+        let mut cutoff = i64::MAX;
+        while let Some(name) = current {
+            let Some(info) = self.branches.get(name) else {
+                break;
+            };
+            if positions.contains_key(name) {
+                break;
+            }
+            positions.insert(name, chain.len());
+            chain.push((cutoff.min(info.head), Vec::new()));
+            cutoff = cutoff.min(info.fork_seq);
+            current = info.parent.as_deref();
         }
-        let mut seqs = Vec::new();
-        if let Some(parent_name) = info.parent.as_deref() {
-            if self.branches.contains_key(parent_name) {
-                let mut parent_seqs = self.build_branch_seqs_inner(parent_name, visited);
-                parent_seqs.retain(|s| *s <= info.fork_seq);
-                seqs.extend(parent_seqs);
+        // BTreeMap iteration already orders each bucket by sequence. Scan all
+        // attribution once rather than once per ancestor; then emit root first.
+        for (sequence, owner) in &self.transition_branches {
+            if let Some(&position) = positions.get(owner.as_str()) {
+                let (limit, records) = &mut chain[position];
+                if sequence <= limit {
+                    records.push(*sequence);
+                }
             }
         }
-        let mut own: Vec<i64> = self
-            .transition_branches
-            .iter()
-            .filter(|(s, b)| b.as_str() == branch_name && **s <= info.head)
-            .map(|(s, _)| *s)
-            .collect();
-        own.sort();
-        seqs.extend(own);
-        seqs
+        chain
+            .into_iter()
+            .rev()
+            .flat_map(|(_, records)| records)
+            .collect()
     }
 
     // -- Persistence helpers -----------------------------------------

@@ -1,0 +1,58 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.91s
+     Running tests/version_ancestry_depth_tests.rs (rust/target/debug/deps/version_ancestry_depth_tests-a6635174d18a85d4)
+
+running 4 tests
+test ancestry_child ... ignored, Executed only by finite ancestry parents
+test deep_checkout_uses_bounded_stack ... FAILED
+test deep_fork_validation_uses_bounded_stack ... FAILED
+test deep_switch_uses_bounded_stack ... FAILED
+
+failures:
+
+---- deep_checkout_uses_bounded_stack stdout ----
+
+thread 'deep_checkout_uses_bounded_stack' (1365415) panicked at tests/version_ancestry_depth_tests.rs:65:5:
+Finite child checkout: 
+running 1 test
+Constructed 2049 valid branches; checkout
+
+
+thread '<unknown>' (1365418) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- deep_fork_validation_uses_bounded_stack stdout ----
+
+thread 'deep_fork_validation_uses_bounded_stack' (1365419) panicked at tests/version_ancestry_depth_tests.rs:65:5:
+Finite child fork: 
+running 1 test
+Constructed 2049 valid branches; fork
+
+
+thread '<unknown>' (1365422) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+
+
+---- deep_switch_uses_bounded_stack stdout ----
+
+thread 'deep_switch_uses_bounded_stack' (1365438) panicked at tests/version_ancestry_depth_tests.rs:65:5:
+Finite child switch: 
+running 1 test
+Constructed 2049 valid branches; switch
+
+
+thread '<unknown>' (1365441) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+
+
+
+failures:
+    deep_checkout_uses_bounded_stack
+    deep_fork_validation_uses_bounded_stack
+    deep_switch_uses_bounded_stack
+
+test result: FAILED. 0 passed; 3 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.13s
+
+error: test failed, to rerun pass `--test version_ancestry_depth_tests`

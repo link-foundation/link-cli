@@ -151,3 +151,7 @@ Reject conflicting sequence records, contradictory decisions and invalid owners
 or sequences while preserving idempotent parsed duplicates and retained floors.
 Retain admission after failed recovery, including queued asynchronous checkpoints
 and retention, until retry completes recovery before following writes or replay.
+
+Construct branch paths iteratively without stack growth per ancestor, scanning
+transition attribution once. Preserve nested fork cutoffs, per-branch heads and
+root-to-leaf replay order, including empty histories and subsequent edits.

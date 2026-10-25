@@ -1,0 +1,139 @@
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v4.0.1+0f7d528729 (64-bit .NET 10.0.12)
+[xUnit.net 00:00:00.28]   Discovering: Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.08]   Discovered:  Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:01.15]   Starting:    Foundation.Data.Doublets.Cli.Tests
+[xUnit.net 00:00:02.03]     Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "checkout") [FAIL]
+[xUnit.net 00:00:02.03]       Finite child checkout exited 134:
+[xUnit.net 00:00:02.03]       Constructed 2049 valid branches; checkout
+[xUnit.net 00:00:02.03]       
+[xUnit.net 00:00:02.03]       Stack overflow.
+[xUnit.net 00:00:02.03]       Repeated 799 times:
+[xUnit.net 00:00:02.03]       --------------------------------
+[xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String, System.Collections.Generic.HashSet`1<System.String>)
+[xUnit.net 00:00:02.03]       --------------------------------
+[xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String)
+[xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.Checkout(Int64)
+[xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
+[xUnit.net 00:00:02.03]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
+[xUnit.net 00:00:02.03]          at System.Threading.Thread.StartCallback()
+[xUnit.net 00:00:02.03]       
+[xUnit.net 00:00:02.03]       Stack Trace:
+[xUnit.net 00:00:02.03]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs(51,0): at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation)
+[xUnit.net 00:00:02.03]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.65]     Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "fork") [FAIL]
+[xUnit.net 00:00:02.65]       Finite child fork exited 134:
+[xUnit.net 00:00:02.65]       Constructed 2049 valid branches; fork
+[xUnit.net 00:00:02.65]       
+[xUnit.net 00:00:02.65]       Stack overflow.
+[xUnit.net 00:00:02.65]       Repeated 798 times:
+[xUnit.net 00:00:02.65]       --------------------------------
+[xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String, System.Collections.Generic.HashSet`1<System.String>)
+[xUnit.net 00:00:02.65]       --------------------------------
+[xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String)
+[xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.Branch(System.String, System.Nullable`1<Int64>)
+[xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass3_0.<Contract>b__1()
+[xUnit.net 00:00:02.65]          at Xunit.Assert.RecordException(System.Action)
+[xUnit.net 00:00:02.65]          at Xunit.Assert.Throws[[System.__Canon, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]](System.Action)
+[xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
+[xUnit.net 00:00:02.65]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
+[xUnit.net 00:00:02.65]          at System.Threading.Thread.StartCallback()
+[xUnit.net 00:00:02.65]       
+[xUnit.net 00:00:02.65]       Stack Trace:
+[xUnit.net 00:00:02.65]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs(51,0): at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation)
+[xUnit.net 00:00:02.65]         --- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "checkout") [735 ms]
+  Error Message:
+   Finite child checkout exited 134:
+Constructed 2049 valid branches; checkout
+
+Stack overflow.
+Repeated 799 times:
+--------------------------------
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String, System.Collections.Generic.HashSet`1<System.String>)
+--------------------------------
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String)
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Checkout(Int64)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
+   at System.Threading.Thread.StartCallback()
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs:line 51
+--- End of stack trace from previous location ---
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "fork") [628 ms]
+  Error Message:
+   Finite child fork exited 134:
+Constructed 2049 valid branches; fork
+
+Stack overflow.
+Repeated 798 times:
+--------------------------------
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String, System.Collections.Generic.HashSet`1<System.String>)
+--------------------------------
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String)
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.Branch(System.String, System.Nullable`1<Int64>)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass3_0.<Contract>b__1()
+   at Xunit.Assert.RecordException(System.Action)
+   at Xunit.Assert.Throws[[System.__Canon, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]](System.Action)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
+   at System.Threading.Thread.StartCallback()
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs:line 51
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.21]     Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "switch") [FAIL]
+[xUnit.net 00:00:03.21]       Finite child switch exited 134:
+[xUnit.net 00:00:03.21]       Constructed 2049 valid branches; switch
+[xUnit.net 00:00:03.21]       
+[xUnit.net 00:00:03.21]       Stack overflow.
+[xUnit.net 00:00:03.21]       Repeated 798 times:
+[xUnit.net 00:00:03.21]       --------------------------------
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String, System.Collections.Generic.HashSet`1<System.String>)
+[xUnit.net 00:00:03.21]       --------------------------------
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String)
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.StartMovementLocked(System.Collections.Generic.List`1<Int64>, System.String)
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.ApplyDiffToLocked(System.Collections.Generic.List`1<Int64>, System.String)
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.VersionControlDecorator.SwitchBranch(System.String)
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
+[xUnit.net 00:00:03.21]          at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
+[xUnit.net 00:00:03.21]          at System.Threading.Thread.StartCallback()
+[xUnit.net 00:00:03.21]       
+[xUnit.net 00:00:03.21]       Stack Trace:
+[xUnit.net 00:00:03.21]         /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs(51,0): at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation)
+[xUnit.net 00:00:03.21]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.23]   Finished:    Foundation.Data.Doublets.Cli.Tests
+  Failed Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(operation: "switch") [558 ms]
+  Error Message:
+   Finite child switch exited 134:
+Constructed 2049 valid branches; switch
+
+Stack overflow.
+Repeated 798 times:
+--------------------------------
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String, System.Collections.Generic.HashSet`1<System.String>)
+--------------------------------
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.BuildBranchSeqsLocked(System.String)
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.StartMovementLocked(System.Collections.Generic.List`1<Int64>, System.String)
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.ApplyDiffToLocked(System.Collections.Generic.List`1<Int64>, System.String)
+   at Foundation.Data.Doublets.Cli.VersionControlDecorator.SwitchBranch(System.String)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.Contract(System.String, System.String)
+   at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests+<>c__DisplayClass2_0.<Child>b__0()
+   at System.Threading.Thread.StartCallback()
+
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.VersionAncestryDepthTests.ValidDeepAncestryUsesBoundedStack(String operation) in /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/VersionAncestryDepthTests.cs:line 51
+--- End of stack trace from previous location ---
+
+Test Run Failed.
+Total tests: 3
+     Failed: 3
+ Total time: 4.1819 Seconds
