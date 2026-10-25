@@ -1601,3 +1601,53 @@ All nine workflows pass on movement head `d4cb43c`, with runs created
 2026-10-25 at 02:44:35 UTC after its commit and push. Native platform, package,
 fresh-merge, release, JS and actual-WASM checks pass; exact run URLs are in
 `version-movement-ci.txt`. Later code requires fresh exact-head validation.
+
+## Legacy Rust transaction identity across restart
+
+Root cause: wall-clock milliseconds plus a process counter can repeat after a
+restart. Recovery indexes commit/abort decisions by ID, so reusing one can
+commit an uncommitted write, resurrect an aborted write or hide pending undo.
+Two original finite probes first recover row 21 instead of expected row 11.
+Four automated native contracts first fail, as do four actual-WASM contracts.
+The before logs are preserved separately from successful validation. Initial
+fixture compile failures are excluded from reproduction evidence. Verbose
+WASM compiler DEBUG lines are omitted from its preserved behavioral log.
+
+Explicit and automatic allocation now exclude zero and IDs in the existing
+recovered commit/abort sets. Those decisions survive retention of payloads.
+Normal candidate checks cost expected O(1); K collisions after restart cost
+O(K) extra candidates while advancing the shared process counter. No extra
+retained index, history scan, mandatory randomness or bare-store work is added.
+A trace, disabled by default, reports skipped historical IDs once per affected
+allocation. Existing public APIs and wire encodings are unchanged.
+
+Four Linux parent cases use genuinely fresh processes and frozen realtime.
+Each child has a ten-second monotonic deadline, 512 MiB address-space limit and
+8 MiB stack limit. Prior commit/abort decisions are followed by explicit undo
+or exit after flushing pending rows, two fresh reopenings and a following commit.
+All four pass. Actual WASM imports old committed/aborted decisions and freezes
+Date.now to verify explicit and automatic owners, recovery and following writes.
+All four pass. Both original finite public-API restart probes also pass after
+rebuilding against the corrected library. Special Linux clock interposition is
+not claimed to execute on Windows/macOS; ordinary existing contracts remain.
+
+Full local native Rust: 737 standard tests plus the custom stdout harness pass;
+eight ignored child entries execute through bounded parents. Actual WASM: 408
+pass. C# Debug/Release: 1,573 each, zero skips. JS: 106 plus TypeScript checks
+pass, with all seventeen production modules at 100% lines/branches/functions
+and all three thresholds enforced. The three WASM wrappers retain 100% measured
+coverage. Formatting, strict native/WASM Clippy, release metadata and source
+sizes pass. No container OOM occurred.
+Debug: 6,501/6,993 lines (92.96%), 3,111/3,528 branches (88.18%)
+Release: 4,959/5,262 lines (94.24%), 3,083/3,509 branches (87.86%)
+native: 10,069/10,901 lines (92.37%), 1,753/2,130 branches (82.30%), 1,326/1,466 functions (90.45%)
+wasm: 7,241/10,463 lines (69.21%), 1,309/1,835 branches (71.34%), 976/1,446 functions (67.50%)
+
+IDs are journal-local, not cryptographic/global identifiers. This does not repair
+older journals already containing conflicting reused decisions. A separate
+finite probe reproduces chunk archives being overwritten when independent
+journals share an archive directory and clocks/counters repeat; exclusive archive
+ownership remains the next audit. Legacy name/history journaling, the observer's
+pre-append window, finer composition and full project coverage remain open.
+All nine workflows pass on preceding movement head d4cb43c; this change requires
+new exact-head CI and does not complete the wider issue.

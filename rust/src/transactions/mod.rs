@@ -602,7 +602,7 @@ where
         }
         if self.current.is_none() {
             self.current = Some(PendingTransaction {
-                id: new_transaction_id(),
+                id: self.allocate_transaction_id(),
                 transitions: Vec::new(),
                 auto_commit: true,
                 rollback_only: false,
@@ -761,6 +761,25 @@ where
 
     // ----- Transaction handle --------------------------------------------
 
+    fn allocate_transaction_id(&self) -> u128 {
+        // Realtime can repeat after restart while the process counter resets.
+        // Durable decisions outlive retained payloads, so consult the existing
+        // recovered indexes before assigning an ID to either kind of owner.
+        let mut collided = false;
+        loop {
+            let id = new_transaction_id();
+            if id != 0 && !self.committed.contains(&id) && !self.rolled_back.contains(&id) {
+                if collided && self.trace {
+                    crate::diagnostics::stderr!(
+                        "[Transactions] Skipped previously decided transaction IDs."
+                    );
+                }
+                return id;
+            }
+            collided = true;
+        }
+    }
+
     pub fn begin_transaction(&mut self) -> Result<TransactionHandle, LinkError> {
         self.ensure_no_version_replay()?;
         if self.current.is_some() {
@@ -768,7 +787,7 @@ where
                 "Nested transactions are not supported.".to_string(),
             ));
         }
-        let id = new_transaction_id();
+        let id = self.allocate_transaction_id();
         let started_ms = now_unix_ms();
         self.current = Some(PendingTransaction {
             id,
@@ -884,8 +903,8 @@ fn insert_ordered<T: LinkReference>(
 static TX_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn new_transaction_id() -> u128 {
-    // Combine a per-process counter with the current timestamp to
-    // approximate a Guid without pulling in the `uuid` crate.
+    // Produce a candidate; journal ownership additionally excludes recovered
+    // decisions because this timestamp/counter pair can repeat after restart.
     let count = TX_COUNTER.fetch_add(1, Ordering::Relaxed) as u128;
     let now = now_unix_ms() as u128;
     (now << 64) | count

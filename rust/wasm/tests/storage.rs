@@ -49,6 +49,9 @@ mod named_types_decorator;
 #[path = "../../tests/transactions_portable_clock_tests.rs"]
 mod transactions_portable_clock;
 
+#[path = "../../tests/transactions_identity_wasm_tests.rs"]
+mod transactions_identity_wasm;
+
 #[path = "../../tests/transactions_decorator_tests.rs"]
 mod transactions_decorator;
 

@@ -115,6 +115,15 @@ Retention limits the in-memory list, while the durable
 sidecar still keeps recovery markers. Optional diagnostic I/O failures preserve
 the operation's outcome; storage and journal errors retain their error semantics.
 
+Legacy Rust transaction IDs exclude every recovered commit and abort decision,
+even if the wall clock repeats after a process restart. Explicit and automatic
+owners use the same allocation check. It uses the existing decision hash sets:
+expected O(1) per candidate, with O(K) extra candidates when a restarted counter
+meets K historical IDs at the same timestamp. The counter advances as collisions
+are skipped; no database scan, extra retained index or random dependency is added.
+These are journal-local identities. This check does not repair older journals
+already containing reused IDs or conflicting decisions.
+
 Legacy Rust/C# transaction wrappers retain observed partial writes when a storage
 operation fails. Automatic operations undo those observations; explicit
 transactions keep them for caller rollback. This requires the adapter's change

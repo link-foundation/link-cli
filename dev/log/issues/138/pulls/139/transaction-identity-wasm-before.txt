@@ -1,0 +1,255 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+   Compiling clink-wasm v2.4.0 (<workspace>/rust/wasm)
+    Finished `test` profile [unoptimized] target(s) in 21.32s
+     Running tests/storage.rs (rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm)
+Set WASM_BINDGEN_TEST_TIMEOUT to 30 seconds...
+running 4 tests
+Invoking test: transactions_identity_wasm::committed_id_is_not_reused_by_explicit_wasm_owner
+panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+assertion `left != right` failed: A recovered journal decision identified a new owner.
+  left: 31912867247517524295680000000001
+ right: 31912867247517524295680000000001
+
+Stack:
+
+Error
+    at <wasm-runner>/wasm-bindgen-test.js:336:25
+    at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+test transactions_identity_wasm::committed_id_is_not_reused_by_explicit_wasm_owner ... FAIL
+Invoking test: transactions_identity_wasm::committed_id_is_not_reused_by_automatic_wasm_owner
+panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+assertion `left != right` failed: A recovered journal decision identified a new owner.
+  left: 31912867247517524295680000000004
+ right: 31912867247517524295680000000004
+
+Stack:
+
+Error
+    at <wasm-runner>/wasm-bindgen-test.js:336:25
+    at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+test transactions_identity_wasm::committed_id_is_not_reused_by_automatic_wasm_owner ... FAIL
+Invoking test: transactions_identity_wasm::aborted_id_is_not_reused_by_explicit_wasm_owner
+panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+assertion `left != right` failed: A recovered journal decision identified a new owner.
+  left: 31912867247517524295680000000007
+ right: 31912867247517524295680000000007
+
+Stack:
+
+Error
+    at <wasm-runner>/wasm-bindgen-test.js:336:25
+    at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+test transactions_identity_wasm::aborted_id_is_not_reused_by_explicit_wasm_owner ... FAIL
+Invoking test: transactions_identity_wasm::aborted_id_is_not_reused_by_automatic_wasm_owner
+panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+assertion `left != right` failed: A recovered journal decision identified a new owner.
+  left: 31912867247517524295680000000010
+ right: 31912867247517524295680000000010
+
+Stack:
+
+Error
+    at <wasm-runner>/wasm-bindgen-test.js:336:25
+    at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+    at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+    at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+    at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+    at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+test transactions_identity_wasm::aborted_id_is_not_reused_by_automatic_wasm_owner ... FAIL
+
+failures:
+
+---- transactions_identity_wasm::committed_id_is_not_reused_by_explicit_wasm_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+        assertion `left != right` failed: A recovered journal decision identified a new owner.
+          left: 31912867247517524295680000000001
+         right: 31912867247517524295680000000001
+
+        Stack:
+
+        Error
+            at <wasm-runner>/wasm-bindgen-test.js:336:25
+            at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19819]:0x30c0b2)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19650]:0x30bdec)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[15678]:0x302cb0)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20befd)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10868]:0x2e7052)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9933]:0x2db335)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[2944]:0x1fdbe1)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<u128, u128> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9204]:0x2cff4b)
+
+---- transactions_identity_wasm::committed_id_is_not_reused_by_automatic_wasm_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+        assertion `left != right` failed: A recovered journal decision identified a new owner.
+          left: 31912867247517524295680000000004
+         right: 31912867247517524295680000000004
+
+        Stack:
+
+        Error
+            at <wasm-runner>/wasm-bindgen-test.js:336:25
+            at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19819]:0x30c0b2)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19650]:0x30bdec)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[15678]:0x302cb0)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20befd)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10868]:0x2e7052)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9933]:0x2db335)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[2944]:0x1fdbe1)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<u128, u128> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9204]:0x2cff4b)
+
+---- transactions_identity_wasm::aborted_id_is_not_reused_by_explicit_wasm_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+        assertion `left != right` failed: A recovered journal decision identified a new owner.
+          left: 31912867247517524295680000000007
+         right: 31912867247517524295680000000007
+
+        Stack:
+
+        Error
+            at <wasm-runner>/wasm-bindgen-test.js:336:25
+            at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19819]:0x30c0b2)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19650]:0x30bdec)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[15678]:0x302cb0)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20befd)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10868]:0x2e7052)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9933]:0x2db335)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[2944]:0x1fdbe1)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<u128, u128> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9204]:0x2cff4b)
+
+---- transactions_identity_wasm::aborted_id_is_not_reused_by_automatic_wasm_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_identity_wasm_tests.rs:80:5:
+        assertion `left != right` failed: A recovered journal decision identified a new owner.
+          left: 31912867247517524295680000000010
+         right: 31912867247517524295680000000010
+
+        Stack:
+
+        Error
+            at <wasm-runner>/wasm-bindgen-test.js:336:25
+            at logError (<wasm-runner>/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (<wasm-runner>/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[14832]:0x2ffd4f)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9478]:0x2d45e7)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3879]:0x234389)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10729]:0x2e5874)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20bea8)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19819]:0x30c0b2)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[19650]:0x30bdec)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[15678]:0x302cb0)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[3166]:0x20befd)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[5557]:0x276369)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[18560]:0x309d97)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[10868]:0x2e7052)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9933]:0x2db335)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[2944]:0x1fdbe1)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<u128, u128> (wasm://wasm/storage-91e7d092bac01889.wasm-022d70e6:wasm-function[9204]:0x2cff4b)
+
+failures:
+
+    transactions_identity_wasm::committed_id_is_not_reused_by_explicit_wasm_owner
+    transactions_identity_wasm::committed_id_is_not_reused_by_automatic_wasm_owner
+    transactions_identity_wasm::aborted_id_is_not_reused_by_explicit_wasm_owner
+    transactions_identity_wasm::aborted_id_is_not_reused_by_automatic_wasm_owner
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 251 filtered out; finished in 0.31s
+
+Error: Node failed with exit_code 1
+error: test failed, to rerun pass `--test storage`
+
+Caused by:
+  process didn't exit successfully: `wasm-bindgen-test-runner <workspace>/rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm transactions_identity_wasm --nocapture` (exit status: 1)
