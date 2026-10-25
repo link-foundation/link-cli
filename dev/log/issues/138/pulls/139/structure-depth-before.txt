@@ -1,0 +1,28 @@
+Finite deep structure output: before evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Date: 2026-10-25 UTC
+Base: 1a482ac1a4d51b122a4864a3361d44e7258b3a0c
+
+No production edits preceded these automated executions.
+
+CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test
+  --manifest-path rust/Cargo.toml --test structure_depth_tests -- --nocapture
+Result: 0 passed, 2 failed, 1 ignored child entry. Both concrete LinkStorage and
+NamedTypeLinks trait formatting reach the prepared 2048-node marker, then abort
+with signal 6 and "has overflowed its stack" / "stack overflow, aborting".
+Each parent starts/reaps a separate finite child: 128 MiB address space, CPU
+2 seconds, dumps disabled, 10-second parent deadline; worker stack 128 KiB.
+See experiments/issue-138/structure-depth-native-before.log (local full log).
+
+DOTNET_GCHeapHardLimit=0x28000000 dotnet test csharp --configuration Debug
+  --disable-build-servers -m:1 --filter FullyQualifiedName~StructureDepthTests
+Result: 0 passed, 1 failed. The isolated child prints "Prepared finite 2048-node
+structure", then exits with stack overflow in recursive FormatStructure and
+FormatStructureSource. Child heap 128 MiB, dumps disabled, Linux CPU 4 seconds,
+10-second parent deadline; worker stack 256 KiB. The child is reaped.
+See experiments/issue-138/structure-depth-csharp-before.log (local full log).
+
+The standalone experiments/issue-138/run-deep-structure-probe.py independently
+reproduces the concrete Rust abort with the same finite graph and small stack.
+The source audit also finds repeated whole-subtree string construction on
+recursive unwind. No unbounded graph, thread count or host stack probe is used.

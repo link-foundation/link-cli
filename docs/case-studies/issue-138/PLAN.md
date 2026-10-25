@@ -226,5 +226,14 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     UNICODE-GRAPH-PLAN.md, unicode-graph-before.txt and unicode-graph.txt.
     Publication and fresh exact-head CI are pending; wider criteria stay open.
 
+17. Deep structure output has bounded before stack-overflow failures in concrete
+    Rust, generic Rust and C#. Shared explicit source-spine frames preserve
+    cycle references and deepest-first name resolution, then assemble one output
+    buffer. Focused native contracts pass; complete local validation, actual
+    WASM, publication and fresh exact-head CI are in progress. See
+    STRUCTURE-DEPTH-PLAN.md and structure-depth-before.txt. The next independent
+    audit addresses observed whitespace truncation in Rust's legacy inline-name
+    text parser. Wider criteria remain unfinished.
+
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

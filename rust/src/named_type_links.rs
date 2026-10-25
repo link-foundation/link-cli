@@ -167,21 +167,14 @@ pub trait NamedTypeLinks {
         id: u32,
         visited: &mut HashSet<u32>,
     ) -> Result<String> {
-        let link = self.get_link(id).ok_or(LinkError::not_found(id))?;
-        if !visited.insert(id) {
-            return self.format_reference(id);
-        }
-
-        let source = if self.exists(link.source) && !visited.contains(&link.source) {
-            self.format_structure_recursive(link.source, visited)?
-        } else {
-            self.format_reference(link.source)?
-        };
-        let target = self.format_reference(link.target)?;
-        let index = self.format_reference(link.index)?;
-        visited.remove(&id);
-
-        Ok(format!("({index}: {source} {target})"))
+        crate::structure_format::format_structure(
+            self,
+            id,
+            visited,
+            |store, address| store.get_link(address),
+            |store, address| store.exists(address),
+            |store, address| store.format_reference(address),
+        )
     }
 }
 

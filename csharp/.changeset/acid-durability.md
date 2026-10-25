@@ -204,3 +204,7 @@ Reject cyclic Unicode sequence graphs through a checked iterative walker while
 retaining the maintained package converter, repeated shared subtrees and existing
 UTF-16 behavior. Keep traversal state local after failed decoding and reject
 malformed persisted names on repeated reopening.
+
+Format deep link structures iteratively with one StringBuilder. Preserve
+source-only expansion, cycle references and deepest-first name lookups while
+avoiding call-stack exhaustion and repeated whole-subtree copying.

@@ -766,23 +766,17 @@ impl LinkStorage {
         self.format_structure_recursive(id, &mut visited)
     }
 
-    /// Recursively formats a link structure
+    /// Formats a source spine using explicit frames rather than call-stack depth.
     fn format_structure_recursive(&self, id: u32, visited: &mut HashSet<u32>) -> Result<String> {
-        let link = self.get(id).ok_or(LinkError::not_found(id))?;
-        if !visited.insert(id) {
-            return Ok(self.format_lino_reference(id));
-        }
-
-        let source = if self.exists(link.source) && !visited.contains(&link.source) {
-            self.format_structure_recursive(link.source, visited)?
-        } else {
-            self.format_lino_reference(link.source)
-        };
-        let target = self.format_lino_reference(link.target);
-        let index = self.format_lino_reference(link.index);
-        visited.remove(&id);
-
-        Ok(format!("({index}: {source} {target})"))
+        let mut store = self;
+        crate::structure_format::format_structure(
+            &mut store,
+            id,
+            visited,
+            |store, address| store.get(address).copied(),
+            |store, address| store.exists(address),
+            |store, address| Ok(store.format_lino_reference(address)),
+        )
     }
 
     /// Prints all links

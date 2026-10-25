@@ -276,3 +276,23 @@ depth-dependent recursion. This adds O(depth) metadata; shared DAG expansion
 can still produce large output. Existing memoization, UTF-16 policies and stored
 bytes remain unchanged. See [contract and limits](../../UNICODE-SEQUENCE-INTEGRITY.md)
 and [execution plan](UNICODE-GRAPH-PLAN.md). No upstream implementation is copied.
+
+## Source-spine output and reference-order compatibility (2026-10-25)
+
+Audited the published
+[generic Rust formatter](https://github.com/link-foundation/link-cli/blob/1a482ac1a4d51b122a4864a3361d44e7258b3a0c/rust/src/named_type_links.rs),
+[concrete Rust formatter](https://github.com/link-foundation/link-cli/blob/1a482ac1a4d51b122a4864a3361d44e7258b3a0c/rust/src/link_storage.rs)
+and [C# formatter](https://github.com/link-foundation/link-cli/blob/1a482ac1a4d51b122a4864a3361d44e7258b3a0c/csharp/Foundation.Data.Doublets.Cli.Library/LinoDatabaseOutput.cs).
+They expand only the source spine, resolving the terminal source and then
+ancestor target/index names while unwinding. Both recursion depth and repeated
+whole-subtree string assembly grow with valid input depth. Bounded native
+executions confirm stack overflow in all three entry points.
+
+Inference from those observable call orders: retain explicit link frames,
+resolve references deepest first, then emit prefixes root first and suffixes
+leaf first. Reuse standard Vec/List/String/StringBuilder components and one
+shared Rust implementation. An independent shallow oracle verifies read order,
+name failures, caller paths, cycles and output. This preserves selected store
+lookup behavior; linear output assembly does not make an unindexed store's
+lookups constant time. See [contract and costs](../../STRUCTURE-OUTPUT.md) and
+[execution plan](STRUCTURE-DEPTH-PLAN.md). No external implementation is copied.

@@ -61,6 +61,7 @@ pub mod query_processor_substitution;
 pub mod query_types;
 pub mod sequences;
 pub mod storage;
+mod structure_format;
 pub mod transactions;
 pub mod unicode_string_storage;
 pub mod version_control;
