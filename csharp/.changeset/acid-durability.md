@@ -167,3 +167,9 @@ rollback; publish name-only versions and preserve names through recovery,
 movement intents and chunk archives. Retain the original row transition and
 v1 codec, add complete record snapshots/replay, preserve shared-name adapters
 and distinguish an existing name owner at address zero from an absent name.
+
+Select optional pre-effect logical row/name undo images for ordinary transactions.
+Retain preparation and cleanup ownership, validate mandatory metadata before
+mutation and reconcile unreported effects before committed history/publication.
+Preserve the default observer policy and original constructor signatures; recover
+unknown allocations and redo later committed checkpoints after image restoration.

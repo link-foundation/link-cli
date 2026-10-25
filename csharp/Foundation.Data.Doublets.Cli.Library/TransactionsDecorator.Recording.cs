@@ -25,7 +25,17 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             var actualKind = before.Index == TLinkAddress.Zero ? TransitionKind.Create
                 : after.Index == TLinkAddress.Zero ? TransitionKind.Delete : TransitionKind.Update;
             return new JournalRecord<TLinkAddress>(new(transaction.Id, 0, default, actualKind, before, after), names: names);
-        });
+        }).ToList();
+        // Name ownership can change without a callback for the previous owner.
+        // Save the complete undo batch before RecordRecords starts appending.
+        if (namesAfter is not null)
+        {
+            var rows = records.Select(record => record.After.Index == TLinkAddress.Zero ? record.Before.Index : record.After.Index).ToHashSet();
+            var names = namesBefore.Keys.Concat(namesAfter.Keys).Distinct().Order().Where(index => !rows.Contains(index))
+                .Select(index => new NameChange<TLinkAddress>(index, namesBefore.GetValueOrDefault(index), namesAfter.GetValueOrDefault(index)))
+                .Where(change => change.Before != change.After).ToArray();
+            if (names.Length != 0) records.Add(new(new(transaction.Id, 0, default, TransitionKind.Update, default, default), true, names));
+        }
         RecordRecords(transaction, records);
     }
 

@@ -12,7 +12,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         HashSet<Guid> RolledBack,
         HashSet<long> Applied,
         long Sequence,
-        long AppliedSequence);
+        long AppliedSequence,
+        List<TransactionUndoImage<TLinkAddress>> Images);
 
     // Build temporary indexes before touching live history, rows or markers.
     // Compare parsed values so idempotent retries keep legacy lexical forms.
@@ -22,6 +23,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         var committed = new HashSet<Guid>();
         var rolledBack = new HashSet<Guid>();
         var applied = new HashSet<long>();
+        var images = new List<TransactionUndoImage<TLinkAddress>>();
+        Dictionary<Guid, TransactionUndoImage<TLinkAddress>>? imageOwners = null;
         long sequence = 0, appliedSequence = 0;
         var any = _logStore.Constants.Any;
         foreach (var raw in _logStore.All(new Link<TLinkAddress>(any, any, any)))
@@ -30,7 +33,25 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             if (string.IsNullOrEmpty(name)) continue;
             if (name.StartsWith(TransitionNamePrefix, StringComparison.Ordinal))
             {
-                if (!JournalRecord<TLinkAddress>.TryParse(name.Substring(TransitionNamePrefix.Length), out var transition))
+                var payload = name.Substring(TransitionNamePrefix.Length);
+                if (payload.StartsWith("v3|", StringComparison.Ordinal))
+                {
+                    var image = TransactionUndoImage<TLinkAddress>.Parse(payload);
+                    imageOwners ??= new();
+                    if (imageOwners.TryGetValue(image.Owner, out var previousImage))
+                    {
+                        if (previousImage.Serialize() != image.Serialize())
+                            throw new InvalidDataException("Conflicting write-ahead undo images.");
+                    }
+                    else
+                    {
+                        images.Add(image);
+                        imageOwners.Add(image.Owner, image);
+                        sequence = Math.Max(sequence, image.Base);
+                    }
+                    continue;
+                }
+                if (!JournalRecord<TLinkAddress>.TryParse(payload, out var transition))
                     throw new InvalidDataException("Malformed transaction record in journal.");
                 if (transition.TransactionId == Guid.Empty || transition.Sequence <= 0)
                     throw new InvalidDataException("Transaction journal records require a nonzero owner and positive sequence.");
@@ -65,7 +86,20 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
                 sequence = Math.Max(sequence, seq);
             }
         }
+        var firstSequences = new Dictionary<Guid, long>();
+        if (images.Count != 0)
+            foreach (var record in transitions.Values)
+                if (!firstSequences.TryGetValue(record.TransactionId, out var first) || record.Sequence < first)
+                    firstSequences[record.TransactionId] = record.Sequence;
+        var pendingBases = new HashSet<long>();
+        foreach (var image in images)
+        {
+            if (firstSequences.TryGetValue(image.Owner, out var first) && first <= image.Base)
+                throw new InvalidDataException("Undo image follows its owner's writes.");
+            if (!committed.Contains(image.Owner) && !rolledBack.Contains(image.Owner) && !pendingBases.Add(image.Base))
+                throw new InvalidDataException("Ambiguous pending undo images at the same base.");
+        }
         return new RecoveryJournal(transitions.Values.OrderBy(t => t.Sequence).ToList(),
-            committed, rolledBack, applied, sequence, appliedSequence);
+            committed, rolledBack, applied, sequence, appliedSequence, images);
     }
 }

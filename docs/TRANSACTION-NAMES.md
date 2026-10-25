@@ -73,7 +73,9 @@ Recovery redoes committed records and undoes unfinished name writes using
 the complete payload. Fault images and actual finite process exits test these
 boundaries. Filesystem flush contracts remain dependent on the configured
 adapter and hardware. The existing row mutation before its observer-journal
-append remains an unfinished crash window; name journaling does not resolve it.
+append remains a crash window in the default observer policy. Select
+[write-ahead logical undo](TRANSACTION-UNDO.md) to prepare an image before row
+effects and reconcile unreported changes before commit/version publication.
 
 The selected transaction wrapper scans and decodes the named sidecar before
 each row or name operation to capture names of absent rows and cascade victims.

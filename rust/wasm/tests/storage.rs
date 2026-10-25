@@ -64,6 +64,9 @@ mod transaction_name_codec;
 #[path = "../../tests/transaction_name_failure_tests.rs"]
 mod transaction_name_failure;
 
+#[path = "../../tests/transaction_row_wal_tests.rs"]
+mod transaction_row_wal;
+
 #[path = "../../tests/version_control_decorator_tests.rs"]
 mod version_control_decorator;
 

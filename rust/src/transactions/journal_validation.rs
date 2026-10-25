@@ -6,6 +6,7 @@ use doublets::data::LinkReference;
 use super::types::{
     APPLIED_MARKER_PREFIX, COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX,
 };
+use super::undo_image::UndoImage;
 use super::JournalRecord;
 use crate::error::LinkError;
 
@@ -16,6 +17,7 @@ pub(super) struct RecoveryJournal<T> {
     pub(super) applied: HashSet<i64>,
     pub(super) sequence: i64,
     pub(super) applied_sequence: i64,
+    pub(super) images: Vec<UndoImage<T>>,
 }
 
 impl<T: LinkReference> RecoveryJournal<T> {
@@ -26,8 +28,26 @@ impl<T: LinkReference> RecoveryJournal<T> {
         let mut applied = HashSet::new();
         let mut sequence = 0;
         let mut applied_sequence = 0;
+        let mut images: Vec<UndoImage<T>> = Vec::new();
+        let mut image_owners = HashMap::<u128, usize>::new();
         for entry in entries {
             if let Some(payload) = entry.strip_prefix(TRANSITION_NAME_PREFIX) {
+                if payload.starts_with("v3|") {
+                    let image = UndoImage::<T>::parse(payload)?;
+                    if let Some(index) = image_owners.get(&image.owner) {
+                        let previous = &images[*index];
+                        if previous != &image {
+                            return Err(LinkError::InvalidFormat(
+                                "conflicting write-ahead undo images".into(),
+                            ));
+                        }
+                    } else {
+                        sequence = sequence.max(image.base);
+                        image_owners.insert(image.owner, images.len());
+                        images.push(image);
+                    }
+                    continue;
+                }
                 // Compare parsed values: identical retries may retain older
                 // lexical forms and extra fields accepted by the public codec.
                 let transition = JournalRecord::<T>::parse(payload)?;
@@ -76,6 +96,33 @@ impl<T: LinkReference> RecoveryJournal<T> {
         }
         let mut log: Vec<_> = transitions.into_values().collect();
         log.sort_unstable_by_key(|transition| transition.sequence);
+        let mut first_sequences = HashMap::new();
+        if !images.is_empty() {
+            for record in &log {
+                first_sequences
+                    .entry(record.transaction_id)
+                    .or_insert(record.sequence);
+            }
+        }
+        let mut pending_bases = HashSet::new();
+        for image in &images {
+            if first_sequences
+                .get(&image.owner)
+                .is_some_and(|sequence| *sequence <= image.base)
+            {
+                return Err(LinkError::InvalidFormat(
+                    "undo image follows its owner's writes".into(),
+                ));
+            }
+            if !committed.contains(&image.owner)
+                && !rolled_back.contains(&image.owner)
+                && !pending_bases.insert(image.base)
+            {
+                return Err(LinkError::InvalidFormat(
+                    "ambiguous pending undo images at the same base".into(),
+                ));
+            }
+        }
         Ok(Self {
             log,
             committed,
@@ -83,6 +130,7 @@ impl<T: LinkReference> RecoveryJournal<T> {
             applied,
             sequence,
             applied_sequence,
+            images,
         })
     }
 }

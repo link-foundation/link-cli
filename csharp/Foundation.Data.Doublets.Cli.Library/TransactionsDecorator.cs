@@ -265,8 +265,21 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
       bool trace = false,
       Action? flushData = null,
       Action? flushLog = null)
+      : this(inner, logStore, RowUndoPolicy.Observed, retentionPolicy, commitMode, trace, flushData, flushLog) { }
+
+    public TransactionsDecorator(
+      INamedTypesLinks<TLinkAddress> inner,
+      INamedTypesLinks<TLinkAddress> logStore,
+      RowUndoPolicy rowUndoPolicy,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
       : base(inner)
     {
+        if (!Enum.IsDefined(rowUndoPolicy)) throw new ArgumentOutOfRangeException(nameof(rowUndoPolicy));
+        RowUndoPolicy = rowUndoPolicy;
         _inner = inner;
         _logStore = logStore;
         _retentionPolicy = retentionPolicy ?? LogRetentionPolicy.Default;
@@ -370,130 +383,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
     {
         return RunWrite(h => _inner.Delete(restriction, h), handler);
-    }
-
-    private TLinkAddress RunWrite(
-      Func<WriteHandler<TLinkAddress>, TLinkAddress> innerCall,
-      WriteHandler<TLinkAddress>? userHandler)
-    {
-        Transaction transaction;
-        bool ownsTransaction;
-        IReadOnlyDictionary<TLinkAddress, string> namesBefore;
-        lock (_lock)
-        {
-            EnsureWriteAllowedLocked();
-            if (_replaying) return innerCall(userHandler ?? NullHandler);
-            if (_sequenceCounter == long.MaxValue)
-                throw new InvalidOperationException("Transaction sequence space is exhausted.");
-            namesBefore = _inner.CaptureNames();
-            if (_current is null)
-            {
-                _current = new Transaction(this, autoCommit: true);
-                ownsTransaction = true;
-            }
-            else
-            {
-                ownsTransaction = false;
-            }
-            transaction = _current;
-        }
-
-        var @continue = _inner.Constants.Continue;
-        var observed = new Dictionary<TLinkAddress, (Link<TLinkAddress>? Before, Link<TLinkAddress>? After)>();
-        var observedOrder = new List<TLinkAddress>();
-
-        WriteHandler<TLinkAddress> wrapped = (before, after) =>
-        {
-            var beforeLink = before is null ? default(Link<TLinkAddress>?) : new Link<TLinkAddress>(before);
-            var afterLink = after is null ? default(Link<TLinkAddress>?) : new Link<TLinkAddress>(after);
-            var key = beforeLink.HasValue ? beforeLink.Value.Index
-                    : afterLink.HasValue ? afterLink.Value.Index
-                    : TLinkAddress.Zero;
-            if (key != TLinkAddress.Zero)
-            {
-                if (!observed.TryGetValue(key, out var state))
-                {
-                    observedOrder.Add(key);
-                    state = (beforeLink, afterLink);
-                }
-                else
-                {
-                    // Null is the original absent state of a newly created
-                    // address, not a missing observation to replace.
-                    state = (state.Before, afterLink);
-                }
-                observed[key] = state;
-            }
-            return userHandler is null ? @continue : userHandler(before, after);
-        };
-
-        void RecordObservedChanges()
-        {
-            if (observedOrder.Count == 0) return;
-            var states = observedOrder.Select(key => observed[key]).ToArray();
-            // RecordRecords saves every undo before its first append. Drain
-            // here so a failed append is never recorded again in the catch.
-            observed.Clear();
-            observedOrder.Clear();
-            IReadOnlyDictionary<TLinkAddress, string> namesAfter;
-            try
-            {
-                namesAfter = _inner.CaptureNames();
-            }
-            catch
-            {
-                transaction.MarkRollbackOnly();
-                RecordTransitions(transaction, states, namesBefore, null);
-                throw;
-            }
-            var previousNames = namesBefore;
-            namesBefore = namesAfter;
-            RecordTransitions(transaction, states, previousNames, namesAfter);
-        }
-
-        // Drain observed rows only when a callback writes a name. Ordinary
-        // callbacks retain coalescing and still all run before append errors.
-        var previousNameObserver = _rowNameObserver.Value;
-        _rowNameObserver.Value = names =>
-        {
-            if (names is null) RecordObservedChanges();
-            else namesBefore = names;
-        };
-        TLinkAddress result;
-        try
-        {
-            result = innerCall(wrapped);
-            RecordObservedChanges();
-        }
-        catch
-        {
-            // A callback describes a change already made, even when the
-            // storage adapter or user handler subsequently throws.
-            try { RecordObservedChanges(); }
-            finally
-            {
-                if (ownsTransaction)
-                {
-                    if (transaction.Records.Count > 0) transaction.Rollback();
-                    else
-                    {
-                        lock (_lock)
-                        {
-                            if (_current == transaction) _current = null;
-                        }
-                    }
-                }
-            }
-            throw;
-        }
-        finally { _rowNameObserver.Value = previousNameObserver; }
-
-        if (ownsTransaction)
-        {
-            transaction.Commit();
-        }
-
-        return result;
     }
 
     private static Link<TLinkAddress> LinkOrEmpty(IList<TLinkAddress>? raw)
@@ -883,6 +772,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         private readonly List<JournalRecord<TLinkAddress>> _transitions = new();
         private readonly bool _autoCommit;
         private int _state; // 0 = open, 1 = committed, 2 = rolled back
+        internal TransactionUndoImage<TLinkAddress>? Image { get; set; }
         public bool IsRollbackOnly { get; private set; }
         public bool IsCommitAttempted { get; private set; }
 
@@ -964,7 +854,17 @@ public class TransactionsDecorator : TransactionsDecorator<uint>
       bool trace = false,
       Action? flushData = null,
       Action? flushLog = null)
-      : base(inner, logStore, retentionPolicy, commitMode, trace, flushData, flushLog)
-    {
-    }
+      : base(inner, logStore, retentionPolicy, commitMode, trace, flushData, flushLog) { }
+
+    /// <summary>Select pre-write row undo for newly opened transactions.</summary>
+    public TransactionsDecorator(
+      INamedTypesLinks<uint> inner,
+      INamedTypesLinks<uint> logStore,
+      RowUndoPolicy rowUndoPolicy,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
+      : base(inner, logStore, rowUndoPolicy, retentionPolicy, commitMode, trace, flushData, flushLog) { }
 }

@@ -58,12 +58,13 @@
 //! replays committed-but-unapplied transitions and undoes logged uncommitted
 //! changes, reporting replay and flush failures.
 //!
-//! This legacy observer adapter mutates the wrapped store before recording its
-//! callbacks. A process failure between a mutation and its journal append can
-//! leave changes without undo records; a cascade can affect several rows in
-//! that window. This adapter does not provide power-loss atomicity for those
-//! unlogged changes. The optional [`crate::engine::Engine`] stages private
-//! changes until durable journal publication instead.
+//! The default [`RowUndoPolicy::Observed`] mutates the store before recording
+//! callbacks and leaves a crash window for unlogged changes. Select
+//! [`RowUndoPolicy::WriteAheadImage`] to flush a complete logical undo image
+//! before the first effect and reconcile complete history after each write.
+//! It requires exclusive ownership and an adapter supporting logical replay;
+//! it does not repair torn physical storage. The optional
+//! [`crate::engine::Engine`] stages private changes until durable publication.
 
 mod log;
 // Replay, recovery and retention live in a submodule; see transactions/recovery.rs.
@@ -73,7 +74,9 @@ mod names;
 mod record;
 mod recording;
 mod recovery;
+mod row_undo;
 mod types;
+mod undo_image;
 mod version_replay;
 
 use std::collections::HashSet;
@@ -95,6 +98,7 @@ pub use types::{
     TransitionKind,
 };
 use types::{COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX};
+pub use undo_image::RowUndoPolicy;
 
 /// Pending state of a transaction (used by the explicit transaction
 /// handle and by per-write auto-transactions).
@@ -106,6 +110,7 @@ struct PendingTransaction<T> {
     rollback_only: bool,
     commit_attempted: bool,
     started_ms: i64,
+    image: Option<undo_image::UndoImage<T>>,
 }
 
 /// One link address and the `(before, after)` states a single logical
@@ -178,6 +183,7 @@ where
     recovery_pending: bool,
     reload_pending: bool,
     trace: bool,
+    row_undo: RowUndoPolicy,
 }
 
 /// The `u32` + [`NamedTypesDecorator`] specialisation used by `clink`.
@@ -217,6 +223,7 @@ where
             recovery_pending: false,
             reload_pending: false,
             trace,
+            row_undo: RowUndoPolicy::Observed,
         };
         decorator.recover()?;
         Ok(decorator)
@@ -373,8 +380,14 @@ where
         let id = match outcome {
             Ok(id) => id,
             Err(error) => {
+                self.fence_failed_image();
                 if owns {
-                    if observed.is_empty() {
+                    if observed.is_empty()
+                        && self
+                            .current
+                            .as_ref()
+                            .is_none_or(|owner| owner.image.is_none())
+                    {
                         self.current = None;
                     } else {
                         self.rollback()?;
@@ -383,6 +396,7 @@ where
                 return Err(error);
             }
         };
+        self.complete_image_observations(owns)?;
         if owns {
             self.commit_current()?;
         }
@@ -423,11 +437,17 @@ where
         let prev = match outcome {
             Ok(prev) => prev,
             Err(err) => {
+                self.fence_failed_image();
                 // Callbacks describe changes already made, even if a later
                 // part of the storage operation fails.
                 self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
                 if owns {
-                    if observed.is_empty() {
+                    if observed.is_empty()
+                        && self
+                            .current
+                            .as_ref()
+                            .is_none_or(|owner| owner.image.is_none())
+                    {
                         self.current = None;
                     } else {
                         self.rollback()?;
@@ -452,6 +472,7 @@ where
         } else {
             self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         }
+        self.complete_image_observations(owns)?;
         if owns {
             self.commit_current()?;
         }
@@ -490,11 +511,17 @@ where
         let deleted = match outcome {
             Ok(d) => d,
             Err(err) => {
+                self.fence_failed_image();
                 // Callbacks describe changes already made, even if a later
                 // part of the storage operation fails.
                 self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
                 if owns {
-                    if observed.is_empty() {
+                    if observed.is_empty()
+                        && self
+                            .current
+                            .as_ref()
+                            .is_none_or(|owner| owner.image.is_none())
+                    {
                         self.current = None;
                     } else {
                         self.rollback()?;
@@ -514,6 +541,7 @@ where
         } else {
             self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         }
+        self.complete_image_observations(owns)?;
         if owns {
             self.commit_current()?;
         }
@@ -534,6 +562,7 @@ where
         let id = match outcome {
             Ok(id) => id,
             Err(error) => {
+                self.fence_failed_image();
                 if owns {
                     self.rollback()?;
                 }
@@ -579,12 +608,14 @@ where
         self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         match outcome {
             Ok(created) => {
+                self.complete_image_observations(owns)?;
                 if owns {
                     self.commit_current()?;
                 }
                 Ok(created)
             }
             Err(error) => {
+                self.fence_failed_image();
                 if owns {
                     self.rollback()?;
                 }
@@ -630,7 +661,8 @@ where
                 "Transaction sequence space is exhausted.".into(),
             ));
         }
-        if self.current.is_none() {
+        let owns = self.current.is_none();
+        if owns {
             self.current = Some(PendingTransaction {
                 id: self.allocate_transaction_id(),
                 transitions: Vec::new(),
@@ -638,11 +670,20 @@ where
                 rollback_only: false,
                 commit_attempted: false,
                 started_ms: now_unix_ms(),
+                image: None,
             });
-            Ok(true)
-        } else {
-            Ok(false)
         }
+        if let Err(error) = self.prepare_row_undo() {
+            self.current
+                .as_mut()
+                .expect("open transaction")
+                .rollback_only = true;
+            if owns {
+                self.rollback()?;
+            }
+            return Err(error);
+        }
+        Ok(owns)
     }
 
     fn write_marker(&mut self, name: &str) -> Result<(), LinkError> {
@@ -687,6 +728,7 @@ where
             rollback_only: false,
             commit_attempted: false,
             started_ms,
+            image: None,
         });
         Ok(TransactionHandle { id, started_ms })
     }
@@ -728,11 +770,15 @@ where
             None => return Ok(()),
         };
         self.replaying = true;
-        let result = pending
-            .transitions
-            .iter()
-            .rev()
-            .try_for_each(|transition| self.try_revert_record(transition));
+        let result = if let Some(image) = &pending.image {
+            self.restore_image(image)
+        } else {
+            pending
+                .transitions
+                .iter()
+                .rev()
+                .try_for_each(|transition| self.try_revert_record(transition))
+        };
         self.replaying = false;
         result?;
         self.inner.flush()?;

@@ -5,6 +5,76 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class TransactionNamedHistoryTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SelectedImagePreparationDoesNotCreateVersionsForUnchangedNames(bool explicitOwner)
+    {
+        var directory = Directory.CreateTempSubdirectory("image-noop-name-").FullName;
+        try
+        {
+            using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data"));
+            using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log"));
+            using var branches = new NamedTypesDecorator<uint>(Path.Combine(directory, "branches"));
+            using var tx = new TransactionsDecorator(data, log, RowUndoPolicy.WriteAheadImage);
+            using var vc = new VersionControlDecorator(tx, branches);
+            var id = vc.CreateAndUpdate(11u, 12u); vc.SetName(id, "original");
+            var before = vc.CurrentSequence; var records = tx.Journal.Count;
+            using var pending = explicitOwner ? vc.BeginTransaction() : null;
+            vc.SetName(id, "original"); vc.RemoveName(77);
+            pending?.Commit();
+            Assert.Equal(before, vc.CurrentSequence); Assert.Equal(records, tx.Journal.Count);
+            vc.SetName(id, "following"); Assert.True(vc.CurrentSequence > before);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private sealed class NameMovingStore(string path) : NamedTypesDecorator<uint>(path)
+    {
+        internal string? NextName;
+        public override uint Update(IList<uint>? restriction, IList<uint>? substitution, Platform.Delegates.WriteHandler<uint>? handler)
+        {
+            var result = base.Update(restriction, substitution, handler);
+            var name = NextName; NextName = null;
+            if (name is not null) SetName(substitution![0], name);
+            return result;
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void UnobservedNameOwnerEvictionIsPreservedInRollbackAndVersionHistory(bool explicitOwner, bool image)
+    {
+        var directory = Directory.CreateTempSubdirectory("unobserved-name-").FullName;
+        try
+        {
+            using var data = new NameMovingStore(Path.Combine(directory, "data"));
+            using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log"));
+            using var branches = new NamedTypesDecorator<uint>(Path.Combine(directory, "branches"));
+            using var tx = new TransactionsDecorator(data, log, image ? RowUndoPolicy.WriteAheadImage : RowUndoPolicy.Observed);
+            using var vc = new VersionControlDecorator(tx, branches);
+            var first = vc.CreateAndUpdate(11u, 12u); var second = vc.CreateAndUpdate(13u, 14u);
+            vc.SetName(first, "original"); vc.SetName(second, "borrowed"); var before = vc.CurrentSequence;
+            using var pending = explicitOwner ? vc.BeginTransaction() : null;
+            data.NextName = "borrowed"; vc.Update(new[] { first }, new[] { first, 21u, 22u }, null);
+            Assert.Equal("borrowed", vc.GetName(first)); Assert.Null(vc.GetName(second));
+            if (explicitOwner) pending!.Rollback();
+            else
+            {
+                var after = vc.CurrentSequence; vc.Checkout(before);
+                Assert.Equal("original", vc.GetName(first)); Assert.Equal("borrowed", vc.GetName(second));
+                vc.Checkout(after); Assert.Equal("borrowed", vc.GetName(first)); Assert.Null(vc.GetName(second));
+                vc.Checkout(before);
+            }
+            Assert.Equal("original", vc.GetName(first)); Assert.Equal("borrowed", vc.GetName(second));
+            Assert.Equal(11u, vc.GetSource(first)); vc.Update(new[] { first }, new[] { first, 31u, 32u }, null);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
     private sealed class CaptureFaultStore(string path) : NamedTypesDecorator<uint>(path)
     {
         public bool FailCapture;
@@ -131,10 +201,13 @@ public class TransactionNamedHistoryTests
     }
 
     [Theory]
-    [InlineData("create")]
-    [InlineData("update")]
-    [InlineData("delete")]
-    public void NameWritesInsideRowCallbacksSurviveVersionRoundTrips(string operation)
+    [InlineData("create", false)]
+    [InlineData("update", false)]
+    [InlineData("delete", false)]
+    [InlineData("create", true)]
+    [InlineData("update", true)]
+    [InlineData("delete", true)]
+    public void NameWritesInsideRowCallbacksSurviveVersionRoundTrips(string operation, bool image)
     {
         var directory = Directory.CreateTempSubdirectory("callback-name-").FullName;
         try
@@ -142,7 +215,7 @@ public class TransactionNamedHistoryTests
             using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data"));
             using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log"));
             using var branches = new NamedTypesDecorator<uint>(Path.Combine(directory, "branches"));
-            using var tx = new TransactionsDecorator(data, log);
+            using var tx = new TransactionsDecorator(data, log, image ? RowUndoPolicy.WriteAheadImage : RowUndoPolicy.Observed);
             using var vc = new VersionControlDecorator(tx, branches);
             var id = vc.CreateAndUpdate(11u, 12u);
             vc.SetName(id, "original");

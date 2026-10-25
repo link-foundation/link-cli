@@ -22,16 +22,22 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         var names = before.Keys.Concat(after.Keys).Distinct().Order().Select(id =>
             new NameChange<TLinkAddress>(id, before.GetValueOrDefault(id), after.GetValueOrDefault(id)))
             .Where(change => change.Before != change.After).ToArray();
-        if (names.Length == 0) return SetInnerName(index, name);
+        if (names.Length == 0 && RowUndoPolicy != RowUndoPolicy.WriteAheadImage) return SetInnerName(index, name);
         if (_sequenceCounter == long.MaxValue)
             throw new InvalidOperationException("Transaction sequence space is exhausted.");
         var owns = _current is null;
         var transaction = _current ??= new Transaction(this, autoCommit: true);
         try
         {
-            RecordRecords(transaction, [new(new(transaction.Id, 0, default, TransitionKind.Update, default, default), true, names)]);
-            // Persist undo before a memory-mapped name sidecar can change.
-            _flushLog();
+            PrepareRowUndo(transaction);
+            if (names.Length != 0)
+            {
+                RecordRecords(transaction, [new(new(transaction.Id, 0, default, TransitionKind.Update, default, default), true, names)]);
+                // Persist undo before a memory-mapped name sidecar can change.
+                _flushLog();
+            }
+            // An identical assignment still invokes the adapter. Its selected
+            // image is durable even though there is no predicted name delta.
         }
         catch
         {
@@ -43,7 +49,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         try
         {
             result = SetInnerName(index, name);
-            _rowNameObserver.Value?.Invoke(after);
+            CompleteImageObservations(transaction);
+            _rowNameObserver.Value?.Invoke(transaction.Image is null ? after : _inner.CaptureNames());
         }
         catch
         {

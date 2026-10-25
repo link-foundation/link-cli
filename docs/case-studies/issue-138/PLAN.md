@@ -139,10 +139,23 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    1,788 C# per configuration, 111 JS and 217 repository tests. Shared codecs,
    independent images, bounded exits, archives and callback failures verify
    the documented paths; bare stores retain their path. See
-   NAMED-HISTORY-PLAN.md and named-history.txt. Publish this useful step and
-   verify every exact-head workflow. Continue ROW-WAL-PLAN.md with failing
-   durable row-before-observer reproductions before changing the protocol.
+   NAMED-HISTORY-PLAN.md and named-history.txt. This step is published and
+   all nine exact-head workflows pass on `9d394d5`. ROW-WAL-PLAN.md follows with
+   durable row-before-observer reproductions recorded before the protocol change.
    Complete coverage and all wider acceptance gaps remain open.
+
+10. The optional ordinary row undo image now has failing before tests and passing
+    focused native/C#/actual-WASM tests. Preparation precedes effects; complete
+    result reconciliation preserves unreported changes for redo and versions.
+    Existing observer behavior remains selectable. Independently authored codec
+    and ordering vectors validate the mandatory protocol before mutation. The
+    identical-name fast path has separate before failures and no-op controls.
+    Complete local suites pass: 820 native, 478 actual WASM, 1,901 C# tests per
+    configuration, 111 JS and 217 repository checks. Runtime conformance and
+    persistent examples pass; see row-wal.txt for exact coverage. Forward
+    publication and fresh exact-head CI are pending.
+    See ROW-WAL-PLAN.md; physical page durability/repair and efficient state
+    structures remain distinct follow-up requirements.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

@@ -89,10 +89,10 @@ public sealed class JournalRecord<TLinkAddress> : IEquatable<JournalRecord<TLink
         return Names.Count == 0 || (shape && Names.Count == 1 && Names[0].Index == index && index != TLinkAddress.Zero);
     }
 
-    private static string EncodeName(string? name) => name is null ? "-"
+    internal static string EncodeName(string? name) => name is null ? "-"
         : string.Concat(name.Select(unit => ((ushort)unit).ToString("X4", CultureInfo.InvariantCulture)));
 
-    private static bool TryDecodeName(string text, out string? name)
+    internal static bool TryDecodeName(string text, out string? name)
     {
         name = null;
         if (text == "-") return true;

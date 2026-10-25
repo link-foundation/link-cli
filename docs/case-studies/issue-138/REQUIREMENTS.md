@@ -19,7 +19,7 @@ complete the original R1–R12 acceptance criteria.
 | R5 | Study competitor source and best strategies | Primary documentation and source survey covering SQLite, PostgreSQL, RocksDB, Redis, etcd and TiKV; costs/guarantee comparison and reusable component evaluation. | In progress; expanded primary-source audit and implemented independent-session group commit distinguish InnoDB flush sharing, MongoDB durable acknowledgement, Cassandra ordinary quorum/repair and current Accord routing; see RESEARCH.md |
 | R6 | Same API / costs only for selected guarantees | Keep existing bare-store cache path; add optional control/history/journal/replication composition with explicit complexity and allocation costs. | Existing raw interfaces implemented by staged sessions; optional journals, delta encoding and replica decorators supplied. Bare stores incur no engine overhead. Delta encoding reduces physical bytes for localized edits; full-state CPU/cloning costs remain documented. Serializable read-set validation is independently selected and tracks only observed addresses; scans retain revision checks. Conflict metadata is skipped for exclusive/optimistic whole-revision serializable modes, allocated lazily for overlapping sessions that need it, and reclaimed after the last validation. Optional point-write ownership allocates only for selected sessions/addresses, releases on every terminal path and rejects use in uncoordinated cluster workspaces. Finer independent validation/history decorator composition remains to study. |
 | R7 | Implement all supported languages | Native Rust and C# library surfaces, portable JS/TS surface and declared backend capabilities; shared wire vectors and scenario tests. | Staged engine surfaces implemented. Compiled WASM conformance passes Node, Bun and Deno; shared fixtures are consumed by Rust, C# and actual WASM. Ordinary legacy transactions/history now execute in actual WASM using portable timestamps; shared fault/recovery contracts verify checkpoint ownership. Newly added distributed strategies must maintain parity. |
-| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 460 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 71.13% lines / 72.80% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
+| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 478 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 72.40% lines / 73.76% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
 | R9 | Document each scenario | Runnable cache, durable store and replicated/sharded examples with failure semantics, ownership and persistence settings. | docs/ENGINE-STRATEGIES.md, docs/ENGINE-CLUSTERS.md and Rust/C#/JS examples cover implemented options, including consensus-backed shard groups. Further deployment strategies need their own recipes. |
 | R10 | Horizontal cluster, shared and shared-nothing options | TCP/advisory shared stores, independent shard namespaces, replicated logs and consensus-backed atomic shard groups. | Shared coordination and immutable journals on independently routed data groups implemented in all languages. Real leader failover, data-group outage, atomic pointer publication and native/WASM interoperability verified. Catalog throughput, whole-journal transfers and object retention limit scale; automatic balancing and multi-catalog transactions are not supplied. |
 | R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus and cross-shard coordination implemented. Efficient WAL/LSM structures and other listed algorithm gaps remain unfinished. |
@@ -142,5 +142,28 @@ native, 460 actual WASM, 1,788 C# per configuration, 111 JS and 217 repository
 tests. See NAMED-HISTORY-PLAN.md, named-history.txt and TRANSACTION-NAMES.md for
 exact coverage, compatibility and costs. Whole-project coverage remains below
 100%; row effects before observer journaling, custom unobserved side effects
-and the wider strategy/efficiency/cluster criteria remain open. Continue
-ROW-WAL-PLAN.md and verify fresh exact-head CI before claiming this publication.
+and the wider strategy/efficiency/cluster criteria remain open at this publication.
+All nine workflows pass on named-history head `9d394d5`; see named-history-ci.txt.
+The following row-image investigation addresses the logical pre-observer window.
+
+
+Ordinary pre-effect row undo (R1/R3/R6/R7/R8/R9/R11) now has a selected full
+logical-image policy in Rust and C#. Before-fix durable-image tests, actual-WASM
+cases and bounded real child exits reproduce persisted allocations, updates,
+deletions and cascades before any observation. The default observer path retains
+its documented cost and window. Selected owners flush their image before effects
+and retain it through uncertain preparation, decision and cleanup. Reconciliation
+adds unreported row/name changes to complete history before commit/version intent.
+Identical-name calls also prepare/reconcile; genuine no-ops add no version.
+The separate default-policy name-eviction regression now preserves the unobserved
+previous name owner in the same pending undo batch.
+
+Mandatory canonical v3 metadata fails closed in older readers. Shared codec
+vectors, conflicting-image validation, ordered mixed recovery, repeated cleanup,
+committed redo, callback names and version replay verify the declared logical
+scope. See ROW-WAL-PLAN.md and TRANSACTION-UNDO.md. Full local suites pass: 820 native, 478 actual WASM, 1,901 C# per
+configuration, 111 JS and 217 repository tests. See row-wal.txt for exact
+coverage. New exact-head CI is pending publication. Full image/per-write scans remain explicit selected
+costs; this does not supply physical torn-page repair, efficient page WAL or
+complete power-loss verification. Whole-project coverage and the wider
+composition, competitor and cluster requirements remain unfinished.

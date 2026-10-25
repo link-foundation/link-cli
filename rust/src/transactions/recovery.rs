@@ -285,6 +285,13 @@ where
         if let Some(record) = journal.log.iter().find(|record| !record.names.is_empty()) {
             self.validate_record_backend(record)?;
         }
+        if journal.images.iter().any(|image| image.names.is_some())
+            && self.inner.capture_names()?.is_none()
+        {
+            return Err(LinkError::StorageError(
+                "undo image requires a named storage adapter".into(),
+            ));
+        }
         if self.reload_pending {
             self.inner.reload()?;
             self.reload_pending = false;
@@ -299,15 +306,72 @@ where
         // An older failed checkpoint can precede a later applied commit. Redo
         // the whole committed suffix in order, including already-applied rows.
         let log_snapshot: Vec<JournalRecord<T>> = self.log.clone();
-        let replay_from = log_snapshot
+        let mut replay_from = log_snapshot
             .iter()
             .position(|transition| {
                 self.committed.contains(&transition.transaction_id)
                     && !self.applied.contains(&transition.sequence)
             })
             .unwrap_or(log_snapshot.len());
+        let pending_images = journal
+            .images
+            .into_iter()
+            .filter(|image| {
+                !self.committed.contains(&image.owner) && !self.rolled_back.contains(&image.owner)
+            })
+            .collect::<Vec<_>>();
+        if let Some(base) = pending_images.iter().map(|image| image.base).min() {
+            replay_from =
+                replay_from.min(log_snapshot.partition_point(|record| record.sequence <= base));
+        }
         self.replaying = true;
         let result = (|| -> Result<Vec<u128>, LinkError> {
+            let mut pending_tx_ids = Vec::new();
+            let mut pending_seen = std::collections::HashSet::new();
+            let imaged = pending_images
+                .iter()
+                .map(|image| image.owner)
+                .collect::<std::collections::HashSet<_>>();
+            if !pending_images.is_empty() {
+                // Undo newest effects first, interleaving legacy records and
+                // complete images by their base sequence. The parser rejects
+                // ambiguous equal-base owners, independent of physical order.
+                let mut images = pending_images.iter().collect::<Vec<_>>();
+                images.sort_by_key(|image| image.base);
+                let mut records = log_snapshot
+                    .iter()
+                    .rev()
+                    .filter(|record| {
+                        !self.committed.contains(&record.transaction_id)
+                            && !self.rolled_back.contains(&record.transaction_id)
+                            && !imaged.contains(&record.transaction_id)
+                    })
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .peekable();
+                for image in images.into_iter().rev() {
+                    while records
+                        .peek()
+                        .is_some_and(|record| record.sequence > image.base)
+                    {
+                        let record = records.next().expect("peeked record");
+                        self.try_revert_record(record)?;
+                        if pending_seen.insert(record.transaction_id) {
+                            pending_tx_ids.push(record.transaction_id);
+                        }
+                    }
+                    self.restore_image(image)?;
+                    if pending_seen.insert(image.owner) {
+                        pending_tx_ids.push(image.owner);
+                    }
+                }
+                for record in records {
+                    self.try_revert_record(record)?;
+                    if pending_seen.insert(record.transaction_id) {
+                        pending_tx_ids.push(record.transaction_id);
+                    }
+                }
+            }
             for transition in &log_snapshot[replay_from..] {
                 if !self.committed.contains(&transition.transaction_id) {
                     continue;
@@ -315,9 +379,11 @@ where
                 self.try_apply_record(transition, false)?;
             }
             // Auto-rollback transitions written but never committed and never rolled back (R10).
-            let mut pending_tx_ids: Vec<u128> = Vec::new();
-            let mut pending_seen = std::collections::HashSet::new();
-            for transition in log_snapshot.iter().rev() {
+            for transition in log_snapshot
+                .iter()
+                .rev()
+                .filter(|_| pending_images.is_empty())
+            {
                 if self.committed.contains(&transition.transaction_id) {
                     continue;
                 }

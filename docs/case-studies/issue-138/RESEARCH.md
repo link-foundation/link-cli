@@ -73,3 +73,24 @@ They are reusable seams for further work, not evidence that the other algorithms
 or their performance have been reproduced. MySQL's durability also depends on
 [storage honoring flushes](https://dev.mysql.com/doc/refman/8.4/en/innodb-init-startup-configuration.html);
 a killed-process recovery test cannot establish real power-loss behavior.
+
+## Ordinary-store undo barrier audit (2026-10-25)
+
+Re-read SQLite's [atomic commit ordering](https://www.sqlite.org/atomiccommit.html)
+and [rollback/hot journals](https://www.sqlite.org/lockingv3.html), then inspected
+`src/pager.c` at the same pinned `c6536c6e60dfa0cc6b07e4458df374aaaf1dcdce`
+commit used above. [`pager_write`, lines 6110–6189](https://github.com/sqlite/sqlite/blob/c6536c6e60dfa0cc6b07e4458df374aaaf1dcdce/src/pager.c#L6110)
+journals original page contents before setting the writable flag; the sector
+variant journals co-resident pages. [`syncJournal`, lines 4340–4445](https://github.com/sqlite/sqlite/blob/c6536c6e60dfa0cc6b07e4458df374aaaf1dcdce/src/pager.c#L4340)
+propagates synchronization errors; commit phase one syncs the journal before
+writing dirty pages (line 6674). The downloaded `pager.c` has SHA-256
+`96d7bb9c4a5a6da0909ce0ab4714311e1ffa5f13007dc4c69f028a2760104ba4`.
+A callback after mutation cannot substitute for this pre-effect boundary.
+
+Our adapter has logical row enumeration/replay, without pager hooks controlling
+all underlying page writes. The selected logical undo image uses those existing
+seams and verifies complete restoration. It adds full-store capture and per-write
+reconciliation costs; it does not implement SQLite's page/sector protocol.
+Physical torn-page recovery and efficient page undo remain separate open work.
+See [configuration, assumptions and costs](../../TRANSACTION-UNDO.md) and
+[the row-barrier plan](ROW-WAL-PLAN.md). No SQLite implementation was copied.

@@ -19,7 +19,7 @@ deletion undo and name-only version attribution.
       verify repeated actual reopening and following edits.
 - [x] Cover automatic/explicit transactions, rollback, version movement,
       retention and compiled WASM. Document exact cost and compatibility.
-- [ ] Run complete local checks and measured coverage sequentially, add release
+- [x] Run complete local checks and measured coverage sequentially, add release
       metadata, review, commit, push only the prepared branch and verify all
       exact-head workflows. Keep broader acceptance gaps open.
 
@@ -78,3 +78,7 @@ callback immediately; full validation caught fourteen lost cascade callbacks
 under journal faults and one changed retention count. Keep ordinary callback
 coalescing and delivery, and drain only for a nested name write. Failed capture
 retains an explicit owner; automatic cleanup rolls back its recorded effects.
+
+All nine workflows pass on published head `9d394d5`; see
+[named-history-ci.txt](../../../dev/log/issues/138/pulls/139/named-history-ci.txt).
+Later production changes require fresh exact-head checks.

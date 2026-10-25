@@ -366,6 +366,46 @@ fn row_records_replay_the_actual_name_after_an_inner_decorator_changes_it() {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn unobserved_name_owner_eviction_is_in_rollback_and_complete_history() {
+    for explicit in [false, true] {
+        let (mut tx, control) = open(Image::default());
+        let first = tx.create(11, 12).unwrap();
+        let second = tx.create(13, 14).unwrap();
+        tx.set_name(first, "original").unwrap();
+        tx.set_name(second, "borrowed").unwrap();
+        let before = tx.inner_mut().capture_names().unwrap();
+        let start = tx.journal().len();
+        if explicit {
+            tx.begin_transaction().unwrap();
+        }
+        control.borrow_mut().update_name = Some("borrowed");
+        tx.update(first, 21, 22).unwrap();
+        let after = tx.inner_mut().capture_names().unwrap();
+        assert!(!after.as_ref().unwrap().contains_key(&second));
+        if explicit {
+            tx.rollback().unwrap();
+        } else {
+            let records = tx.journal()[start..].to_vec();
+            for record in records.iter().rev() {
+                tx.revert_record(record).unwrap();
+            }
+            assert_eq!(tx.inner_mut().capture_names().unwrap(), before);
+            for record in &records {
+                tx.apply_record(record).unwrap();
+            }
+            assert_eq!(tx.inner_mut().capture_names().unwrap(), after);
+            for record in records.iter().rev() {
+                tx.revert_record(record).unwrap();
+            }
+        }
+        assert_eq!(tx.inner_mut().capture_names().unwrap(), before);
+        assert_eq!(tx.inner().get_link(first), Some(Link::new(first, 11, 12)));
+        tx.update(first, 31, 32).unwrap();
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failed_post_effect_name_capture_keeps_row_undo_and_retry_ownership() {
     for explicit in [false, true] {
         let (mut tx, control) = open(Image::default());

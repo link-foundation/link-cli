@@ -43,29 +43,36 @@ where
                 })
             })
             .collect::<Vec<_>>();
-        if names.is_empty() {
+        if names.is_empty() && self.row_undo != RowUndoPolicy::WriteAheadImage {
             return self.inner.set_link_name(index, name);
         }
         let owns = self.ensure_open_transaction()?;
-        let record = JournalRecord {
-            transition: GenericTransition {
-                transaction_id: 0,
-                sequence: 0,
-                timestamp_ms: 0,
-                kind: TransitionKind::Update,
-                before: GenericDoubletLink::empty(),
-                after: GenericDoubletLink::empty(),
-            },
-            name_only: true,
-            names,
-        };
-        self.record_records(std::iter::once(record), owns)?;
+        let changed = !names.is_empty();
+        if changed {
+            let record = JournalRecord {
+                transition: GenericTransition {
+                    transaction_id: 0,
+                    sequence: 0,
+                    timestamp_ms: 0,
+                    kind: TransitionKind::Update,
+                    before: GenericDoubletLink::empty(),
+                    after: GenericDoubletLink::empty(),
+                },
+                name_only: true,
+                names,
+            };
+            self.record_records(std::iter::once(record), owns)?;
+        }
         // A name's undo record must survive before a name sidecar can change.
         // Keep an explicit owner rollback-only when this pre-effect flush fails.
-        let result = self
-            .log_store
-            .flush_log()
-            .and_then(|_| self.inner.set_link_name(index, name));
+        // An identical assignment can still invoke adapter side effects. The
+        // selected image is already durable, but there is no name delta to flush.
+        let result = (|| {
+            if changed {
+                self.log_store.flush_log()?;
+            }
+            self.inner.set_link_name(index, name)
+        })();
         let result = match result {
             Ok(result) => result,
             Err(error) => {
@@ -79,6 +86,7 @@ where
                 return Err(error);
             }
         };
+        self.complete_image_observations(owns)?;
         if owns {
             self.commit_current()?;
         }

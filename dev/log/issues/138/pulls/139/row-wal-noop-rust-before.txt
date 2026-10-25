@@ -1,0 +1,94 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 16.45s
+     Running tests/transaction_row_wal_tests.rs (rust/target/debug/deps/transaction_row_wal_tests-fab788d0447c44d0)
+
+running 1 test
+[Transactions] Prepared row undo image tx=000001a173861fca0000000000000000.
+[Transactions] Recorded Create seq=1 tx=000001a173861fca0000000000000000: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a173861fca0000000000000000: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a173861fca0000000000000000 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a173861fcf0000000000000001.
+[Transactions] Recorded Update seq=3 tx=000001a173861fcf0000000000000001: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173861fcf0000000000000001 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173861fd20000000000000002.
+[Transactions] Recorded Create seq=4 tx=000001a173861fd20000000000000002: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a173861fd20000000000000002: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a173861fd20000000000000002 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a173861fd70000000000000003.
+[Transactions] Recorded Update seq=6 tx=000001a173861fd70000000000000003: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173861fd70000000000000003 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173861fdf0000000000000004.
+[Transactions] Recorded Update seq=7 tx=000001a173861fdf0000000000000004: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173861fdf0000000000000004 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173861fe40000000000000005.
+[Transactions] Recorded Update seq=8 tx=000001a173861fe40000000000000005: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173861fe40000000000000005 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173861fea0000000000000006.
+[Transactions] Recorded Update seq=9 tx=000001a173861fea0000000000000006: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=10 tx=000001a173861fea0000000000000006: (2,1,1) -> (2,51,52).
+[Transactions] Recorded Update seq=11 tx=000001a173861fea0000000000000006: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173861fea0000000000000006 (mode=Sync, transitions=3).
+[Transactions] Prepared row undo image tx=000001a1738620380000000000000007.
+[Transactions] Recorded Create seq=1 tx=000001a1738620380000000000000007: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a1738620380000000000000007: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1738620380000000000000007 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a17386203d0000000000000008.
+[Transactions] Recorded Update seq=3 tx=000001a17386203d0000000000000008: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a17386203d0000000000000008 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a1738620400000000000000009.
+[Transactions] Recorded Create seq=4 tx=000001a1738620400000000000000009: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1738620400000000000000009: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1738620400000000000000009 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a173862046000000000000000a.
+[Transactions] Recorded Update seq=6 tx=000001a173862046000000000000000a: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173862046000000000000000a (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a17386204b000000000000000b.
+[Transactions] Recorded Update seq=7 tx=000001a17386204b000000000000000b: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a17386204b000000000000000b (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a17386204f000000000000000c.
+[Transactions] Recorded Update seq=8 tx=000001a17386204f000000000000000c: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a17386204f000000000000000c (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a173862054000000000000000d.
+[Transactions] Recorded Update seq=9 tx=000001a173862054000000000000000d: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=10 tx=000001a173862054000000000000000d: (2,1,1) -> (2,51,52).
+[Transactions] Recorded Update seq=11 tx=000001a173862054000000000000000d: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a173862054000000000000000d (mode=Sync, transitions=3).
+[Transactions] Prepared row undo image tx=000001a1738620ac000000000000000e.
+[Transactions] Recorded Create seq=1 tx=000001a1738620ac000000000000000e: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a1738620ac000000000000000e: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1738620ac000000000000000e (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a1738620b0000000000000000f.
+[Transactions] Recorded Update seq=3 tx=000001a1738620b0000000000000000f: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1738620b0000000000000000f (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a1738620b40000000000000010.
+[Transactions] Recorded Create seq=4 tx=000001a1738620b40000000000000010: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1738620b40000000000000010: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1738620b40000000000000010 (mode=Sync, transitions=2).
+[Transactions] Prepared row undo image tx=000001a1738620b90000000000000011.
+[Transactions] Recorded Update seq=6 tx=000001a1738620b90000000000000011: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1738620b90000000000000011 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a1738620bd0000000000000012.
+[Transactions] Recorded Update seq=7 tx=000001a1738620bd0000000000000012: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1738620bd0000000000000012 (mode=Sync, transitions=1).
+[Transactions] Prepared row undo image tx=000001a1738620c20000000000000013.
+[Transactions] Recorded Update seq=8 tx=000001a1738620c20000000000000013: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1738620c20000000000000013 (mode=Sync, transitions=1).
+test faults::unreported_effects_from_name_writes_also_have_complete_history ... FAILED
+
+failures:
+
+---- faults::unreported_effects_from_name_writes_also_have_complete_history stdout ----
+
+thread 'faults::unreported_effects_from_name_writes_also_have_complete_history' (343082) panicked at tests/common/transaction_row_wal_faults.rs:216:9:
+assertion `left == right` failed
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 51, target: 52 }]\n{0: \"absent\", 1: \"original 雪\", 2: \"hidden\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    faults::unreported_effects_from_name_writes_also_have_complete_history
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.27s
+
+error: test failed, to rerun pass `--test transaction_row_wal_tests`

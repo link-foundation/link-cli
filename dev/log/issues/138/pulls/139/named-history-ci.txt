@@ -1,0 +1,27 @@
+Named-history exact-head workflow verification
+
+Head: 9d394d5f7fa811ddf088c1aabb27ea5cb6fa8975
+Commit: 2026-10-25T13:52:15Z
+All nine runs created: 2026-10-25T13:52:21Z (after commit).
+
+Broken Link Checker: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601139
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601111
+Dependencies: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601090
+Docs: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601089
+JS client CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601131
+Rust CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601048
+Security: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601085
+WebAssembly CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601072
+Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40199601063
+
+Production commit 450ff3a; subsequent commits normalize diagnostic whitespace.
+Later production changes require fresh exact-head checks.

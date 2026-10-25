@@ -112,7 +112,56 @@ where
                 names,
             }
         });
-        self.record_records(records, owns)?;
+        // An inner name reassignment can evict an owner without a row callback.
+        // Prepare that undo in the SAME batch, before the first fallible append.
+        if let (Some(before), Some(after)) = (names_before, &names_after) {
+            let mut records = records.collect::<Vec<_>>();
+            let observed = records
+                .iter()
+                .map(|record| {
+                    if record.after.index != T::from_byte(0) {
+                        record.after.index
+                    } else {
+                        record.before.index
+                    }
+                })
+                .collect::<std::collections::BTreeSet<_>>();
+            let names = before
+                .keys()
+                .chain(after.keys())
+                .copied()
+                .collect::<std::collections::BTreeSet<_>>()
+                .into_iter()
+                .filter(|index| !observed.contains(index))
+                .filter_map(|index| {
+                    let old = before.get(&index).cloned();
+                    let new = after.get(&index).cloned();
+                    (old != new).then_some(NameChange {
+                        index,
+                        before: old,
+                        after: new,
+                    })
+                })
+                .collect::<Vec<_>>();
+            if !names.is_empty() {
+                records.push(JournalRecord {
+                    transition: GenericTransition {
+                        transaction_id: 0,
+                        sequence: 0,
+                        timestamp_ms: 0,
+                        kind: TransitionKind::Update,
+                        before: GenericDoubletLink::empty(),
+                        after: GenericDoubletLink::empty(),
+                    },
+                    name_only: true,
+                    names,
+                });
+            }
+            self.record_records(records.into_iter(), owns)?;
+        } else {
+            // Keep the unnamed adapter's iterator path without a second batch.
+            self.record_records(records, owns)?;
+        }
         if let Some(error) = capture_error {
             self.current
                 .as_mut()

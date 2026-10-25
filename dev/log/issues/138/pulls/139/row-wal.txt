@@ -1,0 +1,63 @@
+Ordinary pre-effect row undo: final local validation
+
+Policy: RowUndoPolicy.WriteAheadImage, selected independently of the ordinary
+Observed default. Data/log adapters must provide truthful flushes, readable
+logical rows and compatible replay; this is not torn-page or power-loss proof.
+
+Before-fix evidence is retained next to this file:
+- row-wal-rust-before.txt: five portable operation contracts fail; the bounded
+  real-process parent also fails. Each operation covers automatic/explicit owners.
+- row-wal-csharp-before.txt: eight actual mapped child cases fail, covering
+  create/update/delete/cascade, automatic/explicit ownership and two reopens.
+- row-wal-wasm-before.txt: five corresponding actual-WASM contracts fail.
+- row-wal-unobserved-*.txt: default unique-name eviction and selected unreported
+  row/name effects lose complete rollback or history before their corrections.
+- row-wal-noop-*.txt: identical-name adapter calls bypass selected image history;
+  one Rust function and two C# owner cases fail before the fast-path correction.
+
+Final full checks, run sequentially (Cargo jobs=1 and debug info disabled;
+C# heap limit 0x28000000, disabled build servers, MSBuild concurrency=1):
+- cargo fmt: native and WASM; dotnet format --no-restore --verify-no-changes.
+- C# changeset validation and source-size checks, all languages.
+- dotnet test csharp --configuration Debug/Release --collect:'XPlat Code Coverage':
+  1,901 passed, zero failed/skipped, in each configuration.
+- cargo clippy --all-features --all-targets -- -D warnings; actual-WASM Clippy.
+- cargo llvm-cov test --all-features --branch: 820 standard tests pass, zero fail;
+  the custom stdout harness also passes. Twelve child entry points are ignored
+  during direct enumeration and exercised by their bounded parent contracts.
+- Actual wasm32-unknown-unknown coverage: 478 pass, zero fail/ignored.
+- JS node --test with 100% lines/branches/functions thresholds: 111 pass;
+  all seventeen production modules reach 100%. Strict TypeScript passes.
+- Repository Node suites: 217 pass, zero fail/skipped.
+- Generated actual-WASM conformance: Node, Bun and Deno pass.
+- Persistent Rust -> C# -> JS group examples reopen the same snapshot and delta
+  journals. Ordinary Rust/C# row/name rollback and both version checkouts pass
+  under Observed and WriteAheadImage policies.
+- Whitespace passes. Container memory events: oom=0, oom_kill=0, oom_group_kill=0;
+  reclaim occurred. No parallel heavy compilers were run.
+
+New regression scope includes durable first-effect exits before observation,
+32 preparation/effect/decision/checkpoint fault schedules per native language,
+ten repeated undo-phase failures, six capture/correction-append schedules,
+complete committed redo/version attribution and genuine no-op controls. Native
+row-exit children have a ten-second parent deadline; C# has fifteen seconds,
+kill/reap cleanup and a 256 MiB child GC limit. Finite small inputs are used.
+Shared canonical vectors and independent metadata fixtures cover duplicate,
+conflicting, late and ambiguous images, older gaps, mixed pending undo and
+already-applied committed suffixes. Portable contracts execute on actual WASM.
+
+Official complete-run coverage (no diagnostic unions or filtered denominators):
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,099/11,968 (92.74%) | 1,995/2,412 (82.71%) | 1,430/1,570 (91.08%) |
+| Actual WASM, complete linked source | 8,342/11,522 (72.40%) | 1,566/2,123 (73.76%) | 1,093/1,550 (70.52%) |
+| C# Debug | 6,975/7,487 (93.16%) | 3,490/3,934 (88.71%) | Not reported by this collector |
+| C# Release | 5,356/5,673 (94.41%) | 3,467/3,915 (88.56%) | Not reported by this collector |
+
+All three WASM wrapper files measure 100% lines/branches/functions. The complete
+linked-WASM, native Rust and C# totals above remain below the issue's 100% target.
+Image capture and reconciliation retain full-state scans and journal costs;
+physical page repair, efficient WAL/state structures, finer composition and
+wider competitor/cluster requirements remain unfinished. Fresh exact-head CI
+is required after publication.

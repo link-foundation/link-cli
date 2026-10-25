@@ -161,7 +161,7 @@ impl<T: LinkReference> JournalRecord<T> {
     }
 }
 
-fn encode_name(name: Option<&str>) -> String {
+pub(super) fn encode_name(name: Option<&str>) -> String {
     name.map(|name| {
         name.encode_utf16()
             .map(|unit| format!("{unit:04X}"))
@@ -170,7 +170,7 @@ fn encode_name(name: Option<&str>) -> String {
     .unwrap_or_else(|| "-".into())
 }
 
-fn decode_name(text: &str) -> Option<Option<String>> {
+pub(super) fn decode_name(text: &str) -> Option<Option<String>> {
     if text == "-" {
         return Some(None);
     }

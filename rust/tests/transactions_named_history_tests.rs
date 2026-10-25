@@ -153,3 +153,46 @@ fn empty_and_zero_address_names_keep_distinct_presence_and_owners() -> Result<()
     );
     Ok(())
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn selected_undo_image_keeps_versions_and_idle_policy_selection() -> Result<()> {
+    use link_cli::transactions::RowUndoPolicy;
+    let (mut tx, _owners) = make_tx();
+    assert_eq!(tx.row_undo_policy(), RowUndoPolicy::Observed);
+    tx.set_row_undo_policy(RowUndoPolicy::WriteAheadImage)?;
+    tx.begin_transaction()?;
+    assert!(tx.set_row_undo_policy(RowUndoPolicy::Observed).is_err());
+    assert_eq!(tx.row_undo_policy(), RowUndoPolicy::WriteAheadImage);
+    tx.rollback()?;
+    let (_branch_owner, branches) = test_store::named()?;
+    let mut vc = VersionControlDecorator::new(tx, branches, false)?;
+    let id = vc.create_and_update(11, 12)?;
+    vc.set_name(id, "original")?;
+    let before = vc.current_sequence();
+    let records = vc.transactions().journal().len();
+    // Selected preparation must not turn a genuine no-op into a version.
+    vc.set_name(id, "original")?;
+    vc.remove_name(77)?;
+    assert_eq!(vc.current_sequence(), before);
+    assert_eq!(vc.transactions().journal().len(), records);
+    vc.begin_transaction()?;
+    vc.set_name(id, "changed")?;
+    vc.update(id, 21, 22)?;
+    vc.ensure_created(5);
+    vc.set_name(5, "allocated")?;
+    vc.commit()?;
+    let after = vc.current_sequence();
+    assert_eq!(after, vc.transactions().last_logged_sequence());
+    for _ in 0..2 {
+        vc.checkout(before)?;
+        assert_eq!(vc.get_name(id)?.as_deref(), Some("original"));
+        assert_eq!(vc.get(id).unwrap().source, 11);
+        assert!(!vc.exists(5));
+        vc.checkout(after)?;
+        assert_eq!(vc.get_name(id)?.as_deref(), Some("changed"));
+        assert_eq!(vc.get_name(5)?.as_deref(), Some("allocated"));
+        assert_eq!(vc.get(id).unwrap().source, 21);
+    }
+    Ok(())
+}

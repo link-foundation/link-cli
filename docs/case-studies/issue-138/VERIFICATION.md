@@ -2003,3 +2003,47 @@ Full sidecar scans and retained strings are selected transaction costs; bare
 stores do not run them. Complete coverage, row-before-observer durability,
 custom unobserved side effects, efficient structures, finer composition and
 wider strategies remain unfinished. Fresh exact-head CI is still required.
+
+
+## Ordinary pre-effect row undo and complete result reconciliation
+
+The selected `WriteAheadImage` policy now flushes a mandatory canonical full
+logical image before the first row/name effect in an owner. It retains that
+image through preparation, decision and cleanup failures. Recovery interleaves
+pending images with legacy undo and redoes the committed suffix even when some
+records were previously applied. Complete result reconciliation records custom
+unreported rows/names before success or version intent. Identical-name calls
+also reconcile; genuine no-ops allocate no version. Default-policy unique-name
+eviction now records the old unobserved name owner in the same pending batch.
+
+Five portable operations and eight C# real-process cases fail before the change;
+actual-WASM before cases and separate unreported-effect/identical-name failures
+are preserved. Thirty-two fault schedules per native language, repeated undo
+failures, detached durable images, shared canonical vectors, ordered recovery,
+committed redo, version checkout and following edits verify the declared scope.
+See [the complete local evidence](../../../dev/log/issues/138/pulls/139/row-wal.txt)
+and ROW-WAL-PLAN.md. Bounded child exits leave the OS running.
+
+Full local validation passes: 820 standard native Rust tests plus the custom
+stdout harness, twelve bounded-parent child entries, 478 actual WASM tests,
+1,901 C# tests per Debug/Release configuration, 111 JS and 217 repository tests.
+Formatting, strict native/WASM Clippy, type checks, release metadata, source sizes
+and whitespace pass. Generated actual-WASM conformance passes Node/Bun/Deno.
+Persistent group examples pass across languages for snapshot/delta encoding;
+ordinary native examples pass under both undo policies. All seventeen JS modules
+and all three WASM wrapper files measure 100% lines/branches/functions.
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,099/11,968 (92.74%) | 1,995/2,412 (82.71%) | 1,430/1,570 (91.08%) |
+| Actual WASM, complete linked source | 8,342/11,522 (72.40%) | 1,566/2,123 (73.76%) | 1,093/1,550 (70.52%) |
+| C# Debug | 6,975/7,487 (93.16%) | 3,490/3,934 (88.71%) | Not reported by this collector |
+| C# Release | 5,356/5,673 (94.41%) | 3,467/3,915 (88.56%) | Not reported by this collector |
+
+These are official integer totals from complete LLVM/Coverlet runs, rounded to
+two decimals. Sequential builds stay within the container limit with zero
+OOM/OOM-kill events. See [the recipe](../../TRANSACTION-UNDO.md) for compatibility,
+full-image/per-write costs and truthful-flush assumptions. Logical restoration
+does not repair unreadable/torn physical files or verify physical power loss.
+Whole-project 100% coverage, efficient structures, finer composition and wider
+strategies remain unfinished. New exact-head CI is pending publication.
