@@ -1821,3 +1821,55 @@ does not repair an already damaged journal or prove device power-loss behavior.
 Complete native/linked-WASM/C# coverage, ordinary name/history atomicity, other
 legacy mutation windows and broader strategy requirements remain unfinished.
 This batch requires fresh exact-head CI before its publication checklist closes.
+
+## Recovered finite ancestry traversal and session feedback
+
+All nine workflows for preceding recovery-validation head 0e95c81 pass; the
+exact commit, creation times and links are in recovery-validation-ci.txt. The
+interrupted ancestry work survives in f5af989 and was recovered by fast-forward
+without rewriting its history. SESSION-RECOVERY.md links the requested upstream
+report and distinguishes the observed interruption from its unknown cause.
+
+Three finite native regressions per language first overflow a requested 256 KiB
+thread stack while checking out, switching or validating a fork with 2,048
+parents. Parent processes impose a 15-second deadline and kill/reap children;
+Linux Rust children have a 512 MiB address-space limit and disabled core dumps,
+and C# child GC is capped at 256 MiB. A metadata-only adapter isolates traversal
+from name construction; it makes no persistence claim. The original real-name
+deep probe times out while building its fixture and remains inconclusive.
+Actual WASM already passes its deep control before the fix.
+
+Iterative construction preserves root-to-leaf grouping, own branch heads and
+descendant fork cutoffs without a stack frame per parent. Rust uses its existing
+ordered attribution map, expected O(D + A + P) time and O(D + P) temporary space
+for depth D, attribution entries A and returned sequences P. C# sorts selected
+buckets, adding O(P log P) worst-case time. These bounds treat key operations
+as unit cost; long names add hashing/comparison work. Bare stores do none of this work.
+Independent shallow recursive references each verify 512 histories times five
+targets, including cycles and missing parents, without claiming broken movement
+topology is accepted. Public semantic controls preserve exact row replay,
+unreachable-history rejection, following writes and two actual native reopenings.
+
+Full final-production-source local validation passes: 770 native Rust tests plus
+the custom stdout harness (ten ignored child entries execute through parents),
+433 actual-WASM tests, C# Debug and Release with 1,695 each and no skips, and
+106 JS tests plus TypeScript. All seventeen JS modules and the three WASM wrapper
+files retain 100% measured lines/branches/functions. Strict native/WASM Clippy,
+both Rust formatting checks, C# formatting, release fragments and source sizes
+pass. The 217 repository tests first pass 216/217 because this session created an
+empty root ci-logs directory. Removing only that empty workspace artifact makes
+all 217 pass; both logs remain in experiments/issue-138. No production/test rule
+was changed. Container OOM and OOM-kill counters remain zero.
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 10,154/10,972 (92.54%) | 1,779/2,158 (82.44%) | 1,329/1,467 (90.59%) |
+| Actual WASM, complete linked source | 7,330/10,534 (69.58%) | 1,336/1,865 (71.64%) | 981/1,447 (67.80%) |
+| C# Debug | 6,540/7,029 (93.04%) | 3,136/3,552 (88.29%) | Not reported by this collector |
+| C# Release | 5,002/5,303 (94.32%) | 3,111/3,533 (88.06%) | Not reported by this collector |
+
+Rust figures use official LLVM exported totals, not coordinate-union diagnostics.
+C# percentages above are rounded from the integer counts; Coverlet's root rates
+truncate some ratios. Complete coverage, other legacy mutation audits, independent
+composition and wider competitor strategies remain unfinished. This recovered
+batch needs its own exact-head CI before closing its publication checklist.

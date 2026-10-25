@@ -21,9 +21,9 @@ configuration; do not claim a WASM overflow reproduction.
   native reopenings. Actual WASM runs shared portable controls.
 - [x] Replace recursive paths with an iterative chain and one attribution scan;
   preserve root-to-leaf grouping and ascending sequences within each branch.
-- [ ] Verify a shallow independent path oracle, existing malformed-topology and
+- [x] Verify a shallow independent path oracle, existing malformed-topology and
   movement-fault controls, deep following writes, and actual WASM.
-- [ ] Document selected-wrapper costs and release metadata, run all local suites,
+- [x] Document selected-wrapper costs and release metadata, run all local suites,
   coverage, strict lint, formatting, types and source-size checks sequentially.
 - [ ] Self-review, atomic commit, push only the prepared branch, update PR 139,
   read fresh feedback and verify all nine exact-head workflows and failure logs.

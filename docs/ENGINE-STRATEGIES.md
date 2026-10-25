@@ -211,7 +211,8 @@ attribution once, rather than recursing and rescanning for every parent. With D
 ancestors, A attributed transitions and P selected records, native Rust takes
 expected O(D + A + P) time; C# additionally sorts selected per-branch buckets,
 with O(P log P) worst-case sorting. Both use O(D + P) temporary memory and
-constant call-stack space. Each branch's own head and all descendant fork
+constant call-stack space. These bounds treat key hashing/comparison as unit
+cost; long branch names add their hashing/comparison cost. Each branch's own head and all descendant fork
 cutoffs still apply; records remain grouped root to leaf, then ascending within
 each branch. These costs apply only to the selected legacy version wrapper;
 there is no persistent extra index or work on bare cache paths. The separate

@@ -3,6 +3,13 @@
 No required sub-issues were returned by GitHub's sub-issue API. Initial issue
 comments and all three PR comment/review endpoints were empty.
 
+PR feedback added after that initial inventory requests recovery of an interrupted
+session and reporting the interruption to Codex/OpenAI. The preserved ancestry
+commit has been recovered; validation continues under DEEP-ANCESTRY-PLAN.md.
+The reporting request is fulfilled by the linked public report in
+[SESSION-RECOVERY.md](SESSION-RECOVERY.md). That request does not change or
+complete the original R1–R12 acceptance criteria.
+
 | ID | Issue requirement | Solution and verification plan | Status |
 | --- | --- | --- | --- |
 | R1 | Fully test ACID readiness | Failure injection at journal append/flush, data checkpoint, rollback and recovery; anomaly schedules and bounded concurrent histories; report exact persistence assumptions. | In progress: durability, corrupt recovery, Windows mapped flush, short filesystem reads, and cross-language lexical regressions reproduced and corrected. C# whole-graph disposal joins borrowers before closing mapped dependencies and preserves stores after cleanup failure. Real process-exit recovery probes pass; power-loss and distributed fault coverage remain incomplete. |
@@ -12,7 +19,7 @@ comments and all three PR comment/review endpoints were empty.
 | R5 | Study competitor source and best strategies | Primary documentation and source survey covering SQLite, PostgreSQL, RocksDB, Redis, etcd and TiKV; costs/guarantee comparison and reusable component evaluation. | In progress; expanded primary-source audit distinguishes InnoDB group commit, MongoDB durable acknowledgement, Cassandra ordinary quorum/repair and current Accord routing; see RESEARCH.md |
 | R6 | Same API / costs only for selected guarantees | Keep existing bare-store cache path; add optional control/history/journal/replication composition with explicit complexity and allocation costs. | Existing raw interfaces implemented by staged sessions; optional journals, delta encoding and replica decorators supplied. Bare stores incur no engine overhead. Delta encoding reduces physical bytes for localized edits; full-state CPU/cloning costs remain documented. Serializable read-set validation is independently selected and tracks only observed addresses; scans retain revision checks. Conflict metadata is skipped for exclusive/optimistic whole-revision serializable modes, allocated lazily for overlapping sessions that need it, and reclaimed after the last validation. Optional point-write ownership allocates only for selected sessions/addresses, releases on every terminal path and rejects use in uncoordinated cluster workspaces. Finer independent validation/history decorator composition remains to study. |
 | R7 | Implement all supported languages | Native Rust and C# library surfaces, portable JS/TS surface and declared backend capabilities; shared wire vectors and scenario tests. | Staged engine surfaces implemented. Compiled WASM conformance passes Node, Bun and Deno; shared fixtures are consumed by Rust, C# and actual WASM. Ordinary legacy transactions/history now execute in actual WASM using portable timestamps; shared fault/recovery contracts verify checkpoint ownership. Newly added distributed strategies must maintain parity. |
-| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 431 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 69.59% lines / 71.60% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
+| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 433 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 69.58% lines / 71.64% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
 | R9 | Document each scenario | Runnable cache, durable store and replicated/sharded examples with failure semantics, ownership and persistence settings. | docs/ENGINE-STRATEGIES.md, docs/ENGINE-CLUSTERS.md and Rust/C#/JS examples cover implemented options, including consensus-backed shard groups. Further deployment strategies need their own recipes. |
 | R10 | Horizontal cluster, shared and shared-nothing options | TCP/advisory shared stores, independent shard namespaces, replicated logs and consensus-backed atomic shard groups. | Shared coordination and immutable journals on independently routed data groups implemented in all languages. Real leader failover, data-group outage, atomic pointer publication and native/WASM interoperability verified. Catalog throughput, whole-journal transfers and object retention limit scale; automatic balancing and multi-catalog transactions are not supplied. |
 | R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus and cross-shard coordination implemented. Efficient WAL/LSM structures and other listed algorithm gaps remain unfinished. |
@@ -87,5 +94,18 @@ incomplete reloads and C# queued checkpoints/retention wait. Failing before case
 29 native/actual-WASM focused tests and 146 C# cases verify repeated failure,
 cleanup, following commits and reopening. Full suites pass: 765 native, 431
 actual WASM, 1,690 C# per configuration and 106 JS. See
-RECOVERY-VALIDATION-PLAN.md and recovery-validation.txt. Fresh exact-head CI,
-other legacy audits, complete coverage and broader requirements remain open.
+RECOVERY-VALIDATION-PLAN.md and recovery-validation.txt. All nine exact-head
+workflows pass on 0e95c81; see recovery-validation-ci.txt. Later code requires
+fresh CI; other legacy audits, complete coverage and broader requirements remain open.
+
+Deep branch ancestry (R1/R3/R6/R7/R8) now uses iterative path construction in
+both native languages. Three bounded 2,048-parent regressions per language
+first fail with stack overflow; public semantic controls and two actual native
+reopenings preserve fork/head cutoffs and replay order. Each language's shallow
+independent oracle checks 2,560 finite paths, including legacy broken-chain
+truncation. The actual-WASM depth control passes before and after; no WASM
+overflow reproduction is claimed. Full local suites pass: 770 native Rust,
+1,695 C# per configuration, 433 actual WASM and 106 JS tests, plus 217 repository
+checks. See DEEP-ANCESTRY-PLAN.md and deep-ancestry.txt. New publication needs
+fresh exact-head CI. Complete coverage and broader strategies remain unfinished;
+GROUP-COMMIT-PLAN.md records the next independent-session durability design.

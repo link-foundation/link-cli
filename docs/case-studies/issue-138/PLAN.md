@@ -113,11 +113,20 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    journals and failed live recovery now have failing before contracts and
    passing full local suites. Validation preserves idempotent records and
    retained floors; cleanup retains recovery/refresh ownership. See
-   RECOVERY-VALIDATION-PLAN.md and recovery-validation.txt. Fresh CI is pending.
+   RECOVERY-VALIDATION-PLAN.md and recovery-validation.txt. All nine workflows
+   pass on exact published head 0e95c81 (2026-10-25 04:03:39 UTC creation).
+   The interrupted ancestry work was preserved in f5af989 and recovered without
+   rewriting history. Continue DEEP-ANCESTRY-PLAN.md and SESSION-RECOVERY-PLAN.md;
+   ancestry changes pass full local checks and require their own exact-head CI.
+   Full suites pass: 770 native, 433 actual WASM, 1,695 C# per configuration,
+   106 JS and 217 repository tests. See deep-ancestry.txt for exact coverage.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.
-8. Continue the source-backed algorithm/component comparison, efficient journal
+8. Implement the independent-session shared-flush strategy in GROUP-COMMIT-PLAN.md.
+   Preserve per-session revisions and known aborts; uncertain outcomes require
+   prefix discovery rather than claiming an atomic batch. Continue the
+   source-backed algorithm/component comparison, efficient journal
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.
 

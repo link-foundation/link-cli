@@ -1,0 +1,22 @@
+Exact head: 0e95c81778ed0fd0ecffea5e68038a2f2b8f93c0
+Committed: 2026-10-25 04:03:32 UTC
+All nine workflow runs created 2026-10-25 04:03:39 UTC, after commit.
+
+Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491867
+Broken Link Checker: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491863
+Dependencies: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491868
+Docs: success
+https://github.com/link-foundation/link-cli/actions/runs/40160492042
+JS client CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491904
+Security: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491882
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491929
+WebAssembly CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491862
+Rust CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40160491896
