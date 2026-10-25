@@ -46,6 +46,9 @@ boundaries and accepted delimiter/Unicode/NUL branch names. Nine contradictory
 metadata schedules per language verify rejection without rewriting sidecars.
 Native restart checks also verify checkout, a following edit and a second reopen.
 Full native/C#/actual-WASM validation passes; see version-publication.txt for
-measured coverage separately from test counts. Referenced truncated history
-remains a separate unfinished audit. Power-loss and other remaining legacy audits are
-not implied by this process-exit protocol.
+measured coverage separately from test counts. The next batch preflights missing
+retained checkout records; failures while applying an available diff remain a
+separate audit. Power-loss and other remaining legacy audits are not implied by
+this process-exit protocol. Published SHA 2a1c9e3 passes eight workflows; ten C#
+Windows fixtures read files while exclusive mappings are live. See
+PUBLICATION-WINDOWS-PLAN.md for their correction and exact-head CI verification.

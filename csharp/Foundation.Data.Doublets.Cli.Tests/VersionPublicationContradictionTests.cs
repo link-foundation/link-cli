@@ -15,6 +15,18 @@ public class VersionPublicationContradictionTests
 
     private static void Write(NamedTypesDecorator<uint> store, string name) => store.SetName(store.CreateAndUpdate(0u, 0u), name);
 
+    // Windows prevents byte snapshots while a mapped store owns its files.
+    // Close every borrower and mapping before comparing persistent bytes.
+    private static void WithStores(string directory,
+        Action<NamedTypesDecorator<uint>, NamedTypesDecorator<uint>, NamedTypesDecorator<uint>, TransactionsDecorator> action)
+    {
+        using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
+        using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
+        using var branches = new NamedTypesDecorator<uint>(Path.Combine(directory, "branches.links"));
+        using var tx = new TransactionsDecorator(data, log);
+        action(data, log, branches, tx);
+    }
+
     [Theory]
     [InlineData("unknown-branch")]
     [InlineData("wrong-current")]
@@ -30,45 +42,48 @@ public class VersionPublicationContradictionTests
         var directory = Directory.CreateTempSubdirectory("version-contradiction-").FullName;
         try
         {
-            using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
-            using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
             var path = Path.Combine(directory, "branches.links");
-            using var branches = new NamedTypesDecorator<uint>(path);
-            using var tx = new TransactionsDecorator(data, log);
-            using var vc = new VersionControlDecorator(tx, branches);
-            var id = vc.CreateAndUpdate(11u, 12u);
-            var original = vc.CurrentSequence;
-            vc.Branch(VersionExitProbe.Topic); vc.SwitchBranch(VersionExitProbe.Topic);
-            vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
-            var attempted = vc.CurrentSequence;
-            var intent = new VersionControlDecorator.PublicationIntent(tx.Log.Last().TransactionId, original, attempted, VersionExitProbe.Topic);
-            var markers = Markers(branches).ToArray();
-            void Replace(string prefix, string value) => branches.SetName(markers.Single(row => row.Name.StartsWith(prefix, StringComparison.Ordinal)).Id, value);
-            switch (scenario)
+            uint id = 0;
+            WithStores(directory, (data, log, branches, tx) =>
             {
-                case "unknown-branch": intent = intent with { Branch = "unknown" }; break;
-                case "wrong-current": Replace("__vc:current=", "__vc:current=main"); break;
-                case "head-ahead":
-                    var branch = vc.ListBranches().Single(b => b.Name == VersionExitProbe.Topic);
-                    var oldMarker = VersionControlDecorator.EncodeBranchMarker(branch);
-                    branches.SetName(branches.GetByName(oldMarker), VersionControlDecorator.EncodeBranchMarker(branch with { Head = attempted + 1 }));
-                    break;
-                case "applied-ahead": Replace("__vc:applied=", $"__vc:applied={attempted + 1}"); break;
-                case "foreign-record": intent = intent with { Before = 0 }; break;
-                case "missing-record": intent = intent with { After = attempted + 1 }; break;
-                case "foreign-attribution": Replace($"__vc:trans:{attempted}:", $"__vc:trans:{attempted}:branch=main"); break;
-                case "multiple-intents": Write(branches, VersionControlDecorator.EncodePublicationMarker(intent with { Id = Guid.NewGuid() })); break;
-                case "conflicting-decisions": Write(log, "__transactions:rollback:" + intent.Id.ToString("N")); tx.Recover(); break;
-            }
-            Write(branches, VersionControlDecorator.EncodePublicationMarker(intent));
-            branches.Flush(); log.Flush();
+                using var vc = new VersionControlDecorator(tx, branches);
+                id = vc.CreateAndUpdate(11u, 12u);
+                var original = vc.CurrentSequence;
+                vc.Branch(VersionExitProbe.Topic); vc.SwitchBranch(VersionExitProbe.Topic);
+                vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
+                var attempted = vc.CurrentSequence;
+                var intent = new VersionControlDecorator.PublicationIntent(tx.Log.Last().TransactionId, original, attempted, VersionExitProbe.Topic);
+                var markers = Markers(branches).ToArray();
+                void Replace(string prefix, string value) => branches.SetName(markers.Single(row => row.Name.StartsWith(prefix, StringComparison.Ordinal)).Id, value);
+                switch (scenario)
+                {
+                    case "unknown-branch": intent = intent with { Branch = "unknown" }; break;
+                    case "wrong-current": Replace("__vc:current=", "__vc:current=main"); break;
+                    case "head-ahead":
+                        var branch = vc.ListBranches().Single(b => b.Name == VersionExitProbe.Topic);
+                        var oldMarker = VersionControlDecorator.EncodeBranchMarker(branch);
+                        branches.SetName(branches.GetByName(oldMarker), VersionControlDecorator.EncodeBranchMarker(branch with { Head = attempted + 1 }));
+                        break;
+                    case "applied-ahead": Replace("__vc:applied=", $"__vc:applied={attempted + 1}"); break;
+                    case "foreign-record": intent = intent with { Before = 0 }; break;
+                    case "missing-record": intent = intent with { After = attempted + 1 }; break;
+                    case "foreign-attribution": Replace($"__vc:trans:{attempted}:", $"__vc:trans:{attempted}:branch=main"); break;
+                    case "multiple-intents": Write(branches, VersionControlDecorator.EncodePublicationMarker(intent with { Id = Guid.NewGuid() })); break;
+                    case "conflicting-decisions": Write(log, "__transactions:rollback:" + intent.Id.ToString("N")); tx.Recover(); break;
+                }
+                Write(branches, VersionControlDecorator.EncodePublicationMarker(intent));
+                branches.Flush(); log.Flush();
+            });
             var namesPath = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(path);
             var before = File.ReadAllBytes(path); var namesBefore = File.ReadAllBytes(namesPath);
-            Assert.Throws<InvalidDataException>(() => new VersionControlDecorator(tx, branches));
-            branches.Flush();
+            WithStores(directory, (data, log, branches, tx) =>
+            {
+                Assert.Throws<InvalidDataException>(() => new VersionControlDecorator(tx, branches));
+                branches.Flush();
+                Assert.Equal(21u, data.GetSource(id));
+            });
             Assert.Equal(before, File.ReadAllBytes(path));
             Assert.Equal(namesBefore, File.ReadAllBytes(namesPath));
-            Assert.Equal(21u, data.GetSource(id));
         }
         finally { Directory.Delete(directory, recursive: true); }
     }
@@ -86,29 +101,35 @@ public class VersionPublicationContradictionTests
                 var directory = Directory.CreateTempSubdirectory("version-intent-vector-").FullName;
                 try
                 {
-                    using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
-                    using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
                     var path = Path.Combine(directory, "branches.links");
-                    using var branches = new NamedTypesDecorator<uint>(path);
-                    Write(branches, VersionControlDecorator.EncodeBranchMarker(new BranchInfo("main", null, 0, 0)));
-                    if (branch != "main") Write(branches, VersionControlDecorator.EncodeBranchMarker(new BranchInfo(branch, "main", 0, 0)));
-                    Write(branches, "__vc:current=" + branch); Write(branches, "__vc:applied=0"); Write(branches, marker);
-                    branches.Flush();
+                    WithStores(directory, (data, log, branches, tx) =>
+                    {
+                        Write(branches, VersionControlDecorator.EncodeBranchMarker(new BranchInfo("main", null, 0, 0)));
+                        if (branch != "main") Write(branches, VersionControlDecorator.EncodeBranchMarker(new BranchInfo(branch, "main", 0, 0)));
+                        Write(branches, "__vc:current=" + branch); Write(branches, "__vc:applied=0"); Write(branches, marker);
+                        branches.Flush();
+                    });
                     var namesPath = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(path);
                     var before = File.ReadAllBytes(path); var namesBefore = File.ReadAllBytes(namesPath);
-                    using var tx = new TransactionsDecorator(data, log);
-                    if (valid)
+                    WithStores(directory, (data, log, branches, tx) =>
                     {
-                        using var vc = new VersionControlDecorator(tx, branches);
-                        Assert.Equal(branch, vc.CurrentBranch); Assert.Equal(0, vc.CurrentSequence);
-                        vc.Branch("following"); vc.Recover();
-                        Assert.DoesNotContain(Markers(branches), item => item.Name.StartsWith("__vc:pending:", StringComparison.Ordinal));
-                    }
-                    else
+                        if (valid)
+                        {
+                            using var vc = new VersionControlDecorator(tx, branches);
+                            Assert.Equal(branch, vc.CurrentBranch); Assert.Equal(0, vc.CurrentSequence);
+                            vc.Branch("following"); vc.Recover();
+                            Assert.DoesNotContain(Markers(branches), item => item.Name.StartsWith("__vc:pending:", StringComparison.Ordinal));
+                        }
+                        else
+                        {
+                            Assert.Throws<InvalidDataException>(() => new VersionControlDecorator(tx, branches));
+                            branches.Flush();
+                        }
+                    });
+                    if (!valid)
                     {
-                        Assert.Throws<InvalidDataException>(() => new VersionControlDecorator(tx, branches));
-                        branches.Flush();
-                        Assert.Equal(before, File.ReadAllBytes(path)); Assert.Equal(namesBefore, File.ReadAllBytes(namesPath));
+                        Assert.Equal(before, File.ReadAllBytes(path));
+                        Assert.Equal(namesBefore, File.ReadAllBytes(namesPath));
                     }
                 }
                 finally { Directory.Delete(directory, recursive: true); }
