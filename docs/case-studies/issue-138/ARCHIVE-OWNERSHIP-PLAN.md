@@ -14,7 +14,7 @@ only one archive survives; the second writer replaces the first file's bytes.
   journal authority, and optional default-off diagnostic tracing.
 - [x] Run applicable full tests, coverage, lint, release and source-size checks.
 - [x] Run both CLI examples with independent databases sharing archive storage.
-- [ ] Commit/push only the prepared branch, update PR 139 and verify exact-head CI.
+- [x] Commit/push only the prepared branch, update PR 139 and verify exact-head CI.
 
 Rust's [OpenOptions::create_new](https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.create_new)
 atomically creates a previously absent path and refuses existing symlinks.
@@ -57,5 +57,6 @@ on Linux; Windows runner privileges are not assumed.
 Full local validation passes: 742 native Rust, 408 actual WASM, 1,580 C# per
 configuration and 106 JS, with strict lint, formatting, types, source-size and
 release checks. Both CLI examples pass their shared-archive byte comparisons.
-See archive-ownership.txt for exact coverage and evidence. Fresh published-head
-CI remains pending.
+See archive-ownership.txt for exact coverage and evidence. All nine workflows
+pass on published head 7b03c07; see archive-ownership-ci.txt. Later changes need
+fresh exact-head CI.

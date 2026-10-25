@@ -37,6 +37,13 @@ public class RecoveryInterruptionTests
     }
     private sealed class Log(string path, Fault fault) : NamedTypesDecorator<uint>(path)
     {
+        public override string? GetName(uint link)
+        {
+            fault.Check("read-before");
+            var result = base.GetName(link);
+            fault.Check("read-after");
+            return result;
+        }
         public override uint SetName(uint link, string name)
         {
             var anchor = name == "__transactions:applied:2";
@@ -52,7 +59,7 @@ public class RecoveryInterruptionTests
         {
             var cases = new TheoryData<string, string>();
             foreach (var operation in new[] { "update", "delete", "recreate" })
-                foreach (var point in new[] { "old-before", "old-after", "new-before", "new-after",
+                foreach (var point in new[] { "read-before", "read-after", "old-before", "old-after", "new-before", "new-after",
                     "undo-before", "undo-after", "data-before", "data-after", "marker-before", "marker-after", "log-before", "log-after" })
                     cases.Add(operation, point);
             return cases;
@@ -145,6 +152,90 @@ public class RecoveryInterruptionTests
                 var any = log.Constants.Any;
                 Assert.Contains(log.All(new Link<uint>(any, any, any)), row => row is not null && log.GetName(row[0]) == "__transactions:applied:2");
                 Assert.Contains(log.All(new Link<uint>(any, any, any)), row => row is not null && log.GetName(row[0]) == "__transactions:rollback:00000000000000000000000000000004");
+            }
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    public static TheoryData<string, string, string> LiveCases
+    {
+        get
+        {
+            var cases = new TheoryData<string, string, string>();
+            foreach (var row in Cases)
+                foreach (var cleanup in new[] { "recover", "rollback" })
+                    cases.Add((string)row[0], (string)row[1], cleanup);
+            return cases;
+        }
+    }
+    private static string[] Names(NamedTypesDecorator<uint> log)
+    {
+        var any = log.Constants.Any;
+        return log.All(new Link<uint>(any, any, any)).Select(row => log.GetName(Assert.IsAssignableFrom<IList<uint>>(row)[0]))
+            .Where(name => name is not null).Select(name => name!).ToArray();
+    }
+    [Theory(Timeout = 20000)]
+    [MemberData(nameof(LiveCases))]
+    public async Task FailedLiveRecoveryRetainsAdmissionAndCleanupRetry(string operation, string point, string cleanup)
+    {
+        await Task.CompletedTask;
+        var directory = Directory.CreateTempSubdirectory("recovery-live-").FullName;
+        var dataPath = Path.Combine(directory, "data.links");
+        var logPath = Path.Combine(directory, "log.links");
+        try
+        {
+            var fault = new Fault();
+            using (var data = new Store(dataPath, fault, operation))
+            using (var log = new Log(logPath, fault))
+            using (var tx = new TransactionsDecorator(data, log,
+                flushData: () => { fault.Check("data-before"); data.Flush(); fault.Check("data-after"); },
+                flushLog: () => { fault.Check("log-before"); log.Flush(); fault.Check("log-after"); }))
+            {
+                Seed(data, log, operation);
+                fault.Point = point;
+                Assert.Contains(point, Assert.Throws<IOException>(tx.Recover).Message);
+                Assert.Null(fault.Point);
+                var names = Names(log);
+                var exists = tx.Exists(1u);
+                var first = exists ? (tx.GetSource(1u), tx.GetTarget(1u)) : (0u, 0u);
+                var second = (tx.GetSource(2u), tx.GetTarget(2u));
+                Assert.True(tx.HasOpenTransaction);
+                Assert.Throws<InvalidOperationException>(() => tx.BeginTransaction());
+                Assert.Throws<InvalidOperationException>(tx.BeginVersionReplay);
+                Assert.Throws<InvalidOperationException>(() => tx.CreateAndUpdate(91u, 92u));
+                Assert.Throws<InvalidOperationException>(() => tx.Update(new[] { 2u }, new[] { 2u, 91u, 92u }, null));
+                Assert.Throws<InvalidOperationException>(() => tx.Delete(new[] { 2u }, null));
+                var change = new Transition<uint>(Guid.NewGuid(), 1, DateTimeOffset.UnixEpoch, TransitionKind.Update,
+                    new Link<uint>(2, 41, 42), new Link<uint>(2, 91, 92));
+                Assert.Throws<InvalidOperationException>(() => tx.ApplyTransition(change));
+                Assert.Throws<InvalidOperationException>(() => tx.RevertTransition(change));
+                Assert.Equal(exists, tx.Exists(1u));
+                Assert.Equal(first, exists ? (tx.GetSource(1u), tx.GetTarget(1u)) : (0u, 0u));
+                Assert.Equal(second, (tx.GetSource(2u), tx.GetTarget(2u)));
+                Assert.Equal(names, Names(log));
+                Action retry = cleanup == "rollback" ? tx.Rollback : tx.Recover;
+                fault.Point = "read-before";
+                Assert.Contains("read-before", Assert.Throws<IOException>(retry).Message);
+                Assert.Null(fault.Point);
+                Assert.True(tx.HasOpenTransaction);
+                Assert.Throws<InvalidOperationException>(() => tx.BeginTransaction());
+                retry();
+                Assert.False(tx.HasOpenTransaction);
+                Assert.Equal(41u, tx.GetSource(2u));
+                Assert.Equal(42u, tx.GetTarget(2u));
+                if (operation == "delete") Assert.False(tx.Exists(1u));
+                else Assert.Equal(31u, tx.GetSource(1u));
+                tx.Update(new[] { 2u }, new[] { 2u, 61u, 62u }, null);
+            }
+            for (var reopen = 0; reopen < 2; reopen++)
+            {
+                using var data = new NamedTypesDecorator<uint>(dataPath);
+                using var log = new NamedTypesDecorator<uint>(logPath);
+                using var recovered = new TransactionsDecorator(data, log);
+                Assert.Equal(61u, recovered.GetSource(2u));
+                Assert.Equal(62u, recovered.GetTarget(2u));
+                if (operation == "delete") Assert.False(recovered.Exists(1u));
+                else Assert.Equal(31u, recovered.GetSource(1u));
             }
         }
         finally { Directory.Delete(directory, recursive: true); }

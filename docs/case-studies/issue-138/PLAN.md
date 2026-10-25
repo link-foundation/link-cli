@@ -108,10 +108,12 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    A separate finite probe reproduces two databases overwriting a shared chunk
    archive. Four native and three C# occupied-path cases first fail; exclusive
    creation now passes full local validation and both shared-archive CLI examples.
-   See ARCHIVE-OWNERSHIP-PLAN.md and archive-ownership.txt. Fresh exact-head CI
-   remains pending for this batch. Next, reproduce contradictory transaction
-   journals and admission after failed live recovery before changing production;
-   preserve valid idempotent records and retained sequence floors.
+   All nine workflows pass on archive head 7b03c07; see ARCHIVE-OWNERSHIP-PLAN.md,
+   archive-ownership.txt and archive-ownership-ci.txt. Contradictory transaction
+   journals and failed live recovery now have failing before contracts and
+   passing full local suites. Validation preserves idempotent records and
+   retained floors; cleanup retains recovery/refresh ownership. See
+   RECOVERY-VALIDATION-PLAN.md and recovery-validation.txt. Fresh CI is pending.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.

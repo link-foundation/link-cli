@@ -1718,3 +1718,106 @@ durability, eliminate duplicate exports after recovery, provide globally unique
 transaction IDs, or add native filesystem support to WASM. Other legacy audits,
 full project coverage and the wider issue remain unfinished. This batch requires
 fresh exact-head CI before its publication checklist can be completed.
+
+All nine workflows pass on archive ownership head `7b03c07`, with runs
+created 2026-10-25 at 03:25:08 UTC after its commit/push. Native platform,
+fresh-merge, package, release, JS and actual-WASM checks pass. Exact URLs are
+in `archive-ownership-ci.txt`. Later recovery changes need fresh exact-head CI.
+
+## Recovery validation and live ownership
+
+Root causes: recovery accepted opposite decisions for one transaction, conflicting
+records for one sequence, zero owners and nonpositive sequences. Ordered insertion
+retained duplicate parsed records, including conflicts. Live recovery errors also
+released admission while partially replayed data and incomplete persistence could
+remain reachable. Rust reload errors had the same admission problem.
+
+A finite public API probe reproduces all seven sampled contradictions: each is
+accepted, changes row 11 to 21 and appends metadata. It runs with a ten-second
+deadline, 512 MiB address-space and 8 MiB stack limits. Its source, builder and
+bounded runner are retained in experiments/issue-138/recovery-contradiction-probe.rs,
+build-recovery-contradiction-probe.py and run-recovery-contradiction-probe.py.
+Native validation first
+fails 17/18 tests; the applied-floor control passes. Actual WASM first fails
+those 17 plus three live interruption functions. Initial C# validation fails
+17/17; its expanded matrix fails 101/144: 17 validation cases and all 84 live
+phase/cleanup cases. The 42 constructor interruptions and checkpoint control
+pass. Native and WASM each separately fail the new reload ownership function.
+Before loops stop at their first failed assertion; their logs do not prove that
+every later phase failed before the fix.
+
+A follow-up regression against the initial ownership draft reproduces cleanup
+skipping the underlying failed reload. If an external writer already applied its
+journal, replay alone cannot refresh a stale view. Native and WASM both first
+fail. Cleanup now retains that refresh obligation separately. A further two C#
+contracts first fail before adding recovery guards to queued checkpoints and
+retention: after a failed read they append applied markers. A queue sentinel and
+finite waits enforce the schedule without sleep-based races. Reflection controls
+only admission/queue scheduling; assertions inspect public state and real stores.
+Incidental fixture compilation errors are not preserved as behavioral evidence.
+
+Recovery now parses recognized records into temporary indexes before replacing
+live history or replaying rows. It rejects opposite decisions even after payload
+retention, conflicting owner/payload/timestamp records, zero owners and nonpositive
+sequences. It compares parsed values and collapses identical retries, preserving
+legacy accepted numeric/extra-field forms, unrelated names, sequence gaps and
+retained applied floors. Standalone parsers and wire formats remain unchanged.
+Hash indexes and a final sort replace worst-case quadratic vector insertion;
+preparation takes expected O(N + U log U) time and O(U + M) additional index space
+for N records, U unique transitions and M unique markers, plus the adapter read.
+Native pending-owner collection also uses a hash index while preserving undo
+order. Bare stores incur no work; selected wrappers add constant admission flags.
+
+Failed reads, validation, replay, data flush, marker append and journal flush
+retain exclusive recovery admission. New transactions, all write paths and
+unlogged/version replay reject until cleanup succeeds. Rust Recover/save/commit/
+rollback retry recovery; reload additionally retries its incomplete data refresh.
+C# Recover/decorator Rollback retry recovery; queued checkpoints and retention
+wait for the same owner. Default-off tracing reports failure and retains the
+original error. Existing commit/rollback and version-movement ownership remain.
+
+Full validation initially exposes one older version-intent fixture that expected
+contradictory decisions to survive transaction recovery. Align both language
+fixtures with earlier transaction rejection while retaining metadata checks;
+C# now preserves both journal files across two failed actual opens. Ten C#
+focused cases and the shared native/WASM fixture pass. The first full Debug
+run's single failure and 1,689 passes remain in the ignored experiment logs.
+
+Focused after tests: 29 native and 29 actual-WASM tests pass: 18 journal cases,
+eight interruption/reload functions and three suffix-ordering controls. Native
+live functions cover 152 applicable phase/cleanup schedules. Reload covers two
+initial before/after schedules and ten refresh/cleanup combinations with repeated
+failure and following writes. These native/WASM restart controls load separate
+durable images, rather than asserting physical filesystem crash behavior.
+C# passes 146 focused cases: 18 validation, 42 constructor interruptions, 84 live
+phase/retry cases and two queued-work/retention cases. Real mapped stores reopen
+twice after following commits. Failed parsed input leaves rows, live indexes and
+journal entries unchanged; repaired input permits recovery and subsequent writes.
+
+A final assertion audit strengthens the three malformed-input fixtures with
+populated live history. Restoring the seven changed production files to archive
+head 7b03c07 reproduces three failures in each native language: rejection clears
+two already committed records. All fixed source bytes are restored in a finally
+block. The eighteen validation contracts then pass again on native Rust, actual
+WASM and C# Debug/Release. Every final test source has passed. Complete-suite
+coverage below was collected before this test-precondition strengthening, with
+identical production source; final focused checks do not substitute new coverage
+measurements for those complete runs.
+
+Full local native Rust: 765 standard tests plus the custom stdout harness pass;
+nine ignored child entries execute through bounded parents. Actual WASM: 431
+pass. C# Debug/Release: 1,690 each, zero skips. JS: 106 plus TypeScript checks
+pass. All seventeen JS modules and the three WASM wrappers retain 100% measured
+lines/branches/functions coverage. Formatting, strict native/WASM Clippy, release
+metadata and source sizes pass. Container OOM counters remain zero.
+Debug: 6,531/7,020 lines (93.03%), 3,130/3,548 branches (88.22%)
+Release: 4,994/5,295 lines (94.32%), 3,104/3,529 branches (87.96%)
+native: 10,158/10,979 lines (92.52%), 1,775/2,156 branches (82.33%), 1,332/1,470 functions (90.61%)
+wasm: 7,336/10,541 lines (69.59%), 1,334/1,863 branches (71.60%), 984/1,450 functions (67.86%)
+
+Reads during failed recovery still see the mutable legacy view; no snapshot
+isolation is added. Raw inner-store access requires caller ownership. Validation
+does not repair an already damaged journal or prove device power-loss behavior.
+Complete native/linked-WASM/C# coverage, ordinary name/history atomicity, other
+legacy mutation windows and broader strategy requirements remain unfinished.
+This batch requires fresh exact-head CI before its publication checklist closes.

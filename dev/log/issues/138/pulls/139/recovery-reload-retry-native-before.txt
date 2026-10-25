@@ -1,0 +1,22 @@
+   Compiling link-cli v1.0.9 (<repository>/rust)
+    Finished `test` profile [unoptimized] target(s) in 5.58s
+     Running tests/transactions_recovery_fault_tests.rs (rust/target/debug/deps/transactions_recovery_fault_tests-e1cd3eb10c5f6282)
+
+running 1 test
+test reload_retry_refreshes_applied_external_state_before_releasing_admission ... FAILED
+
+failures:
+
+---- reload_retry_refreshes_applied_external_state_before_releasing_admission stdout ----
+
+thread 'reload_retry_refreshes_applied_external_state_before_releasing_admission' (1314356) panicked at tests/transactions_recovery_fault_tests.rs:430:13:
+reload-before/recover: skipped failed reload
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    reload_retry_refreshes_applied_external_state_before_releasing_admission
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test transactions_recovery_fault_tests`

@@ -67,6 +67,9 @@ mod transactions_recovery_order;
 #[path = "../../tests/transactions_recovery_fault_tests.rs"]
 mod transactions_recovery_fault;
 
+#[path = "../../tests/transactions_recovery_validation_tests.rs"]
+mod transactions_recovery_validation;
+
 #[path = "../../tests/transactions_commit_decision_tests.rs"]
 mod transactions_commit_decision;
 

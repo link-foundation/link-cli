@@ -300,7 +300,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     public long AppliedSequence { get { lock (_lock) return _appliedSequence; } }
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
-    internal bool HasOpenTransaction { get { lock (_lock) return _current is not null || _versionReplay; } }
+    internal bool HasOpenTransaction { get { lock (_lock) return _current is not null || _versionReplay || _recoveryPending; } }
     internal bool IsTransactionCommitted(Guid id) { lock (_lock) return _committed.Contains(id); }
     internal bool IsTransactionRolledBack(Guid id) { lock (_lock) return _rolledBack.Contains(id); }
 
@@ -309,6 +309,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
         lock (_lock)
         {
             EnsureNoVersionReplayLocked();
+            EnsureRecoveryCompleteLocked();
             if (_current is not null)
             {
                 throw new InvalidOperationException("Nested transactions are not supported.");
@@ -332,6 +333,11 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     {
         lock (_lock)
         {
+            if (_recoveryPending)
+            {
+                Recover();
+                return;
+            }
             if (_current is not null) OnRollback(_current);
         }
     }
@@ -615,7 +621,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
     private void EnsureReplayAllowedLocked()
     {
-        if (_current is not null || _versionReplay)
+        if (_current is not null || _versionReplay || _recoveryPending)
             throw new InvalidOperationException("Complete the current transaction or its cleanup before unlogged replay.");
     }
 
@@ -691,18 +697,6 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     {
         var link = _logStore.CreateAndUpdate(_logStore.Constants.Null, _logStore.Constants.Null);
         _logStore.SetName(link, name);
-    }
-
-    private static void InsertOrdered(List<Transition<TLinkAddress>> list, Transition<TLinkAddress> transition)
-    {
-        var lo = 0;
-        var hi = list.Count;
-        while (lo < hi)
-        {
-            var mid = (lo + hi) >> 1;
-            if (list[mid].Sequence < transition.Sequence) lo = mid + 1; else hi = mid;
-        }
-        list.Insert(lo, transition);
     }
 
     private void EnforceRetentionLocked()
@@ -789,7 +783,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
             {
                 lock (_lock)
                 {
-                    if (_versionReplay) continue;
+                    if (_versionReplay || _recoveryPending) continue;
                     CheckpointTransition(transition);
                 }
             }
@@ -801,7 +795,7 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
 
         lock (_lock)
         {
-            if (!_versionReplay) EnforceRetentionLocked();
+            if (!_versionReplay && !_recoveryPending) EnforceRetentionLocked();
         }
     }
 

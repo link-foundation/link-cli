@@ -21,6 +21,7 @@ where
     }
 
     pub(crate) fn begin_version_replay(&mut self) -> Result<(), LinkError> {
+        self.ensure_recovery_complete()?;
         if self.current.is_some() {
             return Err(LinkError::Transaction(
                 "A transaction still owns the data store.".into(),

@@ -1,0 +1,753 @@
+   Compiling link-cli v1.0.9 (<repository>/rust)
+   Compiling clink-wasm v2.4.0 (<repository>/rust/wasm)
+    Finished `test` profile [unoptimized] target(s) in 13.15s
+     Running tests/storage.rs (rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm)
+Set WASM_BINDGEN_TEST_TIMEOUT to 30 seconds...
+running 27 tests
+test transactions_recovery_fault::live_update_recovery_retains_admission_after_every_failure ... FAIL
+test transactions_recovery_fault::live_recreation_recovery_retains_admission_after_every_failure ... FAIL
+test transactions_recovery_fault::live_delete_recovery_retains_admission_after_every_failure ... FAIL
+test transactions_recovery_fault::interrupted_update_recovery_restarts_from_durable_images ... ok
+test transactions_recovery_fault::interrupted_recreation_recovery_restarts_from_durable_images ... ok
+test transactions_recovery_fault::interrupted_delete_recovery_restarts_from_durable_images ... ok
+test transactions_recovery_validation::retained_applied_checkpoints_reserve_gaps_without_payloads ... ok
+test transactions_recovery_validation::retain_owner_after_malformed_transition ... FAIL
+test transactions_recovery_validation::retain_owner_after_malformed_commit ... FAIL
+test transactions_recovery_validation::retain_owner_after_malformed_applied_marker ... FAIL
+test transactions_recovery_validation::repeated_pending_records_are_undone_once ... FAIL
+test transactions_recovery_validation::repeated_identical_commits_and_records_are_idempotent ... FAIL
+test transactions_recovery_validation::repeated_identical_aborts_and_records_are_idempotent ... FAIL
+test transactions_recovery_validation::reject_zero_sequence ... FAIL
+test transactions_recovery_validation::reject_zero_owner ... FAIL
+test transactions_recovery_validation::reject_zero_commit_owner ... FAIL
+test transactions_recovery_validation::reject_zero_abort_owner ... FAIL
+test transactions_recovery_validation::reject_two_payloads_for_one_sequence ... FAIL
+test transactions_recovery_validation::reject_two_owners_of_one_sequence ... FAIL
+test transactions_recovery_validation::reject_retained_contradictory_decisions ... FAIL
+test transactions_recovery_validation::reject_negative_sequence ... FAIL
+test transactions_recovery_validation::reject_conflicting_timestamps ... FAIL
+test transactions_recovery_validation::reject_commit_followed_by_abort ... FAIL
+test transactions_recovery_validation::reject_abort_followed_by_commit ... FAIL
+test transactions_recovery_order::applied_update_survives_older_gap ... ok
+test transactions_recovery_order::applied_recreation_survives_older_gap ... ok
+test transactions_recovery_order::applied_delete_survives_older_gap ... ok
+
+failures:
+
+---- transactions_recovery_fault::live_update_recovery_retains_admission_after_every_failure output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_fault_tests.rs:281:13:
+        update/read-before/recover: failed recovery released admission
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::live_verify (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[69]:0x28796)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::live_update_recovery_retains_admission_after_every_failure (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16664]:0x32f3dd)
+
+---- transactions_recovery_fault::live_recreation_recovery_retains_admission_after_every_failure output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_fault_tests.rs:281:13:
+        recreate/read-before/recover: failed recovery released admission
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::live_verify (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[69]:0x28796)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::live_recreation_recovery_retains_admission_after_every_failure (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16666]:0x32f3f7)
+
+---- transactions_recovery_fault::live_delete_recovery_retains_admission_after_every_failure output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_fault_tests.rs:281:13:
+        delete/read-before/recover: failed recovery released admission
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::live_verify (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[69]:0x28796)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::live_delete_recovery_retains_admission_after_every_failure (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16663]:0x32f3d0)
+
+---- transactions_recovery_validation::retain_owner_after_malformed_transition output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:72:9:
+        failed recovery released admission
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x4442f)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::retain_owner_after_malformed_transition (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16503]:0x32ecbc)
+
+---- transactions_recovery_validation::retain_owner_after_malformed_commit output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:72:9:
+        failed recovery released admission
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x4442f)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::retain_owner_after_malformed_commit (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16500]:0x32ec95)
+
+---- transactions_recovery_validation::retain_owner_after_malformed_applied_marker output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:72:9:
+        failed recovery released admission
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b26b)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x4442f)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::retain_owner_after_malformed_applied_marker (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16505]:0x32ecd7)
+
+---- transactions_recovery_validation::repeated_pending_records_are_undone_once output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:144:5:
+        assertion `left == right` failed: one logical sequence despite idempotent retries
+          left: 3
+         right: 1
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3091]:0x21dd7a)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<usize, usize> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10663]:0x30923c)
+
+---- transactions_recovery_validation::repeated_identical_commits_and_records_are_idempotent output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:144:5:
+        assertion `left == right` failed: one logical sequence despite idempotent retries
+          left: 3
+         right: 1
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3091]:0x21dd7a)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<usize, usize> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10663]:0x30923c)
+
+---- transactions_recovery_validation::repeated_identical_aborts_and_records_are_idempotent output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:144:5:
+        assertion `left == right` failed: one logical sequence despite idempotent retries
+          left: 3
+         right: 1
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed_inner (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3091]:0x21dd7a)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::assert_failed::<usize, usize> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10663]:0x30923c)
+
+---- transactions_recovery_validation::reject_zero_sequence output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        zero-sequence: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_zero_sequence (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16492]:0x32ec2d)
+
+---- transactions_recovery_validation::reject_zero_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        zero-owner: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_zero_owner (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16491]:0x32ec20)
+
+---- transactions_recovery_validation::reject_zero_commit_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        zero-commit: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_zero_commit_owner (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16495]:0x32ec54)
+
+---- transactions_recovery_validation::reject_zero_abort_owner output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        zero-abort: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_zero_abort_owner (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16493]:0x32ec3a)
+
+---- transactions_recovery_validation::reject_two_payloads_for_one_sequence output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        payloads: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_two_payloads_for_one_sequence (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16501]:0x32eca2)
+
+---- transactions_recovery_validation::reject_two_owners_of_one_sequence output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        owners: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_two_owners_of_one_sequence (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16499]:0x32ec88)
+
+---- transactions_recovery_validation::reject_retained_contradictory_decisions output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        retained-contradiction: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_retained_contradictory_decisions (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16502]:0x32ecaf)
+
+---- transactions_recovery_validation::reject_negative_sequence output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        negative-sequence: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_negative_sequence (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16494]:0x32ec47)
+
+---- transactions_recovery_validation::reject_conflicting_timestamps output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        timestamp: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_conflicting_timestamps (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16496]:0x32ec61)
+
+---- transactions_recovery_validation::reject_commit_followed_by_abort output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        commit-abort: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_commit_followed_by_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16498]:0x32ec7b)
+
+---- transactions_recovery_validation::reject_abort_followed_by_commit output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_validation_tests.rs:66:9:
+        abort-commit: contradictory journal accepted
+        
+        Stack:
+        
+        Error
+            at /tmp/.tmp91Juwc/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmp91Juwc/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmp91Juwc/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[15489]:0x32b4df)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[9908]:0x2fe05d)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[4071]:0x256ede)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11207]:0x30fd9d)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c080)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+        
+        
+    
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20741]:0x338367)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[20558]:0x338069)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16359]:0x32e587)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[3313]:0x22c0d5)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[5805]:0x29b299)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[19402]:0x335e0a)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[11349]:0x3115fd)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[10385]:0x3052e9)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[99]:0x441e7)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_validation::reject_abort_followed_by_commit (wasm://wasm/storage-91e7d092bac01889.wasm-024d59f2:wasm-function[16497]:0x32ec6e)
+
+failures:
+
+    transactions_recovery_fault::live_update_recovery_retains_admission_after_every_failure
+    transactions_recovery_fault::live_recreation_recovery_retains_admission_after_every_failure
+    transactions_recovery_fault::live_delete_recovery_retains_admission_after_every_failure
+    transactions_recovery_validation::retain_owner_after_malformed_transition
+    transactions_recovery_validation::retain_owner_after_malformed_commit
+    transactions_recovery_validation::retain_owner_after_malformed_applied_marker
+    transactions_recovery_validation::repeated_pending_records_are_undone_once
+    transactions_recovery_validation::repeated_identical_commits_and_records_are_idempotent
+    transactions_recovery_validation::repeated_identical_aborts_and_records_are_idempotent
+    transactions_recovery_validation::reject_zero_sequence
+    transactions_recovery_validation::reject_zero_owner
+    transactions_recovery_validation::reject_zero_commit_owner
+    transactions_recovery_validation::reject_zero_abort_owner
+    transactions_recovery_validation::reject_two_payloads_for_one_sequence
+    transactions_recovery_validation::reject_two_owners_of_one_sequence
+    transactions_recovery_validation::reject_retained_contradictory_decisions
+    transactions_recovery_validation::reject_negative_sequence
+    transactions_recovery_validation::reject_conflicting_timestamps
+    transactions_recovery_validation::reject_commit_followed_by_abort
+    transactions_recovery_validation::reject_abort_followed_by_commit
+
+test result: FAILED. 7 passed; 20 failed; 0 ignored; 249 filtered out; finished in 0.30s
+
+Error: Node failed with exit_code 1
+error: test failed, to rerun pass `--test storage`
+
+Caused by:
+  process didn't exit successfully: `wasm-bindgen-test-runner <repository>/rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm transactions_recovery_` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.

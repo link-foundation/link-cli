@@ -68,6 +68,7 @@
 mod log;
 // Replay, recovery and retention live in a submodule; see transactions/recovery.rs.
 mod commit;
+mod journal_validation;
 mod recovery;
 mod types;
 mod version_replay;
@@ -170,6 +171,8 @@ where
     commit_mode: CommitMode,
     replaying: bool,
     version_replay: bool,
+    recovery_pending: bool,
+    reload_pending: bool,
     trace: bool,
 }
 
@@ -207,6 +210,8 @@ where
             commit_mode,
             replaying: false,
             version_replay: false,
+            recovery_pending: false,
+            reload_pending: false,
             trace,
         };
         decorator.recover()?;
@@ -262,7 +267,7 @@ where
     }
 
     pub(crate) fn has_open_transaction(&self) -> bool {
-        self.current.is_some() || self.version_replay
+        self.current.is_some() || self.version_replay || self.recovery_pending
     }
 
     pub(crate) fn must_finish_commit(&self, id: u128) -> bool {
@@ -300,6 +305,9 @@ where
 
     /// Makes both the data store and the transitions log durable.
     pub fn flush(&mut self) -> Result<(), LinkError> {
+        if self.recovery_pending {
+            return self.recover();
+        }
         self.ensure_no_version_replay()?;
         if self
             .current
@@ -328,12 +336,13 @@ where
     /// Re-reads the wrapped store and rebuilds the transactions state
     /// from the log — the recovery path after another process wrote.
     pub fn reload(&mut self) -> Result<(), LinkError> {
-        if self.has_open_transaction() {
+        if self.current.is_some() || self.version_replay {
             return Err(LinkError::Transaction(
                 "Cannot reload while a transaction is open.".to_string(),
             ));
         }
-        self.inner.reload()?;
+        self.recovery_pending = true;
+        self.reload_pending = true;
         self.recover()
     }
 
@@ -575,6 +584,7 @@ where
 
     pub(crate) fn ensure_write_allowed(&self) -> Result<(), LinkError> {
         self.ensure_no_version_replay()?;
+        self.ensure_recovery_complete()?;
         if self
             .current
             .as_ref()
@@ -782,6 +792,7 @@ where
 
     pub fn begin_transaction(&mut self) -> Result<TransactionHandle, LinkError> {
         self.ensure_no_version_replay()?;
+        self.ensure_recovery_complete()?;
         if self.current.is_some() {
             return Err(LinkError::Transaction(
                 "Nested transactions are not supported.".to_string(),
@@ -804,6 +815,9 @@ where
     /// outcome: retry commit, rollback or save to finish the attempted decision.
     /// Further writes remain fenced until that work succeeds.
     pub fn commit(&mut self) -> Result<(), LinkError> {
+        if self.recovery_pending {
+            return self.recover();
+        }
         if self.current.is_none() {
             return Ok(());
         }
@@ -813,6 +827,9 @@ where
     /// Undo an open transaction, or finish its attempted commit if a previous
     /// commit failed with a possibly durable decision.
     pub fn rollback(&mut self) -> Result<(), LinkError> {
+        if self.recovery_pending {
+            return self.recover();
+        }
         if self
             .current
             .as_ref()
@@ -882,23 +899,6 @@ where
 }
 
 // ----- Helpers ----------------------------------------------------------
-
-fn insert_ordered<T: LinkReference>(
-    list: &mut Vec<GenericTransition<T>>,
-    transition: GenericTransition<T>,
-) {
-    let mut lo = 0usize;
-    let mut hi = list.len();
-    while lo < hi {
-        let mid = (lo + hi) / 2;
-        if list[mid].sequence < transition.sequence {
-            lo = mid + 1;
-        } else {
-            hi = mid;
-        }
-    }
-    list.insert(lo, transition);
-}
 
 static TX_COUNTER: AtomicU64 = AtomicU64::new(0);
 

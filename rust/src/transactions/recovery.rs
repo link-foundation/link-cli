@@ -15,12 +15,13 @@ use doublets::data::LinkReference;
 use crate::error::LinkError;
 use crate::storage::LinksStorage;
 
+use super::journal_validation::RecoveryJournal;
 use super::log::TransitionLogStore;
 use super::types::{
     GenericTransition, LogRetentionPolicy, TransitionKind, APPLIED_MARKER_PREFIX,
-    COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX,
+    ROLLBACK_MARKER_PREFIX,
 };
-use super::{insert_ordered, new_transaction_id, now_unix_ms, GenericTransactionsDecorator};
+use super::{new_transaction_id, now_unix_ms, GenericTransactionsDecorator};
 
 impl<T, S, L> GenericTransactionsDecorator<T, S, L>
 where
@@ -187,63 +188,54 @@ where
 
     // ----- Recovery -------------------------------------------------------
 
-    /// Rebuilds the in-memory log and marker tables from the sidecar
-    /// log store and re-applies committed-but-unapplied side-effects.
-    ///
-    /// Unrelated names are ignored. Recognized transaction records that cannot
-    /// be parsed fail recovery; FileTransitionLog already discards torn tails.
-    /// Silently skipping a complete record could lose committed data.
+    pub(super) fn ensure_recovery_complete(&self) -> Result<(), LinkError> {
+        if self.recovery_pending {
+            return Err(LinkError::Transaction(
+                "Retry recovery before further transaction writes or replay.".into(),
+            ));
+        }
+        Ok(())
+    }
+
+    /// Validates the sidecar journal before rebuilding history and replaying it.
+    /// Unrelated names are ignored; malformed or contradictory transaction
+    /// records fail before rows or live indexes change. Identical retries are
+    /// collapsed. A failure retains write admission until recovery succeeds.
     pub fn recover(&mut self) -> Result<(), LinkError> {
-        if self.has_open_transaction() {
+        if self.current.is_some() || self.version_replay {
             return Err(LinkError::Transaction(
                 "Cannot recover while a transaction is open.".into(),
             ));
         }
-        self.log.clear();
-        self.committed.clear();
-        self.rolled_back.clear();
-        self.applied.clear();
-        self.sequence_counter = 0;
-        self.applied_sequence = 0;
-
-        for entry in self.log_store.read_log_entries()? {
-            if let Some(payload) = entry.strip_prefix(TRANSITION_NAME_PREFIX) {
-                match GenericTransition::<T>::parse(payload) {
-                    Ok(transition) => {
-                        insert_ordered(&mut self.log, transition);
-                        if transition.sequence > self.sequence_counter {
-                            self.sequence_counter = transition.sequence;
-                        }
-                    }
-                    Err(LinkError::AddressOutOfRange(value)) => {
-                        return Err(LinkError::AddressOutOfRange(value))
-                    }
-                    Err(error) => return Err(error),
+        self.recovery_pending = true;
+        match self.recover_journal() {
+            Ok(()) => {
+                self.recovery_pending = false;
+                Ok(())
+            }
+            Err(error) => {
+                if self.trace {
+                    crate::diagnostics::stderr!(
+                        "[Transactions] Recovery failed; admission retained: {error}."
+                    );
                 }
-            } else if let Some(rest) = entry.strip_prefix(COMMIT_MARKER_PREFIX) {
-                let tx_id = u128::from_str_radix(rest, 16)
-                    .map_err(|_| LinkError::InvalidFormat("invalid commit marker".into()))?;
-                self.committed.insert(tx_id);
-            } else if let Some(rest) = entry.strip_prefix(ROLLBACK_MARKER_PREFIX) {
-                let tx_id = u128::from_str_radix(rest, 16)
-                    .map_err(|_| LinkError::InvalidFormat("invalid rollback marker".into()))?;
-                self.rolled_back.insert(tx_id);
-            } else if let Some(rest) = entry.strip_prefix(APPLIED_MARKER_PREFIX) {
-                let seq = rest
-                    .parse::<i64>()
-                    .map_err(|_| LinkError::InvalidFormat("invalid applied marker".into()))?;
-                if seq <= 0 {
-                    return Err(LinkError::InvalidFormat(
-                        "nonpositive applied sequence".into(),
-                    ));
-                }
-                self.applied.insert(seq);
-                self.applied_sequence = self.applied_sequence.max(seq);
-                // Checkpoints reserve their sequences even when retention has
-                // removed the corresponding transition payloads.
-                self.sequence_counter = self.sequence_counter.max(seq);
+                Err(error)
             }
         }
+    }
+
+    fn recover_journal(&mut self) -> Result<(), LinkError> {
+        let journal = RecoveryJournal::<T>::parse(self.log_store.read_log_entries()?)?;
+        if self.reload_pending {
+            self.inner.reload()?;
+            self.reload_pending = false;
+        }
+        self.log = journal.log;
+        self.committed = journal.committed;
+        self.rolled_back = journal.rolled_back;
+        self.applied = journal.applied;
+        self.sequence_counter = journal.sequence;
+        self.applied_sequence = journal.applied_sequence;
 
         // An older failed checkpoint can precede a later applied commit. Redo
         // the whole committed suffix in order, including already-applied rows.
@@ -265,6 +257,7 @@ where
             }
             // Auto-rollback transitions written but never committed and never rolled back (R10).
             let mut pending_tx_ids: Vec<u128> = Vec::new();
+            let mut pending_seen = std::collections::HashSet::new();
             for transition in log_snapshot.iter().rev() {
                 if self.committed.contains(&transition.transaction_id) {
                     continue;
@@ -273,7 +266,7 @@ where
                     continue;
                 }
                 self.try_revert_transition(transition)?;
-                if !pending_tx_ids.contains(&transition.transaction_id) {
+                if pending_seen.insert(transition.transaction_id) {
                     pending_tx_ids.push(transition.transaction_id);
                 }
             }

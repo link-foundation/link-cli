@@ -69,19 +69,44 @@ public class VersionPublicationContradictionTests
                     case "missing-record": intent = intent with { After = attempted + 1 }; break;
                     case "foreign-attribution": Replace($"__vc:trans:{attempted}:", $"__vc:trans:{attempted}:branch=main"); break;
                     case "multiple-intents": Write(branches, VersionControlDecorator.EncodePublicationMarker(intent with { Id = Guid.NewGuid() })); break;
-                    case "conflicting-decisions": Write(log, "__transactions:rollback:" + intent.Id.ToString("N")); tx.Recover(); break;
+                    case "conflicting-decisions":
+                        Write(log, "__transactions:rollback:" + intent.Id.ToString("N"));
+                        Assert.Throws<InvalidDataException>(tx.Recover);
+                        break;
                 }
                 Write(branches, VersionControlDecorator.EncodePublicationMarker(intent));
                 branches.Flush(); log.Flush();
             });
             var namesPath = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(path);
             var before = File.ReadAllBytes(path); var namesBefore = File.ReadAllBytes(namesPath);
-            WithStores(directory, (data, log, branches, tx) =>
+            if (scenario == "conflicting-decisions")
             {
-                Assert.Throws<InvalidDataException>(() => new VersionControlDecorator(tx, branches));
-                branches.Flush();
-                Assert.Equal(21u, data.GetSource(id));
-            });
+                // Transaction recovery now rejects this contradiction before
+                // constructing version control. Preserve both journal files
+                // and metadata across repeated failed opens.
+                var logPath = Path.Combine(directory, "log.links");
+                var logNamesPath = NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(logPath);
+                var logBefore = File.ReadAllBytes(logPath);
+                var logNamesBefore = File.ReadAllBytes(logNamesPath);
+                for (var reopen = 0; reopen < 2; reopen++)
+                {
+                    using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
+                    using var log = new NamedTypesDecorator<uint>(logPath);
+                    Assert.Throws<InvalidDataException>(() => new TransactionsDecorator(data, log));
+                    Assert.Equal(21u, data.GetSource(id));
+                }
+                Assert.Equal(logBefore, File.ReadAllBytes(logPath));
+                Assert.Equal(logNamesBefore, File.ReadAllBytes(logNamesPath));
+            }
+            else
+            {
+                WithStores(directory, (data, log, branches, tx) =>
+                {
+                    Assert.Throws<InvalidDataException>(() => new VersionControlDecorator(tx, branches));
+                    branches.Flush();
+                    Assert.Equal(21u, data.GetSource(id));
+                });
+            }
             Assert.Equal(before, File.ReadAllBytes(path));
             Assert.Equal(namesBefore, File.ReadAllBytes(namesPath));
         }

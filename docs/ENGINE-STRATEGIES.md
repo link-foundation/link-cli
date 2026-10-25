@@ -211,7 +211,29 @@ marker, including later records that already have markers. It flushes the final
 redo and pending undo before filling that gap, keeping an anchor for another
 restart if recovery fails before the final data flush.
 Both Rust and C# reject public recovery while an open transaction owns live
-state; finish its cleanup first. Legacy in-memory transactions and history also
+state; finish its cleanup first. Recovery first builds temporary indexes and
+validates every recognized record before replacing live history or replaying
+rows. It rejects conflicting records for one sequence, opposite decisions for
+one owner, zero owners and nonpositive sequences. Parsed identical records and
+identical decisions are idempotent; legacy lexical forms, unrelated names, gaps
+and applied checkpoints whose payloads were retained away remain accepted.
+Journal preparation costs expected O(N + U log U) time; its temporary indexes
+use O(U + M) memory in addition to the adapter's journal read, for N records,
+U unique transitions and M unique markers. Hash indexes
+replace repeated ordered-vector insertion. These costs apply only to the
+selected transactions wrapper; standalone codecs and bare stores are unchanged.
+
+A failed journal read, validation, replay or persistence step retains recovery
+ownership. Writes, new transactions and unlogged/version replay remain fenced
+until recovery succeeds; C# queued checkpoints and retention also wait. Retry
+Recover, or decorator rollback; Rust save/commit are also cleanup entry points.
+A failed Rust reload additionally retains its underlying refresh obligation,
+including when the external journal already marks every transition applied.
+Cleanup retries that refresh before admitting writes. Reads can still observe
+the current mutable view during failed recovery; this legacy API supplies no
+snapshot isolation. Raw inner-store access remains the caller's responsibility.
+Default-off tracing reports failed recovery while preserving its original error.
+Legacy in-memory transactions and history also
 run in browser/Node WASM, using the JS wall clock for timestamps. File-backed
 adapters and chunk archives still require a supported filesystem.
 

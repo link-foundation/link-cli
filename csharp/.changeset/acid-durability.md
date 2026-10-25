@@ -145,3 +145,9 @@ metadata and retain sequence allocation floors after journal payload eviction.
 Claim chunk archive paths with exclusive creation, preserving existing archives
 and symlink targets. Keep rejected optional archives in the live journal for a
 later retention attempt, using a fresh random candidate.
+
+Validate recovery journals before replacing live history or replaying rows.
+Reject conflicting sequence records, contradictory decisions and invalid owners
+or sequences while preserving idempotent parsed duplicates and retained floors.
+Retain admission after failed recovery, including queued asynchronous checkpoints
+and retention, until retry completes recovery before following writes or replay.

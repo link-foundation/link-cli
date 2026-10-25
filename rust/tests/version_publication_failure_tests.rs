@@ -480,7 +480,22 @@ fn contradictory_intents_preserve_metadata_and_committed_rows() -> Result<()> {
                 &format!("__transactions:rollback:{transaction:032x}"),
             )?;
             log.save()?;
-            tx.recover()?;
+            #[cfg(not(target_arch = "wasm32"))]
+            let journal_before = (
+                std::fs::read(_log_files.0.path())?,
+                std::fs::read(_log_files.1.path())?,
+            );
+            // Reject at transaction recovery before version construction;
+            // failed recovery keeps the existing row and its admission owner.
+            assert!(tx.recover().is_err());
+            #[cfg(not(target_arch = "wasm32"))]
+            assert_eq!(
+                journal_before,
+                (
+                    std::fs::read(_log_files.0.path())?,
+                    std::fs::read(_log_files.1.path())?,
+                )
+            );
         }
         for marker in markers {
             let id = branches.create(0, 0);

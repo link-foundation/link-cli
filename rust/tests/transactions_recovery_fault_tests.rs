@@ -5,7 +5,9 @@ use link_cli::{
 };
 use std::{cell::RefCell, rc::Rc};
 
-const POINTS: [&str; 12] = [
+const POINTS: [&str; 14] = [
+    "read-before",
+    "read-after",
     "old-before",
     "old-after",
     "new-before",
@@ -82,6 +84,19 @@ impl LinksStorage<u32> for Store {
         self.shared.borrow_mut().rows = self.all_links();
         check(&self.shared, "data-after")
     }
+    fn reload(&mut self) -> Result<(), LinkError> {
+        check(&self.shared, "reload-before")?;
+        let rows = self.shared.borrow().rows.clone();
+        self.rows = LinkStorage::in_memory(false);
+        for row in rows {
+            self.rows.ensure_created(row.index);
+            self.rows.update(row.index, row.source, row.target).unwrap();
+        }
+        if self.shared.borrow().point == Some("reload-after") {
+            self.rows.update(1, 91, 92).unwrap();
+        }
+        check(&self.shared, "reload-after")
+    }
 }
 struct Log {
     entries: Vec<String>,
@@ -100,7 +115,10 @@ impl TransitionLogStore for Log {
         Ok(())
     }
     fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
-        Ok(self.entries.clone())
+        check(&self.shared, "read-before")?;
+        let entries = self.entries.clone();
+        check(&self.shared, "read-after")?;
+        Ok(entries)
     }
     fn flush_log(&mut self) -> Result<(), LinkError> {
         check(&self.shared, "log-before")?;
@@ -255,4 +273,174 @@ fn interrupted_delete_recovery_restarts_from_durable_images() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn interrupted_recreation_recovery_restarts_from_durable_images() {
     verify("recreate");
+}
+
+fn live_verify(operation: &'static str) {
+    for point in POINTS {
+        if operation == "delete" && (point.starts_with("old-") || point.starts_with("new-")) {
+            continue;
+        }
+        for cleanup in ["recover", "save", "commit", "rollback"] {
+            let shared = fixture(operation);
+            // Construct an idle reachable wrapper before publishing the recovery input.
+            let entries = std::mem::take(&mut shared.borrow_mut().entries);
+            let mut tx = open(shared.clone(), operation).unwrap();
+            tx.log_store_mut().entries = entries;
+            shared.borrow_mut().point = Some(point);
+            assert!(tx.recover().unwrap_err().to_string().contains(point));
+            assert!(shared.borrow().point.is_none());
+            let before = tx.inner().all_links();
+            let journal = tx.log_store().entries.clone();
+            assert!(
+                tx.begin_transaction().is_err(),
+                "{operation}/{point}/{cleanup}: failed recovery released admission"
+            );
+            assert!(tx.update(2, 91, 92).is_err());
+            assert!(tx.create(91, 92).is_err());
+            assert!(tx.delete(2).is_err());
+            assert!(tx.ensure_created(20).is_err());
+            let transition = Transition {
+                transaction_id: 1,
+                sequence: 1,
+                timestamp_ms: 0,
+                kind: TransitionKind::Update,
+                before: DoubletLink::new(2, 41, 42),
+                after: DoubletLink::new(2, 91, 92),
+            };
+            assert!(tx.apply_transition(&transition).is_err());
+            assert!(tx.revert_transition(&transition).is_err());
+            assert_eq!(tx.inner().all_links(), before);
+            assert_eq!(tx.log_store().entries, journal);
+            // Even a second failed cleanup cannot abandon the recovery owner.
+            shared.borrow_mut().point = Some("read-before");
+            let result = match cleanup {
+                "save" => tx.save(),
+                "commit" => tx.commit(),
+                "rollback" => tx.rollback(),
+                _ => tx.recover(),
+            };
+            assert!(result.unwrap_err().to_string().contains("read-before"));
+            assert!(tx.begin_transaction().is_err());
+            match cleanup {
+                "save" => tx.save(),
+                "commit" => tx.commit(),
+                "rollback" => tx.rollback(),
+                _ => tx.recover(),
+            }
+            .unwrap();
+            assert_eq!(tx.inner().get_link(2).unwrap().source, 41);
+            if operation == "delete" {
+                assert!(!tx.exists(1));
+            } else {
+                assert_eq!(tx.inner().get_link(1).unwrap().source, 31);
+            }
+            tx.update(2, 61, 62).unwrap();
+            drop(tx);
+            for _ in 0..2 {
+                let recovered = open(shared.clone(), operation).unwrap();
+                assert_eq!(recovered.inner().get_link(2).unwrap().source, 61);
+                assert_eq!(recovered.inner().get_link(2).unwrap().target, 62);
+                if operation == "delete" {
+                    assert!(!recovered.exists(1));
+                } else {
+                    assert_eq!(recovered.inner().get_link(1).unwrap().source, 31);
+                }
+            }
+        }
+    }
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn live_update_recovery_retains_admission_after_every_failure() {
+    live_verify("update");
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn live_delete_recovery_retains_admission_after_every_failure() {
+    live_verify("delete");
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn live_recreation_recovery_retains_admission_after_every_failure() {
+    live_verify("recreate");
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn live_reload_failure_retains_admission_until_recovery() {
+    for point in ["reload-before", "reload-after"] {
+        let shared = fixture("update");
+        let entries = std::mem::take(&mut shared.borrow_mut().entries);
+        let mut tx = open(shared.clone(), "update").unwrap();
+        tx.log_store_mut().entries = entries;
+        shared.borrow_mut().point = Some(point);
+        assert!(tx.reload().unwrap_err().to_string().contains(point));
+        assert!(
+            tx.begin_transaction().is_err(),
+            "{point}: failed reload released admission"
+        );
+        tx.recover().unwrap();
+        assert_eq!(tx.inner().get_link(1).unwrap().source, 31);
+        assert_eq!(tx.inner().get_link(2).unwrap().source, 41);
+        tx.update(2, 61, 62).unwrap();
+        drop(tx);
+        for _ in 0..2 {
+            let recovered = open(shared.clone(), "update").unwrap();
+            assert_eq!(recovered.inner().get_link(1).unwrap().source, 31);
+            assert_eq!(recovered.inner().get_link(2).unwrap().source, 61);
+        }
+    }
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn reload_retry_refreshes_applied_external_state_before_releasing_admission() {
+    for point in ["reload-before", "reload-after"] {
+        for cleanup in ["recover", "save", "commit", "rollback", "reload"] {
+            let shared = Rc::new(RefCell::new(Control {
+                rows: vec![Link::new(1, 11, 12)],
+                ..Control::default()
+            }));
+            let mut tx = open(shared.clone(), "update").unwrap();
+            let transition = Transition {
+                transaction_id: 7,
+                sequence: 1,
+                timestamp_ms: 0,
+                kind: TransitionKind::Update,
+                before: DoubletLink::new(1, 11, 12),
+                after: DoubletLink::new(1, 31, 32),
+            };
+            tx.log_store_mut().entries = vec![
+                format!("__transactions:transition:{}", transition.serialize()),
+                "__transactions:commit:00000000000000000000000000000007".into(),
+                "__transactions:applied:1".into(),
+            ];
+            // Another writer has already durably checkpointed this state.
+            shared.borrow_mut().rows = vec![Link::new(1, 31, 32)];
+            shared.borrow_mut().point = Some(point);
+            assert!(tx.reload().is_err());
+            let cleanup_result = |tx: &mut Tx| match cleanup {
+                "save" => tx.save(),
+                "commit" => tx.commit(),
+                "rollback" => tx.rollback(),
+                "reload" => tx.reload(),
+                _ => tx.recover(),
+            };
+            shared.borrow_mut().point = Some("reload-before");
+            assert!(
+                cleanup_result(&mut tx).is_err(),
+                "{point}/{cleanup}: skipped failed reload"
+            );
+            assert!(tx.begin_transaction().is_err());
+            assert_eq!(shared.borrow().rows[0], Link::new(1, 31, 32));
+            cleanup_result(&mut tx).unwrap();
+            assert_eq!(tx.inner().get_link(1).unwrap(), Link::new(1, 31, 32));
+            tx.update(1, 61, 62).unwrap();
+            drop(tx);
+            for _ in 0..2 {
+                let recovered = open(shared.clone(), "update").unwrap();
+                assert_eq!(recovered.inner().get_link(1).unwrap(), Link::new(1, 61, 62));
+            }
+        }
+    }
 }

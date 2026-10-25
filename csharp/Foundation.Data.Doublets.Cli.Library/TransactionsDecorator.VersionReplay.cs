@@ -33,6 +33,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
     {
         lock (_lock)
         {
+            EnsureRecoveryCompleteLocked();
             if (_current is not null)
                 throw new InvalidOperationException("A transaction still owns the data store.");
             _versionReplay = true;
