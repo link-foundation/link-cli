@@ -127,8 +127,9 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
 8. The independent-session shared-flush strategy now passes full local checks:
    784 native, 446 actual WASM, 1,722 C# per configuration, 111 JS and 217
    repository tests. Separate revisions, known aborts, prefix discovery after
-   unknown I/O, real files and twenty native process exits are verified. Publish
-   and verify exact-head CI under GROUP-COMMIT-PLAN.md. Continue the
+   unknown I/O, real files and twenty native process exits are verified. All nine
+   workflows pass on 615df74; see group-commit-ci.txt and GROUP-COMMIT-PLAN.md.
+   Continue the
    source-backed algorithm/component comparison, efficient journal
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.

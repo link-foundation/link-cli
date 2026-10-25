@@ -28,10 +28,13 @@ transaction do not supply this strategy.
       fixed-primary acknowledgement; document selected coordinator memory costs
       and the single serialization point. This does not add an automatic timer
       or scheduler, page repair, anti-entropy or a leaderless consensus protocol.
-- [ ] Run focused then complete local checks and coverage sequentially; retain
+- [x] Run focused then complete local checks and coverage sequentially; retain
       exact evidence, update release fragments, self-review, commit, publish only
       the prepared branch and verify all exact-head CI and latest feedback.
 
 Use bounded groups and fault matrices in tests. No unselected raw store or
 ordinary session should acquire a batch queue, worker or timer. Keep all broader
 acceptance and coverage gaps open until their own implementation is verified.
+
+All nine workflows pass on 615df74; see group-commit-ci.txt for exact SHA,
+creation time and links. Local evidence is in group-commit.txt.
