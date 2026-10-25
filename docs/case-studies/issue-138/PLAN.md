@@ -209,9 +209,22 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     and JS examples, cached data-group outages and cached catalog-majority loss.
     See OBJECT-CACHE-PLAN.md and the object-cache evidence. Complete local
     verification passes: 866 native, 2,016 C# per configuration, 509 actual WASM,
-    177 JS and 221 repository checks. Publication and exact-head CI remain
-    to verify; that plan tracks them.
+    177 JS and 221 repository checks. All nine workflows pass on `4729b53`;
+    object-cache-ci.txt preserves exact SHA, timestamps and links.
     Wider acceptance criteria remain open.
+
+16. Unicode sequence graph integrity now has bounded native before failures:
+    cyclic strings do not terminate, and Rust silently accepts missing children
+    as truncated output. Checked iterative traversal rejects these cases while
+    preserving Unicode order, repeated shared subtrees, deep finite graphs,
+    converter APIs and UTF-16 compatibility. C# reuses the installed converter
+    through its walker interface. Focused tests include malformed names,
+    repeated errors, healthy following reads and persistent reopening. Complete
+    local suites pass: 875 native, 2,022 C# per configuration, 516 actual WASM,
+    177 JS and 221 repository checks. The checked walker reaches 100% measured
+    component coverage; whole-project totals remain below target. See
+    UNICODE-GRAPH-PLAN.md, unicode-graph-before.txt and unicode-graph.txt.
+    Publication and fresh exact-head CI are pending; wider criteria stay open.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

@@ -17,10 +17,13 @@ every begin, even when an object's address and generation are unchanged.
       TypeScript, full native/C# checks and persistent cluster interoperability.
 - [x] Document the immutable-namespace requirement, payload-budget accounting,
       selected costs and remaining full-journal write/replay/retention limits.
-- [ ] Commit and push an atomic step, update PR 139 and verify fresh exact-head
+- [x] Commit and push an atomic step, update PR 139 and verify fresh exact-head
       CI. Preserve every wider unfinished criterion.
 
 This is a local cache of immutable data, not a catalog cache or distributed lock.
 The bounded payload accounting is not a process-heap measurement. Content keys
 and generation do not authenticate hostile data stores. Cache hits retain the
 previously verified content under the existing no-rewrite/no-delete contract.
+
+All nine workflows pass on `4729b53`; object-cache-ci.txt preserves exact
+SHA, timestamps and links. Later changes require fresh exact-head CI.

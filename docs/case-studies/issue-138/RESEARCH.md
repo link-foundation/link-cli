@@ -251,3 +251,28 @@ requires Rust 1.89 or newer. C# and JS reuse their standard dictionary/list/Map
 components instead of adding another platform package. No upstream code was
 copied. Payload limits do not claim to measure container or temporary memory.
 See [contracts, selected costs and limits](../../ENGINE-OBJECT-CACHE.md).
+
+## Checked Unicode graph traversal (2026-10-25)
+
+Audited the installed `Platform.Data.Doublets.Sequences` 0.6.5 source at
+`ed32cddd072df0dace57f02dfb537b0eb8e2bfa5`, including its Unlicense,
+[`SequenceWalkerBase`](https://github.com/linksplatform/Data.Doublets.Sequences/blob/ed32cddd072df0dace57f02dfb537b0eb8e2bfa5/csharp/Platform.Data.Doublets.Sequences/Walkers/SequenceWalkerBase.cs),
+[`RightSequenceWalker`](https://github.com/linksplatform/Data.Doublets.Sequences/blob/ed32cddd072df0dace57f02dfb537b0eb8e2bfa5/csharp/Platform.Data.Doublets.Sequences/Walkers/RightSequenceWalker.cs),
+[`ISequenceWalker`](https://github.com/linksplatform/Data.Doublets.Sequences/blob/ed32cddd072df0dace57f02dfb537b0eb8e2bfa5/csharp/Platform.Data.Doublets.Sequences/Walkers/ISequenceWalker.cs)
+and the
+[`UnicodeSequenceToStringConverter`](https://github.com/linksplatform/Data.Doublets.Sequences/blob/ed32cddd072df0dace57f02dfb537b0eb8e2bfa5/csharp/Platform.Data.Doublets.Sequences/Unicode/UnicodeSequenceToStringConverter.cs).
+The walker follows source/target links without active-path validation. The
+converter already accepts a walker interface, so the maintained converter can
+be reused without a fork or package change. Rust's local walker has the same
+cycle omission and additionally skips absent nodes.
+
+Bounded pre-fix executions confirm nonterminating self-cycles in both native
+languages and successful but truncated Rust output for a missing child.
+Inference for this representation: maintain a per-traversal active-path set,
+remove each node on exit, and reject a second entry while it remains active.
+A global visited set would incorrectly discard repeated valid subtrees. Use
+standard explicit stacks and hash sets, preserving symbol order and avoiding
+depth-dependent recursion. This adds O(depth) metadata; shared DAG expansion
+can still produce large output. Existing memoization, UTF-16 policies and stored
+bytes remain unchanged. See [contract and limits](../../UNICODE-SEQUENCE-INTEGRITY.md)
+and [execution plan](UNICODE-GRAPH-PLAN.md). No upstream implementation is copied.

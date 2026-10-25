@@ -22,6 +22,9 @@ mod quoted_query_references;
 #[path = "../../tests/unicode_sequence_converter_tests.rs"]
 mod unicode_sequence_converter;
 
+#[path = "../../tests/unicode_graph_tests.rs"]
+mod unicode_graph;
+
 #[path = "../../tests/unicode_string_storage_tests.rs"]
 mod unicode_string_storage;
 

@@ -232,7 +232,7 @@ impl<'a> UnicodeStringStorage<'a> {
             .ok_or_else(|| anyhow::anyhow!("Unicode sequence link {sequence} does not exist."))?;
 
         self.sequence_walker
-            .walk(self.links, unicode_sequence.source)
+            .try_walk(self.links, unicode_sequence.source)?
             .into_iter()
             .map(|symbol| {
                 self.unicode_symbol_to_char_converter

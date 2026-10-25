@@ -15,7 +15,7 @@ export CARGO_PROFILE_TEST_DEBUG=0
 export RUSTC_BOOTSTRAP=1
 export WASM_BINDGEN_TEST_TIMEOUT=30
 export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER=wasm-bindgen-test-runner
-export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zcoverage-options=branch -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage"
+export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zcoverage-options=branch -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage ${WASM_COVERAGE_EXTRA_RUSTFLAGS:-}"
 "${CARGO_LLVM_COV_BIN:-cargo-llvm-cov}" llvm-cov test \
   --manifest-path rust/wasm/Cargo.toml --target wasm32-unknown-unknown \
   --test web --test engine --test group_commit --test core --test protocol --test storage --branch --json \

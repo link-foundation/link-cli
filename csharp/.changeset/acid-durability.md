@@ -199,3 +199,8 @@ Preserve scan defaults, historical replay validation and uncertain group outcome
 Select a bounded immutable journal object cache for partitioned stores. Keep
 catalog reads and publication checks fresh, return owned arrays and retain no
 cache by default. Coordinate concurrent fills and payload accounting locally.
+
+Reject cyclic Unicode sequence graphs through a checked iterative walker while
+retaining the maintained package converter, repeated shared subtrees and existing
+UTF-16 behavior. Keep traversal state local after failed decoding and reject
+malformed persisted names on repeated reopening.
