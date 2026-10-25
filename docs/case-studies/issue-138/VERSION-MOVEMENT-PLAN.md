@@ -19,7 +19,7 @@ failure after replay can admit a following write against an unpublished position
   wire vectors, following edits, and exact repeated reopening. Run shared Rust
   contracts on actual WASM.
 - [x] Run full local validation, review the diff and update protocol/release notes.
-- [ ] Update PR, commit and push to the prepared branch, then verify exact-head CI.
+- [x] Update PR, commit and push to the prepared branch, then verify exact-head CI.
 
 Legacy reads expose the wrapped live rows. A failed movement has an uncertain
 outcome until retry/reopen completes; this work must not imply isolated sessions
@@ -30,8 +30,8 @@ movement failure schedules and 25 recovery scenarios; three parent tests verify
 16 original process exits and 24 recovery interruptions. Full native Rust (733),
 C# Debug/Release (1,573 each), actual WASM (404), JS (106), types and lint checks
 pass. Prior publication fault tests pass. Complete project coverage is below
-100%; exact metrics and before logs are in version-movement.txt. Fresh
-published-head CI remains pending.
+100%; exact metrics and before logs are in version-movement.txt. All nine
+workflows pass on published movement head d4cb43c; see version-movement-ci.txt.
 
 Recovery tests first reproduce sequence reuse after payload eviction and C#
 sub-millisecond timestamp comparisons against the millisecond wire format.

@@ -1596,3 +1596,8 @@ not simulate device power loss. Complete project coverage, ordinary legacy
 name/history logging and the wider algorithm/composition criteria remain open.
 All nine workflows pass on preceding journal-tail head 7826d95. This movement
 change needs fresh exact-head CI and does not complete the overall issue.
+
+All nine workflows pass on movement head `d4cb43c`, with runs created
+2026-10-25 at 02:44:35 UTC after its commit and push. Native platform, package,
+fresh-merge, release, JS and actual-WASM checks pass; exact run URLs are in
+`version-movement-ci.txt`. Later code requires fresh exact-head validation.

@@ -55,5 +55,6 @@ applied markers preserve sequence allocation after payload eviction. C# keeps
 failed-constructor cleanup reachable. Full local suites pass: 733 native Rust,
 1,573 C# per configuration, 404 actual WASM and 106 JS. Fault matrices, real
 process exits, corrupt-topology preservation, repeated recovery and following
-edits are detailed in VERSION-MOVEMENT-PLAN.md and version-movement.txt. Fresh
-exact-head CI is pending; full project coverage and wider requirements stay open.
+edits are detailed in VERSION-MOVEMENT-PLAN.md and version-movement.txt. All nine
+workflows pass on movement head d4cb43c; see version-movement-ci.txt. Full project
+coverage and wider requirements stay open; later code needs fresh exact-head CI.

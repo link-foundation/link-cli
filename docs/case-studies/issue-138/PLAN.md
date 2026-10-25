@@ -100,7 +100,12 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    7826d95; see live-tail-ci.txt. Durable checkout/branch movement now preserves
    exclusive ownership and a portable intent through failures. Focused tests
    cover metadata, data/flush faults, restart, corrupt topology, evicted payloads
-   and repeated constructor recovery; full validation and fresh CI are pending.
+   and repeated constructor recovery. Full local suites and all nine exact-head
+   workflows pass on d4cb43c; see version-movement.txt and version-movement-ci.txt.
+   A frozen-clock Rust restart reproduces transaction-ID reuse; native and
+   actual-WASM regressions and allocation checks are tracked in
+   TRANSACTION-IDENTITY-PLAN.md. A separate finite probe reproduces two databases
+   overwriting a shared chunk archive; follow with exclusive archive creation.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.
