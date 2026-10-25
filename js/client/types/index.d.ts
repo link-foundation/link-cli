@@ -334,7 +334,8 @@ export class ClusterTransaction {
 }
 /** Immutable data objects in independent stores; atomic publication in a catalog. */
 export class PartitionedJournalStore implements AtomicJournalStore {
-  constructor(catalog: AtomicJournalStore, partitions: Record<string, AtomicJournalStore>, route: (shard: string) => string);
+  /** Cache budget counts one byte per object/record plus record UTF-8 bytes; zero disables. Catalogs stay fresh. */
+  constructor(catalog: AtomicJournalStore, partitions: Record<string, AtomicJournalStore>, route: (shard: string) => string, options?: { cacheBytes?: number });
   readonly supportsDurableFlush: boolean;
   read(keys: string[]): Promise<JournalVersion[]>;
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;

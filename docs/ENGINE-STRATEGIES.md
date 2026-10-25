@@ -27,6 +27,7 @@ transaction algorithm.
 | Retain small-edit immutable states | Select shared state independently of the other options | Path-copy changed entries instead of cloning a complete row map. See [costs and examples](ENGINE-SHARED-STATE.md). |
 | Serialize small edits | Select change records independently | Encode changed rows plus base/allocator metadata. Combine with shared state to avoid full candidate copies; see [costs and protocol](ENGINE-CHANGE-RECORDS.md). |
 | Validate small constrained edits | Select indexed constraint validation independently | Maintain persistent indexes only for selected constraints; see [ownership, costs and examples](ENGINE-CONSTRAINT-INDEX.md). |
+| Repeated cluster reads | Optional partitioned-store object cache | Reuse verified immutable payloads while reading a fresh catalog; see [budget, ownership and limits](ENGINE-OBJECT-CACHE.md). |
 | Independent commits sharing a flush | Opt-in `commit_group` / `CommitGroup` / `commitGroup` | Preserve each accepted session's revision and share one durability boundary. [Ownership, failure outcomes and costs](ENGINE-GROUP-COMMIT.md). |
 
 `supports_durable_flush` / `SupportsDurableFlush` / `supportsDurableFlush` is

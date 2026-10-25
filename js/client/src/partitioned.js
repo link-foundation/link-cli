@@ -34,12 +34,14 @@ async function readOne(store, key) {
  * Stores/prefixes are caller-owned; object keys must remain immutable forever.
  */
 export class PartitionedJournalStore {
-  #catalog; #partitions; #route;
-  constructor(catalog, partitions, route) {
+  #catalog; #partitions; #route; #cache; #cacheBytes; #cacheUsed = 0;
+  constructor(catalog, partitions, route, { cacheBytes = 0 } = {}) {
+    if (!Number.isSafeInteger(cacheBytes) || cacheBytes < 0) throw new TypeError('cacheBytes must be a nonnegative safe integer');
     if (!atomic(catalog) || !partitions || typeof route !== 'function') throw new TypeError('provide a catalog, partitions and a routing function');
     this.#partitions = new Map(Object.entries(partitions));
     if (this.#partitions.size === 0 || [...this.#partitions].some(([key, store]) => !validName(key) || !atomic(store))) throw new TypeError('provide named atomic data stores');
     this.#catalog = catalog; this.#route = route;
+    this.#cacheBytes = cacheBytes; this.#cache = cacheBytes > 0 ? new Map() : null;
   }
   get supportsDurableFlush() { return this.#catalog.supportsDurableFlush === true && [...this.#partitions.values()].every((store) => store.supportsDurableFlush === true); }
   async read(keys) {
@@ -53,11 +55,34 @@ export class PartitionedJournalStore {
       const parts = entries(pointer.entries);
       if (pointer.generation === '0' && parts.length === 0) { result.push({ generation: '0', entries: [] }); continue; }
       if (pointer.generation === '0' || parts.length !== 4 || parts[0] !== 'blob1' || !this.#partitions.has(parts[1]) || !/^blob1-[0-9a-f]{16}$/.test(parts[2]) || !generation(parts[3]) || parts[3] === '0') throw new LinksError('invalid catalog pointer', { outcome: 'not-sent' });
+      const cacheKey = this.#cache ? `${parts[1]}/${parts[2]}/${parts[3]}` : null;
+      const cached = this.#cache?.get(cacheKey);
+      if (cached) {
+        this.#cache.delete(cacheKey); this.#cache.set(cacheKey, cached);
+        result.push({ generation: pointer.generation, entries: [...cached.entries] }); continue;
+      }
       const object = await readOne(this.#partitions.get(parts[1]), parts[2]);
       if (object.generation !== parts[3] || address(object.entries) !== parts[2]) throw new LinksError('missing or modified immutable object', { outcome: 'not-sent' });
+      this.#remember(cacheKey, object.entries);
       result.push({ generation: pointer.generation, entries: object.entries });
     }
     return result;
+  }
+  #remember(key, records) {
+    if (!this.#cache) return;
+    let size = 1;
+    for (const record of records) {
+      const bytes = encoder.encode(record).length + 1;
+      if (bytes > this.#cacheBytes - size) return;
+      size += bytes;
+    }
+    const old = this.#cache.get(key);
+    if (old) { this.#cacheUsed -= old.size; this.#cache.delete(key); }
+    while (size > this.#cacheBytes - this.#cacheUsed) {
+      const first = this.#cache.keys().next().value;
+      this.#cacheUsed -= this.#cache.get(first).size; this.#cache.delete(first);
+    }
+    this.#cache.set(key, { size, entries: [...records] }); this.#cacheUsed += size;
   }
   async compareExchange(keys, expected, updates) {
     keys = keysOf(keys);

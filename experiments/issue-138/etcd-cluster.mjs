@@ -6,12 +6,14 @@ import { once } from 'node:events';
 import { createWriteStream, mkdtempSync, readFileSync } from 'node:fs';
 import net from 'node:net';
 import { resolve, join } from 'node:path';
-import * as binding from '../../js/pkg/clink_wasm.js';
+import { pathToFileURL } from 'node:url';
 import { ClusterEngine, EtcdJournalStore } from '../../js/client/src/cluster.js';
 import { waitForMembers } from './etcd-harness.mjs';
 import { PartitionedJournalStore } from '../../js/client/src/partitioned.js';
 
-binding.initSync({ module: readFileSync(new URL('../../js/pkg/clink_wasm_bg.wasm', import.meta.url)) });
+const wasmDirectory = resolve(process.env.CLINK_WASM ?? 'js/pkg');
+const binding = await import(pathToFileURL(join(wasmDirectory, 'clink_wasm.js')).href);
+binding.initSync({ module: readFileSync(join(wasmDirectory, 'clink_wasm_bg.wasm')) });
 const binary = process.env.ETCD_BIN ?? resolve('experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd');
 const directory = mkdtempSync(resolve('experiments/issue-138/etcd/run-'));
 const ports = [];
@@ -36,6 +38,16 @@ async function ready(action) {
   let failure;
   for (let attempt = 0; attempt < 30; attempt++) { try { return await action(); } catch (error) { failure = error; await delay(100); } }
   throw failure;
+}
+async function javascriptExample(args, engine) {
+  const child = spawn(process.execPath, ['js/client/examples/cluster.mjs', ...args], {
+    env: { ...process.env, CLINK_WASM: wasmDirectory }, stdio: 'inherit',
+  });
+  assert.equal((await once(child, 'exit'))[0], 0);
+  const read = await engine.begin(['a', 'b']);
+  try { for (const key of ['a', 'b']) assert.equal(await read.shard(key).getName(1), 'JS coordinated 雪'); }
+  finally { await read.close(); }
+  console.log('PASS public JS HTTP example: native journals reopen through actual WASM');
 }
 try {
   for (let i = 0; i < 3; i++) {
@@ -87,6 +99,7 @@ try {
   const native = await engine.begin(['a', 'b']);
   for (const key of ['a', 'b']) assert.equal(await native.shard(key).getName(1), process.env.CLUSTER_CSHARP_EXAMPLE ? 'C# coordinated 雪' : process.env.CLUSTER_RUST_EXAMPLE ? 'Rust coordinated 雪' : 'unknown committed');
   await native.close();
+  await javascriptExample([endpoints.join(','), '/issue138/'], engine);
 
   // Two additional single-member consensus groups demonstrate physically
   // independent bulk storage. The three-member catalog carries pointers only.
@@ -103,19 +116,31 @@ try {
   }
   await waitForMembers(dataEndpoints);
   const prefix = '/partitioned/';
-  const catalog = new EtcdJournalStore(endpoints, { ...options, prefix });
-  const east = new EtcdJournalStore([dataEndpoints[0]], { ...options, prefix });
-  const west = new EtcdJournalStore([dataEndpoints[1]], { ...options, prefix });
-  const partitioned = new PartitionedJournalStore(catalog, { east, west }, (key) => key === 'a' ? 'east' : 'west');
+  let catalogRequests = 0; let dataRequests = 0;
+  const catalog = new EtcdJournalStore(endpoints, { ...options, prefix, fetch: (...args) => { catalogRequests++; return fetch(...args); } });
+  const dataOptions = { ...options, prefix, fetch: (...args) => { dataRequests++; return fetch(...args); } };
+  const east = new EtcdJournalStore([dataEndpoints[0]], dataOptions);
+  const west = new EtcdJournalStore([dataEndpoints[1]], dataOptions);
+  const cacheBytes = Number(process.env.CLUSTER_OBJECT_CACHE_BYTES ?? 0);
+  const partitioned = new PartitionedJournalStore(catalog, { east, west }, (key) => key === 'a' ? 'east' : 'west', { cacheBytes });
   const partitionedEngine = new ClusterEngine(binding, partitioned, { requireDurableFlush: true });
   const dataSeed = await partitionedEngine.begin(['a', 'b']);
   await dataSeed.shard('a').create(0, 0); await dataSeed.shard('b').create(0, 0); await dataSeed.commit();
+  if (cacheBytes > 0) {
+    const first = await partitionedEngine.begin(['a', 'b']); await first.close();
+    const beforeCatalog = catalogRequests; const beforeData = dataRequests;
+    const second = await partitionedEngine.begin(['a', 'b']);
+    assert.equal(await second.shard('a').count(), 1n); await second.close();
+    assert.equal(catalogRequests, beforeCatalog + 1); assert.equal(dataRequests, beforeData);
+    console.log('PASS immutable object cache: actual WASM begin rereads the catalog with zero repeat data requests');
+  }
+  const cacheFlags = cacheBytes > 0 ? ['--cache'] : [];
   if (process.env.CLUSTER_RUST_EXAMPLE) {
-    const child = spawn(process.env.CLUSTER_RUST_EXAMPLE, [endpoints.join(','), prefix, ...dataEndpoints], { stdio: 'inherit' });
+    const child = spawn(process.env.CLUSTER_RUST_EXAMPLE, [endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags], { stdio: 'inherit' });
     assert.equal((await once(child, 'exit'))[0], 0);
   }
   if (process.env.CLUSTER_CSHARP_EXAMPLE) {
-    const child = spawn('dotnet', [process.env.CLUSTER_CSHARP_EXAMPLE, endpoints.join(','), prefix, ...dataEndpoints], { env: { ...process.env, DOTNET_GCHeapHardLimit: '0x18000000' }, stdio: 'inherit' });
+    const child = spawn('dotnet', [process.env.CLUSTER_CSHARP_EXAMPLE, endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags], { env: { ...process.env, DOTNET_GCHeapHardLimit: '0x18000000' }, stdio: 'inherit' });
     assert.equal((await once(child, 'exit'))[0], 0);
   }
   const dataCheck = await partitionedEngine.begin(['a', 'b']);
@@ -124,6 +149,7 @@ try {
     if (process.env.CLUSTER_CSHARP_EXAMPLE || process.env.CLUSTER_RUST_EXAMPLE) assert.equal(await dataCheck.shard(key).getName(1), process.env.CLUSTER_CSHARP_EXAMPLE ? 'C# coordinated 雪' : 'Rust coordinated 雪');
   }
   await dataCheck.close();
+  await javascriptExample([endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags], partitionedEngine);
   const pointers = await catalog.read(['a', 'b']);
   assert.deepEqual(pointers.map((value) => value.entries.slice(0, 2)), [['blob1', 'east'], ['blob1', 'west']]);
   assert.ok(pointers.every((value) => value.entries.length === 4));
@@ -133,6 +159,11 @@ try {
   await stop(nodes[4]);
   await assert.rejects(unavailable.commit());
   assert.deepEqual(await catalog.read(['a', 'b']), pointers);
+  if (cacheBytes > 0) {
+    const cachedWest = await partitionedEngine.begin(['b']);
+    assert.equal(await cachedWest.shard('b').getName(1), 'JS coordinated 雪'); await cachedWest.close();
+    console.log('PASS immutable object cache: previously verified west remains readable during its data-group outage');
+  } else await assert.rejects(partitionedEngine.begin(['b']));
   const isolated = await partitionedEngine.begin(['a']); await isolated.shard('a').setName(1, 'independent group available'); await isolated.commit();
   const isolatedRead = await partitionedEngine.begin(['a']); assert.equal(await isolatedRead.shard('a').getName(1), 'independent group available'); await isolatedRead.close();
   console.log('PASS independent consensus groups: unavailable west publishes nothing; east still commits');
@@ -146,6 +177,7 @@ try {
   console.log(`PASS real etcd: killed leader n${leader}; surviving majority elected and committed`);
   const second = [0, 1, 2].find((i) => i !== leader); await stop(nodes[second]);
   await assert.rejects(engine.begin(['a', 'b']));
+  await assert.rejects(partitionedEngine.begin(['a']));
   console.log('PASS real etcd: majority loss refuses a fresh linearizable snapshot');
 } finally {
   await Promise.all(nodes.map(stop));

@@ -63,7 +63,7 @@ requires a fresh read. No data or catalog mutation is automatically retried.
 The portable pointer is four strings: `blob1`, partition name, object key, and
 object modification generation. Keys use a length-framed UTF-8 FNV-1a-64 index.
 Creation checks full contents and rejects a collision; existing objects are never
-overwritten. Reads verify both generation and index. This detects accidental
+overwritten. Object downloads verify both generation and index. This detects accidental
 corruption and namespace misuse; it does not authenticate an untrusted backend.
 Catalog and data namespaces must be dedicated to this protocol. Keep each
 partition name bound to its original storage namespace, even when changing the
@@ -101,6 +101,12 @@ const engine = new ClusterEngine(binding, journals, { requireDurableFlush: true 
 The design follows the general immutable-data/atomic-metadata pattern described
 in [Apache Iceberg's specification](https://iceberg.apache.org/spec/). The wire
 format and engine implementation here are independent of Iceberg's table format.
+
+Select an optional [bounded immutable object cache](ENGINE-OBJECT-CACHE.md) to
+avoid repeat downloads of unchanged objects. Catalog reads and publication
+checks remain fresh. The zero-budget default retains no objects; payload
+accounting, ownership, outage behavior and persistent retention limits are
+documented separately. Append `--cache` to the partitioned examples to try it.
 
 ## Configuration and ownership
 

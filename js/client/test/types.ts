@@ -86,6 +86,10 @@ async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]
   await store.compareExchange(['a'], versions, [null]);
   const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
   const partitioned: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east');
+  const cached: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east', { cacheBytes: 65536 });
+  await cached.read(['a']);
+  // @ts-expect-error Cache budgets are numeric UTF-8 payload budgets.
+  new PartitionedJournalStore(store, { east: store }, () => 'east', { cacheBytes: '65536' });
   const routed = new ClusterEngine(binding, partitioned);
   await (await routed.begin(['a'])).close();
   await using transaction = await engine.begin(['a', 'b']);

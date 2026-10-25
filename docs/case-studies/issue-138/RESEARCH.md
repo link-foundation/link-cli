@@ -227,3 +227,27 @@ with committed rows. This implements local final-transaction constraints, withou
 copying PostgreSQL code, SQL trigger semantics, key-share locks or distributed
 foreign keys. Recovery retains complete historical validation. See
 [configuration and measured costs](../../ENGINE-CONSTRAINT-INDEX.md).
+
+## Immutable object reuse and bounded caching (2026-10-25)
+
+Rechecked the [Iceberg specification](https://iceberg.apache.org/spec/),
+optimistic concurrency, manifests and snapshots: immutable files can be reused
+across atomically published metadata versions. Inference for this protocol:
+already verified objects can be retained while catalog snapshots remain fresh.
+This implements local object reuse, independently of Iceberg's file formats.
+It does not supply manifests, incremental transfer or snapshot-aware reclamation.
+
+Audited the downloaded `lru` 0.19.0 source at
+[`3ed2e28cfc53059c5a29d6c4f73f5ddf26a29e98`](https://github.com/jeromefroe/lru-rs/blob/3ed2e28cfc53059c5a29d6c4f73f5ddf26a29e98/src/lib.rs):
+`unbounded` (258–260), sentinel construction (300–319), `put` and replacement
+(342–440), promotion in `get` (459–475), removal (1293–1318), and `pop_lru`
+(1377–1383). The maintained component owns hash/list ordering, including its
+internal unsafe pointer management; this engine adds weighted admission and
+eviction through safe APIs. Cargo archive checksum is
+`4a9f71e3591c7ec44d3e563e87bf14ddc2bada8519dca046e5b0e560cd004e2d`.
+Read its MIT license and Cargo manifest: MSRV 1.85; disabling default features
+uses `std::collections::HashMap` and adds no hashbrown dependency. The repository
+requires Rust 1.89 or newer. C# and JS reuse their standard dictionary/list/Map
+components instead of adding another platform package. No upstream code was
+copied. Payload limits do not claim to measure container or temporary memory.
+See [contracts, selected costs and limits](../../ENGINE-OBJECT-CACHE.md).

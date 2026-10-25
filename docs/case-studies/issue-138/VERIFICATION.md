@@ -2395,3 +2395,77 @@ composition, legacy physical page repair, LSM, real power-loss verification,
 automatic balancing/multi-catalog transactions and wider competitor criteria
 remain unfinished. The native issue goal stays active and PR 139 remains draft;
 fresh exact-head CI is required after publication.
+
+
+## Optional immutable journal object cache
+
+Reproduce with experiments/issue-138/validate-object-cache.sh after the
+documented tools/etcd setup. The final constructor compatibility correction
+was made after initial C# builds began: validate-object-cache-csharp-api.sh
+reruns formatting and both full configurations with the corrected source.
+summarize-object-cache.py and this evidence use only final successful reports.
+Compilers run sequentially within the 2.92 GiB container limit.
+
+The independently selected zero-default budget retains checked immutable
+objects by partition/address/object generation. Every catalog snapshot remains
+fresh. Returned arrays are independent; publication/staging still rereads and
+compares complete data. Failed lookups never enter the cache; oversized objects
+do not evict retained entries. Positive object/record overhead bounds empty
+payloads. The existing C# three-argument constructor retains its binary signature.
+Rust reuses audited lru 0.19.0 with default features disabled; C#/JS use standard
+containers. No cache container or retained payload copy is allocated at zero.
+
+object-cache-before.txt preserves absent-API Rust/C# failures and JS download
+counter failures before implementation. These establish missing optional costs,
+not an isolation defect. The first LRU test sequence accidentally reread a before
+probing eviction; the corrected a,b,a,c,b,c,a sequence measures promotion and
+eviction without that extra promotion. Final tests use the corrected oracle.
+Each language independently compares 768 reads across six budgets with explicit
+UTF-8 payload weights. Tests additionally cover empty objects, independent data
+partitions, caller mutation, fresh catalog generations/removal/failure, wrong
+object generations, corrupt fetch/repair, cached-data outages, staging collision
+checks and rejected/failed/lost-response publication. C#/JS force overlapping
+misses and verify one retained copy and correct eviction accounting.
+
+Complete local validation:
+
+- Native Rust all-features coverage: 866 standard passes, zero failed;
+  thirteen ignored child entries are exercised by bounded parent tests.
+  The custom stdout harness passes.
+- C# Debug and Release with Coverlet: 2,016 each, zero failed/skipped.
+- Actual WASM with LLVM coverage: 509 pass, zero failed/ignored, including
+  every portable cache contract.
+- JS: 177 tests; all eighteen production modules enforce 100% lines,
+  branches and functions. Strict TypeScript and 221 repository checks pass.
+- Formatting, strict native/WASM Clippy, source sizes, release fragments,
+  actionlint/ShellCheck, whitespace and 118 latest declared dependencies pass.
+- Generated actual-WASM conformance passes Node, Bun and Deno.
+- Real etcd 3.7.3 interoperability passes with default zero and 65,536 budgets:
+  Rust/C#/WASM use the same catalog and separate east/west data groups. A
+  repeated cached WASM begin issues one catalog request and zero data requests.
+  Atomic conflicts, lost responses, unavailable west/no publication, independent
+  east commits, cached west reads during its data outage, catalog leader failover
+  and majority-loss rejection even for cached shards all pass.
+  Five finite etcd children are stopped and reaped after each run.
+
+Official complete-run totals, without filtered denominators or diagnostic unions:
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,837/12,704 (93.18%) | 2,151/2,578 (83.44%) | 1,513/1,655 (91.42%) |
+| Actual WASM, complete linked source | 8,834/12,013 (73.54%) | 1,673/2,227 (75.12%) | 1,146/1,605 (71.40%) |
+| C# Debug | 7,360/7,875 (93.46%) | 3,862/4,300 (89.81%) | Not reported by this collector |
+| C# Release | 5,658/5,978 (94.65%) | 3,828/4,275 (89.54%) | Not reported by this collector |
+
+ObjectCache component: Native Rust: 39/39 lines, 4/4 branches, 4/4 functions; Actual WASM: 39/39 lines, 4/4 branches, 4/4 functions.
+C# Debug/Release class summaries report 100% lines and branches. All three
+actual-WASM wrappers report 100% lines, branches and functions.
+
+Whole native Rust, linked WASM and C# remain below the required 100%. Cache
+payload weights do not measure process heap. Complete begin replay, updated
+journal transfers and persistent old/orphan objects are unchanged. Immutable
+namespaces must not be rewritten/deleted; cached hits cannot detect later
+out-of-protocol tampering. Catalog availability remains required. Finer
+composition, legacy physical repair, LSM, real power loss, automatic balancing,
+multi-catalog transactions and wider competitor requirements remain unfinished.
+The issue goal stays active and PR 139 stays draft; new code needs exact-head CI.

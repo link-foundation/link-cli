@@ -195,3 +195,7 @@ Select optional persistent constraint indexes independently of map, encoding and
 other engine policies. Allocate only selected pair/name/reference indexes, allow
 atomic swaps, count incoming references and publish roots only after flush.
 Preserve scan defaults, historical replay validation and uncertain group outcomes.
+
+Select a bounded immutable journal object cache for partitioned stores. Keep
+catalog reads and publication checks fresh, return owned arrays and retain no
+cache by default. Coordinate concurrent fills and payload accounting locally.

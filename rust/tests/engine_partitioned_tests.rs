@@ -12,6 +12,7 @@ use std::{
 struct Store(Arc<Mutex<State>>);
 #[derive(Default)]
 struct State {
+    reads: usize,
     values: BTreeMap<String, JournalVersion>,
     revision: u64,
     fail: bool,
@@ -25,7 +26,8 @@ impl AtomicJournalStore for Store {
         !self.0.lock().unwrap().volatile
     }
     fn read(&mut self, keys: &[String]) -> Result<Vec<JournalVersion>, LinkError> {
-        let state = self.0.lock().unwrap();
+        let mut state = self.0.lock().unwrap();
+        state.reads += 1;
         if state.fail {
             return Err(LinkError::Transaction("partition unavailable".into()));
         }
@@ -110,6 +112,10 @@ fn fixture() -> (Store, Store, Store, PartitionedJournalStore<Store, Store>) {
 fn keys() -> Vec<String> {
     vec!["a".into(), "b".into()]
 }
+
+#[path = "engine_partitioned/cache.rs"]
+mod cache;
+
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn portable_addresses_frame_utf8_bytes_and_entry_boundaries() {

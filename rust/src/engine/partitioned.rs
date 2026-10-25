@@ -11,6 +11,7 @@ pub struct PartitionedJournalStore<C, D> {
     catalog: C,
     partitions: BTreeMap<String, D>,
     route: Box<dyn Fn(&str) -> String + Send + Sync>,
+    cache: Option<super::object_cache::ObjectCache>,
 }
 impl<C: AtomicJournalStore, D: AtomicJournalStore> PartitionedJournalStore<C, D> {
     pub fn new(
@@ -28,7 +29,17 @@ impl<C: AtomicJournalStore, D: AtomicJournalStore> PartitionedJournalStore<C, D>
             catalog,
             partitions,
             route: Box::new(route),
+            cache: None,
         })
+    }
+
+    /// Cache verified immutable objects within a UTF-8 payload budget. Zero
+    /// disables caching. Catalog reads and publication checks always stay fresh.
+    /// Budget counts one byte per object/record plus record UTF-8 byte lengths;
+    /// keys, containers, and caller-owned returned copies are additional memory.
+    pub fn with_object_cache(mut self, bytes: usize) -> Self {
+        self.cache = (bytes > 0).then(|| super::object_cache::ObjectCache::new(bytes));
+        self
     }
 }
 // FNV is an index, not authentication. Full contents are compared on creation;
@@ -99,6 +110,17 @@ impl<C: AtomicJournalStore, D: AtomicJournalStore> AtomicJournalStore
             let (partition, key, generation) = pointer(&value.entries)
                 .filter(|_| value.generation > 0)
                 .ok_or_else(|| error("invalid catalog pointer"))?;
+            if let Some(entries) = self
+                .cache
+                .as_mut()
+                .and_then(|cache| cache.get(partition, key, generation))
+            {
+                result.push(JournalVersion {
+                    generation: value.generation,
+                    entries,
+                });
+                continue;
+            }
             let store = self
                 .partitions
                 .get_mut(partition)
@@ -106,6 +128,9 @@ impl<C: AtomicJournalStore, D: AtomicJournalStore> AtomicJournalStore
             let object = read_one(store, key)?;
             if object.generation != generation || address(&object.entries) != key {
                 return Err(error("missing or modified immutable object"));
+            }
+            if let Some(cache) = &mut self.cache {
+                cache.remember(partition, key, generation, &object.entries);
             }
             result.push(JournalVersion {
                 generation: value.generation,

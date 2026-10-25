@@ -1,0 +1,16 @@
+Constraint indexes and .NET setup: exact-head CI
+Commit: 864839b3e3ec0e92d8783dc82ca3bff4996b1be0
+Commit timestamp: 2026-10-25T19:34:54+00:00
+
+Broken Link Checker: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:35:08Z; https://github.com/link-foundation/link-cli/actions/runs/40226713192
+Workflows: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:35:17Z; https://github.com/link-foundation/link-cli/actions/runs/40226713223
+Dependencies: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:35:25Z; https://github.com/link-foundation/link-cli/actions/runs/40226713198
+Docs: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:38:39Z; https://github.com/link-foundation/link-cli/actions/runs/40226713228
+Security: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:39:53Z; https://github.com/link-foundation/link-cli/actions/runs/40226713182
+JS client CI: success; created 2026-10-25T19:34:58Z; completed 2026-10-25T19:40:50Z; https://github.com/link-foundation/link-cli/actions/runs/40226713174
+WebAssembly CI: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:42:12Z; https://github.com/link-foundation/link-cli/actions/runs/40226713207
+C# CI/CD Pipeline: success; created 2026-10-25T19:34:58Z; completed 2026-10-25T19:44:31Z; https://github.com/link-foundation/link-cli/actions/runs/40226713168
+Rust CI/CD Pipeline: success; created 2026-10-25T19:34:59Z; completed 2026-10-25T19:45:58Z; https://github.com/link-foundation/link-cli/actions/runs/40226713206
+
+All nine workflows pass for this commit. Later cache changes require fresh CI.
+The SDK redirect diagnosis and regression are in dotnet-download.txt.

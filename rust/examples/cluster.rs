@@ -8,10 +8,13 @@ use link_cli::engine::{
 use link_cli::LinksStorage;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<_> = std::env::args().skip(1).collect();
-    if args.len() != 2 && args.len() != 4 {
+    let mut args: Vec<_> = std::env::args().skip(1).collect();
+    let cache = args.iter().any(|arg| arg == "--cache");
+    args.retain(|arg| arg != "--cache");
+    if (args.len() != 2 && args.len() != 4) || (cache && args.len() != 4) {
         return Err(
-            "usage: cluster catalog-endpoints prefix/ [east-endpoints west-endpoints]".into(),
+            "usage: cluster catalog-endpoints prefix/ [east-endpoints west-endpoints [--cache]]"
+                .into(),
         );
     }
     let store = EtcdJournalStore::new(
@@ -32,13 +35,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ))
             })
             .collect::<Result<_, link_cli::LinkError>>()?;
-        write(PartitionedJournalStore::new(store, partitions, |key| {
-            if key == "a" {
-                "east".into()
-            } else {
-                "west".into()
-            }
-        })?)
+        write(
+            PartitionedJournalStore::new(store, partitions, |key| {
+                if key == "a" {
+                    "east".into()
+                } else {
+                    "west".into()
+                }
+            })?
+            .with_object_cache(if cache { 65536 } else { 0 }),
+        )
     } else {
         write(store)
     }
@@ -60,6 +66,12 @@ fn write<S: AtomicJournalStore>(store: S) -> Result<(), Box<dyn std::error::Erro
         shard.set_name(1, Some("Rust coordinated 雪".into()))?;
     }
     transaction.commit()?;
+    for _ in 0..2 {
+        let mut read = engine.begin(&["a", "b"])?;
+        for key in ["a", "b"] {
+            assert!(read.shard(key)?.get_link(1).is_some());
+        }
+    }
     println!("PASS Rust HTTP: both shard journals committed atomically");
     Ok(())
 }

@@ -248,6 +248,12 @@ See [ownership, maintenance and interoperability examples](../../docs/ENGINE-SQL
 Durability is an explicit backend capability; replication acknowledgements do
 not provide consensus or failover.
 
+`PartitionedJournalStore` accepts `{ cacheBytes: 65536 }` as its fourth argument
+to cache verified immutable data objects within a UTF-8 payload budget. Default
+zero retains no objects. Catalog reads and publication checks always stay fresh;
+every hit returns an independent array. See [cache costs and ownership](../../docs/ENGINE-OBJECT-CACHE.md)
+and [coordinated network engines](../../docs/ENGINE-CLUSTERS.md).
+
 `const branch = engine.fork(options, journal)` seeds an independent journal.
 Edit it through `branch.engine.begin()`, then call `branch.merge()` to atomically
 merge its committed rows into the parent. Save `branch.mergeBaseRecord()` after

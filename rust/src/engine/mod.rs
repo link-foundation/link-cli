@@ -21,6 +21,7 @@ pub mod etcd;
 mod group;
 mod journal;
 mod named;
+mod object_cache;
 pub mod partitioned;
 mod pessimistic;
 pub mod replication;

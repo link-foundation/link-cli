@@ -196,8 +196,22 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     per configuration, 502 actual WASM, 168 JS and 217 repository tests. All
     sixteen SQLite configurations use the same References policy and reopen
     through all five providers. Official coverage and finite allocation evidence
-    are recorded in constraint-index.txt. Publication and fresh exact-head CI
-    remain; see CONSTRAINT-INDEX-PLAN.md. Wider criteria remain open.
+    are recorded in constraint-index.txt. All nine workflows pass on `864839b`
+    after the SDK redirect correction; constraint-index-ci.txt preserves exact
+    SHA, timestamps and links. See CONSTRAINT-INDEX-PLAN.md. Wider criteria remain open.
+
+15. The independently selected immutable object cache keeps catalog reads fresh
+    and retains only checked partition/address/generation payloads. Zero remains
+    the default. Finite independent UTF-8/LRU oracles, caller ownership, failed
+    fetch/repair, unchanged staging comparisons, concurrent fills and uncertain
+    publication are covered in all three languages and actual WASM. Real etcd
+    controls pass both zero and 65,536-byte budgets, including the public native
+    and JS examples, cached data-group outages and cached catalog-majority loss.
+    See OBJECT-CACHE-PLAN.md and the object-cache evidence. Complete local
+    verification passes: 866 native, 2,016 C# per configuration, 509 actual WASM,
+    177 JS and 221 repository checks. Publication and exact-head CI remain
+    to verify; that plan tracks them.
+    Wider acceptance criteria remain open.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

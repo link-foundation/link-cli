@@ -12,13 +12,21 @@ public sealed class PartitionedJournalStore : IAtomicJournalStore
     private readonly IAtomicJournalStore _catalog;
     private readonly Dictionary<string, IAtomicJournalStore> _partitions;
     private readonly Func<string, string> _route;
+    private readonly ImmutableObjectCache? _cache;
     public PartitionedJournalStore(IAtomicJournalStore catalog, IReadOnlyDictionary<string, IAtomicJournalStore> partitions, Func<string, string> route)
+        : this(catalog, partitions, route, 0) { }
+    /// <summary>Optional LRU payload budget: one byte per object
+    /// and record plus record UTF-8 bytes; zero disables. Metadata and returned
+    /// copies add memory. Catalog reads always stay fresh.</summary>
+    public PartitionedJournalStore(IAtomicJournalStore catalog, IReadOnlyDictionary<string, IAtomicJournalStore> partitions, Func<string, string> route, long cacheBytes)
     {
         ArgumentNullException.ThrowIfNull(catalog); ArgumentNullException.ThrowIfNull(partitions); ArgumentNullException.ThrowIfNull(route);
+        ArgumentOutOfRangeException.ThrowIfNegative(cacheBytes);
         if (partitions.Count == 0) throw new ArgumentException("Provide named atomic data stores.", nameof(partitions));
         _partitions = new(StringComparer.Ordinal);
         foreach (var (name, store) in partitions) { ClusterEngine<uint>.ValidateKeys(new[] { name }); ArgumentNullException.ThrowIfNull(store); _partitions.Add(name, store); }
         _catalog = catalog; _route = route;
+        _cache = cacheBytes > 0 ? new(cacheBytes) : null;
     }
     public bool SupportsDurableFlush => _catalog.SupportsDurableFlush && _partitions.Values.All(store => store.SupportsDurableFlush);
     // FNV indexes objects; full equality at creation rejects collisions safely.
@@ -51,8 +59,10 @@ public sealed class PartitionedJournalStore : IAtomicJournalStore
             var parts = pointer.Entries;
             if (pointer.Generation == 0 || parts.Count != 4 || parts[0] != "blob1" || !_partitions.TryGetValue(parts[1], out var store) || !Regex.IsMatch(parts[2], "\\Ablob1-[0-9a-f]{16}\\z", RegexOptions.CultureInvariant) || !Generation(parts[3], out var generation))
                 throw new InvalidDataException("Invalid catalog pointer.");
+            if (_cache?.Get(parts[1], parts[2], generation) is { } cached) { result.Add(new(pointer.Generation, cached)); continue; }
             var data = ReadOne(store, parts[2]);
             if (data.Generation != generation || Address(data.Entries) != parts[2]) throw new InvalidDataException("Missing or modified immutable object.");
+            _cache?.Remember(parts[1], parts[2], generation, data.Entries);
             result.Add(new(pointer.Generation, data.Entries));
         }
         return result;

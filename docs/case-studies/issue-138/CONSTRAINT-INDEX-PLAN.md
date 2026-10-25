@@ -21,7 +21,7 @@ encoding still pay a full candidate scan for every selected constraint.
       real Node/Bun/Deno conformance and persistent examples.
 - [x] Document algorithm, selected costs and limits; update case-study evidence
       and release notes. Run complete local checks and official coverage.
-- [ ] Commit/push the prepared branch, update PR 139 and verify fresh exact-SHA
+- [x] Commit/push the prepared branch, update PR 139 and verify fresh exact-SHA
       CI, preserving all remaining wider acceptance gaps.
 
 The indexes are local validation structures, not distributed locks or a new
