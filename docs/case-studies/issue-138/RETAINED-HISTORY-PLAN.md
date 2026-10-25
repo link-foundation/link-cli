@@ -15,7 +15,7 @@ or the selected branch. A missing shared prefix requires no replay.
 - [x] Run the same semantic regressions in actual WASM; run full local suites,
       coverage and strict checks before publishing an atomic commit.
 - [x] Update retention documentation, release fragments and review evidence.
-- [ ] Push only the prepared branch and verify fresh exact-head CI.
+- [x] Push only the prepared branch and verify fresh exact-head CI.
 
 This audit concerns unavailable records. Atomic recovery from a failure while
 applying an available diff is a separate requirement and remains unfinished.
@@ -25,3 +25,7 @@ success after skipping missing records. The Rust correction and thirteen
 ordinary version controls pass (16 tests); C# focused verification also passes
 (18 tests). Full native/C#/actual-WASM validation passes; measured coverage is recorded
 separately from test counts in retained-history.txt.
+
+All nine workflows pass for exact head 1f742c5, created 01:07:32 UTC.
+The corrected Windows fixtures and complete 1,443-test suite pass.
+See retained-history-ci.txt and version-publication-windows-after.txt.

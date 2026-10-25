@@ -75,3 +75,6 @@ mod version_publication_failure;
 
 #[path = "../../tests/version_retained_history_tests.rs"]
 mod version_retained_history;
+
+#[path = "../../tests/transactions_replay_owner_tests.rs"]
+mod transactions_replay_owner;

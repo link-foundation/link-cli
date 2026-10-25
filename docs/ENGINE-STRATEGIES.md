@@ -112,6 +112,13 @@ operation fails. Automatic operations undo those observations; explicit
 transactions keep them for caller rollback. This requires the adapter's change
 callbacks. Rust panic unwinding and unobserved mutations are outside this contract.
 
+Public `ApplyTransition`/`RevertTransition` helpers (Rust `apply_transition`/
+`revert_transition`) also reject a live owner before touching data. Finish the
+original transaction or its failed commit/rollback cleanup before unlogged
+replay. These helpers remain available to higher-level version decorators once
+ownership is released and do not append another transition. The admission check
+costs O(1), with no journal scan or allocation on success.
+
 After a legacy journal commit is known durable, a failed synchronous checkpoint
 keeps the transaction owner and blocks later row and named writes. In Rust,
 retry `commit`, `rollback` or `save`; in C#, retry the handle's `Commit`,

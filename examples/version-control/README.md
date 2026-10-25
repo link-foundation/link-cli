@@ -100,3 +100,17 @@ dotnet test csharp --filter FullyQualifiedName~VersionRetainedHistoryTests
 
 This check prevents partial replay caused by unavailable records. Atomic recovery
 from an I/O failure while applying available records remains a separate guarantee.
+
+## Replay and transaction ownership
+
+The lower-level unlogged apply/revert helpers require no live transaction owner.
+Finish the original transaction or retry its failed commit/rollback cleanup
+before replaying another transition. Rejection preserves rows, the journal and
+ownership; replay remains available after cleanup without appending a new entry.
+
+These finite contracts also verify following edits and the portable WASM path:
+
+```sh
+cargo test --manifest-path rust/Cargo.toml --test transactions_replay_owner_tests
+dotnet test csharp --filter FullyQualifiedName~TransactionReplayOwnerTests
+```

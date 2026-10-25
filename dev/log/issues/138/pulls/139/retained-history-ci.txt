@@ -1,0 +1,21 @@
+Retained-history preflight and Windows fixture validation
+Head: 1f742c58b4cc3dd0e7b29af37ec5c3d0a7dcc315
+All nine workflows succeed on this exact published head.
+Run creation: 2026-10-25T01:07:32Z, after publication of both atomic commits.
+Checked: 2026-10-25 01:15:54 UTC
+
+Broken Link Checker: success, completed 2026-10-25T01:07:43Z, https://github.com/link-foundation/link-cli/actions/runs/40149389484
+C# CI/CD Pipeline: success, completed 2026-10-25T01:12:48Z, https://github.com/link-foundation/link-cli/actions/runs/40149389469
+Dependencies: success, completed 2026-10-25T01:08:00Z, https://github.com/link-foundation/link-cli/actions/runs/40149389457
+Docs: success, completed 2026-10-25T01:09:59Z, https://github.com/link-foundation/link-cli/actions/runs/40149389577
+JS client CI: success, completed 2026-10-25T01:10:30Z, https://github.com/link-foundation/link-cli/actions/runs/40149389719
+Rust CI/CD Pipeline: success, completed 2026-10-25T01:13:47Z, https://github.com/link-foundation/link-cli/actions/runs/40149389465
+Security: success, completed 2026-10-25T01:11:09Z, https://github.com/link-foundation/link-cli/actions/runs/40149389467
+WebAssembly CI: success, completed 2026-10-25T01:12:43Z, https://github.com/link-foundation/link-cli/actions/runs/40149389634
+Workflows: success, completed 2026-10-25T01:07:48Z, https://github.com/link-foundation/link-cli/actions/runs/40149389599
+
+C# Windows runs all 1,443 tests successfully, including the ten previously
+failing preservation fixtures. Linux/macOS, fresh-merge, formatting and package
+jobs pass in both native pipelines. Exact Windows before/after excerpts are
+retained separately. No non-passing workflows exist for this published head.
+Any later replay-owner changes require fresh exact-head validation.

@@ -127,3 +127,7 @@ Resolve every changed undo and redo transition before checkout or branch
 switching. Reject missing retained history without changing rows or metadata,
 while preserving no-op and available-suffix moves over an unavailable shared
 prefix. Index the retained journal once instead of rescanning it per transition.
+
+Fence public unlogged transition apply/revert while a transaction or its failed
+commit/rollback cleanup still owns the data. Preserve retry of that owner and
+ordinary unlogged version replay after ownership is released.

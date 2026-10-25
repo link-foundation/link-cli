@@ -30,7 +30,7 @@ acknowledgement can promise durable metadata.
       and same behavior in portable actual-WASM semantic tests.
 - [x] Document flush capability, added costs, compatibility and power-loss limits;
       run full local suites, coverage and strict checks.
-- [ ] Verify fresh exact-head CI after publication.
+- [x] Verify fresh exact-head CI after publication.
 
 The real exit regressions first fail: C# loses attribution in both checkpoint
 error cases; Rust also loses it after both acknowledged commits. Six cases per
@@ -52,3 +52,7 @@ separate audit. Power-loss and other remaining legacy audits are not implied by
 this process-exit protocol. Published SHA 2a1c9e3 passes eight workflows; ten C#
 Windows fixtures read files while exclusive mappings are live. See
 PUBLICATION-WINDOWS-PLAN.md for their correction and exact-head CI verification.
+
+All nine workflows pass for exact head 1f742c5, created 01:07:32 UTC.
+The corrected Windows fixtures and complete 1,443-test suite pass.
+See retained-history-ci.txt and version-publication-windows-after.txt.

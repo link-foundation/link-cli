@@ -571,10 +571,13 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
+    /// <exception cref="InvalidOperationException">A transaction or its cleanup
+    /// still owns the data store.</exception>
     public virtual void RevertTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
+            EnsureReplayAllowedLocked();
             _replaying = true;
             try
             {
@@ -593,10 +596,13 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
+    /// <exception cref="InvalidOperationException">A transaction or its cleanup
+    /// still owns the data store.</exception>
     public virtual void ApplyTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
+            EnsureReplayAllowedLocked();
             _replaying = true;
             try
             {
@@ -607,6 +613,12 @@ public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TL
                 _replaying = false;
             }
         }
+    }
+
+    private void EnsureReplayAllowedLocked()
+    {
+        if (_current is not null)
+            throw new InvalidOperationException("Complete the current transaction or its cleanup before unlogged replay.");
     }
 
     private void TryApplyTransition(Transition<TLinkAddress> transition)

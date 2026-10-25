@@ -83,12 +83,16 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    the missing head; publication/recovery faults and contradictory vectors pass
    full native/C#/actual-WASM validation. Fresh CI exposes ten Windows preservation
    fixtures reading files while exclusive mappings are live. Move byte snapshots
-   outside mapped lifetimes and verify new exact-head CI; see
+   outside mapped lifetimes. All nine workflows pass on 1f742c5; see
    VERSION-PUBLICATION-PLAN.md and PUBLICATION-WINDOWS-PLAN.md.
 7. Truncated history checkout now rejects missing changed records before any
    undo or redo. Three reproductions per native language and actual-WASM shared
    contracts pass; native reopen and available suffix/no-op controls pass. See
    RETAINED-HISTORY-PLAN.md. Atomic replay failures remain a separate audit.
+   Public unlogged replay now rejects pending and failed commit/undo owners.
+   Six before/after cases per native language, existing version controls and
+   full native/C#/actual-WASM suites pass. See REPLAY-OWNER-PLAN.md; publish
+   this independent correction and verify new exact-head CI.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.

@@ -30,7 +30,9 @@ where
 {
     /// Public helper for higher-level decorators (e.g. version control)
     /// — applies a single transition without writing a new log entry.
+    /// Rejects replay while a transaction or its cleanup still owns the data.
     pub fn apply_transition(&mut self, transition: &GenericTransition<T>) -> Result<(), LinkError> {
+        self.ensure_replay_allowed()?;
         self.replaying = true;
         let result = self.try_apply_transition(transition, false);
         self.replaying = false;
@@ -38,14 +40,25 @@ where
     }
 
     /// Reverts one transition, reporting storage errors to the caller.
+    /// Rejects replay while a transaction or its cleanup still owns the data.
     pub fn revert_transition(
         &mut self,
         transition: &GenericTransition<T>,
     ) -> Result<(), LinkError> {
+        self.ensure_replay_allowed()?;
         self.replaying = true;
         let result = self.try_revert_transition(transition);
         self.replaying = false;
         result
+    }
+
+    fn ensure_replay_allowed(&self) -> Result<(), LinkError> {
+        if self.current.is_some() {
+            return Err(LinkError::Transaction(
+                "Complete the current transaction or its cleanup before unlogged replay.".into(),
+            ));
+        }
+        Ok(())
     }
 
     pub(super) fn try_apply_transition(

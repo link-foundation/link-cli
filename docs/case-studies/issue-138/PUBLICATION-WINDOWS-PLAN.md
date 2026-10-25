@@ -7,7 +7,7 @@
       Keep exclusive mapping and exact sidecar/names preservation assertions.
 - [x] Run focused and full local C# suites, formatting and source-size checks.
 - [x] Preserve evidence and prepare an independent fixture correction.
-- [ ] Push prepared branch and verify new exact-head Windows/Linux/macOS CI
+- [x] Push prepared branch and verify new exact-head Windows/Linux/macOS CI
       rather than rerunning stale code.
 
 Run created 2026-10-25T00:49:47Z, head
@@ -28,4 +28,6 @@ version-publication-windows-before.txt under the PR's committed log directory.
 The corrected ten fixtures and three retained-history contracts pass together
 (13 focused tests). Full local Debug/Release pass 1,443 tests each, zero skips;
 formatting, changeset and source-size checks pass. The three extra tests belong
-to the adjacent retained-history commit. Fresh Windows CI is still required.
+to the adjacent retained-history commit. Fresh Windows CI passes on exact head 1f742c5. All ten corrected fixtures
+and the complete 1,443-test suite pass; Linux/macOS and package checks pass too.
+See version-publication-windows-after.txt for exact run and original log lines.
