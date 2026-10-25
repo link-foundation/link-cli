@@ -102,10 +102,13 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    cover metadata, data/flush faults, restart, corrupt topology, evicted payloads
    and repeated constructor recovery. Full local suites and all nine exact-head
    workflows pass on d4cb43c; see version-movement.txt and version-movement-ci.txt.
-   A frozen-clock Rust restart reproduces transaction-ID reuse; native and
-   actual-WASM regressions and allocation checks are tracked in
-   TRANSACTION-IDENTITY-PLAN.md. A separate finite probe reproduces two databases
-   overwriting a shared chunk archive; follow with exclusive archive creation.
+   Frozen-clock Rust restart identity reuse now has four native and four
+   actual-WASM before/after contracts. Full local suites and all nine workflows
+   pass on 6d231fa; see TRANSACTION-IDENTITY-PLAN.md and transaction-identity-ci.txt.
+   A separate finite probe reproduces two databases overwriting a shared chunk
+   archive. Four native and three C# occupied-path cases first fail; exclusive
+   creation now passes focused tests and runs full validation. See
+   ARCHIVE-OWNERSHIP-PLAN.md.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.

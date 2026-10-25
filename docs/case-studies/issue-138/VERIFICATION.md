@@ -1651,3 +1651,8 @@ ownership remains the next audit. Legacy name/history journaling, the observer's
 pre-append window, finer composition and full project coverage remain open.
 All nine workflows pass on preceding movement head d4cb43c; this change requires
 new exact-head CI and does not complete the wider issue.
+
+All nine workflows pass on transaction identity head `6d231fa`, with runs
+created 2026-10-25 at 03:04:52 UTC after its commit/push. Native platform,
+fresh-merge, package, release, JS and actual-WASM checks pass. Exact URLs are
+in `transaction-identity-ci.txt`. Later code requires fresh exact-head CI.

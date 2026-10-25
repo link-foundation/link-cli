@@ -14,7 +14,7 @@ after reopening where an aborted/uncommitted update should leave row 11.
 - [x] Verify repeated reopening, following commits, existing clocks, corruption,
   rollback and publication contracts. Review cost and legacy compatibility.
 - [x] Run applicable full tests, coverage, lint and release checks.
-- [ ] Commit/push only the prepared branch, update PR 139 and verify exact-head CI.
+- [x] Commit/push only the prepared branch, update PR 139 and verify exact-head CI.
 
 Keep the existing recovered decision sets as the uniqueness index rather than
 adding a database scan or mandatory random-number dependency per transaction.
@@ -40,4 +40,5 @@ trace reports that historical IDs were skipped once per affected allocation.
 Full validation passes: 737 native Rust, 408 actual-WASM, 1,573 C# per
 configuration and 106 JS tests, types, formatting, strict lint and release checks.
 Full project coverage remains below 100%; exact metrics and preserved before
-logs are in transaction-identity.txt. Fresh published-head CI remains pending.
+logs are in transaction-identity.txt. All nine workflows pass on published
+identity head 6d231fa; see transaction-identity-ci.txt. Later code needs fresh CI.

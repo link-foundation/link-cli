@@ -65,5 +65,6 @@ restart regressions and four actual-WASM cases first fail, then preserve outcome
 repeated recovery and following commits. Full suites pass: 737 native Rust,
 408 actual WASM, 1,573 C# per configuration and 106 JS tests. Existing decision
 indexes avoid a new scan or retained index; K collisions cost O(K). See
-TRANSACTION-IDENTITY-PLAN.md and transaction-identity.txt. Fresh exact-head CI,
-archive ownership and broader requirements remain unfinished.
+TRANSACTION-IDENTITY-PLAN.md and transaction-identity.txt. All nine workflows
+pass on identity head 6d231fa; see transaction-identity-ci.txt. Archive ownership
+and broader requirements remain unfinished; later code needs fresh CI.
