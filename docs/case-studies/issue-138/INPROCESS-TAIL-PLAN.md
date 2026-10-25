@@ -13,8 +13,8 @@ append that fails after writing a prefix while its writer remains alive.
       and short writes, exact reopening, writer fencing and unchanged raw paths.
 - [x] Run focused/full suites, coverage and format/lint/type/release checks.
 - [x] Preserve before logs, measured costs and limitations; update docs and release notes.
-- [ ] Commit and push only the prepared branch.
-- [ ] Verify fresh exact-head CI, all feedback and final diff.
+- [x] Commit and push only the prepared branch.
+- [x] Verify fresh exact-head CI, all feedback and final diff.
 
 Native children write one committed line and at most one 20,001-byte candidate.
 A shell ignores SIGXFSZ; each native child applies an 8 KiB soft per-file limit
@@ -59,3 +59,6 @@ after runtime startup and restores the original value after all journal access,
 including assertion unwinding. Complete focused coverage must pass without
 truncated profiles before the full suite is retried. These fixture failures are
 separate from the six confirmed pre-fix product failures.
+
+All nine workflows pass on published head 7826d95. See
+`dev/log/issues/138/pulls/139/live-tail-ci.txt`. New code needs fresh CI.
