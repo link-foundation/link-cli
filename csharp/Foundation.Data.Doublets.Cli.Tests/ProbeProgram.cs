@@ -14,6 +14,8 @@ internal static class ProbeProgram
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
             if (args is ["version-exit", var directory, var mode, var automatic])
                 return VersionExitProbe.Run(directory, mode, bool.Parse(automatic));
+            if (args is ["journal-quota", var journalDirectory, var journalMode, var unicode])
+                return JournalLiveTailTests.QuotaChild(journalDirectory, journalMode, bool.Parse(unicode));
             Console.Error.WriteLine("Unknown finite test probe.");
             return 2;
         }

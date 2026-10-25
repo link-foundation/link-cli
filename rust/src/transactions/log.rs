@@ -12,9 +12,8 @@
 //!   the same format the C# port uses.
 //! * [`FileTransitionLog`] — a plain append-only text file, one entry
 //!   per line, `fsync`ed on every append by default. Cheaper than a
-//!   links database and crash-safe by construction: a torn write can
-//!   only ever damage the final line, which [`FileTransitionLog`]
-//!   discards on read.
+//!   links database. An incomplete final line is discarded on open or
+//!   before reusing a writer after an I/O error.
 //!
 //! Reading takes `&mut self` because the links-backed log resolves
 //! names through [`NamedTypes::get_name`], which needs mutable access
@@ -91,18 +90,20 @@ impl TransitionLogStore for NamedTypesDecorator {
 /// guarantee for throughput — the log is then durable only as far as
 /// the last [`flush_log`](TransitionLogStore::flush_log).
 ///
-/// A crash can therefore only ever truncate the file mid-line.
-/// [`open`](FileTransitionLog::open) discards such a torn tail before
-/// the log is used again — otherwise the next append would be glued
-/// onto the fragment and lost with it — and
-/// [`read_log_entries`](TransitionLogStore::read_log_entries) ignores
-/// one defensively. A torn write costs at most the single transition
-/// that was in flight.
+/// An interrupted append can leave a partial final line. Opening the log,
+/// or reading, appending or flushing after a writer I/O error, repairs that
+/// suffix before proceeding. A failed repair is retried on the next operation.
+/// Complete records remain intact, including records written before an error
+/// was returned; callers must discover an uncertain transaction's outcome
+/// rather than blindly retry it. Repair scans backwards with an 8 KiB buffer;
+/// successful operations do not rescan. This framing protocol assumes storage
+/// honors flush and does not prove device-sector atomicity after power loss.
 #[derive(Debug)]
 pub struct FileTransitionLog {
     path: PathBuf,
     file: File,
     sync_on_append: bool,
+    tail_may_be_torn: bool,
     _lock: Option<crate::FileLock>,
 }
 
@@ -139,6 +140,7 @@ impl FileTransitionLog {
             path,
             file,
             sync_on_append: true,
+            tail_may_be_torn: false,
             _lock: None,
         })
     }
@@ -152,6 +154,19 @@ impl FileTransitionLog {
         let mut log = Self::open(path)?;
         log._lock = Some(lock);
         Ok(log)
+    }
+
+    // An error may follow successful short writes. Keep the flag until both
+    // truncation and its durable flush succeed, so repeated I/O faults retry.
+    fn repair_if_needed(&mut self) -> Result<(), LinkError> {
+        if self.tail_may_be_torn {
+            let repair = OpenOptions::new().read(true).write(true).open(&self.path)?;
+            truncate_torn_tail(&repair)?;
+            // A previous failed repair may already have changed the length.
+            repair.sync_all()?;
+            self.tail_may_be_torn = false;
+        }
+        Ok(())
     }
 
     /// Path of the backing file.
@@ -180,15 +195,19 @@ impl TransitionLogStore for FileTransitionLog {
                 "transition log entries must not contain line breaks".to_string(),
             ));
         }
+        self.repair_if_needed()?;
+        self.tail_may_be_torn = true;
         writeln!(self.file, "{entry}")?;
         self.file.flush()?;
         if self.sync_on_append {
             self.file.sync_data()?;
         }
+        self.tail_may_be_torn = false;
         Ok(())
     }
 
     fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
+        self.repair_if_needed()?;
         let mut contents = String::new();
         File::open(&self.path)?.read_to_string(&mut contents)?;
         // Only newline-terminated lines were fully written; a trailing
@@ -202,8 +221,11 @@ impl TransitionLogStore for FileTransitionLog {
     }
 
     fn flush_log(&mut self) -> Result<(), LinkError> {
+        self.repair_if_needed()?;
+        self.tail_may_be_torn = true;
         self.file.flush()?;
         self.file.sync_data()?;
+        self.tail_may_be_torn = false;
         Ok(())
     }
 }
@@ -213,7 +235,7 @@ impl TransitionLogStore for FileTransitionLog {
 /// A crash can leave the log ending in a fragment of an entry. Appending
 /// after that fragment would concatenate the next entry onto it, turning
 /// one lost transition into two, so the fragment is dropped when the log
-/// is opened.
+/// is opened or its live writer recovers from an I/O error.
 fn truncate_torn_tail(file: &File) -> Result<(), LinkError> {
     let len = file.metadata()?.len();
     if len == 0 {

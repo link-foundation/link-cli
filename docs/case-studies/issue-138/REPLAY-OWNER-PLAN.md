@@ -14,8 +14,8 @@ after a commit/rollback error; these helpers must not overwrite its rows.
 - [x] Execute the same Rust contracts in actual WASM and run focused version
       controls, full local suites, coverage, formatting and strict checks.
 - [x] Preserve before logs and measured evidence; update recipes/release notes.
-- [ ] Commit independently and publish only the prepared branch.
-- [ ] Verify new exact-head CI and review all feedback and the final diff.
+- [x] Commit independently and publish only the prepared branch.
+- [x] Verify new exact-head CI and review all feedback and the final diff.
 
 Tests use three rows/updates and a six-case matrix, with no stress loop. Native
 storage/checkpoint behavior and portable logical contracts are measured
@@ -26,3 +26,6 @@ All six cases per native language first fail at the behavioral assertion: no
 exception/error is returned by replay. The initial Rust fixture required the
 borrowed-read extension trait; that compile diagnostic is retained separately
 and is not counted as a reproduced behavioral failure.
+
+All nine workflows pass on 31a50a0. See replay-owner-ci.txt for exact
+SHA/timestamps, run URLs and the transient Bun installation retry.

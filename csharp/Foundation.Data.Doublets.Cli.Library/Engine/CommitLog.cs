@@ -20,44 +20,62 @@ public sealed class MemoryCommitLog : ICommitLog
     public void Flush() { }
 }
 
-/// <summary>Exclusive file writer; repairs an incomplete final line on open.</summary>
+/// <summary>Exclusive file writer; repairs an incomplete final line on open
+/// and before reuse after an I/O error. Complete records are preserved.</summary>
 public sealed class FileCommitLog : ICommitLog, IDisposable
 {
     private readonly FileStream _file;
     private readonly LinksFileLock _lock;
+    private bool _tailMayBeTorn;
     private static readonly UTF8Encoding Utf8 = new(false, true);
     public bool SupportsDurableFlush => true;
 
     public FileCommitLog(string path)
+        : this(path, file => new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read, bufferSize: 1)) { }
+
+    // The same owned file protocol can be exercised with finite syscall faults.
+    internal FileCommitLog(string path, Func<string, FileStream> open)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         _lock = LinksFileLock.TryAcquire(LinksFileLock.LockFilePath(path), LockMode.Exclusive)
             ?? throw new IOException("Journal writer is busy.");
-        try { _file = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read); }
+        try { _file = open(path); }
         catch { _lock.Dispose(); throw; }
-        try
-        {
-            // Scan backwards in bounded chunks rather than loading a torn tail.
-            long end = _file.Length;
-            var buffer = new byte[8192];
-            long complete = 0;
-            while (end > 0)
-            {
-                int length = (int)Math.Min(end, buffer.Length);
-                _file.Position = end - length;
-                _file.ReadExactly(buffer.AsSpan(0, length));
-                int offset = buffer.AsSpan(0, length).LastIndexOf((byte)'\n');
-                if (offset >= 0) { complete = end - length + offset + 1; break; }
-                end -= length;
-            }
-            if (complete != _file.Length) { _file.SetLength(complete); Flush(); }
-            _file.Position = _file.Length;
-        }
+        try { RepairTail(); }
         catch { _file.Dispose(); _lock.Dispose(); throw; }
+    }
+
+    private void RepairTail()
+    {
+        // Scan backwards in bounded chunks rather than loading a torn tail.
+        long end = _file.Length;
+        var buffer = new byte[8192];
+        long complete = 0;
+        while (end > 0)
+        {
+            int length = (int)Math.Min(end, buffer.Length);
+            _file.Position = end - length;
+            _file.ReadExactly(buffer.AsSpan(0, length));
+            int offset = buffer.AsSpan(0, length).LastIndexOf((byte)'\n');
+            if (offset >= 0) { complete = end - length + offset + 1; break; }
+            end -= length;
+        }
+        if (complete != _file.Length) _file.SetLength(complete);
+        // Retry persistence even if an earlier failed repair changed the length.
+        _file.Flush(flushToDisk: true);
+        _file.Position = _file.Length;
+    }
+
+    private void RepairIfNeeded()
+    {
+        if (!_tailMayBeTorn) return;
+        RepairTail();
+        _tailMayBeTorn = false;
     }
 
     public IReadOnlyList<string> Read()
     {
+        RepairIfNeeded();
         _file.Position = 0;
         using var reader = new StreamReader(_file, Utf8, false, 8192, leaveOpen: true);
         var records = new List<string>();
@@ -69,10 +87,22 @@ public sealed class FileCommitLog : ICommitLog, IDisposable
     {
         if (record.Contains('\n') || record.Contains('\r'))
             throw new ArgumentException("Log records cannot contain line breaks.", nameof(record));
+        var bytes = Utf8.GetBytes(record + "\n");
+        RepairIfNeeded();
         _file.Position = _file.Length;
-        _file.Write(Utf8.GetBytes(record + "\n"));
+        // No managed write buffer: after a failed syscall it must not reinsert
+        // an old fragment while seeking or truncating for recovery.
+        _tailMayBeTorn = true;
+        _file.Write(bytes);
+        _tailMayBeTorn = false;
     }
-    public void Flush() => _file.Flush(flushToDisk: true);
+    public void Flush()
+    {
+        RepairIfNeeded();
+        _tailMayBeTorn = true;
+        _file.Flush(flushToDisk: true);
+        _tailMayBeTorn = false;
+    }
     public void Dispose() { _file.Dispose(); _lock.Dispose(); }
 }
 

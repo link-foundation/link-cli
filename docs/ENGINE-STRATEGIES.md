@@ -84,9 +84,17 @@ use an application idempotency key or inspect recovered state first. JS reports
 Replication does not change these rules. Followers can contain an unacknowledged
 commit and must not be promoted automatically.
 
-The exclusive file adapters discard an incomplete final line and reject complete
-corrupt records. Recovery checks checksum, UTF-8 names, address bounds, unique
-addresses, contiguous revisions, nondecreasing allocator and selected constraints.
+The exclusive file adapters discard an incomplete final line on open and before
+read, append or flush after a writer I/O error. Failed repair keeps further
+operations fenced until repair succeeds. Complete records remain intact, even
+when an error followed their write; this does not authorize retrying an uncertain
+business operation. A repair scans backwards with an 8 KiB buffer. Successful
+operations only check a flag, with no rescan. C# disables its managed write
+buffer so failed buffered bytes cannot reappear during repair; append therefore
+performs a file write immediately. These costs belong to the selected file log.
+Complete corrupt records are rejected. Recovery checks checksum, UTF-8 names,
+address bounds, unique addresses, contiguous revisions, nondecreasing allocator
+and selected constraints.
 Checksums detect accidental corruption, not malicious tampering. Establish the
 database directory and protect its metadata before depending on power-loss
 recovery. Filesystem/device failure outside the adapter's flush contract is not

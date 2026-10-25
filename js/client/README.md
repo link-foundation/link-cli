@@ -227,8 +227,11 @@ either a physical log or each replica to compress localized edits between full
 checkpoints. Reopen the stream through the same decorator; see the
 [delta format, costs and recipes](../../docs/ENGINE-DELTA.md).
 For a filesystem journal use
-the separate `./engine-file-log` entry point. Durability is an explicit backend
-capability; replication acknowledgements do not provide consensus or failover.
+the separate `./engine-file-log` entry point. It repairs incomplete final lines
+on open and before reuse after an I/O error, retaining complete records for
+outcome discovery. An engine with an uncertain commit still requires reopening.
+Durability is an explicit backend capability; replication acknowledgements do
+not provide consensus or failover.
 
 `const branch = engine.fork(options, journal)` seeds an independent journal.
 Edit it through `branch.engine.begin()`, then call `branch.merge()` to atomically

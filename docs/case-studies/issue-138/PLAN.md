@@ -91,8 +91,12 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    RETAINED-HISTORY-PLAN.md. Atomic replay failures remain a separate audit.
    Public unlogged replay now rejects pending and failed commit/undo owners.
    Six before/after cases per native language, existing version controls and
-   full native/C#/actual-WASM suites pass. See REPLAY-OWNER-PLAN.md; publish
-   this independent correction and verify new exact-head CI.
+   full native/C#/actual-WASM suites pass. See REPLAY-OWNER-PLAN.md; all nine workflows pass on replay-owner
+   head 31a50a0. Same-handle file-journal reuse after partial append now has
+   six failing before schedules per native/JS adapter. Track framing until
+   repair and its flush finish, then validate reopening and repeated faults;
+   see INPROCESS-TAIL-PLAN.md. Full local native/C#/actual-WASM/JS validation passes; publish the
+   correction and verify fresh exact-head CI.
    Reproduce ordinary legacy named writes across rollback/history/reopen. Their
    admission fence is distinct from logging names atomically; staged sessions
    already keep names in revisions.

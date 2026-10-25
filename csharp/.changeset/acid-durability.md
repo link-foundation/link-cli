@@ -131,3 +131,7 @@ prefix. Index the retained journal once instead of rescanning it per transition.
 Fence public unlogged transition apply/revert while a transaction or its failed
 commit/rollback cleanup still owns the data. Preserve retry of that owner and
 ordinary unlogged version replay after ownership is released.
+
+Repair partial file-journal writes before reusing the same writer for read,
+append or flush. Retain the repair requirement across repeated I/O failures,
+preserve complete records after uncertain writes and use bounded tail scanning.

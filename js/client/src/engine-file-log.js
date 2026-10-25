@@ -17,11 +17,14 @@ function readExactly(fd, bytes, length, position) {
 
 /** A single writer, fenced by atomic directory creation. A crashed owner's
  * lock is NEVER stolen automatically: recovery must first fence the old owner.
+ * Incomplete final lines are repaired on open and before reuse after an I/O
+ * error; complete records remain available for uncertain-outcome discovery.
  * The caller owns this adapter and closes it after all engine sessions. */
 export class FileCommitLog {
   #fd;
   #lock;
   #closed = false;
+  #tailMayBeTorn = false;
   constructor(path) {
     path = resolve(path);
     const directory = dirname(path);
@@ -30,18 +33,7 @@ export class FileCommitLog {
     mkdirSync(this.#lock); // Fails fast if another writer or a stale lock exists.
     try {
       this.#fd = openSync(path, 'a+');
-      const buffer = new Uint8Array(8192);
-      let end = fstatSync(this.#fd).size;
-      let complete = 0;
-      while (end > 0) {
-        const length = Math.min(end, buffer.length);
-        readExactly(this.#fd, buffer, length, end - length);
-        const offset = buffer.subarray(0, length).lastIndexOf(10);
-        if (offset >= 0) { complete = end - length + offset + 1; break; }
-        end -= length;
-      }
-      if (complete !== fstatSync(this.#fd).size) ftruncateSync(this.#fd, complete);
-      fsyncSync(this.#fd);
+      this.#repairTail();
       // POSIX directory sync establishes a new journal's name before commits.
       if (process.platform !== 'win32') {
         const dir = openSync(directory, 'r');
@@ -53,10 +45,33 @@ export class FileCommitLog {
       throw error;
     }
   }
+  // Only uncertain writes trigger a rescan; the buffer stays bounded even
+  // when the failed record is large. Clear admission only after durable repair.
+  #repairTail() {
+    const buffer = new Uint8Array(8192);
+    let end = fstatSync(this.#fd).size;
+    let complete = 0;
+    while (end > 0) {
+      const length = Math.min(end, buffer.length);
+      readExactly(this.#fd, buffer, length, end - length);
+      const offset = buffer.subarray(0, length).lastIndexOf(10);
+      if (offset >= 0) { complete = end - length + offset + 1; break; }
+      end -= length;
+    }
+    if (complete !== fstatSync(this.#fd).size) ftruncateSync(this.#fd, complete);
+    fsyncSync(this.#fd);
+  }
+  #repairIfNeeded() {
+    if (this.#tailMayBeTorn) {
+      this.#repairTail();
+      this.#tailMayBeTorn = false;
+    }
+  }
   get supportsDurableFlush() { return true; }
   #check() { if (this.#closed) throw new Error('journal is closed'); }
   read() {
     this.#check();
+    this.#repairIfNeeded();
     const length = fstatSync(this.#fd).size;
     const bytes = new Uint8Array(length);
     readExactly(this.#fd, bytes, length, 0);
@@ -66,15 +81,24 @@ export class FileCommitLog {
   append(record) {
     this.#check();
     if (typeof record !== 'string' || /[\r\n]/.test(record)) throw new TypeError('journal records must be strings without line breaks');
+    this.#repairIfNeeded();
     const bytes = encode.encode(record + '\n');
+    this.#tailMayBeTorn = true;
     let offset = 0;
     while (offset < bytes.length) {
       const count = writeSync(this.#fd, bytes, offset, bytes.length - offset);
       if (count === 0) throw new Error('journal write made no progress');
       offset += count;
     }
+    this.#tailMayBeTorn = false;
   }
-  flush() { this.#check(); fsyncSync(this.#fd); }
+  flush() {
+    this.#check();
+    this.#repairIfNeeded();
+    this.#tailMayBeTorn = true;
+    fsyncSync(this.#fd);
+    this.#tailMayBeTorn = false;
+  }
   close() {
     if (!this.#closed) {
       this.#closed = true;
