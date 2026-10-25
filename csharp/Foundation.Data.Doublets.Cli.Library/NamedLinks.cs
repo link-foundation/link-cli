@@ -27,6 +27,23 @@ namespace Foundation.Data.Doublets.Cli
             _getString = getString;
         }
 
+        /// <summary>All logical external names, even before row allocation.</summary>
+        public virtual IReadOnlyDictionary<TLinkAddress, string> ExternalNames()
+        {
+            var names = new Dictionary<TLinkAddress, string>();
+            var any = _links.Constants.Any;
+            foreach (var pair in _links.All(new Link<TLinkAddress>(any, any, any)).Select(row => new Link<TLinkAddress>(row)).OrderBy(row => row.Index))
+            {
+                var reference = (Hybrid<TLinkAddress>)pair.Source;
+                if (!reference.IsExternal || !_links.Exists(pair.Target)) continue;
+                var candidate = new Link<TLinkAddress>(_links.GetLink(pair.Target));
+                if (candidate.Source != _nameType) continue;
+                var index = TLinkAddress.CreateTruncating(reference.AbsoluteValue);
+                if (!names.ContainsKey(index)) names[index] = _getString(candidate.Target);
+            }
+            return names;
+        }
+
         public virtual TLinkAddress SetNameForExternalReference(TLinkAddress link, string name)
         {
             var reference = new Hybrid<TLinkAddress>(link, isExternal: true);
@@ -82,11 +99,17 @@ namespace Foundation.Data.Doublets.Cli
 
         public virtual TLinkAddress GetExternalReferenceByName(string name)
         {
+            return TryGetExternalReferenceByName(name, out var reference) ? reference : _links.Constants.Null;
+        }
+
+        public virtual bool TryGetExternalReferenceByName(string name, out TLinkAddress address)
+        {
+            address = _links.Constants.Null;
             var nameSequence = _createString(name);
             var nameLink = _links.SearchOrDefault(_nameType, nameSequence);
             if (nameLink.Equals(_links.Constants.Null))
             {
-                return _links.Constants.Null;
+                return false;
             }
 
             var any = _links.Constants.Any;
@@ -96,11 +119,12 @@ namespace Foundation.Data.Doublets.Cli
                 var reference = (Hybrid<TLinkAddress>)_links.GetSource(link);
                 if (reference.IsExternal)
                 {
-                    return TLinkAddress.CreateTruncating(reference.AbsoluteValue);
+                    address = TLinkAddress.CreateTruncating(reference.AbsoluteValue);
+                    return true;
                 }
             }
 
-            return _links.Constants.Null;
+            return false;
         }
 
         public virtual void RemoveName(TLinkAddress link)

@@ -29,8 +29,9 @@ fn storage_error(error: anyhow::Error) -> LinkError {
 /// shared by the three in-memory decorators, which expose the same
 /// inherent method set.
 macro_rules! impl_in_memory_links_storage {
-    ($type:ty, $create:expr, $flush:expr, $external:expr, $reload:expr) => {
+    ($type:ty, $create:expr, $flush:expr, $external:expr, $reload:expr $(, $extra:item)*) => {
         impl LinksStorage<u32> for $type {
+            $($extra)*
             fn create_link(&mut self, source: u32, target: u32) -> Result<u32, LinkError> {
                 #[allow(clippy::redundant_closure_call)]
                 Ok($create(self, source, target))
@@ -210,6 +211,21 @@ impl_in_memory_links_storage!(
     |storage: &mut NamedTypesDecorator| {
         storage.links_mut().reload()?;
         storage.names_links_mut().reload()
+    },
+    fn capture_names(
+        &mut self,
+    ) -> Result<Option<std::collections::BTreeMap<u32, String>>, LinkError> {
+        self.logical_names().map(Some).map_err(storage_error)
+    },
+    fn set_link_name(&mut self, index: u32, name: Option<&str>) -> Result<u32, LinkError> {
+        use crate::named_types::NamedTypes;
+        match name {
+            Some(name) => self.set_name(index, name).map_err(storage_error),
+            None => {
+                self.remove_name(index).map_err(storage_error)?;
+                Ok(0)
+            }
+        }
     }
 );
 

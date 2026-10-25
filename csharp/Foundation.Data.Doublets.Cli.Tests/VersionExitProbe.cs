@@ -7,7 +7,7 @@ internal static class VersionExitProbe
 {
     internal const string Topic = "topic|:parent=雪\0";
 
-    internal static int Run(string directory, string mode, bool automatic)
+    internal static int Run(string directory, string mode, bool automatic, bool names = false)
     {
         using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
         using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
@@ -21,6 +21,7 @@ internal static class VersionExitProbe
         using var tx = new TransactionsDecorator(data, log, flushData: FlushData, flushLog: log.Flush);
         using var vc = new VersionControlDecorator(tx, branches);
         var id = vc.CreateAndUpdate(11u, 12u);
+        vc.SetName(id, "original");
         var original = vc.CurrentSequence;
         vc.Branch(Topic);
         vc.SwitchBranch(Topic);
@@ -29,7 +30,8 @@ internal static class VersionExitProbe
         armed = mode == "checkpoint";
         var error = Record.Exception(() =>
         {
-            vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
+            if (names) vc.SetName(id, "changed 雪|\0\n");
+            else vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
             if (!automatic && mode != "pending")
             {
                 if (mode == "rollback") transaction!.Rollback();

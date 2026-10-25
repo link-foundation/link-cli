@@ -43,9 +43,11 @@ public class VersionMovementFailureTests
                 using var tx = new TransactionsDecorator(data, log);
                 using var vc = new VersionControlDecorator(tx, branches, trace: true);
                 id = vc.CreateAndUpdate(11u, 12u);
+                vc.SetName(id, "original 雪|\0\n");
                 var original = vc.CurrentSequence;
                 vc.Branch("original");
                 vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
+                vc.SetName(id, "changed 雪|\0\n");
                 var attempted = vc.CurrentSequence;
                 var transition = tx.Log.Last();
                 var heads = vc.ListBranches();
@@ -86,6 +88,7 @@ public class VersionMovementFailureTests
                 Assert.Equal(original, vc.CurrentSequence);
                 Assert.Equal(heads, vc.ListBranches());
                 Assert.Equal(11u, vc.GetSource(id));
+                Assert.Equal("original 雪|\0\n", vc.GetName(id));
                 vc.Update(new[] { id }, new[] { id, 31u, 32u }, null);
                 following = vc.CurrentSequence;
                 Assert.Equal(attempted + 1, following);
@@ -101,6 +104,7 @@ public class VersionMovementFailureTests
                 Assert.Equal(selected, vc.CurrentBranch);
                 Assert.Equal(following, vc.CurrentSequence);
                 Assert.Equal(31u, vc.GetSource(id));
+                Assert.Equal("original 雪|\0\n", vc.GetName(id));
             }
         }
         finally { Directory.Delete(directory, recursive: true); }

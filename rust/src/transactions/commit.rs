@@ -1,6 +1,6 @@
 //! Retain commit ownership across uncertain decisions and failed checkpoints.
 use super::{
-    GenericTransactionsDecorator, GenericTransition, LinkError, LinkReference, LinksStorage,
+    GenericTransactionsDecorator, JournalRecord, LinkError, LinkReference, LinksStorage,
     TransitionLogStore, COMMIT_MARKER_PREFIX,
 };
 
@@ -57,7 +57,7 @@ where
 
     fn finish_commit_checkpoint(
         &mut self,
-        transitions: &[GenericTransition<T>],
+        transitions: &[JournalRecord<T>],
     ) -> Result<(), LinkError> {
         // Never persist an applied marker before its data is durable.
         self.inner.flush()?;

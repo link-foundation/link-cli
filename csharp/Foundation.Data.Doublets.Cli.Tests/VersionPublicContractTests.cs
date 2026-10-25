@@ -38,6 +38,8 @@ public class VersionPublicContractTests
             Assert.Equal("kept", vc.GetName(link)); Assert.Equal(link, vc.GetByName("kept"));
             vc.RemoveName(link);
             Assert.Null(vc.GetName(link)); Assert.Equal(0u, vc.GetByName("kept"));
+            Assert.Equal(head + 2, vc.CurrentSequence);
+            head = vc.CurrentSequence;
             using (var following = await vc.BeginTransactionAsync())
             { vc.CreateAndUpdate(21u, 22u); }
             Assert.Equal(head, vc.CurrentSequence); Assert.Equal(1u, vc.Count());

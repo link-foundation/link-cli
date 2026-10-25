@@ -218,6 +218,22 @@ pub trait LinksStorage<T: LinkReference> {
         self.all_links().len()
     }
 
+    /// Optional logical name snapshot for transactional undo. Unnamed stores
+    /// return None without allocation. Include names of absent/external rows.
+    fn capture_names(
+        &mut self,
+    ) -> Result<Option<std::collections::BTreeMap<T, String>>, LinkError> {
+        Ok(None)
+    }
+
+    /// Changes one logical name without recording. A named adapter must restore
+    /// external-reference names even when their row currently does not exist.
+    fn set_link_name(&mut self, _index: T, _name: Option<&str>) -> Result<T, LinkError> {
+        Err(LinkError::StorageError(
+            "storage does not support names".into(),
+        ))
+    }
+
     /// Makes every write durable on disk.
     ///
     /// Implementations that keep state in memory write it out here;

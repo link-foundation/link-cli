@@ -1,7 +1,7 @@
 //! Finite real-process exits skip all version-owner and storage destructors.
 use anyhow::{bail, Result};
 use link_cli::{
-    CommitMode, LogRetentionPolicy, NamedTypesDecorator, TransactionsDecorator,
+    CommitMode, LogRetentionPolicy, NamedTypeLinks, NamedTypesDecorator, TransactionsDecorator,
     VersionControlDecorator,
 };
 use std::path::Path;
@@ -22,13 +22,14 @@ fn open(directory: &Path) -> Result<VersionControlDecorator> {
         false,
     )
 }
-fn verify(mode: &str, automatic: bool) -> Result<()> {
+fn verify(mode: &str, automatic: bool, names: bool) -> Result<()> {
     let directory = tempfile::tempdir()?;
     let mut child = Command::new(std::env::current_exe()?)
         .args(["--exact", "version_exit_child", "--ignored", "--nocapture"])
         .env("LINK_VERSION_EXIT_DIRECTORY", directory.path())
         .env("LINK_VERSION_EXIT_MODE", mode)
         .env("LINK_VERSION_EXIT_AUTOMATIC", automatic.to_string())
+        .env("LINK_VERSION_EXIT_NAMES", names.to_string())
         .stdout(Stdio::null())
         .stderr(Stdio::inherit())
         .spawn()?;
@@ -57,7 +58,18 @@ fn verify(mode: &str, automatic: bool) -> Result<()> {
     let expected = if committed { attempted } else { original };
     let mut vc = open(directory.path())?;
     assert_eq!(vc.current_branch(), TOPIC);
-    assert_eq!(vc.get(id).unwrap().source, if committed { 21 } else { 11 });
+    assert_eq!(
+        vc.get(id).unwrap().source,
+        if committed && !names { 21 } else { 11 }
+    );
+    assert_eq!(
+        vc.get_name(id)?.as_deref(),
+        Some(if committed && names {
+            "changed 雪|\0\n"
+        } else {
+            "original"
+        })
+    );
     assert_eq!(
         vc.current_sequence(),
         expected,
@@ -73,9 +85,18 @@ fn verify(mode: &str, automatic: bool) -> Result<()> {
     );
     vc.checkout(original)?;
     assert_eq!(vc.get(id).unwrap().source, 11);
+    assert_eq!(vc.get_name(id)?.as_deref(), Some("original"));
     if committed {
         vc.checkout(attempted)?;
-        assert_eq!(vc.get(id).unwrap().source, 21);
+        assert_eq!(vc.get(id).unwrap().source, if names { 11 } else { 21 });
+        assert_eq!(
+            vc.get_name(id)?.as_deref(),
+            Some(if names {
+                "changed 雪|\0\n"
+            } else {
+                "original"
+            })
+        );
     } else {
         assert!(vc.checkout(attempted).is_err());
     }
@@ -83,16 +104,24 @@ fn verify(mode: &str, automatic: bool) -> Result<()> {
     let following = vc.current_sequence();
     vc.save()?;
     drop(vc);
-    let vc = open(directory.path())?;
+    let mut vc = open(directory.path())?;
     assert_eq!(vc.current_sequence(), following);
     assert_eq!(vc.get(id).unwrap().source, 31);
+    assert_eq!(
+        vc.get_name(id)?.as_deref(),
+        Some(if committed && names {
+            "changed 雪|\0\n"
+        } else {
+            "original"
+        })
+    );
     Ok(())
 }
 macro_rules! contract {
     ($name:ident, $mode:literal, $automatic:literal) => {
         #[test]
         fn $name() -> Result<()> {
-            verify($mode, $automatic)
+            verify($mode, $automatic, false)
         }
     };
 }
@@ -120,6 +149,21 @@ contract!(
 );
 
 #[test]
+fn abrupt_name_only_versions_recover_exact_names_and_attribution() -> Result<()> {
+    for (mode, automatic) in [
+        ("success", false),
+        ("success", true),
+        ("checkpoint", false),
+        ("checkpoint", true),
+        ("pending", false),
+        ("rollback", false),
+    ] {
+        verify(mode, automatic, true)?;
+    }
+    Ok(())
+}
+
+#[test]
 #[ignore = "finite child process entry point"]
 fn version_exit_child() -> Result<()> {
     let Some(directory) = std::env::var_os("LINK_VERSION_EXIT_DIRECTORY") else {
@@ -129,19 +173,25 @@ fn version_exit_child() -> Result<()> {
     std::fs::create_dir(directory.join("data"))?;
     let mut vc = open(directory)?;
     let id = vc.create_and_update(11, 12)?;
+    vc.set_name(id, "original")?;
     let original = vc.current_sequence();
     vc.branch(TOPIC, None)?;
     vc.switch_branch(TOPIC)?;
     vc.save()?;
     let mode = std::env::var("LINK_VERSION_EXIT_MODE")?;
     let automatic = std::env::var("LINK_VERSION_EXIT_AUTOMATIC")? == "true";
+    let names = std::env::var("LINK_VERSION_EXIT_NAMES")? == "true";
     if !automatic {
         vc.begin_transaction()?;
     }
     if mode == "checkpoint" {
         std::fs::rename(directory.join("data"), directory.join("moved"))?;
     }
-    let result = vc.update(id, 21, 22);
+    let result = if names {
+        vc.set_name(id, "changed 雪|\0\n").map(|_| ())
+    } else {
+        vc.update(id, 21, 22).map(|_| ())
+    };
     let outcome = if automatic {
         result.map(|_| ())
     } else {

@@ -1,0 +1,132 @@
+242-test transactions_named_history::rollback_of_allocation_preserves_preexisting_external_name ... ok
+243-test transactions_named_history::name_only_versions_advance_and_replay ... ok
+244-test transactions_named_history::empty_and_zero_address_names_keep_distinct_presence_and_owners ... ok
+245-test transaction_name_failure::unnamed_adapters_reject_complete_named_replay_before_row_effects ... ok
+246:test transaction_name_failure::row_records_replay_the_actual_name_after_an_inner_decorator_changes_it ... FAIL
+247-test transaction_name_failure::name_failures_reopen_independent_images_and_release_cleanup_only_after_retry ... ok
+248-test transaction_name_failure::invalid_or_conflicting_name_records_fail_before_rows_names_or_history_change ... ok
+249:test transaction_name_failure::failed_post_effect_name_capture_keeps_row_undo_and_retry_ownership ... FAIL
+250-test query_processor_csharp_parity::test_update_into_existing_pair_reports_merge_matches_csharp ... ok
+251-test query_processor_csharp_parity::test_update_into_existing_pair_repoints_usages_matches_csharp ... ok
+252-test query_processor_csharp_parity::test_update_into_existing_pair_merges_matches_csharp ... ok
+253-test query_processor_csharp_parity::test_update_into_a_pair_that_uses_it_repoints_the_usage_matches_csharp ... ok
+254-test query_processor_csharp_parity::test_unwrapped_create_query_matches_csharp ... ok
+255-test query_processor_csharp_parity::test_unknown_named_restriction_fails_without_auto_create ... ok
+256-test query_processor_csharp_parity::test_unbound_substitution_variable_twice_is_idempotent_matches_csharp ... ok
+257-test query_processor_csharp_parity::test_unbound_substitution_variable_one_half_finds_existing_matches_csharp ... ok
+258-test query_processor_csharp_parity::test_unbound_substitution_variable_in_an_update_keeps_existing_matches_csharp ... ok
+259-test query_processor_csharp_parity::test_unbound_substitution_variable_creates_null_point_matches_csharp ... ok
+260-test query_processor_csharp_parity::test_unbound_substitution_variable_at_an_index_matches_csharp ... ok
+261-test query_processor_csharp_parity::test_swap_one_link_keeps_its_address_matches_csharp ... ok
+262-test query_processor_csharp_parity::test_swap_all_links_using_variables_matches_csharp ... ok
+263-test query_processor_csharp_parity::test_string_composite_left_child_does_not_create_extra_leaf ... ok
+264-test query_processor_csharp_parity::test_string_aliases_in_variable_restriction_constrain_matches_to_named_links_matches_csharp ... ok
+265-test query_processor_csharp_parity::test_star_in_a_substitution_creates_null_point_matches_csharp ... ok
+266-test query_processor_csharp_parity::test_no_op_variable_query_returns_matched_changes ... ok
+267-test query_processor_csharp_parity::test_named_link_rename_matches_csharp ... ok
+268-test query_processor_csharp_parity::test_named_delete_cascades_to_usages_matches_csharp ... ok
+269-test query_processor_csharp_parity::test_issue_20_substitute_matched_link_and_outgoing_link_matches_csharp ... ok
+270-test query_processor_csharp_parity::test_issue_20_substitute_full_point_with_unbound_parts_matches_csharp ... ok
+271-test query_processor_csharp_parity::test_delete_cascades_to_usages_matches_csharp ... ok
+272-test query_processor_csharp_parity::test_delete_cascade_chain_matches_csharp ... ok
+273-test query_processor_csharp_parity::test_delete_by_wildcard_target_matches_csharp ... ok
+274-test query_processor_csharp_parity::test_delete_by_source_target_pattern_matches_csharp ... ok
+275-test query_processor_csharp_parity::test_delete_by_names_keeps_leaf_names_matches_csharp ... ok
+276-test query_processor_csharp_parity::test_delete_all_by_index_wildcard_matches_csharp ... ok
+277-test query_processor_csharp_parity::test_create_explicit_index_after_gap_matches_csharp ... ok
+278-test query_processor_csharp_parity::test_create_deep_nested_numeric_links_matches_csharp ... ok
+279-test link_storage::test_storage_update ... ok
+280-test link_storage::test_storage_search ... ok
+281-test link_storage::test_storage_named_links ... ok
+282-test link_storage::test_storage_moving_a_name_unnames_its_previous_link ... ok
+283-test link_storage::test_storage_get_or_create ... ok
+284-test link_storage::test_storage_delete ... ok
+--
+484-test query_processor_change_report::a_named_leaf_created_on_the_way_is_reported_created ... ok
+485-
+486-failures:
+487-
+488:---- transaction_name_failure::row_records_replay_the_actual_name_after_an_inner_decorator_changes_it output ----
+489-    error output:
+490-        panicked at tests/../../tests/transaction_name_failure_tests.rs:360:5:
+491-        assertion `left == right` failed
+492-          left: "original"
+493-         right: "updated 雪"
+494-        
+495-        Stack:
+496-        
+497-        Error
+498-            at /tmp/.tmpGvjAKF/wasm-bindgen-test.js:390:25
+499-            at logError (/tmp/.tmpGvjAKF/wasm-bindgen-test.js:957:18)
+500-            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpGvjAKF/wasm-bindgen-test.js:389:57)
+501-            at storage-fc0433dfcc6323b4.wasm.<<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[21286]:0x456335)
+502-            at storage-fc0433dfcc6323b4.wasm.<<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[12956]:0x4105a8)
+503-            at storage-fc0433dfcc6323b4.wasm.<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::panic_handling (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4021]:0x2e4f2f)
+504-            at storage-fc0433dfcc6323b4.wasm.<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[12955]:0x41058b)
+505-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_with_hook (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4498]:0x303cb3)
+506-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[8770]:0x3b0381)
+507-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::sys::backtrace::__rust_end_short_backtrace::<std[2b356c9112ee3216]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[25292]:0x460f0b)
+508-        
+509-        
+510-    
+511-    JS exception that was thrown:
+512-        RuntimeError: unreachable
+513-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::__rust_abort (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[26584]:0x4633b8)
+514-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::__rust_start_panic (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[26405]:0x4630c3)
+515-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::rust_panic (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[22168]:0x4593d1)
+516-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_with_hook (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4498]:0x303d24)
+517-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[8770]:0x3b0381)
+518-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::sys::backtrace::__rust_end_short_backtrace::<std[2b356c9112ee3216]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[25292]:0x460f0b)
+519-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::rust_begin_unwind (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[14792]:0x429381)
+520-            at storage-fc0433dfcc6323b4.wasm.core[f0fd674eaa06beef]::panicking::panic_fmt (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[13483]:0x41850e)
+521-            at storage-fc0433dfcc6323b4.wasm.core[f0fd674eaa06beef]::panicking::assert_failed_inner (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[3894]:0x2dc7b7)
+522-            at storage-fc0433dfcc6323b4.wasm.core[f0fd674eaa06beef]::panicking::assert_failed::<alloc[ae94343a5edb5677]::string::String, &str> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[13532]:0x41907b)
+523-
+524:---- transaction_name_failure::failed_post_effect_name_capture_keeps_row_undo_and_retry_ownership output ----
+525-    error output:
+526-        panicked at tests/../../tests/transaction_name_failure_tests.rs:378:9:
+527-        assertion failed: tx.update(id, 21, 22).is_err()
+528-        
+529-        Stack:
+530-        
+531-        Error
+532-            at /tmp/.tmpGvjAKF/wasm-bindgen-test.js:390:25
+533-            at logError (/tmp/.tmpGvjAKF/wasm-bindgen-test.js:957:18)
+534-            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpGvjAKF/wasm-bindgen-test.js:389:57)
+535-            at storage-fc0433dfcc6323b4.wasm.<<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[21286]:0x456335)
+536-            at storage-fc0433dfcc6323b4.wasm.<<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[12956]:0x4105a8)
+537-            at storage-fc0433dfcc6323b4.wasm.<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::panic_handling (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4021]:0x2e4f2f)
+538-            at storage-fc0433dfcc6323b4.wasm.<wasm_bindgen_test[35eda2e99918c282]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[12955]:0x41058b)
+539-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_with_hook (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4498]:0x303cb3)
+540-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[8770]:0x3b0353)
+541-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::sys::backtrace::__rust_end_short_backtrace::<std[2b356c9112ee3216]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[25292]:0x460f0b)
+542-        
+543-        
+544-    
+545-    JS exception that was thrown:
+546-        RuntimeError: unreachable
+547-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::__rust_abort (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[26584]:0x4633b8)
+548-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::__rust_start_panic (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[26405]:0x4630c3)
+549-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::rust_panic (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[22168]:0x4593d1)
+550-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_with_hook (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[4498]:0x303d24)
+551-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[8770]:0x3b0353)
+552-            at storage-fc0433dfcc6323b4.wasm.std[2b356c9112ee3216]::sys::backtrace::__rust_end_short_backtrace::<std[2b356c9112ee3216]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[25292]:0x460f0b)
+553-            at storage-fc0433dfcc6323b4.wasm.__rustc[4b1ee1ef74718a7b]::rust_begin_unwind (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[14792]:0x429381)
+554-            at storage-fc0433dfcc6323b4.wasm.core[f0fd674eaa06beef]::panicking::panic_fmt (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[13483]:0x41850e)
+555-            at storage-fc0433dfcc6323b4.wasm.core[f0fd674eaa06beef]::panicking::panic (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[19127]:0x44c292)
+556:            at storage-fc0433dfcc6323b4.wasm.storage[75cf957f9a7c5cc6]::transaction_name_failure::failed_post_effect_name_capture_keeps_row_undo_and_retry_ownership (wasm://wasm/storage-fc0433dfcc6323b4.wasm-03dd87c2:wasm-function[249]:0xa1c9e)
+557-
+558-failures:
+559-
+560:    transaction_name_failure::row_records_replay_the_actual_name_after_an_inner_decorator_changes_it
+561:    transaction_name_failure::failed_post_effect_name_capture_keeps_row_undo_and_retry_ownership
+562-
+563-test result: FAILED. 292 passed; 2 failed; 0 ignored; 0 filtered out; finished in 102.02s
+564-
+565-Error: Node failed with exit_code 1
+566-error: test failed, to rerun pass `--test storage`
+567-
+568-Caused by:
+569-  process didn't exit successfully: `wasm-bindgen-test-runner /tmp/gh-issue-solver-1792924568628/rust/wasm/target/llvm-cov-target/wasm32-unknown-unknown/debug/deps/storage-fc0433dfcc6323b4.wasm` (exit status: 1)
+570-note: test exited abnormally; to see the full output pass --no-capture to the harness.
+571-error: process didn't exit successfully: `cargo test --target wasm32-unknown-unknown --manifest-path /tmp/gh-issue-solver-1792924568628/rust/wasm/Cargo.toml --target-dir /tmp/gh-issue-solver-1792924568628/rust/wasm/target/llvm-cov-target --test web --test engine --test group_commit --test core --test protocol --test storage` (exit status: 1)

@@ -4,13 +4,13 @@ use std::collections::{HashMap, HashSet};
 use doublets::data::LinkReference;
 
 use super::types::{
-    GenericTransition, APPLIED_MARKER_PREFIX, COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX,
-    TRANSITION_NAME_PREFIX,
+    APPLIED_MARKER_PREFIX, COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX,
 };
+use super::JournalRecord;
 use crate::error::LinkError;
 
 pub(super) struct RecoveryJournal<T> {
-    pub(super) log: Vec<GenericTransition<T>>,
+    pub(super) log: Vec<JournalRecord<T>>,
     pub(super) committed: HashSet<u128>,
     pub(super) rolled_back: HashSet<u128>,
     pub(super) applied: HashSet<i64>,
@@ -30,7 +30,7 @@ impl<T: LinkReference> RecoveryJournal<T> {
             if let Some(payload) = entry.strip_prefix(TRANSITION_NAME_PREFIX) {
                 // Compare parsed values: identical retries may retain older
                 // lexical forms and extra fields accepted by the public codec.
-                let transition = GenericTransition::<T>::parse(payload)?;
+                let transition = JournalRecord::<T>::parse(payload)?;
                 if transition.transaction_id == 0 || transition.sequence <= 0 {
                     return Err(LinkError::InvalidFormat(
                         "transaction records require a nonzero owner and positive sequence".into(),

@@ -160,3 +160,10 @@ Commit caller-selected groups of independent sessions with separate revisions
 and one shared durability flush. Preserve input-order validation, known aborts
 and indeterminate prefix recovery without publishing uncertain state. Avoid
 flushing the primary twice during synchronous replica acknowledgement.
+
+Record ordinary name changes and row-associated names in complete portable
+journal records. Restore unique-name owners and deleted/cascaded names during
+rollback; publish name-only versions and preserve names through recovery,
+movement intents and chunk archives. Retain the original row transition and
+v1 codec, add complete record snapshots/replay, preserve shared-name adapters
+and distinguish an existing name owner at address zero from an absent name.

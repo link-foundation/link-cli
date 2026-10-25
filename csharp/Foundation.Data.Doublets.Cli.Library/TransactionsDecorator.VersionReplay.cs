@@ -47,7 +47,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
         }
     }
 
-    internal void ReplayVersionTransition(Transition<TLinkAddress> transition, bool undo)
+    internal void ReplayVersionTransition(JournalRecord<TLinkAddress> transition, bool undo)
     {
         lock (_lock)
         {
@@ -55,8 +55,8 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             _replaying = true;
             try
             {
-                if (undo) TryRevertTransition(transition);
-                else TryApplyTransition(transition);
+                if (undo) TryRevertRecord(transition);
+                else TryApplyRecord(transition);
             }
             finally { _replaying = false; }
         }

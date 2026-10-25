@@ -28,6 +28,7 @@ public class TransactionReplayOwnerTests
             var id = tx.CreateAndUpdate(11u, 12u);
             tx.Update(new[] { id }, new[] { id, 21u, 22u }, null);
             var previous = tx.Log.Last();
+            var complete = tx.Journal.Last();
             using var pending = tx.BeginTransaction();
             tx.Update(new[] { id }, new[] { id, 31u, 32u }, null);
             if (phase != "pending")
@@ -43,6 +44,10 @@ public class TransactionReplayOwnerTests
             {
                 if (revert) tx.RevertTransition(previous); else tx.ApplyTransition(previous);
             });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                if (revert) tx.RevertRecord(complete); else tx.ApplyRecord(complete);
+            });
             Assert.Equal(source, tx.GetSource(id));
             Assert.Equal(sequence, tx.LastLoggedSequence);
             Assert.Throws<InvalidOperationException>(() => tx.BeginTransaction());
@@ -50,6 +55,8 @@ public class TransactionReplayOwnerTests
             Assert.Equal(phase == "commit" ? 31u : 21u, tx.GetSource(id));
             tx.RevertTransition(previous); Assert.Equal(11u, tx.GetSource(id));
             tx.ApplyTransition(previous); Assert.Equal(21u, tx.GetSource(id));
+            tx.RevertRecord(complete); Assert.Equal(11u, tx.GetSource(id));
+            tx.ApplyRecord(complete); Assert.Equal(21u, tx.GetSource(id));
             Assert.Equal(sequence, tx.LastLoggedSequence);
             tx.Update(new[] { id }, new[] { id, 41u, 42u }, null);
             Assert.Equal(41u, tx.GetSource(id));

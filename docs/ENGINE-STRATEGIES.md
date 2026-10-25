@@ -105,9 +105,12 @@ The legacy transaction decorators have a different architecture: their commit
 marker is flushed before acknowledging commit, data is flushed before an applied
 marker, and replay errors propagate. They still mutate the underlying store
 while a transaction is open; use the staged engine for session isolation.
-Their legacy row journal does not undo or version ordinary named writes; staged
-sessions include names in atomic revisions. Named-write admission fences do not
-add names to that legacy journal.
+Their complete journal records undo and version ordinary named writes, including
+unique-name moves and names removed by deletion. Name-only versions, archive
+replay and movement recovery use the complete payload; row-only snapshots retain
+their original API. See [transaction names](TRANSACTION-NAMES.md) for codecs,
+reader compatibility, named-adapter requirements and the cost of sidecar scans
+and pre-effect journal flushes. Staged sessions include names in atomic revisions.
 Sized and chunked retention discard completed rollback records without replaying
 their writes. Chunk archives contain committed changes only; pending records
 remain in the live log. Live C# retention checkpoints current inline effects

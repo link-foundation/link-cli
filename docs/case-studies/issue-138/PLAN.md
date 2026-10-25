@@ -134,5 +134,15 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
    and state structures, finer decorator composition and full native/linked-WASM
    coverage. Every unsupported strategy and unverified guarantee stays open.
 
+9. Ordinary legacy names now have complete portable history, rollback,
+   recovery and version movement. Full suites pass: 801 native, 460 actual WASM,
+   1,788 C# per configuration, 111 JS and 217 repository tests. Shared codecs,
+   independent images, bounded exits, archives and callback failures verify
+   the documented paths; bare stores retain their path. See
+   NAMED-HISTORY-PLAN.md and named-history.txt. Publish this useful step and
+   verify every exact-head workflow. Continue ROW-WAL-PLAN.md with failing
+   durable row-before-observer reproductions before changing the protocol.
+   Complete coverage and all wider acceptance gaps remain open.
+
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

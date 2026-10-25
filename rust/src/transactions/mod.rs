@@ -69,6 +69,9 @@ mod log;
 // Replay, recovery and retention live in a submodule; see transactions/recovery.rs.
 mod commit;
 mod journal_validation;
+mod names;
+mod record;
+mod recording;
 mod recovery;
 mod types;
 mod version_replay;
@@ -86,6 +89,7 @@ use crate::named_types::NamedTypesDecorator;
 use crate::storage::{LinksStorage, LinksStorageRef};
 
 pub use log::{FileTransitionLog, TransitionLogStore};
+pub use record::{JournalRecord, NameChange};
 pub use types::{
     CommitMode, DoubletLink, GenericDoubletLink, GenericTransition, LogRetentionPolicy, Transition,
     TransitionKind,
@@ -97,7 +101,7 @@ use types::{COMMIT_MARKER_PREFIX, ROLLBACK_MARKER_PREFIX, TRANSITION_NAME_PREFIX
 #[derive(Clone)]
 struct PendingTransaction<T> {
     id: u128,
-    transitions: Vec<GenericTransition<T>>,
+    transitions: Vec<JournalRecord<T>>,
     auto_commit: bool,
     rollback_only: bool,
     commit_attempted: bool,
@@ -160,7 +164,7 @@ where
 {
     inner: S,
     log_store: L,
-    log: Vec<GenericTransition<T>>,
+    log: Vec<JournalRecord<T>>,
     committed: HashSet<u128>,
     rolled_back: HashSet<u128>,
     applied: HashSet<i64>,
@@ -280,6 +284,11 @@ where
 
     /// Returns a snapshot of the transitions log in sequence order.
     pub fn log(&self) -> Vec<GenericTransition<T>> {
+        self.log.iter().map(|record| record.transition).collect()
+    }
+
+    /// Complete retained records, including optional name payloads.
+    pub fn journal(&self) -> Vec<JournalRecord<T>> {
         self.log.clone()
     }
 
@@ -352,6 +361,7 @@ where
         if self.replaying {
             return self.inner.create_link(source, target);
         }
+        let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
         let mut observed = Vec::new();
         let outcome = self
@@ -359,7 +369,7 @@ where
             .create_link_observed(source, target, &mut |before, after| {
                 record_observed(&mut observed, before, after)
             });
-        self.record_observed_transitions(&observed, owns)?;
+        self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         let id = match outcome {
             Ok(id) => id,
             Err(error) => {
@@ -401,6 +411,7 @@ where
                 .update_link_observed(id, source, target, observer);
         }
         let before = self.snapshot(id);
+        let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
         let mut observed: Vec<ObservedChange<T>> = Vec::new();
         let outcome = self
@@ -414,7 +425,7 @@ where
             Err(err) => {
                 // Callbacks describe changes already made, even if a later
                 // part of the storage operation fails.
-                self.record_observed_transitions(&observed, owns)?;
+                self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
                 if owns {
                     if observed.is_empty() {
                         self.current = None;
@@ -431,9 +442,15 @@ where
                 .get_link(id)
                 .map(|link| GenericDoubletLink::from_link(&link))
                 .unwrap_or_else(|| GenericDoubletLink::new(id, source, target));
-            self.record_transition(TransitionKind::Update, before, after, owns)?;
+            self.record_transition(
+                TransitionKind::Update,
+                before,
+                after,
+                owns,
+                names_before.as_ref(),
+            )?;
         } else {
-            self.record_observed_transitions(&observed, owns)?;
+            self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         }
         if owns {
             self.commit_current()?;
@@ -463,6 +480,7 @@ where
             return Ok(deleted);
         }
         let before = self.snapshot(id);
+        let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
         let mut observed: Vec<ObservedChange<T>> = Vec::new();
         let outcome = self.inner.delete_link_observed(id, &mut |before, after| {
@@ -474,7 +492,7 @@ where
             Err(err) => {
                 // Callbacks describe changes already made, even if a later
                 // part of the storage operation fails.
-                self.record_observed_transitions(&observed, owns)?;
+                self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
                 if owns {
                     if observed.is_empty() {
                         self.current = None;
@@ -491,9 +509,10 @@ where
                 before,
                 GenericDoubletLink::empty(),
                 owns,
+                names_before.as_ref(),
             )?;
         } else {
-            self.record_observed_transitions(&observed, owns)?;
+            self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         }
         if owns {
             self.commit_current()?;
@@ -549,6 +568,7 @@ where
         if self.replaying {
             return self.inner.ensure_link_created(id);
         }
+        let names_before = self.inner.capture_names()?;
         let owns = self.ensure_open_transaction()?;
         let mut observed = Vec::new();
         let outcome = self
@@ -556,7 +576,7 @@ where
             .ensure_link_created_observed(id, &mut |before, after| {
                 record_observed(&mut observed, before, after)
             });
-        self.record_observed_transitions(&observed, owns)?;
+        self.record_observed_transitions(&observed, owns, names_before.as_ref())?;
         match outcome {
             Ok(created) => {
                 if owns {
@@ -623,146 +643,6 @@ where
         } else {
             Ok(false)
         }
-    }
-
-    /// Writes one transition per link a single logical write touched.
-    ///
-    /// A resolved write is not necessarily a single-link change: the
-    /// upstream uniqueness and usages decorators merge duplicates and
-    /// cascade through usages, so one `update`/`delete` call can rewrite
-    /// or remove several links. Each of them needs its own transition,
-    /// otherwise a rollback (or a version-control branch switch, which
-    /// replays the same transitions) cannot restore the links the
-    /// cascade touched.
-    ///
-    /// The kind is derived from the observed pair rather than taken from
-    /// the outer operation, because a cascade can delete a link during an
-    /// `update` — recording that as an `Update` would make the revert a
-    /// no-op, since the link no longer exists to be updated back.
-    fn record_observed_transitions(
-        &mut self,
-        observed: &[ObservedChange<T>],
-        owns: bool,
-    ) -> Result<(), LinkError> {
-        let zero = T::from_byte(0);
-        let changes = observed.iter().map(|(_, before, after)| {
-            let kind = match (before.index != zero, after.index != zero) {
-                (false, true) => TransitionKind::Create,
-                (true, false) => TransitionKind::Delete,
-                _ => TransitionKind::Update,
-            };
-            (kind, *before, *after)
-        });
-        self.record_transitions(changes, owns)
-    }
-
-    fn record_transition(
-        &mut self,
-        kind: TransitionKind,
-        before: GenericDoubletLink<T>,
-        after: GenericDoubletLink<T>,
-        owns: bool,
-    ) -> Result<(), LinkError> {
-        self.record_transitions(std::iter::once((kind, before, after)), owns)
-    }
-
-    fn record_transitions(
-        &mut self,
-        changes: impl ExactSizeIterator<Item = TransitionChange<T>>,
-        owns: bool,
-    ) -> Result<(), LinkError> {
-        let transaction_id = self.current.as_ref().map(|tx| tx.id).ok_or_else(|| {
-            LinkError::Transaction(
-                "internal: missing open transaction while recording transition".to_string(),
-            )
-        })?;
-        let exhausted = changes.len() as u128 > (i64::MAX - self.sequence_counter) as u128;
-        let mut prepared = Vec::with_capacity(changes.len());
-        for (kind, before, after) in changes {
-            let sequence = if exhausted {
-                0
-            } else {
-                self.sequence_counter += 1;
-                self.sequence_counter
-            };
-            let transition = GenericTransition {
-                transaction_id,
-                sequence,
-                timestamp_ms: now_unix_ms(),
-                kind,
-                before,
-                after,
-            };
-            self.current
-                .as_mut()
-                .expect("open transaction")
-                .transitions
-                .push(transition);
-            if !exhausted {
-                self.log.push(transition);
-            }
-            prepared.push(transition);
-        }
-        if exhausted {
-            // Keep the entire unnumbered undo batch only in pending memory.
-            // It must never become invalid serialized journal/history entries.
-            self.current
-                .as_mut()
-                .expect("open transaction")
-                .rollback_only = true;
-            if owns {
-                self.rollback()?;
-            }
-            return Err(LinkError::Transaction(
-                "Transaction sequence space is exhausted.".into(),
-            ));
-        }
-        self.append_transitions(&prepared, owns)
-    }
-
-    fn append_transitions(
-        &mut self,
-        transitions: &[GenericTransition<T>],
-        owns: bool,
-    ) -> Result<(), LinkError> {
-        // Save every undo record before the first fallible journal write.
-        for transition in transitions {
-            if let Err(error) = self.write_transition_to_log(transition) {
-                self.current
-                    .as_mut()
-                    .expect("open transaction")
-                    .rollback_only = true;
-                if owns {
-                    self.rollback()?;
-                }
-                return Err(error);
-            }
-            if self.trace {
-                crate::diagnostics::stderr!(
-                    "[Transactions] Recorded {:?} seq={} tx={:032x}: ({},{},{}) -> ({},{},{}).",
-                    transition.kind,
-                    transition.sequence,
-                    transition.transaction_id,
-                    transition.before.index,
-                    transition.before.source,
-                    transition.before.target,
-                    transition.after.index,
-                    transition.after.source,
-                    transition.after.target,
-                );
-            }
-        }
-        Ok(())
-    }
-
-    fn write_transition_to_log(
-        &mut self,
-        transition: &GenericTransition<T>,
-    ) -> Result<(), LinkError> {
-        self.log_store.append_log_entry(&format!(
-            "{TRANSITION_NAME_PREFIX}{}",
-            transition.serialize()
-        ))
     }
 
     fn write_marker(&mut self, name: &str) -> Result<(), LinkError> {
@@ -852,7 +732,7 @@ where
             .transitions
             .iter()
             .rev()
-            .try_for_each(|transition| self.try_revert_transition(transition));
+            .try_for_each(|transition| self.try_revert_record(transition));
         self.replaying = false;
         result?;
         self.inner.flush()?;

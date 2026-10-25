@@ -1951,3 +1951,55 @@ reclaim at the configured container limit did occur. Complete native/C#/linked-
 WASM coverage, legacy name/history atomicity, independent composition and wider
 competitor strategies remain unfinished. Exact-head CI is required for this
 new publication; preceding ancestry head aa601e2 passes all nine workflows.
+
+
+## Ordinary names in complete transaction history
+
+The former legacy wrappers checked name-write admission without journaling
+names. Six minimum regressions in each native language and actual WASM first
+fail; the preserved failures distinguish rename, removal, unique-name movement,
+deletion/cascade undo and name-only version attribution. Separate callback and
+zero-address controls expose additional failures. See named-history*-before.txt
+and named-history.txt under the PR evidence directory.
+
+An additional complete JournalRecord preserves the existing row value/API and
+v1 codec while adding canonical UTF-16 name payloads and name-only updates.
+Recovery validates every record before changing live state. Rollback, recovery,
+archives, checkout and durable movement intents consume complete records.
+Explicit name writes flush their undo before changing names; actual resulting
+row names are captured. C# drains pending rows before nested name writes while
+retaining callback delivery/coalescing. Required capture failures retain undo
+and cleanup ownership. Shared vectors state exact canonical/legacy compatibility
+and the native string domains; old readers reject new complete payloads.
+
+Twenty-four independent durable-image fault schedules per native language
+verify exact state at failure, two reopenings, retained ownership and following
+edits. Portable contracts run under actual WASM. Invalid/conflicting metadata,
+complete public replay admission, sized/chunked archive replay, version movement
+faults and bounded abrupt exits exercise the corresponding persistence paths.
+These process exits leave the OS running and do not simulate physical power loss.
+
+Complete local validation passes: 801 standard native Rust tests plus the custom
+stdout harness, eleven child entries exercised by bounded parents, 460 actual
+WASM tests, C# Debug/Release with 1,788 tests each, 111 JS tests and 217 repository
+checks. Strict types, native/WASM Clippy, formatting, source sizes, release
+metadata and whitespace pass. All seventeen JS modules and three WASM wrappers
+remain at 100% measured lines/branches/functions. Generated actual-WASM glue
+passes Node/Bun/Deno conformance. Cross-language persistent group examples pass
+for snapshot/delta journals; ordinary native name/history examples pass too.
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 10,667/11,506 (92.71%) | 1,884/2,274 (82.85%) | 1,389/1,529 (90.84%) |
+| Actual WASM, complete linked source | 7,867/11,060 (71.13%) | 1,445/1,985 (72.80%) | 1,047/1,509 (69.38%) |
+| C# Debug | 6,803/7,316 (92.99%) | 3,327/3,756 (88.58%) | Not reported by this collector |
+| C# Release | 5,219/5,537 (94.26%) | 3,299/3,737 (88.28%) | Not reported by this collector |
+
+The figures use official LLVM summaries and Coverlet integer totals, rounded
+to two decimals. Builds remain sequential under the configured memory limit;
+reclaim occurred with zero OOM/OOM-kill events. See
+[the recipe, compatibility and selected costs](../../TRANSACTION-NAMES.md).
+Full sidecar scans and retained strings are selected transaction costs; bare
+stores do not run them. Complete coverage, row-before-observer durability,
+custom unobserved side effects, efficient structures, finer composition and
+wider strategies remain unfinished. Fresh exact-head CI is still required.

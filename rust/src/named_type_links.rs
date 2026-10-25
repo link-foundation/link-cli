@@ -387,8 +387,9 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
-        self.ensure_write_allowed()?;
-        NamedTypes::set_name(self.inner_mut(), id, name)
+        Ok(crate::transactions::TransactionsDecorator::set_name(
+            self, id, name,
+        )?)
     }
 
     fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
@@ -396,8 +397,9 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
     }
 
     fn remove_name(&mut self, id: u32) -> Result<()> {
-        self.ensure_write_allowed()?;
-        NamedTypes::remove_name(self.inner_mut(), id)
+        Ok(crate::transactions::TransactionsDecorator::remove_name(
+            self, id,
+        )?)
     }
 
     fn save(&mut self) -> Result<()> {
@@ -468,8 +470,7 @@ impl<B: NamedTypeLinks> NamedTypeLinks
     }
 
     fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
-        self.ensure_write_allowed()?;
-        NamedTypes::set_name(self.transactions_mut().inner_mut(), id, name)
+        crate::version_control::GenericVersionControlDecorator::set_name(self, id, name)
     }
 
     fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
@@ -477,8 +478,7 @@ impl<B: NamedTypeLinks> NamedTypeLinks
     }
 
     fn remove_name(&mut self, id: u32) -> Result<()> {
-        self.ensure_write_allowed()?;
-        NamedTypes::remove_name(self.transactions_mut().inner_mut(), id)
+        crate::version_control::GenericVersionControlDecorator::remove_name(self, id)
     }
 
     fn save(&mut self) -> Result<()> {

@@ -2,8 +2,8 @@
 #![cfg(not(target_arch = "wasm32"))]
 use anyhow::{bail, Result};
 use link_cli::{
-    CommitMode, GenericVersionControlDecorator, LogRetentionPolicy, NamedTypesDecorator,
-    TransactionsDecorator, VersionControlDecorator,
+    CommitMode, GenericVersionControlDecorator, LogRetentionPolicy, NamedTypeLinks,
+    NamedTypesDecorator, TransactionsDecorator, VersionControlDecorator,
 };
 use std::{
     cell::RefCell,
@@ -110,6 +110,7 @@ fn verify(point: &str, switch: bool, recovery_fault: Option<&str>) -> Result<()>
             vc.get(id).unwrap().source,
             if reopen == 0 { 11 } else { 31 }
         );
+        assert_eq!(vc.get_name(id)?.as_deref(), Some("original 雪|\0\n"));
         assert_eq!(
             vc.transactions().last_logged_sequence(),
             if reopen == 0 { attempted } else { following }
@@ -118,6 +119,7 @@ fn verify(point: &str, switch: bool, recovery_fault: Option<&str>) -> Result<()>
             vc.switch_branch("main")?;
             vc.checkout(attempted)?;
             assert_eq!(vc.get(id).unwrap().source, 21);
+            assert_eq!(vc.get_name(id)?.as_deref(), Some("changed 雪|\0\n"));
             if switch {
                 vc.switch_branch(TOPIC)?;
             } else {
@@ -202,9 +204,11 @@ fn movement_exit_child() -> Result<()> {
         false,
     )?;
     let id = vc.create_and_update(11, 12)?;
+    vc.set_name(id, "original 雪|\0\n")?;
     let original = vc.current_sequence();
     vc.branch(TOPIC, None)?;
     vc.update(id, 21, 22)?;
+    vc.set_name(id, "changed 雪|\0\n")?;
     let attempted = vc.current_sequence();
     vc.save()?;
     std::fs::write(

@@ -21,7 +21,7 @@ use super::types::{
     GenericTransition, LogRetentionPolicy, TransitionKind, APPLIED_MARKER_PREFIX,
     ROLLBACK_MARKER_PREFIX,
 };
-use super::{new_transaction_id, now_unix_ms, GenericTransactionsDecorator};
+use super::{new_transaction_id, now_unix_ms, GenericTransactionsDecorator, JournalRecord};
 
 impl<T, S, L> GenericTransactionsDecorator<T, S, L>
 where
@@ -51,6 +51,60 @@ where
         let result = self.try_revert_transition(transition);
         self.replaying = false;
         result
+    }
+
+    /// Replays a complete record, including names, without logging another write.
+    pub fn apply_record(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
+        self.ensure_replay_allowed()?;
+        self.validate_record_backend(record)?;
+        self.replaying = true;
+        let result = self.try_apply_record(record, false);
+        self.replaying = false;
+        result
+    }
+
+    /// Undoes a complete record, including names, without logging another write.
+    pub fn revert_record(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
+        self.ensure_replay_allowed()?;
+        self.validate_record_backend(record)?;
+        self.replaying = true;
+        let result = self.try_revert_record(record);
+        self.replaying = false;
+        result
+    }
+
+    fn validate_record_backend(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
+        record.validate()?;
+        if !record.names.is_empty() && self.inner.capture_names()?.is_none() {
+            return Err(LinkError::StorageError(
+                "journal requires a named storage adapter".into(),
+            ));
+        }
+        Ok(())
+    }
+
+    pub(super) fn try_apply_record(
+        &mut self,
+        record: &JournalRecord<T>,
+        record_applied: bool,
+    ) -> Result<(), LinkError> {
+        if !record.name_only {
+            self.try_apply_transition(&record.transition, false)?;
+        }
+        self.replay_names(record, false)?;
+        if record_applied {
+            self.inner.flush()?;
+            self.mark_applied(record)?;
+            self.log_store.flush_log()?;
+        }
+        Ok(())
+    }
+
+    pub(super) fn try_revert_record(&mut self, record: &JournalRecord<T>) -> Result<(), LinkError> {
+        if !record.name_only {
+            self.try_revert_transition(&record.transition)?;
+        }
+        self.replay_names(record, true)
     }
 
     fn ensure_replay_allowed(&self) -> Result<(), LinkError> {
@@ -226,6 +280,11 @@ where
 
     fn recover_journal(&mut self) -> Result<(), LinkError> {
         let journal = RecoveryJournal::<T>::parse(self.log_store.read_log_entries()?)?;
+        // Parsing already validates every payload. Probe optional adapter
+        // capability once, avoiding a full sidecar scan per retained record.
+        if let Some(record) = journal.log.iter().find(|record| !record.names.is_empty()) {
+            self.validate_record_backend(record)?;
+        }
         if self.reload_pending {
             self.inner.reload()?;
             self.reload_pending = false;
@@ -239,7 +298,7 @@ where
 
         // An older failed checkpoint can precede a later applied commit. Redo
         // the whole committed suffix in order, including already-applied rows.
-        let log_snapshot: Vec<GenericTransition<T>> = self.log.clone();
+        let log_snapshot: Vec<JournalRecord<T>> = self.log.clone();
         let replay_from = log_snapshot
             .iter()
             .position(|transition| {
@@ -253,7 +312,7 @@ where
                 if !self.committed.contains(&transition.transaction_id) {
                     continue;
                 }
-                self.try_apply_transition(transition, false)?;
+                self.try_apply_record(transition, false)?;
             }
             // Auto-rollback transitions written but never committed and never rolled back (R10).
             let mut pending_tx_ids: Vec<u128> = Vec::new();
@@ -265,7 +324,7 @@ where
                 if self.rolled_back.contains(&transition.transaction_id) {
                     continue;
                 }
-                self.try_revert_transition(transition)?;
+                self.try_revert_record(transition)?;
                 if pending_seen.insert(transition.transaction_id) {
                     pending_tx_ids.push(transition.transaction_id);
                 }
@@ -306,7 +365,7 @@ where
             return Ok(());
         }
         while self.log.len() as u64 > max_transitions {
-            let head = self.log[0];
+            let head = self.log[0].clone();
             if !self.rolled_back.contains(&head.transaction_id)
                 && !self.applied.contains(&head.sequence)
             {
@@ -314,7 +373,7 @@ where
                     break; // A pending transaction is not reclaimable.
                 }
                 self.replaying = true;
-                let result = self.try_apply_transition(&head, true);
+                let result = self.try_apply_record(&head, true);
                 self.replaying = false;
                 result?;
                 if !self.applied.contains(&head.sequence) {
@@ -343,14 +402,14 @@ where
         if (self.log.len() as u64) < chunk_size {
             return Ok(());
         }
-        let chunk: Vec<GenericTransition<T>> =
-            self.log.iter().take(chunk_size as usize).copied().collect();
+        let chunk: Vec<JournalRecord<T>> =
+            self.log.iter().take(chunk_size as usize).cloned().collect();
         // Rollback has already durably undone these writes. Reapplying them
         // would resurrect aborted data; archives contain committed changes only.
         let archived: Vec<_> = chunk
             .iter()
             .filter(|transition| !self.rolled_back.contains(&transition.transaction_id))
-            .copied()
+            .cloned()
             .collect();
         for transition in &archived {
             if !self.applied.contains(&transition.sequence) {
@@ -358,7 +417,7 @@ where
                     return Ok(()); // Never apply or discard a pending chunk.
                 }
                 self.replaying = true;
-                let result = self.try_apply_transition(transition, true);
+                let result = self.try_apply_record(transition, true);
                 self.replaying = false;
                 result?;
                 if !self.applied.contains(&transition.sequence) {

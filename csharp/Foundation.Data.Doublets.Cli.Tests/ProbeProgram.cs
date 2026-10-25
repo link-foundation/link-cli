@@ -16,6 +16,8 @@ internal static class ProbeProgram
             if (args is ["deep-ancestry", var operation, var ancestryDirectory]) return VersionAncestryDepthTests.Child(operation, ancestryDirectory);
             if (args is ["version-exit", var directory, var mode, var automatic])
                 return VersionExitProbe.Run(directory, mode, bool.Parse(automatic));
+            if (args is ["name-exit", var nameDirectory, var nameMode, var nameAutomatic])
+                return VersionExitProbe.Run(nameDirectory, nameMode, bool.Parse(nameAutomatic), names: true);
             if (args is ["movement-exit", var movementDirectory, var point, var branchSwitch])
                 return VersionMovementExitTests.Child(movementDirectory, point, bool.Parse(branchSwitch));
             if (args is ["journal-quota", var journalDirectory, var journalMode, var unicode])

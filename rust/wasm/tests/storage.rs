@@ -55,6 +55,15 @@ mod transactions_identity_wasm;
 #[path = "../../tests/transactions_decorator_tests.rs"]
 mod transactions_decorator;
 
+#[path = "../../tests/transactions_named_history_tests.rs"]
+mod transactions_named_history;
+
+#[path = "../../tests/transaction_name_codec_tests.rs"]
+mod transaction_name_codec;
+
+#[path = "../../tests/transaction_name_failure_tests.rs"]
+mod transaction_name_failure;
+
 #[path = "../../tests/version_control_decorator_tests.rs"]
 mod version_control_decorator;
 

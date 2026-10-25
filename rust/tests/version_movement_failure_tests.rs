@@ -39,9 +39,11 @@ fn contract(switch: bool, point: &str) -> Result<()> {
         true,
     )?;
     let id = vc.create_and_update(11, 12)?;
+    vc.set_name(id, "original 雪|\0\n")?;
     let original = vc.current_sequence();
     vc.branch("original", None)?;
     vc.update(id, 21, 22)?;
+    vc.set_name(id, "changed 雪|\0\n")?;
     let attempted = vc.current_sequence();
     let transition = *vc.transactions().log().last().unwrap();
     let heads = vc.list_branches();
@@ -91,6 +93,7 @@ fn contract(switch: bool, point: &str) -> Result<()> {
     assert_eq!(vc.current_sequence(), original);
     assert_eq!(vc.list_branches(), heads);
     assert_eq!(vc.get(id).unwrap().source, 11);
+    assert_eq!(vc.get_name(id)?.as_deref(), Some("original 雪|\0\n"));
     vc.update(id, 31, 32)?;
     let following = vc.current_sequence();
     assert_eq!(following, attempted + 1);
@@ -117,6 +120,7 @@ fn contract(switch: bool, point: &str) -> Result<()> {
         assert_eq!(reopened.current_branch(), selected);
         assert_eq!(reopened.current_sequence(), following);
         assert_eq!(reopened.get(id).unwrap().source, 31);
+        assert_eq!(reopened.get_name(id)?.as_deref(), Some("original 雪|\0\n"));
         reopened.save()?;
     }
     #[cfg(target_arch = "wasm32")]

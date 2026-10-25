@@ -262,6 +262,10 @@ impl NamedTypesDecorator {
         }
     }
 
+    pub(crate) fn logical_names(&mut self) -> Result<std::collections::BTreeMap<u32, String>> {
+        self.with_named_links(|named| named.unicode_storage().external_names())
+    }
+
     fn with_named_links<T>(
         &mut self,
         action: impl FnOnce(&mut NamedLinks<'_>) -> Result<T>,

@@ -99,6 +99,10 @@ namespace Foundation.Data.Doublets.Cli
             LinksFacadeDisposer.Dispose(_links);
         }
 
+        public virtual bool ReassignsNames => false;
+
+        public virtual IReadOnlyDictionary<TLinkAddress, string> CaptureNames() => NamedLinks.ExternalNames();
+
         /// <summary>
         /// Gets the name associated with the specified link address.
         /// </summary>

@@ -153,6 +153,8 @@ namespace Foundation.Data.Doublets.Cli
             PinnedTypesDecorator.Deconstruct(out type1, out type2, out type3);
         }
 
+        public virtual IReadOnlyDictionary<TLinkAddress, string> CaptureNames() => NamedLinks.ExternalNames();
+
         public virtual string? GetName(TLinkAddress link)
         {
             if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] GetName called for link: {link}");
@@ -164,8 +166,7 @@ namespace Foundation.Data.Doublets.Cli
         public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
             if (_tracingEnabled) DiagnosticOutput.WriteLine($"[Trace] SetName called for link: {link} with name: '{name}'");
-            var existingLinkWithName = NamedLinks.GetExternalReferenceByName(name);
-            if (!existingLinkWithName.Equals(_links.Constants.Null) && !existingLinkWithName.Equals(link))
+            if (NamedLinks.TryGetExternalReferenceByName(name, out var existingLinkWithName) && !existingLinkWithName.Equals(link))
             {
                 RemoveName(existingLinkWithName);
             }

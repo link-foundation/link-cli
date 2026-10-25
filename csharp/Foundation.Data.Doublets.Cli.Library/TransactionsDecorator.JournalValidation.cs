@@ -7,7 +7,7 @@ namespace Foundation.Data.Doublets.Cli;
 public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
     private sealed record RecoveryJournal(
-        List<Transition<TLinkAddress>> Transitions,
+        List<JournalRecord<TLinkAddress>> Transitions,
         HashSet<Guid> Committed,
         HashSet<Guid> RolledBack,
         HashSet<long> Applied,
@@ -18,7 +18,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
     // Compare parsed values so idempotent retries keep legacy lexical forms.
     private RecoveryJournal ReadRecoveryJournal()
     {
-        var transitions = new Dictionary<long, Transition<TLinkAddress>>();
+        var transitions = new Dictionary<long, JournalRecord<TLinkAddress>>();
         var committed = new HashSet<Guid>();
         var rolledBack = new HashSet<Guid>();
         var applied = new HashSet<long>();
@@ -30,11 +30,11 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             if (string.IsNullOrEmpty(name)) continue;
             if (name.StartsWith(TransitionNamePrefix, StringComparison.Ordinal))
             {
-                if (!Transition<TLinkAddress>.TryParse(name.Substring(TransitionNamePrefix.Length), out var transition))
+                if (!JournalRecord<TLinkAddress>.TryParse(name.Substring(TransitionNamePrefix.Length), out var transition))
                     throw new InvalidDataException("Malformed transaction record in journal.");
                 if (transition.TransactionId == Guid.Empty || transition.Sequence <= 0)
                     throw new InvalidDataException("Transaction journal records require a nonzero owner and positive sequence.");
-                if (transitions.TryGetValue(transition.Sequence, out var previous) && previous != transition)
+                if (transitions.TryGetValue(transition.Sequence, out var previous) && !previous.Equals(transition))
                     throw new InvalidDataException($"Conflicting transaction records for sequence {transition.Sequence}.");
                 transitions[transition.Sequence] = transition;
                 sequence = Math.Max(sequence, transition.Sequence);

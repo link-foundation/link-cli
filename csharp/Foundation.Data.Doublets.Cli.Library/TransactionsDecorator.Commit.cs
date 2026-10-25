@@ -33,17 +33,17 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             // Retrying an uncertain/known decision finishes synchronously, even through
             // CommitAsync, so cleanup does not silently detach failed work.
             var runAsync = !retry && (forceAsync || _commitMode == CommitMode.Async);
-            Trace($"Committed tx {transaction.Id:N} (mode={(runAsync ? "async" : "sync")}, transitions={transaction.Transitions.Count}).");
+            Trace($"Committed tx {transaction.Id:N} (mode={(runAsync ? "async" : "sync")}, transitions={transaction.Records.Count}).");
             if (runAsync)
             {
-                var transitions = transaction.Transitions.ToArray();
+                var transitions = transaction.Records.ToArray();
                 if (!_asyncQueue.Writer.TryWrite(() => ApplyTransitions(transitions)))
                     throw new InvalidOperationException("Background checkpoint queue is closed.");
             }
             else
             {
                 _flushData();
-                foreach (var transition in transaction.Transitions) MarkApplied(transition);
+                foreach (var transition in transaction.Records) MarkApplied(transition);
                 _flushLog();
                 EnforceRetentionLocked();
             }
@@ -68,9 +68,9 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             _replaying = true;
             try
             {
-                foreach (var transition in transaction.Transitions.AsEnumerable().Reverse())
+                foreach (var transition in transaction.Records.AsEnumerable().Reverse())
                 {
-                    TryRevertTransition(transition);
+                    TryRevertRecord(transition);
                 }
             }
             finally
@@ -83,7 +83,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             transaction.MarkRolledBack();
             _rolledBack.Add(transaction.Id);
             if (_current == transaction) _current = null;
-            Trace($"Rolled back tx {transaction.Id:N} ({transaction.Transitions.Count} transitions).");
+            Trace($"Rolled back tx {transaction.Id:N} ({transaction.Records.Count} transitions).");
             EnforceRetentionLocked();
         }
     }

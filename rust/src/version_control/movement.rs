@@ -2,7 +2,7 @@
 use super::{
     decode_version_name, encode_version_name, GenericVersionControlDecorator, NamedTypeLinks,
 };
-use crate::transactions::{Transition, TransitionKind};
+use crate::transactions::{JournalRecord, TransitionKind};
 use anyhow::{bail, Result};
 use std::collections::HashMap;
 
@@ -14,8 +14,8 @@ pub(super) struct MovementIntent {
     pub from: i64,
     pub to_branch: String,
     pub to: i64,
-    pub undo: Vec<Transition>,
-    pub redo: Vec<Transition>,
+    pub undo: Vec<JournalRecord<u32>>,
+    pub redo: Vec<JournalRecord<u32>>,
 }
 
 #[derive(Clone)]
@@ -35,7 +35,7 @@ fn checksum(body: &str) -> u64 {
 
 impl MovementIntent {
     pub fn encode(&self) -> String {
-        let records = |records: &[Transition]| {
+        let records = |records: &[JournalRecord<u32>]| {
             records
                 .iter()
                 .map(|record| encode_version_name(&record.serialize()))
@@ -64,14 +64,14 @@ impl MovementIntent {
         if fields.len() != 7 || fields[0] != "1" {
             return None;
         }
-        let records = |text: &str| -> Option<Vec<Transition>> {
+        let records = |text: &str| -> Option<Vec<JournalRecord<u32>>> {
             if text.is_empty() {
                 return Some(Vec::new());
             }
             text.split(',')
                 .map(|record| {
                     let text = decode_version_name(record)?;
-                    let record = Transition::parse(&text).ok()?;
+                    let record = JournalRecord::<u32>::parse(&text).ok()?;
                     if record.serialize() != text
                         || record.transaction_id == 0
                         || record.sequence <= 0
@@ -85,7 +85,9 @@ impl MovementIntent {
                             record.before.index == 0 && record.after.index != 0
                         }
                         TransitionKind::Update => {
-                            record.before.index != 0 && record.before.index == record.after.index
+                            record.name_only
+                                || (record.before.index != 0
+                                    && record.before.index == record.after.index)
                         }
                         TransitionKind::Delete => {
                             record.before.index != 0 && record.after.index == 0
@@ -133,12 +135,12 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
             .count();
         let available: HashMap<_, _> = self
             .transactions
-            .log()
+            .journal()
             .into_iter()
             .map(|transition| (transition.sequence, transition))
             .collect();
         let required = |seq: &i64| {
-            available.get(seq).copied().ok_or_else(|| {
+            available.get(seq).cloned().ok_or_else(|| {
                 anyhow::anyhow!(
             "Transition {seq} is no longer retained; checkout requires complete changed history.")
             })
@@ -262,7 +264,7 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
         }
         let available: HashMap<_, _> = self
             .transactions
-            .log()
+            .journal()
             .into_iter()
             .map(|t| (t.sequence, t))
             .collect();

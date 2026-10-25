@@ -62,6 +62,7 @@ fn verify(revert: bool, phase: &str) {
     let id = tx.create_and_update(11, 12).unwrap();
     tx.update(id, 21, 22).unwrap();
     let previous = *tx.log().last().unwrap();
+    let complete = tx.journal().last().unwrap().clone();
     tx.begin_transaction().unwrap();
     tx.update(id, 31, 32).unwrap();
     if phase != "pending" {
@@ -84,6 +85,12 @@ fn verify(revert: bool, phase: &str) {
         tx.apply_transition(&previous)
     };
     assert!(outcome.is_err(), "unlogged replay bypassed the live owner");
+    let outcome = if revert {
+        tx.revert_record(&complete)
+    } else {
+        tx.apply_record(&complete)
+    };
+    assert!(outcome.is_err(), "complete replay bypassed the live owner");
     assert_eq!(tx.get(id).unwrap().source, source);
     assert_eq!(tx.last_logged_sequence(), sequence);
     assert!(tx.begin_transaction().is_err(), "replay released the owner");
@@ -100,6 +107,10 @@ fn verify(revert: bool, phase: &str) {
     tx.revert_transition(&previous).unwrap();
     assert_eq!(tx.get(id).unwrap().source, 11);
     tx.apply_transition(&previous).unwrap();
+    assert_eq!(tx.get(id).unwrap().source, 21);
+    tx.revert_record(&complete).unwrap();
+    assert_eq!(tx.get(id).unwrap().source, 11);
+    tx.apply_record(&complete).unwrap();
     assert_eq!(tx.get(id).unwrap().source, 21);
     assert_eq!(tx.last_logged_sequence(), sequence);
     tx.update(id, 41, 42).unwrap();

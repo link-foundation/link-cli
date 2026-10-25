@@ -30,18 +30,24 @@ public class VersionProcessExitTests
     }
 
     [Theory(Timeout = 30000)]
-    [InlineData("success", false)]
-    [InlineData("success", true)]
-    [InlineData("checkpoint", false)]
-    [InlineData("checkpoint", true)]
-    [InlineData("pending", false)]
-    [InlineData("rollback", false)]
-    public async Task AbruptExitRecoversExactBranchAttribution(string mode, bool automatic)
+    [InlineData("success", false, false)]
+    [InlineData("success", true, false)]
+    [InlineData("checkpoint", false, false)]
+    [InlineData("checkpoint", true, false)]
+    [InlineData("pending", false, false)]
+    [InlineData("rollback", false, false)]
+    [InlineData("success", false, true)]
+    [InlineData("success", true, true)]
+    [InlineData("checkpoint", false, true)]
+    [InlineData("checkpoint", true, true)]
+    [InlineData("pending", false, true)]
+    [InlineData("rollback", false, true)]
+    public async Task AbruptExitRecoversExactBranchAttribution(string mode, bool automatic, bool names)
     {
         var directory = Directory.CreateTempSubdirectory("version-process-exit-").FullName;
         try
         {
-            var (id, original, attempted) = await ExitChild(directory, mode, automatic);
+            var (id, original, attempted) = await ExitChild(directory, mode, automatic, names ? "name-exit" : "version-exit");
             var committed = mode is "success" or "checkpoint";
             var expected = committed ? attempted : original;
             long following = 0;
@@ -55,15 +61,18 @@ public class VersionProcessExitTests
                 Assert.Equal(VersionExitProbe.Topic, vc.CurrentBranch);
                 Assert.Equal(reopen == 0 ? expected : following, vc.CurrentSequence);
                 Assert.Equal(reopen == 0 ? expected : following, vc.ListBranches().Single(b => b.Name == VersionExitProbe.Topic).Head);
-                Assert.Equal(reopen == 1 ? 31u : committed ? 21u : 11u, vc.GetSource(id));
+                Assert.Equal(reopen == 1 ? 31u : committed && !names ? 21u : 11u, vc.GetSource(id));
+                Assert.Equal(committed && names ? "changed 雪|\0\n" : "original", vc.GetName(id));
                 if (reopen == 0)
                 {
                     vc.Checkout(original);
                     Assert.Equal(11u, vc.GetSource(id));
+                    Assert.Equal("original", vc.GetName(id));
                     if (committed)
                     {
                         vc.Checkout(attempted);
-                        Assert.Equal(21u, vc.GetSource(id));
+                        Assert.Equal(names ? 11u : 21u, vc.GetSource(id));
+                        Assert.Equal(names ? "changed 雪|\0\n" : "original", vc.GetName(id));
                     }
                     else Assert.Throws<InvalidOperationException>(() => vc.Checkout(attempted));
                     vc.Update(new[] { id }, new[] { id, 31u, 32u }, null);

@@ -1,6 +1,6 @@
 //! Exclusive, unlogged replay owned by the version decorator.
 use super::{
-    GenericTransactionsDecorator, GenericTransition, LinkError, LinksStorage, TransitionLogStore,
+    GenericTransactionsDecorator, JournalRecord, LinkError, LinksStorage, TransitionLogStore,
 };
 use doublets::data::LinkReference;
 
@@ -35,15 +35,15 @@ where
 
     pub(crate) fn replay_version_transition(
         &mut self,
-        transition: &GenericTransition<T>,
+        transition: &JournalRecord<T>,
         undo: bool,
     ) -> Result<(), LinkError> {
         self.require_version_replay()?;
         self.replaying = true;
         let result = if undo {
-            self.try_revert_transition(transition)
+            self.try_revert_record(transition)
         } else {
-            self.try_apply_transition(transition, false)
+            self.try_apply_record(transition, false)
         };
         self.replaying = false;
         result

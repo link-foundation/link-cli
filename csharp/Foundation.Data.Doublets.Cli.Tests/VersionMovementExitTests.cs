@@ -49,8 +49,10 @@ public class VersionMovementExitTests
         using var tx = new TransactionsDecorator(data, log, flushData: FlushData, flushLog: log.Flush);
         using var vc = new VersionControlDecorator(tx, branches);
         var id = vc.CreateAndUpdate(11u, 12u);
+        vc.SetName(id, "original 雪|\0\n");
         var original = vc.CurrentSequence;
         vc.Branch(topic);
+        vc.SetName(id, "changed 雪|\0\n");
         if (asynchronous) { tx.CommitMode = CommitMode.Async; failCheckpoint = 1; }
         vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
         if (asynchronous) Assert.True(checkpointFailed.Wait(TimeSpan.FromSeconds(3)));
@@ -84,12 +86,14 @@ public class VersionMovementExitTests
                 Assert.Equal(selected, vc.CurrentBranch);
                 Assert.Equal(reopen == 0 ? original : following, vc.CurrentSequence);
                 Assert.Equal(reopen == 0 ? 11u : 31u, vc.GetSource(id));
+                Assert.Equal("original 雪|\0\n", vc.GetName(id));
                 Assert.Equal(reopen == 0 ? attempted : following, tx.LastLoggedSequence);
                 if (reopen == 0)
                 {
                     vc.SwitchBranch("main");
                     vc.Checkout(attempted);
                     Assert.Equal(21u, vc.GetSource(id));
+                    Assert.Equal("changed 雪|\0\n", vc.GetName(id));
                     if (branchSwitch) vc.SwitchBranch(selected);
                     else vc.Checkout(original);
                     vc.Update(new[] { id }, new[] { id, 31u, 32u }, null);

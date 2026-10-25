@@ -8,7 +8,7 @@ public partial class VersionControlDecorator
 {
     private const string MovementPrefix = "__vc:move:";
     internal sealed record MovementIntent(string FromBranch, long From, string ToBranch, long To,
-        Transition<uint>[] Undo, Transition<uint>[] Redo);
+        JournalRecord<uint>[] Undo, JournalRecord<uint>[] Redo);
     private sealed class MovementState(MovementIntent intent, uint link = 0, bool prepared = false)
     {
         internal readonly MovementIntent Intent = intent;
@@ -28,7 +28,7 @@ public partial class VersionControlDecorator
 
     internal static string EncodeMovement(MovementIntent intent)
     {
-        static string Records(Transition<uint>[] records) => string.Join(',', records.Select(t => EncodeVersionName(t.Serialize())));
+        static string Records(JournalRecord<uint>[] records) => string.Join(',', records.Select(t => EncodeVersionName(t.Serialize())));
         var body = string.Join('|', "1", EncodeVersionName(intent.FromBranch),
             intent.From.ToString(CultureInfo.InvariantCulture), EncodeVersionName(intent.ToBranch),
             intent.To.ToString(CultureInfo.InvariantCulture), Records(intent.Undo), Records(intent.Redo));
@@ -52,19 +52,19 @@ public partial class VersionControlDecorator
             || !TryDecodeVersionName(fields[3], out var toBranch) || !ValidMovementName(toBranch)
             || !long.TryParse(fields[2], NumberStyles.None, CultureInfo.InvariantCulture, out var from)
             || !long.TryParse(fields[4], NumberStyles.None, CultureInfo.InvariantCulture, out var to)) return false;
-        static bool Records(string text, out Transition<uint>[] records)
+        static bool Records(string text, out JournalRecord<uint>[] records)
         {
             records = [];
             if (text.Length == 0) return true;
-            var result = new List<Transition<uint>>();
+            var result = new List<JournalRecord<uint>>();
             foreach (var encoded in text.Split(','))
             {
-                if (!TryDecodeVersionName(encoded, out var payload) || !Transition<uint>.TryParse(payload, out var record)
+                if (!TryDecodeVersionName(encoded, out var payload) || !JournalRecord<uint>.TryParse(payload, out var record)
                     || record.Serialize() != payload || record.TransactionId == Guid.Empty || record.Sequence <= 0) return false;
                 var valid = record.Kind switch
                 {
                     TransitionKind.Create => record.Before.Index == 0 && record.After.Index != 0,
-                    TransitionKind.Update => record.Before.Index != 0 && record.Before.Index == record.After.Index,
+                    TransitionKind.Update => record.NameOnly || (record.Before.Index != 0 && record.Before.Index == record.After.Index),
                     TransitionKind.Delete => record.Before.Index != 0 && record.After.Index == 0,
                     _ => false,
                 };
@@ -87,8 +87,8 @@ public partial class VersionControlDecorator
         if (newBranch == _currentBranch && to == _currentApplied) return;
         var currentPath = BuildBranchSeqsLocked(_currentBranch).Where(s => s <= _currentApplied).ToList();
         var common = currentPath.Zip(targetPath).TakeWhile(pair => pair.First == pair.Second).Count();
-        var available = _transactions.Log.ToDictionary(t => t.Sequence);
-        Transition<uint> Required(long sequence) => available.TryGetValue(sequence, out var transition)
+        var available = _transactions.Journal.ToDictionary(t => t.Sequence);
+        JournalRecord<uint> Required(long sequence) => available.TryGetValue(sequence, out var transition)
             ? transition : throw new InvalidOperationException($"Transition {sequence} is no longer retained; checkout requires complete changed history.");
         // Resolve all changed history before claiming ownership or changing rows.
         var undo = currentPath.Skip(common).Reverse().Select(Required).ToArray();
@@ -161,7 +161,7 @@ public partial class VersionControlDecorator
         if (!intent.Undo.Select(t => t.Sequence).SequenceEqual(from.Skip(common).Reverse())
             || !intent.Redo.Select(t => t.Sequence).SequenceEqual(to.Skip(common)))
             throw new InvalidDataException("Version movement intent contradicts its transition paths.");
-        var available = _transactions.Log.ToDictionary(t => t.Sequence);
+        var available = _transactions.Journal.ToDictionary(t => t.Sequence);
         foreach (var record in intent.Undo.Concat(intent.Redo))
             if (!_transactions.IsTransactionCommitted(record.TransactionId) || _transactions.IsTransactionRolledBack(record.TransactionId)
                 // The wire timestamp has millisecond precision; an in-memory

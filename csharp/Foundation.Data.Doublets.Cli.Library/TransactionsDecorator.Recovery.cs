@@ -60,7 +60,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             {
                 var transition = _log[index];
                 if (!_committed.Contains(transition.TransactionId)) continue;
-                TryApplyTransition(transition);
+                TryApplyRecord(transition);
             }
 
             // Auto-rollback transitions written but never committed and never
@@ -69,7 +69,7 @@ public partial class TransactionsDecorator<TLinkAddress> where TLinkAddress : IU
             {
                 if (_committed.Contains(transition.TransactionId)) continue;
                 if (_rolledBack.Contains(transition.TransactionId)) continue;
-                TryRevertTransition(transition);
+                TryRevertRecord(transition);
             }
 
             // Mark recovered-but-incomplete transactions as rolled back so

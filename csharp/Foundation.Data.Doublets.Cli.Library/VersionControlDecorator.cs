@@ -719,23 +719,17 @@ public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersio
 
     // -- INamedTypes forwarding -------------------------------------------
 
+    public virtual bool ReassignsNames => _transactions.ReassignsNames;
+    public virtual IReadOnlyDictionary<uint, string> CaptureNames() => _transactions.CaptureNames();
     public virtual string? GetName(uint link) => _transactions.GetName(link);
     public virtual uint SetName(uint link, string name)
     {
-        lock (_lock)
-        {
-            EnsureWriteAllowedLocked();
-            return _transactions.SetName(link, name);
-        }
+        return RunVcWrite(() => _transactions.SetName(link, name));
     }
     public virtual uint GetByName(string name) => _transactions.GetByName(name);
     public virtual void RemoveName(uint link)
     {
-        lock (_lock)
-        {
-            EnsureWriteAllowedLocked();
-            _transactions.RemoveName(link);
-        }
+        RunVcWrite(() => { _transactions.RemoveName(link); return 0u; });
     }
 
     // -- Convenience ------------------------------------------------------

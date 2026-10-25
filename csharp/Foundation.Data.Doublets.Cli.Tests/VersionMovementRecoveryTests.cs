@@ -49,7 +49,7 @@ public class VersionMovementRecoveryTests
             originalOwner.Update(new[] { id }, new[] { id, 21u, 22u }, null);
             var attempted = originalOwner.CurrentSequence;
             var record = tx.Log.Last();
-            var intent = new VersionControlDecorator.MovementIntent("main", attempted, "original", original, [record], []);
+            var intent = new VersionControlDecorator.MovementIntent("main", attempted, "original", original, [new JournalRecord<uint>(record)], []);
             uint Marker(string name)
             {
                 var link = branches.CreateAndUpdate(0u, 0u);
@@ -73,9 +73,9 @@ public class VersionMovementRecoveryTests
                 "unreachable-from" => intent with { From = long.MaxValue },
                 "unreachable-to" => intent with { To = long.MaxValue },
                 "missing-undo" => intent with { Undo = [] },
-                "extra-redo" => intent with { Redo = [record] },
-                "wrong-payload" => intent with { Undo = [record with { After = new Link<uint>(id, 91u, 92u) }] },
-                "wrong-decision" => intent with { Undo = [record with { TransactionId = Guid.NewGuid() }] },
+                "extra-redo" => intent with { Redo = [new JournalRecord<uint>(record)] },
+                "wrong-payload" => intent with { Undo = [new JournalRecord<uint>(record with { After = new Link<uint>(id, 91u, 92u) })] },
+                "wrong-decision" => intent with { Undo = [new JournalRecord<uint>(record with { TransactionId = Guid.NewGuid() })] },
                 _ => intent,
             };
             if (scenario == "wrong-current") Replace("__vc:current=", "__vc:current=other");

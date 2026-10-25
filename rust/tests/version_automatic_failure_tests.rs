@@ -25,6 +25,7 @@ struct Failure {
     id: u32,
     original: i64,
     expected: i64,
+    baseline_commits: usize,
 }
 fn failure(phase: &str) -> Result<Failure> {
     let directory = tempfile::tempdir()?;
@@ -37,6 +38,13 @@ fn failure(phase: &str) -> Result<Failure> {
     vc.branch("topic", None)?;
     vc.switch_branch("topic")?;
     vc.save()?;
+    let baseline_commits = vc
+        .transactions_mut()
+        .log_store_mut()
+        .read_log_entries()?
+        .iter()
+        .filter(|entry| entry.starts_with("__transactions:commit:"))
+        .count();
     std::fs::rename(directory.path().join(phase), directory.path().join("moved"))?;
     let outcome = vc.update(id, 21, 22);
     std::fs::rename(directory.path().join("moved"), directory.path().join(phase))?;
@@ -52,7 +60,7 @@ fn failure(phase: &str) -> Result<Failure> {
             .iter()
             .filter(|entry| entry.starts_with("__transactions:commit:"))
             .count(),
-        if phase == "data" { 2 } else { 1 }
+        baseline_commits + usize::from(phase == "data")
     );
     assert!(vc.branch("blocked", None).is_err());
     assert!(vc.tag("blocked", None).is_err());
@@ -66,6 +74,7 @@ fn failure(phase: &str) -> Result<Failure> {
         id,
         original,
         expected,
+        baseline_commits,
     })
 }
 fn cleanup(vc: &mut VersionControlDecorator, operation: &str) -> Result<()> {
@@ -83,6 +92,7 @@ fn verify_retry(operation: &str) -> Result<()> {
             id,
             original,
             expected,
+            baseline_commits,
         } = failure(phase)?;
         std::fs::rename(directory.path().join(phase), directory.path().join("moved"))?;
         let repeated = cleanup(&mut vc, operation);
@@ -103,7 +113,7 @@ fn verify_retry(operation: &str) -> Result<()> {
                 .iter()
                 .filter(|entry| entry.starts_with("__transactions:commit:"))
                 .count(),
-            2
+            baseline_commits + 1
         );
         vc.tag("committed", None)?;
         vc.save()?;

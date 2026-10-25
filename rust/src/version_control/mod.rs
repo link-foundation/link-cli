@@ -269,6 +269,14 @@ impl<B: NamedTypeLinks> GenericVersionControlDecorator<B> {
         self.run_version_write(|transactions| transactions.create_and_update(source, target))
     }
 
+    pub fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
+        self.run_version_write(|transactions| transactions.set_name(id, name))
+    }
+
+    pub fn remove_name(&mut self, id: u32) -> Result<()> {
+        self.run_version_write(|transactions| transactions.remove_name(id))
+    }
+
     pub fn exists(&self, id: u32) -> bool {
         self.transactions.exists(id)
     }
