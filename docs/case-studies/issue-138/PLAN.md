@@ -153,7 +153,8 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     Complete local suites pass: 820 native, 478 actual WASM, 1,901 C# tests per
     configuration, 111 JS and 217 repository checks. Runtime conformance and
     persistent examples pass; see row-wal.txt for exact coverage. Forward
-    publication and fresh exact-head CI are pending.
+    publication is complete and all nine workflows pass on `f95f59d`; see
+    row-wal-ci.txt. IMAGE-REPLAY-PLAN.md extends replay compatibility and coverage.
     See ROW-WAL-PLAN.md; physical page durability/repair and efficient state
     structures remain distinct follow-up requirements.
 

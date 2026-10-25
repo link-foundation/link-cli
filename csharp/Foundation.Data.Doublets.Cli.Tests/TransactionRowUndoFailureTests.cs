@@ -28,11 +28,17 @@ public class TransactionRowUndoFailureTests
         internal bool Unobserved;
         internal bool HiddenOnName;
         internal bool FailAfterUnobserved;
+        internal string? HiddenEffectKind;
+        internal uint? IgnoreRowRestore;
+        internal uint? IgnoreNameRestore;
+        internal int IgnoredCalls;
         private bool _captureFailure;
         private void HiddenEffects()
         {
-            Delete(new[] { 2u }, null);
-            var created = this.CreateAndUpdate(51u, 52u); SetName(created, "hidden"); SetName(0u, "absent");
+            var kind = HiddenEffectKind; HiddenEffectKind = null;
+            if (kind != "create") Delete(new[] { 2u }, null);
+            if (kind != "delete") { var created = this.CreateAndUpdate(51u, 52u); SetName(created, "hidden"); }
+            SetName(0u, "absent");
             _captureFailure = FailAfterUnobserved; FailAfterUnobserved = false;
         }
         public override IReadOnlyDictionary<uint, string> CaptureNames()
@@ -52,6 +58,10 @@ public class TransactionRowUndoFailureTests
         };
         public override uint Update(IList<uint>? restriction, IList<uint>? substitution, WriteHandler<uint>? handler)
         {
+            if (restriction is { Count: > 0 } && IgnoreRowRestore == restriction[0])
+            {
+                IgnoredCalls++; return Constants.Continue;
+            }
             control.Check("row-before");
             var result = base.Update(restriction, substitution, (before, after) =>
             {
@@ -67,9 +77,15 @@ public class TransactionRowUndoFailureTests
         }
         public override uint SetName(uint index, string name)
         {
+            if (IgnoreNameRestore == index) { IgnoredCalls++; return index; }
             control.Check("name-before"); var result = base.SetName(index, name);
             if (HiddenOnName) { HiddenOnName = false; HiddenEffects(); }
             Capture(); control.Check("name-after"); return result;
+        }
+        public override void RemoveName(uint index)
+        {
+            if (IgnoreNameRestore == index) { IgnoredCalls++; return; }
+            base.RemoveName(index);
         }
     }
     private sealed class Log(string path, Control control) : NamedTypesDecorator<uint>(path)
@@ -119,6 +135,38 @@ public class TransactionRowUndoFailureTests
         var dependent = tx.CreateAndUpdate(first, first); tx.SetName(dependent, "dependent");
         tx.SetName(0, "zero"); tx.SetName(77, "absent"); return first;
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void IncompleteRowOrNameRestorationRetainsCleanupOwner(bool names)
+    {
+        using var live = new Harness(Image.Empty, true); var tx = live.Tx;
+        var first = Seed(tx); live.Data.Capture(); var before = live.Control.Image;
+        using var pending = tx.BeginTransaction();
+        tx.Update(new[] { first }, new[] { first, 21u, 22u }, null); tx.SetName(first, "changed");
+        if (names) live.Data.IgnoreNameRestore = first; else live.Data.IgnoreRowRestore = first;
+        for (var retry = 0; retry < 2; retry++)
+        {
+            Assert.Contains("complete undo image", Assert.Throws<InvalidDataException>(tx.Rollback).Message);
+            Assert.True(live.Data.IgnoredCalls > 0);
+            Assert.Throws<InvalidOperationException>(() => tx.CreateAndUpdate(41u, 42u));
+            Assert.Throws<InvalidOperationException>(() => tx.Update(new[] { first }, new[] { first, 41u, 42u }, null));
+            Assert.Throws<InvalidOperationException>(() => tx.SetName(first, "blocked"));
+            Assert.Throws<InvalidOperationException>(() => tx.BeginTransaction());
+            Assert.Throws<InvalidOperationException>(pending.Commit);
+            Assert.Throws<InvalidOperationException>(tx.Recover);
+            live.Data.Flush(); live.Data.Capture(); var image = live.Control.Image;
+            for (var reopen = 0; reopen < 2; reopen++)
+            {
+                using var restored = new Harness(image); EqualImage(before, restored); image = restored.Control.Image;
+            }
+        }
+        live.Data.IgnoreRowRestore = null; live.Data.IgnoreNameRestore = null;
+        tx.Rollback(); tx.Rollback(); EqualImage(before, live);
+        tx.CreateAndUpdate(41u, 42u); tx.SetName(first, "following"); live.Data.Capture();
+        using var reopened = new Harness(live.Control.Image); EqualImage(live.Control.Image, reopened);
+    }
     private static void EqualImage(Image expected, Harness actual)
     {
         actual.Data.Capture();
@@ -146,15 +194,21 @@ public class TransactionRowUndoFailureTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void SelectedImageCompletesUnobservedEffectsForHistoryAndCommittedRedo(bool explicitOwner)
+    [InlineData(false, "replace")]
+    [InlineData(true, "replace")]
+    [InlineData(false, "create")]
+    [InlineData(true, "create")]
+    [InlineData(false, "delete")]
+    [InlineData(true, "delete")]
+    public void SelectedImageCompletesUnobservedEffectsForHistoryAndCommittedRedo(bool explicitOwner, string kind)
     {
         using var live = new Harness(Image.Empty, true); var tx = live.Tx;
         var first = Seed(tx); live.Data.Capture(); var before = live.Control.Image; var start = tx.Journal.Count;
         using var pending = explicitOwner ? tx.BeginTransaction() : null;
-        live.Data.Unobserved = true; tx.Update(new[] { first }, new[] { first, 21u, 22u }, null); pending?.Commit();
+        live.Data.Unobserved = true; live.Data.HiddenEffectKind = kind;
+        tx.Update(new[] { first }, new[] { first, 21u, 22u }, null); pending?.Commit();
         live.Data.Capture(); var after = live.Control.Image; var records = tx.Journal.Skip(start).ToArray();
+        Assert.Equal(kind switch { "create" => 3, "delete" => 1, _ => 2 }, after.Rows.Length);
         foreach (var record in records.Reverse()) tx.RevertRecord(record); EqualImage(before, live);
         foreach (var record in records) tx.ApplyRecord(record); EqualImage(after, live);
         var firstSequence = records[0].Sequence;

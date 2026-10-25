@@ -56,7 +56,8 @@ movement. Callback delivery and ordinary coalescing remain available.
 Rollback restores the image through logical storage methods: clear references,
 remove unknown allocations, reserve original addresses, remove allocator-created
 holes, restore rows and replace the full name map. It verifies the resulting
-image before acknowledging cleanup. An error retains admission for retry.
+image before acknowledging cleanup. An error retains admission for retry,
+including when an adapter reports success without restoring a row or name.
 Recovery validates the entire journal before mutation, undoes unfinished images
 in descending base-sequence order with intervening ordinary pending records,
 and redoes the committed suffix that restoration could have overwritten.
@@ -108,7 +109,10 @@ identifier; base is a canonical nonnegative signed-64-bit sequence. Rows are
 strictly increasing nonzero addresses encoded as `id,source,target`, separated
 by semicolons. Names use sorted `id,UTF16hex` pairs, including address zero and
 absent rows. Uppercase four-digit UTF-16 units encode arbitrary delimiters;
-an empty name field is a present empty map, while `-` means an unnamed adapter.
+an empty name field is a present empty map, while `-` leaves names unspecified.
+An unnamed image can be read by a named adapter; restoration does not replace
+its unrelated external name map. Row replay can still have the adapter's usual
+name side effects on affected rows.
 C# retains its unpaired UTF-16 domain; Rust rejects lone surrogates. Canonical
 re-encoding rejects malformed or overflowing fields. Identical image retries
 collapse; conflicting owner images, records at/before their owner's base and

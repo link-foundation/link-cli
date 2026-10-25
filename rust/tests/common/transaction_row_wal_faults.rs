@@ -4,7 +4,14 @@ use super::*;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn selected_images_complete_unobserved_effects_for_history_and_committed_redo() {
-    for explicit in [false, true] {
+    for (explicit, kind) in [
+        (false, None),
+        (true, None),
+        (false, Some("create")),
+        (true, Some("create")),
+        (false, Some("delete")),
+        (true, Some("delete")),
+    ] {
         let (tx, control) = open(Image::default());
         let mut tx = tx
             .with_row_undo(link_cli::transactions::RowUndoPolicy::WriteAheadImage)
@@ -17,9 +24,18 @@ fn selected_images_complete_unobserved_effects_for_history_and_committed_redo() 
             tx.begin_transaction().unwrap();
         }
         control.borrow_mut().unobserved = true;
+        control.borrow_mut().hidden_effect_kind = kind;
         tx.update(first, 21, 22).unwrap();
         tx.commit().unwrap();
         let after = capture(&mut tx);
+        assert_eq!(
+            tx.inner().all_links().len(),
+            match kind {
+                Some("create") => 3,
+                Some("delete") => 1,
+                _ => 2,
+            }
+        );
         assert_ne!(after, before);
         let records = tx.journal()[start..].to_vec();
         for record in records.iter().rev() {

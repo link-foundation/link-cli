@@ -30,8 +30,8 @@ have their own pre-effect barrier; that does not establish a row-write barrier.
       accept a new mandatory undo protocol they cannot interpret.
 - [x] Run focused then complete local suites/coverage sequentially within the
       memory budget; document compatibility, costs and measured coverage.
-- [ ] Review, commit and push the prepared branch.
-- [ ] Verify every exact-head workflow after publication.
+- [x] Review, commit and push the prepared branch.
+- [x] Verify every exact-head workflow after publication.
 
 The selected `WriteAheadImage` policy now prepares a full logical image before
 an owner's first effect. The default `Observed` policy retains its existing
@@ -44,6 +44,10 @@ Complete local validation passes: 820 native, 478 actual WASM, 1,901 C# tests
 per Debug/Release configuration, 111 JS and 217 repository checks. Formatting,
 lints, types, release metadata, source sizes, runtime conformance and persistent
 examples pass. See row-wal.txt for official coverage; complete-project totals
-remain below 100%. Forward publication and new exact-head CI remain pending. See TRANSACTION-UNDO.md for replay/flush assumptions, full-image
-costs and wire compatibility. Process exits leave the OS alive; no physical
+remain below 100%. Published as fa03b5f. C# CI tests and fresh-merge checks pass; SDK 10.0.402
+rejects one else/foreach layout at log lines 1997–1999 in run 40205855501.
+The explicit-block correction f95f59d passes local formatting and 108 focused
+C# cases. All nine exact-head workflows pass on f95f59d; see row-wal-ci.txt.
+See TRANSACTION-UNDO.md for replay/flush assumptions, full-image costs and wire
+compatibility. Process exits leave the OS alive; no physical
 power-loss simulation or page-level atomicity is claimed.

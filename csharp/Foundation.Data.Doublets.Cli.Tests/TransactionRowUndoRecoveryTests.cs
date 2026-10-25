@@ -11,7 +11,7 @@ public class TransactionRowUndoRecoveryTests
     private static string Row(int owner, long sequence, uint beforeSource, uint beforeTarget, uint source, uint target)
         => $"{Prefix}v1|{Id(owner)}|{sequence}|0|1|1,{beforeSource},{beforeTarget}|1,{source},{target}";
     private static string Commit(int owner) => "__transactions:commit:" + Id(owner);
-    private static void Verify(string[] entries, uint source, uint target)
+    private static void Verify(string[] entries, uint source, uint target, bool preserveExternalNames = false)
     {
         var directory = Directory.CreateTempSubdirectory("undo-order-").FullName;
         try
@@ -21,6 +21,7 @@ public class TransactionRowUndoRecoveryTests
             {
                 data.EnsureCreated(1u); data.Update(new[] { 1u }, new[] { 1u, 99u, 99u }, null);
                 data.EnsureCreated(8u); data.Update(new[] { 8u }, new[] { 8u, 1u, 1u }, null);
+                data.SetName(0, "zero"); data.SetName(77, "external");
                 foreach (var entry in entries) log.SetName(log.CreateAndUpdate(0u, 0u), entry);
             }
             for (var reopen = 0; reopen < 2; reopen++)
@@ -30,6 +31,8 @@ public class TransactionRowUndoRecoveryTests
                 using var tx = new TransactionsDecorator(data, log);
                 var rows = tx.All(new[] { tx.Constants.Any, tx.Constants.Any, tx.Constants.Any }).ToArray();
                 Assert.Single(rows); Assert.Equal(source, tx.GetSource(1u)); Assert.Equal(target, tx.GetTarget(1u));
+                Assert.Equal(preserveExternalNames ? "zero" : null, tx.GetName(0));
+                if (reopen == 0) Assert.Equal(preserveExternalNames ? "external" : null, tx.GetName(77));
                 if (reopen == 0) tx.SetName(77, "following"); else Assert.Equal("following", tx.GetName(77));
             }
         }
@@ -38,6 +41,10 @@ public class TransactionRowUndoRecoveryTests
     [Fact]
     public void ImageRestoreRedoesLaterAppliedCommits()
         => Verify([Image(1, 0, 11, 12), Row(2, 1, 11, 12, 31, 32), Commit(2), "__transactions:applied:1"], 31, 32);
+
+    [Fact]
+    public void UnnamedImageRestoresRowsWithoutReplacingExternalNames()
+        => Verify([Image(1, 0, 11, 12) + "-"], 11, 12, preserveExternalNames: true);
 
     [Fact]
     public void OlderGapAndMixedPendingUndoKeepTheirOrder()

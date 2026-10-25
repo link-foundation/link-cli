@@ -23,6 +23,10 @@ struct Control {
     hidden_on_name: bool,
     fail_after_unobserved: bool,
     capture_failure: bool,
+    hidden_effect_kind: Option<&'static str>,
+    ignore_row_restore: Option<u32>,
+    ignore_name_restore: Option<u32>,
+    ignored_calls: usize,
 }
 type Shared = Rc<RefCell<Control>>;
 fn check(control: &Shared, point: &str) -> Result<(), LinkError> {
@@ -44,9 +48,14 @@ struct Store {
 }
 impl Store {
     fn hidden_effects(&mut self) -> Result<(), LinkError> {
-        self.inner.delete_link(2)?;
-        let created = self.inner.create_link(51, 52)?;
-        self.inner.set_link_name(created, Some("hidden"))?;
+        let kind = self.control.borrow_mut().hidden_effect_kind.take();
+        if kind != Some("create") {
+            self.inner.delete_link(2)?;
+        }
+        if kind != Some("delete") {
+            let created = self.inner.create_link(51, 52)?;
+            self.inner.set_link_name(created, Some("hidden"))?;
+        }
         self.inner.set_link_name(0, Some("absent"))?;
         let fail = std::mem::take(&mut self.control.borrow_mut().fail_after_unobserved);
         self.control.borrow_mut().capture_failure = fail;
@@ -80,6 +89,14 @@ impl LinksStorage<u32> for Store {
     }
     fn update_link(&mut self, index: u32, source: u32, target: u32) -> Result<Link, LinkError> {
         check(&self.control, "row-before")?;
+        let ignore = self.control.borrow().ignore_row_restore == Some(index);
+        if ignore {
+            self.control.borrow_mut().ignored_calls += 1;
+            return self
+                .inner
+                .get_link(index)
+                .ok_or_else(|| LinkError::StorageError("missing ignored row".into()));
+        }
         let result = self.inner.update_link(index, source, target)?;
         if std::mem::take(&mut self.control.borrow_mut().unobserved) {
             self.hidden_effects()?;
@@ -113,6 +130,11 @@ impl LinksStorage<u32> for Store {
     }
     fn set_link_name(&mut self, index: u32, name: Option<&str>) -> Result<u32, LinkError> {
         check(&self.control, "name-before")?;
+        let ignore = self.control.borrow().ignore_name_restore == Some(index);
+        if ignore {
+            self.control.borrow_mut().ignored_calls += 1;
+            return Ok(index);
+        }
         let result = self.inner.set_link_name(index, name)?;
         if std::mem::take(&mut self.control.borrow_mut().hidden_on_name) {
             self.hidden_effects()?;
@@ -154,10 +176,14 @@ impl TransitionLogStore for Log {
     }
 }
 type Tx = GenericTransactionsDecorator<u32, Store, Log>;
+#[path = "common/transaction_row_wal_compatibility.rs"]
+mod compatibility;
 #[path = "common/transaction_row_wal_faults.rs"]
 mod faults;
 #[path = "common/transaction_row_wal_recovery.rs"]
 mod recovery;
+#[path = "common/transaction_row_wal_wide.rs"]
+mod wide;
 fn rows(image: &[Link]) -> LinkStorage {
     let mut store = LinkStorage::in_memory(false);
     for row in image {

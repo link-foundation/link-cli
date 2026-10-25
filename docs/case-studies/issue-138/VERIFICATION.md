@@ -2047,3 +2047,64 @@ full-image/per-write costs and truthful-flush assumptions. Logical restoration
 does not repair unreadable/torn physical files or verify physical power loss.
 Whole-project 100% coverage, efficient structures, finer composition and wider
 strategies remain unfinished. New exact-head CI is pending publication.
+
+All nine row-undo workflows pass on `f95f59d` (created 2026-10-25
+15:24:00–15:24:01 UTC after that commit). The preceding C# formatter failure
+is preserved with its exact SDK and log lines. See row-wal-ci.txt and
+row-wal-format-ci-before.txt under the PR evidence directory.
+
+
+## Undo image replay compatibility and restoration verification
+
+This batch extends tests and documents existing behavior; it changes no
+production logic. The new controls pass on the published row-undo behavior.
+
+- Row/name adapters acknowledge a restore without applying it. Cleanup fails
+  twice, preserves write/admission fences and is retried after adapter repair.
+  Independently persisted partial replays recover twice with exact rows/names;
+  a following edit and reopening still work. Both languages cover each kind.
+- Legal unnamed images restore rows without replacing unrelated external names.
+  Empty named maps remain distinct and clear names. Following edits survive.
+- Sparse compatible adapters restore the shared 2^32-address image twice, undo
+  a selected owner's edits and perform a following allocation. C# bounds creator
+  calls to eight; Rust directly reserves sparse addresses. No dense 2^32 probe.
+  Portable Rust also covers selected unnamed owners and runs on actual WASM.
+- Six explicit/automatic cases distinguish unreported replacement, allocation
+  and deletion. Complete row counts, reverse/forward public history and two
+  independent committed-redo reopenings verify each result.
+
+Focused: 20 native Rust tests (one child entry ignored), 112 C# cases, 19 actual
+WASM cases. Full checks run sequentially within the 2.92 GiB container:
+- C# Debug/Release with Coverlet: 1,909 each, zero failed/skipped.
+- Native Rust all-features LLVM branch coverage: 823 standard passes, zero fail;
+  twelve ignored child entry points are exercised by bounded parents. The
+  custom stdout harness also passes.
+- Actual WASM coverage: 481 pass, zero failed/ignored.
+- JS: 111 tests; all 17 production modules reach the enforced 100% line, branch
+  and function thresholds. Strict TypeScript passes. Repository checks: 217.
+- Native/WASM formatting and strict Clippy, C# formatting, source sizes, release
+  metadata and whitespace pass.
+- Generated actual-WASM runtime conformance passes Node, Bun and Deno.
+- Persistent Rust -> C# -> JS group examples reopen snapshot/delta journals;
+  ordinary native row/name/history examples pass under both undo policies.
+- No OOM/OOM-kill events; heavy compilers run sequentially and reclaim occurs.
+
+The initial repository-check attempt rejected root-level downloaded CI logs.
+The unchanged logs were moved under experiments/issue-138/ci-logs; all 217
+checks then passed. No source correction or test exclusion was needed.
+
+Official complete-run integer totals (no filtered denominator or diagnostic union):
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,107/11,968 (92.81%) | 1,999/2,412 (82.88%) | 1,430/1,570 (91.08%) |
+| Actual WASM, complete linked source | 8,350/11,522 (72.47%) | 1,571/2,123 (74.00%) | 1,093/1,550 (70.52%) |
+| C# Debug | 6,978/7,489 (93.18%) | 3,498/3,934 (88.92%) | Not reported by this collector |
+| C# Release | 5,357/5,673 (94.43%) | 3,473/3,915 (88.71%) | Not reported by this collector |
+
+All three WASM wrappers measure 100% lines/branches/functions. Complete native,
+linked-WASM and C# coverage remains below 100%. Logical images still require
+readable storage, compatible replay and truthful flushes. These controls do not
+establish physical page repair or real power-loss safety. Efficient WAL/state
+structures, finer composition and wider competitor/cluster requirements remain
+unfinished. Fresh exact-head CI is required after publication.
