@@ -1,0 +1,41 @@
+Version-exit diagnostics CI: b03bd4ef4689ec3cda54c3fe693e8af4c854c33e
+PR: https://github.com/link-foundation/link-cli/pull/139
+All nine workflows completed successfully. Each run was created at 2026-10-26T13:14:40Z.
+
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40328896489
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40328896488
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40328896576
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40328896654
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40328896463
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40328896785
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40328896540
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40328896572
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40328896588
+
+Rust native matrix (exact same SHA):
+Test (windows-2025): success https://github.com/link-foundation/link-cli/actions/runs/40328896572/job/121593224264
+Test (ubuntu-24.04): success https://github.com/link-foundation/link-cli/actions/runs/40328896572/job/121593224288
+Test (macos-26): success https://github.com/link-foundation/link-cli/actions/runs/40328896572/job/121593224836
+
+Windows raw job log retained locally:
+experiments/issue-138/ci-logs/version-exit-diagnostics-windows-40328896572.log
+Relevant original lines 6334..6346:
+6334: 2026-10-26T13:22:32.4664478Z      Running `D:\a\link-cli\link-cli\rust\target\debug\deps\version_process_exit_tests-45d449e74310316f.exe`
+6335: 2026-10-26T13:22:32.4746293Z
+6336: 2026-10-26T13:22:32.4746704Z running 8 tests
+6337: 2026-10-26T13:22:34.0228583Z test pending_exit_does_not_publish_an_aborted_version ... ok
+6338: 2026-10-26T13:22:34.6275308Z test explicit_commit_checkpoint_error_survives_exit ... ok
+6339: 2026-10-26T13:22:34.6560143Z test automatic_commit_checkpoint_error_survives_exit ... ok
+6340: 2026-10-26T13:22:35.5520855Z test rollback_exit_does_not_publish_an_aborted_version ... ok
+6341: 2026-10-26T13:22:35.5522148Z test version_exit_child ... ignored, finite child process entry point
+6342: 2026-10-26T13:22:36.4365240Z test successful_automatic_commit_survives_exit ... ok
+6343: 2026-10-26T13:22:36.4515966Z test successful_explicit_commit_survives_exit ... ok
+6344: 2026-10-26T13:22:39.1115242Z test abrupt_name_only_versions_recover_exact_names_and_attribution ... ok
+6345: 2026-10-26T13:22:39.1115497Z
+6346: 2026-10-26T13:22:39.1115716Z test result: ok. 7 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.64s
+
+All seven existing contracts pass; one ignored function is the finite child entry point.
+The whole Windows suite completes in 6.64 seconds. The per-child deadline remains ten seconds.
+The original d98c2ee timeout cause is unknown. This success does not establish its root cause.
+The harness now preserves child stdout/stderr and phase timings on failures; no production
+durability behavior or timeout guarantee was weakened. Later checkpoint code requires fresh CI.

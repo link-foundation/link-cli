@@ -128,6 +128,35 @@ fn sessions_preserve_visibility_history_and_closed_state() {
 }
 
 #[wasm_bindgen_test]
+fn checkpoint_exports_retained_snapshots_without_log_effects_and_rejects_poison() {
+    let log = make_test_log("ok");
+    let engine = StagedEngine::with_log(r#"{"history":2}"#, log.clone().unchecked_into()).unwrap();
+    for _ in 0..3 {
+        let mut tx = engine.begin().unwrap();
+        assert!(!tx.request("(create: (0 0))").contains("error:"));
+        tx.commit().unwrap();
+    }
+    let original = engine.journal().unwrap();
+    let exported = engine.export_checkpoint().unwrap();
+    assert_eq!(
+        serde_json::from_str::<Vec<String>>(&exported)
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(engine.journal().unwrap(), original);
+    let copy = StagedEngine::new(r#"{"history":"all"}"#, &exported).unwrap();
+    assert_eq!(snapshot(&copy, None), snapshot(&engine, None));
+    assert_eq!(snapshot(&copy, Some(2)), snapshot(&engine, Some(2)));
+    assert!(copy.snapshot(Some(0)).is_err());
+    set_test_log_mode(&log, "flush-string");
+    let mut tx = engine.begin().unwrap();
+    tx.request("(create: (0 0))");
+    assert!(tx.commit().is_err());
+    assert!(engine.export_checkpoint().is_err());
+}
+
+#[wasm_bindgen_test]
 fn admission_and_conflict_errors_cross_the_wasm_boundary() {
     let exclusive = StagedEngine::new(r#"{"concurrency":"exclusive"}"#, "[]").unwrap();
     let mut held = exclusive.begin().unwrap();

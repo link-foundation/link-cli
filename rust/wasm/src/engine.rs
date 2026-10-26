@@ -99,7 +99,8 @@ pub struct StagedEngine {
 }
 #[wasm_bindgen]
 impl StagedEngine {
-    /// journal_json is an array of engine1/engine2 records ("[]" for an empty store).
+    /// journal_json contains engine1/engine2 records, optionally after one engine3
+    /// checkpoint ("[]" for an empty store).
     #[wasm_bindgen(constructor)]
     pub fn new(options_json: &str, journal_json: &str) -> Result<StagedEngine, String> {
         let entries = serde_json::from_str(journal_json).map_err(|error| error.to_string())?;
@@ -172,6 +173,14 @@ impl StagedEngine {
             .with_log(|log| {
                 Ok(serde_json::to_string(&log.read_log_entries()?).expect("strings serialize"))
             })
+            .map_err(|e| e.to_string())
+    }
+    /// Export retained committed snapshots without publishing or rewriting a log.
+    #[wasm_bindgen(js_name = exportCheckpoint)]
+    pub fn export_checkpoint(&self) -> Result<String, String> {
+        self.inner
+            .export_checkpoint()
+            .map(|entries| serde_json::to_string(&entries).expect("strings serialize"))
             .map_err(|e| e.to_string())
     }
     /// Historical rows use decimal addresses, avoiding JS number precision loss.

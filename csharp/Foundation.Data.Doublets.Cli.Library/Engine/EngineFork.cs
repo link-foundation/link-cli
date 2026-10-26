@@ -27,10 +27,13 @@ public sealed partial class LinksEngine<T>
         lock (Gate) CheckReady();
         var (snapshot, next) = RevisionJournal<T>.Decode(mergeBaseRecord);
         var structure = options?.StateStructure ?? StateStructure.Flat;
-        var previous = EngineSnapshot<T>.Create(0, new(structure)); var previousNext = BigInteger.One; bool found = false;
+        var previous = EngineSnapshot<T>.Create(0, new(structure)); var previousNext = BigInteger.One; bool found = false, first = true;
         foreach (var record in log.Read())
         {
-            var (current, allocator) = RevisionJournal<T>.DecodeAfter(record, previous, previousNext, structure);
+            var (current, allocator) = first && record.StartsWith("engine3|", StringComparison.Ordinal)
+                ? RevisionJournal<T>.DecodeCheckpoint(record, structure)
+                : RevisionJournal<T>.DecodeAfter(record, previous, previousNext, structure);
+            first = false;
             if (current.Revision == snapshot.Revision && allocator == next && current.Rows.SequenceEqual(snapshot.Rows)) found = true;
             previous = current; previousNext = allocator;
         }

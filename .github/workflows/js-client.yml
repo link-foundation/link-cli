@@ -22,6 +22,8 @@ on:
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
+      - 'examples/journal-checkpoints/**'
+      - 'experiments/issue-138/generate-checkpoint-vectors.py'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
@@ -41,6 +43,8 @@ on:
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
+      - 'examples/journal-checkpoints/**'
+      - 'experiments/issue-138/generate-checkpoint-vectors.py'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
@@ -128,6 +132,8 @@ jobs:
           cmp ../../docs/protocol/native-pages-v1.json ../../experiments/issue-138/native-pages-regenerated.json
           python3 ../../experiments/issue-138/make-mirrored-page-vectors.py ../../experiments/issue-138/mirrored-pages-regenerated.json
           cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
+          python3 ../../experiments/issue-138/generate-checkpoint-vectors.py ../../experiments/issue-138/engine-checkpoint-regenerated.json
+          cmp ../../docs/protocol/engine-checkpoint-vectors.json ../../experiments/issue-138/engine-checkpoint-regenerated.json
 
       - name: Unit tests and complete production coverage
         run: >-
@@ -221,6 +227,23 @@ jobs:
           tar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd
           node --test --test-timeout=10000 experiments/issue-138/etcd-harness.test.mjs
           node experiments/issue-138/etcd-cluster.mjs
+          CLUSTER_JOURNAL_CHECKPOINT_INTERVAL=1 node experiments/issue-138/etcd-cluster.mjs
+
+      - name: Verify finite checkpoint payloads with actual WASM
+        run: |
+          node examples/journal-checkpoints/measure.mjs > experiments/issue-138/checkpoint-node.json
+          bun examples/journal-checkpoints/measure.mjs > experiments/issue-138/checkpoint-bun.json
+          deno run --allow-all examples/journal-checkpoints/measure.mjs > experiments/issue-138/checkpoint-deno.json
+          cmp experiments/issue-138/checkpoint-node.json experiments/issue-138/checkpoint-bun.json
+          cmp experiments/issue-138/checkpoint-node.json experiments/issue-138/checkpoint-deno.json
+
+      - name: Preserve checkpoint payload measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-checkpoint-payloads
+          path: experiments/issue-138/checkpoint-*.json
+          if-no-files-found: ignore
 
       - name: Preserve consensus member logs
         if: always()

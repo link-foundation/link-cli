@@ -44,6 +44,13 @@ pub(super) fn unhex(text: &str) -> Result<String, LinkError> {
     String::from_utf8(bytes).map_err(|_| error("invalid UTF-8 in journal name"))
 }
 pub(super) fn encode<T: LinkReference>(snapshot: &Snapshot<T>, next: u128) -> String {
+    encode_format(snapshot, next, "engine1")
+}
+pub(super) fn encode_format<T: LinkReference>(
+    snapshot: &Snapshot<T>,
+    next: u128,
+    format: &str,
+) -> String {
     let payload = snapshot
         .rows
         .values()
@@ -60,7 +67,7 @@ pub(super) fn encode<T: LinkReference>(snapshot: &Snapshot<T>, next: u128) -> St
         })
         .collect::<Vec<_>>()
         .join(";");
-    let text = format!("engine1|{}|{next}|{payload}", snapshot.revision);
+    let text = format!("{format}|{}|{next}|{payload}", snapshot.revision);
     format!("{text}|{:016x}", checksum(&text))
 }
 pub(super) fn address<T: LinkReference>(text: &str) -> Result<T, LinkError> {
@@ -116,9 +123,26 @@ pub(super) fn decode_after<T: LinkReference>(
 }
 
 pub(super) fn decode<T: LinkReference>(entry: &str) -> Result<(Snapshot<T>, u128), LinkError> {
+    decode_format(entry, "engine1")
+}
+pub(super) fn decode_checkpoint<T: LinkReference>(
+    entry: &str,
+    structure: StateStructure,
+) -> Result<(Snapshot<T>, u128), LinkError> {
+    let (mut snapshot, next) = decode_format(entry, "engine3")?;
+    if snapshot.revision == 0 && next != 1 {
+        return Err(error("invalid initial checkpoint"));
+    }
+    snapshot.rows = Arc::new(Arc::unwrap_or_clone(snapshot.rows).adapt(structure, None));
+    Ok((snapshot, next))
+}
+fn decode_format<T: LinkReference>(
+    entry: &str,
+    format: &str,
+) -> Result<(Snapshot<T>, u128), LinkError> {
     let text = checked_text(entry)?;
     let parts = text.split('|').collect::<Vec<_>>();
-    if parts.len() != 4 || parts[0] != "engine1" {
+    if parts.len() != 4 || parts[0] != format {
         return Err(error("unsupported journal format"));
     }
     if parts[1..=2]

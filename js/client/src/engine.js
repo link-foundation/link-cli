@@ -106,6 +106,8 @@ export class WasmEngine {
     };
   }
   journal() { this.#check(); return JSON.parse(this.#native.journal()); }
+  /** Independent retained snapshots; caller owns publication and durability. */
+  exportCheckpoint() { this.#check(); return JSON.parse(this.#native.exportCheckpoint()); }
   /** Existing sessions own independent handles; close each to release them. */
   close() { if (!this.#closed) { this.#closed = true; this.#native.free(); } }
   [Symbol.dispose]() { this.close(); }

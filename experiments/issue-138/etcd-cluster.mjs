@@ -16,6 +16,9 @@ const binding = await import(pathToFileURL(join(wasmDirectory, 'clink_wasm.js'))
 binding.initSync({ module: readFileSync(join(wasmDirectory, 'clink_wasm_bg.wasm')) });
 const binary = process.env.ETCD_BIN ?? resolve('experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd');
 const directory = mkdtempSync(resolve('experiments/issue-138/etcd/run-'));
+const checkpoint = process.env.CLUSTER_JOURNAL_CHECKPOINT_INTERVAL === '1';
+const checkpointFlags = checkpoint ? ['--checkpoint'] : [];
+const checkpointOptions = checkpoint ? { journalCheckpointInterval: 1 } : {};
 const ports = [];
 const reservations = [];
 try {
@@ -40,7 +43,7 @@ async function ready(action) {
   throw failure;
 }
 async function javascriptExample(args, engine) {
-  const child = spawn(process.execPath, ['js/client/examples/cluster.mjs', ...args], {
+  const child = spawn(process.execPath, ['js/client/examples/cluster.mjs', ...args, ...checkpointFlags], {
     env: { ...process.env, CLINK_WASM: wasmDirectory }, stdio: 'inherit',
   });
   assert.equal((await once(child, 'exit'))[0], 0);
@@ -65,11 +68,14 @@ try {
   await waitForMembers(endpoints);
   const store = new EtcdJournalStore(endpoints, options);
   await ready(() => store.read(['a']));
-  const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
+  const engine = new ClusterEngine(binding, store, { requireDurableFlush: true, ...checkpointOptions });
   const seed = await engine.begin(['a', 'b']);
   await seed.shard('a').create(0, 0); await seed.shard('b').create(0, 0); await seed.commit();
+  if (checkpoint) for (const value of await store.read(['a', 'b'])) {
+    assert.equal(value.entries.length, 1); assert.ok(value.entries[0].startsWith('engine3|'));
+  }
   const stale = await engine.begin(['a', 'b']);
-  const other = new ClusterEngine(binding, new EtcdJournalStore(endpoints, options));
+  const other = new ClusterEngine(binding, new EtcdJournalStore(endpoints, options), checkpointOptions);
   const fresh = await other.begin(['b']); await fresh.shard('b').setName(1, 'leader-safe 雪'); await fresh.commit();
   await stale.shard('a').delete(1); await assert.rejects(stale.commit(), { outcome: 'failed' });
   console.log('PASS real etcd: atomic multi-shard CAS and read-only dependency conflict');
@@ -80,7 +86,7 @@ try {
     if (loseReply && JSON.parse(request.body).compare) { loseReply = false; await result.body.cancel(); throw Error('injected lost commit response'); }
     return result;
   } });
-  const uncertain = await new ClusterEngine(binding, lossy).begin(['a', 'b']);
+  const uncertain = await new ClusterEngine(binding, lossy, checkpointOptions).begin(['a', 'b']);
   await uncertain.shard('a').setName(1, 'unknown committed'); await uncertain.shard('b').setName(1, 'unknown committed');
   await assert.rejects(uncertain.commit(), { outcome: 'unknown' });
   const recovered = await engine.begin(['a', 'b']);
@@ -89,11 +95,11 @@ try {
   console.log('PASS real etcd: dropped response discovers both committed shards without replay');
 
   if (process.env.CLUSTER_RUST_EXAMPLE) {
-    const child = spawn(process.env.CLUSTER_RUST_EXAMPLE, [endpoints.join(','), '/issue138/'], { stdio: 'inherit' });
+    const child = spawn(process.env.CLUSTER_RUST_EXAMPLE, [endpoints.join(','), '/issue138/', ...checkpointFlags], { stdio: 'inherit' });
     assert.equal((await once(child, 'exit'))[0], 0);
   }
   if (process.env.CLUSTER_CSHARP_EXAMPLE) {
-    const child = spawn('dotnet', [process.env.CLUSTER_CSHARP_EXAMPLE, endpoints.join(','), '/issue138/'], { env: { ...process.env, DOTNET_GCHeapHardLimit: '0x18000000' }, stdio: 'inherit' });
+    const child = spawn('dotnet', [process.env.CLUSTER_CSHARP_EXAMPLE, endpoints.join(','), '/issue138/', ...checkpointFlags], { env: { ...process.env, DOTNET_GCHeapHardLimit: '0x18000000' }, stdio: 'inherit' });
     assert.equal((await once(child, 'exit'))[0], 0);
   }
   const native = await engine.begin(['a', 'b']);
@@ -123,7 +129,7 @@ try {
   const west = new EtcdJournalStore([dataEndpoints[1]], dataOptions);
   const cacheBytes = Number(process.env.CLUSTER_OBJECT_CACHE_BYTES ?? 0);
   const partitioned = new PartitionedJournalStore(catalog, { east, west }, (key) => key === 'a' ? 'east' : 'west', { cacheBytes });
-  const partitionedEngine = new ClusterEngine(binding, partitioned, { requireDurableFlush: true });
+  const partitionedEngine = new ClusterEngine(binding, partitioned, { requireDurableFlush: true, ...checkpointOptions });
   const dataSeed = await partitionedEngine.begin(['a', 'b']);
   await dataSeed.shard('a').create(0, 0); await dataSeed.shard('b').create(0, 0); await dataSeed.commit();
   if (cacheBytes > 0) {
@@ -136,11 +142,11 @@ try {
   }
   const cacheFlags = cacheBytes > 0 ? ['--cache'] : [];
   if (process.env.CLUSTER_RUST_EXAMPLE) {
-    const child = spawn(process.env.CLUSTER_RUST_EXAMPLE, [endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags], { stdio: 'inherit' });
+    const child = spawn(process.env.CLUSTER_RUST_EXAMPLE, [endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags, ...checkpointFlags], { stdio: 'inherit' });
     assert.equal((await once(child, 'exit'))[0], 0);
   }
   if (process.env.CLUSTER_CSHARP_EXAMPLE) {
-    const child = spawn('dotnet', [process.env.CLUSTER_CSHARP_EXAMPLE, endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags], { env: { ...process.env, DOTNET_GCHeapHardLimit: '0x18000000' }, stdio: 'inherit' });
+    const child = spawn('dotnet', [process.env.CLUSTER_CSHARP_EXAMPLE, endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags, ...checkpointFlags], { env: { ...process.env, DOTNET_GCHeapHardLimit: '0x18000000' }, stdio: 'inherit' });
     assert.equal((await once(child, 'exit'))[0], 0);
   }
   const dataCheck = await partitionedEngine.begin(['a', 'b']);
@@ -151,6 +157,12 @@ try {
   await dataCheck.close();
   await javascriptExample([endpoints.join(','), prefix, ...dataEndpoints, ...cacheFlags], partitionedEngine);
   const pointers = await catalog.read(['a', 'b']);
+  if (checkpoint) {
+    for (const value of await partitioned.read(['a', 'b'])) {
+      assert.equal(value.entries.length, 1); assert.ok(value.entries[0].startsWith('engine3|'));
+    }
+    console.log('PASS checkpoints: native Rust/C#/actual-WASM round trips preserve compacted journals and monotonic CAS generations');
+  }
   assert.deepEqual(pointers.map((value) => value.entries.slice(0, 2)), [['blob1', 'east'], ['blob1', 'west']]);
   assert.ok(pointers.every((value) => value.entries.length === 4));
   console.log('PASS independent consensus groups: native/WASM interoperability; catalog contains only atomic pointers');

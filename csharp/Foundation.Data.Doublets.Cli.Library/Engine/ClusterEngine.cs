@@ -23,12 +23,15 @@ public sealed class ClusterEngine<T> where T : struct, IBinaryInteger<T>, IUnsig
 {
     private readonly IAtomicJournalStore _store;
     private readonly EngineOptions _options;
-    public ClusterEngine(IAtomicJournalStore store, EngineOptions? options = null)
+    private readonly ulong? _journalCheckpointInterval;
+    public ClusterEngine(IAtomicJournalStore store, EngineOptions? options = null, ulong? journalCheckpointInterval = null)
     {
         _store = store; options ??= new();
         if (options.Concurrency != ConcurrencyControl.Optimistic || options.Isolation != IsolationLevel.Serializable)
             throw new ArgumentException("Network sessions require optimistic admission and serializable validation.", nameof(options));
         if (options.RequireDurableFlush && !store.SupportsDurableFlush) throw new ArgumentException("Coordinator does not support durable flush.", nameof(store));
+        if (journalCheckpointInterval == 0) throw new ArgumentOutOfRangeException(nameof(journalCheckpointInterval));
+        _journalCheckpointInterval = journalCheckpointInterval;
         _options = options with { RequireDurableFlush = false };
     }
     public ClusterTransaction<T> Begin(params string[] keys)
@@ -36,7 +39,7 @@ public sealed class ClusterEngine<T> where T : struct, IBinaryInteger<T>, IUnsig
         ValidateKeys(keys);
         var expected = _store.Read(keys);
         if (expected.Count != keys.Length) throw new InvalidDataException("Incomplete coordinator snapshot.");
-        return new(_store, _options, keys.ToArray(), expected.Select(item => new JournalVersion(item.Generation, item.Entries.ToArray())).ToArray());
+        return new(_store, _options, keys.ToArray(), expected.Select(item => new JournalVersion(item.Generation, item.Entries.ToArray())).ToArray(), _journalCheckpointInterval);
     }
     internal static void ValidateKeys(IReadOnlyList<string> keys)
     {
@@ -52,19 +55,21 @@ public sealed class ClusterTransaction<T> : IDisposable where T : struct, IBinar
     private readonly IAtomicJournalStore _store;
     private readonly string[] _keys;
     private readonly IReadOnlyList<JournalVersion> _expected;
-    private readonly List<(MemoryCommitLog Log, EngineSession<T> Session)> _work = new();
+    private readonly List<(MemoryCommitLog Log, LinksEngine<T> Engine, EngineSession<T> Session)> _work = new();
     private readonly List<ClusterShardSession<T>> _shards = new();
     private bool _closed;
-    internal ClusterTransaction(IAtomicJournalStore store, EngineOptions options, string[] keys, IReadOnlyList<JournalVersion> expected)
+    private readonly ulong? _journalCheckpointInterval;
+    internal ClusterTransaction(IAtomicJournalStore store, EngineOptions options, string[] keys, IReadOnlyList<JournalVersion> expected, ulong? journalCheckpointInterval)
     {
         _store = store; _keys = keys; _expected = expected;
+        _journalCheckpointInterval = journalCheckpointInterval;
         try
         {
             foreach (var item in expected)
             {
                 var log = new MemoryCommitLog(); foreach (var entry in item.Entries) log.Append(entry);
-                var session = new LinksEngine<T>(log, options).Begin();
-                _work.Add((log, session)); _shards.Add(new(this, session));
+                var engine = new LinksEngine<T>(log, options); var session = engine.Begin();
+                _work.Add((log, engine, session)); _shards.Add(new(this, session));
             }
         }
         catch { Dispose(); throw; }
@@ -84,16 +89,19 @@ public sealed class ClusterTransaction<T> : IDisposable where T : struct, IBinar
             for (var i = 0; i < _work.Count; i++)
             {
                 _work[i].Session.Commit(); var entries = _work[i].Log.Read();
-                updates.Add(entries.Count == _expected[i].Entries.Count ? null : entries);
+                // Test before compaction: a checkpoint may keep the same length.
+                if (entries.Count == _expected[i].Entries.Count) updates.Add(null);
+                else updates.Add(_journalCheckpointInterval is { } interval && _work[i].Engine.Snapshot().Revision % interval == 0
+                    ? _work[i].Engine.ExportCheckpoint() : entries);
             }
             bool committed;
             try { committed = _store.CompareExchange(_keys, _expected, updates); }
             catch (Exception cause) { throw new IOException("Indeterminate coordinated commit; read fresh journals to discover the outcome.", cause); }
             if (!committed) throw new InvalidOperationException("Conflict: a selected shard changed since begin.");
         }
-        finally { foreach (var (_, session) in _work) session.Dispose(); }
+        finally { foreach (var item in _work) item.Session.Dispose(); }
     }
-    public void Rollback() { _closed = true; foreach (var (_, session) in _work) session.Rollback(); }
+    public void Rollback() { _closed = true; foreach (var item in _work) item.Session.Rollback(); }
     public void Dispose() => Rollback();
 }
 

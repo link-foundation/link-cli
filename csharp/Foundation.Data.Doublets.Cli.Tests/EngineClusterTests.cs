@@ -2,7 +2,7 @@ using Foundation.Data.Doublets.Cli.Engine;
 
 namespace Foundation.Data.Doublets.Cli.Tests;
 
-public class EngineClusterTests
+public partial class EngineClusterTests
 {
     private sealed class Store : IAtomicJournalStore
     {
@@ -10,6 +10,7 @@ public class EngineClusterTests
         private readonly Dictionary<string, JournalVersion> _values = new();
         private ulong _generation;
         public bool LoseReply;
+        public bool FailBefore;
         public bool SupportsDurableFlush => false;
         public Func<IReadOnlyList<string>, IReadOnlyList<JournalVersion>>? ReadOverride;
         public IReadOnlyList<JournalVersion> Read(IReadOnlyList<string> keys)
@@ -18,6 +19,7 @@ public class EngineClusterTests
         {
             lock (_gate)
             {
+                if (FailBefore) throw new IOException("request lost before effect");
                 if (keys.Where((key, i) => (_values.GetValueOrDefault(key)?.Generation ?? 0) != expected[i].Generation).Any()) return false;
                 var generation = ++_generation;
                 for (var i = 0; i < keys.Count; i++) if (updates[i] is { } entries) _values[keys[i]] = new(generation, entries.ToArray());

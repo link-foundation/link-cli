@@ -1,12 +1,12 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-var cache = args.Contains("--cache"); args = args.Where(value => value != "--cache").ToArray();
-if ((args.Length != 2 && args.Length != 4) || (cache && args.Length != 4)) throw new ArgumentException("usage: ClusterExample catalog-endpoints prefix/ [east-endpoints west-endpoints [--cache]]");
+var cache = args.Contains("--cache"); var checkpoint = args.Contains("--checkpoint"); args = args.Where(value => value != "--cache" && value != "--checkpoint").ToArray();
+if ((args.Length != 2 && args.Length != 4) || (cache && args.Length != 4)) throw new ArgumentException("usage: ClusterExample catalog-endpoints prefix/ [east-endpoints west-endpoints [--cache]] [--checkpoint]");
 using var store = new EtcdJournalStore(args[0].Split(',').Select(value => new Uri(value)), args[1]);
 using var east = args.Length == 4 ? new EtcdJournalStore(args[2].Split(',').Select(value => new Uri(value)), args[1]) : null;
 using var west = args.Length == 4 ? new EtcdJournalStore(args[3].Split(',').Select(value => new Uri(value)), args[1]) : null;
 IAtomicJournalStore journals = args.Length == 4 ? new PartitionedJournalStore(store, new Dictionary<string, IAtomicJournalStore> { ["east"] = east!, ["west"] = west! }, key => key == "a" ? "east" : "west", cacheBytes: cache ? 65536 : 0) : store;
-var engine = new ClusterEngine<uint>(journals, new() { RequireDurableFlush = true });
+var engine = new ClusterEngine<uint>(journals, new() { RequireDurableFlush = true }, journalCheckpointInterval: checkpoint ? 1ul : null);
 using var transaction = engine.Begin("a", "b");
 foreach (var key in new[] { "a", "b" })
 {

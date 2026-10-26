@@ -18,10 +18,12 @@ internal static class RevisionJournal<T>
         return hash;
     }
     internal static string Encode(EngineSnapshot<T> snapshot, BigInteger next)
+        => EncodeFormat(snapshot, next, "engine1");
+    internal static string EncodeFormat(EngineSnapshot<T> snapshot, BigInteger next, string format)
     {
         var rows = string.Join(";", snapshot.Rows.Values.Select(row =>
             $"{Number(row.Link.Index)},{Number(row.Link.Source)},{Number(row.Link.Target)},{(row.Name is null ? "-" : Convert.ToHexStringLower(Utf8.GetBytes(row.Name)))}"));
-        var text = $"engine1|{Number(snapshot.Revision)}|{Number(next)}|{rows}";
+        var text = $"{format}|{Number(snapshot.Revision)}|{Number(next)}|{rows}";
         return $"{text}|{Checksum(text):x16}";
     }
     private static string Decimal(string text) => text.Length > 0 && text.All(c => c is >= '0' and <= '9')
@@ -46,12 +48,21 @@ internal static class RevisionJournal<T>
         return (snapshot.Adapt(structure, previous), next);
     }
     internal static (EngineSnapshot<T>, BigInteger) Decode(string record)
+        => DecodeFormat(record, "engine1");
+    internal static (EngineSnapshot<T>, BigInteger) DecodeCheckpoint(string record, StateStructure structure)
+    {
+        var (snapshot, next) = DecodeFormat(record, "engine3");
+        if (snapshot.Revision == 0 && next != 1)
+            throw new InvalidDataException("Invalid initial checkpoint.");
+        return (snapshot.Adapt(structure), next);
+    }
+    private static (EngineSnapshot<T>, BigInteger) DecodeFormat(string record, string format)
     {
         try
         {
             string text = CheckedText(record);
             var parts = text.Split('|');
-            if (parts.Length != 4 || parts[0] != "engine1") throw new FormatException("Unsupported journal format.");
+            if (parts.Length != 4 || parts[0] != format) throw new FormatException("Unsupported journal format.");
             ulong revision = ulong.Parse(Decimal(parts[1]), NumberStyles.None, CultureInfo.InvariantCulture);
             BigInteger next = BigInteger.CreateChecked(UInt128.Parse(Decimal(parts[2]), NumberStyles.None, CultureInfo.InvariantCulture));
             if (next < 1) throw new FormatException("Invalid allocator.");

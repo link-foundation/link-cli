@@ -451,5 +451,26 @@ unsupported filesystem capability. No production change is claimed. Complete
 Rust suites pass 967 native plus six doctests and 571 actual-WASM tests; complete
 official measured lines are 94.37% and 81.45%, below R8's target. See
 ARCHIVE-STREAM-PLAN.md and archive-stream.txt. C#/JS production and the preceding
-complete validation are retained unchanged. Fresh exact-head CI follows
-publication; every wider unmet criterion remains active.
+complete validation are retained unchanged. At d98c2ee eight workflows pass,
+but four Rust Windows version-exit cases hit the existing ten-second deadline.
+archive-stream-ci-before.txt preserves exact timestamps, SHA and error lines.
+Phase/stream diagnostics are published at b03bd4e without changing the deadline.
+All nine fresh workflows pass, including all three native platforms; the Windows
+exit suite passes seven contracts in 6.64 seconds. The original timeout cause
+remains unknown. version-exit-diagnostics-ci.txt preserves exact evidence.
+Every wider unmet criterion remains active.
+
+Optional logical checkpoints (R1/R3/R5/R6/R7/R8/R9/R10/R11/R12) export retained
+committed snapshots without mutating the live journal. The separately selected
+cluster interval uses the existing atomic generation CAS and leaves default
+append behavior intact. Focused native/C# contracts verify selected constraints,
+exact historical allocators and branch descriptors, private pending reservations,
+history eviction, immutable objects and before/after unknown outcomes. Complete
+local suites pass 975 native plus six doctests, 2,180 C# per configuration,
+580 actual-WASM, 211 JS and 221 repository checks. Real etcd passes three modes;
+48 existing physical/policy combinations pass 288 writers, and Node/Bun/Deno
+produce identical 36-case payloads. JOURNAL-CHECKPOINT-PLAN.md and
+journal-checkpoint.txt record exact results and complete coverage. Fresh CI and
+initial-checkpoint support in the physical delta decorator remain unfinished.
+Old object reclamation, local file replacement and every wider unfinished
+requirement remain open.

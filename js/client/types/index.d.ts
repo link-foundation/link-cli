@@ -53,6 +53,7 @@ export interface StagedEngineLike {
   group(): StagedCommitGroupLike;
   snapshot(revision?: bigint): string;
   journal(): string;
+  exportCheckpoint(): string;
   fork(options: string, journal: string): StagedBranchLike;
   forkWithLog(options: string, log: CommitLog): StagedBranchLike;
   resume(options: string, journal: string, base: string): StagedBranchLike;
@@ -88,6 +89,8 @@ export class WasmEngine {
   resumeBranch(journal: string[] | CommitLog, mergeBaseRecord: string, options?: EngineOptions): WasmBranch;
   snapshot(revision?: AddressInput): { revision: bigint; rows: (Link & { name: string | null })[] };
   journal(): string[];
+  /** Retained committed snapshots; does not rewrite or publish the live log. */
+  exportCheckpoint(): string[];
   close(): void;
   [Symbol.dispose](): void;
 }
@@ -321,7 +324,7 @@ export class EtcdJournalStore implements AtomicJournalStore {
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
 }
 export class ClusterEngine {
-  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStore, options?: EngineOptions);
+  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStore, options?: EngineOptions & { journalCheckpointInterval?: number });
   begin(keys: string[]): Promise<ClusterTransaction>;
 }
 export class ClusterTransaction {

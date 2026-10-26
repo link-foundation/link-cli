@@ -20,6 +20,9 @@ mod boundary;
 #[path = "../../tests/engine_cluster_tests.rs"]
 mod cluster;
 
+#[path = "../../tests/engine_checkpoint_tests.rs"]
+mod checkpoint;
+
 #[path = "../../tests/engine_partitioned_tests.rs"]
 mod partitioned;
 

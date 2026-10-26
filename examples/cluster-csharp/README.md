@@ -29,3 +29,9 @@ Append east and west endpoint lists to either command to route bulk journals to
 independent consensus groups. The original endpoint list then serves only the
 atomic catalog. See the independent-data recipe in the deployment documentation;
 partition namespaces must remain immutable and old objects are retained.
+# Optional checkpoints
+
+Add `--checkpoint` to publish retained-history checkpoints after every changed
+revision using the same atomic store. Defaults remain append-only. Upgrade every
+reader before enabling engine3 journals. See
+[configuration and costs](../../docs/ENGINE-CHECKPOINTS.md).

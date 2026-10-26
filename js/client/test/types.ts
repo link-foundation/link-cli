@@ -60,6 +60,7 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   const replica = new MemoryCommitLog();
   const log: CommitLog = new DeltaCommitLog(new ReplicatedCommitLog(file, [replica], { acknowledgements: 1 }), { checkpointInterval: 128 });
   using engine = new WasmEngine(binding, options, log);
+  const checkpoint: string[] = engine.exportCheckpoint(); void checkpoint;
   const session: EngineClient = engine.begin();
   await using owned = session;
   await session.create(0n, 0n);
@@ -86,7 +87,9 @@ async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]
   const store: AtomicJournalStore = new EtcdJournalStore(['https://localhost:2379'], { headers: { Authorization: 'token' }, timeoutMs: 1000 });
   const versions: JournalVersion[] = await store.read(['a']);
   await store.compareExchange(['a'], versions, [null]);
-  const engine = new ClusterEngine(binding, store, { requireDurableFlush: true });
+  const engine = new ClusterEngine(binding, store, { requireDurableFlush: true, journalCheckpointInterval: 64 });
+  // @ts-expect-error Checkpoint intervals are numeric revision counts.
+  new ClusterEngine(binding, store, { journalCheckpointInterval: '64' });
   const partitioned: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east');
   const cached: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east', { cacheBytes: 65536 });
   await cached.read(['a']);

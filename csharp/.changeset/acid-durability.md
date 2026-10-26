@@ -234,3 +234,7 @@ single-copy format and costs, and retain uncertain native ownership fences.
 
 Accept equals signs in native command tag names while preserving aliases to
 complete existing tags, unknown-point diagnostics and following database edits.
+
+Select optional portable retained-history checkpoints and coordinated checkpoint
+publication through the existing generation CAS. Preserve append-only defaults,
+committed allocators, selected history and uncertain-outcome recovery.

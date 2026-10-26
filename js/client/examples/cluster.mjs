@@ -7,14 +7,15 @@ import { ClusterEngine, EtcdJournalStore, PartitionedJournalStore } from '../src
 const directory = resolve(process.env.CLINK_WASM ?? '../pkg');
 const binding = await import(pathToFileURL(resolve(directory, 'clink_wasm.js')).href);
 binding.initSync({ module: await readFile(resolve(directory, 'clink_wasm_bg.wasm')) });
-const cache = process.argv.includes('--cache'); const args = process.argv.slice(2).filter((arg) => arg !== '--cache');
+const cache = process.argv.includes('--cache'); const checkpoint = process.argv.includes('--checkpoint');
+const args = process.argv.slice(2).filter((arg) => arg !== '--cache' && arg !== '--checkpoint');
 if (cache && args.length !== 4) throw new TypeError('--cache requires east and west data groups');
 const store = new EtcdJournalStore((args[0] ?? 'http://localhost:2379').split(','), { prefix: args[1] ?? '/demo/' });
 const journals = args[2] && args[3] ? new PartitionedJournalStore(store, {
   east: new EtcdJournalStore(args[2].split(','), { prefix: args[1] ?? '/demo/' }),
   west: new EtcdJournalStore(args[3].split(','), { prefix: args[1] ?? '/demo/' }),
 }, (key) => key === 'a' ? 'east' : 'west', { cacheBytes: cache ? 65536 : 0 }) : store;
-const engine = new ClusterEngine(binding, journals, { requireDurableFlush: true });
+const engine = new ClusterEngine(binding, journals, { requireDurableFlush: true, ...(checkpoint ? { journalCheckpointInterval: 1 } : {}) });
 const transaction = await engine.begin(['a', 'b']);
 try {
 for (const key of ['a', 'b']) {

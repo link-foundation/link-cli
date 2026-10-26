@@ -120,27 +120,32 @@ export class EtcdJournalStore {
  * coordinator transaction, with conservative serializable validation.
  */
 export class ClusterEngine {
-  #binding; #store; #options;
+  #binding; #store; #options; #journalCheckpointInterval;
   constructor(binding, store, options = {}) {
     if (typeof store?.read !== 'function' || typeof store?.compareExchange !== 'function') throw new TypeError('expected an atomic journal store');
     if (options.concurrency && options.concurrency !== 'optimistic') throw new UnsupportedError('network sessions use optimistic admission');
     if (options.isolation && options.isolation !== 'serializable') throw new UnsupportedError('network sessions use serializable snapshot validation');
     if (options.requireDurableFlush && store.supportsDurableFlush !== true) throw new UnsupportedError('coordinator does not support durable flush');
-    this.#binding = binding; this.#store = store; this.#options = { ...options, requireDurableFlush: false };
+    const { journalCheckpointInterval, ...engineOptions } = options;
+    if (journalCheckpointInterval !== undefined && (!Number.isSafeInteger(journalCheckpointInterval) || journalCheckpointInterval <= 0))
+      throw new TypeError('journalCheckpointInterval must be a positive safe integer');
+    this.#journalCheckpointInterval = journalCheckpointInterval;
+    this.#binding = binding; this.#store = store; this.#options = { ...engineOptions, requireDurableFlush: false };
   }
   async begin(keys) {
     keys = keysOf(keys);
     const snapshot = await this.#store.read(keys);
     if (!Array.isArray(snapshot) || snapshot.length !== keys.length) throw new LinksError('incomplete coordinator snapshot', { outcome: 'not-sent' });
-    return ClusterTransaction.open(this.#binding, this.#store, this.#options, keys, snapshot);
+    return ClusterTransaction.open(this.#binding, this.#store, this.#options, keys, snapshot, this.#journalCheckpointInterval);
   }
 }
 
 export class ClusterTransaction {
-  #store; #keys; #snapshot; #work = []; #clients = []; #state = 'open'; #pending;
-  static async open(binding, store, options, keys, snapshot) {
+  #store; #keys; #snapshot; #work = []; #clients = []; #state = 'open'; #pending; #journalCheckpointInterval;
+  static async open(binding, store, options, keys, snapshot, journalCheckpointInterval) {
     const transaction = new ClusterTransaction();
     transaction.#store = store; transaction.#keys = keys;
+    transaction.#journalCheckpointInterval = journalCheckpointInterval;
     transaction.#snapshot = snapshot.map((item) => ({ generation: item.generation, entries: [...records(item.entries)] }));
     try {
       for (const item of transaction.#snapshot) {
@@ -176,7 +181,10 @@ export class ClusterTransaction {
         const { engine, client } = this.#work[index];
         await client.commit();
         const journal = engine.journal();
-        updates.push(journal.length === this.#snapshot[index].entries.length ? null : journal);
+        // Check before compaction: equal/shrinking lengths still publish writes.
+        if (journal.length === this.#snapshot[index].entries.length) updates.push(null);
+        else updates.push(this.#journalCheckpointInterval !== undefined &&
+          engine.snapshot().revision % BigInt(this.#journalCheckpointInterval) === 0n ? engine.exportCheckpoint() : journal);
       }
       let published;
       try { published = await this.#store.compareExchange(this.#keys, this.#snapshot, updates); }

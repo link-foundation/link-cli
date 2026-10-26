@@ -60,9 +60,12 @@ impl<T: LinkReference, P: TransitionLogStore> Engine<T, P> {
             rows: std::sync::Arc::new(Rows::new(options.state_structure)),
         };
         let mut previous_next = 1;
-        for record in log.read_log_entries()? {
-            let (snapshot, allocator) =
-                journal::decode_after(&record, &previous, previous_next, options.state_structure)?;
+        for (index, record) in log.read_log_entries()?.into_iter().enumerate() {
+            let (snapshot, allocator) = if index == 0 && record.starts_with("engine3|") {
+                journal::decode_checkpoint(&record, options.state_structure)?
+            } else {
+                journal::decode_after(&record, &previous, previous_next, options.state_structure)?
+            };
             if snapshot.revision == base.revision && snapshot.rows == base.rows && allocator == next
             {
                 found = true;

@@ -36,6 +36,7 @@ pub trait AtomicJournalStore {
 pub struct ClusterEngine<T, S> {
     store: Arc<Mutex<S>>,
     options: EngineOptions,
+    journal_checkpoint_interval: Option<u64>,
     marker: PhantomData<T>,
 }
 impl<T: LinkReference, S: AtomicJournalStore> ClusterEngine<T, S> {
@@ -55,8 +56,18 @@ impl<T: LinkReference, S: AtomicJournalStore> ClusterEngine<T, S> {
         Ok(Self {
             store: Arc::new(Mutex::new(store)),
             options,
+            journal_checkpoint_interval: None,
             marker: PhantomData,
         })
+    }
+    /// Replace the published journal with retained snapshots every N revisions.
+    /// Disabled by default. The atomic store remains the publication boundary.
+    pub fn with_journal_checkpoint_interval(mut self, interval: u64) -> Result<Self, LinkError> {
+        if interval == 0 {
+            return Err(error("journal checkpoint interval must be positive"));
+        }
+        self.journal_checkpoint_interval = Some(interval);
+        Ok(self)
     }
     pub fn begin(&self, keys: &[&str]) -> Result<ClusterTransaction<T, S>, LinkError> {
         let keys: Vec<String> = keys.iter().map(|key| (*key).into()).collect();
@@ -85,6 +96,7 @@ impl<T: LinkReference, S: AtomicJournalStore> ClusterEngine<T, S> {
             keys,
             expected,
             shards,
+            journal_checkpoint_interval: self.journal_checkpoint_interval,
             closed: false,
         })
     }
@@ -114,6 +126,7 @@ pub struct ClusterTransaction<T: LinkReference, S: AtomicJournalStore> {
     keys: Vec<String>,
     expected: Vec<JournalVersion>,
     shards: Vec<ShardSession<T>>,
+    journal_checkpoint_interval: Option<u64>,
     closed: bool,
 }
 impl<T: LinkReference, S: AtomicJournalStore> ClusterTransaction<T, S> {
@@ -138,8 +151,19 @@ impl<T: LinkReference, S: AtomicJournalStore> ClusterTransaction<T, S> {
         let mut updates = Vec::new();
         for (shard, expected) in self.shards.iter_mut().zip(&self.expected) {
             shard.session.commit()?;
-            let entries = shard.engine.with_log(|log| Ok(log.entries.clone()))?;
-            updates.push((entries.len() != expected.entries.len()).then_some(entries));
+            let mut entries = shard.engine.with_log(|log| Ok(log.entries.clone()))?;
+            // Compare before compaction: a checkpoint can shrink the journal or
+            // leave its length unchanged. Read-only groups publish no rewrite.
+            if entries.len() == expected.entries.len() {
+                updates.push(None);
+            } else {
+                if let Some(interval) = self.journal_checkpoint_interval {
+                    if shard.engine.snapshot()?.revision.is_multiple_of(interval) {
+                        entries = shard.engine.export_checkpoint()?;
+                    }
+                }
+                updates.push(Some(entries));
+            }
         }
         let outcome = self
             .store

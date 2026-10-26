@@ -20,8 +20,9 @@ Requirement mapping: R1/R7/R8/R9/R12. Every wider criterion stays active.
       strict lint/format and complete official coverage denominators.
 - [x] Preserve complete local evidence, review the atomic diff, publish on the
       prepared branch and inspect fresh CI at its exact SHA.
-- [ ] Investigate the Windows process-exit deadlines and verify fresh CI after
-      diagnostic evidence identifies or excludes the suspected stall.
+- [x] Preserve the Windows deadline failures, add child stream/phase diagnostics
+      without extending the deadline, and verify fresh exact-head CI. Keep the
+      original timeout cause explicitly unknown.
 
 Input parsing/validation must finish before import mutation. This contract does
 not assert atomic undo after storage allocation, update, name or save failures.
@@ -57,4 +58,7 @@ macOS, coverage and lint pass, but four Windows version process-exit cases hit
 the unchanged ten-second child deadline. The original logs establish no root
 cause. archive-stream-ci-before.txt preserves exact workflow URLs and failure
 lines. The next native harness preserves child stdout/stderr and elapsed phases
-without increasing the deadline; fresh Windows execution remains required.
+without increasing the deadline. All nine workflows pass at b03bd4e, including
+all three native platforms. The Windows version-exit suite passes seven contracts
+in 6.64 seconds. This does not establish the original timeout cause. See
+version-exit-diagnostics-ci.txt for exact SHA, run URLs and Windows log lines.

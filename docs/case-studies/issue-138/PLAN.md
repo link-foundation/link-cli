@@ -421,5 +421,26 @@ complete the overall issue or authorize marking the draft ready early.
     suites pass 967 native plus six doctests and 571 actual-WASM tests, with
     complete official coverage of 94.37% and 81.45% lines respectively. All 221
     repository checks, optional-SQL guards and strict native/WASM Clippy pass.
-    See ARCHIVE-STREAM-PLAN.md and archive-stream.txt. Publication requires fresh
-    exact-head CI; whole-project 100% and every wider unmet criterion stay active.
+    See ARCHIVE-STREAM-PLAN.md and archive-stream.txt. At d98c2ee, eight workflows
+    pass; four Rust Windows version-exit cases hit their existing ten-second
+    deadline. Phase/stream diagnostics are published at b03bd4e; all nine fresh
+    workflows pass, including every native platform. The Windows exit suite
+    passes seven contracts in 6.64 seconds with the unchanged child deadline.
+    The original timeout cause remains unknown. See archive-stream-ci-before.txt
+    and version-exit-diagnostics-ci.txt. Whole-project 100%
+    and every wider unmet criterion stay active.
+
+34. Optional logical checkpoint journals now preserve exact retained snapshots
+    and committed allocator metadata through matching native and WASM/JS APIs.
+    An independently selected cluster interval publishes through the existing
+    generation CAS; default commits retain append behavior. Before-feature wire
+    and binding failures, branch integration regressions, selected constraints,
+    shrinking/equal-length journals, immutable objects and uncertain outcomes
+    pass. Complete local suites pass 975 native plus six doctests, 2,180 C# per
+    configuration, 580 actual-WASM, 211 JS and 221 repository checks. Real etcd
+    passes default/checkpoint/cache modes; all 48 existing physical/policy
+    configurations pass 288 writers. Node/Bun/Deno produce identical 36-case
+    payload results. See JOURNAL-CHECKPOINT-PLAN.md and journal-checkpoint.txt.
+    Fresh exact-head CI and initial-checkpoint support in the physical delta
+    decorator remain to verify. This does not reclaim old objects, replace
+    local files/pages or complete any wider unmet criterion.

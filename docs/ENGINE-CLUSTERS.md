@@ -36,6 +36,12 @@ aggregate write throughput. More workers and separate shard namespaces spread
 processing. Use the optional partitioned decorator below to move journal data
 out of the catalog into independent stores and consensus groups.
 
+An independently selected [logical checkpoint interval](ENGINE-CHECKPOINTS.md)
+bounds the current replay/transfer history when retention is bounded. It uses
+the same grouped generation CAS, keeps defaults unchanged and retains old
+partitioned objects. History All and full-snapshot checkpoint costs remain
+explicit; it does not increase the coordinator's throughput or request limits.
+
 ## Independent data stores
 
 `PartitionedJournalStore` implements the same atomic journal store contract in

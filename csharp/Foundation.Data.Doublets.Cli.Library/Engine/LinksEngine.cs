@@ -68,7 +68,7 @@ public sealed partial class LinksEngine<T>
     internal int Active;
     internal bool Poisoned;
     private readonly ICommitLog _log;
-    private readonly SortedDictionary<ulong, EngineSnapshot<T>> _history = new();
+    private readonly SortedDictionary<ulong, (EngineSnapshot<T> Snapshot, BigInteger Next)> _history = new();
     internal ConstraintIndex<T>? ConstraintIndex;
 
     public LinksEngine(ICommitLog log, EngineOptions? options = null)
@@ -89,9 +89,14 @@ public sealed partial class LinksEngine<T>
         Options = Options with { Constraints = Options.Constraints.ToArray() };
         Current = EngineSnapshot<T>.Create(0, new(Options.StateStructure));
         Retain();
+        bool first = true;
         foreach (var record in log.Read())
         {
-            var (snapshot, next) = RevisionJournal<T>.DecodeAfter(record, Current, Next, Options.StateStructure);
+            bool checkpoint = first && record.StartsWith("engine3|", StringComparison.Ordinal);
+            var (snapshot, next) = checkpoint ? RevisionJournal<T>.DecodeCheckpoint(record, Options.StateStructure)
+                : RevisionJournal<T>.DecodeAfter(record, Current, Next, Options.StateStructure);
+            if (checkpoint) _history.Clear();
+            first = false;
             Validate(snapshot.Rows);
             Current = snapshot;
             Next = next;
@@ -124,7 +129,7 @@ public sealed partial class LinksEngine<T>
         {
             CheckReady();
             return revision == Current.Revision ? Current : _history.TryGetValue(revision, out var snapshot)
-                ? snapshot : throw new KeyNotFoundException("Revision is not retained.");
+                ? snapshot.Snapshot : throw new KeyNotFoundException("Revision is not retained.");
         }
     }
     public TResult WithLog<TResult>(Func<ICommitLog, TResult> operation)
@@ -173,7 +178,7 @@ public sealed partial class LinksEngine<T>
     private void Retain()
     {
         if (Options.HistoryLimit == 0) return;
-        _history[Current.Revision] = Current;
+        _history[Current.Revision] = (Current, CommittedNext);
         while (Options.HistoryLimit is { } limit && _history.Count > limit) _history.Remove(_history.First().Key);
     }
     internal void Validate(IReadOnlyDictionary<T, EngineRow<T>> rows)

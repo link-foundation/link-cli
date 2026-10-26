@@ -10,10 +10,11 @@ use link_cli::LinksStorage;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args: Vec<_> = std::env::args().skip(1).collect();
     let cache = args.iter().any(|arg| arg == "--cache");
-    args.retain(|arg| arg != "--cache");
+    let checkpoint = args.iter().any(|arg| arg == "--checkpoint");
+    args.retain(|arg| arg != "--cache" && arg != "--checkpoint");
     if (args.len() != 2 && args.len() != 4) || (cache && args.len() != 4) {
         return Err(
-            "usage: cluster catalog-endpoints prefix/ [east-endpoints west-endpoints [--cache]]"
+            "usage: cluster catalog-endpoints prefix/ [east-endpoints west-endpoints [--cache]] [--checkpoint]"
                 .into(),
         );
     }
@@ -44,12 +45,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             })?
             .with_object_cache(if cache { 65536 } else { 0 }),
+            checkpoint,
         )
     } else {
-        write(store)
+        write(store, checkpoint)
     }
 }
-fn write<S: AtomicJournalStore>(store: S) -> Result<(), Box<dyn std::error::Error>> {
+fn write<S: AtomicJournalStore>(
+    store: S,
+    checkpoint: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     let engine = ClusterEngine::<u32, _>::new(
         store,
         EngineOptions {
@@ -57,6 +62,11 @@ fn write<S: AtomicJournalStore>(store: S) -> Result<(), Box<dyn std::error::Erro
             ..Default::default()
         },
     )?;
+    let engine = if checkpoint {
+        engine.with_journal_checkpoint_interval(1)?
+    } else {
+        engine
+    };
     let mut transaction = engine.begin(&["a", "b"])?;
     for key in ["a", "b"] {
         let shard = transaction.shard(key)?;

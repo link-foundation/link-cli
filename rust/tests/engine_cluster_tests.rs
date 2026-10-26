@@ -15,6 +15,7 @@ struct State {
     revision: u64,
     values: BTreeMap<String, JournalVersion>,
     lose_reply: bool,
+    fail_before: bool,
     short_read: bool,
     panic_read: bool,
     durable: bool,
@@ -41,6 +42,9 @@ impl AtomicJournalStore for Store {
         updates: &[Option<Vec<String>>],
     ) -> Result<bool, LinkError> {
         let mut state = self.0.lock().unwrap();
+        if state.fail_before {
+            return Err(LinkError::Transaction("request lost before effect".into()));
+        }
         if keys.iter().zip(expected).any(|(key, value)| {
             state.values.get(key).map_or(0, |v| v.generation) != value.generation
         }) {
@@ -65,6 +69,9 @@ impl AtomicJournalStore for Store {
         Ok(true)
     }
 }
+
+#[path = "engine_cluster/checkpoint.rs"]
+mod checkpoint;
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn cross_shard_commit_is_atomic_and_checks_read_only_shards() {

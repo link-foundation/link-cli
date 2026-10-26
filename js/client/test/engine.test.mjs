@@ -39,6 +39,7 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
       assert.equal(journal, '["record"]');
     }
     journal() { return '["record"]'; }
+    exportCheckpoint() { return '["checkpoint"]'; }
     snapshot(revision) {
       assert.equal(revision, 10n);
       return '{"revision":"10","rows":[{"index":"4294967295","source":"0","target":"1","name":null}]}';
@@ -49,10 +50,12 @@ test('engine wrapper preserves decimal addresses and passes explicit policies', 
   const engine = new WasmEngine({ StagedEngine: Native }, { isolation: 'snapshot' }, ['record']);
   assert.equal(engine.snapshot('10').rows[0].index, 4294967295n);
   assert.deepEqual(engine.journal(), ['record']);
+  assert.deepEqual(engine.exportCheckpoint(), ['checkpoint']);
   assert.ok(engine.begin() instanceof EngineClient);
   engine.close(); engine.close();
   assert.equal(freed, 1);
   assert.throws(() => engine.begin(), /closed/);
+  assert.throws(() => engine.exportCheckpoint(), /closed/);
   assert.throws(() => new WasmEngine({}), /StagedEngine/);
 });
 

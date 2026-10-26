@@ -174,7 +174,7 @@ impl<T: LinkReference> Snapshot<T> {
 struct State<T, L> {
     log: L,
     current: Snapshot<T>,
-    history: BTreeMap<u64, Snapshot<T>>,
+    history: BTreeMap<u64, (Snapshot<T>, u128)>,
     changed: BTreeMap<T, u64>,
     write_owners: BTreeMap<T, Arc<()>>,
     next: u128,
@@ -233,13 +233,19 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             log,
         };
         state.retain();
-        for entry in entries {
-            let (snapshot, next) = journal::decode_after(
-                &entry,
-                &state.current,
-                state.next,
-                state.options.state_structure,
-            )?;
+        for (index, entry) in entries.into_iter().enumerate() {
+            let (snapshot, next) = if index == 0 && entry.starts_with("engine3|") {
+                let decoded = journal::decode_checkpoint(&entry, state.options.state_structure)?;
+                state.history.clear();
+                decoded
+            } else {
+                journal::decode_after(
+                    &entry,
+                    &state.current,
+                    state.next,
+                    state.options.state_structure,
+                )?
+            };
             state.validate(&snapshot.rows)?;
             state.next = next;
             state.committed_next = next;
@@ -282,8 +288,36 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
         state
             .history
             .get(&revision)
-            .cloned()
+            .map(|(snapshot, _)| snapshot.clone())
             .ok_or_else(|| error("revision is not retained"))
+    }
+    /// Export an independent checkpoint followed by retained committed revisions.
+    /// Does not rewrite/publish the live log or include pending reservations.
+    /// The caller owns atomic publication and synchronization of these records.
+    pub fn export_checkpoint(&self) -> Result<Vec<String>, LinkError> {
+        let state = self.lock()?;
+        let snapshots: Vec<_> = if state.history.is_empty() {
+            vec![(&state.current, state.committed_next)]
+        } else {
+            state
+                .history
+                .values()
+                .map(|(snapshot, next)| (snapshot, *next))
+                .collect()
+        };
+        Ok(snapshots
+            .into_iter()
+            .enumerate()
+            .map(|(index, (snapshot, next))| {
+                // Exact committed metadata preserves saved branch descriptors
+                // without exposing the current owner's private reservations.
+                journal::encode_format(
+                    snapshot,
+                    next,
+                    if index == 0 { "engine3" } else { "engine1" },
+                )
+            })
+            .collect())
     }
     pub fn begin(&self) -> Result<EngineTransaction<T, L>, LinkError> {
         let mut state = self.lock()?;
@@ -336,12 +370,16 @@ impl<T: LinkReference, L> State<T, L> {
         match self.options.history {
             HistoryPolicy::None => {}
             HistoryPolicy::All => {
-                self.history
-                    .insert(self.current.revision, self.current.clone());
+                self.history.insert(
+                    self.current.revision,
+                    (self.current.clone(), self.committed_next),
+                );
             }
             HistoryPolicy::Last(limit) => {
-                self.history
-                    .insert(self.current.revision, self.current.clone());
+                self.history.insert(
+                    self.current.revision,
+                    (self.current.clone(), self.committed_next),
+                );
                 while self.history.len() > limit {
                     self.history.pop_first();
                 }
