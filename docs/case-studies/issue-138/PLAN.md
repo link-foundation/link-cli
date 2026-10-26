@@ -342,4 +342,16 @@ complete the overall issue or authorize marking the draft ready early.
     WASM cases with unchanged production denominators. Native coverage reaches
     94.29% lines and actual WASM 78.24% lines; parser coverage is 404/405 native
     and 394/405 WASM lines. See ARGUMENT-CONTRACTS-PLAN.md and arguments.txt.
-    Fresh exact-head CI and every wider inventoried criterion remain open.
+    All nine workflows pass on 164f6f0; arguments-ci.txt records exact evidence.
+    Every wider inventoried criterion remains open.
+
+28. A finite real-quota child first reproduces failed mapped growth disposing
+    the current view while retaining its stale pointer and reservation. C# now
+    keeps its owned stream and current view until a replacement is ready. Failed
+    initialization releases only new resources; logical shrink defers physical
+    truncation until used-length disposal. Repeated rejection, unflushed bytes,
+    flush, retry, following writes, exact reopening and normal shrink/regrowth
+    pass. Both full C# configurations pass 2,126 tests with complete coverage;
+    formatting/release/source and 221 repository checks pass. See
+    MAPPED-GROWTH-PLAN.md and mapped-growth-{before,}.txt. Fresh exact-head
+    platform CI and every broader unfinished requirement remain active.

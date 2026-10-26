@@ -32,32 +32,37 @@ internal sealed class DurableMappedMemory : ResizableDirectMemoryBase
 
     protected override void OnReservedCapacityChanged(long oldReservedCapacity, long newReservedCapacity)
     {
-        Unmap();
-        _stream = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+        // Keep both the live pointer and file ownership until a replacement is
+        // ready. The base retains its old capacity when this callback throws.
+        var stream = _stream ?? new FileStream(_path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+        MemoryMappedFile? mapping = null;
+        MemoryMappedViewAccessor? view = null;
         try
         {
-            _stream.SetLength(newReservedCapacity);
-            _mapping = MemoryMappedFile.CreateFromFile(_stream, null, newReservedCapacity,
+            // CreateFromFile grows the backing file itself. Explicit SetLength
+            // requires unmapping first on Windows. Smaller reservations change
+            // the view; the file is truncated to UsedCapacity during disposal.
+            mapping = MemoryMappedFile.CreateFromFile(stream, null, Math.Max(newReservedCapacity, stream.Length),
                 MemoryMappedFileAccess.ReadWrite, HandleInheritability.None, leaveOpen: true);
-            _view = _mapping.CreateViewAccessor(0, newReservedCapacity);
-            // The accessor remains owned until Unmap; offset zero is page aligned.
-            Pointer = _view.SafeMemoryMappedViewHandle.DangerousGetHandle();
+            view = mapping.CreateViewAccessor(0, newReservedCapacity);
         }
         catch
         {
-            Unmap();
+            view?.Dispose();
+            mapping?.Dispose();
+            if (_stream is null) stream.Dispose();
             throw;
         }
-    }
-
-    private void Unmap()
-    {
-        _view?.Dispose();
-        _view = null;
-        _mapping?.Dispose();
-        _mapping = null;
-        _stream?.Dispose();
-        _stream = null;
+        var oldView = _view;
+        var oldMapping = _mapping;
+        _stream = stream;
+        _mapping = mapping;
+        _view = view;
+        // The accessor owns this offset-zero, page-aligned pointer until the
+        // next successful replacement or disposal.
+        Pointer = view.SafeMemoryMappedViewHandle.DangerousGetHandle();
+        oldView?.Dispose();
+        oldMapping?.Dispose();
     }
 
     protected override void DisposePointer(IntPtr pointer, long usedCapacity)

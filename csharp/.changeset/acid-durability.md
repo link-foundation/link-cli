@@ -2,6 +2,10 @@
 'Foundation.Data.Doublets.Cli': minor
 ---
 
+Preserve the current mapped view and owned file handle when capacity growth is
+rejected. Construct a replacement before publishing its pointer, retaining
+flush, retry, following edits and exact used-length disposal after an I/O error.
+
 Reject complete corrupt journal entries and report replay failures. Add explicit
 data/journal flush callbacks and checkpoint only after data reaches storage.
 

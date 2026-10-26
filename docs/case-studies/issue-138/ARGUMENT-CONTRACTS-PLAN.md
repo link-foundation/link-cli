@@ -16,7 +16,7 @@ files and every wider unfinished criterion in the acceptance inventory.
       retaining the verified 256 MiB linear-memory cap and finite test deadlines.
 - [x] Run focused contracts, strict Clippy/format, complete native coverage and
       repository/release checks; retain exact reports and an atomic commit.
-- [ ] Obtain fresh exact-head CI, including all supported native platforms,
+- [x] Obtain fresh exact-head CI, including all supported native platforms,
       and continue every wider unfinished requirement.
 
 The preceding complete native report measures cli.rs at 352/405 lines and
@@ -31,3 +31,5 @@ All seven groups pass natively and in actual WASM. Complete suites pass 930
 native cases and 546 WASM cases. The parser reaches 404/405 native lines and
 394/405 WASM lines; complete production remains below 100%. See arguments.txt
 and VERIFICATION.md for complete denominators. No production source changed.
+All nine workflows pass on 164f6f0, including the native platform matrices.
+arguments-ci.txt preserves exact SHA, creation timestamps and links.

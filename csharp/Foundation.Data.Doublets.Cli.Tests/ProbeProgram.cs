@@ -12,6 +12,7 @@ internal static class ProbeProgram
         try
         {
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
+            if (args is ["mapping-quota", var mappingDirectory]) return MappedGrowthTests.QuotaChild(mappingDirectory);
             if (args is ["deep-structure", var structureDirectory]) return StructureDepthTests.Child(structureDirectory);
             if (args is ["unicode-cycle", var unicodeOperation, var unicodeDirectory]) return UnicodeGraphCycleTests.Child(unicodeOperation, unicodeDirectory);
             if (args is ["group-exit", var groupPath, var groupPoint, var delta]) return EngineGroupExitTests.Child(groupPath, groupPoint, bool.Parse(delta));

@@ -2808,5 +2808,39 @@ The parser component measures 404/405 native lines, 116/118 branches and 28/28
 functions, versus 394/405 lines, 112/118 branches and 25/28 functions in WASM.
 Every production denominator is retained. C# and JS source remains unchanged
 from the recorded 2,124-per-configuration and 209-case runs. See arguments.txt
-and ARGUMENT-CONTRACTS-PLAN.md. Whole-project 100%, fresh exact-head CI and
-every broader unfinished criterion remain open.
+and ARGUMENT-CONTRACTS-PLAN.md. All nine workflows pass on argument head 164f6f0, including Linux/macOS/Windows
+native matrices; arguments-ci.txt records exact SHA, timestamps and links.
+Whole-project 100% and every broader unfinished criterion remain open.
+
+## Rejected owned mapped-file growth
+
+A bounded Linux quota child first fails after rejected expansion: the base
+retains its old reservation and pointer while Flush throws ObjectDisposedException
+because the old view was already disposed. The safe reproduction checks flush
+before reading that pointer. Existing growth remains a passing control. See
+mapped-growth-before.txt; the earlier exception-type/sharing test-oracle mistakes
+are identified separately and are not counted as product failures.
+
+The replacement retains its current mapping and owned stream until both new
+mapping and view exist, then publishes the pointer. Failed initialization closes
+its newly acquired handle. Mapping creation extends the file through the platform
+API, avoiding SetLength against a live Windows view. A smaller reservation uses
+a smaller view; physical truncation remains at used-length disposal.
+
+Two focused contracts cover failed initialization, repeated rejected growth,
+unflushed bytes, flush, following growth/writes, exact file length/reopening,
+exclusive-handle denial, shrink/regrowth, invalid reservations and disposal.
+The quota child has an 8 KiB file limit, 128 MiB GC heap and finite reaping deadline;
+its largest requested file is 12 KiB. All 2,126 tests pass in both configurations.
+
+| Complete measured scope | Covered lines | Covered branches |
+| --- | --- | --- |
+| C# Debug | 7,943/8,260 (96.16%) | 4,264/4,638 (91.94%) |
+| C# Release | 6,099/6,298 (96.84%) | 4,219/4,611 (91.50%) |
+
+DurableMappedMemory.cs measures 45/46 Debug and 39/40 Release lines. All
+production files remain measured. Formatting, release/source-size, ShellCheck
+and 221 repository checks pass. Other language source remains unchanged from
+930 native / 546 actual WASM / 209 JS runs. See MAPPED-GROWTH-PLAN.md and
+mapped-growth.txt. Fresh exact-head CI, complete coverage, legacy physical
+repair/power-loss verification and every broader unfinished criterion remain open.
