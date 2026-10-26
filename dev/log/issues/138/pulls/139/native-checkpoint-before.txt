@@ -1,0 +1,50 @@
+Native checkpoint factory controls before implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: 133c4ff4a51240cda983dc34f7e4ca58c44d1c4c
+
+Minimal fixtures were copied into the real test targets before adding the factories.
+Command: bash experiments/issue-138/reproduce-native-checkpoint-factories.sh
+The reproducer now refuses a different/dirty checkout to protect expanded tests.
+Run in an isolated clean worktree at the baseline, with its experiment fixtures.
+
+experiments/issue-138/native-checkpoint-rust-before.log:
+2: error[E0432]: unresolved import `link_cli::engine::paged::FileCheckpointPagedLog`
+6:   |                               ^^^^^^^^^^^^^^^^^^^^^^ no `FileCheckpointPagedLog` in `engine::paged`
+
+experiments/issue-138/native-checkpoint-csharp-before.log:
+5: csharp/Foundation.Data.Doublets.Cli.Tests/NativeCheckpointFactoryTests.cs(16,33): error CS0246: The type or namespace name 'FileCheckpointPagedCommitLog' could not be found (are you missing a using directive or an assembly reference?) [csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+6: csharp/Foundation.Data.Doublets.Cli.Tests/NativeCheckpointFactoryTests.cs(24,38): error CS0246: The type or namespace name 'FileCheckpointPagedCommitLog' could not be found (are you missing a using directive or an assembly reference?) [csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+7: csharp/Foundation.Data.Doublets.Cli.Tests/NativeCheckpointFactoryTests.cs(27,35): error CS0246: The type or namespace name 'FileCheckpointPagedCommitLog' could not be found (are you missing a using directive or an assembly reference?) [csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+experiments/issue-138/native-checkpoint-js-before.log:
+5: Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'js/client/src/engine-file-checkpoint-pages.js' imported from js/client/test/engine-file-checkpoint-pages.test.mjs
+
+These are missing-feature failures, not an existing publication corruption claim.
+
+Independent existing JS constructor defect:
+New raw-handle regression failed before changing engine-file-paged-log.js.
+Original acquisition failure was replaced by a cleanup failure.
+experiments/issue-138/native-checkpoint-js-masked-cause-before.log:
+15: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /original acquisition failure/. Input:
+16:
+17: 'cleanup handle 1'
+
+The fix retains the original cause and every cleanup error in AggregateError.
+Both partial acquisition and portable validation cleanup paths are covered.
+Before/after full reports remain under experiments/issue-138/.
+Final complete validation and measured limits are recorded separately.
+
+A following independent directory-error regression was run after the outer
+constructor cleanup fix, before correcting the existing try/finally directory
+cleanup. Command:
+node --test --test-name-pattern='directory synchronization and close faults' js/client/test/engine-file-paged-faults.test.mjs
+Exit 1; experiments/issue-138/native-checkpoint-js-directory-before.log:
+  actual:   [Error: directory close failed]
+  expected: [Error: directory synchronization failed, Error: directory close failed]
+
+The directory synchronization error had been replaced by close's error. The
+fixed constructor retains both original error objects, followed by every raw
+handle cleanup error. Four finite combinations cover synchronization success
+or failure and healthy or failing raw cleanup, requiring all four raw closes,
+appropriate retained fences, exact acknowledged records and following reopening.
+The complete raw fault suite passes all nine cases after both corrections.

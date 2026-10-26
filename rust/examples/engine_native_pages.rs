@@ -1,16 +1,21 @@
 //! Reopen the same native doublets page journal from Rust, C# and Node/Bun/Deno.
-//! cargo run --manifest-path rust/Cargo.toml --features native-pages --example engine_native_pages -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--checkpoint-fixture=<json>]
-use link_cli::engine::paged::{FilePageDevice, MirroredPageDevice, PageDevice, PagedLog};
+//! cargo run --manifest-path rust/Cargo.toml --features native-pages --example engine_native_pages -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--compact|--checkpoint-fixture=<json>]
+use link_cli::engine::paged::{
+    FileCheckpointPagedLog, FilePageDevice, MirroredPageDevice, PageDevice, PagedLog,
+};
 use link_cli::engine::{
     Constraint, ConstraintValidation, DeltaLog, Engine, EngineOptions, GroupCommitOutcome,
-    HistoryPolicy, IsolationLevel, RevisionEncoding, StateStructure,
+    HistoryPolicy, IsolationLevel, MemoryLog, RevisionEncoding, StateStructure,
 };
-use link_cli::{LinksStorage, TransitionLogStore};
+use link_cli::{LinkError, LinksStorage, TransitionLogStore};
+
+type Compact<L> = fn(&Engine<u64, L>) -> Result<bool, LinkError>;
 
 fn run<L: TransitionLogStore>(
     mut log: L,
     options: EngineOptions,
     checkpoint: Option<&str>,
+    compact: Option<Compact<L>>,
 ) -> anyhow::Result<L> {
     if let Some(seed) = checkpoint {
         if log.read_log_entries()?.is_empty() {
@@ -19,8 +24,15 @@ fn run<L: TransitionLogStore>(
         }
         anyhow::ensure!(log.read_log_entries()?.first().map(String::as_str) == Some(seed));
     }
+    let branch_options = EngineOptions {
+        require_durable_flush: false,
+        ..options.clone()
+    };
     let db = Engine::<u64, _>::open(log, options)?;
     let before = db.snapshot()?;
+    let branch = compact
+        .map(|_| db.fork(MemoryLog::default(), branch_options.clone()))
+        .transpose()?;
     if let Some(seed) = checkpoint {
         assert!(before.revision >= 40);
         assert_eq!(before.revision - 8, before.rows().len() as u64);
@@ -62,9 +74,31 @@ fn run<L: TransitionLogStore>(
         ]
     );
     assert_eq!(before.rows().len() + 2, db.snapshot()?.rows().len());
-    assert_eq!(db.snapshot_at(before.revision)?.rows(), before.rows());
+    if compact.is_none() {
+        assert_eq!(db.snapshot_at(before.revision)?.rows(), before.rows());
+    }
     let after = db.snapshot()?;
-    if checkpoint.is_some() {
+    if let Some(compact) = compact {
+        assert!(db.snapshot_at(before.revision).is_err());
+        let mut private = db.begin()?;
+        assert_eq!(private.create_link(0, 0)?, after.revision + 1);
+        assert!(compact(&db)?);
+        assert!(!compact(&db)?);
+        assert_eq!(before.rows().len() + 2, after.rows().len());
+        let branch = branch.unwrap();
+        let descriptor = branch.merge_base_record();
+        let child = branch
+            .into_engine()
+            .into_log()
+            .map_err(|_| anyhow::anyhow!("live branch sessions"))?;
+        let resumed = db.resume_branch(child, branch_options, &descriptor)?;
+        assert_eq!(resumed.engine().snapshot()?.rows(), before.rows());
+        assert_eq!(resumed.merge_base_record(), descriptor);
+        drop(resumed);
+        private.rollback();
+        drop(private);
+        println!("Native compacting pages group: {} -> {} revisions; {} -> {} rows; private reservation {}, pinned rows and branch base verified", before.revision, after.revision, before.rows().len(), after.rows().len(), after.revision + 1);
+    } else if checkpoint.is_some() {
         println!(
             "Native checkpoint pages group: {} -> {} revisions; {} -> {} rows; pinned predecessor and exact prior names verified",
             before.revision, after.revision, before.rows().len(), after.rows().len()
@@ -101,7 +135,11 @@ fn main() -> anyhow::Result<()> {
             vec![]
         },
         isolation: IsolationLevel::Snapshot,
-        history: HistoryPolicy::All,
+        history: if args.iter().any(|arg| arg == "--compact") {
+            HistoryPolicy::Last(2)
+        } else {
+            HistoryPolicy::All
+        },
         require_durable_flush: true,
         state_structure: if args.iter().any(|arg| arg == "--flat") {
             StateStructure::Flat
@@ -132,7 +170,26 @@ fn main() -> anyhow::Result<()> {
     } else {
         None
     };
-    if args.iter().any(|arg| arg == "--mirrored") {
+    if args.iter().any(|arg| arg == "--compact") {
+        anyhow::ensure!(
+            checkpoint.is_none(),
+            "compaction handoffs use their own two-revision retention control"
+        );
+        let log = FileCheckpointPagedLog::open(path, args.iter().any(|arg| arg == "--mirrored"))?;
+        let mut log = if delta {
+            run(
+                DeltaLog::new(log, 128)?,
+                options,
+                None,
+                Some(Engine::compact_journal),
+            )?
+            .into_inner()
+        } else {
+            run(log, options, None, Some(Engine::compact_journal))?
+        };
+        println!("Native checkpoint bank epoch: {}", log.epoch()?);
+        log.close()?;
+    } else if args.iter().any(|arg| arg == "--mirrored") {
         run_device(
             MirroredPageDevice::open(path)?,
             options,
@@ -159,9 +216,9 @@ fn run_device<D: PageDevice>(
 ) -> anyhow::Result<D> {
     let log = PagedLog::open(device)?;
     let log = if delta {
-        run(DeltaLog::new(log, 128)?, options, checkpoint)?.into_inner()
+        run(DeltaLog::new(log, 128)?, options, checkpoint, None)?.into_inner()
     } else {
-        run(log, options, checkpoint)?
+        run(log, options, checkpoint, None)?
     };
     Ok(log.into_device())
 }

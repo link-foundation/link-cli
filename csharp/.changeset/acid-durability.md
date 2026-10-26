@@ -248,3 +248,8 @@ physical records and fence uncertain operations until actual reopening.
 Compact retained committed journals under the engine commit lock through an
 optional replacement log. Preserve sessions, pins, history and allocator gaps;
 compose physical delta journals and fence unknown publication until reopening.
+
+Own the native checkpoint root and both single/mirrored banks through a selected
+factory. Acquire all fences before recovery, close every raw owner root last,
+preserve constructor and cleanup errors, and retain uncertain fences without
+flushing pending work during disposal.

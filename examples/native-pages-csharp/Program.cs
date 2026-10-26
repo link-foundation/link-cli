@@ -1,16 +1,19 @@
 using Foundation.Data.Doublets.Cli.Engine;
 using System.Text.Json;
 
-// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--checkpoint-fixture=<json>]
+// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--compact|--checkpoint-fixture=<json>]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal)) ?? throw new ArgumentException("Provide a dedicated Native pages database path.");
-IPageDevice device = args.Contains("--mirrored") ? new FileMirroredPageDevice(path) : new FilePageDevice(path);
-using var ownership = (IDisposable)device;
-var physical = new PagedCommitLog(device);
+bool compact = args.Contains("--compact");
+IPageDevice? device = compact ? null : args.Contains("--mirrored") ? new FileMirroredPageDevice(path) : new FilePageDevice(path);
+using var ownership = device as IDisposable;
+using var checkpointPhysical = compact ? new FileCheckpointPagedCommitLog(path, args.Contains("--mirrored")) : null;
+ICommitLog physical = checkpointPhysical is null ? new PagedCommitLog(device!) : checkpointPhysical;
 ICommitLog log = args.Contains("--delta") ? new DeltaCommitLog(physical) : physical;
 string? checkpoint = null;
 const string fixturePrefix = "--checkpoint-fixture=";
 if (args.FirstOrDefault(arg => arg.StartsWith(fixturePrefix, StringComparison.Ordinal)) is { } fixture)
 {
+    Require(!compact);
     using var json = JsonDocument.Parse(File.ReadAllText(fixture[fixturePrefix.Length..]));
     checkpoint = json.RootElement.GetProperty("nativePageSeed").GetString()
         ?? throw new InvalidDataException("Fixture must contain nativePageSeed.");
@@ -20,7 +23,7 @@ if (args.FirstOrDefault(arg => arg.StartsWith(fixturePrefix, StringComparison.Or
 var engine = new LinksEngine<ulong>(log, new()
 {
     Isolation = Foundation.Data.Doublets.Cli.Engine.IsolationLevel.Snapshot,
-    HistoryLimit = null,
+    HistoryLimit = compact ? 2 : null,
     RequireDurableFlush = true,
     StateStructure = args.Contains("--flat") ? StateStructure.Flat : args.Contains("--sorted-runs") ? StateStructure.SortedRuns : StateStructure.Shared,
     RevisionEncoding = args.Contains("--snapshot") ? RevisionEncoding.Snapshot : RevisionEncoding.Changes,
@@ -29,6 +32,7 @@ var engine = new LinksEngine<ulong>(log, new()
 });
 static void Require(bool condition) { if (!condition) throw new InvalidDataException("Native pages interoperability invariant failed."); }
 var before = engine.Snapshot();
+var branchLog = new MemoryCommitLog(); var branch = compact ? engine.Fork(branchLog, new() { HistoryLimit = null }) : null;
 if (checkpoint is not null)
 {
     Require(before.Revision >= 40 && before.Revision - 8 == (ulong)before.Rows.Count);
@@ -50,8 +54,20 @@ using var b = engine.Begin(); ulong second = b.CreateLink(first, 0); b.SetName(s
 Require(first == before.Revision + 1 && second == before.Revision + 2);
 var outcomes = engine.CommitGroup(new[] { a, b });
 Require(outcomes.Select(result => result.Revision).SequenceEqual(new ulong?[] { before.Revision + 1, before.Revision + 2 }));
-Require(engine.Snapshot().Rows.Count == before.Rows.Count + 2 && engine.SnapshotAt(before.Revision).Rows.SequenceEqual(before.Rows));
+Require(engine.Snapshot().Rows.Count == before.Rows.Count + 2);
+if (!compact) Require(engine.SnapshotAt(before.Revision).Rows.SequenceEqual(before.Rows));
 var after = engine.Snapshot();
-Console.WriteLine(checkpoint is not null
+if (compact)
+{
+    bool unavailable = false; try { engine.SnapshotAt(before.Revision); } catch (KeyNotFoundException) { unavailable = true; }
+    Require(unavailable);
+    using var pending = engine.Begin(); Require(pending.CreateLink(0, 0) == after.Revision + 1);
+    Require(engine.CompactJournal()); Require(!engine.CompactJournal());
+    string descriptor = branch!.MergeBaseRecord; var resumed = engine.ResumeBranch(branchLog, descriptor);
+    Require(resumed.Engine.Snapshot().Rows.SequenceEqual(before.Rows)); Require(resumed.MergeBaseRecord == descriptor); pending.Rollback();
+    Console.WriteLine($"Native compacting pages group: {before.Revision} -> {after.Revision} revisions; {before.Rows.Count} -> {after.Rows.Count} rows; private reservation {after.Revision + 1}, pinned rows and branch base verified");
+    Console.WriteLine($"Native checkpoint bank epoch: {checkpointPhysical!.Epoch}");
+}
+else Console.WriteLine(checkpoint is not null
     ? $"Native checkpoint pages group: {before.Revision} -> {after.Revision} revisions; {before.Rows.Count} -> {after.Rows.Count} rows; pinned predecessor and exact prior names verified"
     : $"Native pages group: {before.Revision} -> {after.Revision} revisions/rows; pinned predecessor and exact prior names verified");

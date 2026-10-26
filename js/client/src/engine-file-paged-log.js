@@ -37,9 +37,17 @@ export class FilePageDevice {
         this.#files.push(openSync(file, constants.O_RDWR | constants.O_CREAT, 0o600));
       if (process.platform !== 'win32') {
         const directory = openSync(dirname(path), 'r');
-        try { fsyncSync(directory); } finally { closeSync(directory); }
+        const errors = [];
+        try { fsyncSync(directory); } catch (error) { errors.push(error); }
+        try { closeSync(directory); } catch (error) { errors.push(error); }
+        if (errors.length === 1) throw errors[0];
+        if (errors.length > 1) throw new AggregateError(errors, 'native page directory synchronization and cleanup failed');
       }
-    } catch (error) { this.close(); throw error; }
+    } catch (cause) {
+      try { this.close(); }
+      catch (cleanup) { throw new AggregateError([cause, cleanup], 'native page initialization and cleanup failed'); }
+      throw cause;
+    }
   }
   #check() { if (this.#closed) throw new Error('native page device is closed'); }
   get supportsDurableFlush() { return true; }
@@ -94,7 +102,12 @@ export class FilePagedCommitLog extends PagedCommitLog {
   #closed = false;
   constructor(path, options) {
     const device = new FilePageDevice(path);
-    try { super(device, options); } catch (error) { device.close(); throw error; }
+    try { super(device, options); }
+    catch (cause) {
+      try { device.close(); }
+      catch (cleanup) { throw new AggregateError([cause, cleanup], 'native page log initialization and cleanup failed'); }
+      throw cause;
+    }
     this.#device = device;
   }
   #check() { if (this.#closed) throw new Error('native page log is closed'); }

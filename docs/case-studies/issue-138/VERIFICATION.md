@@ -2995,3 +2995,72 @@ change. Native owning factories and their process-recovery composition remain
 unfinished. Fresh exact-head CI, complete-project coverage and all wider unmet
 requirements remain active. Volatile images/process exits do not certify
 hardware power-loss durability.
+
+## Native checkpoint ownership and process recovery
+
+The following native factories acquire the raw root and all selected bank/mirror
+owners before validation, reset or repair. Constructor failures retain the
+original error and every reverse-order cleanup failure; explicit close releases
+the root last, does not flush pending records, and never retries uncertain raw
+handles. A remaining bank fence blocks recovery even after root release. Tests
+also reject ordinary/checkpoint in-place conversion in both directions without
+altering the original acknowledged journal.
+
+Three missing-factory controls first fail in the actual language targets at
+133c4ff. Independent existing JS acquisition/cleanup and directory-sync/close
+regressions also first fail; final tests preserve the actual error identities,
+all raw cleanup attempts, acknowledged records and following reopening. See
+native-checkpoint-before.txt and the guarded reproducer/fixtures under
+experiments/issue-138.
+
+Final validation uses Rust 1.99.0, .NET SDK 10.0.403, Node 26.12.1, Bun 1.4.4 and
+Deno 2.9.7. `validate-native-checkpoint-all.sh` preserves seven independent stage
+reports. Cargo runs one compiler at a time with reduced debug information; .NET
+uses a 640 MiB heap bound and actual-WASM modules have verified 256 MiB caps.
+An early live edit of the shell driver lost its final C# success message; both
+complete zero-failure reports and coverage attachments were verified separately.
+The remaining stages completed without editing the driver. The saved original
+driver error and initial strict-Clippy range-loop error remain available.
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,013 plus six doctests | 13,642 / 14,449 | 2,547 / 2,958 | 1,772 / 1,907 |
+| Actual WASM, linked source | 620 | 11,068 / 13,424 | 2,165 / 2,603 | 1,403 / 1,778 |
+| C# Debug | 2,227 | 8,267 / 8,561 | 4,513 / 4,880 | not reported |
+| C# Release | 2,227 | 6,344 / 6,530 | 4,460 / 4,845 | not reported |
+| JS production modules | 239 | 100% | 100% | 100% |
+
+Eighteen native child entry points are ignored by direct test discovery and
+exercised through bounded parents. The new C# factory measures 100% lines and
+branches in both configurations. Rust file_checkpoint.rs measures 214/221 lines,
+5/6 branches and 57/58 functions; its private durability method and some error
+regions remain unexecuted. The actual-WASM engine wrapper measures 263/263 lines,
+6/6 branches and 50/50 functions; LLVM regions/instantiations remain below 100%.
+Whole-project 100% coverage is unfinished; no denominator is reduced.
+
+Native process parents terminate children immediately before and after actual
+writes, truncations and synchronization during replacement and mirrored repair.
+JS observes 34 single-copy replacement cuts, 62 mirrored replacement cuts and
+12 mirrored-repair cuts. Rust and C# independently enumerate their own actual
+operation traces. Each case observes child termination before removing abandoned
+fences, accepts a complete old/new publication (repair retains the acknowledged
+one), then appends, flushes, compacts and verifies another fresh reopening.
+
+Ordinary journals, imported initial checkpoints and selected native compaction
+each pass 48 configurations and 288 persistent Rust/Node/Bun/C#/Deno/Rust writer
+handoffs. Compaction advances root epochs one through six, retains two revisions,
+preserves exact Unicode/BOM/NUL names, allocator gaps, private reservations, pins
+and branch bases, and repairs deliberate closed mirrored-bank damage. Node/Bun/
+Deno also agree on all 72 actual-WASM compositions and finite payload reports.
+All three real-etcd modes pass leader/majority-loss and native handoff checks.
+
+All 221 repository checks, strict native/WASM lint, formatting, TypeScript,
+optional-SQL guards, vector regeneration, release/source limits, ShellCheck,
+actionlint and whitespace checks pass. See NATIVE-CHECKPOINT-PLAN.md,
+native-checkpoint.txt and docs/ENGINE-NATIVE-CHECKPOINTS.md. The preceding engine
+head 133c4ff passes all nine workflows and native platforms; engine-compaction-ci.txt
+preserves that evidence. This native batch still needs its own exact-head CI.
+Root-media redundancy/repair, legacy mapped repair/efficient page undo, physical
+LSM, persistent object reclamation, wider algorithms and every other unmet
+criterion remain active. Truthful synchronization is assumed; finite process
+exits do not certify physical power-loss behavior.

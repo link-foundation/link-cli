@@ -121,3 +121,76 @@ test('owner-removal errors are reported after all handles close', (context) => {
     assert.equal(fs.existsSync(path + '.writer'), false);
   } finally { restore(); fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('failed native construction preserves the original cause and every cleanup error', (context) => {
+  const messages = (error) => error instanceof AggregateError ? error.errors.flatMap(messages) : [error.message];
+  for (const partial of [true, false]) {
+    const dir = directory(), path = join(dir, 'log'), owned = new Set();
+    const open = fs.openSync, close = fs.closeSync;
+    const restoreOpen = replace(context, 'openSync', (name, ...options) => {
+      if (partial && name === path + '.meta0') throw new Error('original acquisition failure');
+      const fd = open(name, ...options);
+      if ([path, path + '.writer', path + '.meta0', path + '.meta1'].includes(name)) owned.add(fd);
+      return fd;
+    });
+    let closed = 0;
+    const restoreClose = replace(context, 'closeSync', (fd) => {
+      close(fd);
+      if (owned.delete(fd)) { closed++; throw new Error(`cleanup handle ${closed}`); }
+    });
+    try {
+      assert.throws(() => partial ? new FilePageDevice(path) : new FilePagedCommitLog(path, { maxPages: 0 }), (error) => {
+        const causes = messages(error);
+        assert.match(causes[0], partial ? /original acquisition failure/ : /page limit/);
+        assert.deepEqual(causes.slice(1), Array.from({ length: partial ? 2 : 4 }, (_, i) => `cleanup handle ${i + 1}`));
+        return true;
+      });
+      assert.equal(owned.size, 0); assert.equal(closed, partial ? 2 : 4);
+      assert.equal(fs.existsSync(path + '.writer'), true);
+    } finally { restoreOpen(); restoreClose(); fs.rmSync(dir, { recursive: true, force: true }); }
+  }
+});
+
+test('directory synchronization and close faults preserve every original cause', (context) => {
+  const causes = (error) => error instanceof AggregateError ? error.errors.flatMap(causes) : [error];
+  for (const syncFails of [false, true]) for (const cleanupFails of [false, true]) {
+    const dir = directory(), path = join(dir, 'log');
+    using initial = new FilePagedCommitLog(path); initial.append('acknowledged 雪'); initial.flush(); initial.close();
+    const open = fs.openSync, close = fs.closeSync, sync = fs.fsyncSync, handles = new Set();
+    const syncError = new Error('directory synchronization failed'), closeError = new Error('directory close failed');
+    const cleanupErrors = Array.from({ length: 4 }, (_, i) => new Error(`raw cleanup ${i}`));
+    let directoryHandle, attempted = 0;
+    const restoreOpen = replace(context, 'openSync', (name, ...options) => {
+      const fd = open(name, ...options);
+      if (name === dir) directoryHandle = fd; else handles.add(fd);
+      return fd;
+    });
+    const restoreSync = replace(context, 'fsyncSync', (fd) => {
+      if (fd === directoryHandle && syncFails) throw syncError;
+      return sync(fd);
+    });
+    const restoreClose = replace(context, 'closeSync', (fd) => {
+      close(fd);
+      if (fd === directoryHandle) throw closeError;
+      assert.equal(handles.delete(fd), true);
+      const error = cleanupErrors[attempted++]; if (cleanupFails) throw error;
+    });
+    try {
+      assert.throws(() => new FilePagedCommitLog(path), (error) => {
+        assert.deepEqual(causes(error), [...(syncFails ? [syncError] : []), closeError, ...(cleanupFails ? cleanupErrors : [])]);
+        return true;
+      });
+      assert.equal(attempted, 4); assert.equal(handles.size, 0);
+      assert.equal(fs.existsSync(path + '.writer'), cleanupFails);
+    } finally { restoreOpen(); restoreSync(); restoreClose(); }
+    try {
+      // All actual close calls completed above; only the injected report was uncertain.
+      if (cleanupFails) fs.unlinkSync(path + '.writer');
+      using recovered = new FilePagedCommitLog(path);
+      assert.deepEqual(JSON.parse(recovered.read()), ['acknowledged 雪']);
+      recovered.append('following'); recovered.flush(); recovered.close();
+      using again = new FilePagedCommitLog(path);
+      assert.deepEqual(JSON.parse(again.read()), ['acknowledged 雪', 'following']);
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  }
+});

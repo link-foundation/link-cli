@@ -490,3 +490,28 @@ complete the overall issue or authorize marking the draft ready early.
     batch requires fresh exact-head CI. Publication under the engine commit lock,
     physical-delta replacement and native owning factories remain unfinished, as do
     whole-project 100% coverage and every wider unmet acceptance criterion.
+
+38. Engine checkpoint publication now retains the commit mutex through optional
+    replacement, including independently selected physical delta codecs. Exact
+    history, pins, private/committed allocator distinctions, pending sessions,
+    point locks, admission and branch bases survive. Unsupported logs reject
+    before mutation; uncertain publication fences the engine. All 72 bank/state/
+    encoding/history/delta combinations pass in Rust/C# and actual WASM across
+    Node/Bun/Deno. Full suites pass 1,002 native plus six doctests, 620 actual
+    WASM, 2,210 C# per configuration, 230 JS and 221 repository checks. All nine
+    workflows and every native platform pass on 133c4ff; engine-compaction-ci.txt
+    preserves exact evidence. Native owning factories continue under
+    NATIVE-CHECKPOINT-PLAN.md; whole-project coverage and all wider gaps remain
+    active.
+
+39. Native owning checkpoint factories now acquire every device before recovery
+    mutation, preserve original/all cleanup errors, close banks before the root
+    and retain uncertain fences without implicit flush or retry. Missing-feature
+    controls and two JS error-masking regressions precede implementation. Bounded
+    actual replacement/repair exits, exact following commits and independent
+    format-conversion rejection pass in Rust/C#/JS. Complete suites pass 1,013
+    native plus six doctests, 620 actual WASM, 2,227 C# per configuration, 239 JS
+    and 221 repository checks. All three persistent controls pass 48/288 handoffs;
+    etcd and runtime comparisons pass. NATIVE-CHECKPOINT-PLAN.md and
+    native-checkpoint{,-before}.txt retain exact coverage and selected costs.
+    Commit, fresh exact-head CI and every wider unmet criterion remain active.

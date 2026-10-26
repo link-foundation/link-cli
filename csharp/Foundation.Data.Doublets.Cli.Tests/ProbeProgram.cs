@@ -21,6 +21,8 @@ internal static class ProbeProgram
                     Enum.Parse<Engine.RevisionEncoding>(encoding), Enum.Parse<Engine.StateStructure>(structure));
             if (args is ["mirrored-pages-exit", var mirrorPath, var mirrorPoint]) return MirroredFileExitTests.Child(mirrorPath, mirrorPoint);
             if (args is ["pages-exit", var pagesPath, var pagesPoint]) return PagedFileExitTests.Child(pagesPath, pagesPoint);
+            if (args is ["checkpoint-pages-cut", var checkpointPath, var checkpointMirror, var checkpointPoint, var checkpointRepair])
+                return NativeCheckpointExitTests.Child(checkpointPath, bool.Parse(checkpointMirror), int.Parse(checkpointPoint, System.Globalization.CultureInfo.InvariantCulture), bool.Parse(checkpointRepair));
             if (args is ["sqlite-exit", var sqlitePath, var sqlitePoint, var sqliteDelta, var sqliteEncoding, var sqliteStructure])
                 return EngineSqliteExitTests.Child(sqlitePath, sqlitePoint, bool.Parse(sqliteDelta),
                     Enum.Parse<Engine.RevisionEncoding>(sqliteEncoding), Enum.Parse<Engine.StateStructure>(sqliteStructure));

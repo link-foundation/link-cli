@@ -69,6 +69,10 @@
     "./engine-file-mirrored-pages": {
       "types": "./types/engine-file-mirrored-pages.d.ts",
       "default": "./src/engine-file-mirrored-pages.js"
+    },
+    "./engine-file-checkpoint-pages": {
+      "types": "./types/engine-file-checkpoint-pages.d.ts",
+      "default": "./src/engine-file-checkpoint-pages.js"
     }
   },
   "files": [

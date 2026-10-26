@@ -59,6 +59,7 @@ if (mode === 'rust') {
     const { FileCommitLog } = await import('../../js/client/src/engine-file-log.js');
     const { FilePagedCommitLog } = await import('../../js/client/src/engine-file-paged-log.js');
     const { FileMirroredPagedCommitLog } = await import('../../js/client/src/engine-file-mirrored-pages.js');
+    const { FileCheckpointPagedCommitLog } = await import('../../js/client/src/engine-file-checkpoint-pages.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);
     const replica = new MemoryCommitLog();
     const memory = new ReplicatedCommitLog(new MemoryCommitLog(), [replica], { acknowledgements: 2 });
@@ -82,6 +83,13 @@ if (mode === 'rust') {
     mirrored.append('mirrored 雪'); mirrored.flush(); mirrored.close();
     using reopenedMirror = new FileMirroredPagedCommitLog(mirroredPath);
     assert.deepEqual(JSON.parse(reopenedMirror.read()), ['mirrored 雪']);
+    for (const mirroredBanks of [false, true]) {
+      const checkpointPath = join(directory, `checkpoint-${mirroredBanks}`);
+      using checkpoint = new FileCheckpointPagedCommitLog(checkpointPath, { mirroredBanks });
+      assert.equal(checkpoint.replace(['checkpoint \ufeff\0雪']), true); checkpoint.close();
+      using reopenedCheckpoint = new FileCheckpointPagedCommitLog(checkpointPath, { mirroredBanks });
+      assert.deepEqual(JSON.parse(reopenedCheckpoint.read()), ['checkpoint \ufeff\0雪']);
+    }
     console.log('JS root, memory replication and native file/page reopening: no SQLite module loads');
   } finally {
     hook.deregister();

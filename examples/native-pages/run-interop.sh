@@ -7,6 +7,13 @@ case "${NATIVE_PAGES_CHECKPOINT:-0}" in
  0|1) ;;
  *) printf '%s\n' 'NATIVE_PAGES_CHECKPOINT must be 0 or 1.' >&2; exit 2 ;;
 esac
+case "${NATIVE_PAGES_COMPACT:-0}" in
+ 0|1) ;;
+ *) printf '%s\n' 'NATIVE_PAGES_COMPACT must be 0 or 1.' >&2; exit 2 ;;
+esac
+if [[ "${NATIVE_PAGES_COMPACT:-0}" == 1 && "${NATIVE_PAGES_CHECKPOINT:-0}" == 1 ]]; then
+ printf '%s\n' 'Initial checkpoint and compacting handoffs are independent controls.' >&2; exit 2
+fi
 native_example="${NATIVE_PAGES_RUST_EXAMPLE:-$PWD/rust/target/debug/examples/engine_native_pages}"
 managed_example="${NATIVE_PAGES_CSHARP_EXAMPLE:-$PWD/examples/native-pages-csharp/bin/Debug/net10.0/NativePagesExample.dll}"
 if [[ ! -x "$native_example" || ! -f "$managed_example" ]]; then
@@ -17,17 +24,24 @@ page_data=$(mktemp -d)
 trap 'rm -rf "$page_data"' EXIT
 configuration=0
 check_mirrors() {
- local suffix
+ local suffix bank
+ local banks=('')
+ if [[ "${NATIVE_PAGES_COMPACT:-0}" == 1 ]]; then banks=(.bank0 .bank1); fi
+ for bank in "${banks[@]}"; do
  for suffix in '' .meta0 .meta1; do
-  cmp "$database$suffix" "$database.mirror$suffix"
+  cmp "$database$bank$suffix" "$database$bank.mirror$suffix"
+ done
+ test ! -e "$database$bank.writer"
+ test ! -e "$database$bank.mirror.writer"
  done
  test ! -e "$database.writer"
- test ! -e "$database.mirror.writer"
 }
 damage_one_copy() {
  # Only closed, dedicated temporary journals are damaged. Each next provider
  # must repair the exact acknowledged prefix, including its metadata decision.
- python3 - "$database" "$(((configuration + writer) % 2))" <<'PY'
+ local selected="$database"
+ if [[ "${NATIVE_PAGES_COMPACT:-0}" == 1 ]]; then selected+=".bank$((writer % 2))"; fi
+ python3 - "$selected" "$(((configuration + writer) % 2))" <<'PY'
 import os, sys
 path = sys.argv[1] + ('.mirror' if sys.argv[2] == '1' else '')
 with open(path, 'r+b') as data:
@@ -56,6 +70,7 @@ for validation in scan indexed; do
   for encoding in snapshot changes; do
    for physical in plain delta; do
     flags=(--references)
+    [[ "${NATIVE_PAGES_COMPACT:-0}" != 1 ]] || flags+=(--compact)
     [[ "$mode" != mirrored ]] || flags+=(--mirrored)
     [[ "$validation" != indexed ]] || flags+=(--indexed-constraints)
     [[ "$structure" != flat ]] || flags+=(--flat)

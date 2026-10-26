@@ -20,7 +20,7 @@ replacement of an acknowledged journal.
 - [x] Add engine replacement under the commit lock, optional physical delta
       composition and matching WASM/JS binding. Preserve history, pins, active
       reservations and sessions; reject unsupported capabilities before mutation.
-- [ ] Add native file ownership/cleanup, bounded process exits and persistent
+- [x] Add native file ownership/cleanup, bounded process exits and persistent
       cross-provider handoffs with following groups in normal CI.
 - [x] Run complete portable suites and measured coverage sequentially within
       2.92 GiB; preserve before failures, ownership rules, selected costs and
@@ -36,8 +36,10 @@ retain their original failed logs and separate forward commits.
 
 Engine integration and complete local verification are recorded in
 [ENGINE-COMPACTION-PLAN.md](ENGINE-COMPACTION-PLAN.md) and engine-compaction.txt.
-That following batch needs its own exact-head CI. Native owning factories and
-process/persistent replacement checks remain in the unchecked step above.
+That following batch passes all nine workflows and every native platform on
+133c4ff; engine-compaction-ci.txt records exact evidence. Native owning factories
+and process/persistent replacement checks continue under
+[NATIVE-CHECKPOINT-PLAN.md](NATIVE-CHECKPOINT-PLAN.md).
 
 The root uses two fixed metadata files and two complete page banks. No file
 name changes during replacement. All devices stay under one exclusive owner;

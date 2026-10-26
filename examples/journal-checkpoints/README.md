@@ -87,3 +87,20 @@ The devices in this example are volatile cloned images. They demonstrate codec
 and engine composition, and do not establish filesystem or hardware durability.
 Compaction requires exclusive ownership of the root and all banks; see
 [publication, ownership and costs](../../docs/protocol/checkpoint-pages.md).
+
+
+To compact the same filesystem journal across native providers, run:
+
+```sh
+CLINK_WASM=/absolute/path/to/pkg bash examples/journal-checkpoints/run-native-compact-interop.sh
+```
+
+Build the same Rust and C# native examples first. The script uses `--compact`
+with the new owning factories, dedicated temporary databases and last-two
+retention. Its 48 configurations pass through six writers, producing 288 groups
+and epochs one through six. Each group preserves a pinned image and saved branch
+base, verifies unavailable evicted history and rolls back private allocation.
+Every mirrored handoff damages a closed selected-bank copy and requires repair
+before following writes. Exact names, twelve final revisions, both bank copies
+and released ownership files are checked. The ordinary and imported-checkpoint
+controls continue to run separately. See [ownership and recovery](../../docs/ENGINE-NATIVE-CHECKPOINTS.md).

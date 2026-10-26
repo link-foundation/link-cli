@@ -136,4 +136,4 @@ Construction costs O(retained committed snapshot bytes); delta adds another
 prepared physical sequence. This explicit operation holds the commit mutex for
 construction, validation and storage synchronization. Ordinary commits do no
 replacement work. See the finite [72-case example](../../examples/journal-checkpoints/compact.mjs)
-and the remaining [native ownership work](../case-studies/issue-138/LOCAL-CHECKPOINT-PLAN.md).
+and [native factories, recovery checks and file costs](../ENGINE-NATIVE-CHECKPOINTS.md).

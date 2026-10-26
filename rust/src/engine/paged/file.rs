@@ -73,6 +73,20 @@ impl FilePageDevice {
             .get_mut(index)
             .ok_or_else(|| invalid("page device file index"))
     }
+    #[inline]
+    fn mutation<T>(
+        &mut self,
+        index: usize,
+        _operation: &str,
+        action: impl FnOnce(&mut File) -> io::Result<T>,
+    ) -> Result<T, LinkError> {
+        #[cfg(test)]
+        events::observe(&self.lock, index, _operation, false);
+        let result = action(self.file(index)?)?;
+        #[cfg(test)]
+        events::observe(&self.lock, index, _operation, true);
+        Ok(result)
+    }
     pub fn close(&mut self) -> Result<(), LinkError> {
         self.close_with(close_file)
     }
@@ -147,17 +161,16 @@ impl PageDevice for FilePageDevice {
         if slot > 1 {
             return Err(invalid("metadata slot"));
         }
-        let file = self.file(slot + 1)?;
-        file.rewind()?;
-        file.write_all(bytes)?;
-        file.set_len(128)?;
+        self.file(slot + 1)?.rewind()?;
+        self.mutation(slot + 1, "write", |file| file.write_all(bytes))?;
+        self.mutation(slot + 1, "truncate", |file| file.set_len(128))?;
         Ok(())
     }
     fn sync_metadata(&mut self, slot: usize) -> Result<(), LinkError> {
         if slot > 1 {
             return Err(invalid("metadata slot"));
         }
-        self.file(slot + 1)?.sync_all()?;
+        self.mutation(slot + 1, "sync", |file| file.sync_all())?;
         Ok(())
     }
     fn read_page(&mut self, index: u64) -> Result<[u8; PAGE_SIZE], LinkError> {
@@ -180,18 +193,18 @@ impl PageDevice for FilePageDevice {
             return Err(invalid("native page file changed during ownership"));
         }
         file.seek(SeekFrom::Start(position))?;
-        file.write_all(bytes)?;
+        self.mutation(0, "write", |file| file.write_all(bytes))?;
         Ok(())
     }
     fn sync_data(&mut self) -> Result<(), LinkError> {
-        self.file(0)?.sync_all()?;
+        self.mutation(0, "sync", |file| file.sync_all())?;
         Ok(())
     }
     fn truncate_data(&mut self, length: u64) -> Result<(), LinkError> {
         if length > super::MAX_PAGES * PAGE_SIZE as u64 {
             return Err(invalid("physical data length"));
         }
-        self.file(0)?.set_len(length)?;
+        self.mutation(0, "truncate", |file| file.set_len(length))?;
         Ok(())
     }
 }
@@ -206,10 +219,14 @@ impl RepairPageDevice for FilePageDevice {
             return Err(invalid("repair would create a hole"));
         }
         file.seek(SeekFrom::Start(offset))?;
-        file.write_all(bytes)?;
+        self.mutation(0, "repair", |file| file.write_all(bytes))?;
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "file_events.rs"]
+pub(super) mod events;
 #[cfg(unix)]
 fn close_file(file: File) -> io::Result<()> {
     use std::os::fd::IntoRawFd;

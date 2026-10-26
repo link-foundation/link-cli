@@ -95,6 +95,10 @@ The caller keeps all three devices under exclusive ownership. Preparation
 finishes before publishing the new root; uncertain I/O fences until reopening.
 See the [root protocol, API, finite failure controls and costs](protocol/checkpoint-pages.md).
 Ordinary page providers retain their existing files and append-only behavior.
+Select [native owning checkpoint factories](ENGINE-NATIVE-CHECKPOINTS.md) for
+fixed filesystem paths and cleanup. The examples accept `--compact` to select
+these factories and compact retained history after each group. Use a dedicated
+new path; this flag does not convert an ordinary page journal in place.
 The destructive interoperability controls use dedicated temporary databases only.
 
 Rust callers pass `FilePageDevice::open(path)?` to `PagedLog::open`, then use the

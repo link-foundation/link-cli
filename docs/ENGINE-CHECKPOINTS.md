@@ -56,8 +56,8 @@ Select the portable two-bank log and optionally wrap it with physical delta
 compression; its [protocol and costs](protocol/checkpoint-pages.md) describe
 ownership, synchronization and uncertain-outcome fencing. The
 [72-configuration example](../examples/journal-checkpoints/compact.mjs) runs on
-actual WASM in Node, Bun and Deno. Native owning factories remain a separate
-unfinished integration in the local checkpoint plan. See also the
+actual WASM in Node, Bun and Deno. Selected [native owning factories](ENGINE-NATIVE-CHECKPOINTS.md) provide the
+fixed files, cleanup and writer fencing for filesystem journals. See also the
 [wire and ownership contract](protocol/engine-checkpoints.md).
 The physical delta decorator accepts an initial engine3 record unchanged, then
 enforces consecutive engine1/engine2 revisions. Complete checkpoint rows can be

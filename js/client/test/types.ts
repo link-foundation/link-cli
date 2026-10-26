@@ -19,6 +19,16 @@ async function main(links: Links) {
 
 import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, DeltaCommitLog, type EngineOptions, type StagedEngineLike, type CommitLog } from '../types/index.js';
 import { FileCommitLog } from '../types/engine-file-log.js';
+import { FileCheckpointPagedCommitLog } from '../types/engine-file-checkpoint-pages.js';
+function nativeCheckpointTypes(path: string) {
+  using log = new FileCheckpointPagedCommitLog(path, { mirroredBanks: true, maxPages: 64 });
+  const replaceable: ReplaceableCommitLog = log;
+  const durable: true = log.supportsDurableFlush;
+  const changed: boolean = replaceable.replace(['雪']); const epoch: bigint = log.epoch;
+  // @ts-expect-error Exact boolean selection rejects ambiguous modes.
+  new FileCheckpointPagedCommitLog(path, { mirroredBanks: 'yes' });
+  return { durable, changed, epoch };
+}
 import { SqliteCommitLog, type SqliteConnection } from '../types/engine-sqlite-log.js';
 function sqliteTypes(connection: SqliteConnection) {
   using log = new SqliteCommitLog(connection, { busyTimeoutMs: 0, autoCheckpointPages: 0 });

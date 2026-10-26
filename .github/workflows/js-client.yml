@@ -29,6 +29,7 @@ on:
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+      - 'experiments/issue-138/native-checkpoint-cut.mjs'
   pull_request:
     branches:
       - main
@@ -51,6 +52,7 @@ on:
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+      - 'experiments/issue-138/native-checkpoint-cut.mjs'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -330,13 +332,16 @@ jobs:
           dotnet build examples/native-pages-csharp --configuration Release
           bash examples/native-pages/run-interop.sh
           bash examples/journal-checkpoints/run-paged-interop.sh
+          bash examples/journal-checkpoints/run-native-compact-interop.sh
 
       - name: Preserve native checkpoint page handoffs
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: issue-138-checkpoint-pages
-          path: experiments/issue-138/checkpoint-paged-interop.log
+          path: |
+            experiments/issue-138/checkpoint-paged-interop.log
+            experiments/issue-138/native-compact-interop.log
           if-no-files-found: ignore
 
       # A small run of the acceptance benchmark: it exits non-zero unless a

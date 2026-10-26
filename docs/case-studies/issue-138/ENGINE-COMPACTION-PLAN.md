@@ -32,7 +32,7 @@ codec. Native file ownership and every wider acceptance gap remain active.
 - [x] Complete native/C#/actual-WASM suites and measured coverage, strict JS
       coverage and TypeScript, real-etcd modes, both existing native handoff
       controls and repository checks. Preserve complete logs and exact totals.
-- [ ] Review, commit and push only the prepared branch; inspect all fresh
+- [x] Review, commit and push only the prepared branch; inspect all fresh
       exact-SHA workflows and native platforms. Continue native owning factories
       and the complete R1–R12 inventory without treating this batch as completion.
 
@@ -52,3 +52,7 @@ and functions measure 100%; LLVM regions and instantiations remain below that
 figure and are retained in the report. Whole-project totals remain below 100%.
 Both existing native handoff controls pass 48 configurations/288 writers each;
 all three real-etcd modes and identical 72-case runtime compositions pass.
+
+Exact-head workflows and native platforms subsequently passed at 133c4ff;
+see `dev/log/issues/138/pulls/139/engine-compaction-ci.txt`. The following
+native-ownership work and wider requirements remain active.

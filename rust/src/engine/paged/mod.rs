@@ -4,6 +4,10 @@
 mod file;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 pub use file::FilePageDevice;
+#[cfg(all(feature = "native-pages", any(unix, windows)))]
+mod file_checkpoint;
+#[cfg(all(feature = "native-pages", any(unix, windows)))]
+pub use file_checkpoint::FileCheckpointPagedLog;
 mod checkpoint;
 mod checkpoint_format;
 mod format;

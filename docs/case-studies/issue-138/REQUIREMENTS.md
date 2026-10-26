@@ -533,5 +533,27 @@ on Node, Bun and Deno. Complete local suites pass 1,002 native plus six doctests
 620 actual WASM, 2,210 C# per configuration, 230 JS and 221 repository checks.
 See ENGINE-COMPACTION-PLAN.md and engine-compaction{,-before}.txt for exact
 coverage, real-etcd and both 48-configuration persistent handoff controls.
-The eight previously unregistered WASM wrapper tests now execute. Native owning
-factories/process recovery, fresh exact-head CI and all wider gaps remain active.
+The eight previously unregistered WASM wrapper tests now execute. All nine
+workflows and Rust/C# Linux/macOS/Windows matrices pass on 133c4ff;
+engine-compaction-ci.txt records exact heads, timestamps and job results.
+Native ownership/process recovery is recorded in the following batch; all wider
+gaps remain active.
+
+Native checkpoint ownership (R1/R3/R5/R6/R7/R8/R9/R10/R11/R12) now acquires
+every raw root/bank fence before validation, reset or mirrored repair. All acquired
+owners close in reverse order, root last, on constructor failure and explicit
+close; original and every cleanup error remain observable. Pending appends are
+not flushed. Uncertain close retains affected fences and repeated close does not
+retry native handles. Existing JS constructors also preserve acquisition and
+directory synchronization errors through failing cleanup. Independent before
+controls and finite replacement/repair exits pass in all native providers.
+
+Complete final suites pass 1,013 native Rust tests plus six doctests, 620 actual
+WASM, 2,227 C# per configuration, 239 JS and 221 repository checks. Each ordinary,
+imported-checkpoint and native-replacement handoff passes 48 configurations and
+288 writers; all three etcd modes and runtime comparisons pass. JS enforces 100%
+lines/branches/functions, the new C# factory measures 100% lines/branches, and the
+new Rust factory measures 214/221 lines, 5/6 branches and 57/58 functions. Complete
+project denominators remain below target. See NATIVE-CHECKPOINT-PLAN.md and
+native-checkpoint{,-before}.txt. Fresh native-batch CI and all wider unfinished
+acceptance criteria remain active; process exits do not certify hardware power loss.

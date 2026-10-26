@@ -286,3 +286,12 @@ The optional `engine-mirrored-pages` and `engine-file-mirrored-pages` entries ad
 two-copy native page repair without importing filesystem or SQL dependencies
 into the universal entry. See [native page recipes](../../docs/ENGINE-NATIVE-PAGES.md)
 for ownership, synchronization, immutable mode and corruption limits.
+
+
+The separate `@link-foundation/link-cli-client/engine-file-checkpoint-pages`
+entry exports `FileCheckpointPagedCommitLog` for retained-history compaction in
+Node, Bun and Deno. It owns a fixed root and two page banks, optionally mirrors
+each bank with `{ mirroredBanks: true }`, and implements `replace(records)` for
+`WasmEngine.compactJournal()`. This selection adds no SQLite requirement. Use a
+new dedicated path and close the log after its engine and sessions. See the
+[native configuration, file ownership and interoperability recipe](../../docs/ENGINE-NATIVE-CHECKPOINTS.md).
