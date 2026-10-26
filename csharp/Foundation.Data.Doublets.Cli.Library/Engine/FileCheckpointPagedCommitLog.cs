@@ -2,8 +2,8 @@ using static Foundation.Data.Doublets.Cli.Engine.PageFormat;
 
 namespace Foundation.Data.Doublets.Cli.Engine;
 
-/// <summary>Owns a raw root and fixed .bank0/.bank1 devices, with optional
-/// .mirror copies of each bank. Acquires every fence before validation/repair.
+/// <summary>Owns a root and fixed .bank0/.bank1 devices, with independently
+/// selected .mirror copies of the root and banks. Acquires every fence before validation/repair.
 /// Close never flushes pending work; it attempts every device, root last.
 /// Uncertain native cleanup retains the affected .writer fences.</summary>
 public sealed class FileCheckpointPagedCommitLog : IReplaceableCommitLog, IDisposable
@@ -13,14 +13,19 @@ public sealed class FileCheckpointPagedCommitLog : IReplaceableCommitLog, IDispo
     public FileCheckpointPagedCommitLog(string path, bool mirroredBanks = false, ulong maxPages = MaxPages)
         : this(path, mirroredBanks, maxPages, name => new FilePageDevice(name)) { }
 
-    internal FileCheckpointPagedCommitLog(string path, bool mirroredBanks, ulong maxPages, Func<string, FilePageDevice> open)
+    // Retain the original constructor signature for already compiled consumers.
+    public FileCheckpointPagedCommitLog(string path, bool mirroredBanks, bool mirroredRoot, ulong maxPages = MaxPages)
+        : this(path, mirroredBanks, maxPages, name => new FilePageDevice(name), mirroredRoot) { }
+
+    internal FileCheckpointPagedCommitLog(string path, bool mirroredBanks, ulong maxPages, Func<string, FilePageDevice> open, bool mirroredRoot = false)
     {
         path = Path.GetFullPath(path);
         var acquired = new List<FilePageDevice>();
         FilePageDevice Acquire(string name) { var device = open(name); acquired.Add(device); return device; }
         try
         {
-            var root = Acquire(path);
+            var primaryRoot = Acquire(path);
+            var secondaryRoot = mirroredRoot ? Acquire(path + ".mirror") : null;
             IPageDevice Bank(int index)
             {
                 string name = path + $".bank{index}";
@@ -28,6 +33,7 @@ public sealed class FileCheckpointPagedCommitLog : IReplaceableCommitLog, IDispo
                 return mirroredBanks ? new MirroredPageDevice(primary, Acquire(name + ".mirror")) : primary;
             }
             var first = Bank(0); var second = Bank(1);
+            IPageDevice root = secondaryRoot is null ? primaryRoot : new MirroredCheckpointRoot(primaryRoot, secondaryRoot, mirroredBanks ? 1U : 0U);
             _inner = new CheckpointPagedCommitLog(root, first, second, maxPages);
             _owned = acquired.ToArray();
         }

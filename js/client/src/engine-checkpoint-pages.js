@@ -12,11 +12,11 @@ export class CheckpointPagedCommitLog {
       || new Set([root, ...banks]).size !== 3) throw new TypeError('checkpoint devices must be three distinct exclusive owners');
     if (!Number.isSafeInteger(maxPages) || maxPages < 1 || maxPages > MAX_PAGES) throw new RangeError('invalid checkpoint page limit');
     this.#root = root; this.#banks = banks.slice(); this.#maxPages = maxPages;
-    const flags = banks[0].metadataFlags ?? 0;
-    if ((root.metadataFlags ?? 0) !== 0 || (flags !== 0 && flags !== 1) || (banks[1].metadataFlags ?? 0) !== flags)
-      fail('checkpoint requires a raw root and matching bank modes');
+    const flags = banks[0].metadataFlags ?? 0, rootFlags = root.metadataFlags ?? 0;
+    if ((rootFlags !== 0 && rootFlags !== (2 | flags)) || (flags !== 0 && flags !== 1) || (banks[1].metadataFlags ?? 0) !== flags)
+      fail('checkpoint requires matching root and bank modes (flags)');
     if (root.dataLength !== 0) fail('checkpoint root data must be empty');
-    let decision = selectDecision([root.readMetadata(0), root.readMetadata(1)], flags);
+    let decision = selectDecision([root.readMetadata(0), root.readMetadata(1)], rootFlags | flags);
     if (decision !== undefined) {
       const bank = banks[Number(decision.epoch % 2n)], expected = bankIdentity(decision.identity, decision.epoch);
       let found = false;
@@ -38,12 +38,13 @@ export class CheckpointPagedCommitLog {
       }
       const identity = root.newDatabaseId();
       if (!(identity instanceof Uint8Array) || identity.length !== 16) fail('checkpoint root identity length');
-      decision = { identity: identity.slice(), epoch: 0n, flags };
+      decision = { identity: identity.slice(), epoch: 0n, flags: rootFlags | flags };
       for (let i = 0; i < 2; i++) this.#reset(banks[i], bankIdentity(identity, BigInt(i)), flags);
       finish(root.syncData()); finish(root.writeMetadata(0, decisionBytes(decision))); finish(root.syncMetadata(0));
     }
     this.#decision = decision;
     this.#active = new PagedCommitLog(banks[Number(decision.epoch % 2n)], { maxPages });
+    if ((rootFlags & 2) !== 0) finish(root.completeRecovery());
   }
   #reset(device, identity, flags) {
     finish(device.truncateData(0)); finish(device.syncData());
@@ -81,7 +82,7 @@ export class CheckpointPagedCommitLog {
     if (this.#decision.epoch === 0xffffffffffffffffn) throw new RangeError('checkpoint epoch exhausted');
     const next = { ...this.#decision, epoch: this.#decision.epoch + 1n }, slot = Number(next.epoch % 2n);
     this.#fenced = true;
-    this.#reset(this.#banks[slot], bankIdentity(next.identity, next.epoch), next.flags);
+    this.#reset(this.#banks[slot], bankIdentity(next.identity, next.epoch), next.flags & 1);
     const prepared = new PagedCommitLog(this.#banks[slot], { maxPages: this.#maxPages });
     for (const record of copy) prepared.append(record);
     prepared.flush(); finish(this.#root.writeMetadata(slot, decisionBytes(next))); finish(this.#root.syncMetadata(slot));

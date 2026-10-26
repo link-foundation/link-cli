@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { syncBuiltinESMExports } from 'node:module';
 import { FileCheckpointPagedCommitLog } from '../src/engine-file-checkpoint-pages.js';
 
-const names = (path, mirrored) => ['', '.bank0', ...(mirrored ? ['.bank0.mirror'] : []), '.bank1', ...(mirrored ? ['.bank1.mirror'] : [])].map(suffix => path + suffix);
+const names = (path, mirrored, mirroredRoot) => ['', ...(mirroredRoot ? ['.mirror'] : []), '.bank0', ...(mirrored ? ['.bank0.mirror'] : []), '.bank1', ...(mirrored ? ['.bank1.mirror'] : [])].map(suffix => path + suffix);
 const closeOrder = (devices) => devices.slice().reverse().flatMap(name => [name + '.meta1', name + '.meta0', name, name + '.writer']);
 const causes = (error) => error instanceof AggregateError ? error.errors.flatMap(causes) : [error.message];
 function observe(context, path, { failed = Infinity, failClose = () => false } = {}) {
@@ -29,41 +29,42 @@ function observe(context, path, { failed = Infinity, failClose = () => false } =
 }
 
 test('every native acquisition/validation failure preserves all cleanup causes and closes in reverse order', (context) => {
-  for (const mirroredBanks of [false, true]) for (const failClose of [false, true]) {
-    const count = mirroredBanks ? 5 : 3;
+  for (const mirroredBanks of [false, true]) for (const mirroredRoot of [false, true]) for (const failClose of [false, true]) {
+    const count = (mirroredBanks ? 5 : 3) + Number(mirroredRoot);
     for (let failed = 0; failed <= count; failed++) {
       const directory = fs.mkdtempSync(join(tmpdir(), 'clink-checkpoint-init-')), path = join(directory, 'journal');
       const trace = observe(context, path, { failed, failClose: () => failClose });
       try {
-        assert.throws(() => new FileCheckpointPagedCommitLog(path, { mirroredBanks, maxPages: failed === count ? 0 : 64 }), error => {
+        assert.throws(() => new FileCheckpointPagedCommitLog(path, { mirroredBanks, mirroredRoot, maxPages: failed === count ? 0 : 64 }), error => {
           const messages = causes(error); assert.match(messages[0], failed === count ? /page limit/ : /original acquisition/);
           assert.deepEqual(messages.slice(1), failClose ? closeOrder(trace.opened).map(name => 'cleanup ' + name) : []); return true;
         });
         assert.deepEqual(trace.closed, closeOrder(trace.opened)); assert.equal(trace.handles.size, 0);
-        for (const name of names(path, mirroredBanks)) assert.equal(fs.existsSync(name + '.writer'), failClose && trace.opened.includes(name));
+        for (const name of names(path, mirroredBanks, mirroredRoot)) assert.equal(fs.existsSync(name + '.writer'), failClose && trace.opened.includes(name));
       } finally { trace.restore(); fs.rmSync(directory, { recursive: true, force: true }); }
     }
   }
 });
 
 test('explicit close attempts all raw handles root last and retains only uncertain owners', (context) => {
-  for (const mirroredBanks of [false, true]) for (const allFail of [false, true]) {
-    const directory = fs.mkdtempSync(join(tmpdir(), 'clink-checkpoint-close-')), path = join(directory, 'journal'), devices = names(path, mirroredBanks);
-    const failing = name => allFail || [devices[1], devices[1] + '.meta0', devices[1] + '.meta1', devices[1] + '.writer'].includes(name);
+  for (const mirroredBanks of [false, true]) for (const mirroredRoot of [false, true]) for (const allFail of [false, true]) {
+    const directory = fs.mkdtempSync(join(tmpdir(), 'clink-checkpoint-close-')), path = join(directory, 'journal'), devices = names(path, mirroredBanks, mirroredRoot);
+    const bankIndex = mirroredRoot ? 2 : 1;
+    const failing = name => allFail || [devices[bankIndex], devices[bankIndex] + '.meta0', devices[bankIndex] + '.meta1', devices[bankIndex] + '.writer'].includes(name);
     const trace = observe(context, path, { failClose: failing });
     try {
-      const log = new FileCheckpointPagedCommitLog(path, { mirroredBanks }); log.replace(['acknowledged']);
+      const log = new FileCheckpointPagedCommitLog(path, { mirroredBanks, mirroredRoot }); log.replace(['acknowledged']);
       assert.throws(() => log.close(), error => { assert.deepEqual(causes(error), closeOrder(devices).filter(failing).map(name => 'cleanup ' + name)); return true; });
       assert.deepEqual(trace.closed, closeOrder(devices)); assert.equal(trace.handles.size, 0); log.close(); assert.equal(trace.closed.length, devices.length * 4);
       assert.throws(() => log.read(), /closed/); assert.throws(() => log.epoch, /closed/);
       trace.restore();
-      for (const name of devices) assert.equal(fs.existsSync(name + '.writer'), allFail || name === devices[1]);
+      for (const name of devices) assert.equal(fs.existsSync(name + '.writer'), allFail || name === devices[bankIndex]);
       const files = devices.flatMap(name => [name, name + '.meta0', name + '.meta1']), before = files.map(name => fs.readFileSync(name));
-      assert.throws(() => new FileCheckpointPagedCommitLog(path, { mirroredBanks }), /EEXIST/);
+      assert.throws(() => new FileCheckpointPagedCommitLog(path, { mirroredBanks, mirroredRoot }), /EEXIST/);
       assert.deepEqual(files.map(name => fs.readFileSync(name)), before);
       // All injected closes released their descriptors before reporting errors.
       for (const name of devices) if (fs.existsSync(name + '.writer')) fs.unlinkSync(name + '.writer');
-      using reopened = new FileCheckpointPagedCommitLog(path, { mirroredBanks }); assert.deepEqual(JSON.parse(reopened.read()), ['acknowledged']);
+      using reopened = new FileCheckpointPagedCommitLog(path, { mirroredBanks, mirroredRoot }); assert.deepEqual(JSON.parse(reopened.read()), ['acknowledged']);
     } finally { trace.restore(); fs.rmSync(directory, { recursive: true, force: true }); }
   }
 });

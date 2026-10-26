@@ -83,11 +83,11 @@ if (mode === 'rust') {
     mirrored.append('mirrored 雪'); mirrored.flush(); mirrored.close();
     using reopenedMirror = new FileMirroredPagedCommitLog(mirroredPath);
     assert.deepEqual(JSON.parse(reopenedMirror.read()), ['mirrored 雪']);
-    for (const mirroredBanks of [false, true]) {
-      const checkpointPath = join(directory, `checkpoint-${mirroredBanks}`);
-      using checkpoint = new FileCheckpointPagedCommitLog(checkpointPath, { mirroredBanks });
+    for (const mirroredBanks of [false, true]) for (const mirroredRoot of [false, true]) {
+      const checkpointPath = join(directory, `checkpoint-${mirroredBanks}-${mirroredRoot}`);
+      using checkpoint = new FileCheckpointPagedCommitLog(checkpointPath, { mirroredBanks, mirroredRoot });
       assert.equal(checkpoint.replace(['checkpoint \ufeff\0雪']), true); checkpoint.close();
-      using reopenedCheckpoint = new FileCheckpointPagedCommitLog(checkpointPath, { mirroredBanks });
+      using reopenedCheckpoint = new FileCheckpointPagedCommitLog(checkpointPath, { mirroredBanks, mirroredRoot });
       assert.deepEqual(JSON.parse(reopenedCheckpoint.read()), ['checkpoint \ufeff\0雪']);
     }
     console.log('JS root, memory replication and native file/page reopening: no SQLite module loads');

@@ -1,0 +1,36 @@
+Selected mirrored checkpoint roots — missing-feature evidence
+Baseline: 600cf5f0a25741c865f8730ce23d08363f76c932
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Before production changes, the same four-device minimum example was added to
+each actual test target. It commits old records, replaces them, damages one
+acknowledged root decision copy, reopens through the selected adapter and
+requires the acknowledged epoch/records plus synchronized repaired root bytes.
+
+Rust actual engine_checkpoint_pages_tests target:
+  mirrored-root-rust-before.log:2-10, E0432 unresolved import MirroredCheckpointRoot.
+C# actual Debug test project:
+  mirrored-root-csharp-before.log:5-6, CS0246 missing MirroredCheckpointRoot.
+JS actual native node:test target:
+  mirrored-root-js-before.log:5-6, ERR_MODULE_NOT_FOUND engine-checkpoint-root.js.
+
+These are missing-feature failures, not evidence of a promised existing mode
+losing a commit. Existing single-root modes remain unchanged. Expanded finite
+fault, corruption and independent-vector controls are subsequent verification.
+No physical power-loss claim follows from these tests.
+
+Minimal before fixtures and a clean-baseline guarded reproducer are retained
+under experiments/issue-138 (reproduce-mirrored-root.sh). Complete original
+failure logs remain there; the reproducer refuses to overwrite the working fix.
+
+The native factory controls were added before its native implementation at
+6a0f7c96850ca6b507f924fcfcbe429357b32864. With mirroredRoot selected, the same
+minimal real-file sequence additionally requires journal.mirror.meta0:
+  mirrored-root-native-rust-before.log:2-12: E0432 FileCheckpointOptions and
+    E0599 FileCheckpointPagedLog::with_options are missing.
+  mirrored-root-native-csharp-before.log:5-7: CS1739 mirroredRoot is missing.
+  mirrored-root-native-js-before.log:13-25: selected mirror file does not exist;
+    the old JS constructor ignored the unknown option (actual false, expected true).
+The native fixtures and clean-baseline guarded reproducer are retained under
+experiments/issue-138/reproduce-mirrored-root-native.sh. The old factory never
+advertised this option; this is a missing selection, not a lost-ACK assertion.

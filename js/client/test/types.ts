@@ -21,12 +21,14 @@ import { WasmEngine, EngineClient, MemoryCommitLog, ReplicatedCommitLog, DeltaCo
 import { FileCommitLog } from '../types/engine-file-log.js';
 import { FileCheckpointPagedCommitLog } from '../types/engine-file-checkpoint-pages.js';
 function nativeCheckpointTypes(path: string) {
-  using log = new FileCheckpointPagedCommitLog(path, { mirroredBanks: true, maxPages: 64 });
+  using log = new FileCheckpointPagedCommitLog(path, { mirroredBanks: true, mirroredRoot: true, maxPages: 64 });
   const replaceable: ReplaceableCommitLog = log;
   const durable: true = log.supportsDurableFlush;
   const changed: boolean = replaceable.replace(['雪']); const epoch: bigint = log.epoch;
   // @ts-expect-error Exact boolean selection rejects ambiguous modes.
   new FileCheckpointPagedCommitLog(path, { mirroredBanks: 'yes' });
+  // @ts-expect-error root selection is boolean, independently of bank selection
+  new FileCheckpointPagedCommitLog(path, { mirroredRoot: 1 });
   return { durable, changed, epoch };
 }
 import { SqliteCommitLog, type SqliteConnection } from '../types/engine-sqlite-log.js';
@@ -145,7 +147,7 @@ import { MirroredPageDevice } from '../types/engine-mirrored-pages.js';
 import { FileMirroredPagedCommitLog } from '../types/engine-file-mirrored-pages.js';
 function mirroredPageTypes(primary: RepairPageDevice, secondary: RepairPageDevice, plain: PageDevice) {
   const device: PageDevice = new MirroredPageDevice(primary, secondary);
-  const mode: 0 | 1 | undefined = device.metadataFlags;
+  const mode: 0 | 1 | 2 | 3 | undefined = device.metadataFlags;
   device.readCheckedPage?.(0, 0n);
   using file = new FileMirroredPagedCommitLog('mirrored-pages');
   const log: CommitLog = new PagedCommitLog(device);
@@ -154,7 +156,16 @@ function mirroredPageTypes(primary: RepairPageDevice, secondary: RepairPageDevic
   // @ts-expect-error Checksums preserve all 64 bits.
   device.readCheckedPage?.(0, 0);
   // @ts-expect-error Unsupported format modes cannot silently select a fallback.
-  const unsupported: PageDevice = { ...primary, metadataFlags: 2 };
+  const unsupported: PageDevice = { ...primary, metadataFlags: 4 };
   void unsupported;
   return [mode, file.read(), log.read()];
+}
+
+import { MirroredCheckpointRoot } from '../types/engine-checkpoint-root.js';
+function checkpointRootTypes(primary: PageDevice, secondary: PageDevice, banks: [PageDevice, PageDevice]) {
+  const root: PageDevice = new MirroredCheckpointRoot(primary, secondary, 0);
+  const log = new CheckpointPagedCommitLog(root, banks);
+  // @ts-expect-error Bank mode must be explicitly single or mirrored.
+  new MirroredCheckpointRoot(primary, secondary, 2);
+  return log.read();
 }

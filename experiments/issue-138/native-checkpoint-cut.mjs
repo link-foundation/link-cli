@@ -2,8 +2,8 @@
 import fs from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
 import { FileCheckpointPagedCommitLog } from '../../js/client/src/engine-file-checkpoint-pages.js';
-const [path, mirror, cut, phase] = process.argv.slice(2), point = Number(cut), handles = new Map(), events = [];
-let active = phase === 'repair';
+const [path, mirror, cut, phase, rootMirror] = process.argv.slice(2), point = Number(cut), handles = new Map(), events = [];
+let active = phase !== 'replace';
 const open = fs.openSync;
 fs.openSync = (name, ...options) => { const fd = open(name, ...options); if (name === path || name.startsWith(path + '.')) handles.set(fd, name.slice(path.length) || 'root'); return fd; };
 for (const operation of ['writeSync', 'ftruncateSync', 'fsyncSync']) {
@@ -16,7 +16,7 @@ for (const operation of ['writeSync', 'ftruncateSync', 'fsyncSync']) {
   };
 }
 syncBuiltinESMExports();
-using log = new FileCheckpointPagedCommitLog(path, { mirroredBanks: mirror === 'true', maxPages: 64 });
+using log = new FileCheckpointPagedCommitLog(path, { mirroredBanks: mirror === 'true', mirroredRoot: rootMirror === 'true', maxPages: 64 });
 if (phase === 'replace') { active = true; log.replace(['雪'.repeat(700), '\ufeff\0😀']); }
 active = false;
 log.close(); process.stdout.write(JSON.stringify(events));

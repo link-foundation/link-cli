@@ -120,7 +120,7 @@ type Log = CheckpointPagedLog<Device, Device>;
 fn devices<const N: usize>(images: [Image; N]) -> ([Device; N], Rc<RefCell<Trace>>) {
     let trace = Rc::new(RefCell::new(Trace::default()));
     let devices = std::array::from_fn(|i| Device {
-        name: ["root", "bank0", "bank1", "mirror0", "mirror1"][i],
+        name: ["root", "bank0", "bank1", "mirror0", "mirror1", "rootMirror"][i],
         trace: trace.clone(),
         state: Rc::new(RefCell::new(State {
             live: images[i].clone(),
@@ -763,3 +763,6 @@ fn engine_compaction_composes_with_both_bank_modes_delta_state_history_and_encod
         }
     }
 }
+
+#[path = "support/checkpoint_root.rs"]
+mod root_mirror;

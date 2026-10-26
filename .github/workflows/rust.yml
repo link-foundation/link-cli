@@ -9,6 +9,7 @@ on:
     paths:
       - 'rust/**'
       - 'docs/protocol/native-pages*'
+      - 'docs/protocol/checkpoint*'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
       - '.github/scripts/check-sqlite-optional.mjs'

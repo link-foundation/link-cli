@@ -3087,3 +3087,79 @@ Linux/macOS/Windows. native-checkpoint-ci-fix.txt records exact timestamps,
 permanent run URLs and saved job/log evidence. Every broader unmet criterion
 remains active; the following root-mirroring source is excluded from this
 test-patch verification.
+
+
+## Independent mirrored checkpoint roots
+
+The optional root adapter selects two copies independently of mirrored page
+banks, with flags 2/3 preserving the existing flags 0/1 formats. The checkpoint
+log validates both advertised bank modes before I/O, validates both root copies
+and the entire selected bank before root repair, rechecks every staged root
+source before writing a destination, and synchronizes both published decisions
+before acknowledgement. Unknown canonical versions/modes and contradictory
+identities/epochs reject. Uncertain mutations fence the adapter. Native owners
+acquire every selected root/bank fence before recovery and close in reverse order.
+The old C# constructor signature and all single-root defaults remain available.
+
+The portable missing-feature controls first fail against 600cf5f; native factory
+selection first fails against 6a0f7c9. Guarded isolated-baseline reproducers and
+minimal fixtures are committed under experiments/issue-138. Eleven new portable
+controls per language cover independent full-u64 vectors, all 512 selected-root
+single-byte corruptions across both bank modes, epochs and bank reuse, invalid
+banks, contradictory/unknown copies, changed staged sources, and finite before/
+after publication/recovery faults. Native controls cover all four owning modes,
+foreign fences before any repair, cleanup failures, compatible reopening and
+both directions of invalid mode conversion. See mirrored-root-before.txt.
+
+The sequential seven-stage driver passes from 2026-10-26T19:38:18Z through
+20:22:23Z; complete logs and coverage reports retain their original denominators.
+Cargo uses one compiler with reduced debug information, .NET a 640 MiB heap,
+and all eight actual-WASM modules have verified 256 MiB linear-memory caps.
+No OOM event occurs. C# baseline trace collection is independently retained and
+included in future driver runs; the small driver addition passes ShellCheck.
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,028 plus six doctests | 13,860 / 14,669 | 2,580 / 2,994 | 1,803 / 1,938 |
+| Actual WASM, linked source | 631 | 11,241 / 13,598 | 2,196 / 2,637 | 1,430 / 1,805 |
+| C# Debug | 2,264 | 8,327 / 8,621 | 4,583 / 4,950 | not reported |
+| C# Release | 2,264 | 6,399 / 6,585 | 4,527 / 4,913 | not reported |
+| JS production modules | 261 | 100% | 100% | 100% |
+
+Eighteen ignored native child entry points execute through bounded parents;
+one legacy doctest example remains ignored. Rust checkpoint_root.rs measures
+164/164 lines, 29/30 branches and 27/27 functions in both native/actual WASM.
+file_checkpoint.rs measures 259/267 lines, 7/8 branches and 61/62 functions.
+The C# native factory measures 100% lines/branches; the root adapter measures
+100% lines and 98.33% branches. Native private forwarding and canonical-error
+regions remain uncovered. The WASM engine wrapper measures 263/263 lines,
+6/6 branches, 50/50 functions and 415/415 LLVM regions; its instantiations and
+complete linked-source metrics remain incomplete. Whole-project 100% is open.
+
+Each native language independently observes and executes 258 actual before/
+after process-exit cuts across nine replacement/repair scenarios: 34, 62, 12,
+40, 68, 12, 6, 6 and 18. A child must terminate before abandoned fences are
+removed. Recovery requires a complete old/new publication (the acknowledged
+one during repair), then following append/flush/compaction and fresh reopening.
+These are bounded process tests, not physical power-loss certification.
+
+Selected native compaction passes 96 independent root/bank/state/constraint/
+encoding/history/delta configurations and 576 Rust/Node/Bun/C#/Deno/Rust writers.
+Root epochs advance one through six; exact names, allocator gaps, private
+reservations, immutable pins and branch bases survive. Each mirrored mode
+repairs deliberate closed-copy damage, including simultaneous root and bank
+copy damage. Ordinary journals and imported checkpoints independently retain
+48 configurations/288 handoffs each. Node/Bun/Deno agree on 36 payload/delta
+cases and 72 compaction compositions. Portable controls, actual-WASM conformance
+and all 48 ordinary native policies pass; four declared capability skips remain
+visible in conformance. All three real three-member etcd modes pass.
+
+All 221 repository checks, strict native/WASM Clippy, formatting, TypeScript,
+independent vector regeneration, SQL optionality, changesets, source limits,
+ShellCheck, actionlint and whitespace checks pass. Shared checkpoint fixture
+changes now trigger native language workflows. Fresh GitHub comments/reviews
+show no new request; latest main is already included. GitHub's diff endpoint
+still rejects more than 300 files with HTTP406; preserved diagnostics and local
+base/batch diffs provide review evidence. See MIRRORED-ROOT-PLAN.md, the native
+recipe, root protocol and mirrored-root.txt. Fresh exact-head CI follows the
+commit. All broader unmet criteria and the draft status remain active.

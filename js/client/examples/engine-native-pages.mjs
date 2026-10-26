@@ -1,4 +1,4 @@
-// CLINK_WASM=<web package> node|bun|deno run --allow-all ... <database> [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--checkpoint-fixture=<json>]
+// CLINK_WASM=<web package> node|bun|deno run --allow-all ... <database> [--mirrored] [--mirrored-root] [--compact] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--checkpoint-fixture=<json>]
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -10,9 +10,10 @@ if (!path || !process.env.CLINK_WASM) throw new Error('provide a dedicated datab
 const binding = await import(pathToFileURL(join(process.env.CLINK_WASM, 'clink_wasm.js')).href);
 binding.initSync({ module: readFileSync(join(process.env.CLINK_WASM, 'clink_wasm_bg.wasm')) });
 const compact = process.argv.includes('--compact');
+assert.ok(!process.argv.includes('--mirrored-root') || compact, '--mirrored-root requires --compact');
 const Provider = compact ? (await import('../src/engine-file-checkpoint-pages.js')).FileCheckpointPagedCommitLog : process.argv.includes('--mirrored')
   ? (await import('../src/engine-file-mirrored-pages.js')).FileMirroredPagedCommitLog : FilePagedCommitLog;
-using physical = new Provider(path, { mirroredBanks: process.argv.includes('--mirrored') });
+using physical = new Provider(path, { mirroredBanks: process.argv.includes('--mirrored'), mirroredRoot: process.argv.includes('--mirrored-root') });
 const fixturePrefix = '--checkpoint-fixture=';
 const fixture = process.argv.find(arg => arg.startsWith(fixturePrefix));
 const checkpoint = fixture === undefined ? null : JSON.parse(readFileSync(fixture.slice(fixturePrefix.length), 'utf8')).nativePageSeed;

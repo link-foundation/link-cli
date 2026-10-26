@@ -253,3 +253,9 @@ Own the native checkpoint root and both single/mirrored banks through a selected
 factory. Acquire all fences before recovery, close every raw owner root last,
 preserve constructor and cleanup errors, and retain uncertain fences without
 flushing pending work during disposal.
+
+Select checkpoint root mirroring independently of bank copies. Retain the
+original constructor signature and single-root defaults. Validate root copies
+and their committed bank before repair, synchronize both decisions before
+acknowledgment and reject persisted mode conversion without changing existing
+bytes. Acquire and clean up every selected native root and bank owner.

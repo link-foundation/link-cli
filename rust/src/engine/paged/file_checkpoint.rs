@@ -1,7 +1,7 @@
 //! Selected native ownership of the root and both fixed checkpoint banks.
 use super::{
-    format::invalid, CheckpointPagedLog, FilePageDevice, MirroredPageDevice, PageDevice,
-    RepairPageDevice, MAX_PAGES, PAGE_SIZE,
+    format::invalid, CheckpointPagedLog, FilePageDevice, MirroredCheckpointRoot,
+    MirroredPageDevice, PageDevice, RepairPageDevice, MAX_PAGES, PAGE_SIZE,
 };
 use crate::{LinkError, ReplaceableTransitionLogStore, TransitionLogStore};
 use std::{
@@ -66,21 +66,27 @@ impl RepairPageDevice for Lease {
     }
 }
 
-enum Bank {
+enum NativeDevice {
     Single(Lease),
     Mirrored(Box<MirroredPageDevice<Lease>>),
+    Root(Box<MirroredCheckpointRoot<Lease>>),
 }
-impl Bank {
+impl NativeDevice {
     fn device(&mut self) -> &mut dyn PageDevice {
         match self {
             Self::Single(device) => device,
             Self::Mirrored(device) => &mut **device,
+            Self::Root(device) => &mut **device,
         }
     }
 }
-impl PageDevice for Bank {
+impl PageDevice for NativeDevice {
     fn metadata_flags(&self) -> u32 {
-        u32::from(matches!(self, Self::Mirrored(_)))
+        match self {
+            Self::Single(_) => 0,
+            Self::Mirrored(_) => 1,
+            Self::Root(device) => device.metadata_flags(),
+        }
     }
     fn supports_durable_flush(&self) -> bool {
         true
@@ -124,12 +130,31 @@ impl PageDevice for Bank {
     }
 }
 
-/// Owns native devices at `path`, `.bank0` and `.bank1`, with optional `.mirror`
-/// copies of each bank. Acquires every writer fence before validation or repair.
+/// Independently selected root and bank copies. Defaults retain the existing
+/// single-root, single-bank mode and its file/I/O costs.
+#[derive(Clone, Copy, Debug)]
+pub struct FileCheckpointOptions {
+    pub mirrored_banks: bool,
+    pub mirrored_root: bool,
+    pub max_pages: u64,
+}
+impl Default for FileCheckpointOptions {
+    fn default() -> Self {
+        Self {
+            mirrored_banks: false,
+            mirrored_root: false,
+            max_pages: MAX_PAGES,
+        }
+    }
+}
+
+/// Owns native devices at `path`, `.bank0` and `.bank1`, with independently
+/// selected `.mirror` copies of the root and banks. Acquires every writer fence
+/// before validation or repair.
 /// Close never flushes pending records; it attempts every device in reverse
 /// order, root last. Uncertain cleanup retains the affected native writer fence.
 pub struct FileCheckpointPagedLog {
-    inner: Option<CheckpointPagedLog<Lease, Bank>>,
+    inner: Option<CheckpointPagedLog<NativeDevice, NativeDevice>>,
     owners: Vec<Lease>,
 }
 fn suffix(path: &Path, extension: &str) -> PathBuf {
@@ -138,6 +163,14 @@ fn suffix(path: &Path, extension: &str) -> PathBuf {
     result.into()
 }
 impl FileCheckpointPagedLog {
+    pub fn with_options(
+        path: impl AsRef<Path>,
+        options: FileCheckpointOptions,
+    ) -> Result<Self, LinkError> {
+        Self::build_selected(path.as_ref(), options, Lease::open, |_, device| {
+            device.close()
+        })
+    }
     pub fn open(path: impl AsRef<Path>, mirrored_banks: bool) -> Result<Self, LinkError> {
         Self::with_max_pages(path, mirrored_banks, MAX_PAGES)
     }
@@ -158,6 +191,23 @@ impl FileCheckpointPagedLog {
         path: &Path,
         mirrored: bool,
         max_pages: u64,
+        open: impl FnMut(&Path) -> Result<Lease, LinkError>,
+        close: impl FnMut(usize, &mut FilePageDevice) -> Result<(), LinkError>,
+    ) -> Result<Self, LinkError> {
+        Self::build_selected(
+            path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                max_pages,
+                ..Default::default()
+            },
+            open,
+            close,
+        )
+    }
+    fn build_selected(
+        path: &Path,
+        options: FileCheckpointOptions,
         mut open: impl FnMut(&Path) -> Result<Lease, LinkError>,
         close: impl FnMut(usize, &mut FilePageDevice) -> Result<(), LinkError>,
     ) -> Result<Self, LinkError> {
@@ -168,21 +218,34 @@ impl FileCheckpointPagedLog {
                 owners.push(lease.clone());
                 Ok::<_, LinkError>(lease)
             };
-            let root = acquire(path)?;
+            let primary_root = acquire(path)?;
+            let secondary_root = if options.mirrored_root {
+                Some(acquire(&suffix(path, ".mirror"))?)
+            } else {
+                None
+            };
             let mut bank = |index| {
                 let name = suffix(path, &format!(".bank{index}"));
                 let primary = acquire(&name)?;
-                Ok::<_, LinkError>(if mirrored {
-                    Bank::Mirrored(Box::new(MirroredPageDevice::new(
+                Ok::<_, LinkError>(if options.mirrored_banks {
+                    NativeDevice::Mirrored(Box::new(MirroredPageDevice::new(
                         primary,
                         acquire(&suffix(&name, ".mirror"))?,
                     )))
                 } else {
-                    Bank::Single(primary)
+                    NativeDevice::Single(primary)
                 })
             };
             let banks = [bank(0)?, bank(1)?];
-            CheckpointPagedLog::with_max_pages(root, banks, max_pages)
+            let root = match secondary_root {
+                Some(secondary) => NativeDevice::Root(Box::new(MirroredCheckpointRoot::new(
+                    primary_root,
+                    secondary,
+                    u32::from(options.mirrored_banks),
+                )?)),
+                None => NativeDevice::Single(primary_root),
+            };
+            CheckpointPagedLog::with_max_pages(root, banks, options.max_pages)
         })();
         match result {
             Ok(inner) => Ok(Self {
@@ -197,7 +260,7 @@ impl FileCheckpointPagedLog {
             },
         }
     }
-    fn inner(&mut self) -> Result<&mut CheckpointPagedLog<Lease, Bank>, LinkError> {
+    fn inner(&mut self) -> Result<&mut CheckpointPagedLog<NativeDevice, NativeDevice>, LinkError> {
         self.inner
             .as_mut()
             .ok_or_else(|| invalid("native checkpoint log is closed"))

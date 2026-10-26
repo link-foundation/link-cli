@@ -1,12 +1,13 @@
 using Foundation.Data.Doublets.Cli.Engine;
 using System.Text.Json;
 
-// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--compact|--checkpoint-fixture=<json>]
+// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--mirrored-root] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--compact|--checkpoint-fixture=<json>]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal)) ?? throw new ArgumentException("Provide a dedicated Native pages database path.");
 bool compact = args.Contains("--compact");
+if (args.Contains("--mirrored-root") && !compact) throw new ArgumentException("--mirrored-root requires --compact");
 IPageDevice? device = compact ? null : args.Contains("--mirrored") ? new FileMirroredPageDevice(path) : new FilePageDevice(path);
 using var ownership = device as IDisposable;
-using var checkpointPhysical = compact ? new FileCheckpointPagedCommitLog(path, args.Contains("--mirrored")) : null;
+using var checkpointPhysical = compact ? new FileCheckpointPagedCommitLog(path, args.Contains("--mirrored"), args.Contains("--mirrored-root")) : null;
 ICommitLog physical = checkpointPhysical is null ? new PagedCommitLog(device!) : checkpointPhysical;
 ICommitLog log = args.Contains("--delta") ? new DeltaCommitLog(physical) : physical;
 string? checkpoint = null;

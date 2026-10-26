@@ -7,9 +7,11 @@ pub use file::FilePageDevice;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 mod file_checkpoint;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
-pub use file_checkpoint::FileCheckpointPagedLog;
+pub use file_checkpoint::{FileCheckpointOptions, FileCheckpointPagedLog};
 mod checkpoint;
 mod checkpoint_format;
+mod checkpoint_root;
+pub use checkpoint_root::MirroredCheckpointRoot;
 mod format;
 pub use checkpoint::CheckpointPagedLog;
 mod mirrored;

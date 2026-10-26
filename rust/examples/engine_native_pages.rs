@@ -1,7 +1,8 @@
 //! Reopen the same native doublets page journal from Rust, C# and Node/Bun/Deno.
-//! cargo run --manifest-path rust/Cargo.toml --features native-pages --example engine_native_pages -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--compact|--checkpoint-fixture=<json>]
+//! cargo run --manifest-path rust/Cargo.toml --features native-pages --example engine_native_pages -- <database> [--mirrored] [--mirrored-root] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints] [--compact|--checkpoint-fixture=<json>]
 use link_cli::engine::paged::{
-    FileCheckpointPagedLog, FilePageDevice, MirroredPageDevice, PageDevice, PagedLog,
+    FileCheckpointOptions, FileCheckpointPagedLog, FilePageDevice, MirroredPageDevice, PageDevice,
+    PagedLog,
 };
 use link_cli::engine::{
     Constraint, ConstraintValidation, DeltaLog, Engine, EngineOptions, GroupCommitOutcome,
@@ -170,12 +171,24 @@ fn main() -> anyhow::Result<()> {
     } else {
         None
     };
+    anyhow::ensure!(
+        !args.iter().any(|arg| arg == "--mirrored-root")
+            || args.iter().any(|arg| arg == "--compact"),
+        "--mirrored-root requires --compact"
+    );
     if args.iter().any(|arg| arg == "--compact") {
         anyhow::ensure!(
             checkpoint.is_none(),
             "compaction handoffs use their own two-revision retention control"
         );
-        let log = FileCheckpointPagedLog::open(path, args.iter().any(|arg| arg == "--mirrored"))?;
+        let log = FileCheckpointPagedLog::with_options(
+            path,
+            FileCheckpointOptions {
+                mirrored_banks: args.iter().any(|arg| arg == "--mirrored"),
+                mirrored_root: args.iter().any(|arg| arg == "--mirrored-root"),
+                ..Default::default()
+            },
+        )?;
         let mut log = if delta {
             run(
                 DeltaLog::new(log, 128)?,

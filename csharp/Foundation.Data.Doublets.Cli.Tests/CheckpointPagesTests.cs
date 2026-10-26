@@ -3,7 +3,7 @@ using Foundation.Data.Doublets.Cli.Engine;
 
 namespace Foundation.Data.Doublets.Cli.Tests;
 
-public class CheckpointPagesTests
+public partial class CheckpointPagesTests
 {
     private sealed class Trace { internal List<string> Calls = new(); internal (int At, bool After)? Fault; }
     private sealed class Image

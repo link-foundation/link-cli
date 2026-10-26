@@ -35,9 +35,10 @@ public sealed class CheckpointPagedCommitLog : IReplaceableCommitLog
         if (maxPages == 0 || maxPages > MaxPages) throw new ArgumentOutOfRangeException(nameof(maxPages));
         _root = root; _banks = new[] { first, second }; _maxPages = maxPages;
         uint flags = first.MetadataFlags;
-        if (root.MetadataFlags != 0 || flags > 1 || second.MetadataFlags != flags) throw Invalid("checkpoint requires a raw root and matching bank modes");
+        uint rootFlags = root.MetadataFlags;
+        if ((rootFlags != 0 && rootFlags != (2 | flags)) || flags > 1 || second.MetadataFlags != flags) throw Invalid("checkpoint requires matching root and bank modes (flags)");
         if (root.DataLength != 0) throw Invalid("checkpoint root data must be empty");
-        var decision = CheckpointDecision.Select(new[] { root.ReadMetadata(0), root.ReadMetadata(1) }, flags);
+        var decision = CheckpointDecision.Select(new[] { root.ReadMetadata(0), root.ReadMetadata(1) }, rootFlags | flags);
         if (decision is not null)
         {
             bool found = false;
@@ -60,11 +61,12 @@ public sealed class CheckpointPagedCommitLog : IReplaceableCommitLog
                     throw Invalid("unrooted checkpoint bank contains committed metadata");
             }
             byte[] identity = root.NewDatabaseId(); if (identity.Length != 16) throw Invalid("checkpoint root identity length");
-            decision = new CheckpointDecision(identity.ToArray(), 0, flags);
+            decision = new CheckpointDecision(identity.ToArray(), 0, rootFlags | flags);
             for (int i = 0; i < 2; i++) Reset(_banks[i], (decision with { Epoch = (ulong)i }).BankIdentity(), flags);
             root.SyncData(); root.WriteMetadata(0, decision.Encode()); root.SyncMetadata(0);
         }
         _decision = decision; _active = new PagedCommitLog(_banks[decision.Bank], maxPages);
+        if ((rootFlags & 2) != 0) root.CompleteRecovery();
     }
     private static void Reset(IPageDevice device, byte[] identity, uint flags)
     {
@@ -92,7 +94,7 @@ public sealed class CheckpointPagedCommitLog : IReplaceableCommitLog
         if (Read().SequenceEqual(copy)) return false;
         if (_decision.Epoch == ulong.MaxValue) throw Invalid("checkpoint epoch exhausted");
         var next = _decision with { Epoch = _decision.Epoch + 1 }; _fenced = true;
-        Reset(_banks[next.Bank], next.BankIdentity(), next.Flags);
+        Reset(_banks[next.Bank], next.BankIdentity(), next.Flags & 1);
         var prepared = new PagedCommitLog(_banks[next.Bank], _maxPages);
         foreach (string record in copy) prepared.Append(record);
         prepared.Flush(); _root.WriteMetadata(next.Bank, next.Encode()); _root.SyncMetadata(next.Bank);

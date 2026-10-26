@@ -529,3 +529,19 @@ independent controls on Windows. native-checkpoint-ci-fix.txt records exact
 timestamps and run URLs. Its earlier checkpoint-progress observation still has
 no established cause. The selected mirrored-root batch and every broader
 acceptance criterion continue independently.
+
+
+40. Checkpoint roots now select two-copy redundancy independently of page-bank
+    mirroring in all providers. Canonical decision validation, complete bank
+    validation, staged source revalidation and synchronized repair preserve
+    acknowledged groups; unknown formats, incompatible modes and uncertain I/O
+    fail closed. Existing modes and constructor signatures remain available.
+    Missing-feature controls, independent u64 vectors, all root-copy bytes,
+    finite I/O schedules and 258 real process cuts per native language verify
+    the declared scope. Complete suites pass 1,028 native plus six doctests,
+    631 actual WASM, 2,264 C# per configuration, 261 JS and 221 repository checks.
+    Native compaction passes 96 configurations/576 handoffs with root/bank damage;
+    existing ordinary/imported 48/288 controls and all real-etcd modes pass.
+    See MIRRORED-ROOT-PLAN.md, mirrored-root{,-before}.txt and the protocol recipe.
+    Publication and fresh exact-head CI follow. Complete coverage, physical
+    power-loss testing and every wider unmet acceptance criterion remain active.

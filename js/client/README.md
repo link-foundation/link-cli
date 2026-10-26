@@ -246,10 +246,16 @@ roots, rejects committed page corruption and fences uncertain writers. The
 parent directory must exist; crashed ownership requires explicit external
 fencing. See [native page costs, assumptions and example](../../docs/ENGINE-NATIVE-PAGES.md).
 For complete ordered-journal replacement, `CheckpointPagedCommitLog` from the
-separate `./engine-checkpoint-pages` entry accepts a raw root device and two
+separate `./engine-checkpoint-pages` entry accepts a root device and two
 page-bank devices. Keep all devices under one exclusive owner. It synchronizes
 the inactive bank before publishing its epoch-bound root; uncertain operations
 require reopening. See [protocol, ownership and costs](../../docs/protocol/checkpoint-pages.md).
+Select root redundancy independently with `MirroredCheckpointRoot` from
+`./engine-checkpoint-root`. The native owning `FileCheckpointPagedCommitLog`
+from `./engine-file-checkpoint-pages` accepts `{ mirroredRoot, mirroredBanks }`,
+both false by default. It acquires every selected raw owner before repair and
+closes them root last. Keep both persisted modes when reopening; conversion
+requires a separate destination. See [native selection and costs](../../docs/ENGINE-NATIVE-CHECKPOINTS.md).
 
 With a replacement-capable log, call `engine.compactJournal()` to publish retained
 committed snapshots while holding the engine commit lock. It returns false for

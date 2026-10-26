@@ -6,8 +6,9 @@ export interface PagedLogOptions {
 /** Exclusive caller-owned synchronous device. Successful synchronization must
  * persist preceding writes. Failed mutations require reopening the log. */
 export interface PageDevice {
-  /** Immutable physical mode; omitted selects the single-copy protocol. */
-  readonly metadataFlags?: 0 | 1;
+  /** Immutable device mode; 2/3 select mirrored checkpoint roots with raw/mirrored banks.
+   * Omitted selects single-copy pages. PagedCommitLog accepts only 0/1. */
+  readonly metadataFlags?: 0 | 1 | 2 | 3;
   readonly supportsDurableFlush: boolean;
   readonly dataLength: number;
   newDatabaseId(): Uint8Array;

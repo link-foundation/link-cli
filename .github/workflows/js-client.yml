@@ -29,6 +29,7 @@ on:
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-root-vectors.py'
       - 'experiments/issue-138/native-checkpoint-cut.mjs'
   pull_request:
     branches:
@@ -52,6 +53,7 @@ on:
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-root-vectors.py'
       - 'experiments/issue-138/native-checkpoint-cut.mjs'
   workflow_dispatch:
     inputs:
@@ -140,6 +142,8 @@ jobs:
           cmp ../../docs/protocol/engine-checkpoint-vectors.json ../../experiments/issue-138/engine-checkpoint-regenerated.json
           python3 ../../experiments/issue-138/make-checkpoint-page-vectors.py ../../experiments/issue-138/checkpoint-pages-regenerated.json
           cmp ../../docs/protocol/checkpoint-pages-v1.json ../../experiments/issue-138/checkpoint-pages-regenerated.json
+          python3 ../../experiments/issue-138/make-checkpoint-root-vectors.py ../../experiments/issue-138/checkpoint-root-regenerated.json
+          cmp ../../docs/protocol/checkpoint-root-mirror-v1.json ../../experiments/issue-138/checkpoint-root-regenerated.json
 
       - name: Unit tests and complete production coverage
         run: >-
@@ -199,8 +203,8 @@ jobs:
 
       - name: Portable checkpoint pages and replacement codecs on Bun and Deno
         run: |
-          bun test js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
-          deno test --allow-all js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-compaction*.test.mjs
+          bun test js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs
 
       - name: Cache cargo registry
         uses: actions/cache@v6

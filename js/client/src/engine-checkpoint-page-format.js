@@ -11,7 +11,7 @@ export function decisionBytes({ identity, epoch, flags }) {
   data.setUint32(32, bank, true); data.setUint32(36, flags, true); bytes.set(bankIdentity(identity, epoch), 40);
   data.setBigUint64(120, hash(bytes.subarray(0, 120)), true); return bytes;
 }
-function decode(bytes, slot, flags) {
+export function decodeDecision(bytes, slot, flags) {
   if (bytes === undefined) return undefined;
   if (!(bytes instanceof Uint8Array)) fail('checkpoint root bytes');
   if (bytes.length !== 128 || hash(bytes.subarray(0, 120)) !== view(bytes).getBigUint64(120, true)) return undefined;
@@ -22,7 +22,7 @@ function decode(bytes, slot, flags) {
   return { identity, epoch, flags };
 }
 export function selectDecision(raw, flags) {
-  const a = decode(raw[0], 0, flags), b = decode(raw[1], 1, flags);
+  const a = decodeDecision(raw[0], 0, flags), b = decodeDecision(raw[1], 1, flags);
   if (a === undefined) return b;
   if (b === undefined) return a;
   const difference = a.epoch > b.epoch ? a.epoch - b.epoch : b.epoch - a.epoch;

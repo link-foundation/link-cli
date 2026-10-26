@@ -30,16 +30,20 @@ impl<R: PageDevice, D: PageDevice> CheckpointPagedLog<R, D> {
             return Err(invalid("invalid checkpoint page limit"));
         }
         let flags = banks[0].metadata_flags();
-        if root.metadata_flags() != 0 || flags > 1 || banks[1].metadata_flags() != flags {
+        let root_flags = root.metadata_flags();
+        if (root_flags != 0 && root_flags != (2 | flags))
+            || flags > 1
+            || banks[1].metadata_flags() != flags
+        {
             return Err(invalid(
-                "checkpoint requires a raw root and matching bank modes",
+                "checkpoint requires matching root and bank modes (flags)",
             ));
         }
         if root.data_length()? != 0 {
             return Err(invalid("checkpoint root data must be empty"));
         }
         let raw = [root.read_metadata(0)?, root.read_metadata(1)?];
-        let decision = if let Some(decision) = select(&raw, flags)? {
+        let decision = if let Some(decision) = select(&raw, root_flags | flags)? {
             let bank = &mut banks[decision.bank()];
             let mut found = false;
             for slot in 0..2 {
@@ -80,7 +84,7 @@ impl<R: PageDevice, D: PageDevice> CheckpointPagedLog<R, D> {
             let decision = Decision {
                 identity: root.new_database_id()?,
                 epoch: 0,
-                flags,
+                flags: root_flags | flags,
             };
             for (i, bank) in banks.iter_mut().enumerate() {
                 let initial = Decision {
@@ -100,8 +104,12 @@ impl<R: PageDevice, D: PageDevice> CheckpointPagedLog<R, D> {
         } else {
             (second, first)
         };
+        let active = PagedLog::with_max_pages(chosen, max_pages)?;
+        if root_flags & 2 != 0 {
+            root.complete_recovery()?;
+        }
         Ok(Self {
-            active: PagedLog::with_max_pages(chosen, max_pages)?,
+            active,
             inactive: Some(inactive),
             decision,
             fenced: false,
@@ -207,7 +215,7 @@ impl<R: PageDevice, D: PageDevice> ReplaceableTransitionLogStore for CheckpointP
         self.fenced = true;
         let mut device = self.inactive.take().expect("inactive device retained");
         let prepared = (|| {
-            reset(&mut device, next.bank_id(), next.flags)?;
+            reset(&mut device, next.bank_id(), next.flags & 1)?;
             let mut log = PagedLog::with_max_pages(Borrowed(&mut device), self.active.max_pages)?;
             for entry in entries {
                 log.append_log_entry(entry)?;

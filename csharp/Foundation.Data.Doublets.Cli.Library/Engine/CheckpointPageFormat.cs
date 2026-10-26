@@ -19,7 +19,7 @@ internal sealed record CheckpointDecision(byte[] Identity, ulong Epoch, uint Fla
         BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(36), Flags); BankIdentity().CopyTo(bytes, 40);
         Put(bytes, 120, Hash(bytes.AsSpan(0, 120))); return bytes;
     }
-    private static CheckpointDecision? Decode(byte[]? bytes, int slot, uint flags)
+    internal static CheckpointDecision? Decode(byte[]? bytes, int slot, uint flags)
     {
         if (bytes is not { Length: 128 } || Hash(bytes.AsSpan(0, 120)) != U64(bytes, 120)) return null;
         if (!bytes.AsSpan(0, 8).SequenceEqual("CLNKBK01"u8) || bytes.AsSpan(56, 64).ContainsAnyExcept((byte)0))

@@ -16,29 +16,30 @@ public class NativeCheckpointExitTests
         }
     }
     private static string[] Replacement => new[] { new string('雪', 700), "\ufeff\0😀" };
-    internal static int Child(string path, bool mirrored, int point, bool repair)
+    internal static int Child(string path, bool mirrored, int point, string phase, bool mirroredRoot)
     {
-        var trace = new List<string>(); bool active = repair;
+        var trace = new List<string>(); bool active = phase != "replace";
         void Observe(string name, string operation, bool after)
         {
             if (!active) return;
             trace.Add($"{name[path.Length..]}:{operation}:{after}"); if (trace.Count - 1 == point) Environment.Exit(73);
         }
         FilePageDevice Open(string name) => new(name, (file, owner) => new ObservedFile(file, owner, Observe), _ => { });
-        using var log = new FileCheckpointPagedCommitLog(path, mirrored, 64, Open);
-        if (!repair) { active = true; log.Replace(Replacement); }
+        using var log = new FileCheckpointPagedCommitLog(path, mirrored, 64, Open, mirroredRoot);
+        if (phase == "replace") { active = true; log.Replace(Replacement); }
         active = false; log.Dispose(); Console.WriteLine(JsonSerializer.Serialize(trace)); return 0;
     }
-    private static void Seed(string path, bool mirrored, bool repair)
+    private static void Seed(string path, bool mirrored, bool mirroredRoot, string phase)
     {
-        using var log = new FileCheckpointPagedCommitLog(path, mirrored, 64); log.Replace(new[] { "retired bank" }); log.Replace(new[] { "acknowledged" }); log.Dispose();
-        if (repair) { File.WriteAllBytes(path + ".bank0", File.ReadAllBytes(path + ".bank0")[..19]); File.WriteAllText(path + ".bank0.meta0", "torn"); }
+        using var log = new FileCheckpointPagedCommitLog(path, mirrored, mirroredRoot, 64); log.Replace(new[] { "retired bank" }); log.Replace(new[] { "acknowledged" }); log.Dispose();
+        if (phase is "root-repair" or "both-repair") File.WriteAllText(path + ".meta0", "torn root");
+        if (phase is "repair" or "both-repair") { File.WriteAllBytes(path + ".bank0", File.ReadAllBytes(path + ".bank0")[..19]); File.WriteAllText(path + ".bank0.meta0", "torn"); }
     }
-    private static async Task<string> RunChild(string path, bool mirrored, int point, bool repair)
+    private static async Task<string> RunChild(string path, bool mirrored, int point, string phase, bool mirroredRoot)
     {
         var info = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true };
         info.Environment["DOTNET_GCHeapHardLimit"] = "0x06000000";
-        foreach (string argument in new[] { typeof(NativeCheckpointExitTests).Assembly.Location, "checkpoint-pages-cut", path, mirrored.ToString(), point.ToString(System.Globalization.CultureInfo.InvariantCulture), repair.ToString() }) info.ArgumentList.Add(argument);
+        foreach (string argument in new[] { typeof(NativeCheckpointExitTests).Assembly.Location, "checkpoint-pages-cut", path, mirrored.ToString(), point.ToString(System.Globalization.CultureInfo.InvariantCulture), phase, mirroredRoot.ToString() }) info.ArgumentList.Add(argument);
         using var child = Process.Start(info)!; var stdout = child.StandardOutput.ReadToEndAsync(); var stderr = child.StandardError.ReadToEndAsync();
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         try { await child.WaitForExitAsync(deadline.Token); }
@@ -51,32 +52,39 @@ public class NativeCheckpointExitTests
     }
 
     [Theory(Timeout = 120000)]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task EveryRealNativeMutationSurvivesBeforeAndAfterProcessExit(bool mirrored, bool repair)
+    [InlineData(false, false, "replace")]
+    [InlineData(true, false, "replace")]
+    [InlineData(true, false, "repair")]
+    [InlineData(false, true, "replace")]
+    [InlineData(true, true, "replace")]
+    [InlineData(true, true, "repair")]
+    [InlineData(false, true, "root-repair")]
+    [InlineData(true, true, "root-repair")]
+    [InlineData(true, true, "both-repair")]
+    public async Task EveryRealNativeMutationSurvivesBeforeAndAfterProcessExit(bool mirrored, bool mirroredRoot, string phase)
     {
         string directory = Directory.CreateTempSubdirectory("checkpoint-cut-").FullName;
         try
         {
-            string baseline = Path.Combine(directory, "baseline"); Seed(baseline, mirrored, repair);
-            string[] points = JsonSerializer.Deserialize<string[]>(await RunChild(baseline, mirrored, -1, repair))!; Assert.InRange(points.Length, repair ? 12 : 30, 150);
+            string baseline = Path.Combine(directory, "baseline"); Seed(baseline, mirrored, mirroredRoot, phase);
+            string[] points = JsonSerializer.Deserialize<string[]>(await RunChild(baseline, mirrored, -1, phase, mirroredRoot))!; Assert.InRange(points.Length, phase == "replace" ? 30 : phase == "root-repair" ? 6 : 12, 150);
             foreach (string operation in new[] { "write", "truncate", "sync" }) Assert.Contains(points, value => value.Contains(operation, StringComparison.Ordinal));
-            Assert.Contains(points, value => value.StartsWith(repair ? ".bank0:write:" : ".meta1:write:", StringComparison.Ordinal));
+            Assert.Contains(points, value => value.StartsWith(phase == "replace" ? ".meta1:write:" : phase == "root-repair" ? ".meta0:write:" : ".bank0:write:", StringComparison.Ordinal));
             for (int point = 0; point < points.Length; point++)
             {
-                string path = Path.Combine(directory, $"case-{point}"); Seed(path, mirrored, repair); await RunChild(path, mirrored, point, repair);
-                Assert.Throws<IOException>(() => new FileCheckpointPagedCommitLog(path, mirrored));
+                string path = Path.Combine(directory, $"case-{point}"); Seed(path, mirrored, mirroredRoot, phase); await RunChild(path, mirrored, point, phase, mirroredRoot);
+                Assert.Throws<IOException>(() => new FileCheckpointPagedCommitLog(path, mirrored, mirroredRoot));
+                if (phase == "both-repair") Assert.Contains(points, value => value.StartsWith(".meta0:write:", StringComparison.Ordinal));
                 // The observed child exit proves its ownership is now fenced.
-                foreach (string suffix in mirrored ? new[] { "", ".bank0", ".bank0.mirror", ".bank1", ".bank1.mirror" } : new[] { "", ".bank0", ".bank1" }) File.Delete(path + suffix + ".writer");
-                using var recovered = new FileCheckpointPagedCommitLog(path, mirrored, 64); var actual = recovered.Read();
+                foreach (string suffix in new[] { "" }.Concat(mirroredRoot ? new[] { ".mirror" } : Array.Empty<string>()).Concat(mirrored ? new[] { ".bank0", ".bank0.mirror", ".bank1", ".bank1.mirror" } : new[] { ".bank0", ".bank1" })) File.Delete(path + suffix + ".writer");
+                using var recovered = new FileCheckpointPagedCommitLog(path, mirrored, mirroredRoot, 64); var actual = recovered.Read();
                 Assert.True(actual.SequenceEqual(new[] { "acknowledged" }) || actual.SequenceEqual(Replacement), $"torn result at point {point}: {points[point]}");
-                if (repair) Assert.Equal(new[] { "acknowledged" }, actual);
+                if (phase != "replace") Assert.Equal(new[] { "acknowledged" }, actual);
                 recovered.Append("following"); recovered.Flush(); Assert.Equal(actual.Append("following"), recovered.Read());
                 Assert.True(recovered.Replace(new[] { "compacted after exit" })); recovered.Dispose();
-                using var again = new FileCheckpointPagedCommitLog(path, mirrored); Assert.Equal(new[] { "compacted after exit" }, again.Read());
+                using var again = new FileCheckpointPagedCommitLog(path, mirrored, mirroredRoot); Assert.Equal(new[] { "compacted after exit" }, again.Read());
             }
-            Console.WriteLine($"native checkpoint mirrored={mirrored} repair={repair}: {points.Length} bounded before/after process exits");
+            Console.WriteLine($"native checkpoint mirroredBanks={mirrored} mirroredRoot={mirroredRoot} phase={phase}: {points.Length} bounded before/after process exits");
         }
         finally { Directory.Delete(directory, true); }
     }

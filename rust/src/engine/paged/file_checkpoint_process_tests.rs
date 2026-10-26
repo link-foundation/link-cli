@@ -11,12 +11,15 @@ use std::{
 fn records() -> Vec<String> {
     vec!["雪".repeat(700), "\u{feff}\0😀".into()]
 }
-fn seed(path: &Path, mirrored: bool, repair: bool) {
-    let mut log = FileCheckpointPagedLog::open(path, mirrored).unwrap();
+fn seed(path: &Path, options: FileCheckpointOptions, phase: &str) {
+    let mut log = FileCheckpointPagedLog::with_options(path, options).unwrap();
     log.replace_log_entries(&["retired bank".into()]).unwrap();
     log.replace_log_entries(&["acknowledged".into()]).unwrap();
     log.close().unwrap();
-    if repair {
+    if phase == "root-repair" || phase == "both-repair" {
+        fs::write(suffix(path, ".meta0"), b"torn root").unwrap();
+    }
+    if phase == "repair" || phase == "both-repair" {
         fs::OpenOptions::new()
             .write(true)
             .open(suffix(path, ".bank0"))
@@ -26,7 +29,7 @@ fn seed(path: &Path, mirrored: bool, repair: bool) {
         fs::write(suffix(path, ".bank0.meta0"), b"torn").unwrap();
     }
 }
-fn child(path: &Path, mirrored: bool, point: isize, repair: bool) -> i32 {
+fn child(path: &Path, options: FileCheckpointOptions, point: isize, phase: &str) -> i32 {
     let mut command = Command::new(std::env::current_exe().unwrap());
     command
         .args([
@@ -36,9 +39,16 @@ fn child(path: &Path, mirrored: bool, point: isize, repair: bool) -> i32 {
             "--nocapture",
         ])
         .env("CLINK_CHECKPOINT_CUT_PATH", path)
-        .env("CLINK_CHECKPOINT_CUT_MIRROR", mirrored.to_string())
+        .env(
+            "CLINK_CHECKPOINT_CUT_MIRROR",
+            options.mirrored_banks.to_string(),
+        )
         .env("CLINK_CHECKPOINT_CUT_POINT", point.to_string())
-        .env("CLINK_CHECKPOINT_CUT_REPAIR", repair.to_string())
+        .env("CLINK_CHECKPOINT_CUT_PHASE", phase)
+        .env(
+            "CLINK_CHECKPOINT_CUT_ROOT",
+            options.mirrored_root.to_string(),
+        )
         .stdout(Stdio::null())
         .stderr(Stdio::null());
     #[cfg(unix)]
@@ -75,48 +85,73 @@ fn child(path: &Path, mirrored: bool, point: isize, repair: bool) -> i32 {
 
 #[test]
 fn every_real_native_replacement_mutation_survives_before_and_after_process_exit() {
-    for (mirrored, repair) in [(false, false), (true, false), (true, true)] {
+    for (mirrored_banks, mirrored_root, phase) in [
+        (false, false, "replace"),
+        (true, false, "replace"),
+        (true, false, "repair"),
+        (false, true, "replace"),
+        (true, true, "replace"),
+        (true, true, "repair"),
+        (false, true, "root-repair"),
+        (true, true, "root-repair"),
+        (true, true, "both-repair"),
+    ] {
+        let options = FileCheckpointOptions {
+            mirrored_banks,
+            mirrored_root,
+            ..Default::default()
+        };
         let dir = tempfile::tempdir().unwrap();
         let baseline = dir.path().join("baseline");
-        seed(&baseline, mirrored, repair);
-        assert_eq!(child(&baseline, mirrored, -1, repair), 0);
+        seed(&baseline, options, phase);
+        assert_eq!(child(&baseline, options, -1, phase), 0);
         let trace = fs::read_to_string(suffix(&baseline, ".events")).unwrap();
         let points: Vec<_> = trace.lines().collect();
         assert!(
-            (if repair { 12..=150 } else { 30..=150 }).contains(&points.len()),
+            (if phase == "replace" {
+                30..=150
+            } else if phase == "root-repair" {
+                6..=150
+            } else {
+                12..=150
+            })
+            .contains(&points.len()),
             "finite native mutation trace: {trace}"
         );
         for operation in ["write", "truncate", "sync"] {
             assert!(trace.contains(operation));
         }
-        assert!(trace.contains(if repair {
-            "journal.bank0.writer:0:repair"
-        } else {
-            "journal.writer:2:write"
+        assert!(trace.contains(match phase {
+            "replace" => "journal.writer:2:write",
+            "root-repair" => "journal.writer:1:write",
+            _ => "journal.bank0.writer:0:repair",
         }));
+        if phase == "both-repair" {
+            assert!(trace.contains("journal.writer:1:write"));
+        }
         for (point, operation) in points.iter().enumerate() {
             let case = tempfile::tempdir().unwrap();
             let path = case.path().join("journal");
-            seed(&path, mirrored, repair);
+            seed(&path, options, phase);
             assert_eq!(
-                child(&path, mirrored, point as isize, repair),
+                child(&path, options, point as isize, phase),
                 73,
                 "point {point}: {}",
                 operation
             );
-            assert!(FileCheckpointPagedLog::open(&path, mirrored).is_err());
+            assert!(FileCheckpointPagedLog::with_options(&path, options).is_err());
             // Only the observed child exit permits explicit owner removal.
-            for name in super::tests::names(&path, mirrored) {
+            for name in super::tests::names_selected(&path, mirrored_banks, mirrored_root) {
                 fs::remove_file(suffix(&name, ".writer")).unwrap();
             }
-            let mut recovered = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+            let mut recovered = FileCheckpointPagedLog::with_options(&path, options).unwrap();
             let actual = recovered.read_log_entries().unwrap();
             assert!(
                 actual == ["acknowledged"] || actual == records(),
                 "torn result at point {point}: {}",
                 operation
             );
-            if repair {
+            if phase != "replace" {
                 assert_eq!(actual, ["acknowledged"]);
             }
             recovered.append_log_entry("following").unwrap();
@@ -129,12 +164,12 @@ fn every_real_native_replacement_mutation_survives_before_and_after_process_exit
                 .replace_log_entries(&["compacted after exit".into()])
                 .unwrap();
             recovered.close().unwrap();
-            let mut again = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+            let mut again = FileCheckpointPagedLog::with_options(&path, options).unwrap();
             assert_eq!(again.read_log_entries().unwrap(), ["compacted after exit"]);
             again.close().unwrap();
         }
         eprintln!(
-            "native checkpoint mirrored={mirrored} repair={repair}: {} bounded before/after process exits",
+            "native checkpoint mirroredBanks={mirrored_banks} mirroredRoot={mirrored_root} phase={phase}: {} bounded before/after process exits",
             points.len()
         );
     }
@@ -144,7 +179,7 @@ fn every_real_native_replacement_mutation_survives_before_and_after_process_exit
 #[ignore = "finite child entry exercised by every_real_native_replacement_mutation_survives_before_and_after_process_exit"]
 fn native_checkpoint_cut_child() {
     let path = PathBuf::from(std::env::var_os("CLINK_CHECKPOINT_CUT_PATH").unwrap());
-    let mirrored = std::env::var("CLINK_CHECKPOINT_CUT_MIRROR")
+    let mirrored_banks = std::env::var("CLINK_CHECKPOINT_CUT_MIRROR")
         .unwrap()
         .parse()
         .unwrap();
@@ -154,10 +189,16 @@ fn native_checkpoint_cut_child() {
         .unwrap();
     let trace = Rc::new(RefCell::new(Vec::new()));
     let observed = trace.clone();
-    let repair: bool = std::env::var("CLINK_CHECKPOINT_CUT_REPAIR")
+    let phase = std::env::var("CLINK_CHECKPOINT_CUT_PHASE").unwrap();
+    let mirrored_root = std::env::var("CLINK_CHECKPOINT_CUT_ROOT")
         .unwrap()
         .parse()
         .unwrap();
+    let options = FileCheckpointOptions {
+        mirrored_banks,
+        mirrored_root,
+        ..Default::default()
+    };
     let observer = Box::new(move |name: &Path, file, operation: &str, after| {
         let mut trace = observed.borrow_mut();
         // Normalize the root name so a baseline and each fresh case compare.
@@ -170,15 +211,15 @@ fn native_checkpoint_cut_child() {
             std::process::exit(73);
         }
     });
-    let mut log = if repair {
+    let mut log = if phase != "replace" {
         events::set(Some(observer));
-        FileCheckpointPagedLog::open(&path, mirrored).unwrap()
+        FileCheckpointPagedLog::with_options(&path, options).unwrap()
     } else {
-        let log = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        let log = FileCheckpointPagedLog::with_options(&path, options).unwrap();
         events::set(Some(observer));
         log
     };
-    if !repair {
+    if phase == "replace" {
         log.replace_log_entries(&records()).unwrap();
     }
     events::set(None);

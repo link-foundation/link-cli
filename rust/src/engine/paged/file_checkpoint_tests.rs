@@ -8,12 +8,12 @@ fn native_bank_ports_expose_identifiers_and_reject_unchecked_mirror_reads() {
         let path = dir.path().join("bank");
         let primary = Lease::open(&path).unwrap();
         let mut bank = if mirrored {
-            Bank::Mirrored(Box::new(MirroredPageDevice::new(
+            NativeDevice::Mirrored(Box::new(MirroredPageDevice::new(
                 primary,
                 Lease::open(&suffix(&path, ".mirror")).unwrap(),
             )))
         } else {
-            Bank::Single(primary)
+            NativeDevice::Single(primary)
         };
         assert!(bank.supports_durable_flush());
         assert_eq!(bank.metadata_flags(), u32::from(mirrored));
@@ -37,8 +37,11 @@ fn native_bank_ports_expose_identifiers_and_reject_unchecked_mirror_reads() {
     }
 }
 
-pub(super) fn names(path: &Path, mirrored: bool) -> Vec<PathBuf> {
+pub(super) fn names_selected(path: &Path, mirrored: bool, mirrored_root: bool) -> Vec<PathBuf> {
     let mut result = vec![path.to_path_buf()];
+    if mirrored_root {
+        result.push(suffix(path, ".mirror"));
+    }
     for bank in 0..2 {
         let primary = suffix(path, &format!(".bank{bank}"));
         result.push(primary.clone());
@@ -51,17 +54,20 @@ pub(super) fn names(path: &Path, mirrored: bool) -> Vec<PathBuf> {
 
 #[test]
 fn every_acquisition_failure_and_invalid_initialization_closes_in_reverse_order() {
-    for mirrored in [false, true] {
-        let count = if mirrored { 5 } else { 3 };
+    for (mirrored, mirrored_root) in [(false, false), (true, false), (false, true), (true, true)] {
+        let count = (if mirrored { 5 } else { 3 }) + usize::from(mirrored_root);
         for failed in 0..=count {
             let dir = tempfile::tempdir().unwrap();
             let path = dir.path().join("journal");
             let mut opened = 0;
             let closed = RefCell::new(Vec::new());
-            let result = FileCheckpointPagedLog::build(
+            let result = FileCheckpointPagedLog::build_selected(
                 &path,
-                mirrored,
-                if failed == count { 0 } else { 64 },
+                FileCheckpointOptions {
+                    mirrored_banks: mirrored,
+                    mirrored_root,
+                    max_pages: if failed == count { 0 } else { 64 },
+                },
                 |name| {
                     if opened == failed {
                         return Err(invalid("injected acquisition"));
@@ -81,7 +87,7 @@ fn every_acquisition_failure_and_invalid_initialization_closes_in_reverse_order(
                 "injected acquisition"
             }));
             assert_eq!(*closed.borrow(), (0..failed).rev().collect::<Vec<_>>());
-            for name in names(&path, mirrored) {
+            for name in names_selected(&path, mirrored, mirrored_root) {
                 assert!(!suffix(&name, ".writer").exists());
             }
         }
@@ -90,10 +96,18 @@ fn every_acquisition_failure_and_invalid_initialization_closes_in_reverse_order(
 
 #[test]
 fn ordinary_explicit_close_releases_all_banks_before_root_and_never_retries() {
-    for mirrored in [false, true] {
+    for (mirrored, mirrored_root) in [(false, false), (true, false), (false, true), (true, true)] {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("journal");
-        let mut log = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        let mut log = FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         let mut order = Vec::new();
         let count = log.owners.len();
         log.close_with(|index, device| {
@@ -105,7 +119,15 @@ fn ordinary_explicit_close_releases_all_banks_before_root_and_never_retries() {
         log.close_with(|_, _| panic!("repeated close retried a raw handle"))
             .unwrap();
         assert!(log.epoch().is_err());
-        let mut reopened = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        let mut reopened = FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         assert_eq!(reopened.epoch().unwrap(), 0);
         reopened.close().unwrap();
     }
@@ -113,10 +135,18 @@ fn ordinary_explicit_close_releases_all_banks_before_root_and_never_retries() {
 
 #[test]
 fn every_uncertain_close_attempts_all_four_raw_handles_and_preserves_each_fence() {
-    for mirrored in [false, true] {
+    for (mirrored, mirrored_root) in [(false, false), (true, false), (false, true), (true, true)] {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("journal");
-        let mut log = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        let mut log = FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         let mut handles = 0;
         let mut order = Vec::new();
         let error = log
@@ -129,7 +159,7 @@ fn every_uncertain_close_attempts_all_four_raw_handles_and_preserves_each_fence(
                 })
             })
             .unwrap_err();
-        let paths = names(&path, mirrored);
+        let paths = names_selected(&path, mirrored, mirrored_root);
         assert_eq!(handles, paths.len() * 4);
         assert_eq!(order, (0..paths.len()).rev().collect::<Vec<_>>());
         for (index, name) in paths.iter().enumerate() {
@@ -141,24 +171,35 @@ fn every_uncertain_close_attempts_all_four_raw_handles_and_preserves_each_fence(
         log.close().unwrap();
         assert_eq!(handles, paths.len() * 4);
         assert!(log.read_log_entries().is_err());
-        assert!(FileCheckpointPagedLog::open(&path, mirrored).is_err());
+        assert!(FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            }
+        )
+        .is_err());
     }
 }
 
 #[test]
 fn constructor_preserves_original_error_and_every_reverse_cleanup_failure() {
-    for mirrored in [false, true] {
-        let count = if mirrored { 5 } else { 3 };
+    for (mirrored, mirrored_root) in [(false, false), (true, false), (false, true), (true, true)] {
+        let count = (if mirrored { 5 } else { 3 }) + usize::from(mirrored_root);
         for failed in 1..=count {
             let dir = tempfile::tempdir().unwrap();
             let path = dir.path().join("journal");
             let mut opened = 0;
             let mut handles = 0;
             let mut order = Vec::new();
-            let error = FileCheckpointPagedLog::build(
+            let error = FileCheckpointPagedLog::build_selected(
                 &path,
-                mirrored,
-                if failed == count { 0 } else { 64 },
+                FileCheckpointOptions {
+                    mirrored_banks: mirrored,
+                    mirrored_root,
+                    max_pages: if failed == count { 0 } else { 64 },
+                },
                 |name| {
                     if opened == failed {
                         return Err(invalid("original acquisition error"));
@@ -188,7 +229,11 @@ fn constructor_preserves_original_error_and_every_reverse_cleanup_failure() {
                 assert!(error
                     .to_string()
                     .contains(&format!("cleanup device {index}")));
-                assert!(suffix(&names(&path, mirrored)[index], ".writer").exists());
+                assert!(suffix(
+                    &names_selected(&path, mirrored, mirrored_root)[index],
+                    ".writer"
+                )
+                .exists());
             }
         }
     }
@@ -225,13 +270,21 @@ fn poisoned_leases_reject_io_but_cleanup_still_attempts_every_raw_owner() {
 
 #[test]
 fn one_uncertain_bank_remains_fenced_after_root_release_before_any_repair() {
-    for mirrored in [false, true] {
+    for (mirrored, mirrored_root) in [(false, false), (true, false), (false, true), (true, true)] {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("journal");
-        let mut log = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        let mut log = FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         log.replace_log_entries(&["acknowledged".into()]).unwrap();
         log.append_log_entry("pending must stay private").unwrap();
-        let devices = names(&path, mirrored);
+        let devices = names_selected(&path, mirrored, mirrored_root);
         let files: Vec<_> = devices
             .iter()
             .flat_map(|name| [name.clone(), suffix(name, ".meta0"), suffix(name, ".meta1")])
@@ -240,10 +293,11 @@ fn one_uncertain_bank_remains_fenced_after_root_release_before_any_repair() {
             .iter()
             .map(|name| std::fs::read(name).unwrap())
             .collect();
+        let bank_index = 1 + usize::from(mirrored_root);
         let mut attempts = 0;
         let error = log
             .close_with(|index, device| {
-                if index == 1 {
+                if index == bank_index {
                     device.close_with(|file| {
                         drop(file);
                         attempts += 1;
@@ -257,11 +311,19 @@ fn one_uncertain_bank_remains_fenced_after_root_release_before_any_repair() {
         assert!(error.to_string().contains("uncertain bank close"));
         assert_eq!(attempts, 4);
         for (index, name) in devices.iter().enumerate() {
-            assert_eq!(suffix(name, ".writer").exists(), index == 1);
+            assert_eq!(suffix(name, ".writer").exists(), index == bank_index);
         }
         log.close().unwrap();
         assert_eq!(attempts, 4);
-        assert!(FileCheckpointPagedLog::open(&path, mirrored).is_err());
+        assert!(FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            }
+        )
+        .is_err());
         assert_eq!(
             files
                 .iter()
@@ -270,18 +332,70 @@ fn one_uncertain_bank_remains_fenced_after_root_release_before_any_repair() {
             before
         );
         for (index, name) in devices.iter().enumerate() {
-            assert_eq!(suffix(name, ".writer").exists(), index == 1);
+            assert_eq!(suffix(name, ".writer").exists(), index == bank_index);
         }
         // The injected close dropped every raw handle before returning error.
-        std::fs::remove_file(suffix(&devices[1], ".writer")).unwrap();
-        let mut reopened = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        std::fs::remove_file(suffix(&devices[bank_index], ".writer")).unwrap();
+        let mut reopened = FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         assert_eq!(reopened.read_log_entries().unwrap(), ["acknowledged"]);
         reopened.append_log_entry("following").unwrap();
         reopened.flush_log().unwrap();
         reopened.replace_log_entries(&["compacted".into()]).unwrap();
         reopened.close().unwrap();
-        let mut again = FileCheckpointPagedLog::open(&path, mirrored).unwrap();
+        let mut again = FileCheckpointPagedLog::with_options(
+            &path,
+            FileCheckpointOptions {
+                mirrored_banks: mirrored,
+                mirrored_root,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         assert_eq!(again.read_log_entries().unwrap(), ["compacted"]);
         again.close().unwrap();
+    }
+}
+
+#[test]
+fn native_root_port_forwards_metadata_recovery_and_rejects_page_storage() {
+    for bank_flags in [0, 1] {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("root");
+        let root = MirroredCheckpointRoot::new(
+            Lease::open(&path).unwrap(),
+            Lease::open(&suffix(&path, ".mirror")).unwrap(),
+            bank_flags,
+        )
+        .unwrap();
+        let mut root = NativeDevice::Root(Box::new(root));
+        assert!(root.supports_durable_flush());
+        assert_eq!(root.metadata_flags(), 2 | bank_flags);
+        let identity = root.new_database_id().unwrap();
+        assert_eq!(root.data_length().unwrap(), 0);
+        assert!(root.read_metadata(0).unwrap().is_none());
+        let decision = super::super::checkpoint_format::Decision {
+            identity,
+            epoch: 0,
+            flags: 2 | bank_flags,
+        }
+        .encode();
+        root.write_metadata(0, &decision).unwrap();
+        root.sync_metadata(0).unwrap();
+        assert_eq!(root.read_metadata(0).unwrap().unwrap(), decision);
+        root.complete_recovery().unwrap();
+        assert!(root.read_page(0).is_err());
+        assert!(root.read_checked_page(0, 0).is_err());
+        assert!(root.write_page(0, &[0; PAGE_SIZE]).is_err());
+        root.truncate_data(0).unwrap();
+        root.sync_data().unwrap();
+        assert!(root.truncate_data(1).is_err());
     }
 }

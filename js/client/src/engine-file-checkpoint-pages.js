@@ -2,6 +2,7 @@
 import { FilePageDevice } from './engine-file-paged-log.js';
 import { MirroredPageDevice } from './engine-mirrored-pages.js';
 import { CheckpointPagedCommitLog } from './engine-checkpoint-pages.js';
+import { MirroredCheckpointRoot } from './engine-checkpoint-root.js';
 
 function closeAll(devices) {
   const errors = [];
@@ -13,17 +14,19 @@ function closeAll(devices) {
 export class FileCheckpointPagedCommitLog extends CheckpointPagedCommitLog {
   #devices;
   #closed = false;
-  constructor(path, { mirroredBanks = false, ...options } = {}) {
+  constructor(path, { mirroredBanks = false, mirroredRoot = false, ...options } = {}) {
     if (typeof mirroredBanks !== 'boolean') throw new TypeError('mirroredBanks must be boolean');
+    if (typeof mirroredRoot !== 'boolean') throw new TypeError('mirroredRoot must be boolean');
     const devices = [];
     const acquire = (name) => { const device = new FilePageDevice(name); devices.push(device); return device; };
     try {
-      const root = acquire(path);
+      const primaryRoot = acquire(path), secondaryRoot = mirroredRoot ? acquire(path + '.mirror') : undefined;
       const bank = (index) => {
         const name = path + `.bank${index}`, primary = acquire(name);
         return mirroredBanks ? new MirroredPageDevice(primary, acquire(name + '.mirror')) : primary;
       };
       const banks = [bank(0), bank(1)];
+      const root = mirroredRoot ? new MirroredCheckpointRoot(primaryRoot, secondaryRoot, mirroredBanks ? 1 : 0) : primaryRoot;
       super(root, banks, options);
     } catch (cause) {
       const errors = closeAll(devices);
