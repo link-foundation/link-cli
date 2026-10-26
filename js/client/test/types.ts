@@ -96,3 +96,15 @@ async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]
   const links: Links = transaction.shard('a');
   await links.create(0, 0); await transaction.commit();
 }
+
+import { PagedCommitLog, type PageDevice } from '../types/engine-paged-log.js';
+import { FilePagedCommitLog } from '../types/engine-file-paged-log.js';
+function nativePageTypes(device: PageDevice) {
+  const portable: CommitLog = new PagedCommitLog(device, { maxPages: 1024 });
+  using native = new FilePagedCommitLog('native-pages', { maxPages: 1024 });
+  const physical: CommitLog = native;
+  physical.append('opaque'); physical.flush();
+  // @ts-expect-error Page limits must be numeric.
+  new PagedCommitLog(device, { maxPages: '1024' });
+  return portable.read();
+}

@@ -1,6 +1,7 @@
 """Independent finite wire vectors; no production codec is imported."""
 import json
 import struct
+import sys
 from pathlib import Path
 
 PAGE = 4096
@@ -84,5 +85,5 @@ append_group(image, ['', 'snow 雪', '\ufeff\0'])
 result['oneGroup'] = snapshot(image)
 append_group(image, [''])
 result['twoGroups'] = snapshot(image)
-Path('experiments/issue-138/native-page-vectors.json').write_text(json.dumps(result, ensure_ascii=True, indent=2) + '\n')
+Path(sys.argv[1] if len(sys.argv) > 1 else 'experiments/issue-138/native-page-vectors.json').write_text(json.dumps(result, ensure_ascii=True, indent=2) + '\n')
 print('Independent vectors: empty, UTF-8 multi-chunk group, immutable partial-page successor')

@@ -25,6 +25,7 @@ paths use this project's doublets and journal implementations without SQL:
 | Durable ordered logical records | Rust `FileTransitionLog`, C# `FileCommitLog`, JS `FileCommitLog`; WASM uses the JS host bridge |
 | Logical pre-effect undo in legacy stores | Selected full logical row/name images and native transaction journals |
 | Replica acknowledgements and catch-up | Ordered-log replication decorators over the chosen native logs |
+| Native shadow pages | Optional JS/TS `FilePagedCommitLog`, actual Rust-backed WASM; Rust/C# provider parity and redundant repair in progress; see [native page protocol](ENGINE-NATIVE-PAGES.md) |
 | Shards and atomic catalog publication | Native immutable-object, routing and catalog adapters; the optional etcd adapter delegates consensus to etcd |
 
 The CI guard in `.github/scripts/check-sqlite-optional.mjs` resolves actual

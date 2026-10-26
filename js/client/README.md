@@ -240,6 +240,11 @@ For a filesystem journal use
 the separate `./engine-file-log` entry point. It repairs incomplete final lines
 on open and before reuse after an I/O error, retaining complete records for
 outcome discovery. An engine with an uncertain commit still requires reopening.
+For SQL-free immutable doublets pages use `FilePagedCommitLog` from the separate
+`./engine-file-paged-log` entry. It publishes groups through alternating durable
+roots, rejects committed page corruption and fences uncertain writers. The
+parent directory must exist; crashed ownership requires explicit external
+fencing. See [native page costs, assumptions and example](../../docs/ENGINE-NATIVE-PAGES.md).
 For a physical page WAL use the separate `./engine-sqlite-log` entry with a
 dedicated synchronous Node/Bun/Deno SQLite connection. It imports no provider
 into the universal entry. The adapter requires SQLite >= 3.51.3, enforces WAL/FULL,

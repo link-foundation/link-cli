@@ -55,6 +55,7 @@ if (mode === 'rust') {
   try {
     const { MemoryCommitLog, ReplicatedCommitLog } = await import('../../js/client/src/index.js');
     const { FileCommitLog } = await import('../../js/client/src/engine-file-log.js');
+    const { FilePagedCommitLog } = await import('../../js/client/src/engine-file-paged-log.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);
     const replica = new MemoryCommitLog();
     const memory = new ReplicatedCommitLog(new MemoryCommitLog(), [replica], { acknowledgements: 2 });
@@ -68,7 +69,12 @@ if (mode === 'rust') {
     journal.close();
     using reopened = new FileCommitLog(path);
     assert.deepEqual(JSON.parse(reopened.read()), ['native 雪']);
-    console.log('JS root, memory replication and native file reopening: no SQLite module loads');
+    const pagePath = join(directory, 'native-pages');
+    using pages = new FilePagedCommitLog(pagePath);
+    pages.append('native \ufeff\0雪'); pages.flush(); pages.close();
+    using reopenedPages = new FilePagedCommitLog(pagePath);
+    assert.deepEqual(JSON.parse(reopenedPages.read()), ['native \ufeff\0雪']);
+    console.log('JS root, memory replication and native file/page reopening: no SQLite module loads');
   } finally {
     hook.deregister();
     rmSync(directory, { recursive: true, force: true });

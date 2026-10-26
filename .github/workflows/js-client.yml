@@ -22,6 +22,7 @@ on:
       - 'examples/sqlite-csharp/**'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
+      - 'experiments/issue-138/make-native-page-vectors.py'
   pull_request:
     branches:
       - main
@@ -37,6 +38,7 @@ on:
       - 'examples/sqlite-csharp/**'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
+      - 'experiments/issue-138/make-native-page-vectors.py'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -113,6 +115,11 @@ jobs:
 
       - name: Verify default imports and native logs need no SQLite
         run: node ../../.github/scripts/check-sqlite-optional.mjs js
+
+      - name: Verify independently generated native page vectors
+        run: |
+          python3 ../../experiments/issue-138/make-native-page-vectors.py ../../experiments/issue-138/native-pages-regenerated.json
+          cmp ../../docs/protocol/native-pages-v1.json ../../experiments/issue-138/native-pages-regenerated.json
 
       - name: Unit tests and complete production coverage
         run: >-

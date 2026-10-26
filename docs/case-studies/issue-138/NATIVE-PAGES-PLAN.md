@@ -54,3 +54,12 @@ criteria. The plan must not be used to mark any of those complete.
 Prototype evidence: NATIVE-PAGES-FORMAT.md and native-pages-prototype.txt.
 Eleven finite JS investigation tests and actual-WASM Node/Bun/Deno reopening
 pass. Production integration and Rust/C# parity are still unchecked above.
+
+JS/TS production integration now passes 197 full JS tests, enforced 100%
+production coverage, strict types, 221 repository checks and actual-WASM
+Node/Bun/Deno conformance under 16 independent policy configurations. Native
+files share the same ownership convention. Finite before evidence preserves
+an uncertain-close fence regression and its passing correction. See
+native-pages-js.txt and ENGINE-NATIVE-PAGES.md. Rust/C# parity, cross-language
+files and selected redundant repair remain required before the main boxes can
+be checked. The existing 0.2.0 client release preparation covers the new exports.

@@ -310,3 +310,12 @@ pass. New exact-head CI is pending publication; native page strategies and the
 other inventoried requirements remain unfinished. Published head `faf191d`
 already passes all nine workflows, including optional-SQL dependency guards;
 structure-depth-ci.txt records exact timestamps, SHAs and job links.
+
+Native shadow pages (R1/R5/R6/R7/R8/R9/R11) now have a SQL-free JS/TS provider
+with independent byte vectors and finite persistence/corruption/ownership
+contracts. Full JS suites pass 197 tests and enforced 100% complete production
+coverage, plus strict types, 221 repository tests and Node/Bun/Deno actual-WASM
+conformance under 16 independent configurations. Constant new-group write
+counters and bounded process exits are recorded in native-pages-js.txt.
+Rust/C# parity, cross-language files, redundant physical repair and fresh CI
+remain unfinished; NATIVE-PAGES-PLAN.md tracks those and the wider gaps.

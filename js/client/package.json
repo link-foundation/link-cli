@@ -49,6 +49,14 @@
     "./engine-file-log": {
       "types": "./types/engine-file-log.d.ts",
       "default": "./src/engine-file-log.js"
+    },
+    "./engine-paged-log": {
+      "types": "./types/engine-paged-log.d.ts",
+      "default": "./src/engine-paged-log.js"
+    },
+    "./engine-file-paged-log": {
+      "types": "./types/engine-file-paged-log.d.ts",
+      "default": "./src/engine-file-paged-log.js"
     }
   },
   "files": [

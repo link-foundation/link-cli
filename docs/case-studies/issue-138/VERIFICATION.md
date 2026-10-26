@@ -2678,3 +2678,10 @@ object retention, balancing, multi-catalog transactions and the other inventorie
 acceptance criteria remain unfinished. Keep the goal active and PR draft;
 publication requires fresh exact-head CI. Native page prototype experiments are
 separate future implementation evidence, not part of these production results.
+
+Native page JS/TS integration: 197 full unit tests, 100% measured production
+lines/branches/functions across all 20 modules, strict types, 221 repository
+checks and Node/Bun/Deno actual-WASM conformance pass. Independent binary vectors,
+finite I/O/cleanup faults, bounded child exits and fixed new-group byte counters
+are retained. See native-pages-js.txt. This is JS provider evidence; matching
+Rust/C# providers, redundant physical repair and fresh CI are still required.
