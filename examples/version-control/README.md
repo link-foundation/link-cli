@@ -18,6 +18,7 @@ C# and the Rust CLIs expose the same flag surface.
 |------|---------------|
 | `run-csharp.sh` | End-to-end version-control demo using the C# `clink` binary |
 | `run-rust.sh`   | End-to-end version-control demo using the Rust `clink` binary |
+| `tag-names.sh`  | Exact delimiter/Unicode tags, existing-tag aliases and following edits in either native CLI |
 | `README.md`     | This file |
 
 ## What the demo does
@@ -43,7 +44,7 @@ C# and the Rust CLIs expose the same flag surface.
 --branch-from <seq>          Fork point when creating a branch
 --checkout <seq|tag>         Time-travel to a sequence number or named tag
                               Implies --vc.
---tag <name[=seq]>           Tag the current head, or a specific seq.
+--tag <name[=point]>         Tag the current head, a sequence or an existing tag.
                               Implies --vc.
 --list-branches              Print all branches and exit
 --list-tags                  Print all tags and exit
@@ -52,6 +53,19 @@ C# and the Rust CLIs expose the same flag surface.
 When neither `--vc` nor any version-control flag is used the bare CLI
 behaviour is unchanged: no `versioncontrol.links` sidecar is created
 (R17).
+
+When a name contains `=`, the first delimiter whose complete suffix resolves
+separates the name and point. Existing aliases keep priority: once `release=0`
+exists, `--tag 'alias=release=0'` points `alias` at that tag. An unknown point
+still rejects the command. Quote delimiter/Unicode names when invoking a shell.
+
+The finite example creates a temporary database, checks exact rows after four
+checkouts, then commits another edit and removes its files:
+
+```sh
+bash examples/version-control/tag-names.sh rust/target/debug/clink
+bash examples/version-control/tag-names.sh dotnet csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+```
 
 ## Interrupted commits
 

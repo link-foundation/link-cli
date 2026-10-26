@@ -120,6 +120,45 @@ fn empty_retention_uses_default_and_invalid_policies_do_not_create_stores() {
 }
 
 #[test]
+fn delimiter_tag_names_preserve_existing_alias_syntax_and_following_edits() {
+    for name in ["release=雪=part", "release=0"] {
+        let dir = tempdir().unwrap();
+        let db = dir.path().join("data.links");
+        run(&db, &["--vc", "() ((1 1))"]).success();
+        run(&db, &["--tag", "first"]).success();
+        let listing = run(&db, &["--list-tags"]).success();
+        let (_, head) = listing.trim().split_once('\t').unwrap();
+        let specification = format!("{name}={head}");
+        run(&db, &["--tag", &specification]).success();
+        let listing = run(&db, &["--list-tags"]).success();
+        assert!(listing
+            .lines()
+            .any(|line| line == format!("{name}\t{head}")));
+
+        // A complete existing tag has priority over a later numeric suffix.
+        // A last-delimiter-only parser would break this previously valid alias.
+        run(&db, &["--tag", &format!("alias={name}")]).success();
+        let listing = run(&db, &["--list-tags"]).success();
+        assert!(listing.lines().any(|line| line == format!("alias\t{head}")));
+        assert!(!listing
+            .lines()
+            .any(|line| line.starts_with("alias=release\t")));
+        run(&db, &["--vc", "() ((2 2))"]).success();
+        for point in [name, "alias"] {
+            assert_eq!(
+                run(&db, &["--checkout", point, "--after"]).success(),
+                "(1: 1 1)\n"
+            );
+        }
+        run(&db, &["--tag", "new=still=missing"]).failure("Unknown tag point 'still=missing'.");
+        run(&db, &["--tag", "new="]).failure("Unknown tag point ''.");
+        assert_eq!(run(&db, &["--list-tags"]).success(), listing);
+        run(&db, &["--vc", "() ((2 2))"]).success();
+        assert_eq!(run(&db, &["--after"]).success(), "(1: 1 1)\n(2: 2 2)\n");
+    }
+}
+
+#[test]
 fn before_changes_and_after_render_the_same_persisted_transition() {
     let dir = tempdir().unwrap();
     let db = dir.path().join("data.links");

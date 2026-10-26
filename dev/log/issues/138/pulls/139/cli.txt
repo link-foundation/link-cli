@@ -1,0 +1,34 @@
+Public native command contracts; PR https://github.com/link-foundation/link-cli/pull/139
+Run: bash experiments/issue-138/validate-cli-contracts.sh
+Rust uses one compiler job, debug info disabled; .NET GC heap cap 640 MiB.
+
+Complete native Rust: 923 passed, 0 failed, 17 bounded child entry points ignored by direct invocation.
+Native Rust lines: 12815/13646 (93.91030%)
+Native Rust branches: 2381/2816 (84.55256%)
+Native Rust functions: 1640/1773 (92.49859%)
+cli.rs lines: 352/405 (86.91358%)
+cli.rs branches: 100/118 (84.74576%)
+cli.rs functions: 24/28 (85.71429%)
+main.rs lines: 380/390 (97.43590%)
+main.rs branches: 112/114 (98.24561%)
+main.rs functions: 36/36 (100.00000%)
+
+Complete C# Debug: 2091 passed, 0 failed/skipped.
+C# Debug lines: 7901/8259 (95.66533%)
+C# Debug branches: 4240/4632 (91.53713%)
+Program.cs unique lines: 736/767
+Report: experiments/issue-138/cli-csharp-Debug-results/049b3389-b901-4934-802c-c40eb15223b2/coverage.cobertura.xml
+
+Complete C# Release: 2091 passed, 0 failed/skipped.
+C# Release lines: 6072/6296 (96.44219%)
+C# Release branches: 4194/4605 (91.07492%)
+Program.cs unique lines: 714/742
+Report: experiments/issue-138/cli-csharp-Release-results/847da466-1075-4075-9a86-7c37626a6844/coverage.cobertura.xml
+
+Focused native CLI executable file: 11 passed; C# entry-point contracts: 31 passed.
+Both public tag-name examples, strict Clippy, format, ShellCheck, release/source checks and 221 repository checks pass.
+Finite nesting controls in both native commands: depths 2/32/62/63 accepted; 128/2048 rejected at the declared limit 64.
+Rejected nesting preserves exact rows through reopening and a following successful edit; no parser behavior change.
+Before reproductions and exact errors: dev/log/issues/138/pulls/139/cli-before.txt.
+The initial xUnit synchronous Timeout attributes were rejected, then removed before these complete passing C# runs.
+No production files excluded; complete-project 100% and the wider inventory remain unfinished. Fresh exact-head CI required.

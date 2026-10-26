@@ -223,3 +223,6 @@ Select two-copy native page repair separately from revision, validation and
 replication policies. Synchronize both copies before acknowledgement and validate
 the entire expected prefix before repairing a damaged copy. Preserve the default
 single-copy format and costs, and retain uncertain native ownership fences.
+
+Accept equals signs in native command tag names while preserving aliases to
+complete existing tags, unknown-point diagnostics and following database edits.

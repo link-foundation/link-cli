@@ -340,5 +340,17 @@ mirrored-pages-{js,rust,csharp}.txt. Whole-project coverage remains below target
 legacy physical repair/page undo, LSM, finer composition, complete journal replay/
 updates, persistent object retention, balancing, multi-catalog transactions and
 the other inventoried criteria remain unfinished. Fresh C# CI exposed formatter
-and Windows test-ownership failures; their correction is being verified. The
+and Windows test-ownership failures; the correction and Rust mirror now pass all
+nine workflows on b0612d0, recorded in mirrored-pages-parity-ci.txt. The
 next measured command-path audit is tracked in CLI-COVERAGE-PLAN.md.
+
+Native command recovery/version-name contracts (R1/R3/R7/R8/R9/R12) now include
+before failures for delimiter-containing tag names, accepted complete-tag aliases,
+exact checkout/listing, error preservation and subsequent edits. Thirty-one C#
+entry-point contracts verify mapped-store release after every returned command.
+Complete runs pass 923 native Rust and 2,091 C# tests per configuration. All
+production files remain in the measured denominator: C# reaches 95.67% Debug
+and 96.44% Release lines, still below target. Both native public tag-name examples
+and finite declared-nesting-limit controls pass. See CLI-COVERAGE-PLAN.md,
+VERIFICATION.md and cli-before.txt. Fresh exact-head CI and all wider inventoried
+criteria remain unfinished.

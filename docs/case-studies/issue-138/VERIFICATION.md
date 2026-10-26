@@ -2733,6 +2733,34 @@ physical power loss and arbitrary hostile corruption are not certified.
 All nine workflows pass on the preceding JS mirror head be89fb7. Initial C#
 head 288cc6d passes eight workflows but fails newer formatting and a Windows
 exclusive-handle test. Their exact errors and correction are preserved in
-mirrored-pages-csharp-ci-before.txt; fresh passing exact-head CI remains required.
+mirrored-pages-csharp-ci-before.txt. All nine workflows now pass on complete
+native/JS mirror head b0612d0, including both native platform matrices; see
+mirrored-pages-parity-ci.txt. Subsequent command changes require fresh CI.
 Complete coverage and all other inventoried gaps remain active. The next audit
 of public command recovery and version names is in CLI-COVERAGE-PLAN.md.
+
+## Native public command contracts
+
+Before tests reproduce rejected delimiter-containing tag names in both native
+executables. Parsing now prefers the earliest delimiter with a resolvable complete
+suffix, preserving existing aliases such as alias=release=0. Exact listing,
+checkout, repeated ownership, rejection without mutation and following edits
+pass. Thirty-one serialized C# entry-point contracts measure real dispatch and
+verify exclusive file reopening after every command, including errors. Existing
+subprocess integration tests remain. Both native tag-name examples pass.
+
+Complete runs pass 923 native Rust cases (17 bounded child entry points) and
+2,091 C# cases in each configuration. No portable source changed since the
+539-case actual-WASM run above. Finite nested-query controls confirm the existing
+64-level parser limit and healthy reopening/edits after rejection; no new parser
+behavior is claimed. See CLI-COVERAGE-PLAN.md and cli-before.txt.
+
+| Complete measured scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 12,815/13,646 (93.91%) | 2,381/2,816 (84.55%) | 1,640/1,773 (92.50%) |
+| C# Debug | 7,901/8,259 (95.67%) | 4,240/4,632 (91.54%) | Not reported |
+| C# Release | 6,072/6,296 (96.44%) | 4,194/4,605 (91.07%) | Not reported |
+
+Whole-project 100% and the wider inventory remain unfinished. The next audit
+continues through uncovered public query compatibility paths. Command publication
+requires its own fresh exact-head CI.

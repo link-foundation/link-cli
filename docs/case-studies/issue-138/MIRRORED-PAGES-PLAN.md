@@ -15,8 +15,8 @@ doublewrite buffer and does not repair legacy mapped Doublets files.
 - [x] Test all language/runtime file interchange, independent policy composition,
       owned handle cleanup and bounded process exits.
 - [x] Measure selected byte/read/write/sync costs and complete-run coverage.
-- [ ] Obtain fresh passing exact-head CI after all matching implementations.
-      C# formatter and Windows test corrections are under validation.
+- [x] Obtain fresh passing exact-head CI after all matching implementations.
+      All nine workflows pass on b0612d0, including both native platform matrices.
 
 Implemented mode: an immutable metadata flag identifies mirrored storage. A plain
 reader must reject this mode rather than silently ignore the second copy.
@@ -62,6 +62,8 @@ guards pass. C# passes 15 focused contracts and 2,060 complete tests in each
 configuration; see mirrored-pages-csharp.txt. Its initial fresh CI exposed
 formatter differences and a Windows-only test read against an exclusive file
 owner; mirrored-pages-csharp-ci-before.txt preserves those exact failures.
+The correction passes all nine workflows on b0612d0; see
+mirrored-pages-parity-ci.txt for exact SHA, timestamps and run URLs.
 
 The shared-file recipe passes all 32 single/mirrored policy configurations and
 192 writer invocations through Rust -> Node -> Bun -> C# -> Deno -> Rust. Every

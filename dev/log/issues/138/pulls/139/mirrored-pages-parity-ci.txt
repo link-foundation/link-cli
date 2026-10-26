@@ -1,0 +1,20 @@
+Native mirrored-page parity CI, observed 2026-10-26 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact head: b0612d0b44317f7008b6a274e006a9121b1b55ed
+All nine workflows succeeded; all created 2026-10-26T08:05:49Z.
+
+Broken Link Checker: success — https://github.com/link-foundation/link-cli/actions/runs/40289924911
+C# CI/CD Pipeline: success — https://github.com/link-foundation/link-cli/actions/runs/40289924854
+Dependencies: success — https://github.com/link-foundation/link-cli/actions/runs/40289924900
+Docs: success — https://github.com/link-foundation/link-cli/actions/runs/40289924979
+JS client CI: success — https://github.com/link-foundation/link-cli/actions/runs/40289924914
+Rust CI/CD Pipeline: success — https://github.com/link-foundation/link-cli/actions/runs/40289924880
+Security: success — https://github.com/link-foundation/link-cli/actions/runs/40289925050
+WebAssembly CI: success — https://github.com/link-foundation/link-cli/actions/runs/40289924830
+Workflows: success — https://github.com/link-foundation/link-cli/actions/runs/40289924956
+
+This run includes the C# formatter/Windows ownership correction f68193c.
+C# and Rust platform matrices pass on Windows, macOS and Linux. The preceding
+C# failure evidence remains in mirrored-pages-csharp-ci-before.txt. Earlier
+f68193c workflows cancelled after b0612d0 superseded them are not new failures.
+The following command-parser changes require their own fresh exact-head CI.

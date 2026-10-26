@@ -307,10 +307,17 @@ complete the overall issue or authorize marking the draft ready early.
     repairing deliberate closed-copy damage before following commits. Native
     formatter/strict Clippy/optional-SQL guards pass. Fresh C# CI exposed a
     formatter difference and a test that read an exclusively owned Windows file;
-    preserve the exact logs and validate their correction. See MIRRORED-PAGES-PLAN.md.
+    the correction and Rust mirror now pass all nine workflows on b0612d0.
+    See MIRRORED-PAGES-PLAN.md and mirrored-pages-parity-ci.txt for exact evidence.
 
-25. Continue the complete-denominator coverage audit through public command
-    recovery and version-name contracts. Preserve failing behavior tests before
-    changes, maintain accepted tag-alias grammar, exercise all mapped ownership
-    cleanup and compare actual complete-run coverage. CLI-COVERAGE-PLAN.md records
-    the concrete checklist; whole-project 100% and wider criteria remain open.
+25. The complete-denominator command audit reproduces and corrects rejected
+    delimiter-containing tag names in both native executables while preserving
+    aliases to complete existing tags. Thirty-one C# entry-point contracts check
+    configuration/error recovery, mapped ownership release, versions, triggers
+    and file pipelines; the real Rust executable contracts and both public
+    examples pass. Complete runs pass 923 native and 2,091 C# cases per
+    configuration. C# command coverage improves from 597/759 to 736/767 Debug
+    lines and 626/734 to 714/742 Release lines. Bounded nesting controls confirm
+    the existing declared parser limit and subsequent usable files. See
+    CLI-COVERAGE-PLAN.md and cli-before.txt; fresh exact-head CI is required.
+    Whole-project 100% and all wider inventoried criteria remain open.

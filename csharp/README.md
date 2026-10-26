@@ -87,6 +87,14 @@ clink --db data.links --vc --branch feature --branch-from 1
 clink --db data.links --vc --list-branches
 ```
 
+Tags accept `name=sequence` or `name=existing-tag`. For names containing `=`,
+the command uses the first delimiter whose complete suffix resolves. For example,
+after creating `v1`, `--tag 'release=雪=part=v1'` creates `release=雪=part`,
+and `--tag 'alias=release=雪=part'` creates an alias at the same point.
+Quote these arguments in the shell. The
+[tag-name example](../examples/version-control/tag-names.sh) checks both forms
+and checkout through repeated native command invocations.
+
 `BeginTransaction()` / `Commit()` / `Rollback()` are also exposed on the
 library API for explicit batches. End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and

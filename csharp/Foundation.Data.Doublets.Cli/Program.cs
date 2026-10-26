@@ -168,7 +168,7 @@ var checkoutOption = new Option<string?>("--checkout")
 
 var tagOption = new Option<string?>("--tag")
 {
-    Description = "Create a tag in the form 'name' (at current head) or 'name=<seq>'. Implies --vc."
+    Description = "Create a tag as 'name' (current head) or 'name=<sequence-or-tag>'. Uses the first '=' whose suffix resolves. Implies --vc."
 };
 
 var listBranchesOption = new Option<bool>("--list-branches")
@@ -490,13 +490,21 @@ rootCommand.SetAction(
                   }
                   else
                   {
-                      tagName = tagSpec.Substring(0, eq);
                       var point = tagSpec.Substring(eq + 1);
-                      if (!TryResolveSequence(vcLinks, point, out var resolved))
+                      var separator = eq;
+                      long resolved;
+                      // Preserve existing aliases before trying delimiters in
+                      // the name: alias=release=0 may refer to tag release=0.
+                      while (!TryResolveSequence(vcLinks, tagSpec.Substring(separator + 1), out resolved))
                       {
-                          Console.Error.WriteLine($"Unknown tag point '{point}'.");
-                          return 1;
+                          separator = tagSpec.IndexOf('=', separator + 1);
+                          if (separator < 0)
+                          {
+                              Console.Error.WriteLine($"Unknown tag point '{point}'.");
+                              return 1;
+                          }
                       }
+                      tagName = tagSpec.Substring(0, separator);
                       tagSeq = resolved;
                   }
                   try
