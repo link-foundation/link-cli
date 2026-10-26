@@ -2783,4 +2783,30 @@ production files remain measured: Debug 7,938/8,259 lines (96.11%) and
 4,214/4,605 branches (91.51%). See query-compatibility.txt and
 QUERY-COMPATIBILITY-PLAN.md. Rust/actual-WASM/JS source is unchanged from the
 recorded 923/539/209-test runs. Whole-project coverage and all broader criteria
-remain unfinished; new publication requires fresh exact-head CI.
+remain unfinished. All nine workflows pass on query head 580dcb2; see
+query-compatibility-ci.txt. Subsequent changes require fresh exact-head CI.
+
+## Shared native and WASM argument contracts
+
+Seven portable public contracts compare complete parsed configurations for
+all long/short aliases, exact Unicode/whitespace/delimiter values, optional
+booleans, signed/unsigned boundaries, arities, literal queries, error recovery
+and independent decorator selection. No production defect reproduced. An
+initial expected diagnostic used an alias rather than the established canonical
+name; correcting that oracle is not product before-failure evidence.
+
+Complete suites pass 930 native tests and 546 actual WASM tests, with strict
+Clippy/format and 221 repository checks. WASM uses the verified 256 MiB linear
+memory cap, finite test deadlines and the existing six executables.
+
+| Complete measured scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 12,867/13,646 (94.29%) | 2,397/2,816 (85.12%) | 1,644/1,773 (92.72%) |
+| Actual WASM, complete linked source | 9,931/12,693 (78.24%) | 1,978/2,419 (81.77%) | 1,259/1,690 (74.50%) |
+
+The parser component measures 404/405 native lines, 116/118 branches and 28/28
+functions, versus 394/405 lines, 112/118 branches and 25/28 functions in WASM.
+Every production denominator is retained. C# and JS source remains unchanged
+from the recorded 2,124-per-configuration and 209-case runs. See arguments.txt
+and ARGUMENT-CONTRACTS-PLAN.md. Whole-project 100%, fresh exact-head CI and
+every broader unfinished criterion remain open.

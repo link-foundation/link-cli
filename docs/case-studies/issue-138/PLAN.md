@@ -331,5 +331,15 @@ complete the overall issue or authorize marking the draft ready early.
     so production code remains unchanged. Both complete C# configurations pass
     2,124 tests; complete measured lines reach 96.11% Debug and 96.79% Release,
     still below the target. See QUERY-COMPATIBILITY-PLAN.md and
-    query-compatibility.txt. Publication requires fresh exact-head CI; every
+    query-compatibility.txt. All nine workflows pass on 580dcb2; exact SHA,
+    timestamps and links are preserved in query-compatibility-ci.txt. Every
     wider unfinished requirement stays active.
+
+27. Seven public argument contract groups pass natively and in actual WASM,
+    comparing complete configurations, aliases, exact literal values, booleans,
+    numeric/arity boundaries, rejection recovery and independent strategy flags.
+    No production defect reproduced. Complete suites pass 930 native and 546
+    WASM cases with unchanged production denominators. Native coverage reaches
+    94.29% lines and actual WASM 78.24% lines; parser coverage is 404/405 native
+    and 394/405 WASM lines. See ARGUMENT-CONTRACTS-PLAN.md and arguments.txt.
+    Fresh exact-head CI and every wider inventoried criterion remain open.

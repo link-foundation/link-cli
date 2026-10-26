@@ -364,3 +364,12 @@ lines reach 96.11% Debug / 96.79% Release, still below R8's target. See
 QUERY-COMPATIBILITY-PLAN.md and query-compatibility.txt. Command head 63ccbc7
 passes all nine workflows, preserved in cli-ci.txt; later changes require fresh
 CI. Every wider inventoried gap remains unfinished.
+
+Public Rust argument contracts (R3/R6/R7/R8/R9/R12) now run seven semantic
+groups both natively and in actual WASM, preserving complete configurations,
+exact values, bounds, rejection recovery and independent decorator selection.
+No production defect reproduced. Full suites pass 930 native / 546 WASM tests;
+complete measured lines reach 94.29% / 78.24%, below the whole-project target.
+See ARGUMENT-CONTRACTS-PLAN.md, VERIFICATION.md and arguments.txt. Query head
+580dcb2 passes all nine workflows, recorded in query-compatibility-ci.txt.
+Later changes require fresh CI; every wider inventoried gap remains unfinished.

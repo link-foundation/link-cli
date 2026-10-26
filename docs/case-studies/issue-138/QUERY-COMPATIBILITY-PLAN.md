@@ -13,7 +13,7 @@ inventory items remain active throughout this audit.
       the established accepted-query semantics and diagnostic policy.
 - [x] Run focused and complete native checks with unchanged coverage denominators,
       format/release/source checks, preserve evidence and commit an atomic batch.
-- [ ] Obtain fresh exact-head CI and continue every wider unfinished criterion.
+- [x] Obtain fresh exact-head CI and continue every wider unfinished criterion.
 
 Source tracing finds a candidate null-list hazard in the legacy mixed processor:
 `outerLinkValues?.Count < 2` does not reject a null child list, but the following
@@ -36,3 +36,5 @@ mixed wildcard errors, existing-pair reuse and basic update-count diagnostics
 also preserve exact rows, names and subsequent successful edits. The no-op
 shape matrix additionally reopens the real native files and checks another edit.
 See query-compatibility.txt for the complete report paths and reproducible run.
+All nine workflows pass on 580dcb2, including the native platform matrices;
+query-compatibility-ci.txt preserves the exact SHA, creation timestamps and links.
