@@ -20,6 +20,7 @@ on:
       - 'docs/protocol/**'
       - 'examples/cluster-csharp/**'
       - 'examples/journal-maintenance-csharp/**'
+      - 'examples/journal-reclamation-csharp/**'
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
@@ -33,6 +34,7 @@ on:
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
       - 'experiments/issue-138/make-maintenance-vectors.py'
       - 'experiments/issue-138/verify-maintenance-lazy.mjs'
+      - 'experiments/issue-138/*reclamation*'
       - 'experiments/issue-138/native-checkpoint-cut.mjs'
   pull_request:
     branches:
@@ -47,6 +49,7 @@ on:
       - 'docs/protocol/**'
       - 'examples/cluster-csharp/**'
       - 'examples/journal-maintenance-csharp/**'
+      - 'examples/journal-reclamation-csharp/**'
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
@@ -60,6 +63,7 @@ on:
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
       - 'experiments/issue-138/make-maintenance-vectors.py'
       - 'experiments/issue-138/verify-maintenance-lazy.mjs'
+      - 'experiments/issue-138/*reclamation*'
       - 'experiments/issue-138/native-checkpoint-cut.mjs'
   workflow_dispatch:
     inputs:
@@ -153,6 +157,12 @@ jobs:
           python3 ../../experiments/issue-138/make-maintenance-vectors.py ../../experiments/issue-138/maintenance-regenerated.json
           cmp ../../docs/protocol/journal-maintenance-v1.json ../../experiments/issue-138/maintenance-regenerated.json
           node ../../experiments/issue-138/verify-maintenance-lazy.mjs
+          python3 ../../experiments/issue-138/make-reclamation-vectors.py ../../experiments/issue-138/reclamation-regenerated.json
+          cmp ../../docs/protocol/reclamation-v1.json ../../experiments/issue-138/reclamation-regenerated.json
+          node ../../experiments/issue-138/verify-reclamation-lazy.mjs
+          node ../../experiments/issue-138/verify-reclamation-memory.mjs
+          python3 ../../experiments/issue-138/model-object-reclamation.py
+          python3 ../../experiments/issue-138/model-reclamation-readers.py
 
       - name: Unit tests and complete production coverage
         run: >-
@@ -212,8 +222,8 @@ jobs:
 
       - name: Portable checkpoint pages and replacement codecs on Bun and Deno
         run: |
-          bun test js/client/test/cluster-maintenance.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
-          deno test --allow-all js/client/test/cluster-maintenance.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs
+          bun test js/client/test/cluster-maintenance.test.mjs js/client/test/reclaiming*.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/cluster-maintenance.test.mjs js/client/test/reclaiming*.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -228,7 +238,7 @@ jobs:
             ${{ runner.os }}-js-client-cargo-
 
       - name: Build the Rust server
-        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd --bin clink --example cluster --example journal_maintenance
+        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd --bin clink --example cluster --example journal_maintenance --example journal_reclamation
 
       - name: Build the C# server
         run: dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
@@ -240,12 +250,15 @@ jobs:
         run: |
           dotnet build examples/cluster-csharp --configuration Release
           dotnet build examples/journal-maintenance-csharp --configuration Release
+          dotnet build examples/journal-reclamation-csharp --configuration Release
 
       - name: Verify actual consensus and language interoperability
         env:
           ETCD_BIN: ${{ github.workspace }}/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd
           MAINTENANCE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_maintenance
           MAINTENANCE_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-maintenance-csharp/bin/Release/net10.0/JournalMaintenanceExample.dll
+          RECLAMATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_reclamation
+          RECLAMATION_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-reclamation-csharp/bin/Release/net10.0/JournalReclamationExample.dll
           CLUSTER_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/cluster
           CLUSTER_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
         run: |
@@ -255,6 +268,7 @@ jobs:
           tar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd
           node --test --test-timeout=10000 experiments/issue-138/etcd-harness.test.mjs
           node experiments/issue-138/etcd-maintenance.mjs
+          node experiments/issue-138/etcd-reclamation.mjs
           node experiments/issue-138/etcd-cluster.mjs
           CLUSTER_JOURNAL_CHECKPOINT_INTERVAL=1 node experiments/issue-138/etcd-cluster.mjs
 

@@ -263,3 +263,8 @@ bytes. Acquire and clean up every selected native root and bank owner.
 Add optional namespace maintenance with complete bounded revision-consistent
 etcd scans and generation-conditional single-key deletion. Preserve ordinary
 atomic-store costs and leave immutable-object reclamation independently selected.
+
+Select explicit epoch-fenced immutable journal reclamation with complete bounded
+root discovery, exact-generation deletion, coherent owned-reader refresh and
+zero-default optional caching. Keep append-only modes and expose native/WASM
+retained-history checkpoint handoffs and deterministic concurrency fault cases.

@@ -181,3 +181,17 @@ function checkpointRootTypes(primary: PageDevice, secondary: PageDevice, banks: 
   new MirroredCheckpointRoot(primary, secondary, 2);
   return log.read();
 }
+
+import { ReclaimingPartitionedJournalStore, type ReclamationOptions, type ReclamationResult } from '../types/index.js';
+async function reclamationTypes(provider: JournalMaintenanceStore) {
+  const options: ReclamationOptions = { maxKeys: 4096, maxBytes: 8388608, pageKeys: 128, cacheBytes: 0 };
+  const store = await ReclaimingPartitionedJournalStore.open(provider, { east: provider }, () => 'east', options);
+  const atomic: AtomicJournalStore = store; const initial = await atomic.read(['a']);
+  await atomic.compareExchange(['a'], initial, [['record']]); const result: ReclamationResult | null = await store.collectGarbage();
+  // @ts-expect-error Dedicated metadata must be opened and validated before use.
+  new ReclaimingPartitionedJournalStore();
+  // @ts-expect-error Epochs preserve every u64 bit as canonical decimal strings.
+  const invalid: number | undefined = result?.epoch;
+  return { result, invalid, durable: store.supportsDurableFlush };
+}
+void reclamationTypes;

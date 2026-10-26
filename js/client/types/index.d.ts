@@ -361,3 +361,17 @@ export class PartitionedJournalStore implements AtomicJournalStore {
   read(keys: string[]): Promise<JournalVersion[]>;
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
 }
+
+/** Dedicated blob2 namespaces; collection is caller-selected and never automatic. */
+export interface ReclamationOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; cacheBytes?: number }
+export interface ReclamationResult { epoch: string; examined: number; deleted: number }
+export class ReclaimingPartitionedJournalStore implements AtomicJournalStore {
+  private constructor();
+  static open(catalog: JournalMaintenanceStore, partitions: Record<string, JournalMaintenanceStore>, route: (shard: string) => string, options?: ReclamationOptions): Promise<ReclaimingPartitionedJournalStore>;
+  readonly supportsDurableFlush: boolean;
+  /** 1..31 distinct nonreserved shards; returned groups are owned. */
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+  /** Null means a known competing epoch. Errors can follow acknowledged cuts. */
+  collectGarbage(): Promise<ReclamationResult | null>;
+}

@@ -84,3 +84,7 @@ required-features = ["native-pages"]
 [[example]]
 name = "journal_maintenance"
 required-features = ["etcd"]
+
+[[example]]
+name = "journal_reclamation"
+required-features = ["etcd"]

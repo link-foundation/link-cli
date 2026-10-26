@@ -159,6 +159,14 @@ are using its generations.
 
 ## Reproduce verification
 
+For explicit removal of retired immutable journal objects, select the separately
+opened [epoch-fenced reclamation store](ENGINE-RECLAMATION.md). It requires
+maintenance-capable dedicated new namespaces and supports 1..31 shards per atomic
+group because its epoch occupies one comparison slot. Existing append-only modes
+keep their original behavior. The native and WASM reclamation examples also
+verify retained history, allocator gaps and stale owned-workspace conflicts
+across sequential language handoffs.
+
 The [Rust and C# examples](../examples/cluster-csharp/README.md) and
 [JS example](../js/client/examples/cluster.mjs) use the same journal representation.
 The bounded [integration runner](../experiments/issue-138/etcd-cluster.mjs) launches

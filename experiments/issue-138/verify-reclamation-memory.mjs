@@ -1,0 +1,26 @@
+// Check the deterministic provider independently of the reclamation strategy.
+import assert from 'node:assert/strict';
+import { MemoryMaintenanceStore } from './reclamation-memory.mjs';
+const store = new MemoryMaintenanceStore('test');
+const initial = await store.read(['a', 'b']);
+assert.ok(await store.compareExchange(['a', 'b'], initial, [['a0'], ['b0']]));
+const old = await store.read(['a', 'b']); assert.equal(old[0].generation, old[1].generation);
+old[0].entries[0] = 'caller owned'; assert.equal((await store.read(['a']))[0].entries[0], 'a0');
+assert.ok(await store.compareDelete('a', old[0].generation));
+assert.ok(await store.compareExchange(['a'], await store.read(['a']), [['a1']]));
+assert.ok(BigInt((await store.read(['a']))[0].generation) > BigInt(old[0].generation));
+assert.equal(await store.compareDelete('a', old[0].generation), false);
+assert.equal(await store.compareExchange(['a', 'b'], old, [['bad'], ['bad']]), false);
+assert.equal((await store.read(['b']))[0].entries[0], 'b0');
+await assert.rejects(store.scanNamespace({ maxKeys: 1 }), /complete fake scan limit/);
+const revision = store.revision;
+assert.ok(await store.compareExchange(['b'], await store.read(['b']), [null]));
+assert.equal(store.revision, revision);
+store.on('swap', () => { throw Error('lost response after mutation'); }, { after: true });
+await assert.rejects(store.compareExchange(['b'], await store.read(['b']), [['b1']]), /lost response/);
+assert.equal((await store.read(['b']))[0].entries[0], 'b1');
+assert.equal(store.calls.filter((call) => call.operation === 'swap').length, 5);
+const listing = await store.scanNamespace({ keysOnly: true });
+assert.deepEqual(listing.map((item) => item.key), ['a', 'b']);
+assert.ok(listing.every((item) => item.version.entries.length === 0));
+console.log('PASS deterministic test provider: atomic guards, owned values, non-reused generations/ABA, complete limits, read-only comparisons and mutation-before-response loss. No production collector or durability claim.');

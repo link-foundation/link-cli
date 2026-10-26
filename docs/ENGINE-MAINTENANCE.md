@@ -14,6 +14,10 @@ will never reference it. The existing `PartitionedJournalStore` continues to
 retain immutable objects. Its objects must not be deleted using this API without
 an independently verified publication/reader fencing protocol.
 
+The separately opened [reclamation store](ENGINE-RECLAMATION.md) supplies epoch
+fencing and coherent owned-reader refresh for dedicated new `blob2` namespaces.
+Select that store explicitly when collection is required.
+
 Use a dedicated caller-owned prefix. Every key in it must use the existing shard
 name grammar: 1..128 ASCII letters, digits, dot, dash or underscore. A foreign,
 malformed or unexpected key rejects the entire scan. These methods neither
@@ -108,5 +112,6 @@ The etcd implementation follows its primary
 [Range and transaction API](https://etcd.io/docs/v3.6/learning/api/) and pinned
 [range/count/deletion implementation](https://github.com/etcd-io/etcd/blob/v3.6.5/server/etcdserver/txn/txn.go).
 Those contracts do not prove a higher-level reclamation protocol. See the
-[case-study plan](case-studies/issue-138/MAINTENANCE-PLAN.md) for exact validation
-and unfinished object collection work.
+[maintenance plan](case-studies/issue-138/MAINTENANCE-PLAN.md) for capability
+validation and the [reclamation plan](case-studies/issue-138/RECLAMATION-PLAN.md)
+for the separately selected collector's proof obligations and evidence.

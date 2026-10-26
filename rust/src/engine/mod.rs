@@ -27,6 +27,7 @@ mod object_cache;
 pub mod paged;
 pub mod partitioned;
 mod pessimistic;
+pub mod reclaiming;
 pub mod replication;
 mod rows;
 #[cfg(test)]

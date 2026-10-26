@@ -545,3 +545,21 @@ acceptance criterion continue independently.
     See MIRRORED-ROOT-PLAN.md, mirrored-root{,-before}.txt and the protocol recipe.
     Publication and fresh exact-head CI follow. Complete coverage, physical
     power-loss testing and every wider unmet acceptance criterion remain active.
+
+41. Optional namespace maintenance now supplies complete bounded revision-pinned
+    scans and exact-generation single-send deletion in Rust, C# and JS. Existing
+    atomic providers retain their API; selected codecs initialize on demand.
+    Missing-API failures, 94 independent wire cases and real three-member native/
+    WASM handoffs precede publication. Full suites pass 1,032 native plus six
+    doctests, 631 actual WASM, 2,268 C# per configuration, 359 JS and 221 repository
+    checks. All nine workflows and native platform matrices pass on `44e0fa8`;
+    MAINTENANCE-PLAN.md and maintenance{,-before,-ci}.txt retain exact evidence.
+
+42. Independently selected epoch-fenced reclamation now composes that capability
+    with immutable object publication. Publishers compare the observed epoch;
+    collectors retain their own fence, validate every complete namespace before
+    deletion, protect aliased roots and delete exact listed generations. Owned
+    readers discard whole retired groups and retry once only after both pointer
+    and catalog generation change. Tests and finite models precede implementation;
+    RECLAMATION-PLAN.md tracks complete validation, publication and fresh CI.
+    Wider acceptance gaps remain active throughout this batch.

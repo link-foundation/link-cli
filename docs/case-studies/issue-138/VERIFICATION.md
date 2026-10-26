@@ -3225,3 +3225,78 @@ All nine exact-head workflows pass on maintenance head `44e0fa8`, including
 Linux/macOS/Windows Rust and C# test matrices. See maintenance-ci.txt for run and
 job URLs with timestamps. This validates the maintenance capability; later
 reclamation changes require independent verification.
+
+
+## Selected epoch-fenced object reclamation
+
+`ReclaimingPartitionedJournalStore` now explicitly composes the optional
+maintenance capability in Rust, C# and JS/TS. Every publisher compares the
+observed reclamation epoch alongside its shard guards. Each collector advances
+one fence and validates a complete catalog and every bounded data namespace
+before deleting only unprotected older-epoch objects by exact generation.
+Aliased live keys remain protected across partition names. Owned readers discard
+an entire retired group and refresh/retry once only after both its missing
+pointer and catalog generation change. The independent cache still defaults to
+zero. Existing append-only providers retain their API and behavior.
+
+Actual missing-API controls first fail against `44e0fa8`. Sixty-five independent
+address/epoch/pointer vectors execute in every implementation. Bounded models
+cover 70,859 unique two-writer/two-collector states and retain unsafe negative
+controls without the epoch guard or epoch-specific keys. A separate finite
+reader model exposes a fractured group when refreshing only a missing shard;
+the whole-group model retains five coherent terminal views. These models do not
+prove the production implementation or physical durability.
+
+Test-first regressions additionally expose sparse JS input staging, BOM loss,
+aliased-provider live-object deletion and reused catalog generations. All three
+implementations now retain aliased roots and require both pointer/generation
+changes before refresh. Twenty-four malformed-snapshot controls and eight later
+request-failure controls expose JS errors that hid earlier successful mutations;
+selected composite boundaries now retain unknown outcome and the original cause.
+Caller validation still precedes I/O. See `reclamation-before.txt`.
+
+The complete sequential driver passes from 2026-10-26T21:49:03Z through
+22:17:42Z. Cargo uses one compiler with reduced debug information, .NET a
+640 MiB heap, and actual-WASM modules a verified 256 MiB linear-memory cap.
+No OOM event occurs. Complete reports retain their original denominators:
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,057 plus six doctests | 14,480 / 15,307 | 2,737 / 3,164 | 1,868 / 2,008 |
+| Actual WASM, linked source | 656 | 11,667 / 14,037 | 2,294 / 2,747 | 1,470 / 1,848 |
+| C# Debug | 2,307 | 8,627 / 8,921 | 4,851 / 5,228 | not reported |
+| C# Release | 2,307 | 6,627 / 6,813 | 4,795 / 5,191 | not reported |
+| JS production modules | 518 | 100% | 100% | 100% |
+
+Eighteen native child entries execute through bounded parent tests; one legacy
+doctest remains ignored. Rust's new store measures 198/207 lines, 37/46 branches
+and 14/14 functions; its codec measures 163/166, 47/50 and 22/24; its collector
+measures 57/58, 14/14 and 3/4 in both native and actual WASM. C# covers all new
+production lines; codec and store branches retain uncovered cases. Every new JS
+module measures 100% lines/branches/functions, as does the complete JS production
+scope. The actual-WASM engine wrapper remains at 263/263 lines, 6/6 branches and
+50/50 functions; linked coverage remains incomplete. Whole-project 100% is open.
+
+A freshly built bounded WASM package passes Rust → C# → Node → Bun → Deno
+handoffs, followed by Rust → C# → Node after leader loss. Each checks atomic
+two-shard checkpoints, every retained revision/name, deleted allocator gaps,
+owned retired workspaces and stale commit conflicts. Ten before/after response
+loss cases each send one mutation and recover through fresh state; whole-group
+refresh, warm-cache data outage and majority loss also pass. Every harness child
+is reaped. Etcd supplies its declared persistence; network/process failures do
+not certify physical device power loss.
+
+Bun/Deno each pass all159 selected cases. TypeScript, strict native/WASM Clippy,
+formatting, independent vector regeneration, deterministic-provider controls,
+SQLite optionality, changesets, source limits, 221 repository checks, actionlint,
+ShellCheck and whitespace checks pass. Latest main is included; refreshed issue/
+PR comment/review endpoints show no new request. GitHub still rejects the
+>300-file PR diff with HTTP406; preserved diagnostics and local base/batch diffs
+support review. `RECLAMATION-PLAN.md`, `reclamation.txt` and the runnable
+`ENGINE-RECLAMATION.md` recipe retain exact evidence and selected costs.
+
+Namespace ownership and preservation of nonreused generation/epoch identities
+remain application/provider contracts. Borrowed physical roots are unsupported;
+complete listing bounds, full-journal writes/replay and catalog contention limit
+scale. Fresh exact-head CI follows publication. Every broader unmet acceptance
+criterion remains active and the PR remains draft and unmerged.

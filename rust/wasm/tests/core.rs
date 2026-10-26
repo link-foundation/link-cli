@@ -32,6 +32,9 @@ mod checkpoint_pages;
 #[path = "../../tests/engine_partitioned_tests.rs"]
 mod partitioned;
 
+#[path = "../../tests/engine_reclaiming_tests.rs"]
+mod reclaiming;
+
 #[path = "../../tests/engine_readset_tests.rs"]
 mod readset;
 

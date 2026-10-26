@@ -278,6 +278,12 @@ zero retains no objects. Catalog reads and publication checks always stay fresh;
 every hit returns an independent array. See [cache costs and ownership](../../docs/ENGINE-OBJECT-CACHE.md)
 and [coordinated network engines](../../docs/ENGINE-CLUSTERS.md).
 
+`await ReclaimingPartitionedJournalStore.open(catalog, partitions, route, options)`
+selects explicit epoch-fenced reclamation on dedicated maintenance-capable
+namespaces. Call `collectGarbage()` to retire old unreferenced objects; the default
+partitioned store retains its objects. See [protocol, bounded scans, owned reads
+and native/WASM handoff examples](../../docs/ENGINE-RECLAMATION.md).
+
 `const branch = engine.fork(options, journal)` seeds an independent journal.
 Edit it through `branch.engine.begin()`, then call `branch.merge()` to atomically
 merge its committed rows into the parent. Save `branch.mergeBaseRecord()` after

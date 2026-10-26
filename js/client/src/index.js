@@ -28,3 +28,5 @@ export { ANY, toAddress } from './operations.js';
 export { ClusterEngine, ClusterTransaction, EtcdJournalStore } from './cluster.js';
 export { PartitionedJournalStore } from './partitioned.js';
 export { DeltaCommitLog } from './engine-delta.js';
+
+export { ReclaimingPartitionedJournalStore } from './reclaiming.js';

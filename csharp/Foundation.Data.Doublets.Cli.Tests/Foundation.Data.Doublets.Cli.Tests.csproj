@@ -49,6 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="../../docs/protocol/reclamation-v1.json" Link="reclamation-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/journal-maintenance-v1.json" Link="journal-maintenance-v1.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

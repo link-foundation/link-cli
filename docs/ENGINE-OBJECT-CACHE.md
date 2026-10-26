@@ -52,9 +52,12 @@ or delete its immutable objects. A hit reuses previously verified contents: it
 can succeed during a data-store outage, and cannot detect later out-of-protocol
 tampering with that object. The catalog must still be available. FNV addressing
 does not authenticate hostile stores. Old readers can retain pointers after
-publication; no garbage collector or reclamation proof is supplied. The cache
-does not bound persistent old/orphan objects or reduce complete updated-journal
-writes. Those storage and scaling requirements remain open.
+publication; this append-only decorator supplies no collector. The separately
+opened [reclamation store](ENGINE-RECLAMATION.md) uses epoch-fenced `blob2`
+objects and coherent owned-reader refresh, with the same optional cache budget.
+The append-only cache does not bound persistent old/orphan objects or reduce
+complete updated-journal writes. The selected collector still needs complete
+bounded namespace listings; it retains full-journal staging and publication costs.
 
 The Rust implementation reuses [`lru` 0.19.0](https://github.com/jeromefroe/lru-rs),
 with default features disabled to use standard hashing. Its ordering is bounded

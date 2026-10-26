@@ -341,3 +341,31 @@ an ordered map, and carry merges can rewrite complete runs. No throughput or
 constant-write-cost improvement is implied. See [costs](../../ENGINE-SORTED-RUNS.md)
 and [the verification plan](SORTED-RUNS-PLAN.md). Physical SSTables, background
 compaction and legacy mapped-file repair remain unfinished.
+
+## Fenced immutable-object reclamation (2026-10-26)
+
+Rechecked Iceberg's [snapshot retention and commit requirements](https://iceberg.apache.org/spec/#snapshot-retention-policy):
+retention considers branch/tag references and retained ancestors; files may be
+removed only when remaining live snapshots no longer need them. Reintroducing
+deleted files can invalidate incremental cleanup. Metadata commits must use the
+current version atomically. This motivates inventorying every durable root,
+including retained history, before considering physical deletion.
+
+Rechecked the [etcd v3.6 API](https://etcd.io/docs/v3.6/learning/api/):
+`version` resets after deletion, whereas `mod_revision` identifies a modification.
+Transactions evaluate comparisons and apply their selected operations atomically.
+The maintenance adapter consequently uses modification revisions, including for
+conditional deletion; restoring a deployment must preserve their non-reuse or
+migrate into new namespaces.
+
+Design inference for this journal representation: root discovery alone cannot
+exclude a publisher that staged an object before discovery but publishes after
+it. A separately selected catalog epoch fences those publishers. Epoch-specific
+object names prevent later writers from resurrecting a candidate; exact object
+generations protect replacements. Owned readers retry the whole captured group
+once if retirement races fetching it. Current journals retain revision/branch
+history, and no borrowed external physical root is exposed. These are local
+protocol choices, rather than Iceberg compatibility or a claim that its cleanup
+algorithm has been implemented. Independent bounded models include unsafe
+negative controls, and public-API fault schedules test the implementation.
+See [the protocol, proof assumptions and costs](../../ENGINE-RECLAMATION.md).
