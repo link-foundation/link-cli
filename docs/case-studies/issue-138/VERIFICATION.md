@@ -1,25 +1,39 @@
 # Verification record
 
-Latest complete Rust/C#/JS validation includes import allocation errors:
-963 native Rust tests and six doctests, 556 actual-WASM tests, 2,172 C# tests
-per Debug/Release configuration and 209 JS tests on Node 26 pass, plus strict
-types and 221 repository checks. All 48 physical/policy configurations pass
+Latest Rust validation adds portable archive and finite stream contracts:
+967 native Rust tests and six doctests and 571 actual-WASM tests pass. Unchanged
+C#/JS production retains the preceding import-allocation batch's 2,172 C# tests
+per Debug/Release configuration and 209 JS tests on Node 26, plus strict types.
+All 221 repository checks pass. All 48 physical/policy configurations pass
 288 shared-file writers, including mirrored damaged-copy repair. The preceding
 sorted-run batch additionally tested Node 24.
 
 Complete native coverage is 13,012/13,788 lines, 2,431/2,842 branches and
-1,661/1,789 functions. Actual WASM is 10,406/12,857 lines, 2,041/2,491 branches
-and 1,321/1,709 functions. C# Debug is 8,059/8,353 lines and 4,356/4,722
+1,661/1,789 functions. Actual WASM is 10,472/12,857 lines, 2,043/2,493 branches
+and 1,331/1,709 functions. C# Debug is 8,059/8,353 lines and 4,356/4,722
 branches; Release is 6,179/6,365 lines and 4,304/4,689 branches. JS production
 modules enforce 100% lines/branches/functions; WASM wrapper modules measure
 383/383 lines, 20/20 branches and 73/73 functions. Complete-project 100% remains
-unfinished. See IMPORT-ALLOCATION-PLAN.md and import-allocation.txt for commands
-and complete coverage. The import-allocation-before.txt log preserves six native
+unfinished. See ARCHIVE-STREAM-PLAN.md and archive-stream.txt for commands and
+complete Rust coverage, and IMPORT-ALLOCATION-PLAN.md and import-allocation.txt
+for the preceding complete C#/JS runs. The import-allocation-before.txt log preserves six native
 panics and five portable ignored faults before the four production call-site
 changes. Named imports remain passing controls; no C# production change is
 needed. Six portable import cases run in actual WASM. Native fixtures require
-cleanup, repeated imports, following writes and two exact reopenings. Fresh
-exact-head CI follows publication.
+cleanup, repeated imports, following writes and two exact reopenings. All nine
+workflows pass at import head 847ed01, including native Linux/macOS/Windows;
+import-allocation-ci.txt preserves exact evidence. Archive test changes require
+fresh exact-head CI after publication.
+
+The archive batch preserves all sixteen original native contracts: ten now run
+both natively and inside actual WASM and six retain their native remote/CLI/file
+coverage. Four new portable stream groups check every finite reader/writer fault
+boundary in the 30-byte golden vector, truncation/trailing bytes, short I/O,
+preserved rows/names and following use. A WASM-only control verifies unsupported
+filesystem errors and successful following in-memory use. No new production
+defect is claimed. Native archive lines/branches/functions reach 100%; actual
+WASM measures 129/131 lines, 5/6 branches and 18/18 functions. Whole-project
+coverage remains below target.
 
 The preceding trigger/query composition batch passes all nine workflows at
 c530a6a, including Linux/macOS/Windows; fallible-composition-ci.txt retains exact

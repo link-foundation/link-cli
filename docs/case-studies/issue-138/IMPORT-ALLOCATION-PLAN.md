@@ -16,7 +16,7 @@ Requirement mapping: R1/R6/R7/R8/R9/R12. All wider criteria stay active.
 - [x] Keep every address small in pre-fix probes. Never exercise a potentially
       huge explicit allocation without finite process memory limits.
 - [x] Run required local checks and retain complete coverage denominators.
-- [ ] Publish an atomic commit and inspect fresh CI at its exact SHA.
+- [x] Publish an atomic commit and inspect fresh CI at its exact SHA.
 
 Before production changes, six real-filesystem cases panic, four portable cases
 ignore faults and one further portable case ignores reallocation failure after
@@ -27,9 +27,11 @@ All 28 focused Rust composition cases pass. Complete local suites pass: 963 nati
 plus six doctests, 556 actual-WASM, 2,172 C# per Debug/Release configuration,
 209 JS and 221 repository checks. All 48 physical/policy configurations pass
 288 cross-language writers with mirrored repair. See import-allocation.txt for
-commands and complete official coverage. Fresh exact-head CI follows publication.
+commands and complete official coverage. All nine workflows pass on 847ed01,
+including native Linux/macOS/Windows. import-allocation-ci.txt preserves exact
+heads, creation timestamps and workflow URLs.
 
 This follows the independently verified fallible query/trigger bridge batch.
-Local import checks pass; fresh CI is required after publication.
+Local import checks and exact-head CI pass; later commits require fresh CI.
 An error does not imply atomic undo of earlier imported rows or known durability;
 the selected owner's cleanup and recovery protocol remains authoritative.

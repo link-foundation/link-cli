@@ -438,4 +438,18 @@ following writes and exact reopening; C# is a passing exception control without
 production changes. All 48 physical/policy choices pass 288 shared-file writers
 with mirrored repair. See IMPORT-ALLOCATION-PLAN.md and import-allocation.txt for
 complete coverage and the distinction between error propagation and atomic undo.
-Fresh exact-head CI follows publication. Every wider unmet criterion stays active.
+All nine workflows pass at 847ed01, including native Linux/macOS/Windows;
+import-allocation-ci.txt preserves exact heads, creation timestamps and URLs.
+Every wider unmet criterion stays active.
+
+Portable archive contracts (R1/R7/R8/R9/R12) now run ten existing compatibility
+cases in actual WASM while preserving six native remote/CLI/filesystem cases.
+Four finite stream groups check 31 read-failure boundaries, 30 truncated prefixes,
+three trailing bytes, 30 partial-write failures and short successful I/O, with
+exact rows/names and following use. A WASM-only file-helper control verifies the
+unsupported filesystem capability. No production change is claimed. Complete
+Rust suites pass 967 native plus six doctests and 571 actual-WASM tests; complete
+official measured lines are 94.37% and 81.45%, below R8's target. See
+ARCHIVE-STREAM-PLAN.md and archive-stream.txt. C#/JS production and the preceding
+complete validation are retained unchanged. Fresh exact-head CI follows
+publication; every wider unmet criterion remains active.

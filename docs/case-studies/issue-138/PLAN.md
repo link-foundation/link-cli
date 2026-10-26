@@ -407,5 +407,19 @@ complete the overall issue or authorize marking the draft ready early.
     209 JS and 221 repository checks. Cleanup, retries, following writes and two
     exact native reopenings pass. All 48 physical/policy choices pass 288 shared
     file writers with mirrored repair. See IMPORT-ALLOCATION-PLAN.md and
-    import-allocation{,-before}.txt. Fresh exact-head CI follows publication.
+    import-allocation{,-before}.txt. All nine workflows pass at 847ed01,
+    including native Linux/macOS/Windows; import-allocation-ci.txt preserves
+    exact heads, creation timestamps and workflow URLs.
     Complete 100% coverage and every wider unmet acceptance criterion stay active.
+
+33. Archive compatibility now shares ten existing native contracts with actual
+    WASM while retaining all six native remote/CLI/filesystem contracts. Four
+    finite stream groups check every read/write fault boundary, truncation,
+    trailing bytes, one-byte I/O, exact rows/names, retries and following writes.
+    A WASM-only file-helper capability control preserves path context and store
+    reuse. No new production defect or production change is claimed. Complete
+    suites pass 967 native plus six doctests and 571 actual-WASM tests, with
+    complete official coverage of 94.37% and 81.45% lines respectively. All 221
+    repository checks, optional-SQL guards and strict native/WASM Clippy pass.
+    See ARCHIVE-STREAM-PLAN.md and archive-stream.txt. Publication requires fresh
+    exact-head CI; whole-project 100% and every wider unmet criterion stay active.

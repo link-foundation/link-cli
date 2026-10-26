@@ -7,6 +7,9 @@ mod test_store;
 #[path = "../../tests/common/version_metadata.rs"]
 mod version_metadata;
 
+#[path = "../../tests/common/store_archive.rs"]
+mod archive_fixture;
+
 #[path = "../../tests/query_processor_tests.rs"]
 mod query_processor;
 
@@ -117,3 +120,9 @@ mod transactions_replay_owner;
 
 #[path = "../../tests/fallible_composition_tests.rs"]
 mod fallible_composition;
+
+#[path = "../../tests/store_archive_portable_tests.rs"]
+mod store_archive;
+
+#[path = "../../tests/store_archive_stream_tests.rs"]
+mod store_archive_stream;
