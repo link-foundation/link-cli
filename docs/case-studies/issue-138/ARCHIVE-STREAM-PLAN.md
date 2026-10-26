@@ -18,8 +18,10 @@ Requirement mapping: R1/R7/R8/R9/R12. Every wider criterion stays active.
       context, preserve the store and permit following in-memory archive use.
 - [x] Execute the shared contracts inside actual WASM, verify bounded memory,
       strict lint/format and complete official coverage denominators.
-- [ ] Preserve complete local evidence, review the atomic diff, publish on the
+- [x] Preserve complete local evidence, review the atomic diff, publish on the
       prepared branch and inspect fresh CI at its exact SHA.
+- [ ] Investigate the Windows process-exit deadlines and verify fresh CI after
+      diagnostic evidence identifies or excludes the suspected stall.
 
 Input parsing/validation must finish before import mutation. This contract does
 not assert atomic undo after storage allocation, update, name or save failures.
@@ -49,3 +51,10 @@ branches, 100% WASM functions; filesystem success is unavailable on that target.
 The three wrapper modules remain 100%, separately from complete linked totals.
 C#/JS production is unchanged; the preceding import-allocation batch's complete
 validation remains the evidence for those surfaces, not a newly executed run.
+
+At d98c2ee, eight workflows pass, including actual WASM and C#. Rust Linux,
+macOS, coverage and lint pass, but four Windows version process-exit cases hit
+the unchanged ten-second child deadline. The original logs establish no root
+cause. archive-stream-ci-before.txt preserves exact workflow URLs and failure
+lines. The next native harness preserves child stdout/stderr and elapsed phases
+without increasing the deadline; fresh Windows execution remains required.

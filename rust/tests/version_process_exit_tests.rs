@@ -10,28 +10,33 @@ use std::time::{Duration, Instant};
 
 const TOPIC: &str = "topic|:parent=\u{96ea}\0";
 fn open(directory: &Path) -> Result<VersionControlDecorator> {
+    let trace = std::env::var_os("LINK_VERSION_EXIT_DIRECTORY").is_some();
     VersionControlDecorator::new(
         TransactionsDecorator::new(
             NamedTypesDecorator::new(directory.join("data/data.links"), false)?,
             NamedTypesDecorator::new(directory.join("log.links"), false)?,
             LogRetentionPolicy::Infinite,
             CommitMode::Sync,
-            false,
+            trace,
         )?,
         NamedTypesDecorator::new(directory.join("branches.links"), false)?,
-        false,
+        trace,
     )
 }
 fn verify(mode: &str, automatic: bool, names: bool) -> Result<()> {
     let directory = tempfile::tempdir()?;
+    // Preserve both streams without an unread pipe or a shared runner output
+    // handle. Include progress on failure while keeping the existing deadline.
+    let diagnostics_path = directory.path().join("child.log");
+    let diagnostics = std::fs::File::create(&diagnostics_path)?;
     let mut child = Command::new(std::env::current_exe()?)
         .args(["--exact", "version_exit_child", "--ignored", "--nocapture"])
         .env("LINK_VERSION_EXIT_DIRECTORY", directory.path())
         .env("LINK_VERSION_EXIT_MODE", mode)
         .env("LINK_VERSION_EXIT_AUTOMATIC", automatic.to_string())
         .env("LINK_VERSION_EXIT_NAMES", names.to_string())
-        .stdout(Stdio::null())
-        .stderr(Stdio::inherit())
+        .stdout(Stdio::from(diagnostics.try_clone()?))
+        .stderr(Stdio::from(diagnostics))
         .spawn()?;
     let deadline = Instant::now() + Duration::from_secs(10);
     let status = loop {
@@ -41,14 +46,24 @@ fn verify(mode: &str, automatic: bool, names: bool) -> Result<()> {
         if Instant::now() >= deadline {
             child.kill()?;
             child.wait()?;
-            bail!("finite version-exit child did not finish: {mode}/{automatic}");
+            bail!(
+                "finite version-exit child did not finish: {mode}/{automatic}/{names}.\n{}",
+                std::fs::read_to_string(&diagnostics_path)?
+            );
         }
         std::thread::sleep(Duration::from_millis(10));
     };
     assert!(
         status.success(),
-        "version-exit child failed at {mode}/{automatic}"
+        "version-exit child failed at {mode}/{automatic}/{names}: {}",
+        std::fs::read_to_string(&diagnostics_path)?
     );
+    if std::env::var_os("LINK_VERSION_EXIT_SHOW_DIAGNOSTICS").is_some() {
+        eprintln!(
+            "{mode}/{automatic}/{names}: {}",
+            std::fs::read_to_string(&diagnostics_path)?
+        );
+    }
     let manifest = std::fs::read_to_string(directory.path().join("manifest"))?;
     let fields: Vec<_> = manifest.split(',').collect();
     let id: u32 = fields[0].parse()?;
@@ -166,32 +181,46 @@ fn abrupt_name_only_versions_recover_exact_names_and_attribution() -> Result<()>
 #[test]
 #[ignore = "finite child process entry point"]
 fn version_exit_child() -> Result<()> {
+    let started = Instant::now();
+    let phase = |name: &str| eprintln!("version-exit +{:?}: {name}", started.elapsed());
     let Some(directory) = std::env::var_os("LINK_VERSION_EXIT_DIRECTORY") else {
         return Ok(());
     };
     let directory = Path::new(&directory);
+    phase("create directory");
     std::fs::create_dir(directory.join("data"))?;
+    phase("open");
     let mut vc = open(directory)?;
+    phase("create row");
     let id = vc.create_and_update(11, 12)?;
+    phase("set original name");
     vc.set_name(id, "original")?;
     let original = vc.current_sequence();
+    phase("create branch");
     vc.branch(TOPIC, None)?;
+    phase("switch branch");
     vc.switch_branch(TOPIC)?;
+    phase("save seed");
     vc.save()?;
+    phase("seed ready");
     let mode = std::env::var("LINK_VERSION_EXIT_MODE")?;
     let automatic = std::env::var("LINK_VERSION_EXIT_AUTOMATIC")? == "true";
     let names = std::env::var("LINK_VERSION_EXIT_NAMES")? == "true";
     if !automatic {
+        phase("begin explicit");
         vc.begin_transaction()?;
     }
     if mode == "checkpoint" {
+        phase("move checkpoint path");
         std::fs::rename(directory.join("data"), directory.join("moved"))?;
     }
+    phase("attempt change");
     let result = if names {
         vc.set_name(id, "changed 雪|\0\n").map(|_| ())
     } else {
         vc.update(id, 21, 22).map(|_| ())
     };
+    phase("change returned");
     let outcome = if automatic {
         result.map(|_| ())
     } else {
@@ -199,11 +228,14 @@ fn version_exit_child() -> Result<()> {
         if mode == "pending" {
             Ok(())
         } else if mode == "rollback" {
+            phase("rollback");
             vc.rollback()
         } else {
+            phase("commit");
             vc.commit()
         }
     };
+    phase("decision returned");
     if mode == "checkpoint" {
         // Restore all paths before exiting. The error comes from the actual
         // checkpoint and no destructor/cleanup is used to finish publication.
@@ -212,9 +244,11 @@ fn version_exit_child() -> Result<()> {
     } else {
         outcome?;
         if mode == "pending" || mode == "rollback" {
+            phase("save pending or rollback");
             vc.save()?;
         }
     }
+    phase("write manifest");
     std::fs::write(
         directory.join("manifest"),
         format!(
@@ -222,5 +256,6 @@ fn version_exit_child() -> Result<()> {
             vc.transactions().last_logged_sequence()
         ),
     )?;
+    phase("exit without destructors");
     std::process::exit(0);
 }
