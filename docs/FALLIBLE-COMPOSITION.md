@@ -30,6 +30,20 @@ The fallible methods also surface a trigger failure parked by an earlier
 infallible call. Trigger schema, text and payload construction propagates
 allocation errors rather than entering an infallible transaction bridge.
 
+Text imports use the same fallible bridge for explicit addresses and anonymous
+nested pairs. Binary archives reserve their addresses through that bridge before
+applying rows and names. If a selected transformation deletes a reserved row,
+the import update also propagates a failure while reserving it again. Named
+imports retain their existing fallible allocation. Public import signatures,
+accepted text shapes and binary packet formats stay the same.
+
+Parsing and structural validation finish before import mutation, but an
+allocation failure can occur after earlier rows have been imported. An import
+error is not an all-or-nothing transaction. Callers that need atomic import
+must use the selected transaction boundary and its cleanup/recovery protocol.
+Retries reuse existing rows and names, subject to the selected transformations;
+they do not undo effects from an earlier attempt.
+
 Named query planning also propagates failures from temporary address probes.
 Successful probes create and then delete temporary rows in reverse order to
 restore allocation order. They still execute the selected adapter's writes
@@ -51,8 +65,8 @@ change adds no background service, backend or dependency.
 
 C# uses exceptions throughout this write path. Its regression controls verify
 that the original allocation exception survives trigger/query composition and
-that a following write persists after the fault is removed. The reproduced
-infallible-bridge panic concerns Rust.
+text/archive import, and that a following write persists after the fault is
+removed. The reproduced infallible-bridge panic concerns Rust.
 
 See the [case study](case-studies/issue-138/FALLIBLE-COMPOSITION-PLAN.md) for the
 fault matrix and [transaction recovery](ENGINE-STRATEGIES.md) for owner cleanup.

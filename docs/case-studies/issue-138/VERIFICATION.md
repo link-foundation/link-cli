@@ -1,27 +1,30 @@
 # Verification record
 
-Latest complete Rust/C#/JS validation includes fallible allocation composition:
-949 native Rust tests and six doctests, 550 actual-WASM tests, 2,169 C# tests
+Latest complete Rust/C#/JS validation includes import allocation errors:
+963 native Rust tests and six doctests, 556 actual-WASM tests, 2,172 C# tests
 per Debug/Release configuration and 209 JS tests on Node 26 pass, plus strict
 types and 221 repository checks. All 48 physical/policy configurations pass
 288 shared-file writers, including mirrored damaged-copy repair. The preceding
 sorted-run batch additionally tested Node 24.
 
-Complete native coverage is 13,011/13,788 lines, 2,427/2,846 branches and
-1,661/1,789 functions. Actual WASM is 10,329/12,836 lines, 2,033/2,487 branches
-and 1,311/1,706 functions. C# Debug is 8,051/8,353 lines and 4,352/4,722
-branches; Release is 6,175/6,365 lines and 4,301/4,689 branches. JS production
+Complete native coverage is 13,012/13,788 lines, 2,431/2,842 branches and
+1,661/1,789 functions. Actual WASM is 10,406/12,857 lines, 2,041/2,491 branches
+and 1,321/1,709 functions. C# Debug is 8,059/8,353 lines and 4,356/4,722
+branches; Release is 6,179/6,365 lines and 4,304/4,689 branches. JS production
 modules enforce 100% lines/branches/functions; WASM wrapper modules measure
 383/383 lines, 20/20 branches and 73/73 functions. Complete-project 100% remains
-unfinished. See FALLIBLE-COMPOSITION-PLAN.md and fallible-composition.txt for
-commands and complete coverage. The fallible-composition-before.txt log preserves
-ten filesystem panics and two portable regressions before the production fix.
-Four portable contracts now cover successful/no-op triggers,
-eleven bookkeeping faults and parked errors; five C# cases are passing exception
-controls, without C# production changes. Native fixtures verify cleanup,
-following writes and two exact reopenings. Fresh exact-head CI is still required.
-All nine workflows pass at preceding sorted-run head a1f12fec, including
-Linux/macOS/Windows; sorted-runs-ci.txt retains exact heads and timestamps.
+unfinished. See IMPORT-ALLOCATION-PLAN.md and import-allocation.txt for commands
+and complete coverage. The import-allocation-before.txt log preserves six native
+panics and five portable ignored faults before the four production call-site
+changes. Named imports remain passing controls; no C# production change is
+needed. Six portable import cases run in actual WASM. Native fixtures require
+cleanup, repeated imports, following writes and two exact reopenings. Fresh
+exact-head CI follows publication.
+
+The preceding trigger/query composition batch passes all nine workflows at
+c530a6a, including Linux/macOS/Windows; fallible-composition-ci.txt retains exact
+evidence. All nine workflows also pass at preceding sorted-run head a1f12fec;
+sorted-runs-ci.txt retains exact heads and timestamps.
 
 This is evidence for [PR 139](https://github.com/link-foundation/link-cli/pull/139),
 not a claim that the open-ended issue is complete. Commands run with one Cargo

@@ -1,0 +1,137 @@
+Import allocation: preserved pre-fix regressions
+PR: https://github.com/link-foundation/link-cli/pull/139
+Production baseline: c530a6a1a93ab464669735b44679fbaf9d9cae11
+Tests were added before changing the four import allocation call sites.
+Explicit imported addresses are at most 8; all probes use dedicated finite stores.
+File target: cargo test --manifest-path rust/Cargo.toml --all-features --test fallible_composition_file_tests import_ -- --nocapture
+Portable target: cargo test --manifest-path rust/Cargo.toml --all-features --test fallible_composition_tests import_ -- --nocapture
+Reallocation target additionally isolates import_reallocation after adding that test.
+First file run: exit 101; six panics, two passing named-import controls.
+First portable run: exit 101; four ignored faults, one passing named control.
+Reallocation run: exit 101; one ignored fault after a once trigger removes the reserved row.
+Following assertions in these tests also cover retries and successful imports.
+No unsupported huge address is exercised in a pre-fix probe.
+
+Complete original file log:
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 10.05s
+     Running tests/fallible_composition_file_tests.rs (rust/target/debug/deps/fallible_composition_file_tests-8e77dbd6d2eb86e5)
+
+running 8 tests
+
+thread 'import_transaction_explicit_returns_io_error' (388692) panicked at src/named_type_links.rs:349:14:
+TransactionsDecorator::ensure_created failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpTiExgL/log: Is a directory (os error 21)")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'import_transaction_explicit_returns_io_error' (388692) panicked at tests/fallible_composition_file_tests.rs:71:5:
+import-explicit must return its journal error, got Err(Any { .. })
+test import_transaction_explicit_returns_io_error ... FAILED
+
+thread 'import_transaction_nested_returns_io_error' (388694) panicked at src/named_type_links.rs:388:14:
+TransactionsDecorator::get_or_create failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpecvDXp/log: Is a directory (os error 21)")
+
+thread 'import_transaction_nested_returns_io_error' (388694) panicked at tests/fallible_composition_file_tests.rs:71:5:
+import-nested must return its journal error, got Err(Any { .. })
+
+thread 'import_transaction_archive_returns_io_error' (388691) panicked at src/named_type_links.rs:349:14:
+TransactionsDecorator::ensure_created failed in NamedTypeLinks bridge: StorageError("Failed to replace database: /tmp/.tmpuGCP0p/log: Is a directory (os error 21)")
+test import_transaction_nested_returns_io_error ... FAILED
+
+thread 'import_transaction_archive_returns_io_error' (388691) panicked at tests/fallible_composition_file_tests.rs:71:5:
+import-archive must return its journal error, got Err(Any { .. })
+test import_transaction_archive_returns_io_error ... FAILED
+
+thread 'import_version_explicit_returns_io_error' (388696) panicked at src/version_control/mod.rs:306:14:
+VersionControlDecorator::ensure_created failed: Storage error: Failed to replace database: /tmp/.tmpkW3ZUA/log: Is a directory (os error 21)
+
+thread 'import_version_explicit_returns_io_error' (388696) panicked at tests/fallible_composition_file_tests.rs:71:5:
+import-explicit must return its journal error, got Err(Any { .. })
+test import_version_explicit_returns_io_error ... FAILED
+
+thread 'import_version_archive_returns_io_error' (388695) panicked at src/version_control/mod.rs:306:14:
+VersionControlDecorator::ensure_created failed: Storage error: Failed to replace database: /tmp/.tmpYgEJGw/log: Is a directory (os error 21)
+
+thread 'import_version_archive_returns_io_error' (388695) panicked at tests/fallible_composition_file_tests.rs:71:5:
+import-archive must return its journal error, got Err(Any { .. })
+test import_version_archive_returns_io_error ... FAILED
+
+thread 'import_version_nested_returns_io_error' (388698) panicked at src/named_type_links.rs:475:14:
+VersionControlDecorator::get_or_create failed in NamedTypeLinks bridge: Storage error: Failed to replace database: /tmp/.tmpNwYbFf/log: Is a directory (os error 21)
+
+thread 'import_version_nested_returns_io_error' (388698) panicked at tests/fallible_composition_file_tests.rs:71:5:
+import-nested must return its journal error, got Err(Any { .. })
+test import_version_nested_returns_io_error ... FAILED
+test import_transaction_named_control ... ok
+test import_version_named_control ... ok
+
+failures:
+
+failures:
+    import_transaction_archive_returns_io_error
+    import_transaction_explicit_returns_io_error
+    import_transaction_nested_returns_io_error
+    import_version_archive_returns_io_error
+    import_version_explicit_returns_io_error
+    import_version_nested_returns_io_error
+
+test result: FAILED. 2 passed; 6 failed; 0 ignored; 0 measured; 10 filtered out; finished in 1.71s
+
+error: test failed, to rerun pass `--test fallible_composition_file_tests`
+
+Complete original portable log:
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.70s
+     Running tests/fallible_composition_tests.rs (rust/target/debug/deps/fallible_composition_tests-4dae26506d557738)
+
+running 5 tests
+
+thread 'import_explicit_allocation_returns_errors' (388841) panicked at tests/fallible_composition_tests.rs:311:5:
+import-explicit: must return allocation fault 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test import_explicit_allocation_returns_errors ... FAILED
+
+thread 'import_nested_later_allocation_returns_errors' (388844) panicked at tests/fallible_composition_tests.rs:311:5:
+import-nested: must return allocation fault 2
+
+thread 'import_archive_allocation_returns_errors' (388840) panicked at tests/fallible_composition_tests.rs:311:5:
+import-archive: must return allocation fault 1
+test import_nested_later_allocation_returns_errors ... FAILED
+
+thread 'import_nested_allocation_returns_errors' (388843) panicked at tests/fallible_composition_tests.rs:311:5:
+import-nested: must return allocation fault 1
+test import_nested_allocation_returns_errors ... FAILED
+test import_archive_allocation_returns_errors ... FAILED
+test import_named_allocation_control ... ok
+
+failures:
+
+failures:
+    import_archive_allocation_returns_errors
+    import_explicit_allocation_returns_errors
+    import_nested_allocation_returns_errors
+    import_nested_later_allocation_returns_errors
+
+test result: FAILED. 1 passed; 4 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--test fallible_composition_tests`
+
+Complete original reallocation log:
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.21s
+     Running tests/fallible_composition_tests.rs (rust/target/debug/deps/fallible_composition_tests-4dae26506d557738)
+
+running 1 test
+
+thread 'import_reallocation_after_trigger_deletion_returns_errors' (389020) panicked at tests/fallible_composition_tests.rs:417:5:
+reallocation must return the second fault
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test import_reallocation_after_trigger_deletion_returns_errors ... FAILED
+
+failures:
+
+failures:
+    import_reallocation_after_trigger_deletion_returns_errors
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `--test fallible_composition_tests`

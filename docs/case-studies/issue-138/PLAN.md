@@ -394,6 +394,18 @@ complete the overall issue or authorize marking the draft ready early.
     Cleanup, following writes and two exact native reopenings pass. See
     FALLIBLE-COMPOSITION-PLAN.md and fallible-composition{,-before}.txt. All 48
     physical/policy choices pass 288 shared-file writers with mirrored repair.
-    Fresh exact-head CI remains in progress.
+    All nine workflows pass at c530a6a, including Linux/macOS/Windows;
+    fallible-composition-ci.txt preserves exact evidence.
     Import allocation bypasses are traced separately in IMPORT-ALLOCATION-PLAN.md;
-    those and every wider unmet acceptance criterion stay active.
+    their fix is recorded in step 32. Every wider unmet criterion stays active.
+
+32. Text and archive imports now use fallible allocation for explicit addresses,
+    anonymous nested pairs and reallocation after a selected trigger deletes a
+    reserved row. Six native panics and five portable ignored faults first fail;
+    named-import controls retain their passing behavior. Full local suites pass
+    963 native plus six doctests, 556 actual-WASM, 2,172 C# per configuration,
+    209 JS and 221 repository checks. Cleanup, retries, following writes and two
+    exact native reopenings pass. All 48 physical/policy choices pass 288 shared
+    file writers with mirrored repair. See IMPORT-ALLOCATION-PLAN.md and
+    import-allocation{,-before}.txt. Fresh exact-head CI follows publication.
+    Complete 100% coverage and every wider unmet acceptance criterion stay active.

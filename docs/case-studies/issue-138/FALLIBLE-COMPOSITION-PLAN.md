@@ -14,7 +14,7 @@ Requirement mapping: R1/R6/R7/R8/R9/R12. Wider acceptance criteria stay active.
 - [x] Verify the C# exception-propagation control without claiming its API has
       the Rust Result/infallible-bridge defect.
 - [x] Run focused then complete local suites, coverage and required checks.
-- [ ] Publish an atomic change, update PR 139 and inspect fresh exact-head CI.
+- [x] Publish an atomic change, update PR 139 and inspect fresh exact-head CI.
 
 All fixtures use finite small addresses and dedicated temporary files. No
 process-wide corruption, unbounded allocation or host stress is necessary.
@@ -22,4 +22,6 @@ Returning an error does not itself undo an operation whose durable outcome is
 uncertain; existing transaction cleanup/recovery remains authoritative.
 
 Complete local evidence: `dev/log/issues/138/pulls/139/fallible-composition.txt`.
-Fresh CI must be verified after publishing this atomic change.
+All nine workflows pass at exact head c530a6a, including native Linux, macOS
+and Windows. `fallible-composition-ci.txt` preserves timestamps and run URLs.
+Later changes require fresh CI; every wider unmet criterion stays active.

@@ -5,6 +5,8 @@ use link_cli::{
     PersistentTransformationKind, QueryProcessor,
 };
 use std::{cell::RefCell, rc::Rc};
+#[path = "common/import_operation.rs"]
+mod import_operation;
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "common/storage.rs"]
 mod test_store;
@@ -286,4 +288,143 @@ fn fallible_allocations_surface_a_parked_trigger_error_once() -> Result<()> {
         links.save()?;
     }
     Ok(())
+}
+
+fn import_fault(operation: &str, fail_at: usize) -> Result<()> {
+    let (_files, mut inner) = test_store::named()?;
+    let seed = inner.try_create(1, 1)?;
+    assert_eq!(seed, 1);
+    inner.set_name(seed, "seed 雪")?;
+    let control = Rc::new(RefCell::new(Control {
+        fail_at: Some(fail_at),
+        ..Default::default()
+    }));
+    let mut links = PersistentTransformationDecorator::embedded(
+        Store {
+            inner,
+            control: control.clone(),
+        },
+        false,
+    );
+    let before = links.all_links();
+    let result = import_operation::run(&mut links, operation);
+    assert!(
+        result.is_err(),
+        "{operation}: must return allocation fault {fail_at}"
+    );
+    assert!(result
+        .unwrap_err()
+        .to_string()
+        .contains("injected allocation"));
+    assert_eq!(control.borrow().calls, fail_at);
+    assert_eq!(control.borrow().infallible, 0, "{operation}: wrong bridge");
+    assert_eq!(links.get_link(seed), Some(Link::new(seed, seed, seed)));
+    assert_eq!(links.get_name(seed)?.as_deref(), Some("seed 雪"));
+    if fail_at == 1 {
+        assert_eq!(links.all_links(), before);
+    }
+    control.borrow_mut().fail_at = None;
+    import_operation::run(&mut links, operation)?;
+    let mut imported = links.all_links();
+    imported.sort_by_key(|row| row.index);
+    let allocations = control.borrow().calls;
+    import_operation::run(&mut links, operation)?;
+    let mut repeated = links.all_links();
+    repeated.sort_by_key(|row| row.index);
+    assert_eq!(repeated, imported, "retry preserves addresses and rows");
+    assert_eq!(
+        control.borrow().calls,
+        allocations,
+        "retry allocates nothing"
+    );
+    assert_eq!(control.borrow().infallible, 0);
+    match operation {
+        "import-explicit" | "import-archive" => {
+            assert_eq!(links.get_link(8), Some(Link::new(8, 1, 8)));
+            if operation == "import-archive" {
+                assert_eq!(links.get_name(8)?.as_deref(), Some("imported 雪"));
+            }
+        }
+        "import-nested" => {
+            let nested = links.search(1, 8).expect("anonymous nested pair");
+            assert_eq!(links.get_link(8), Some(Link::new(8, nested, 1)));
+        }
+        "import-named" => {
+            let id = links.get_by_name("imported 雪")?.expect("imported name");
+            assert_eq!(links.get_link(id), Some(Link::new(id, 1, 0)));
+        }
+        _ => unreachable!(),
+    }
+    let following = links.try_create(0, 0)?;
+    links.set_name(following, "after import=雪\0")?;
+    links.save()?;
+    assert_eq!(
+        links.get_name(following)?.as_deref(),
+        Some("after import=雪\0")
+    );
+    Ok(())
+}
+
+macro_rules! import_case {
+    ($name:ident, $operation:literal, $fault:literal) => {
+        #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+        #[cfg_attr(not(target_arch = "wasm32"), test)]
+        fn $name() -> Result<()> {
+            import_fault($operation, $fault)
+        }
+    };
+}
+import_case!(
+    import_explicit_allocation_returns_errors,
+    "import-explicit",
+    1
+);
+import_case!(import_nested_allocation_returns_errors, "import-nested", 1);
+import_case!(
+    import_nested_later_allocation_returns_errors,
+    "import-nested",
+    2
+);
+import_case!(
+    import_archive_allocation_returns_errors,
+    "import-archive",
+    1
+);
+import_case!(import_named_allocation_control, "import-named", 1);
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn import_reallocation_after_trigger_deletion_returns_errors() -> Result<()> {
+    let (_files, mut inner) = test_store::named()?;
+    inner.try_create(1, 1)?;
+    let (_schema_files, schema) = test_store::named()?;
+    let control = Rc::new(RefCell::new(Control {
+        fail_at: Some(2),
+        ..Default::default()
+    }));
+    let mut links = PersistentTransformationDecorator::with_sidecar(
+        Store {
+            inner,
+            control: control.clone(),
+        },
+        schema,
+        false,
+    );
+    // The first allocation succeeds, but the selected trigger removes its row.
+    // The import update must propagate a fault while reserving that row again.
+    links.store_trigger(PersistentTransformationKind::Once, "(((8: * *)) ())")?;
+    let result = import_operation::run(&mut links, "import-explicit");
+    assert!(result.is_err(), "reallocation must return the second fault");
+    assert!(result
+        .unwrap_err()
+        .to_string()
+        .contains("injected allocation"));
+    assert_eq!(control.borrow().calls, 2);
+    assert_eq!(control.borrow().infallible, 0);
+    assert!(!links.exists(8));
+    assert!(links.triggers()?.is_empty());
+    control.borrow_mut().fail_at = None;
+    import_operation::run(&mut links, "import-explicit")?;
+    assert_eq!(links.get_link(8), Some(Link::new(8, 1, 8)));
+    links.save()
 }

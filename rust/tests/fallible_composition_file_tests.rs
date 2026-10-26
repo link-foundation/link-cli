@@ -6,6 +6,8 @@ use link_cli::{
     TransactionsDecorator, VersionControlDecorator,
 };
 use std::path::Path;
+#[path = "common/import_operation.rs"]
+mod import_operation;
 
 fn transaction(directory: &Path) -> Result<TransactionsDecorator> {
     Ok(TransactionsDecorator::new(
@@ -22,6 +24,10 @@ fn blocked<L: NamedTypeLinks>(
     directory: &Path,
     operation: &str,
 ) -> Result<(Vec<Link>, u32)> {
+    if operation.starts_with("import-") {
+        assert_eq!(links.try_create(1, 1)?, 1);
+        links.set_name(1, "seed 雪")?;
+    }
     // Pre-existing schema points force the error into relationship allocation,
     // rather than the already fallible named-point helper.
     if operation == "schema" {
@@ -56,6 +62,7 @@ fn blocked<L: NamedTypeLinks>(
                 "schema" => {
                     triggers.store_trigger(PersistentTransformationKind::Always, "(() ())")?;
                 }
+                name if name.starts_with("import-") => import_operation::run(&mut triggers, name)?,
                 _ => unreachable!(),
             }
         }
@@ -69,6 +76,17 @@ fn blocked<L: NamedTypeLinks>(
     // original owner before any following write; an error is not an undo claim.
     std::fs::remove_dir(directory.join("log"))?;
     triggers.save()?;
+    if operation.starts_with("import-") {
+        import_operation::run(&mut triggers, operation)?;
+        let before = triggers.all_links();
+        import_operation::run(&mut triggers, operation)?;
+        assert_eq!(triggers.all_links(), before);
+        assert_eq!(triggers.get_link(1), Some(Link::new(1, 1, 1)));
+        assert_eq!(triggers.get_name(1)?.as_deref(), Some("seed 雪"));
+        if operation == "import-archive" {
+            assert_eq!(triggers.get_name(8)?.as_deref(), Some("imported 雪"));
+        }
+    }
     if operation == "schema" {
         let root = triggers.store_trigger(PersistentTransformationKind::Always, "(() ())")?;
         assert_eq!(
@@ -85,7 +103,12 @@ fn blocked<L: NamedTypeLinks>(
     Ok((rows, following))
 }
 
-fn reopened<L: NamedTypeLinks>(mut links: L, rows: &[Link], following: u32) -> Result<()> {
+fn reopened<L: NamedTypeLinks>(
+    mut links: L,
+    rows: &[Link],
+    following: u32,
+    operation: &str,
+) -> Result<()> {
     let mut actual = links.all_links();
     actual.sort_by_key(|row| row.index);
     assert_eq!(actual, rows);
@@ -93,6 +116,15 @@ fn reopened<L: NamedTypeLinks>(mut links: L, rows: &[Link], following: u32) -> R
         links.get_name(following)?.as_deref(),
         Some("following 雪=\0")
     );
+    if operation.starts_with("import-") {
+        assert_eq!(links.get_name(1)?.as_deref(), Some("seed 雪"));
+        if operation == "import-named" {
+            let id = links.get_by_name("imported 雪")?.expect("imported name");
+            assert_eq!(links.get_link(id), Some(Link::new(id, 1, 0)));
+        } else if operation == "import-archive" {
+            assert_eq!(links.get_name(8)?.as_deref(), Some("imported 雪"));
+        }
+    }
     links.save()
 }
 
@@ -112,12 +144,12 @@ fn check(versioned: bool, operation: &str) -> Result<()> {
                 NamedTypesDecorator::new(directory.path().join("branches"), false)?,
                 false,
             )?;
-            reopened(version, &rows, following)?;
+            reopened(version, &rows, following, operation)?;
         }
     } else {
         let (rows, following) = blocked(tx, directory.path(), operation)?;
         for _ in 0..2 {
-            reopened(transaction(directory.path())?, &rows, following)?;
+            reopened(transaction(directory.path())?, &rows, following, operation)?;
         }
     }
     Ok(())
@@ -145,3 +177,35 @@ case!(trigger_transaction_query_returns_io_error, false, "query");
 case!(trigger_version_query_returns_io_error, true, "query");
 case!(trigger_transaction_schema_returns_io_error, false, "schema");
 case!(trigger_version_schema_returns_io_error, true, "schema");
+case!(
+    import_transaction_explicit_returns_io_error,
+    false,
+    "import-explicit"
+);
+case!(
+    import_version_explicit_returns_io_error,
+    true,
+    "import-explicit"
+);
+case!(
+    import_transaction_nested_returns_io_error,
+    false,
+    "import-nested"
+);
+case!(
+    import_version_nested_returns_io_error,
+    true,
+    "import-nested"
+);
+case!(
+    import_transaction_archive_returns_io_error,
+    false,
+    "import-archive"
+);
+case!(
+    import_version_archive_returns_io_error,
+    true,
+    "import-archive"
+);
+case!(import_transaction_named_control, false, "import-named");
+case!(import_version_named_control, true, "import-named");
