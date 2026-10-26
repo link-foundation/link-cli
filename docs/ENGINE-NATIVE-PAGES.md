@@ -88,7 +88,14 @@ each file through Rust, Node, Bun, C#, Deno and Rust, verifying all earlier exac
 names and twelve final revisions. In mirrored mode it damages one closed copy
 between writers, alternates the damaged side across configurations, and checks
 both repaired data and metadata byte for byte after each writer closes.
-These destructive controls use dedicated temporary databases only.
+
+Portable `CheckpointPagedLog` / `CheckpointPagedCommitLog` optionally replace an
+entire ordered journal through two fixed page banks and one raw root device.
+The caller keeps all three devices under exclusive ownership. Preparation
+finishes before publishing the new root; uncertain I/O fences until reopening.
+See the [root protocol, API, finite failure controls and costs](protocol/checkpoint-pages.md).
+Ordinary page providers retain their existing files and append-only behavior.
+The destructive interoperability controls use dedicated temporary databases only.
 
 Rust callers pass `FilePageDevice::open(path)?` to `PagedLog::open`, then use the
 log through the existing `TransitionLogStore` interface. After releasing the

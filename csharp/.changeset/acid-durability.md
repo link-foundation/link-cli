@@ -240,3 +240,7 @@ publication through the existing generation CAS. Preserve append-only defaults,
 committed allocators, selected history and uncertain-outcome recovery.
 Compose initial checkpoints with physical delta journals and either replica
 decorator order while preserving exact replay and uncertain-operation fencing.
+
+Provide optional complete-journal replacement through two fixed page banks and
+an epoch-bound synchronized root. Keep devices caller-owned, reject pending
+physical records and fence uncertain operations until actual reopening.

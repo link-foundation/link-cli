@@ -4,7 +4,10 @@
 mod file;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 pub use file::FilePageDevice;
+mod checkpoint;
+mod checkpoint_format;
 mod format;
+pub use checkpoint::CheckpointPagedLog;
 mod mirrored;
 use crate::{LinkError, TransitionLogStore};
 use format::{

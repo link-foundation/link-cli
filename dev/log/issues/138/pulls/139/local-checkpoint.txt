@@ -1,0 +1,65 @@
+Optional portable two-bank journals; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline: cdff1b48f007c9c4a8ca9322d491d41b5582f4f3
+Run: bash experiments/issue-138/validate-local-checkpoint.sh <stage>
+Sequential compilers, Cargo jobs=1, reduced debug; actual WASM capped at 256 MiB.
+csharp: complete stage passed
+native: complete stage passed
+wasm: complete stage passed
+js: complete stage passed
+repository: complete stage passed
+Before-feature controls fail independently in Rust, C# and JS; see local-checkpoint-before.txt.
+Independent root/empty-bank vectors match six u64 epochs, mirrored flags and malformed checksummed decisions.
+Single/mirrored finite failures occur before/after every baseline I/O, followed by durable-image reopening.
+Uncertain owners fence; fresh owners retain complete old/new sequences and reuse partial inactive banks.
+All 128 torn-root lengths, stale identities, selected-bank damage, no-op/pending inputs and u64 limits pass.
+Two pre-commit Rust ownership regressions first fail, then require both banks to drop before root.
+
+Native Rust: 992 passed, 0 failed, 17 ignored child entry points.
+Complete lines: 13360/14163 (94.33030%)
+Complete branches: 2534/2946 (86.01494%)
+Complete functions: 1698/1833 (92.63502%)
+checkpoint.rs lines: 209/231 (90.47619%)
+checkpoint.rs branches: 46/46 (100.00000%)
+checkpoint.rs functions: 22/28 (78.57143%)
+checkpoint_format.rs lines: 58/58 (100.00000%)
+checkpoint_format.rs branches: 22/22 (100.00000%)
+checkpoint_format.rs functions: 7/7 (100.00000%)
+
+Actual WASM: 597 passed, 0 failed, 0 ignored child entry points.
+Complete lines: 10831/13240 (81.80514%)
+Complete branches: 2149/2597 (82.74933%)
+Complete functions: 1371/1756 (78.07517%)
+checkpoint.rs lines: 209/231 (90.47619%)
+checkpoint.rs branches: 46/46 (100.00000%)
+checkpoint.rs functions: 22/28 (78.57143%)
+checkpoint_format.rs lines: 58/58 (100.00000%)
+checkpoint_format.rs branches: 22/22 (100.00000%)
+checkpoint_format.rs functions: 7/7 (100.00000%)
+Wrapper-only lines: 391/391 (100.00000%)
+Wrapper-only branches: 20/20 (100.00000%)
+Wrapper-only functions: 76/76 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.77s
+
+C# Debug: 2198 passed, 0 failed/skipped.
+Complete lines: 8195/8490 (96.52532%)
+Complete branches: 4489/4856 (92.44234%)
+Foundation.Data.Doublets.Cli.Engine.IReplaceableCommitLog: lines 0; branches 1
+Foundation.Data.Doublets.Cli.Engine.CheckpointPagedCommitLog: lines 1; branches 1
+Foundation.Data.Doublets.Cli.Engine.CheckpointDecision: lines 1; branches 1
+
+C# Release: 2198 passed, 0 failed/skipped.
+Complete lines: 6286/6473 (97.11108%)
+Complete branches: 4436/4821 (92.01410%)
+Foundation.Data.Doublets.Cli.Engine.IReplaceableCommitLog: lines 0; branches 1
+Foundation.Data.Doublets.Cli.Engine.CheckpointPagedCommitLog: lines 1; branches 1
+Foundation.Data.Doublets.Cli.Engine.CheckpointDecision: lines 1; branches 1
+JS: {'tests': 226, 'pass': 226, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: 11 portable controls, actual-WASM conformance/48 policies and identical 36-case composition/payload reports pass.
+bun: 11 portable controls, actual-WASM conformance/48 policies and identical 36-case composition/payload reports pass.
+deno: 11 portable controls, actual-WASM conformance/48 policies and identical 36-case composition/payload reports pass.
+Strict format/lint, TypeScript, vector regeneration, optional-SQL guards, release/source/workflow checks pass.
+Existing distributed/file handoffs retain the separately recorded preceding validation; no new claim is made here.
+Portable devices only, with explicit ownership rules; engine-lock integration and native owning factories remain unfinished.
+Truthful device synchronization is assumed. Models/processes do not establish hardware power-loss durability.
+Whole-project 100% and every wider unmet issue criterion remain unfinished; fresh exact-head CI required.

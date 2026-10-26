@@ -18,8 +18,12 @@ Requirement mapping: R1/R3/R6/R7/R8/R9/R12. Continue all wider unmet criteria.
       deliberate closed-copy damage and repair before every mirrored handoff.
 - [x] Preserve the ordinary revision-zero interoperability control, regenerate
       fixtures, check native examples/lint/format and add normal-CI execution.
-- [ ] Record evidence, update the PR, commit and push only the prepared branch,
+- [x] Record evidence, update the PR, commit and push only the prepared branch,
       then inspect all fresh exact-head workflows and native matrices.
+
+All nine workflows pass at cdff1b4, including every Rust and C# native platform.
+Exact timestamps and runs are in checkpoint-paged-ci.txt. The following local
+replacement implementation needs its own complete validation and fresh CI.
 
 The baseline does not establish a library defect: the old examples ignored the
 new fixture selector and started ordinary journals at zero. The delta correction

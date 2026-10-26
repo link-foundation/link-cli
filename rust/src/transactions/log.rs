@@ -44,6 +44,19 @@ pub trait TransitionLogStore {
     }
 }
 
+/// Optional replacement of a complete ordered journal under the same exclusive
+/// owner. Success publishes all records atomically and durably when advertised.
+/// An uncertain failure fences the implementation until actual reopening.
+pub trait ReplaceableTransitionLogStore: TransitionLogStore {
+    /// Dynamic adapters can expose the capability only when their inner log can.
+    fn supports_replacement(&self) -> bool {
+        true
+    }
+    /// Returns false when an identical committed journal needs no replacement.
+    /// Pending unflushed records must be rejected before changing durable state.
+    fn replace_log_entries(&mut self, entries: &[String]) -> Result<bool, LinkError>;
+}
+
 fn storage_error(error: anyhow::Error) -> LinkError {
     LinkError::StorageError(format!("{error:#}"))
 }

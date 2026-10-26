@@ -470,3 +470,23 @@ complete the overall issue or authorize marking the draft ready early.
     existing prefix instead of replacing it; no production storage change is
     claimed. CHECKPOINT-PAGES-PLAN.md and checkpoint-paged.txt record scope and
     verification. Atomic local replacement and all wider criteria remain active.
+
+37. Optional portable two-bank journals now replace a complete ordered sequence
+    by preparing an inactive bank and then synchronizing an epoch-bound root.
+    Independent shared vectors and missing-feature
+    controls precede implementation. Finite faults before/after every baseline I/O,
+    all 128 torn-root lengths, stale bank identities, mirrored-bank reuse, pending
+    input, exact Unicode bytes and u64 limits pass. Two additional Rust ownership
+    regressions first fail, then verify that both banks drop before root on ordinary
+    destruction and every tested constructor failure.
+
+    Complete local suites pass 992 native Rust tests plus six doctests, 597 actual
+    WASM tests, 2,198 C# tests in each configuration, 226 JS tests and 221 repository
+    checks. Node/Bun/Deno each pass all 11 portable controls and actual-WASM integration;
+    36 composition and payload reports agree exactly across all three runtimes.
+    See LOCAL-CHECKPOINT-PLAN.md and local-checkpoint{,-before}.txt. The preceding
+    persisted-checkpoint head cdff1b4 passes all nine workflows and every native
+    platform; checkpoint-paged-ci.txt records exact heads and timestamps. This new
+    batch requires fresh exact-head CI. Publication under the engine commit lock,
+    physical-delta replacement and native owning factories remain unfinished, as do
+    whole-project 100% coverage and every wider unmet acceptance criterion.

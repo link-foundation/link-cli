@@ -28,6 +28,7 @@ on:
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-page-vectors.py'
   pull_request:
     branches:
       - main
@@ -49,6 +50,7 @@ on:
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-page-vectors.py'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -134,6 +136,8 @@ jobs:
           cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
           python3 ../../experiments/issue-138/generate-checkpoint-vectors.py ../../experiments/issue-138/engine-checkpoint-regenerated.json
           cmp ../../docs/protocol/engine-checkpoint-vectors.json ../../experiments/issue-138/engine-checkpoint-regenerated.json
+          python3 ../../experiments/issue-138/make-checkpoint-page-vectors.py ../../experiments/issue-138/checkpoint-pages-regenerated.json
+          cmp ../../docs/protocol/checkpoint-pages-v1.json ../../experiments/issue-138/checkpoint-pages-regenerated.json
 
       - name: Unit tests and complete production coverage
         run: >-
@@ -190,6 +194,11 @@ jobs:
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
           deno-version: v2.x
+
+      - name: Portable checkpoint pages on Bun and Deno
+        run: |
+          bun test js/client/test/engine-checkpoint-pages.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-checkpoint-pages.test.mjs
 
       - name: Cache cargo registry
         uses: actions/cache@v6

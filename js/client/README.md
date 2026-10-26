@@ -245,6 +245,11 @@ For SQL-free immutable doublets pages use `FilePagedCommitLog` from the separate
 roots, rejects committed page corruption and fences uncertain writers. The
 parent directory must exist; crashed ownership requires explicit external
 fencing. See [native page costs, assumptions and example](../../docs/ENGINE-NATIVE-PAGES.md).
+For complete ordered-journal replacement, `CheckpointPagedCommitLog` from the
+separate `./engine-checkpoint-pages` entry accepts a raw root device and two
+page-bank devices. Keep all devices under one exclusive owner. It synchronizes
+the inactive bank before publishing its epoch-bound root; uncertain operations
+require reopening. See [protocol, ownership and costs](../../docs/protocol/checkpoint-pages.md).
 For a physical page WAL use the separate `./engine-sqlite-log` entry with a
 dedicated synchronous Node/Bun/Deno SQLite connection. It imports no provider
 into the universal entry. The adapter requires SQLite >= 3.51.3, enforces WAL/FULL,

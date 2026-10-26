@@ -104,6 +104,16 @@ async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]
 
 import { PagedCommitLog, type PageDevice } from '../types/engine-paged-log.js';
 import { FilePagedCommitLog } from '../types/engine-file-paged-log.js';
+import { CheckpointPagedCommitLog, type ReplaceableCommitLog } from '../types/engine-checkpoint-pages.js';
+function checkpointPageTypes(root: PageDevice, first: PageDevice, second: PageDevice) {
+  const log: ReplaceableCommitLog = new CheckpointPagedCommitLog(root, [first, second], { maxPages: 1024 });
+  const replaced: boolean = log.replace(['opaque'] as const);
+  // @ts-expect-error A complete replacement takes an ordered array of strings.
+  log.replace('opaque');
+  // @ts-expect-error There are exactly two physical banks.
+  new CheckpointPagedCommitLog(root, [first]);
+  return replaced;
+}
 function nativePageTypes(device: PageDevice) {
   const portable: CommitLog = new PagedCommitLog(device, { maxPages: 1024 });
   using native = new FilePagedCommitLog('native-pages', { maxPages: 1024 });

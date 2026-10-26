@@ -8,7 +8,7 @@ export const EXTERNAL = 1n << 63n, PAYLOAD = (1n << 56n) - 1n;
 export const fail = (text) => { throw new Error('invalid native pages: ' + text); };
 export const same = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
 export const view = (bytes) => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-const hash = (bytes, initial = 0xcbf29ce484222325n) => {
+export const hash = (bytes, initial = 0xcbf29ce484222325n) => {
   let result = initial;
   for (const byte of bytes) result = BigInt.asUintN(64, (result ^ BigInt(byte)) * 0x100000001b3n);
   return result;

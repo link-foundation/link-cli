@@ -1,6 +1,44 @@
 # Verification record
 
-The latest integration extension imports an independently generated revision-40
+The latest complete portable checkpoint batch passes every baseline device
+operation with before/after faults, durable old/new reopening, following writes,
+all truncated-root lengths, malformed checksummed roots, epoch boundaries and
+single/mirrored reuse. Rust constructor and ordinary destruction preserve root
+ownership until both banks are released; two before-failing controls verify it.
+All 992 native tests plus six doctests, 597 actual WASM tests, 2,198 C# tests per
+configuration, 226 JS tests and 221 repository checks pass. Each JS runtime also
+passes 11 portable controls, actual-WASM conformance/48 policies and identical
+36-case composition and payload reports. Strict formatting, Clippy, types,
+optional-SQL, source-size, release and workflow checks pass. The initial Bun
+harness used a plain script invocation; correcting it to Bun's native test runner
+is not evidence of a product defect.
+
+| Complete measured scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 13,360/14,163 (94.33%) | 2,534/2,946 (86.01%) | 1,698/1,833 (92.64%) |
+| Actual WASM, complete linked source | 10,831/13,240 (81.81%) | 2,149/2,597 (82.75%) | 1,371/1,756 (78.08%) |
+| C# Debug | 8,195/8,490 (96.53%) | 4,489/4,856 (92.44%) | Not reported |
+| C# Release | 6,286/6,473 (97.11%) | 4,436/4,821 (92.01%) | Not reported |
+
+The root-format Rust component measures 58/58 lines, 22/22 branches and 7/7
+functions in both builds. The two-bank Rust component measures 209/231 lines,
+46/46 branches and 22/28 functions; private forwarding methods still have
+uncovered paths. C# checkpoint decision/log classes measure 100% lines and
+reported branches, while the optional interface's default capability getter
+remains uncovered. JS complete production coverage remains 100% for all three
+metrics, and WASM wrapper-only coverage remains 391/391 lines, 20/20 branches
+and 76/76 functions. No denominator is excluded to meet a target.
+
+LOCAL-CHECKPOINT-PLAN.md and local-checkpoint{,-before}.txt preserve exact scope
+and evidence. This portable backend leaves C#/JS device cleanup with callers;
+Rust owns supplied values and transfers cleanup responsibility on extraction.
+Engine-lock publication, physical-delta replacement, native file ownership and
+hardware power-loss verification remain unfinished. All nine workflows pass on
+preceding head cdff1b4, including every native platform; checkpoint-paged-ci.txt
+preserves the runs. This batch needs fresh exact-head CI, and every wider unmet
+criterion remains active.
+
+The preceding integration extension imports an independently generated revision-40
 checkpoint into native pages, then passes all 48 physical/policy configurations
 through Rust, Node, Bun, C#, Deno and Rust again. Its 288 writer invocations
 finish at revision 52 with 44 rows, preserving exact checkpoint bytes, names,
@@ -10,7 +48,7 @@ This changes examples and CI, with no production page/engine/codec change and
 no new full-coverage measurement. CHECKPOINT-PAGES-PLAN.md and checkpoint-paged.txt
 record the before-example control, exact scope and local lint/build checks.
 
-Latest complete local validation corrects initial logical checkpoints rejected
+The preceding complete local validation corrects initial logical checkpoints rejected
 by the independently selected physical delta codec. Independent vectors first
 fail in Rust, C# and JS. Exact checkpoint bytes now survive, following complete
 snapshots can compress, logical changes interrupt that dependency, and invalid

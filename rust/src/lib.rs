@@ -105,8 +105,8 @@ pub use storage::{
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
-    GenericTransition, LogRetentionPolicy, RowUndoPolicy, TransactionHandle, TransactionsDecorator,
-    Transition, TransitionKind, TransitionLogStore,
+    GenericTransition, LogRetentionPolicy, ReplaceableTransitionLogStore, RowUndoPolicy,
+    TransactionHandle, TransactionsDecorator, Transition, TransitionKind, TransitionLogStore,
 };
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use version_control::{

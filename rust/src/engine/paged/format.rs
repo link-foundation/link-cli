@@ -35,7 +35,7 @@ pub fn portable(value: u64) -> Result<u64, LinkError> {
     }
     Ok(value)
 }
-fn hash(bytes: &[u8], initial: u64) -> u64 {
+pub(super) fn hash(bytes: &[u8], initial: u64) -> u64 {
     bytes.iter().fold(initial, |sum, byte| {
         (sum ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })

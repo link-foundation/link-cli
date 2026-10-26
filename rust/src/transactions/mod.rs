@@ -91,7 +91,7 @@ use crate::link::GenericLink;
 use crate::named_types::NamedTypesDecorator;
 use crate::storage::{LinksStorage, LinksStorageRef};
 
-pub use log::{FileTransitionLog, TransitionLogStore};
+pub use log::{FileTransitionLog, ReplaceableTransitionLogStore, TransitionLogStore};
 pub use record::{JournalRecord, NameChange};
 pub use types::{
     CommitMode, DoubletLink, GenericDoubletLink, GenericTransition, LogRetentionPolicy, Transition,
