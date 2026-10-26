@@ -21,9 +21,9 @@ remains active; this plan does not replace the complete acceptance inventory.
 - [x] Test partitioned stores, real etcd and native/actual-WASM interchange;
       measure bounded record/UTF-8 byte counts against append-only controls.
 - [x] Document protocol, upgrade requirements, costs, examples and release inputs.
-- [ ] Run all local suites/coverage, review the diff, publish only the prepared
+- [x] Run all local suites/coverage, review the diff, publish only the prepared
       branch and inspect every fresh exact-head workflow and native matrix.
-- [ ] Extend the independently selected physical delta decorator to accept an
+- [x] Extend the independently selected physical delta decorator to accept an
       initial checkpoint in all languages, with reproducing tests first.
 
 The engine3 first record is an independent logical snapshot. Following records
@@ -54,9 +54,16 @@ handoffs, unknown responses, data/leader/majority loss. Node/Bun/Deno produce
 identical 36-case finite payload reports. journal-checkpoint.txt records complete
 coverage and payload counts; complete-project 100% remains unmet.
 
+All nine workflows pass on checkpoint head a329fa7, including native Linux,
+macOS and Windows. C# first failed two Windows fixture cleanups with a file still
+open; a debug rerun passed all 2,180 cases without changing any deadline. The
+underlying first-attempt cause is unknown. journal-checkpoint-ci.txt and
+checkpoint-ci-windows-before.txt preserve exact heads, run links and log lines.
+
 Review found that the older physical delta codec rejects initial engine3 records.
-That composition remains an immediate follow-up with tests before its correction;
-the current logical export and coordinated-publication tests do not verify it.
+CHECKPOINT-DELTA-PLAN.md records separate before-code failures and its correction
+with complete fresh native/C#/actual-WASM/JS validation. The preceding logical
+export and coordinated-publication tests did not establish that composition.
 
 Research: Redis describes multipart AOF base/increment files and atomic manifest
 replacement ([persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)).

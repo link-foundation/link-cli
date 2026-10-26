@@ -23,6 +23,9 @@ mod cluster;
 #[path = "../../tests/engine_checkpoint_tests.rs"]
 mod checkpoint;
 
+#[path = "../../tests/engine_checkpoint_delta_tests.rs"]
+mod checkpoint_delta;
+
 #[path = "../../tests/engine_partitioned_tests.rs"]
 mod partitioned;
 

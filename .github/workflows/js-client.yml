@@ -237,6 +237,14 @@ jobs:
           cmp experiments/issue-138/checkpoint-node.json experiments/issue-138/checkpoint-bun.json
           cmp experiments/issue-138/checkpoint-node.json experiments/issue-138/checkpoint-deno.json
 
+      - name: Verify checkpoint and physical delta composition with actual WASM
+        run: |
+          node examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-node.json
+          bun examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-bun.json
+          deno run --allow-all examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-deno.json
+          cmp experiments/issue-138/checkpoint-delta-node.json experiments/issue-138/checkpoint-delta-bun.json
+          cmp experiments/issue-138/checkpoint-delta-node.json experiments/issue-138/checkpoint-delta-deno.json
+
       - name: Preserve checkpoint payload measurements
         if: always()
         uses: actions/upload-artifact@v7

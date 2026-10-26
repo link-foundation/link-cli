@@ -31,3 +31,18 @@ array envelope, and excludes transport/disk framing.
 The complete output also counts bytes read and published over all 32 commits.
 Retaining all history can increase current payload size; these measurements do
 not predict larger workloads or latency.
+
+`delta.mjs` copies retained checkpoints into physical delta journals with
+replication in either composition order. Run it with the same `CLINK_WASM`:
+
+```sh
+CLINK_WASM=/absolute/path/to/pkg node examples/journal-checkpoints/delta.mjs
+```
+
+Its 36 cases cover three state structures, both logical encodings and three
+history policies. Each reopens both replicas, preserves exact history and
+Unicode names, and allocates address 41 after committed gaps 33 through 40.
+The initial engine3 bytes are unchanged. Following snapshots can use delta1;
+logical changes pass through and reset the complete-image compression base.
+These volatile copies are independent databases; exporting does not coordinate
+their future allocations with the original engine.

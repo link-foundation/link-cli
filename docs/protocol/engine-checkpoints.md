@@ -50,3 +50,15 @@ including read-only dependencies, are still checked. Read-only groups publish no
 rewrite. Journal lengths may shrink or stay equal after a real write; generations
 remain the conflict token. A failed or lost response still requires a fresh read
 to discover the outcome, with no automatic mutation replay.
+
+Physical delta decorators retain the exact first engine3 bytes and checksum.
+That complete image may be the base of a following delta1, which reconstructs
+an ordinary engine1 record and checks its own original checksum. No delta1
+format changes are needed. Following engine2 changes pass through unchanged and
+interrupt complete-image compression. A second engine3, a revision gap, or a
+following record after the maximum u64 revision is rejected. The selected codec
+still requires canonical printable ASCII headers; the engine validates rows,
+allocators, names and selected constraints after expansion. Independent
+physicalDelta vectors in the shared checkpoint fixture cover these boundaries.
+Append/flush uncertainty fences the decorator until reopen discovers its actual
+prefix. Logical export does not replace or compact an existing physical stream.

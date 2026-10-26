@@ -238,3 +238,5 @@ complete existing tags, unknown-point diagnostics and following database edits.
 Select optional portable retained-history checkpoints and coordinated checkpoint
 publication through the existing generation CAS. Preserve append-only defaults,
 committed allocators, selected history and uncertain-outcome recovery.
+Compose initial checkpoints with physical delta journals and either replica
+decorator order while preserving exact replay and uncertain-operation fencing.

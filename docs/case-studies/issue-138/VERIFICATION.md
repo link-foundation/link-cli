@@ -1,33 +1,43 @@
 # Verification record
 
-Latest complete local validation adds optional logical checkpoints: 975 native
-Rust tests plus six doctests, 580 actual-WASM tests, 2,180 C# tests per
-Debug/Release configuration, 211 JS tests and 221 repository checks pass.
-All 48 existing physical/policy configurations pass 288 shared-file writers,
-including mirrored damaged-copy repair. Real etcd passes default, checkpoints
-and checkpoints with caching, including native/WASM handoffs and consensus loss.
-Node/Bun/Deno produce identical 36-case finite payload measurements. The existing
-page/delta interoperability fixtures start at ordinary revision one; physical
-delta acceptance of an initial engine3 checkpoint remains an immediate follow-up.
+Latest complete local validation corrects initial logical checkpoints rejected
+by the independently selected physical delta codec. Independent vectors first
+fail in Rust, C# and JS. Exact checkpoint bytes now survive, following complete
+snapshots can compress, logical changes interrupt that dependency, and invalid
+ordering rejects before append. Immutable pins, retained allocators, uncertainty
+fences and both replication orders pass. See CHECKPOINT-DELTA-PLAN.md and
+checkpoint-delta-before.txt.
 
-Complete native coverage is 13,082/13,860 lines, 2,454/2,866 branches and
-1,669/1,797 functions. Actual WASM is 10,553/12,937 lines, 2,068/2,517 branches
-and 1,342/1,720 functions. C# Debug is 8,089/8,383 lines and 4,379/4,746
-branches; Release is 6,205/6,391 lines and 4,328/4,713 branches. JS production
+Full suites pass 980 native Rust tests plus six doctests, 585 actual-WASM tests,
+2,187 C# tests per Debug/Release configuration, 215 JS tests and 221 repository
+checks. Node/Bun/Deno produce identical results for 36 checkpoint/delta/replica
+compositions and 36 finite checkpoint payload measurements. Real etcd passes
+default, checkpoint and checkpoint-with-cache modes with native/WASM handoffs
+and consensus loss. All 48 existing physical/policy configurations pass 288
+shared-file writers with mirrored repair. Those existing file fixtures start
+at ordinary revision one; they do not prove persisted initial-checkpoint handoff.
+
+| Complete measured scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 13,093/13,871 (94.39%) | 2,466/2,878 (85.68%) | 1,669/1,797 (92.88%) |
+| Actual WASM, complete linked source | 10,564/12,948 (81.59%) | 2,081/2,529 (82.29%) | 1,342/1,720 (78.02%) |
+| C# Debug | 8,098/8,392 (96.50%) | 4,395/4,762 (92.29%) | Not reported |
+| C# Release | 6,213/6,399 (97.09%) | 4,344/4,729 (91.86%) | Not reported |
+
+The Rust delta module measures 224/224 lines, 72/72 branches and 26/26 functions
+both natively and in actual WASM. C# DeltaCommitLog.cs measures 100% lines and
+branches across all reported classes in both configurations. JS production
 modules enforce 100% lines/branches/functions; WASM wrapper modules measure
-391/391 lines, 20/20 branches and 76/76 functions. Complete-project 100% remains
-unfinished. See JOURNAL-CHECKPOINT-PLAN.md and journal-checkpoint.txt for complete
-commands, measurements and scope. Fresh exact-head CI is required for these
-production changes. All nine workflows pass on preceding diagnostic head
-b03bd4e, including Linux/macOS/Windows. The original d98c2ee Windows child timeout
-cause remains unknown; version-exit-diagnostics-ci.txt preserves the fresh result
-without increasing the deadline. The import-allocation-before.txt log preserves six native
-panics and five portable ignored faults before the four production call-site
-changes. Named imports remain passing controls; no C# production change is
-needed. Six portable import cases run in actual WASM. Native fixtures require
-cleanup, repeated imports, following writes and two exact reopenings. All nine
-workflows pass at import head 847ed01, including native Linux/macOS/Windows;
-import-allocation-ci.txt preserves exact evidence.
+391/391 lines, 20/20 branches and 76/76 functions. These component measurements
+do not complete whole-project coverage. checkpoint-delta.txt preserves commands,
+complete counts, exact costs and scope.
+
+All nine workflows pass on preceding checkpoint head a329fa7, including native
+Linux/macOS/Windows. Two initial C# Windows fixture cleanup failures pass on an
+unchanged-code debug rerun; their original cause remains unknown. See
+journal-checkpoint-ci.txt and checkpoint-ci-windows-before.txt. Fresh exact-head
+CI is required for the later delta correction. Local atomic file replacement,
+old object reclamation and every wider unmet acceptance criterion remain active.
 
 The archive batch preserves all sixteen original native contracts: ten now run
 both natively and inside actual WASM and six retain their native remote/CLI/file

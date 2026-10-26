@@ -3,8 +3,14 @@
 use super::{error, journal::checksum};
 use crate::{LinkError, TransitionLogStore};
 
+#[derive(PartialEq, Eq)]
+enum Kind {
+    Snapshot,
+    Changes,
+    Checkpoint,
+}
 struct Frame {
-    complete: bool,
+    kind: Kind,
     revision: u64,
     next: String,
     rows: String,
@@ -40,21 +46,28 @@ fn verified(entry: &str) -> Result<Vec<&str>, LinkError> {
 }
 fn frame(entry: &str) -> Result<Frame, LinkError> {
     let fields = verified(entry)?;
-    let complete = match (fields[0], fields.len()) {
-        ("engine1", 5) => true,
-        ("engine2", 6) => false,
+    let kind = match (fields[0], fields.len()) {
+        ("engine1", 5) => Kind::Snapshot,
+        ("engine2", 6) => Kind::Changes,
+        ("engine3", 5) => Kind::Checkpoint,
         _ => return Err(error("expected an engine revision")),
     };
-    let offset = usize::from(!complete);
+    let offset = usize::from(kind == Kind::Changes);
     let revision = decimal(fields[1], u128::from(u64::MAX))? as u64;
-    if revision == 0 || decimal(fields[2 + offset], u128::MAX)? == 0 {
+    let next = decimal(fields[2 + offset], u128::MAX)?;
+    if next == 0 || (revision == 0 && kind != Kind::Checkpoint) {
         return Err(error("invalid delta journal revision or allocator"));
     }
-    if !complete && decimal(fields[2], u128::from(u64::MAX))? != u128::from(revision - 1) {
+    if revision == 0 && (next != 1 || !fields[3].is_empty()) {
+        return Err(error("invalid revision-zero checkpoint"));
+    }
+    if kind == Kind::Changes
+        && decimal(fields[2], u128::from(u64::MAX))? != u128::from(revision - 1)
+    {
         return Err(error("invalid logical change base"));
     }
     Ok(Frame {
-        complete,
+        kind,
         revision,
         next: fields[2 + offset].into(),
         rows: fields[3 + offset].into(),
@@ -62,6 +75,13 @@ fn frame(entry: &str) -> Result<Frame, LinkError> {
     })
 }
 fn contiguous(before: Option<&Frame>, after: &Frame) -> Result<(), LinkError> {
+    if after.kind == Kind::Checkpoint {
+        return if before.is_none() {
+            Ok(())
+        } else {
+            Err(error("checkpoint must be the first delta journal record"))
+        };
+    }
     let expected = match before {
         Some(before) => before.revision.checked_add(1),
         None => Some(1),
@@ -80,7 +100,7 @@ fn expand(before: Option<&Frame>, entry: &str) -> Result<String, LinkError> {
         return Err(error("invalid delta journal envelope"));
     }
     let before = before.ok_or_else(|| error("delta journal base is missing"))?;
-    if !before.complete {
+    if before.kind == Kind::Changes {
         return Err(error("delta requires a complete snapshot base"));
     }
     if fields[1] != before.hash {
@@ -212,8 +232,8 @@ impl Codec {
         contiguous(self.previous.as_ref(), &parsed)?;
         let physical = match &self.previous {
             Some(before)
-                if before.complete
-                    && parsed.complete
+                if before.kind != Kind::Changes
+                    && parsed.kind != Kind::Changes
                     && self.streak + 1 < u64::from(self.interval) =>
             {
                 compress(before, &parsed, entry)

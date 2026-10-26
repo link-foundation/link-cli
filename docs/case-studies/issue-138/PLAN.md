@@ -441,6 +441,22 @@ complete the overall issue or authorize marking the draft ready early.
     passes default/checkpoint/cache modes; all 48 existing physical/policy
     configurations pass 288 writers. Node/Bun/Deno produce identical 36-case
     payload results. See JOURNAL-CHECKPOINT-PLAN.md and journal-checkpoint.txt.
-    Fresh exact-head CI and initial-checkpoint support in the physical delta
-    decorator remain to verify. This does not reclaim old objects, replace
-    local files/pages or complete any wider unmet criterion.
+    All nine workflows pass on a329fa7, including every native platform; see
+    journal-checkpoint-ci.txt. Two initial Windows cleanup failures pass on
+    an unchanged-code debug rerun; their cause remains unknown. Initial-checkpoint
+    support in the physical delta decorator is being verified separately under
+    CHECKPOINT-DELTA-PLAN.md. This does not reclaim old objects, replace local
+    files/pages or complete any wider unmet criterion.
+
+35. Initial checkpoints now compose with the independently selected physical
+    delta codec in Rust, C# and JS. Shared independent before vectors first fail;
+    following snapshots compress, logical changes reset that dependency, invalid
+    order rejects before mutation, and failed I/O fences the owner. Retention,
+    allocator holes, immutable pins and both replica orders pass. Full fresh
+    suites pass 980 native plus six doctests, 585 actual-WASM, 2,187 C# per
+    configuration, 215 JS and 221 repository checks. Node/Bun/Deno agree on 36
+    compositions; real etcd passes three modes and existing file interoperability
+    passes 48 configurations/288 writers with mirrored repair. The file fixtures
+    start at ordinary revision one. See CHECKPOINT-DELTA-PLAN.md and
+    checkpoint-delta{,-before}.txt. Complete project coverage and every wider
+    criterion remain unfinished; publication and fresh exact-head CI follow.

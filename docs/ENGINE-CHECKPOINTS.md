@@ -50,8 +50,14 @@ provide reader leases. The catalog remains the atomic publication boundary.
 Local append-only file/page journals are unchanged; callers can separately export
 an independent checkpoint via the public engine APIs. See the
 [wire and ownership contract](protocol/engine-checkpoints.md).
-The current physical delta decorator accepts ordinary engine1/engine2 journals;
-initial-checkpoint support in that decorator remains unfinished.
+The physical delta decorator accepts an initial engine3 record unchanged, then
+enforces consecutive engine1/engine2 revisions. Complete checkpoint rows can be
+the base for the next physical delta1; logical changes interrupt that dependency.
+A later engine3 is rejected even when its revision is consecutive. Either
+replication order works: place delta outside replication to copy identical
+physical records, or inside each replica to compare logical records with
+independently selected compression intervals. See the
+[finite composition example](../examples/journal-checkpoints/delta.mjs).
 
 This reduces current replay and transfer histories when retention is bounded.
 It does not remove full-snapshot checkpoint cost, catalogue contention or the

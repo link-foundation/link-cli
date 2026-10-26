@@ -13,7 +13,11 @@ public sealed class DeltaCommitLog : ICommitLog
     private ulong _streak;
     private bool _ready;
     private bool _poisoned;
-    private sealed record Frame(ulong Revision, string Next, string Rows, string Hash, bool Complete);
+    private enum Kind { Snapshot, Changes, Checkpoint }
+    private sealed record Frame(ulong Revision, string Next, string Rows, string Hash, Kind Format)
+    {
+        public bool Complete => Format != Kind.Changes;
+    }
 
     /// <param name="inner">Caller-owned, exclusively fenced physical log.</param>
     /// <param name="checkpointInterval">At most interval-1 consecutive deltas; 1 writes only full records.</param>
@@ -51,22 +55,31 @@ public sealed class DeltaCommitLog : ICommitLog
     private static Frame Full(string record)
     {
         var fields = Verified(record);
-        bool complete = fields[0] switch
+        Kind kind = fields[0] switch
         {
-            "engine1" when fields.Length == 5 => true,
-            "engine2" when fields.Length == 6 => false,
+            "engine1" when fields.Length == 5 => Kind.Snapshot,
+            "engine2" when fields.Length == 6 => Kind.Changes,
+            "engine3" when fields.Length == 5 => Kind.Checkpoint,
             _ => throw new InvalidDataException("Expected an engine revision.")
         };
-        int offset = complete ? 0 : 1;
+        int offset = kind == Kind.Changes ? 1 : 0;
         ulong revision = (ulong)Decimal(fields[1], ulong.MaxValue);
-        if (revision == 0 || Decimal(fields[2 + offset], UInt128.MaxValue) == 0)
+        UInt128 next = Decimal(fields[2 + offset], UInt128.MaxValue);
+        if (next == 0 || (revision == 0 && kind != Kind.Checkpoint))
             throw new InvalidDataException("Invalid delta journal revision or allocator.");
-        if (!complete && Decimal(fields[2], ulong.MaxValue) != revision - 1)
+        if (revision == 0 && (next != 1 || fields[3].Length != 0))
+            throw new InvalidDataException("Invalid revision-zero checkpoint.");
+        if (kind == Kind.Changes && Decimal(fields[2], ulong.MaxValue) != revision - 1)
             throw new InvalidDataException("Invalid logical change base.");
-        return new(revision, fields[2 + offset], fields[3 + offset], fields[4 + offset], complete);
+        return new(revision, fields[2 + offset], fields[3 + offset], fields[4 + offset], kind);
     }
     private static void Contiguous(Frame? before, Frame after)
     {
+        if (after.Format == Kind.Checkpoint)
+        {
+            if (before is not null) throw new InvalidDataException("Checkpoint must be the first delta journal record.");
+            return;
+        }
         UInt128 expected = before is null ? 1 : (UInt128)before.Revision + 1;
         if (expected != after.Revision) throw new InvalidDataException("Delta journal revisions are not contiguous.");
     }
