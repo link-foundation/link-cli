@@ -355,3 +355,13 @@ complete the overall issue or authorize marking the draft ready early.
     formatting/release/source and 221 repository checks pass. See
     MAPPED-GROWTH-PLAN.md and mapped-growth-{before,}.txt. Fresh exact-head
     platform CI and every broader unfinished requirement remain active.
+
+29. Seventeen journal value contracts preserve captured ownership, single
+    enumeration, read-only names, complete equality/hash behavior, public header
+    properties and finite full UTF-16 codec controls. No production defect
+    reproduces. Both full configurations pass 2,143 tests with unchanged
+    production denominators, plus format/release/source and 221 repository checks.
+    See JOURNAL-VALUE-PLAN.md and journal-values.txt. Exact-head 1aafc31 C# CI
+    passes all three platforms; Rust Windows fails an existing movement child
+    deadline. Its investigation and fresh CI remain active, along with every
+    wider inventoried criterion.

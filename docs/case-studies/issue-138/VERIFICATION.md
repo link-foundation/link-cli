@@ -2844,3 +2844,15 @@ and 221 repository checks pass. Other language source remains unchanged from
 930 native / 546 actual WASM / 209 JS runs. See MAPPED-GROWTH-PLAN.md and
 mapped-growth.txt. Fresh exact-head CI, complete coverage, legacy physical
 repair/power-loss verification and every broader unfinished criterion remain open.
+
+
+Journal value ownership (R1/R3/R7/R8/R12) now has seventeen passing public
+controls, including single capture, read-only exposure, complete equality/hash
+collections and a finite 65,536-unit .NET name. No production defect reproduced.
+Both complete configurations pass 2,143 tests; all production files remain
+measured at 7,950/8,260 lines and 4,268/4,638 branches in Debug, 6,104/6,298
+lines and 4,223/4,611 branches in Release. See JOURNAL-VALUE-PLAN.md and
+journal-values.txt. Whole-project 100% and every broader criterion remain open.
+Mapped-growth head 1aafc31 passes C# Linux/macOS/Windows and eight workflows;
+Rust Windows fails an existing movement child deadline. See
+mapped-growth-ci-before.txt; investigation and fresh exact-head CI remain active.

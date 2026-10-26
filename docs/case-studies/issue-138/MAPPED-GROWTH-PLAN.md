@@ -39,3 +39,9 @@ with no failures/skips. Complete measured lines reach 96.16% Debug and 96.84%
 Release, still below the whole-project target. Formatting, release/source-size,
 ShellCheck and 221 repository checks pass. See mapped-growth.txt for exact
 reports. Fresh platform CI is required before accepting the native change.
+
+Exact-head 1aafc31 C# CI passes Linux/macOS/Windows, including normal growth
+and shrink/regrowth. Eight of nine workflows pass. Rust Windows run
+40299771183 fails the pre-existing movement child deadline; preserved log lines
+32629–32635 identify the failure. Its root cause remains under investigation;
+this is not accepted as a passing CI batch. See mapped-growth-ci-before.txt.
