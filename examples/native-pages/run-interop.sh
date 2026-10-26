@@ -3,6 +3,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 : "${CLINK_WASM:?provide the generated actual WASM web package}"
+case "${NATIVE_PAGES_CHECKPOINT:-0}" in
+ 0|1) ;;
+ *) printf '%s\n' 'NATIVE_PAGES_CHECKPOINT must be 0 or 1.' >&2; exit 2 ;;
+esac
 native_example="${NATIVE_PAGES_RUST_EXAMPLE:-$PWD/rust/target/debug/examples/engine_native_pages}"
 managed_example="${NATIVE_PAGES_CSHARP_EXAMPLE:-$PWD/examples/native-pages-csharp/bin/Debug/net10.0/NativePagesExample.dll}"
 if [[ ! -x "$native_example" || ! -f "$managed_example" ]]; then
@@ -58,6 +62,9 @@ for validation in scan indexed; do
     [[ "$structure" != sorted-runs ]] || flags+=(--sorted-runs)
     [[ "$encoding" != snapshot ]] || flags+=(--snapshot)
     [[ "$physical" != delta ]] || flags+=(--delta)
+    if [[ "${NATIVE_PAGES_CHECKPOINT:-0}" == 1 ]]; then
+     flags+=("--checkpoint-fixture=$PWD/docs/protocol/engine-checkpoint-vectors.json")
+    fi
     database="$page_data/$mode-$validation-$structure-$encoding-$physical"
     printf '%s\n' "$mode/$validation/$structure/$encoding/$physical"
     writer=0

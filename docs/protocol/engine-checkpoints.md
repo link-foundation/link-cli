@@ -62,3 +62,10 @@ allocators, names and selected constraints after expansion. Independent
 physicalDelta vectors in the shared checkpoint fixture cover these boundaries.
 Append/flush uncertainty fences the decorator until reopen discovers its actual
 prefix. Logical export does not replace or compact an existing physical stream.
+
+The independent `nativePageSeed` fixture starts at revision 40 with 32 rows,
+allocator 41, retired addresses 33 through 40 and BOM/Unicode/NUL names. The
+native page interoperability examples import it into dedicated empty journals
+and preserve its exact bytes through following writes in all three providers.
+This tests persisted checkpoint import and physical encoding composition;
+it does not replace an existing acknowledged journal.

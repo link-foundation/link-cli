@@ -1,5 +1,15 @@
 # Verification record
 
+The latest integration extension imports an independently generated revision-40
+checkpoint into native pages, then passes all 48 physical/policy configurations
+through Rust, Node, Bun, C#, Deno and Rust again. Its 288 writer invocations
+finish at revision 52 with 44 rows, preserving exact checkpoint bytes, names,
+retained history, pins and allocator gaps. Mirrored handoffs repair a damaged
+closed copy. The ordinary revision-zero control independently passes 48/288.
+This changes examples and CI, with no production page/engine/codec change and
+no new full-coverage measurement. CHECKPOINT-PAGES-PLAN.md and checkpoint-paged.txt
+record the before-example control, exact scope and local lint/build checks.
+
 Latest complete local validation corrects initial logical checkpoints rejected
 by the independently selected physical delta codec. Independent vectors first
 fail in Rust, C# and JS. Exact checkpoint bytes now survive, following complete
@@ -35,8 +45,9 @@ complete counts, exact costs and scope.
 All nine workflows pass on preceding checkpoint head a329fa7, including native
 Linux/macOS/Windows. Two initial C# Windows fixture cleanup failures pass on an
 unchanged-code debug rerun; their original cause remains unknown. See
-journal-checkpoint-ci.txt and checkpoint-ci-windows-before.txt. Fresh exact-head
-CI is required for the later delta correction. Local atomic file replacement,
+journal-checkpoint-ci.txt and checkpoint-ci-windows-before.txt. All nine workflows
+also pass on delta-correction head 68fa923, including every native platform;
+checkpoint-delta-ci.txt records exact heads and timestamps. Local atomic file replacement,
 old object reclamation and every wider unmet acceptance criterion remain active.
 
 The archive batch preserves all sixteen original native contracts: ten now run

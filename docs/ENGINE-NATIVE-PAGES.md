@@ -165,3 +165,15 @@ Portable `MirroredPageDevice` instead borrows two distinct caller-owned
 `IRepairPageDevice` implementations. Keep both alive until all log/engine users
 finish. Disposing the native pair attempts every acquired handle, aggregates
 cleanup failures and retains uncertain owner files; it never commits staged data.
+
+The same examples can start a dedicated database from a nonzero logical
+checkpoint using `--checkpoint-fixture=<engine-checkpoint-vectors.json>`.
+They preserve committed allocator gaps, names and the exact retained seed before
+adding each following group. Run
+`CLINK_WASM=/absolute/path/to/pkg bash examples/journal-checkpoints/run-paged-interop.sh`
+for all 48 physical/policy configurations across Rust, Node, Bun, C#, Deno and
+Rust. Mirrored handoffs also repair deliberately damaged closed copies. See the
+[checkpoint recipe](../examples/journal-checkpoints/README.md) for ownership,
+fixture selection and evidence. Importing a checkpoint does not replace an
+existing acknowledged journal or coordinate its future allocations with another
+database.

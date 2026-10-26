@@ -92,6 +92,13 @@ vectors["physicalDelta"] = {
     ],
     "zeroFollow": [zero, record("engine1|1|1|")],
 }
+# The native page examples deliberately keep references, duplicate names/pairs,
+# a nonzero checkpoint revision and eight retired allocator reservations.
+interop_rows = {
+    i: (0 if i % 2 else i - 1, ("\ufefffirst 雪\0😀" if i % 2 else "second").encode().hex())
+    for i in range(1, 33)
+}
+vectors["nativePageSeed"] = complete("engine3", 40, interop_rows)
 Path(sys.argv[1] if len(sys.argv) > 1 else "docs/protocol/engine-checkpoint-vectors.json").write_text(
     json.dumps(vectors, ensure_ascii=False, indent=2) + "\n"
 )

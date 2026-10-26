@@ -474,7 +474,7 @@ journal-checkpoint.txt record exact results and complete coverage. All nine
 workflows pass on a329fa7, including native Linux/macOS/Windows matrices; see
 journal-checkpoint-ci.txt. Two initial C# Windows fixture cleanup failures pass
 on an unchanged-code debug rerun; their underlying cause remains unknown.
-Initial-checkpoint support in the physical delta decorator is being verified
+Initial-checkpoint support in the physical delta decorator is verified
 under CHECKPOINT-DELTA-PLAN.md.
 Old object reclamation, local file replacement and every wider unfinished
 requirement remain open.
@@ -489,4 +489,16 @@ All three JS runtimes agree on 36 actual-WASM compositions. See
 CHECKPOINT-DELTA-PLAN.md, checkpoint-delta-before.txt and checkpoint-delta.txt.
 The changed codec reaches 100% measured lines/branches, with native/WASM
 functions also at 100%; complete project coverage and every wider criterion
-remain unfinished. Fresh exact-head CI is pending publication.
+remain unfinished. All nine exact-head workflows pass on 68fa923, including
+every native platform; checkpoint-delta-ci.txt records the runs and timestamps.
+
+Persisted initial checkpoints (R1/R3/R6/R7/R8/R9/R12) now pass all 48 native
+page/policy configurations through Rust, Node, Bun, C#, Deno and Rust again.
+Each of 288 writer handoffs preserves the exact retained revision-40 checkpoint,
+allocator gaps 33 through 40, names, references and pins before committing two
+following revisions. The final revision is 52 with 44 rows. Mirrored handoffs
+include closed-copy data/metadata damage and repair. The ordinary revision-zero
+control also passes 48 configurations/288 writers. This extends examples and
+normal-CI integration; no production engine/page/codec change is claimed.
+CHECKPOINT-PAGES-PLAN.md and checkpoint-paged.txt preserve scope and evidence.
+Local atomic journal replacement and every wider unmet criterion remain open.

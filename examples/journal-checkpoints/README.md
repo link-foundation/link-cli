@@ -46,3 +46,25 @@ The initial engine3 bytes are unchanged. Following snapshots can use delta1;
 logical changes pass through and reset the complete-image compression base.
 These volatile copies are independent databases; exporting does not coordinate
 their future allocations with the original engine.
+
+For persisted SQL-free pages, build the native examples as described in
+[the page recipe](../../docs/ENGINE-NATIVE-PAGES.md), then run:
+
+```sh
+CLINK_WASM=/absolute/path/to/pkg bash examples/journal-checkpoints/run-paged-interop.sh
+```
+
+This uses dedicated temporary databases. An independently generated checkpoint
+starts at revision 40 with 32 rows, committed allocator gaps 33 through 40, and
+BOM/Unicode/NUL names. Each configuration passes the same files through Rust,
+Node, Bun, C#, Deno and Rust again. Every provider preserves the exact checkpoint,
+retained revision 40 and unavailable revision 39, allocates after the gaps, and
+commits two independent sessions. Mirrored handoffs damage one closed data and
+metadata copy before requiring the next provider to repair it. The full output
+is saved under experiments/issue-138/checkpoint-paged-interop.log.
+
+The native examples select this fixture only with
+`--checkpoint-fixture=/absolute/path/to/engine-checkpoint-vectors.json`. They
+seed an empty logical journal, require an existing journal's first record to
+match exactly, and never replace an existing acknowledged prefix. This imports
+an independent database; local atomic checkpoint replacement remains separate.

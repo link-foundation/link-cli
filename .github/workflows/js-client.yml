@@ -312,6 +312,15 @@ jobs:
           cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages --example engine_native_pages
           dotnet build examples/native-pages-csharp --configuration Release
           bash examples/native-pages/run-interop.sh
+          bash examples/journal-checkpoints/run-paged-interop.sh
+
+      - name: Preserve native checkpoint page handoffs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-checkpoint-pages
+          path: experiments/issue-138/checkpoint-paged-interop.log
+          if-no-files-found: ignore
 
       # A small run of the acceptance benchmark: it exits non-zero unless a
       # fresh client reads back exactly what was written. Full-size numbers

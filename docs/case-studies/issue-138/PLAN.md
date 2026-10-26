@@ -444,7 +444,7 @@ complete the overall issue or authorize marking the draft ready early.
     All nine workflows pass on a329fa7, including every native platform; see
     journal-checkpoint-ci.txt. Two initial Windows cleanup failures pass on
     an unchanged-code debug rerun; their cause remains unknown. Initial-checkpoint
-    support in the physical delta decorator is being verified separately under
+    support in the physical delta decorator is verified separately under
     CHECKPOINT-DELTA-PLAN.md. This does not reclaim old objects, replace local
     files/pages or complete any wider unmet criterion.
 
@@ -459,4 +459,14 @@ complete the overall issue or authorize marking the draft ready early.
     passes 48 configurations/288 writers with mirrored repair. The file fixtures
     start at ordinary revision one. See CHECKPOINT-DELTA-PLAN.md and
     checkpoint-delta{,-before}.txt. Complete project coverage and every wider
-    criterion remain unfinished; publication and fresh exact-head CI follow.
+    criterion remain unfinished. All nine workflows pass on 68fa923, including
+    every native platform; checkpoint-delta-ci.txt records exact evidence.
+
+36. Native page examples now select an independent revision-40 checkpoint with
+    32 named rows and allocator gaps 33 through 40. All 48 physical/policy
+    configurations pass 288 shared-file writer handoffs, ending at revision 52
+    with 44 rows. The ordinary revision-zero control also passes 48/288. Both
+    include damaged-copy repair in mirrored mode. Examples reject a different
+    existing prefix instead of replacing it; no production storage change is
+    claimed. CHECKPOINT-PAGES-PLAN.md and checkpoint-paged.txt record scope and
+    verification. Atomic local replacement and all wider criteria remain active.

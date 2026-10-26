@@ -15,7 +15,7 @@ Requirement mapping: R1/R3/R6/R7/R8/R9/R12. Continue every broader unmet criteri
       checkpoint seed; reopening discovers the actual durable prefix.
 - [x] Run actual-WASM contracts and Node/Bun/Deno binding composition, complete
       local suites, official coverage, native page interoperability and lint.
-- [ ] Update protocol/cost/release/evidence and PR descriptions, commit and push
+- [x] Update protocol/cost/release/evidence and PR descriptions, commit and push
       only the prepared branch, then inspect all fresh exact-head CI.
 
 This extends the new logical checkpoint feature. It does not establish a defect
@@ -33,4 +33,7 @@ at ordinary revision one, so persisted initial-checkpoint interchange remains
 separate work. checkpoint-delta.txt records exact coverage and payload costs;
 the changed codec reaches 100% lines/branches in every measured implementation
 and 100% reported native/WASM functions. Whole-project coverage remains below
-target. Publication and fresh exact-head CI remain pending.
+target. Commit 68fa923 passes all nine fresh exact-head workflows, including
+Rust and C# on Linux/macOS/Windows. checkpoint-delta-ci.txt preserves exact
+heads, timestamps and run links. Persisted initial-checkpoint handoff is covered
+by the following CHECKPOINT-PAGES-PLAN.md integration batch.
