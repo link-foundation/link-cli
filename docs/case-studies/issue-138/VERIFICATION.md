@@ -3348,3 +3348,75 @@ integration is unchanged and remains separately verified by `reclamation.txt`
 and all nine workflows on `419f7c7` in `reclamation-ci.txt`. Fresh exact-head
 CI must verify this test batch after publication. Whole-project 100% coverage
 and every wider unfinished criterion remain active; PR139 stays unmerged.
+
+
+## Physical immutable sorted tables and checkpoint case scheduling
+
+Matching Rust/C#/JS tables seal one immutable native doublets-page flush. Open
+validates every bounded physical/logical record before exposing an index of
+keys, addresses and page hashes. Point lookup reads verified payload pages;
+absent keys need no page I/O. Returned values and complete scans are owned.
+Canonical positive u64 generations preserve tombstones and live empty journals.
+Construction validates every input before I/O and refuses occupied devices.
+Mirrored repair is completed only after the complete table validates.
+
+Missing table APIs first fail in all three languages on baseline `9a9a95c`;
+`sorted-table-before.txt` retains the compiler/runtime errors and isolated
+reproduction driver. Twenty-five valid/corrupt native binary vectors are
+independently generated without importing a production codec. Their generation
+followed the initial implementation. Finite before/after creation failures,
+128 truncated seals, decision conflicts/modes, read failures and post-open
+damage controls pass. An 80-key table spanning more than 40 pages reads its
+middle 1,000-byte payload with at most three physical page requests.
+
+The complete sequential driver starts 2026-10-26T23:20:09Z and all checks finish
+at 23:50:25Z. The first repository layout run correctly rejects a root `ci-logs`
+directory created during CI investigation; moving the preserved log under
+`experiments/issue-138/ci-logs` resolves it. The failed output remains preserved,
+and every repository check plus the remaining lint/format gates is rerun.
+No language-suite or interchange failure occurred. Reproduce with
+`bash experiments/issue-138/validate-sorted-table.sh`.
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,073 plus six doctests | 14,754 / 15,587 | 2,808 / 3,252 | 1,898 / 2,041 |
+| Actual WASM, linked source | 672 | 11,938 / 14,317 | 2,365 / 2,835 | 1,499 / 1,881 |
+| C# Debug | 2,349 | 8,728 / 9,022 | 4,993 / 5,382 | not reported |
+| C# Release | 2,349 | 6,705 / 6,891 | 4,937 / 5,345 | not reported |
+| JS production modules | 533 | 100% | 100% | 100% |
+
+Eighteen native child entries run through bounded parent tests; one legacy
+doctest stays ignored. The new Rust table measures 269/280 lines, 69/88 branches
+and 30/33 functions in both native and actual WASM. No complete denominator is
+reduced or excluded. Whole-project native/C#/linked-WASM coverage stays open.
+Bun/Deno each pass all174 selected cases. Strict TypeScript, native/WASM Clippy,
+formatting, both independent vector regenerations, lazy import positive/negative
+controls, SQL optionality, source limits, changesets, all221 repository checks,
+ShellCheck, actionlint and whitespace checks pass. Compilers run sequentially
+with jobs1/reduced debug, .NET640MiB and verified actual-WASM256MiB caps. Cgroup
+OOM and OOM-kill counters remain zero.
+
+The native Rust/C#/Node/Bun/Deno examples pass all25 writer/reader pairs. Each
+reader verifies the complete 80-key scan and every indexed point, max-u64
+tombstone, live empty journal and Unicode/BOM/NUL/newline values. It preserves
+all three physical file hashes and releases its owner. Native examples and
+explicit SQL-denial controls select the physical table without SQLite.
+
+Separately, all nine workflows complete on published contract head `9a9a95c`,
+but C# Windows fails its mirrored-bank/root replacement xUnit case at 120s.
+The other eight workflows and C# Linux/macOS pass. Full log
+`experiments/issue-138/ci-logs/csharp-40416245668.log` lines26794-26810 contains
+the exact deadline; it does not establish a child/storage assertion failure or
+the source of slowness. Four disjoint ordinal slices per configuration retain
+all258 original real process cutpoints, 120s case and 10s child deadlines,
+cleanup, ownership and recovery assertions. All36 focused cases pass and their
+counts independently cover each original boundary exactly once. The combined
+full C# suites above include this test-only correction and eight table tests.
+Fresh exact-head Windows/macOS/Linux CI remains required after publication.
+
+`sorted-table.txt`, `sorted-table-before.txt`, `checkpoint-slices.txt` and the
+two implementation plans preserve the evidence. Physical tables alone do not
+implement LSM WAL/memtable/manifest recovery, compaction or retirement. The
+separate PHYSICAL-LSM-PLAN.md keeps that required composition active. Physical
+power-loss certification, complete coverage and every wider gap remain open;
+PR139 remains draft and unmerged.

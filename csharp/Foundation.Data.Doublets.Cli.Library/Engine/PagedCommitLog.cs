@@ -143,12 +143,13 @@ public sealed class PagedCommitLog : ICommitLog
             State = State with { Pages = State.Pages + 1, LastHash = hash }; Array.Clear(_page); _count = 0;
         }
     }
-    private sealed class Cursor(IPageDevice device, Metadata state)
+    internal sealed class Cursor(IPageDevice device, Metadata state, ulong? startingHash = null)
     {
         private long _index = (long)state.Pages - 1;
-        private ulong _generation = state.Generation, _expected = state.LastHash;
+        private ulong _generation = state.Generation, _expected = startingHash ?? state.LastHash;
         private byte[] _page = Array.Empty<byte>();
         private int _count;
+        internal void StartAt(ulong root) { _index = (long)((root - 1) / Cells); Load(); _count = (int)((root - 1) % Cells + 1); }
         internal ulong Consumed { get; private set; }
         internal ulong Current => _index < 0 ? 0 : (ulong)_index * Cells + (ulong)_count;
         internal void Load()
@@ -175,10 +176,11 @@ public sealed class PagedCommitLog : ICommitLog
             return result;
         }
     }
-    private List<string> ReadCommitted(bool retain)
+    private List<string> ReadCommitted(bool retain) => ReadCommitted(_device, _state, retain);
+    internal static List<string> ReadCommitted(IPageDevice device, Metadata state, bool retain)
     {
-        var records = new List<string>(); if (_state.Pages == 0) return records;
-        var cursor = new Cursor(_device, _state); cursor.Load(); ulong root = _state.Root, count = 0;
+        var records = new List<string>(); if (state.Pages == 0) return records;
+        var cursor = new Cursor(device, state); cursor.Load(); ulong root = state.Root, count = 0;
         while (root != 0)
         {
             var (source, previous) = cursor.Take(root); ulong text = Portable(source);
@@ -199,7 +201,7 @@ public sealed class PagedCommitLog : ICommitLog
             if (retain) records.Add(record);
             root = previous; count++;
         }
-        if (cursor.Current != 0 || cursor.Consumed != _state.Rows || count != _state.Records) throw Invalid("record counts");
+        if (cursor.Current != 0 || cursor.Consumed != state.Rows || count != state.Records) throw Invalid("record counts");
         records.Reverse(); return records;
     }
 }

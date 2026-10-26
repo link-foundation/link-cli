@@ -22,6 +22,7 @@ if (mode === 'rust') {
     ['default native', 'rust/Cargo.toml', []],
     ['bare native', 'rust/Cargo.toml', ['--no-default-features']],
     ['native pages', 'rust/Cargo.toml', ['--no-default-features', '--features', 'native-pages']],
+    ['sorted tables', 'rust/Cargo.toml', ['--no-default-features', '--features', 'native-pages,sorted-tables']],
     ['default WASM', 'rust/wasm/Cargo.toml', ['--target', 'wasm32-unknown-unknown']],
     ['WASM with native-only feature', 'rust/Cargo.toml', ['--target', 'wasm32-unknown-unknown', '--features', 'sqlite,native-pages']],
   ];
@@ -57,7 +58,8 @@ if (mode === 'rust') {
   try {
     const { MemoryCommitLog, ReplicatedCommitLog } = await import('../../js/client/src/index.js');
     const { FileCommitLog } = await import('../../js/client/src/engine-file-log.js');
-    const { FilePagedCommitLog } = await import('../../js/client/src/engine-file-paged-log.js');
+    const { FilePagedCommitLog, FilePageDevice } = await import('../../js/client/src/engine-file-paged-log.js');
+    const { SortedJournalTable } = await import('../../js/client/src/engine-sorted-table.js');
     const { FileMirroredPagedCommitLog } = await import('../../js/client/src/engine-file-mirrored-pages.js');
     const { FileCheckpointPagedCommitLog } = await import('../../js/client/src/engine-file-checkpoint-pages.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);
@@ -78,6 +80,10 @@ if (mode === 'rust') {
     pages.append('native \ufeff\0雪'); pages.flush(); pages.close();
     using reopenedPages = new FilePagedCommitLog(pagePath);
     assert.deepEqual(JSON.parse(reopenedPages.read()), ['native \ufeff\0雪']);
+    using tableDevice = new FilePageDevice(join(directory, 'sorted-table'));
+    const tableRows = [{ key: 'a', generation: '18446744073709551615', entries: null }];
+    assert.deepEqual(SortedJournalTable.create(tableDevice, tableRows).entries(), tableRows);
+    assert.deepEqual(SortedJournalTable.open(tableDevice).entries(), tableRows);
     const mirroredPath = join(directory, 'mirrored-pages');
     using mirrored = new FileMirroredPagedCommitLog(mirroredPath);
     mirrored.append('mirrored 雪'); mirrored.flush(); mirrored.close();

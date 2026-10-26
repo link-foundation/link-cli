@@ -369,3 +369,19 @@ protocol choices, rather than Iceberg compatibility or a claim that its cleanup
 algorithm has been implemented. Independent bounded models include unsafe
 negative controls, and public-API fault schedules test the implementation.
 See [the protocol, proof assumptions and costs](../../ENGINE-RECLAMATION.md).
+
+## Native physical sorted tables (2026-10-26)
+
+Rechecked RocksDB's [architecture](https://github.com/facebook/rocksdb/wiki/RocksDB-Overview),
+[WAL](https://github.com/facebook/rocksdb/wiki/Write-Ahead-Log-%28WAL%29) and
+[MANIFEST](https://github.com/facebook/rocksdb/wiki/MANIFEST) primary documentation.
+The design separates mutable memory, sorted immutable files and recovery logs;
+a manifest records the selected physical state. Durable data files alone do not
+identify the selected version after a failed multi-file update.
+
+Design inference: our existing SQL-free immutable doublets pages can hold sealed
+sorted journal records with retained key/address and page-hash indexes. Physical
+point reads need not materialize every payload. This is a storage building block;
+WAL/memtable/manifest publication and compaction still require independent fault
+and restart verification. It neither copies RocksDB's code/format nor supplies
+its full feature set. See [execution plan](PHYSICAL-SORTED-TABLE-PLAN.md).

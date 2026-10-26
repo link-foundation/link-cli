@@ -349,6 +349,7 @@ dependencies = [
  "lino-arguments",
  "lru",
  "rpds",
+ "serde_json",
  "thiserror",
  "web-time",
 ]

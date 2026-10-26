@@ -40,7 +40,8 @@ features = [
 ]
 
 [features]
-default = ["console_error_panic_hook"]
+default = ["console_error_panic_hook", "sorted-tables"]
+sorted-tables = ["link-cli/sorted-tables"]
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

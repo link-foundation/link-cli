@@ -307,3 +307,13 @@ each bank with `{ mirroredBanks: true }`, and implements `replace(records)` for
 `WasmEngine.compactJournal()`. This selection adds no SQLite requirement. Use a
 new dedicated path and close the log after its engine and sessions. See the
 [native configuration, file ownership and interoperability recipe](../../docs/ENGINE-NATIVE-CHECKPOINTS.md).
+
+`SortedJournalTable` from `./engine-sorted-table` creates or opens a sealed
+immutable physical table on a caller-owned `PageDevice`, including the native
+`FilePageDevice`. It retains sorted keys, physical addresses and page hashes
+after complete bounded validation, then reads selected physical pages for a
+point lookup. Tombstones preserve exact decimal u64 generations; an empty array
+is a live empty journal. Close the selected device yourself. See the
+[format and costs](../../docs/protocol/native-sorted-table.md) and
+[25 native writer/reader combinations](../../examples/sorted-tables/README.md).
+WAL/manifest publication and compaction require further LSM composition.

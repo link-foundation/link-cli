@@ -24,11 +24,14 @@ on:
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
+      - 'examples/sorted-tables/**'
+      - 'examples/sorted-tables-csharp/**'
       - 'examples/journal-checkpoints/**'
       - 'experiments/issue-138/generate-checkpoint-vectors.py'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
+      - 'experiments/issue-138/*sorted-table*'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
@@ -53,11 +56,14 @@ on:
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
+      - 'examples/sorted-tables/**'
+      - 'examples/sorted-tables-csharp/**'
       - 'examples/journal-checkpoints/**'
       - 'experiments/issue-138/generate-checkpoint-vectors.py'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
+      - 'experiments/issue-138/*sorted-table*'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
@@ -146,6 +152,9 @@ jobs:
         run: |
           python3 ../../experiments/issue-138/make-native-page-vectors.py ../../experiments/issue-138/native-pages-regenerated.json
           cmp ../../docs/protocol/native-pages-v1.json ../../experiments/issue-138/native-pages-regenerated.json
+          python3 ../../experiments/issue-138/make-sorted-table-vectors.py ../../experiments/issue-138/sorted-table-regenerated.json
+          cmp ../../docs/protocol/native-sorted-table-v1.json ../../experiments/issue-138/sorted-table-regenerated.json
+          node ../../experiments/issue-138/verify-sorted-table-lazy.mjs
           python3 ../../experiments/issue-138/make-mirrored-page-vectors.py ../../experiments/issue-138/mirrored-pages-regenerated.json
           cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
           python3 ../../experiments/issue-138/generate-checkpoint-vectors.py ../../experiments/issue-138/engine-checkpoint-regenerated.json
@@ -365,6 +374,15 @@ jobs:
           bash examples/native-pages/run-interop.sh
           bash examples/journal-checkpoints/run-paged-interop.sh
           bash examples/journal-checkpoints/run-native-compact-interop.sh
+
+      - name: Immutable physical sorted table interchange
+        env:
+          SORTED_TABLE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/sorted_table
+          SORTED_TABLE_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/sorted-tables-csharp/bin/Release/net10.0/SortedTablesExample.dll
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,sorted-tables --example sorted_table
+          dotnet build examples/sorted-tables-csharp --configuration Release
+          bash examples/sorted-tables/run-interop.sh
 
       - name: Preserve native checkpoint page handoffs
         if: always()

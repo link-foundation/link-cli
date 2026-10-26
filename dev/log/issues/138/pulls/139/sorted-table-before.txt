@@ -1,0 +1,24 @@
+Physical sorted-table missing-API controls before implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: 9a9a95cda375395a54005a5f6a8495e9eee2fde9
+
+The first roundtrip controls were run before adding production table APIs:
+Rust log line2: error[E0432]: unresolved imports SortedJournalEntry,
+SortedJournalTable and SortedTableOptions from link_cli::engine::paged.
+C# log line5: error CS0246: SortedJournalEntry could not be found.
+JavaScript log line5: ERR_MODULE_NOT_FOUND for src/engine-sorted-table.js.
+The original fixtures remain in experiments/issue-138/sorted-table-before.rs,
+SortedTableBeforeTests.cs and sorted-table-before.test.mjs.
+
+Reproduce with Rust, .NET 10 and Node available in an isolated clean worktree
+at the baseline SHA. From that baseline checkout run:
+bash /absolute/path/to/PR/experiments/issue-138/run-sorted-table-before.sh /absolute/path/to/PR
+The driver refuses an incorrect or dirty checkout, copies only the controls,
+saves each compiler/runtime log, and requires all three missing-API failures.
+The commands underlying this driver ran before implementation; the later
+packaged driver itself has not been rerun against a second baseline checkout.
+
+These are feature-absence controls, not a claim that existing storage is buggy.
+Independent valid/corrupt binary vectors were generated without a production
+codec after the initial implementation; no earlier vector run is claimed.
+The final tests additionally check fault schedules, read bounds and native files.

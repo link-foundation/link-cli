@@ -195,3 +195,19 @@ async function reclamationTypes(provider: JournalMaintenanceStore) {
   return { result, invalid, durable: store.supportsDurableFlush };
 }
 void reclamationTypes;
+
+import { SortedJournalTable, type SortedJournalEntry } from '../types/engine-sorted-table.js';
+function sortedTableTypes(device: PageDevice) {
+  const rows: readonly SortedJournalEntry[] = [{ key: 'a', generation: '18446744073709551615', entries: null }];
+  const table = SortedJournalTable.create(device, rows, { maxKeys: 4096, maxBytes: 8388608 });
+  const digest: string = table.digest;
+  const entry: SortedJournalEntry | undefined = SortedJournalTable.open(device).get('a');
+  // @ts-expect-error Construction requires complete physical validation through the factories.
+  new SortedJournalTable();
+  // @ts-expect-error Exact generations use decimal strings.
+  SortedJournalTable.create(device, [{ key: 'a', generation: 1, entries: [] }]);
+  // @ts-expect-error Admission bounds are numbers.
+  SortedJournalTable.open(device, { maxBytes: '8388608' });
+  return { entry, digest, values: table.entries() };
+}
+void sortedTableTypes;

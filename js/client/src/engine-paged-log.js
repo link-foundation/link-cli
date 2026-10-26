@@ -1,5 +1,6 @@
 // SQL-free ordered log; internal page wire helpers are shared with repair.
-import { PAGE, CELLS, MAX_PAGES, encoder, decoder, PAGE_MAGIC, EXTERNAL, PAYLOAD, fail, same, view, pageHash, number, finish, metadata, decodeMetadata } from './engine-page-format.js';
+import { PAGE, CELLS, MAX_PAGES, encoder, PAGE_MAGIC, EXTERNAL, fail, same, view, pageHash, finish, metadata, decodeMetadata } from './engine-page-format.js';
+import { readPageRecords } from './engine-page-reader.js';
 
 export class PagedCommitLog {
   #device;
@@ -91,54 +92,5 @@ export class PagedCommitLog {
     finish(this.#device.writeMetadata(slot, metadata(next))); finish(this.#device.syncMetadata(slot));
     this.#state = next; this.#pending = []; this.#pendingRows = 0; this.#fenced = false;
   }
-  #readCommitted(retain) {
-    const state = this.#state, output = [];
-    if (state.pages === 0) return output;
-    let index = state.pages - 1, expected = state.lastHash, generation = state.generation;
-    let page, count = 0, consumed = 0, recordCount = 0;
-    const load = () => {
-      page = this.#device.readCheckedPage === undefined
-        ? this.#device.readPage(index) : this.#device.readCheckedPage(index, expected);
-      if (!(page instanceof Uint8Array) || page.length !== PAGE) fail('short page');
-      const data = view(page), actualHash = pageHash(page);
-      if (!same(page.subarray(0, 8), PAGE_MAGIC) || !same(page.subarray(8, 24), state.identity)
-        || number(data.getBigUint64(24, true)) !== index || actualHash !== expected || actualHash !== data.getBigUint64(56, true))
-        fail('page checksum or identity');
-      const created = number(data.getBigUint64(32, true));
-      if (created === 0 || created > generation || created < generation - 1 || (index === state.pages - 1 && created !== generation)
-        || (index === 0 && created !== 1)) fail('page generation');
-      generation = created; count = data.getUint32(40, true); expected = data.getBigUint64(48, true);
-      if (count === 0 || count > CELLS || data.getUint32(44, true) !== 0
-        || page.subarray(64 + count * 16).some(Boolean) || (index === 0 && expected !== 0n)) fail('page count or padding');
-    };
-    load();
-    const current = () => index < 0 ? 0 : index * CELLS + count;
-    const take = (wanted) => {
-      if (wanted === 0 || wanted !== current()) fail('noncanonical doublet reference');
-      const data = view(page), offset = 64 + (count - 1) * 16;
-      const result = [data.getBigUint64(offset, true), number(data.getBigUint64(offset + 8, true))];
-      consumed++; count--;
-      if (count === 0) { index--; if (index >= 0) load(); }
-      return result;
-    };
-    let root = state.root;
-    while (root !== 0) {
-      const [source, previous] = take(root);
-      let string = number(source), bytes = [];
-      while (string !== 0) {
-        const [external, next] = take(string), length = Number((external >> 56n) & 7n), payload = external & PAYLOAD;
-        if ((external & EXTERNAL) === 0n || (external & 0x7800000000000000n) !== 0n || length === 0
-          || (payload >> BigInt(length * 8)) !== 0n || (next !== 0 && length !== 7)) fail('string doublet');
-        for (let i = 0; i < length; i++) bytes.push(Number((payload >> BigInt(i * 8)) & 255n));
-        string = next;
-      }
-      const text = decoder.decode(new Uint8Array(bytes));
-      if (/[\r\n]/.test(text)) fail('record delimiter');
-      if (previous !== current()) fail('record predecessor');
-      if (retain) output.push(text);
-      root = previous; recordCount++;
-    }
-    if (current() !== 0 || consumed !== state.rows || recordCount !== state.records) fail('record counts');
-    return output.reverse();
-  }
+  #readCommitted(retain) { return readPageRecords(this.#device, this.#state, retain); }
 }

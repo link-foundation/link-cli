@@ -15,6 +15,8 @@ pub use checkpoint_root::MirroredCheckpointRoot;
 mod format;
 pub use checkpoint::CheckpointPagedLog;
 mod mirrored;
+#[cfg(feature = "sorted-tables")]
+mod sorted_table;
 use crate::{LinkError, TransitionLogStore};
 use format::{
     invalid, page_hash, portable, put, u32_at, u64_at, Metadata, CELLS, EXTERNAL, PAGE_MAGIC,
@@ -22,6 +24,8 @@ use format::{
 };
 pub use format::{MAX_PAGES, PAGE_SIZE};
 pub use mirrored::MirroredPageDevice;
+#[cfg(feature = "sorted-tables")]
+pub use sorted_table::{SortedJournalEntry, SortedJournalTable, SortedTableOptions};
 
 /// Caller-owned exclusive synchronous storage. Successful sync must persist all
 /// preceding writes in that file. Mutation failure requires reopening the log.

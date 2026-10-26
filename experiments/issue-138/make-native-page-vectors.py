@@ -27,7 +27,7 @@ def metadata(generation, pages, rows, records, root, last_hash):
     return result
 
 
-def append_group(image, group):
+def append_group(image, group, max_cells=CELLS):
     generation = image['generation'] + 1
     slots = []
     pages = []
@@ -50,7 +50,7 @@ def append_group(image, group):
 
     def cell(source, target):
         nonlocal rows
-        if len(slots) == CELLS:
+        if len(slots) == max_cells:
             finish()
         index = (len(image['pages']) + len(pages)) * CELLS + len(slots) + 1
         slots.append((source, target))
@@ -78,12 +78,14 @@ def snapshot(image):
             'pages': [value.hex() for value in image['pages']]}
 
 
-image = dict(generation=0, root=0, rows=0, last_hash=0, pages=[], records=[],
-             metadata=[metadata(0, 0, 0, 0, 0, 0), bytes()])
-result = {'databaseId': IDENTITY.hex(), 'empty': snapshot(image)}
-append_group(image, ['', 'snow 雪', '\ufeff\0'])
-result['oneGroup'] = snapshot(image)
-append_group(image, [''])
-result['twoGroups'] = snapshot(image)
-Path(sys.argv[1] if len(sys.argv) > 1 else 'experiments/issue-138/native-page-vectors.json').write_text(json.dumps(result, ensure_ascii=True, indent=2) + '\n')
-print('Independent vectors: empty, UTF-8 multi-chunk group, immutable partial-page successor')
+
+if __name__ == "__main__":
+    image = dict(generation=0, root=0, rows=0, last_hash=0, pages=[], records=[],
+                 metadata=[metadata(0, 0, 0, 0, 0, 0), bytes()])
+    result = {'databaseId': IDENTITY.hex(), 'empty': snapshot(image)}
+    append_group(image, ['', 'snow 雪', '\ufeff\0'])
+    result['oneGroup'] = snapshot(image)
+    append_group(image, [''])
+    result['twoGroups'] = snapshot(image)
+    Path(sys.argv[1] if len(sys.argv) > 1 else 'experiments/issue-138/native-page-vectors.json').write_text(json.dumps(result, ensure_ascii=True, indent=2) + '\n')
+    print('Independent vectors: empty, UTF-8 multi-chunk group, immutable partial-page successor')

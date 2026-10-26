@@ -20,6 +20,9 @@ struct State {
     live: Image,
     durable: Image,
     calls: Vec<String>,
+    reads: usize,
+    completed: usize,
+    mode: u32,
     fault: Option<(usize, bool)>,
 }
 #[derive(Clone, Default)]
@@ -54,16 +57,26 @@ impl Device {
     }
 }
 impl PageDevice for Device {
+    fn metadata_flags(&self) -> u32 {
+        self.0.borrow().mode
+    }
+    fn complete_recovery(&mut self) -> Result<(), LinkError> {
+        self.0.borrow_mut().completed += 1;
+        Ok(())
+    }
     fn supports_durable_flush(&self) -> bool {
         true
     }
     fn new_database_id(&mut self) -> Result<[u8; 16], LinkError> {
+        self.0.borrow_mut().reads += 1;
         Ok(std::array::from_fn(|i| i as u8))
     }
     fn data_length(&mut self) -> Result<u64, LinkError> {
+        self.0.borrow_mut().reads += 1;
         Ok(self.0.borrow().live.pages.len() as u64 * 4096)
     }
     fn read_metadata(&mut self, slot: usize) -> Result<Option<Vec<u8>>, LinkError> {
+        self.0.borrow_mut().reads += 1;
         Ok(self.0.borrow().live.metadata[slot].clone())
     }
     fn read_page(&mut self, index: u64) -> Result<[u8; 4096], LinkError> {
@@ -95,6 +108,17 @@ impl PageDevice for Device {
     fn truncate_data(&mut self, length: u64) -> Result<(), LinkError> {
         self.action("truncateData".into(), |s| {
             s.live.pages.truncate(length as usize / 4096)
+        })
+    }
+}
+impl link_cli::engine::paged::RepairPageDevice for Device {
+    fn repair_page(&mut self, index: u64, bytes: &[u8; 4096]) -> Result<(), LinkError> {
+        self.action("repairPage".into(), |s| {
+            if index as usize == s.live.pages.len() {
+                s.live.pages.push(*bytes);
+            } else {
+                s.live.pages[index as usize] = *bytes;
+            }
         })
     }
 }
@@ -588,3 +612,7 @@ fn independent_engine_policies_compose_with_replicas_groups_and_reopen() -> Resu
     }
     Ok(())
 }
+
+#[path = "engine_paged/sorted_table.rs"]
+#[cfg(feature = "sorted-tables")]
+mod sorted_table;

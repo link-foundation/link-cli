@@ -268,3 +268,8 @@ Select explicit epoch-fenced immutable journal reclamation with complete bounded
 root discovery, exact-generation deletion, coherent owned-reader refresh and
 zero-default optional caching. Keep append-only modes and expose native/WASM
 retained-history checkpoint handoffs and deterministic concurrency fault cases.
+
+Provide explicitly selected immutable physical sorted journal tables over native
+doublets pages, with exact tombstone generations, bounded full validation and
+indexed physical point reads. Verify portable vectors and native cross-language
+file interchange; keep WAL/manifest/compaction composition separate.

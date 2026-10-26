@@ -6,7 +6,7 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 // Finite durable-image device: writes and their individual persistence barriers
 // are separate. A complete unsynced decision may reach storage before a reply.
-internal sealed class PagedTestDevice : IPageDevice
+internal sealed class PagedTestDevice : IRepairPageDevice
 {
     internal sealed class Image
     {
@@ -18,10 +18,14 @@ internal sealed class PagedTestDevice : IPageDevice
     internal readonly List<string> Calls = new();
     internal (int At, bool After)? Fault;
     internal bool ReadError;
+    internal int Reads;
+    internal int Completed;
+    public uint MetadataFlags { get; set; }
+    public void CompleteRecovery() { Completed++; }
     public bool SupportsDurableFlush { get; set; } = true;
-    public byte[] NewDatabaseId() => Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
-    public long DataLength => Live.Pages.Count * 4096L;
-    public byte[]? ReadMetadata(int slot) => Live.Metadata[slot]?.ToArray();
+    public byte[] NewDatabaseId() { Reads++; return Enumerable.Range(0, 16).Select(i => (byte)i).ToArray(); }
+    public long DataLength { get { Reads++; return Live.Pages.Count * 4096L; } }
+    public byte[]? ReadMetadata(int slot) { Reads++; return Live.Metadata[slot]?.ToArray(); }
     public byte[] ReadPage(ulong index)
     {
         Calls.Add("readPage"); if (ReadError) throw new IOException("injected read"); return Live.Pages[(int)index].ToArray();
@@ -42,6 +46,10 @@ internal sealed class PagedTestDevice : IPageDevice
         byte[] copy = bytes.ToArray(); Action("writePage", () => { Assert.Equal((ulong)Live.Pages.Count, index); Live.Pages.Add(copy); });
     }
     public void SyncData() => Action("syncData", () => Durable.Pages = Live.Pages.Select(p => p.ToArray()).ToList());
+    public void RepairPage(ulong index, ReadOnlySpan<byte> bytes)
+    {
+        byte[] copy = bytes.ToArray(); Action("repairPage", () => { if (index == (ulong)Live.Pages.Count) Live.Pages.Add(copy); else Live.Pages[(int)index] = copy; });
+    }
     public void WriteMetadata(int slot, ReadOnlySpan<byte> bytes)
     {
         byte[] copy = bytes.ToArray(); Action("writeMetadata" + slot, () => Live.Metadata[slot] = copy);

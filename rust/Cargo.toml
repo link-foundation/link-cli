@@ -68,6 +68,7 @@ windows-sys = { version = "0.61.2", features = ["Win32_Foundation"], optional = 
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
 sqlite = ["dep:rusqlite"]
 native-pages = ["dep:getrandom", "dep:libc", "dep:windows-sys"]
+sorted-tables = ["dep:serde_json"]
 
 [[example]]
 name = "cluster"
@@ -88,3 +89,7 @@ required-features = ["etcd"]
 [[example]]
 name = "journal_reclamation"
 required-features = ["etcd"]
+
+[[example]]
+name = "sorted_table"
+required-features = ["native-pages", "sorted-tables"]
