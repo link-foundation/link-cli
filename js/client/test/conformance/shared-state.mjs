@@ -5,7 +5,8 @@ import { WasmEngine, MemoryCommitLog, DeltaCommitLog } from '../../src/index.js'
 /** Public JS/TS options exercise the actual compiled native core in each runtime. */
 export async function sharedStateConformance(binding) {
   for (const revisionEncoding of ['snapshot', 'changes']) {
-    for (const stateStructure of ['flat', 'shared']) {
+    for (const stateStructure of ['flat', 'shared', 'sorted-runs']) {
+      for (const other of ['flat', 'shared', 'sorted-runs'])
       for (const delta of [false, true]) {
         const physical = new MemoryCommitLog();
         const log = () => delta ? new DeltaCommitLog(physical) : physical;
@@ -22,7 +23,6 @@ export async function sharedStateConformance(binding) {
           ]);
           await a.close(); await b.close();
           assert.equal(pinned.rows[0].name, null);
-          const other = stateStructure === 'shared' ? 'flat' : 'shared';
           const otherEncoding = revisionEncoding === 'changes' ? 'snapshot' : 'changes';
           const child = engine.fork({ stateStructure: other, revisionEncoding: otherEncoding }); const base = child.mergeBaseRecord();
           assert.match(base, /^engine1\|/);
@@ -51,5 +51,5 @@ export async function sharedStateConformance(binding) {
   }
   for (const stateStructure of ['mutable', 42, [], {}])
     assert.throws(() => new WasmEngine(binding, { stateStructure }));
-  console.log('ok wasm engine: independent flat/shared state and snapshot/changes records, groups, mixed branches and plain/delta reopen');
+  console.log('ok wasm engine: independent flat/shared/sorted-run state and snapshot/changes records, groups, mixed branches and plain/delta reopen');
 }

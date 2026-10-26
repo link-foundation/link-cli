@@ -1,5 +1,5 @@
 //! Reopen the same native doublets page journal from Rust, C# and Node/Bun/Deno.
-//! cargo run --manifest-path rust/Cargo.toml --features native-pages --example engine_native_pages -- <database> [--mirrored] [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
+//! cargo run --manifest-path rust/Cargo.toml --features native-pages --example engine_native_pages -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints]
 use link_cli::engine::paged::{FilePageDevice, MirroredPageDevice, PageDevice, PagedLog};
 use link_cli::engine::{
     Constraint, ConstraintValidation, DeltaLog, Engine, EngineOptions, GroupCommitOutcome,
@@ -75,6 +75,8 @@ fn main() -> anyhow::Result<()> {
         require_durable_flush: true,
         state_structure: if args.iter().any(|arg| arg == "--flat") {
             StateStructure::Flat
+        } else if args.iter().any(|arg| arg == "--sorted-runs") {
+            StateStructure::SortedRuns
         } else {
             StateStructure::Shared
         },

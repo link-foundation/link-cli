@@ -3,7 +3,7 @@ import { WasmEngine, MemoryCommitLog, DeltaCommitLog } from '../../src/index.js'
 
 /** The option crosses the public JS queue and actual compiled WASM boundary. */
 export async function constraintIndexConformance(binding) {
-  for (const stateStructure of ['flat', 'shared']) {
+  for (const stateStructure of ['flat', 'shared', 'sorted-runs']) {
     for (const revisionEncoding of ['snapshot', 'changes']) {
       for (const constraintValidation of ['scan', 'indexed']) {
         const physical = new MemoryCommitLog();

@@ -39,6 +39,8 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   void invalidConstraints;
   const sharedOptions: EngineOptions = { stateStructure: 'shared' };
   const flatOptions: EngineOptions = { stateStructure: 'flat' };
+  const runOptions: EngineOptions = { stateStructure: 'sorted-runs' };
+  void runOptions;
   void sharedOptions; void flatOptions;
   // @ts-expect-error Unknown state structures must not silently select a policy.
   const invalidStructure: EngineOptions = { stateStructure: 'mutable' };

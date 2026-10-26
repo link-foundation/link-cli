@@ -16,8 +16,12 @@ fn options(state_structure: StateStructure, revision_encoding: RevisionEncoding)
 fn encodings() -> [RevisionEncoding; 2] {
     [RevisionEncoding::Snapshot, RevisionEncoding::Changes]
 }
-fn structures() -> [StateStructure; 2] {
-    [StateStructure::Flat, StateStructure::Shared]
+fn structures() -> [StateStructure; 3] {
+    [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ]
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]

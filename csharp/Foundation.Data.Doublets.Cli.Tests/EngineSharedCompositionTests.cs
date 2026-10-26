@@ -9,6 +9,7 @@ public class EngineSharedCompositionTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void StructureChoiceIsIndependentOfAdmissionIsolationAndValidation(StateStructure structure)
     {
         foreach (var concurrency in Enum.GetValues<ConcurrencyControl>())
@@ -36,6 +37,11 @@ public class EngineSharedCompositionTests
     [InlineData(StateStructure.Flat, StateStructure.Shared)]
     [InlineData(StateStructure.Shared, StateStructure.Flat)]
     [InlineData(StateStructure.Shared, StateStructure.Shared)]
+    [InlineData(StateStructure.Flat, StateStructure.SortedRuns)]
+    [InlineData(StateStructure.Shared, StateStructure.SortedRuns)]
+    [InlineData(StateStructure.SortedRuns, StateStructure.Flat)]
+    [InlineData(StateStructure.SortedRuns, StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns, StateStructure.SortedRuns)]
     public void GroupsBranchesAndReopeningPreserveMixedChoices(StateStructure parentStructure, StateStructure branchStructure)
     {
         var log = new MemoryCommitLog(); var options = new EngineOptions { StateStructure = parentStructure, Isolation = IsolationLevel.Snapshot, HistoryLimit = null };
@@ -53,6 +59,8 @@ public class EngineSharedCompositionTests
         var current = engine.Snapshot(); Assert.False(current.Rows.ContainsKey(2)); Assert.True(current.Rows.ContainsKey(ulong.MaxValue));
         Assert.Equal(parentStructure == StateStructure.Shared, current.Rows is ImmutableSortedDictionary<ulong, EngineRow<ulong>>);
         Assert.Equal(branchStructure == StateStructure.Shared, resumed.Engine.Snapshot().Rows is ImmutableSortedDictionary<ulong, EngineRow<ulong>>);
+        Assert.Equal(parentStructure == StateStructure.SortedRuns, current.Rows is SortedRunRows<ulong>);
+        Assert.Equal(branchStructure == StateStructure.SortedRuns, resumed.Engine.Snapshot().Rows is SortedRunRows<ulong>);
         using (var discarded = engine.Begin()) { discarded.SetName(1, "discarded"); discarded.Rollback(); }
         var reopened = new LinksEngine<ulong>(log, options); Assert.Equal(current.Rows, reopened.Snapshot().Rows);
         Assert.Equal(2, reopened.SnapshotAt(1).Rows.Count);
@@ -63,6 +71,7 @@ public class EngineSharedCompositionTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void ConstraintsAndRetentionPreservePriorSnapshots(StateStructure structure)
     {
         foreach (var constraint in Enum.GetValues<EngineConstraint>())
@@ -101,6 +110,8 @@ public class EngineSharedCompositionTests
     [InlineData(StateStructure.Shared, false)]
     [InlineData(StateStructure.Flat, true)]
     [InlineData(StateStructure.Shared, true)]
+    [InlineData(StateStructure.SortedRuns, false)]
+    [InlineData(StateStructure.SortedRuns, true)]
     public void UnknownCommitPreservesPinnedSnapshotAndReopensTheActualOutcome(StateStructure structure, bool flush)
     {
         var log = new FailingLog(); var options = new EngineOptions { StateStructure = structure };
@@ -116,6 +127,7 @@ public class EngineSharedCompositionTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void ExistingPortableRecordsReopenWithoutChangingTheirWire(StateStructure structure)
     {
         using var vectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Protocol", "engine-revision-vectors.json")));

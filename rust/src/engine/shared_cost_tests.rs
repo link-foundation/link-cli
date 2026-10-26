@@ -12,7 +12,7 @@ fn shared() -> EngineOptions {
 fn unmaterialized(snapshot: &Snapshot<u64>) {
     match snapshot.rows.as_ref() {
         Rows::Shared { compatibility, .. } => assert!(compatibility.get().is_none()),
-        Rows::Flat(_) => panic!("selected shared representation lost"),
+        Rows::Flat(_) | Rows::SortedRuns(_) => panic!("selected shared representation lost"),
     }
 }
 

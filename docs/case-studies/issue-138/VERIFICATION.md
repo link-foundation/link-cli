@@ -1,16 +1,20 @@
 # Verification record
 
-Latest native-page validation: 910 native Rust tests (16 child entry points
-ignored), 531 actual WASM tests and 2,045 C# tests in each configuration pass.
-Independent vectors, finite I/O/corruption/ownership contracts, bounded process
-exits and all 16 Rust/Node/Bun/C#/Deno/Rust shared-file configurations pass.
-Native coverage is 12,531/13,356 lines, 2,343/2,774 branches and 1,594/1,726
-functions. Actual WASM is 9,334/12,483 lines, 1,835/2,385 branches and 1,200/1,654
-functions. C# Debug is 7,654/8,156 lines and 4,100/4,546 branches; Release is
-5,893/6,204 lines and 4,063/4,521 branches. These complete-project totals leave
-100% coverage unfinished. Selected redundant repair and the wider inventory
-remain open. Exact commands and evidence: native-pages-rust.txt,
-native-pages-csharp.txt and NATIVE-PAGES-PLAN.md.
+Latest complete local validation, including immutable sorted runs: 935 native
+Rust tests and six doctests, 546 actual-WASM tests, 2,164 C# tests per Debug/
+Release configuration, 209 JS tests on Node 26 and 24, strict types and 221
+repository checks pass. All 48 physical/policy configurations pass 288 Rust/
+Node/Bun/C#/Deno/Rust file writers, including mirrored damaged-copy repair.
+
+Complete native coverage is 12,969/13,748 lines, 2,419/2,840 branches and
+1,654/1,783 functions. Actual WASM is 10,033/12,796 lines, 1,999/2,443 branches
+and 1,269/1,700 functions. C# Debug is 8,043/8,353 lines and 4,351/4,722
+branches; Release is 6,171/6,365 lines and 4,300/4,689 branches. JS production
+modules enforce 100% lines/branches/functions; WASM wrapper modules measure
+383/383 lines, 20/20 branches and 73/73 functions. Complete-project 100% remains
+unfinished. See SORTED-RUNS-PLAN.md and sorted-runs.txt for commands, component
+measurements, baseline and the preserved initial C# wrapper error after both
+suites passed. Fresh exact-head CI is required for the sorted-run batch.
 
 This is evidence for [PR 139](https://github.com/link-foundation/link-cli/pull/139),
 not a claim that the open-ended issue is complete. Commands run with one Cargo

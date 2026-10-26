@@ -24,7 +24,8 @@ var engine = new LinksEngine<ulong>(new MemoryCommitLog(), new() {
 const engine = new WasmEngine(binding, { stateStructure: 'shared' });
 ```
 
-The Rust-backed JS/TS/WASM option accepts `flat` and `shared`; unknown values
+The Rust-backed JS/TS/WASM option accepts `flat`, `shared` and independently
+selected [immutable sorted runs](ENGINE-SORTED-RUNS.md); unknown values
 fail before opening the engine. C# also rejects undefined enum values. Sessions
 keep the same links/names API, visibility, conflict validation, rollback and
 unknown-commit behavior. The choice changes allocation and update costs, without
@@ -32,9 +33,9 @@ adding a worker, queue, timer or new durability guarantee.
 
 ## Composition and compatibility
 
-Both representations default to complete `engine1` revisions; independently
+All representations default to complete `engine1` revisions; independently
 selected [change records](ENGINE-CHANGE-RECORDS.md) encode changed rows. Existing
-journals reopen under either choice. Full-snapshot shared recovery compares each
+journals reopen under any choice. Full-snapshot shared recovery compares each
 decoded revision with its predecessor and reuses unchanged entries. Change-record
 recovery retains the preceding root and applies changed paths directly.
 

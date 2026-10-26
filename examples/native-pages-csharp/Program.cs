@@ -1,6 +1,6 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
+// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal)) ?? throw new ArgumentException("Provide a dedicated Native pages database path.");
 IPageDevice device = args.Contains("--mirrored") ? new FileMirroredPageDevice(path) : new FilePageDevice(path);
 using var ownership = (IDisposable)device;
@@ -11,7 +11,7 @@ var engine = new LinksEngine<ulong>(log, new()
     Isolation = Foundation.Data.Doublets.Cli.Engine.IsolationLevel.Snapshot,
     HistoryLimit = null,
     RequireDurableFlush = true,
-    StateStructure = args.Contains("--flat") ? StateStructure.Flat : StateStructure.Shared,
+    StateStructure = args.Contains("--flat") ? StateStructure.Flat : args.Contains("--sorted-runs") ? StateStructure.SortedRuns : StateStructure.Shared,
     RevisionEncoding = args.Contains("--snapshot") ? RevisionEncoding.Snapshot : RevisionEncoding.Changes,
     ConstraintValidation = args.Contains("--indexed-constraints") ? ConstraintValidation.Indexed : ConstraintValidation.Scan,
     Constraints = args.Contains("--references") || args.Contains("--indexed-constraints") ? new[] { EngineConstraint.References } : Array.Empty<EngineConstraint>()

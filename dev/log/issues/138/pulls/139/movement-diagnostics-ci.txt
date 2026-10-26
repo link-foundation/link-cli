@@ -1,0 +1,18 @@
+Bounded movement child diagnostics: exact-head GitHub Actions evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 3c22e698e61ef9a8a1bf7c3d68139f2c065b2b98
+Commit created: 2026-10-26T09:52:03+00:00
+All nine workflows completed successfully after this commit.
+
+Broken Link Checker: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898037
+C# CI/CD Pipeline: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898217
+Dependencies: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898007
+Docs: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898221
+JS client CI: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898177
+Rust CI/CD Pipeline: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898134
+Security: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302898025
+WebAssembly CI: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302897990
+Workflows: success; created 2026-10-26T09:52:09Z; https://github.com/link-foundation/link-cli/actions/runs/40302897957
+
+Native Linux/macOS/Windows matrices and actual WASM pass. Later commits need fresh CI.
+Whole-project coverage and every wider unfinished requirement remain active.

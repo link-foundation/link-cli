@@ -11,7 +11,7 @@ public enum SerializableValidation { Revision, ReadSet }
 public enum EngineConstraint { References, UniquePairs, UniqueNames }
 public enum ConstraintValidation { Scan, Indexed }
 /// <summary>Independent in-memory representation; journal format is unchanged.</summary>
-public enum StateStructure { Flat, Shared }
+public enum StateStructure { Flat, Shared, SortedRuns }
 /// <summary>Logical payload, independent of physical log/delta encoding.</summary>
 public enum RevisionEncoding { Snapshot, Changes }
 
@@ -44,7 +44,12 @@ public sealed class EngineSnapshot<T>
     { Revision = revision; Rows = rows.Freeze(); }
     internal static EngineSnapshot<T> Create(ulong revision, EngineRows<T> rows) => new(revision, rows);
     internal EngineSnapshot<T> Adapt(StateStructure structure, EngineSnapshot<T>? previous = null)
-        => (Rows is ImmutableSortedDictionary<T, EngineRow<T>>) == (structure == StateStructure.Shared)
+        => (structure switch
+        {
+            StateStructure.Shared => Rows is ImmutableSortedDictionary<T, EngineRow<T>>,
+            StateStructure.SortedRuns => Rows is SortedRunRows<T>,
+            _ => Rows is not ImmutableSortedDictionary<T, EngineRow<T>> && Rows is not SortedRunRows<T>,
+        })
             ? this : Create(Revision, new(Rows, structure, previous?.Rows));
 }
 

@@ -4,7 +4,7 @@ export interface EngineOptions {
   /** Default full scans, or persistent indexes for only the selected constraints. */
   constraintValidation?: 'scan' | 'indexed';
   /** In-memory immutable state; independent of journal and isolation. */
-  stateStructure?: 'flat' | 'shared';
+  stateStructure?: 'flat' | 'shared' | 'sorted-runs';
   /** Logical journal records; independent of the physical delta decorator. */
   revisionEncoding?: 'snapshot' | 'changes';
   concurrency?: 'optimistic' | 'exclusive' | 'pessimistic';

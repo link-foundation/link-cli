@@ -10,7 +10,9 @@ Requirement mapping: R1/R3/R7/R8/R12. Preserve the complete issue inventory.
 - [x] Run focused tests, complete native tests, strict lint and repository checks.
 - [ ] Obtain exact-head platform diagnostics; establish the root cause before
       claiming a fix. Do not weaken crash/recovery assertions or extend deadlines.
-- [ ] Verify the resulting change in fresh CI and continue all wider criteria.
+- [x] Verify the diagnostic change in fresh CI; all nine workflows pass on
+      3c22e69, including all native platform matrices. See movement-diagnostics-ci.txt.
+      Continue all wider criteria; the earlier timeout's cause remains unknown.
 
 Run 40299771183 at 1aafc31 fails only Windows's
 switch_survives_exit_at_every_persisted_movement_phase. Lines 32629–32635
@@ -31,5 +33,5 @@ The unchanged crash/recovery schedule passes locally: three parents exercise
 all child exit points, then the full native suite passes. Journal-only head
 e39ecce also passes all nine workflows, including Windows, before this
 instrumentation. The original timeout is not reproducible here; no database
-fix or definite pipe/setup cause is claimed. Fresh CI must verify the added
-diagnostics, and a recurrence must be investigated using the retained phase.
+fix or definite pipe/setup cause is claimed. All nine workflows also pass on
+diagnostic head 3c22e69. A recurrence must be investigated using the retained phase.

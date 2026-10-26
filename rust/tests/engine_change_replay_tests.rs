@@ -22,7 +22,11 @@ fn records(values: &serde_json::Value) -> Vec<String> {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn independent_change_and_mixed_records_recover_exact_names_rows_history_and_allocator() {
     let fixtures = vectors();
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         for kind in ["valid", "mixed"] {
             let entries = records(&fixtures[kind]);
             let options = EngineOptions {
@@ -91,7 +95,11 @@ impl TransitionLogStore for ReadOnlyLog {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn malformed_change_streams_reject_without_rewriting_the_supplied_journal() {
     for fixture in vectors()["invalidU32"].as_array().unwrap() {
-        for structure in [StateStructure::Flat, StateStructure::Shared] {
+        for structure in [
+            StateStructure::Flat,
+            StateStructure::Shared,
+            StateStructure::SortedRuns,
+        ] {
             let expected = records(&fixture["records"]);
             let saved = Rc::new(RefCell::new(expected.clone()));
             let result = Engine::<u32, _>::open(

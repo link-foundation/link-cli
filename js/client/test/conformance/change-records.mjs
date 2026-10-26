@@ -5,7 +5,7 @@ import { WasmEngine, MemoryCommitLog, DeltaCommitLog } from '../../src/index.js'
 /** Independent wire fixtures cross the actual JS-to-WASM boundary. */
 export async function changeRecordConformance(binding) {
   const vectors = JSON.parse(readFileSync(new URL('../../../../docs/protocol/engine-change-vectors.json', import.meta.url), 'utf8'));
-  for (const stateStructure of ['flat', 'shared']) {
+  for (const stateStructure of ['flat', 'shared', 'sorted-runs']) {
     for (const revisionEncoding of ['snapshot', 'changes']) {
       for (const records of [vectors.valid, vectors.mixed]) {
         const physical = new MemoryCommitLog(records);

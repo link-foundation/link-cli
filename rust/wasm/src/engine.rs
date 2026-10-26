@@ -46,6 +46,7 @@ fn options(text: &str) -> Result<EngineOptions, String> {
         state_structure: match parsed.state_structure.as_deref() {
             None | Some("flat") => StateStructure::Flat,
             Some("shared") => StateStructure::Shared,
+            Some("sorted-runs") => StateStructure::SortedRuns,
             _ => return Err("unknown state structure".into()),
         },
         concurrency: match parsed.concurrency.as_deref() {

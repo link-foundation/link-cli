@@ -30,6 +30,7 @@ public class EngineChangesFaultTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void UncertainChangeGroupsRecoverEveryDurablePrefixAndPreserveTheOldVisibleState(StateStructure structure)
     {
         foreach (bool delta in new[] { false, true })

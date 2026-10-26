@@ -353,8 +353,10 @@ complete the overall issue or authorize marking the draft ready early.
     flush, retry, following writes, exact reopening and normal shrink/regrowth
     pass. Both full C# configurations pass 2,126 tests with complete coverage;
     formatting/release/source and 221 repository checks pass. See
-    MAPPED-GROWTH-PLAN.md and mapped-growth-{before,}.txt. Fresh exact-head
-    platform CI and every broader unfinished requirement remain active.
+    MAPPED-GROWTH-PLAN.md and mapped-growth-{before,}.txt. Exact-head C# CI passes
+    all three platforms; Rust Windows fails an existing movement child deadline.
+    Journal-only e39ecce later passes all nine workflows before movement
+    instrumentation. Every broader unfinished requirement remains active.
 
 29. Seventeen journal value contracts preserve captured ownership, single
     enumeration, read-only names, complete equality/hash behavior, public header
@@ -363,5 +365,19 @@ complete the overall issue or authorize marking the draft ready early.
     production denominators, plus format/release/source and 221 repository checks.
     See JOURNAL-VALUE-PLAN.md and journal-values.txt. Exact-head 1aafc31 C# CI
     passes all three platforms; Rust Windows fails an existing movement child
-    deadline. Its investigation and fresh CI remain active, along with every
-    wider inventoried criterion.
+    deadline. Journal-only e39ecce passes all nine workflows, and diagnostic
+    head 3c22e69 also passes all nine, without extending that deadline or
+    establishing its earlier cause. See journal-values-ci.txt and
+    movement-diagnostics-ci.txt. Every wider inventoried criterion remains open.
+
+30. Independently selected immutable sorted runs now use the same native/WASM/
+    JS/TS engine surfaces. A real pre-feature compiled binding rejects selection;
+    finite map oracles, shared-array controls, all nine conversions and expanded
+    replay/group/branch/fault matrices pass. Full local suites pass 935 native,
+    546 actual-WASM, 2,164 C# per configuration and 209 JS tests on Node 26/24,
+    plus strict types and 221 repository checks. All 48 physical/policy choices
+    pass 288 shared-file writers, including mirrored damage and repair. Complete
+    coverage remains below target; exact values and the initial wrapper-script
+    error are preserved in sorted-runs.txt and sorted-runs-wrapper-before.txt.
+    See SORTED-RUNS-PLAN.md. Fresh exact-head CI remains required. Physical
+    SSTables and every wider unmet criterion remain unfinished.

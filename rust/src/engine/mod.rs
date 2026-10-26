@@ -29,6 +29,7 @@ pub mod replication;
 mod rows;
 #[cfg(test)]
 mod shared_cost_tests;
+mod sorted_runs;
 #[cfg(all(feature = "sqlite", not(target_arch = "wasm32")))]
 pub mod sqlite;
 mod transaction;
@@ -55,6 +56,8 @@ pub enum StateStructure {
     Flat,
     /// Share immutable entries and path-copy an ordered tree for changed rows.
     Shared,
+    /// Share immutable sorted runs; merge occupied event-count tiers on writes.
+    SortedRuns,
 }
 
 /// Logical journal payload, independent of the physical log's encoding.

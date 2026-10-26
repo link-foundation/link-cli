@@ -1,4 +1,4 @@
-// CLINK_WASM=<web package> node|bun|deno run --allow-all ... <database> [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
+// CLINK_WASM=<web package> node|bun|deno run --allow-all ... <database> [--delta] [--flat|--sorted-runs] [--snapshot] [--references] [--indexed-constraints]
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -14,7 +14,7 @@ const Provider = process.argv.includes('--mirrored')
 using physical = new Provider(path);
 using engine = new WasmEngine(binding, {
   isolation: 'snapshot', history: 'all', requireDurableFlush: true,
-  stateStructure: process.argv.includes('--flat') ? 'flat' : 'shared',
+  stateStructure: process.argv.includes('--flat') ? 'flat' : process.argv.includes('--sorted-runs') ? 'sorted-runs' : 'shared',
   revisionEncoding: process.argv.includes('--snapshot') ? 'snapshot' : 'changes',
   constraintValidation: process.argv.includes('--indexed-constraints') ? 'indexed' : 'scan',
   constraints: process.argv.includes('--references') || process.argv.includes('--indexed-constraints') ? ['references'] : [],

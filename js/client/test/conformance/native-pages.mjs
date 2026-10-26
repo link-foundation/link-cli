@@ -17,7 +17,7 @@ export async function nativePageConformance(binding) {
       flushes = 0;
       flush() { this.flushes++; super.flush(); }
     }
-    for (const stateStructure of ['flat', 'shared'])
+    for (const stateStructure of ['flat', 'shared', 'sorted-runs'])
       for (const revisionEncoding of ['snapshot', 'changes'])
         for (const constraintValidation of ['scan', 'indexed'])
           for (const delta of [false, true]) {
@@ -76,6 +76,6 @@ export async function nativePageConformance(binding) {
             }
           }
     }
-    console.log('ok wasm native pages: 32 independent policies, plain/mirrored real-file reopen and repair, exact names, shared flush, replica acknowledgement, rejected constraints and following writes');
+    console.log('ok wasm native pages: 48 independent policies, plain/mirrored real-file reopen and repair, exact names, shared flush, replica acknowledgement, rejected constraints and following writes');
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

@@ -141,7 +141,11 @@ fn schedule<L: TransitionLogStore>(
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn uncertain_change_groups_recover_each_possible_durable_prefix_without_publishing_tentative_rows()
 {
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         for delta in [false, true] {
             for (mode, max_prefix) in [("append-before", 1), ("append-after", 2), ("flush", 2)] {
                 for prefix in 0..=max_prefix {

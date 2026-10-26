@@ -84,6 +84,7 @@ fn validates_every_binding_option_and_journal_before_opening() {
         r#"{"constraintValidation":"scan"}"#,
         r#"{"constraintValidation":"indexed","constraints":["references","unique-pairs","unique-names"]}"#,
         r#"{"stateStructure":"shared"}"#,
+        r#"{"stateStructure":"sorted-runs"}"#,
         r#"{"revisionEncoding":"snapshot"}"#,
         r#"{"revisionEncoding":"changes","stateStructure":"shared"}"#,
         r#"{"history":null}"#,

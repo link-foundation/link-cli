@@ -9,6 +9,7 @@ public class EngineChangeReplayTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void IndependentChangeAndMixedRecordsPreserveNamesRowsHistoryAndAllocator(StateStructure structure)
     {
         using var fixtures = Vectors();
@@ -65,6 +66,7 @@ public class EngineChangeReplayTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void MalformedChangesRejectWithoutRewritingTheSuppliedJournal(StateStructure structure)
     {
         using var fixtures = Vectors();

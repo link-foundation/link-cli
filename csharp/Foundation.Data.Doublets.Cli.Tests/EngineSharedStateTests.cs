@@ -78,6 +78,7 @@ public class EngineSharedStateTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void BothStructuresMatchAFiniteIndependentRowsAndNamesOracle(StateStructure structure)
     {
         var log = new MemoryCommitLog(); var engine = new LinksEngine<ulong>(log, Options(structure));

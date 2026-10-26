@@ -57,7 +57,11 @@ fn selected_structure_preserves_unchanged_row_identity_and_old_snapshots() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn both_structures_match_a_finite_independent_row_and_name_oracle() {
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         let db = Engine::<u64, _>::open(MemoryLog::default(), options(structure)).unwrap();
         let mut expected = BTreeMap::new();
         let mut saved = Vec::new();
@@ -103,7 +107,11 @@ fn both_structures_match_a_finite_independent_row_and_name_oracle() {
             }
         }
         let records = db.with_log(|log| Ok(log.clone())).unwrap();
-        for reopen_structure in [StateStructure::Flat, StateStructure::Shared] {
+        for reopen_structure in [
+            StateStructure::Flat,
+            StateStructure::Shared,
+            StateStructure::SortedRuns,
+        ] {
             let reopened =
                 Engine::<u64, _>::open(records.clone(), options(reopen_structure)).unwrap();
             assert_eq!(
@@ -117,7 +125,11 @@ fn both_structures_match_a_finite_independent_row_and_name_oracle() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn structure_choice_is_independent_of_admission_isolation_and_read_validation() {
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         for concurrency in [
             ConcurrencyControl::Optimistic,
             ConcurrencyControl::Exclusive,
@@ -188,8 +200,16 @@ fn structure_choice_is_independent_of_admission_isolation_and_read_validation() 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn groups_branches_and_reopening_preserve_mixed_structure_choices() {
-    for parent_structure in [StateStructure::Flat, StateStructure::Shared] {
-        for branch_structure in [StateStructure::Flat, StateStructure::Shared] {
+    for parent_structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
+        for branch_structure in [
+            StateStructure::Flat,
+            StateStructure::Shared,
+            StateStructure::SortedRuns,
+        ] {
             let config = EngineOptions {
                 isolation: IsolationLevel::Snapshot,
                 ..options(parent_structure)
@@ -248,7 +268,11 @@ fn groups_branches_and_reopening_preserve_mixed_structure_choices() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn selected_constraints_fail_without_changing_prior_snapshots_or_history() {
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         for constraint in [
             Constraint::References,
             Constraint::UniquePairs,
@@ -302,7 +326,11 @@ fn existing_portable_records_reopen_under_both_structures_without_wire_changes()
         .iter()
         .map(|record| record.as_str().unwrap().into())
         .collect();
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         let db = Engine::<u32, _>::open(
             MemoryLog {
                 entries: records.clone(),
@@ -350,7 +378,11 @@ impl TransitionLogStore for Failing {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn uncertain_commits_preserve_pinned_state_and_reopen_the_actual_outcome() {
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         for flush in [false, true] {
             let fault = Rc::new(RefCell::new(Faults::default()));
             let db = Engine::<u64, _>::open(Failing(fault.clone()), options(structure)).unwrap();
@@ -382,7 +414,11 @@ fn uncertain_commits_preserve_pinned_state_and_reopen_the_actual_outcome() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn retained_and_unretained_shared_snapshots_survive_noop_and_rollback_paths() {
-    for structure in [StateStructure::Flat, StateStructure::Shared] {
+    for structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
         for history in [
             HistoryPolicy::None,
             HistoryPolicy::Last(1),

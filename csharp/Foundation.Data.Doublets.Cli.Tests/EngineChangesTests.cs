@@ -9,6 +9,7 @@ public class EngineChangesTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void SelectedEncodingVisitsOnlyChangedRowsAndPreservesAllocationAndNoopSemantics(StateStructure structure)
     {
         foreach (var encoding in Enum.GetValues<RevisionEncoding>())
@@ -46,6 +47,7 @@ public class EngineChangesTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void GroupsAndEvictedMergeBasesReplayMixedEncodingsAndStateChoices(StateStructure structure)
     {
         foreach (var branchStructure in Enum.GetValues<StateStructure>())
@@ -72,6 +74,7 @@ public class EngineChangesTests
     [Theory]
     [InlineData(StateStructure.Flat)]
     [InlineData(StateStructure.Shared)]
+    [InlineData(StateStructure.SortedRuns)]
     public void ChangeEncodingPreservesAdmissionVisibilityValidationConstraintsAndHistory(StateStructure structure)
     {
         foreach (var concurrency in Enum.GetValues<ConcurrencyControl>())

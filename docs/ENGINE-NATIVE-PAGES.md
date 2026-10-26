@@ -10,7 +10,7 @@ codec is a separate `./engine-paged-log` entry accepting a synchronous `PageDevi
 Rust provides the portable `engine::paged::PagedLog<D>` on native and WASM
 targets. Feature `native-pages` selects `FilePageDevice`; it introduces no SQL
 dependency and its native dependencies are excluded from WASM. Rust, Node, Bun
-and Deno reopen the same files in all 16 example policy combinations. C# provides
+and Deno reopen the same files in all 24 example policy combinations. C# provides
 `PagedCommitLog` over caller-owned `IPageDevice`, with `FilePageDevice` for native
 files. The public C# library adds no SQL package. All five runtime examples
 reopen the same files and verify the preceding writers' exact records.
@@ -67,7 +67,8 @@ CLINK_WASM="$PWD/js/pkg" deno run --allow-all js/client/examples/engine-native-p
 ```
 
 Each invocation verifies all prior exact names and commits two sessions in one
-flush, retaining their separate revisions and pinned predecessor. `--flat`,
+flush, retaining their separate revisions and pinned predecessor. `--flat` or
+`--sorted-runs` selects an alternative to these examples' shared-tree default.
 `--snapshot`, `--delta`, `--references` and `--indexed-constraints` select independent
 policies. Reopen with compatible constraints and the same physical delta choice.
 `--mirrored` selects two-copy physical repair when creating a database; retain
@@ -82,7 +83,7 @@ dotnet run --project examples/native-pages-csharp -- existing-directory/journal
 CLINK_WASM="$PWD/js/pkg" bash examples/native-pages/run-interop.sh
 ```
 
-The interchange script exercises 32 physical/policy configurations. It reopens
+The interchange script exercises 48 physical/policy configurations. It reopens
 each file through Rust, Node, Bun, C#, Deno and Rust, verifying all earlier exact
 names and twelve final revisions. In mirrored mode it damages one closed copy
 between writers, alternates the damaged side across configurations, and checks
@@ -112,9 +113,9 @@ flushes staged records.
 Tests consume independently generated wire vectors, inject finite durable-image
 write/sync failures, reject malformed checksummed structures, reopen actual
 files and bound real process-exit probes. The normal actual-WASM conformance
-runner exercises 16 combinations under all three JS runtimes, including two
+runner exercises 24 combinations under all three JS runtimes, including two
 real-file opens, shared flushes, replica acknowledgement, rejected constraints
-and following writes. Mirrored mode adds another sixteen combinations with
+and following writes. Mirrored mode adds another twenty-four combinations with
 damaged data/metadata between opens. Finite tests are not physical power-loss certification.
 
 Select two-copy repair in JavaScript with a separate import:

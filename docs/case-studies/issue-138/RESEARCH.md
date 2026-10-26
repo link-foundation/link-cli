@@ -318,3 +318,26 @@ name failures, caller paths, cycles and output. This preserves selected store
 lookup behavior; linear output assembly does not make an unindexed store's
 lookups constant time. See [contract and costs](../../STRUCTURE-OUTPUT.md) and
 [execution plan](STRUCTURE-DEPTH-PLAN.md). No external implementation is copied.
+
+
+## Immutable sorted runs (2026-10-26)
+
+RocksDB's [architecture](https://github.com/facebook/rocksdb/wiki/RocksDB-Overview)
+separates in-memory representations, WAL and on-disk sorted tables. Its
+[universal compaction](https://github.com/facebook/rocksdb/wiki/Universal-Compaction)
+merges adjacent time ranges with explicit write/read/space tradeoffs. Inspected
+[`compaction_picker_universal.cc` at `014e1c4`](https://github.com/facebook/rocksdb/blob/014e1c43c12947c2efe15275b7dd371bce13e6f1/db/compaction/compaction_picker_universal.cc),
+lines 150–260 and 1040–1190: run-count, size-amplification and size-selection
+conditions are separate. The full downloaded source is retained locally.
+
+Design inference: the existing row seam can independently select immutable sorted
+arrays while keeping its journal and session contracts. A small binary carry
+policy over effective edit counts needs no new library or SQL dependency.
+Newest values win equal keys; tombstones hide older runs until complete
+compaction. This policy is deliberately simpler than RocksDB's physical storage
+and picker. Native Rust and C# implementations share immutable arrays with pinned
+revisions; JS/TS selects the Rust implementation through WASM. Scans materialize
+an ordered map, and carry merges can rewrite complete runs. No throughput or
+constant-write-cost improvement is implied. See [costs](../../ENGINE-SORTED-RUNS.md)
+and [the verification plan](SORTED-RUNS-PLAN.md). Physical SSTables, background
+compaction and legacy mapped-file repair remain unfinished.

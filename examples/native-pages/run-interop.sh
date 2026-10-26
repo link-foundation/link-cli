@@ -48,13 +48,14 @@ run_writer() {
 }
 for mode in single mirrored; do
 for validation in scan indexed; do
- for structure in flat shared; do
+ for structure in flat shared sorted-runs; do
   for encoding in snapshot changes; do
    for physical in plain delta; do
     flags=(--references)
     [[ "$mode" != mirrored ]] || flags+=(--mirrored)
     [[ "$validation" != indexed ]] || flags+=(--indexed-constraints)
     [[ "$structure" != flat ]] || flags+=(--flat)
+    [[ "$structure" != sorted-runs ]] || flags+=(--sorted-runs)
     [[ "$encoding" != snapshot ]] || flags+=(--snapshot)
     [[ "$physical" != delta ]] || flags+=(--delta)
     database="$page_data/$mode-$validation-$structure-$encoding-$physical"
