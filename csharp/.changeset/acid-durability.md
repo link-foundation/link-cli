@@ -259,3 +259,7 @@ original constructor signature and single-root defaults. Validate root copies
 and their committed bank before repair, synchronize both decisions before
 acknowledgment and reject persisted mode conversion without changing existing
 bytes. Acquire and clean up every selected native root and bank owner.
+
+Add optional namespace maintenance with complete bounded revision-consistent
+etcd scans and generation-conditional single-key deletion. Preserve ordinary
+atomic-store costs and leave immutable-object reclamation independently selected.

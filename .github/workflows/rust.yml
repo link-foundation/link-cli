@@ -10,6 +10,7 @@ on:
       - 'rust/**'
       - 'docs/protocol/native-pages*'
       - 'docs/protocol/checkpoint*'
+      - 'docs/protocol/journal-maintenance-v1.json'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
       - '.github/scripts/check-sqlite-optional.mjs'

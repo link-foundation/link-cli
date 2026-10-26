@@ -325,8 +325,18 @@ export interface EtcdJournalStoreOptions {
   maxRequestBytes?: number;
   maxResponseBytes?: number;
 }
-export class EtcdJournalStore implements AtomicJournalStore {
+/** Decoded key bytes + 8 generation bytes + UTF-8 records with one separator each.
+ * Container overhead also depends on the accounted record count. */
+export interface JournalScanOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; keysOnly?: boolean }
+export interface JournalNamespaceEntry { key: string; version: JournalVersion }
+export interface JournalMaintenanceStore extends AtomicJournalStore {
+  scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
+  compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
+}
+export class EtcdJournalStore implements JournalMaintenanceStore {
   constructor(endpoints: string[], options?: EtcdJournalStoreOptions);
+  scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
+  compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
   readonly supportsDurableFlush: true;
   read(keys: string[]): Promise<JournalVersion[]>;
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;

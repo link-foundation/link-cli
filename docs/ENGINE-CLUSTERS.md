@@ -174,3 +174,8 @@ Primary references: [etcd API](https://etcd.io/docs/v3.6/learning/api/),
 [ProtoJSON defaults](https://protobuf.dev/programming-guides/json/).
 The JSON protocol omits default `false` fields; adapters distinguish a valid
 rejected comparison from an invalid response using the response header.
+
+The etcd adapters also expose an independently selected
+[namespace maintenance capability](ENGINE-MAINTENANCE.md): complete bounded
+revision-consistent scans and exact-generation conditional deletion. This does
+not supply a reclamation policy; existing partitioned stores retain their objects.

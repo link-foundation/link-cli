@@ -73,6 +73,22 @@ export class EtcdJournalStore {
       throw new LinksError(`coordinator request failed: ${cause}`, { outcome, cause });
     }
   }
+  /** Complete bounded revision-consistent namespace, or an error. */
+  async scanNamespace(options) {
+    const { scanOptions, scanOnce } = await import('./cluster-maintenance.js');
+    options = scanOptions(options);
+    let failure;
+    for (let attempt = 0; attempt < this.#endpoints.length; attempt++) {
+      try { return await scanOnce((body) => this.#post(body, 'not-sent'), this.#prefix, options); }
+      catch (cause) { failure = cause; this.#cursor = (this.#cursor + 1) % this.#endpoints.length; }
+    }
+    throw failure;
+  }
+  /** Send one generation-conditional delete. Errors may have unknown outcomes. */
+  async compareDelete(key, expectedGeneration) {
+    const { deleteRequest, deletionResult } = await import('./cluster-maintenance.js');
+    return deletionResult(await this.#post(deleteRequest(this.#prefix, key, expectedGeneration), 'unknown'));
+  }
   async read(keys) {
     keys = keysOf(keys);
     let failure;

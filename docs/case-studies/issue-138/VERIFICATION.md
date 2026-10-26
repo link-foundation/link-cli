@@ -3169,3 +3169,54 @@ All nine workflows pass on mirrored-root head `df6e01c`, including Linux/macOS/
 Windows native tests and actual WASM. `mirrored-root-ci.txt` preserves exact run
 IDs and timestamps. This does not complete the wider acceptance criteria; later
 maintenance work needs independent exact-head validation.
+
+
+## Optional namespace maintenance
+
+The existing atomic interface remains unchanged; the selected provider capability
+adds complete bounded namespace snapshots and exact generation-conditional
+deletions. Rust, C# and JavaScript etcd adapters pin all pages to one linearizable
+revision, reject malformed/incomplete replies, discard all pages on read failover,
+and send every deletion once. Generation reuse, including after restore, violates
+the provider contract. No object-liveness rule, collector or automatic task is
+introduced. Ordinary JS read/CAS loads no selected helper module; C# creates its
+maintenance codec only on first use.
+
+The actual missing-API tests first fail against df6e01c. Seventy-nine independent
+scan vectors and fifteen deletion vectors are consumed by every implementation.
+They cover canonical Unicode/base64/revisions, ordering, limits, omitted ProtoJSON
+zero fields, historical pagination, malformed responses and exact deletion
+outcomes. The finite real three-member etcd probe passes Rust/C#/Node/Bun/Deno
+examples, concurrent insert/update/delete between pinned pages, compaction with
+whole-snapshot restart, lost deletion replies, leader loss and majority loss.
+Its election precondition requires a live elected leader and linearizable read;
+the original readiness failure remains preserved, with no timeout extension.
+
+The complete sequential driver passes from 2026-10-26T20:42:50Z to 21:13:57Z.
+Cargo uses one compiler/reduced debug information, .NET a 640 MiB heap, and actual
+WASM a verified 256 MiB linear-memory cap. No OOM event occurs.
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,032 plus six doctests | 14,062 / 14,876 | 2,639 / 3,054 | 1,829 / 1,966 |
+| Actual WASM, linked source | 631 | 11,241 / 13,606 | 2,196 / 2,637 | 1,430 / 1,806 |
+| C# Debug | 2,268 | 8,428 / 8,722 | 4,684 / 5,054 | not reported |
+| C# Release | 2,268 | 6,481 / 6,667 | 4,629 / 5,017 | not reported |
+| JS production modules | 359 | 100% | 100% | 100% |
+
+Eighteen native child entry points execute through bounded parents; one legacy
+doctest remains ignored. The native maintenance adapter measures 194/199 lines,
+59/60 branches and 25/27 functions; the C# partial adapter measures 100% lines
+and 98.07% branches. The actual-WASM wrapper remains at 263/263 lines, 6/6
+branches and 50/50 functions; complete linked coverage remains below target.
+No denominator is reduced or inferred from test counts.
+
+Bun/Deno each pass 98 maintenance cases. TypeScript, strict native/WASM Clippy,
+formatting, independent vector regeneration, SQLite optionality guards,
+changesets, source limits, ShellCheck, actionlint and 221 repository checks pass.
+All comments/review endpoints were refreshed with no new feedback; latest main
+is an ancestor. GitHub's >300-file diff limit remains documented; local base and
+batch diffs support review. See MAINTENANCE-PLAN.md, maintenance-before.txt,
+maintenance.txt and docs/ENGINE-MAINTENANCE.md. Fresh exact-head CI follows
+publication. Actual epoch-fenced reclamation, whole-project 100% coverage,
+physical power-loss verification and the wider listed criteria remain unfinished.

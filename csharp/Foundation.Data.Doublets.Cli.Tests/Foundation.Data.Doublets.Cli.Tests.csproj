@@ -48,4 +48,7 @@
     <ProjectReference Include="..\Foundation.Data.Doublets.Cli\Foundation.Data.Doublets.Cli.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../../docs/protocol/journal-maintenance-v1.json" Link="journal-maintenance-v1.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

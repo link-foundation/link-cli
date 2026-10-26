@@ -80,3 +80,7 @@ required-features = ["sqlite"]
 [[example]]
 name = "engine_native_pages"
 required-features = ["native-pages"]
+
+[[example]]
+name = "journal_maintenance"
+required-features = ["etcd"]

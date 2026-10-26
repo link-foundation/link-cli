@@ -21,6 +21,7 @@ mod delta;
 pub mod etcd;
 mod group;
 mod journal;
+pub mod maintenance;
 mod named;
 mod object_cache;
 pub mod paged;

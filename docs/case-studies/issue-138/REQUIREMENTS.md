@@ -589,3 +589,17 @@ All nine workflows pass on mirrored-root head `df6e01c`, including Linux/macOS/
 Windows native tests and actual WASM. `mirrored-root-ci.txt` preserves exact run
 IDs and timestamps. This does not complete the wider acceptance criteria; later
 maintenance work needs independent exact-head validation.
+
+
+Optional namespace maintenance (R1/R4/R6/R7/R8/R9/R10/R11/R12) now supplies
+revision-pinned complete bounded etcd scans and single-send exact-generation
+deletion in Rust, C# and JS. Ordinary atomic stores keep their original contract;
+selected codecs initialize on demand. Actual before failures, 94 independent
+wire cases, 98 Bun/Deno controls, native examples and real three-member faults
+verify the capability. Complete local suites pass: 1,032 native Rust, 2,268 C#
+per configuration, 631 actual WASM, 359 JS and 221 repository checks. JS stays
+at 100% measured coverage; complete native/C#/linked-WASM totals remain below
+target. See MAINTENANCE-PLAN.md, maintenance-before.txt, maintenance.txt and the
+maintenance recipe. Fresh exact-head CI is required after publication. This
+capability alone does not implement object collection; fencing, complete root
+discovery and coherent reader refresh remain required and unfinished.

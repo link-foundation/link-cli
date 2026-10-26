@@ -101,6 +101,18 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
 }
 
 import { ClusterEngine, EtcdJournalStore, PartitionedJournalStore, type JournalVersion, type AtomicJournalStore } from '../types/index.js';
+import type { JournalMaintenanceStore, JournalNamespaceEntry, JournalScanOptions } from '../types/index.js';
+async function maintenanceTypes() {
+  const maintenance: JournalMaintenanceStore = new EtcdJournalStore(['https://localhost:2379']);
+  const options: JournalScanOptions = { maxKeys: 64, maxBytes: 4096, pageKeys: 8, keysOnly: true };
+  const snapshot: JournalNamespaceEntry[] = await maintenance.scanNamespace(options);
+  const deleted: boolean = await maintenance.compareDelete(snapshot[0].key, snapshot[0].version.generation);
+  // @ts-expect-error Non-reusable generations use canonical decimal strings.
+  await maintenance.compareDelete('a', 7);
+  // @ts-expect-error Ordinary atomic stores do not require maintenance methods.
+  await (maintenance as AtomicJournalStore).scanNamespace();
+  return deleted;
+}
 async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]) {
   const store: AtomicJournalStore = new EtcdJournalStore(['https://localhost:2379'], { headers: { Authorization: 'token' }, timeoutMs: 1000 });
   const versions: JournalVersion[] = await store.read(['a']);

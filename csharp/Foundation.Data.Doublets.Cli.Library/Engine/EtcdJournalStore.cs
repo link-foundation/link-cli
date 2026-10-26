@@ -7,7 +7,7 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 
 /// <summary>etcd JSON gateway. Requires a trusted durable deployment. Mutations
 /// are never retried after transport errors. An injected HttpClient is caller-owned.</summary>
-public sealed class EtcdJournalStore : IAtomicJournalStore, IDisposable
+public sealed partial class EtcdJournalStore : IJournalMaintenanceStore, IDisposable
 {
     private readonly Uri[] _endpoints;
     private readonly string _prefix;

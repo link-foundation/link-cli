@@ -1,5 +1,7 @@
 //! HTTP(S) etcd JSON gateway adapter. Requires a trusted durable etcd deployment.
 //! One atomic Txn reads all selected keys; writes compare modification revisions.
+mod maintenance;
+
 use super::{
     cluster::{validate_keys, AtomicJournalStore, JournalVersion},
     error,

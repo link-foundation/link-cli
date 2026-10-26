@@ -1,0 +1,63 @@
+Optional maintenance missing-feature evidence; https://github.com/link-foundation/link-cli/pull/139
+Baseline: df6e01cbdf08bd11470aac8a72ef1c57a5ca927d; tests executed before implementation.
+Reproducer: experiments/issue-138/reproduce-maintenance.sh, requiring a clean isolated baseline.
+Saved minimal fixtures: maintenance-before.rs, MaintenanceBeforeTests.cs, maintenance-before.test.mjs.
+The original C# output also contains a cascading obsolete async-assert diagnostic while the method types are unresolved; the primary missing API evidence is CS0246.
+
+rust:
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+error[E0432]: unresolved import `link_cli::engine::maintenance`
+ --> tests/engine_etcd_maintenance_tests.rs:2:48
+  |
+2 | use link_cli::engine::{etcd::EtcdJournalStore, maintenance::{JournalMaintenanceStore, JournalScanOptions}};
+  |                                                ^^^^^^^^^^^ could not find `maintenance` in `engine`
+
+error[E0599]: no method named `scan_namespace` found for struct `EtcdJournalStore` in the current scope
+ --> tests/engine_etcd_maintenance_tests.rs:6:19
+  |
+6 |     assert!(store.scan_namespace(JournalScanOptions { max_keys: 0, ..Default::default() }).is_err());
+  |                   ^^^^^^^^^^^^^^ method not found in `EtcdJournalStore`
+
+error[E0599]: no method named `compare_delete` found for struct `EtcdJournalStore` in the current scope
+ --> tests/engine_etcd_maintenance_tests.rs:7:19
+  |
+7 |     assert!(store.compare_delete("a", 0).is_err());
+  |                   ^^^^^^^^^^^^^^ method not found in `EtcdJournalStore`
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `link-cli` (test "engine_etcd_maintenance_tests") due to 3 previous errors
+
+csharp:
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/EtcdMaintenanceTests.cs(9,9): error CS0246: The type or namespace name 'IJournalMaintenanceStore' could not be found (are you missing a using directive or an assembly reference?) [<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/EtcdMaintenanceTests.cs(10,88): error CS0246: The type or namespace name 'JournalScanOptions' could not be found (are you missing a using directive or an assembly reference?) [<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/EtcdMaintenanceTests.cs(11,9): error CS0619: 'Assert.Throws<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAsync<T> (and await the result) when testing async code.' [<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+js:
+✖ maintenance options fail before I/O (2.282605ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 187.082533
+
+✖ failing tests:
+
+test at js/client/test/cluster-maintenance.test.mjs:4:1
+✖ maintenance options fail before I/O (2.282605ms)
+  TypeError [Error]: store.scanNamespace is not a function
+      at TestContext.<anonymous> (file://<workspace>/js/client/test/cluster-maintenance.test.mjs:6:30)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+Following regression controls consume 79 independent scan cases and 15 deletion cases in every implementation.
+The missing capability does not establish safe immutable-object collection; the existing partitioned store remains append-only.
