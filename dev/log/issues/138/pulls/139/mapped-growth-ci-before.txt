@@ -8,16 +8,16 @@ Rust Windows fails an existing finite movement child; no timeout is increased.
 Full downloaded log: experiments/issue-138/ci-logs/mapped-growth-rust-40299771183.log
 Relevant numbered lines:
 32626: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5729262Z failures:
-32627: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5729444Z 
+32627: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5729444Z
 32628: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5730021Z ---- switch_survives_exit_at_every_persisted_movement_phase stdout ----
 32629: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5730794Z Error: Finite movement child did not stop.
-32630: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5730993Z 
-32631: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731000Z 
+32630: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5730993Z
+32631: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731000Z
 32632: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731074Z failures:
 32633: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731356Z     switch_survives_exit_at_every_persisted_movement_phase
-32634: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731596Z 
+32634: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731596Z
 32635: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5731949Z test result: FAILED. 2 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 78.92s
-32636: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5732318Z 
+32636: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5732318Z
 32637: Test (windows-2025)	Run tests	2026-10-26T09:36:38.5792458Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test version_movement_exit_tests`
 32638: Test (windows-2025)	Run tests	2026-10-26T09:36:38.7035965Z ##[error]Process completed with exit code 1.
 

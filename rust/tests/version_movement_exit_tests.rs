@@ -40,13 +40,17 @@ fn verify(point: &str, switch: bool, recovery_fault: Option<&str>) -> Result<()>
     let directory = tempfile::tempdir()?;
     std::fs::create_dir(directory.path().join("data"))?;
     std::fs::create_dir(directory.path().join("branches"))?;
+    // A pipe left unread until exit can itself stall a verbose child. A file
+    // retains progress on deadline failures without introducing that backpressure.
+    let diagnostics_path = directory.path().join("child.log");
+    let diagnostics = std::fs::File::create(&diagnostics_path)?;
     let mut child = Command::new(std::env::current_exe()?)
         .args(["--exact", "movement_exit_child", "--ignored", "--nocapture"])
         .env("LINK_MOVEMENT_EXIT_DIRECTORY", directory.path())
         .env("LINK_MOVEMENT_EXIT_POINT", point)
         .env("LINK_MOVEMENT_EXIT_SWITCH", switch.to_string())
-        .stdout(Stdio::null())
-        .stderr(Stdio::piped())
+        .stdout(Stdio::from(diagnostics.try_clone()?))
+        .stderr(Stdio::from(diagnostics))
         .spawn()?;
     let deadline = Instant::now() + Duration::from_secs(10);
     loop {
@@ -56,15 +60,18 @@ fn verify(point: &str, switch: bool, recovery_fault: Option<&str>) -> Result<()>
         if Instant::now() >= deadline {
             child.kill()?;
             child.wait()?;
-            bail!("Finite movement child did not stop.");
+            bail!(
+                "Finite movement child did not stop: {point}/{switch}.\n{}",
+                std::fs::read_to_string(&diagnostics_path)?
+            );
         }
         std::thread::sleep(Duration::from_millis(10));
     }
-    let output = child.wait_with_output()?;
+    let status = child.wait()?;
     assert!(
-        output.status.success(),
+        status.success(),
         "{point}/{switch}: {}",
-        String::from_utf8_lossy(&output.stderr)
+        std::fs::read_to_string(&diagnostics_path)?
     );
     let manifest = std::fs::read_to_string(directory.path().join("manifest"))?;
     let fields: Vec<_> = manifest.split(',').collect();
@@ -191,6 +198,9 @@ fn interrupted_recovery_reopens_at_every_metadata_phase() -> Result<()> {
 #[test]
 #[ignore = "Executed only by bounded movement parents"]
 fn movement_exit_child() -> Result<()> {
+    let started = Instant::now();
+    let progress = |stage| eprintln!("movement child {:?}: {stage}", started.elapsed());
+    progress("opening stores");
     let directory = std::env::var("LINK_MOVEMENT_EXIT_DIRECTORY")?;
     let directory = Path::new(&directory);
     let fault = Rc::new(RefCell::new(Fault::default()));
@@ -201,15 +211,21 @@ fn movement_exit_child() -> Result<()> {
             fault: fault.clone(),
             intent: 0,
         },
-        false,
+        true,
     )?;
+    progress("creating row");
     let id = vc.create_and_update(11, 12)?;
+    progress("naming original row");
     vc.set_name(id, "original 雪|\0\n")?;
     let original = vc.current_sequence();
+    progress("creating branch");
     vc.branch(TOPIC, None)?;
+    progress("updating row");
     vc.update(id, 21, 22)?;
+    progress("naming changed row");
     vc.set_name(id, "changed 雪|\0\n")?;
     let attempted = vc.current_sequence();
+    progress("saving setup");
     vc.save()?;
     std::fs::write(
         directory.join("manifest"),
@@ -217,10 +233,12 @@ fn movement_exit_child() -> Result<()> {
     )?;
     fault.borrow_mut().flushes = 0;
     fault.borrow_mut().on_check = Some(|point| {
+        eprintln!("movement child metadata: {point}");
         if std::env::var("LINK_MOVEMENT_EXIT_POINT").as_deref() == Ok(point) {
             std::process::exit(0);
         }
     });
+    progress("beginning requested movement");
     if std::env::var("LINK_MOVEMENT_EXIT_SWITCH")? == "true" {
         vc.switch_branch(TOPIC)?;
     } else {

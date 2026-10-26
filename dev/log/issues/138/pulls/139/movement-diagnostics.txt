@@ -1,0 +1,14 @@
+Movement child diagnostics; PR https://github.com/link-foundation/link-cli/pull/139
+Failure source: mapped-growth-ci-before.txt, Rust run 40299771183 Windows.
+Journal-only e39ecce passes all nine workflows before diagnostic changes.
+No root cause or database correction claimed; no timeout increase.
+
+Focused: 3 passed, 0 failed, 1 child entry point exercised by bounded parents.
+Full native: 936 passed; no failing harnesses.
+All original crash points, row/name recovery, following edits and reopenings retained.
+Strict all-feature/all-target Clippy, native format, source-size and 221 repository tests pass.
+
+Child output now goes to a per-child file, with elapsed setup and metadata phases.
+A failed exit/deadline includes point/switch and complete bounded child output.
+The ten-second deadline and kill/join remain unchanged.
+All whole-project coverage and broader acceptance criteria remain active.

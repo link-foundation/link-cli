@@ -12,7 +12,7 @@ wider unfinished criterion active.
       simplification is needed.
 - [x] Run focused and full Debug/Release coverage with all production files,
       formatting/release/source checks and repository tests; retain evidence.
-- [ ] Obtain fresh exact-head CI, review source and continue the wider inventory.
+- [x] Obtain fresh exact-head CI and review source. Every wider criterion remains active.
 
 JournalRecord copies the caller's enumeration into a read-only list. Its public
 equality includes the complete transition, name-only marker and ordered names.
@@ -29,3 +29,8 @@ coverage measures 96.25% lines / 92.02% branches in Debug and 96.92% / 91.59%
 in Release. JournalRecord.cs reaches 83/84 and 67/68 unique lines respectively.
 See journal-values.txt; production denominators remain unchanged. Fresh CI and
 all wider acceptance criteria remain active.
+
+All nine exact-head workflows pass on e39ecce, including Linux/macOS/Windows
+native matrices and actual WASM. See journal-values-ci.txt. The earlier Windows
+movement deadline does not recur; its cause remains unknown and the separate
+diagnostic work preserves future failure context without raising the deadline.
