@@ -1,5 +1,5 @@
 //! Optional native I/O; no filesystem/entropy/close bindings enter WASM.
-use super::{format::invalid, PageDevice, PAGE_SIZE};
+use super::{format::invalid, PageDevice, RepairPageDevice, PAGE_SIZE};
 use crate::LinkError;
 use std::fs::{File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write};
@@ -76,7 +76,7 @@ impl FilePageDevice {
     pub fn close(&mut self) -> Result<(), LinkError> {
         self.close_with(close_file)
     }
-    fn close_with(
+    pub(super) fn close_with(
         &mut self,
         mut close: impl FnMut(File) -> io::Result<()>,
     ) -> Result<(), LinkError> {
@@ -192,6 +192,21 @@ impl PageDevice for FilePageDevice {
             return Err(invalid("physical data length"));
         }
         self.file(0)?.set_len(length)?;
+        Ok(())
+    }
+}
+impl RepairPageDevice for FilePageDevice {
+    fn repair_page(&mut self, index: u64, bytes: &[u8; PAGE_SIZE]) -> Result<(), LinkError> {
+        if index >= super::MAX_PAGES {
+            return Err(invalid("physical repair address"));
+        }
+        let file = self.file(0)?;
+        let offset = index * PAGE_SIZE as u64;
+        if file.metadata()?.len() < offset {
+            return Err(invalid("repair would create a hole"));
+        }
+        file.seek(SeekFrom::Start(offset))?;
+        file.write_all(bytes)?;
         Ok(())
     }
 }

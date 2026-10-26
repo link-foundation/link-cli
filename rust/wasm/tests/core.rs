@@ -58,3 +58,6 @@ mod constraint_index;
 
 #[path = "../../tests/engine_paged_tests.rs"]
 mod engine_paged_tests;
+
+#[path = "../../tests/engine_mirrored_pages_tests.rs"]
+mod engine_mirrored_pages_tests;

@@ -2697,3 +2697,42 @@ checks and Node/Bun/Deno actual-WASM conformance pass. Independent binary vector
 finite I/O/cleanup faults, bounded child exits and fixed new-group byte counters
 are retained. See native-pages-js.txt. This is JS provider evidence; matching
 Rust/C# providers, redundant physical repair and fresh CI are still required.
+
+
+## Native single-copy and mirrored page parity — current local run
+
+This section supersedes the initial provider-only status above. Complete local
+mirror validation passes 922 native Rust tests (17 child entries are exercised
+by bounded parents), 539 actual WASM tests, 2,060 C# tests per configuration and
+209 JS tests. JS retains enforced 100% production line/branch/function coverage
+on Node 26 and Node 24. Strict native/WASM Clippy, formatting, optional-SQL guards,
+strict TypeScript and 221 repository checks pass in the recorded provider runs.
+
+The public shared-file recipe passes all 32 single/mirrored policy configurations
+and 192 writer invocations through Rust -> Node -> Bun -> C# -> Deno -> Rust.
+Each mirrored handoff damages one closed copy, and the next writer repairs data
+and metadata before another group. Every final file has twelve exact revisions
+and prior names. Independent vectors, persistence/repair faults before and after
+effects, repeated reopening, ownership cleanup and bounded real process exits
+are recorded in mirrored-pages-{js,rust,csharp}.txt.
+
+| Complete measured scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 12,812/13,643 (93.91%) | 2,381/2,816 (84.55%) | 1,638/1,771 (92.49%) |
+| Actual WASM, complete linked source | 9,540/12,693 (75.16%) | 1,866/2,419 (77.14%) | 1,235/1,690 (73.08%) |
+| C# Debug | 7,746/8,248 (93.91%) | 4,178/4,630 (90.24%) | Not reported |
+| C# Release | 5,974/6,285 (95.05%) | 4,140/4,603 (89.94%) | Not reported |
+
+The same selected next-record flush after 0/1/32 preceding groups performs two
+new page writes, two metadata writes and four syncs, without historical device
+reads or writes. The codec holds one page buffer; mirror selection holds two
+candidate pages and damaged-index tracking. Open/read still validates history.
+One expected surviving copy and successful synchronization remain assumptions;
+physical power loss and arbitrary hostile corruption are not certified.
+
+All nine workflows pass on the preceding JS mirror head be89fb7. Initial C#
+head 288cc6d passes eight workflows but fails newer formatting and a Windows
+exclusive-handle test. Their exact errors and correction are preserved in
+mirrored-pages-csharp-ci-before.txt; fresh passing exact-head CI remains required.
+Complete coverage and all other inventoried gaps remain active. The next audit
+of public command recovery and version names is in CLI-COVERAGE-PLAN.md.

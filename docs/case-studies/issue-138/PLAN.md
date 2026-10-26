@@ -299,3 +299,18 @@ complete the overall issue or authorize marking the draft ready early.
     commits. Independent mode-1 vectors and 36 damaged-copy cases are preserved.
     Matching Rust/C# mirrors and all-language interchange remain in progress.
     See MIRRORED-PAGES-PLAN.md and mirrored-pages-js.txt.
+
+24. Matching Rust/C# mirrored native pages now pass independent corruption,
+    persistence and cleanup contracts. Full suites pass 922 native Rust, 539
+    actual WASM, 2,060 C# per configuration and 209 JS tests. All 32 single/mirror
+    compositions pass 192 shared-file writer invocations through all providers,
+    repairing deliberate closed-copy damage before following commits. Native
+    formatter/strict Clippy/optional-SQL guards pass. Fresh C# CI exposed a
+    formatter difference and a test that read an exclusively owned Windows file;
+    preserve the exact logs and validate their correction. See MIRRORED-PAGES-PLAN.md.
+
+25. Continue the complete-denominator coverage audit through public command
+    recovery and version-name contracts. Preserve failing behavior tests before
+    changes, maintain accepted tag-alias grammar, exercise all mapped ownership
+    cleanup and compare actual complete-run coverage. CLI-COVERAGE-PLAN.md records
+    the concrete checklist; whole-project 100% and wider criteria remain open.

@@ -1,7 +1,7 @@
 Optional two-copy native page repair — C#, 2026-10-26 UTC.
 PR: https://github.com/link-foundation/link-cli/pull/139
 
-Before: experiments/issue-138/mirrored-csharp-before.log line 6 records
+Before: experiments/issue-138/mirrored-csharp-before.log line 5 records
 CS0246 for the absent IRepairPageDevice public contract. Independent mode-1
 wire fixtures and damage instructions precede provider implementation.
 

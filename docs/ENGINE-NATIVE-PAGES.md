@@ -14,13 +14,11 @@ and Deno reopen the same files in all 16 example policy combinations. C# provide
 `PagedCommitLog` over caller-owned `IPageDevice`, with `FilePageDevice` for native
 files. The public C# library adds no SQL package. All five runtime examples
 reopen the same files and verify the preceding writers' exact records.
-JS/TS also provides independently selected redundant repair; matching Rust/C#
-decorators are in progress. See [mirrored mode](protocol/native-pages-mirrored.md).
-This provider does not implement
-repair of legacy mapped Doublets files, LSM or efficient page undo. Its two
-metadata decisions recover torn unacknowledged writes under the stated model;
-they do not repair corruption of an acknowledged decision. Committed data-page
-corruption rejects open rather than silently discarding a previously acknowledged
+Rust, C# and JS/TS also provide independently selected redundant repair. See
+[mirrored mode](protocol/native-pages-mirrored.md). This provider does not implement
+repair of legacy mapped Doublets files, LSM or efficient page undo. Alternating
+metadata recovers torn unacknowledged writes under the stated model. Single-copy
+mode rejects committed page/decision corruption instead of silently discarding an acknowledged
 group. See the [binary protocol and exact persistence assumptions](protocol/native-pages.md).
 
 ```js
@@ -72,6 +70,8 @@ Each invocation verifies all prior exact names and commits two sessions in one
 flush, retaining their separate revisions and pinned predecessor. `--flat`,
 `--snapshot`, `--delta`, `--references` and `--indexed-constraints` select independent
 policies. Reopen with compatible constraints and the same physical delta choice.
+`--mirrored` selects two-copy physical repair when creating a database; retain
+the same immutable mode on every subsequent open in every language.
 
 The Rust example accepts the same path and policy flags:
 
@@ -81,6 +81,13 @@ dotnet build examples/native-pages-csharp
 dotnet run --project examples/native-pages-csharp -- existing-directory/journal
 CLINK_WASM="$PWD/js/pkg" bash examples/native-pages/run-interop.sh
 ```
+
+The interchange script exercises 32 physical/policy configurations. It reopens
+each file through Rust, Node, Bun, C#, Deno and Rust, verifying all earlier exact
+names and twelve final revisions. In mirrored mode it damages one closed copy
+between writers, alternates the damaged side across configurations, and checks
+both repaired data and metadata byte for byte after each writer closes.
+These destructive controls use dedicated temporary databases only.
 
 Rust callers pass `FilePageDevice::open(path)?` to `PagedLog::open`, then use the
 log through the existing `TransitionLogStore` interface. After releasing the
@@ -107,7 +114,8 @@ write/sync failures, reject malformed checksummed structures, reopen actual
 files and bound real process-exit probes. The normal actual-WASM conformance
 runner exercises 16 combinations under all three JS runtimes, including two
 real-file opens, shared flushes, replica acknowledgement, rejected constraints
-and following writes. Finite tests are not physical power-loss certification.
+and following writes. Mirrored mode adds another sixteen combinations with
+damaged data/metadata between opens. Finite tests are not physical power-loss certification.
 
 Select two-copy repair in JavaScript with a separate import:
 
@@ -123,9 +131,36 @@ existing pages or fill a contiguous missing suffix; the decorator invokes this
 privileged operation only after validating the complete logical prefix. Native
 files use `path` and `path + '.mirror'`, each with metadata and its own exclusive
 writer file. A plain reader rejects mirrored metadata rather than dropping the
-second-copy requirement. The JS example accepts `--mirrored` for new databases.
+second-copy requirement. Every language example accepts `--mirrored` for new
+databases.
 Use the same immutable physical mode on every subsequent open. Both copies must
 be synchronized before acknowledgement; selected storage and writes double.
 One-copy damage is repairable only while the expected valid page/decision
 survives in the other copy. Losing both copies is outside that guarantee. This
 strategy adds neither consensus nor physical power-loss certification.
+
+Rust selects the same strategy at the device boundary:
+
+```rust
+use link_cli::engine::paged::{MirroredPageDevice, PagedLog};
+let device = MirroredPageDevice::open("existing-directory/mirrored-journal")?;
+let log = PagedLog::open(device)?;
+// Use the existing TransitionLogStore API; release engine users before close.
+log.into_device().close()?;
+```
+
+`MirroredPageDevice<D>` can also own two caller-supplied `RepairPageDevice`
+implementations. Extracting devices does not flush staged records. A native
+explicit close attempts both devices and preserves uncertain ownership files.
+
+C# selects an owned native pair through `FileMirroredPageDevice`:
+
+```csharp
+using var device = new FileMirroredPageDevice("existing-directory/mirrored-journal");
+ICommitLog journal = new PagedCommitLog(device, maxPages: 1024);
+```
+
+Portable `MirroredPageDevice` instead borrows two distinct caller-owned
+`IRepairPageDevice` implementations. Keep both alive until all log/engine users
+finish. Disposing the native pair attempts every acquired handle, aggregates
+cleanup failures and retains uncertain owner files; it never commits staged data.

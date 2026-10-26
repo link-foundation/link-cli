@@ -5,16 +5,33 @@ mod file;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 pub use file::FilePageDevice;
 mod format;
+mod mirrored;
 use crate::{LinkError, TransitionLogStore};
 use format::{
     invalid, page_hash, portable, put, u32_at, u64_at, Metadata, CELLS, EXTERNAL, PAGE_MAGIC,
     PAYLOAD,
 };
 pub use format::{MAX_PAGES, PAGE_SIZE};
+pub use mirrored::MirroredPageDevice;
 
 /// Caller-owned exclusive synchronous storage. Successful sync must persist all
 /// preceding writes in that file. Mutation failure requires reopening the log.
 pub trait PageDevice {
+    /// Immutable physical format; the default preserves single-copy bytes.
+    fn metadata_flags(&self) -> u32 {
+        0
+    }
+    fn read_checked_page(
+        &mut self,
+        index: u64,
+        _expected: u64,
+    ) -> Result<[u8; PAGE_SIZE], LinkError> {
+        self.read_page(index)
+    }
+    /// Called only after the complete committed prefix validates.
+    fn complete_recovery(&mut self) -> Result<(), LinkError> {
+        Ok(())
+    }
     fn supports_durable_flush(&self) -> bool {
         false
     }
@@ -27,6 +44,12 @@ pub trait PageDevice {
     fn write_page(&mut self, index: u64, bytes: &[u8; PAGE_SIZE]) -> Result<(), LinkError>;
     fn sync_data(&mut self) -> Result<(), LinkError>;
     fn truncate_data(&mut self, length: u64) -> Result<(), LinkError>;
+}
+
+/// Privileged repair of an existing page or contiguous missing suffix. The
+/// caller must validate a surviving copy and the complete logical prefix first.
+pub trait RepairPageDevice: PageDevice {
+    fn repair_page(&mut self, index: u64, bytes: &[u8; PAGE_SIZE]) -> Result<(), LinkError>;
 }
 
 /// Immutable committed doublets pages and alternating metadata decisions.
@@ -49,10 +72,14 @@ impl<D: PageDevice> PagedLog<D> {
         if max_pages == 0 || max_pages > MAX_PAGES {
             return Err(invalid("invalid native page limit"));
         }
+        let flags = device.metadata_flags();
+        if flags > 1 {
+            return Err(invalid("unsupported device mode"));
+        }
         let raw = [device.read_metadata(0)?, device.read_metadata(1)?];
         let mut valid = Vec::new();
         for bytes in &raw {
-            if let Some(state) = Metadata::decode(bytes.as_deref().unwrap_or_default())? {
+            if let Some(state) = Metadata::decode(bytes.as_deref().unwrap_or_default(), flags)? {
                 valid.push(state);
             }
         }
@@ -60,7 +87,7 @@ impl<D: PageDevice> PagedLog<D> {
             if raw.iter().flatten().any(|bytes| !bytes.is_empty()) || device.data_length()? != 0 {
                 return Err(invalid("no valid metadata decision"));
             }
-            let state = Metadata::empty(device.new_database_id()?);
+            let state = Metadata::empty(device.new_database_id()?, flags);
             device.sync_data()?;
             device.write_metadata(0, &state.encode())?;
             device.sync_metadata(0)?;
@@ -86,6 +113,7 @@ impl<D: PageDevice> PagedLog<D> {
             return Err(invalid("truncated committed pages"));
         }
         read_committed(&mut device, &state, false)?;
+        device.complete_recovery()?;
         if length > committed {
             device.truncate_data(committed)?;
             device.sync_data()?;
@@ -131,7 +159,10 @@ impl<D: PageDevice> TransitionLogStore for PagedLog<D> {
     }
     fn read_log_entries(&mut self) -> Result<Vec<String>, LinkError> {
         self.check()?;
-        match read_committed(&mut self.device, &self.state, true) {
+        match read_committed(&mut self.device, &self.state, true).and_then(|records| {
+            self.device.complete_recovery()?;
+            Ok(records)
+        }) {
             Ok(mut records) => {
                 records.extend(self.pending.iter().cloned());
                 Ok(records)
@@ -227,7 +258,9 @@ struct Cursor<'a, D> {
 }
 impl<D: PageDevice> Cursor<'_, D> {
     fn load(&mut self) -> Result<(), LinkError> {
-        self.page = self.device.read_page(self.index as u64)?;
+        self.page = self
+            .device
+            .read_checked_page(self.index as u64, self.expected)?;
         let page = &self.page;
         let actual = page_hash(page);
         if &page[..8] != PAGE_MAGIC

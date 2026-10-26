@@ -44,7 +44,8 @@ metadata is repaired and synchronized. Subsequent recovery is idempotent. A
 failed repair fences the owner and preserves the surviving source for reopen.
 
 Selected data/metadata bytes, page writes and flush syncs double. The codec keeps
-one page buffer; repair also tracks damaged indexes and two metadata decisions.
+one page buffer; redundant selection also holds two candidate page buffers, and
+repair tracks damaged indexes and two metadata decisions.
 Open/read still scan history, and the log interface still returns all records.
 The ordinary single-copy provider pays none of the additional copy I/O. Logical
 revision encoding, state structure, validation, delta encoding and replica

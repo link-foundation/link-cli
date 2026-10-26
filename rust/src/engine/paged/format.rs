@@ -46,6 +46,7 @@ pub fn page_hash(bytes: &[u8; PAGE_SIZE]) -> u64 {
 
 #[derive(Clone)]
 pub struct Metadata {
+    pub flags: u32,
     pub identity: [u8; 16],
     pub generation: u64,
     pub pages: u64,
@@ -55,8 +56,9 @@ pub struct Metadata {
     pub last_hash: u64,
 }
 impl Metadata {
-    pub fn empty(identity: [u8; 16]) -> Self {
+    pub fn empty(identity: [u8; 16], flags: u32) -> Self {
         Self {
+            flags,
             identity,
             generation: 0,
             pages: 0,
@@ -70,6 +72,7 @@ impl Metadata {
         let mut bytes = [0; 128];
         bytes[..8].copy_from_slice(META_MAGIC);
         bytes[8..12].copy_from_slice(&1_u32.to_le_bytes());
+        bytes[12..16].copy_from_slice(&self.flags.to_le_bytes());
         bytes[16..32].copy_from_slice(&self.identity);
         for (index, value) in [
             self.generation,
@@ -90,17 +93,18 @@ impl Metadata {
     }
     /// Missing/torn decisions have no committed meaning. Checksummed unsupported
     /// versions/flags are errors, not permission to silently select old state.
-    pub fn decode(bytes: &[u8]) -> Result<Option<Self>, LinkError> {
+    pub fn decode(bytes: &[u8], flags: u32) -> Result<Option<Self>, LinkError> {
         if bytes.len() != 128 || hash(&bytes[..120], 0xcbf29ce484222325) != u64_at(bytes, 120) {
             return Ok(None);
         }
         if &bytes[..8] != META_MAGIC || u32_at(bytes, 8) != 1 {
             return Err(invalid("unsupported metadata version"));
         }
-        if u32_at(bytes, 12) != 0 || bytes[80..120].iter().any(|v| *v != 0) {
+        if u32_at(bytes, 12) != flags || bytes[80..120].iter().any(|v| *v != 0) {
             return Err(invalid("unsupported metadata flags"));
         }
         let result = Self {
+            flags,
             identity: bytes[16..32].try_into().expect("fixed identity"),
             generation: portable(u64_at(bytes, 32))?,
             pages: portable(u64_at(bytes, 40))?,

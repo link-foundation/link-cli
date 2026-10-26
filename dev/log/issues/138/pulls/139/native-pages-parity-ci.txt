@@ -1,0 +1,16 @@
+Native Rust/C#/JS page parity CI, observed 2026-10-26 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact head: 9bce3a7f598855cff1aeca951205aac685421adf
+All nine workflows succeeded; all created 2026-10-26T06:53:52Z.
+
+Docs: success — https://github.com/link-foundation/link-cli/actions/runs/40282511936
+Security: success — https://github.com/link-foundation/link-cli/actions/runs/40282512128
+JS client CI: success — https://github.com/link-foundation/link-cli/actions/runs/40282512213
+Broken Link Checker: success — https://github.com/link-foundation/link-cli/actions/runs/40282511896
+Workflows: success — https://github.com/link-foundation/link-cli/actions/runs/40282512112
+Dependencies: success — https://github.com/link-foundation/link-cli/actions/runs/40282512062
+C# CI/CD Pipeline: success — https://github.com/link-foundation/link-cli/actions/runs/40282512165
+WebAssembly CI: success — https://github.com/link-foundation/link-cli/actions/runs/40282511983
+Rust CI/CD Pipeline: success — https://github.com/link-foundation/link-cli/actions/runs/40282511913
+
+The subsequent optional-mirror code requires fresh exact-head CI.

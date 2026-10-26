@@ -25,7 +25,8 @@ paths use this project's doublets and journal implementations without SQL:
 | Durable ordered logical records | Rust `FileTransitionLog`, C# `FileCommitLog`, JS `FileCommitLog`; WASM uses the JS host bridge |
 | Logical pre-effect undo in legacy stores | Selected full logical row/name images and native transaction journals |
 | Replica acknowledgements and catch-up | Ordered-log replication decorators over the chosen native logs |
-| Native shadow pages | Optional Rust `PagedLog`/`native-pages` file device, C# `PagedCommitLog`/`FilePageDevice` and JS/TS `FilePagedCommitLog`, actual Rust-backed WASM; redundant repair in progress; see [native page protocol](ENGINE-NATIVE-PAGES.md) |
+| Native shadow pages | Optional Rust `PagedLog`/`native-pages` file device, C# `PagedCommitLog`/`FilePageDevice` and JS/TS `FilePagedCommitLog`, including actual Rust-backed WASM; see [native page protocol](ENGINE-NATIVE-PAGES.md) |
+| Selected two-copy page repair | Rust/C# `MirroredPageDevice`, C# `FileMirroredPageDevice` and JS/TS `FileMirroredPagedCommitLog`; expected-checksum repair after complete-prefix validation, with twice the selected persistence work |
 | Shards and atomic catalog publication | Native immutable-object, routing and catalog adapters; the optional etcd adapter delegates consensus to etcd |
 
 The CI guard in `.github/scripts/check-sqlite-optional.mjs` resolves actual
@@ -40,7 +41,7 @@ providers disabled.
 
 These checks establish dependency optionality. Native logical records and undo
 images do not supply a physical pager or repair unreadable/torn mapped pages.
-Native page repair, page undo/doublewrite, LSM, persistent object retention,
+Legacy mapped-page repair, page undo/doublewrite, LSM, persistent object retention,
 incremental whole-journal replay, automatic balancing and the remaining
 distributed algorithms are unfinished requirements in the
 [acceptance inventory](case-studies/issue-138/REQUIREMENTS.md). The selected

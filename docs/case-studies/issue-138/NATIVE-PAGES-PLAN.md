@@ -18,7 +18,7 @@ neither LMDB compatibility nor equivalent implementation maturity is claimed.
       provider. Never automatically steal a crashed writer's exclusive-create lock.
 - [x] Verify selected costs with finite page/byte counters, preserving existing
       default stores and independent logical encoding/replication strategies.
-- [ ] Add independently selected mirrored page repair with matching finite
+- [x] Add independently selected mirrored page repair with matching finite
       corruption tests; distinguish its storage cost from a doublewrite buffer.
 - [ ] Run complete suites, coverage, runnable examples and fresh exact-head CI;
       update the native capability comparison with precise persistence limits.
@@ -88,3 +88,11 @@ process-exit controls. See native-pages-csharp-before.txt and native-pages-cshar
 The selected mirrored extension is tracked separately in MIRRORED-PAGES-PLAN.md;
 it and fresh exact-head CI remain unchecked above. No wider criterion is closed
 by completing this one native representation.
+
+Current parity evidence supersedes the initial prototype/JS-only status above:
+matching mirrored repair now passes all three languages, 922 native Rust checks,
+539 actual-WASM checks, 2,060 C# tests per configuration and 209 JS tests. The
+public shared-file recipe passes 32 configurations / 192 writers with deliberate
+closed-copy damage at mirrored handoffs. MIRRORED-PAGES-PLAN.md records exact
+costs and remaining CI corrections. Complete project coverage and all wider
+acceptance criteria remain open.
