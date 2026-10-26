@@ -29,7 +29,7 @@ part of R1/R4/R6/R7/R8/R9/R10/R11/R12; the wider issue remains unfinished.
 - [x] Run full native/C# Debug+Release/actual-WASM/JS coverage suites and strict
       checks, rebuild the final WASM package and repeat the real-etcd integration.
 - [x] Publish complete coverage denominators and curated before/after evidence.
-- [ ] Review all changes; commit and push only the prepared branch, inspect fresh
+- [x] Review all changes; commit and push only the prepared branch, inspect fresh
       exact-head CI, preserve failed logs and correct any actual failures.
 - [ ] Continue the wider unfinished R1–R12 requirements in this same draft PR.
 
@@ -61,3 +61,9 @@ ten response-loss cases, coherent reader refresh and leader/majority loss.
 reclamation.txt retains complete denominators, finite model counterexamples and
 limits; reclamation-before.txt retains actual missing-API and regression failures.
 Fresh exact-head CI follows publication; every wider unmet criterion stays active.
+
+All nine workflows pass on published source `419f7c7`, created after that commit
+at 2026-10-26T22:19:35Z. Both native Linux/macOS/Windows matrices and actual WASM
+pass. `reclamation-ci.txt` retains exact run/job URLs and timestamps. The next
+test-only contract audit has its own plan and requires new exact-head CI after
+publication; broader acceptance criteria remain unfinished.

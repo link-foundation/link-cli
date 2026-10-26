@@ -3300,3 +3300,9 @@ remain application/provider contracts. Borrowed physical roots are unsupported;
 complete listing bounds, full-journal writes/replay and catalog contention limit
 scale. Fresh exact-head CI follows publication. Every broader unmet acceptance
 criterion remains active and the PR remains draft and unmerged.
+
+All nine workflows subsequently pass on exact reclamation source `419f7c7`,
+with run creation 2026-10-26T22:19:35Z after that commit. Rust and C# each pass
+Linux/macOS/Windows; actual-WASM and JS integration pass. `reclamation-ci.txt`
+retains permanent run/job URLs and exact timestamps. Subsequent contract tests
+are tracked separately and require fresh CI after publication.
