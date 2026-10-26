@@ -195,10 +195,10 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Portable checkpoint pages on Bun and Deno
+      - name: Portable checkpoint pages and replacement codecs on Bun and Deno
         run: |
-          bun test js/client/test/engine-checkpoint-pages.test.mjs --timeout 30000
-          deno test --allow-all js/client/test/engine-checkpoint-pages.test.mjs
+          bun test js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-compaction*.test.mjs
 
       - name: Cache cargo registry
         uses: actions/cache@v6
@@ -253,6 +253,14 @@ jobs:
           deno run --allow-all examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-deno.json
           cmp experiments/issue-138/checkpoint-delta-node.json experiments/issue-138/checkpoint-delta-bun.json
           cmp experiments/issue-138/checkpoint-delta-node.json experiments/issue-138/checkpoint-delta-deno.json
+
+      - name: Verify engine compaction with actual WASM and both bank modes
+        run: |
+          node examples/journal-checkpoints/compact.mjs > experiments/issue-138/checkpoint-compact-node.json
+          bun examples/journal-checkpoints/compact.mjs > experiments/issue-138/checkpoint-compact-bun.json
+          deno run --allow-all examples/journal-checkpoints/compact.mjs > experiments/issue-138/checkpoint-compact-deno.json
+          cmp experiments/issue-138/checkpoint-compact-node.json experiments/issue-138/checkpoint-compact-bun.json
+          cmp experiments/issue-138/checkpoint-compact-node.json experiments/issue-138/checkpoint-compact-deno.json
 
       - name: Preserve checkpoint payload measurements
         if: always()

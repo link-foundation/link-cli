@@ -17,7 +17,7 @@ replacement of an acknowledged journal.
       complete new records and fence uncertain owners.
 - [x] Verify malformed roots, epoch exhaustion, pending input, no-op replacement,
       stale bank identities, repeated swaps, resource ownership and finite costs.
-- [ ] Add engine replacement under the commit lock, optional physical delta
+- [x] Add engine replacement under the commit lock, optional physical delta
       composition and matching WASM/JS binding. Preserve history, pins, active
       reservations and sessions; reject unsupported capabilities before mutation.
 - [ ] Add native file ownership/cleanup, bounded process exits and persistent
@@ -25,9 +25,19 @@ replacement of an acknowledged journal.
 - [x] Run complete portable suites and measured coverage sequentially within
       2.92 GiB; preserve before failures, ownership rules, selected costs and
       component/whole-project coverage in local-checkpoint{,-before}.txt.
-- [ ] Commit/push this portable batch only to the prepared branch and inspect
+- [x] Commit/push this portable batch only to the prepared branch and inspect
       every fresh exact-head workflow and native platform. Engine/file changes
       need their own following complete validation.
+
+All nine workflows and both native language platform matrices pass on c66e75f;
+`local-checkpoint-ci.txt` preserves exact heads, creation timestamps and links.
+The intervening dependency update and SDK-matching C# formatting correction
+retain their original failed logs and separate forward commits.
+
+Engine integration and complete local verification are recorded in
+[ENGINE-COMPACTION-PLAN.md](ENGINE-COMPACTION-PLAN.md) and engine-compaction.txt.
+That following batch needs its own exact-head CI. Native owning factories and
+process/persistent replacement checks remain in the unchecked step above.
 
 The root uses two fixed metadata files and two complete page banks. No file
 name changes during replacement. All devices stay under one exclusive owner;

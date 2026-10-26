@@ -628,3 +628,138 @@ fn failed_open_releases_banks_before_root_at_every_device_operation() {
         }
     }
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn engine_compaction_composes_with_both_bank_modes_delta_state_history_and_encoding() {
+    use link_cli::engine::{
+        DeltaLog, Engine, EngineOptions, HistoryPolicy, RevisionEncoding, StateStructure,
+    };
+    use link_cli::LinksStorage;
+    fn exercise<L: ReplaceableTransitionLogStore>(log: L, options: EngineOptions) {
+        let engine = Engine::<u32, _>::open(log, options).unwrap();
+        assert!(engine.compact_journal().unwrap());
+        let mut pin = None;
+        for revision in 1..=6 {
+            let mut tx = engine.begin().unwrap();
+            if revision == 1 {
+                tx.create_link(0, 0).unwrap();
+                tx.ensure_link_created(7).unwrap();
+                tx.delete_link(7).unwrap();
+            }
+            tx.set_name(1, Some(format!("雪 {} {revision}", "x".repeat(256))))
+                .unwrap();
+            tx.commit().unwrap();
+            if revision == 1 {
+                pin = Some(engine.snapshot().unwrap());
+            }
+        }
+        let mut pending = engine.begin().unwrap();
+        assert_eq!(pending.create_link(0, 0).unwrap(), 8);
+        let expected = engine.export_checkpoint().unwrap();
+        let changed = engine.with_log(|log| log.read_log_entries()).unwrap() != expected;
+        assert_eq!(engine.compact_journal().unwrap(), changed);
+        assert!(!engine.compact_journal().unwrap());
+        assert_eq!(
+            engine.with_log(|log| log.read_log_entries()).unwrap(),
+            expected
+        );
+        assert!(engine.snapshot().unwrap().get(8).is_none());
+        pending.commit().unwrap();
+        drop(pending);
+        assert!(pin
+            .unwrap()
+            .get(1)
+            .unwrap()
+            .name
+            .as_ref()
+            .unwrap()
+            .ends_with(" 1"));
+        engine.compact_journal().unwrap();
+        assert!(!engine.compact_journal().unwrap());
+    }
+    fn reopened<L: ReplaceableTransitionLogStore>(log: L, options: EngineOptions) {
+        let engine = Engine::<u32, _>::open(log, options).unwrap();
+        assert_eq!(engine.snapshot().unwrap().revision, 7);
+        assert!(engine.snapshot().unwrap().get(8).is_some());
+        assert!(!engine.compact_journal().unwrap());
+        let mut following = engine.begin().unwrap();
+        assert_eq!(following.create_link(0, 0).unwrap(), 9);
+        following.commit().unwrap();
+        engine.compact_journal().unwrap();
+        assert!(!engine.compact_journal().unwrap());
+    }
+    for state_structure in [
+        StateStructure::Flat,
+        StateStructure::Shared,
+        StateStructure::SortedRuns,
+    ] {
+        for revision_encoding in [RevisionEncoding::Snapshot, RevisionEncoding::Changes] {
+            for history in [
+                HistoryPolicy::None,
+                HistoryPolicy::Last(2),
+                HistoryPolicy::All,
+            ] {
+                for delta in [false, true] {
+                    let options = EngineOptions {
+                        state_structure,
+                        revision_encoding,
+                        history,
+                        require_durable_flush: true,
+                        ..Default::default()
+                    };
+                    let (source, _) = devices::<3>(Default::default());
+                    let log = CheckpointPagedLog::with_max_pages(
+                        source[0].clone(),
+                        [source[1].clone(), source[2].clone()],
+                        64,
+                    )
+                    .unwrap();
+                    if delta {
+                        exercise(DeltaLog::new(log, 128).unwrap(), options.clone());
+                    } else {
+                        exercise(log, options.clone());
+                    }
+                    let (source, _) = devices(durable(&source));
+                    let log = CheckpointPagedLog::with_max_pages(
+                        source[0].clone(),
+                        [source[1].clone(), source[2].clone()],
+                        64,
+                    )
+                    .unwrap();
+                    if delta {
+                        reopened(DeltaLog::new(log, 128).unwrap(), options.clone());
+                    } else {
+                        reopened(log, options.clone());
+                    }
+                    let (source, _) = devices::<5>(Default::default());
+                    let mirrored = |source: &[Device; 5]| {
+                        CheckpointPagedLog::with_max_pages(
+                            source[0].clone(),
+                            [
+                                MirroredPageDevice::new(source[1].clone(), source[2].clone()),
+                                MirroredPageDevice::new(source[3].clone(), source[4].clone()),
+                            ],
+                            64,
+                        )
+                        .unwrap()
+                    };
+                    if delta {
+                        exercise(
+                            DeltaLog::new(mirrored(&source), 128).unwrap(),
+                            options.clone(),
+                        );
+                    } else {
+                        exercise(mirrored(&source), options.clone());
+                    }
+                    let (source, _) = devices(durable(&source));
+                    if delta {
+                        reopened(DeltaLog::new(mirrored(&source), 128).unwrap(), options);
+                    } else {
+                        reopened(mirrored(&source), options);
+                    }
+                }
+            }
+        }
+    }
+}

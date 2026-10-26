@@ -61,6 +61,12 @@ async function engineTypes(binding: { StagedEngine: { new(options: string, journ
   const log: CommitLog = new DeltaCommitLog(new ReplicatedCommitLog(file, [replica], { acknowledgements: 1 }), { checkpointInterval: 128 });
   using engine = new WasmEngine(binding, options, log);
   const checkpoint: string[] = engine.exportCheckpoint(); void checkpoint;
+  const changed: boolean = engine.compactJournal(); void changed;
+  const replaceable = new DeltaCommitLog(new MemoryCommitLog());
+  const supported: boolean = replaceable.supportsReplacement; void supported;
+  const replaced: boolean = replaceable.replace(checkpoint); void replaced;
+  // @ts-expect-error replacement is synchronous and requires string records
+  replaceable.replace([1]);
   const session: EngineClient = engine.begin();
   await using owned = session;
   await session.create(0n, 0n);

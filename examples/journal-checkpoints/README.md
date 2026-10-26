@@ -68,3 +68,22 @@ The native examples select this fixture only with
 seed an empty logical journal, require an existing journal's first record to
 match exactly, and never replace an existing acknowledged prefix. This imports
 an independent database; local atomic checkpoint replacement remains separate.
+
+To compact the live engine through the portable two-bank journal, run:
+
+```sh
+CLINK_WASM=/absolute/path/to/pkg node examples/journal-checkpoints/compact.mjs
+```
+
+The same script runs with Bun or `deno run --allow-all`. Its 72 configurations
+combine three state structures, two logical encodings, three retention policies,
+optional physical delta compression and single or mirrored page banks. It checks
+no-op compaction, pending reservations, pinned history, following commit groups,
+fresh image reopening and repair of a damaged closed mirrored copy. Every
+configuration finishes with another allocation and commit. The output is
+deterministic and compared across all three runtimes in normal CI.
+
+The devices in this example are volatile cloned images. They demonstrate codec
+and engine composition, and do not establish filesystem or hardware durability.
+Compaction requires exclusive ownership of the root and all banks; see
+[publication, ownership and costs](../../docs/protocol/checkpoint-pages.md).

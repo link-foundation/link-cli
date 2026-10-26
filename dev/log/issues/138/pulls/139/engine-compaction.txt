@@ -1,0 +1,72 @@
+Engine-lock compaction; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline: 652ce129a3d7f1032d25da94b2472aceb41dd49e; missing-feature controls in engine-compaction-before.txt.
+Validation: bash experiments/issue-138/validate-engine-compaction.sh <stage>
+Sequential compilers; Cargo jobs=1, reduced debug, .NET SDK10.0.403/640MiB heap, actual WASM256MiB cap.
+csharp: complete stage passed
+native: complete stage passed
+wasm: complete stage passed
+js: complete stage passed
+repository: complete stage passed
+cluster: complete stage passed
+interop: complete stage passed
+
+Native Rust: 1002 passed, 17 ignored child entry points.
+Complete lines: 13399/14199 (94.36580%)
+Complete branches: 2540/2950 (86.10169%)
+Complete functions: 1703/1837 (92.70550%)
+engine/checkpoint.rs lines: 37/37 (100.00000%)
+engine/checkpoint.rs branches: 6/6 (100.00000%)
+engine/checkpoint.rs functions: 5/5 (100.00000%)
+engine/delta.rs lines: 245/245 (100.00000%)
+engine/delta.rs branches: 74/74 (100.00000%)
+engine/delta.rs functions: 28/28 (100.00000%)
+
+Actual WASM: 620 passed, 0 ignored child entry points.
+Complete lines: 11068/13424 (82.44934%)
+Complete branches: 2165/2603 (83.17326%)
+Complete functions: 1403/1778 (78.90889%)
+engine/checkpoint.rs lines: 37/37 (100.00000%)
+engine/checkpoint.rs branches: 6/6 (100.00000%)
+engine/checkpoint.rs functions: 5/5 (100.00000%)
+engine/delta.rs lines: 245/245 (100.00000%)
+engine/delta.rs branches: 74/74 (100.00000%)
+engine/delta.rs functions: 28/28 (100.00000%)
+All ten wrapper unit controls execute in the actual WASM runner; native registration is retained.
+Wrapper-only lines: 539/539 (100.00000%)
+Wrapper-only branches: 22/22 (100.00000%)
+Wrapper-only functions: 94/94 (100.00000%)
+Wrapper-only regions: 908/909 (99.88999%)
+Wrapper-only instantiations: 134/177 (75.70621%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.16s
+
+C# Debug: 2210 passed, 0 failed/skipped.
+Complete lines: 8225/8519 (96.54889%)
+Complete branches: 4500/4868 (92.44043%)
+Foundation.Data.Doublets.Cli.Engine.DeltaCommitLog: lines 1; branches 0.9913
+Foundation.Data.Doublets.Cli.Engine.DeltaCommitLog/Frame: lines 1; branches 1
+Foundation.Data.Doublets.Cli.Engine.LinksEngine`1: lines 1; branches 1
+Final C# Debug delta/compaction follow-up: 32 passed; both components100% lines/branches.
+Follow-up adds rejection/reuse for a non-replaceable inner log; complete-suite totals above remain the unmerged reports.
+
+C# Release: 2210 passed, 0 failed/skipped.
+Complete lines: 6310/6496 (97.13670%)
+Complete branches: 4447/4833 (92.01324%)
+Foundation.Data.Doublets.Cli.Engine.DeltaCommitLog: lines 1; branches 0.9912000000000001
+Foundation.Data.Doublets.Cli.Engine.DeltaCommitLog/Frame: lines 1; branches 1
+Foundation.Data.Doublets.Cli.Engine.LinksEngine`1: lines 1; branches 1
+Final C# Release delta/compaction follow-up: 32 passed; both components100% lines/branches.
+Follow-up adds rejection/reuse for a non-replaceable inner log; complete-suite totals above remain the unmerged reports.
+JS: {'tests': 230, 'pass': 230, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: identical72-case actual-WASM compaction report; conformance and48 existing independent policies pass.
+bun: identical72-case actual-WASM compaction report; conformance and48 existing independent policies pass.
+deno: identical72-case actual-WASM compaction report; conformance and48 existing independent policies pass.
+Engine lock retained across construction/publication; native bounded concurrent commits wait for replacement.
+History, pins, committed/private allocators, following groups, locks/admission, read sets and saved branch bases preserved.
+Unsupported rejection preserves usability; before/after errors fence engine/codec and reopen complete old/new streams.
+All72 bank/state/encoding/history/delta cases pass in native, C# and each actual-WASM runtime.
+Cluster checkpoint modes0/1 and1+64KiB cache; existing48 native configurations/288 handoffs pass.
+Initial-checkpoint native control: another48 configurations/288 handoffs, revision40->52, closed mirrored repair.
+Strict format/lint, TypeScript, vector regeneration, optional-SQL, release/source/workflow checks pass.
+Native owning factories/process recovery, whole-project100% coverage and every wider unmet issue criterion remain unfinished.
+Truthful device synchronization is assumed; cloned images and process exits do not establish hardware power-loss durability.

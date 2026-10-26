@@ -1,0 +1,25 @@
+Engine compaction missing-feature controls at 652ce129a3d7f1032d25da94b2472aceb41dd49e
+
+The real native Rust target fails with E0599 at lines 22 and 24:
+no method named compact_journal found for Engine<u32, ReplacingLog>.
+The final native control includes the required TransitionLogStore.flush_log.
+An initial adapter omission also caused E0046; corrected before this control.
+
+The real C# project fails with CS1061 at EngineCompactionTests.cs:20-21:
+LinksEngine<uint> does not contain a definition for CompactJournal.
+
+The real JS wrapper test fails at engine-compaction.test.mjs:10:
+TypeError: engine.compactJournal is not a function.
+
+The actual wasm32-unknown-unknown binding target fails with E0599 at
+engine_compaction.rs:8: StagedEngine has no compact_journal method.
+
+Commands and complete before logs are retained under experiments/issue-138.
+These are missing-feature controls, not claims of a prior data-loss defect.
+
+The first full coverage run with --lib executed the new direct-trait control,
+but exposed eight existing #[test] wrapper controls that the WASM runner did
+not register. All611 registered tests passed; those eight test functions had
+zero coverage. They are now registered for wasm-bindgen on WASM and retain
+native #[test] registration. This is runner/measurement coverage, not evidence
+of a production data-loss failure. The final report preserves complete counts.

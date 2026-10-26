@@ -70,3 +70,6 @@ mod engine_paged_tests;
 
 #[path = "../../tests/engine_mirrored_pages_tests.rs"]
 mod engine_mirrored_pages_tests;
+
+#[path = "../../tests/engine_compaction_tests.rs"]
+mod compaction;

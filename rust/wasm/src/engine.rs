@@ -183,6 +183,13 @@ impl StagedEngine {
             .map(|entries| serde_json::to_string(&entries).expect("strings serialize"))
             .map_err(|e| e.to_string())
     }
+    /// Publish a checkpoint through the optional atomic replacement capability.
+    #[wasm_bindgen(js_name = compactJournal)]
+    pub fn compact_journal(&self) -> Result<bool, String> {
+        self.inner
+            .compact_journal()
+            .map_err(|cause| cause.to_string())
+    }
     /// Historical rows use decimal addresses, avoiding JS number precision loss.
     pub fn snapshot(&self, revision: Option<u64>) -> Result<String, String> {
         let snapshot = match revision {
@@ -316,7 +323,8 @@ impl StagedSession {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn binding_sessions_and_journal_round_trip() {
         let engine = StagedEngine::new(r#"{"history":"all"}"#, "[]").unwrap();
         let mut session = engine.begin().unwrap();
@@ -328,7 +336,8 @@ mod tests {
         assert_eq!(reopened.begin().unwrap().count(), 1);
         assert!(engine.snapshot(Some(0)).unwrap().contains("\"rows\":[]"));
     }
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn invalid_policies_are_not_silently_ignored() {
         for text in [
             "[]",

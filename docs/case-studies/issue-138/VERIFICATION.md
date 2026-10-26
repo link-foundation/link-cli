@@ -2947,3 +2947,51 @@ journal-values.txt. Whole-project 100% and every broader criterion remain open.
 Mapped-growth head 1aafc31 passes C# Linux/macOS/Windows and eight workflows;
 Rust Windows fails an existing movement child deadline. See
 mapped-growth-ci-before.txt; investigation and fresh exact-head CI remain active.
+
+## Engine publication of retained checkpoints
+
+Missing-feature controls fail in the actual Rust, C#, JS and WASM targets before
+the publication APIs exist. The engine now holds its commit mutex through
+checkpoint construction and replacement. Unsupported capability preserves
+usability; every uncertain replacement error fences the engine and pending
+sessions until fresh reopening. Physical delta logs validate and prepare their
+complete input before inner I/O and adopt the new codec on either boolean result.
+
+Complete local suites pass 1,002 native tests plus six doctests, 620 actual-WASM
+tests, 2,210 C# tests in each configuration, 230 JS tests and 221 repository
+checks. Seventeen native child entry points run through bounded parents. The
+actual-WASM runner now registers eight pre-existing wrapper unit controls and
+two direct replacement-trait controls. JS enforces 100% production lines,
+branches and functions; strict TypeScript passes.
+
+| Complete measured scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 13,399/14,199 (94.37%) | 2,540/2,950 (86.10%) | 1,703/1,837 (92.71%) |
+| Actual WASM, complete linked source | 11,068/13,424 (82.45%) | 2,165/2,603 (83.17%) | 1,403/1,778 (78.91%) |
+| C# Debug | 8,225/8,519 (96.55%) | 4,500/4,868 (92.44%) | Not reported |
+| C# Release | 6,310/6,496 (97.14%) | 4,447/4,833 (92.01%) | Not reported |
+
+The shared Rust checkpoint and delta components measure 100% lines, branches
+and functions in native and WASM runs. WASM wrappers measure 539/539 lines,
+22/22 branches and 94/94 functions; finer LLVM regions are 908/909 and
+instantiations 134/177. A final C# follow-up adds rejection/reuse of an ordinary
+non-replaceable inner log. Its 32 cases per configuration bring both changed
+components to 100% lines/branches. The complete-suite totals above remain the
+raw earlier reports; they are not silently merged with the focused follow-up.
+
+All 72 bank/state/encoding/history/delta combinations preserve history, private
+reservations, pins and following groups in native Rust/C# and in actual WASM on
+Node, Bun and Deno. Bounded native gates verify commit serialization; stale
+read-set, pessimistic ownership, exclusive admission and saved branch descriptors
+remain effective after replacement. Both existing native handoff controls pass
+48 configurations and 288 writers each, including closed mirrored-copy repair.
+Real etcd passes default, checkpoint and checkpoint-plus-cache modes. All eight
+coverage modules use verified 256 MiB linear-memory caps; compilers run sequentially.
+
+See ENGINE-COMPACTION-PLAN.md, engine-compaction-before.txt and engine-compaction.txt.
+The temporary root-level CI log directory caused one local repository-layout
+failure; moving preserved logs under experiments resolves it without a source
+change. Native owning factories and their process-recovery composition remain
+unfinished. Fresh exact-head CI, complete-project coverage and all wider unmet
+requirements remain active. Volatile images/process exits do not certify
+hardware power-loss durability.

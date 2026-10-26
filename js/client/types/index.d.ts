@@ -17,6 +17,9 @@ export interface EngineOptions {
   requireDurableFlush?: boolean;
 }
 export interface CommitLog {
+  /** Optional synchronous atomic replacement; false means identical records. */
+  readonly supportsReplacement?: boolean;
+  replace?(records: readonly string[]): boolean;
   readonly supportsDurableFlush: boolean;
   read(): string;
   append(record: string): void;
@@ -32,6 +35,8 @@ export class MemoryCommitLog implements CommitLog {
 export class DeltaCommitLog implements CommitLog {
   constructor(inner: CommitLog, options?: { checkpointInterval?: number });
   readonly supportsDurableFlush: boolean;
+  readonly supportsReplacement: boolean;
+  replace(records: readonly string[]): boolean;
   read(): string;
   append(record: string): void;
   flush(): void;
@@ -54,6 +59,7 @@ export interface StagedEngineLike {
   snapshot(revision?: bigint): string;
   journal(): string;
   exportCheckpoint(): string;
+  compactJournal(): boolean;
   fork(options: string, journal: string): StagedBranchLike;
   forkWithLog(options: string, log: CommitLog): StagedBranchLike;
   resume(options: string, journal: string, base: string): StagedBranchLike;
@@ -91,6 +97,8 @@ export class WasmEngine {
   journal(): string[];
   /** Retained committed snapshots; does not rewrite or publish the live log. */
   exportCheckpoint(): string[];
+  /** Publish under the commit lock. Unknown outcomes require reopening. */
+  compactJournal(): boolean;
   close(): void;
   [Symbol.dispose](): void;
 }

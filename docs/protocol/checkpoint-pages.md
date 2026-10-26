@@ -105,7 +105,35 @@ uses O(replacement bytes) pending buffers plus the normal page buffer. It writes
 O(replacement bytes/pages), two empty 128-byte bank decisions, a complete bank
 decision, and one 128-byte root. Mirroring doubles bank I/O. Two bank images
 occupy disk until a later replacement reuses the inactive bank. Default ordinary
-journals incur no root device, second bank or replacement work. Logical engine
-checkpoint construction and publication under its commit lock are a separate
-composition requirement tracked in
-[the local checkpoint plan](../case-studies/issue-138/LOCAL-CHECKPOINT-PLAN.md).
+journals incur no root device, second bank or replacement work.
+
+## Engine publication
+
+Rust `Engine::compact_journal`, C# `LinksEngine.CompactJournal` and WASM/JS
+`WasmEngine.compactJournal()` construct the same retained committed records as
+checkpoint export, holding the commit mutex continuously through replacement.
+Select a replacement-capable log explicitly. Rust exposes the method when the
+log implements `ReplaceableTransitionLogStore`; an implementation reporting
+unsupported capability rejects before mutation. C#/WASM ordinary logs also
+reject before mutation and remain usable for following commits. WASM external
+logs opt in with exactly `supportsReplacement: true`; `replace(records)` must
+finish synchronously and return a boolean. An identical sequence returns false.
+
+Compaction does not advance the revision or alter retained snapshots, pinned
+images, conflict generations, locks, admission counts or pending transactions.
+Private allocator reservations remain reserved in the live owner and stay out of
+the checkpoint. An independently reopened copy starts at the committed allocator
+position. Branch merge-base descriptors retain their exact committed metadata.
+
+Any replacement error can hide completed publication. The engine fences itself
+and pending sessions until a fresh owner reopens storage and discovers the old
+or new decision. Pinned immutable snapshots remain readable. Physical delta
+decorators delegate the optional capability, validate and encode the entire new
+sequence in temporary memory before inner I/O, and adopt their new codec state
+only after a boolean acknowledgement. An uncertain replacement fences the codec.
+
+Construction costs O(retained committed snapshot bytes); delta adds another
+prepared physical sequence. This explicit operation holds the commit mutex for
+construction, validation and storage synchronization. Ordinary commits do no
+replacement work. See the finite [72-case example](../../examples/journal-checkpoints/compact.mjs)
+and the remaining [native ownership work](../case-studies/issue-138/LOCAL-CHECKPOINT-PLAN.md).

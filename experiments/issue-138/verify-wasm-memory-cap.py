@@ -16,7 +16,7 @@ def uleb(stream):
         shift += 7
     raise AssertionError('invalid WebAssembly integer')
 
-for name in ['web', 'engine', 'group_commit', 'core', 'protocol', 'storage']:
+for name in ['clink_wasm', 'web', 'engine', 'engine_compaction', 'group_commit', 'core', 'protocol', 'storage']:
     module = max(modules.glob(name + '-*.wasm'), key=lambda p: p.stat().st_mtime)
     checked = False
     with module.open('rb') as stream:

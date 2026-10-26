@@ -13,10 +13,30 @@ public sealed partial class LinksEngine<T>
         lock (Gate)
         {
             CheckReady();
-            IEnumerable<(EngineSnapshot<T> Snapshot, BigInteger Next)> snapshots = _history.Count == 0 ? new[] { (Current, CommittedNext) } : _history.Values;
-            return snapshots.Select((item, index) => RevisionJournal<T>.EncodeFormat(item.Snapshot,
-                item.Next,
-                index == 0 ? "engine3" : "engine1")).ToArray();
+            return CheckpointLocked();
+        }
+    }
+
+    // Caller holds Gate continuously through construction and publication.
+    private IReadOnlyList<string> CheckpointLocked()
+    {
+        IEnumerable<(EngineSnapshot<T> Snapshot, BigInteger Next)> snapshots = _history.Count == 0 ? new[] { (Current, CommittedNext) } : _history.Values;
+        return snapshots.Select((item, index) => RevisionJournal<T>.EncodeFormat(item.Snapshot,
+            item.Next,
+            index == 0 ? "engine3" : "engine1")).ToArray();
+    }
+    /// <summary>Publish retained committed snapshots through an optional atomic
+    /// replacement log. An unknown outcome fences this owner until reopen.</summary>
+    public bool CompactJournal()
+    {
+        lock (Gate)
+        {
+            CheckReady();
+            if (_log is not IReplaceableCommitLog { SupportsReplacement: true } replacement)
+                throw new NotSupportedException("Selected log does not support journal replacement.");
+            var records = CheckpointLocked();
+            try { return replacement.Replace(records); }
+            catch { Poisoned = true; throw; }
         }
     }
 }

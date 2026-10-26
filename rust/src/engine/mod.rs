@@ -8,6 +8,7 @@
 mod boundary_tests;
 mod branch;
 mod changes;
+mod checkpoint;
 pub mod cluster;
 mod commit;
 #[cfg(test)]
@@ -290,34 +291,6 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             .get(&revision)
             .map(|(snapshot, _)| snapshot.clone())
             .ok_or_else(|| error("revision is not retained"))
-    }
-    /// Export an independent checkpoint followed by retained committed revisions.
-    /// Does not rewrite/publish the live log or include pending reservations.
-    /// The caller owns atomic publication and synchronization of these records.
-    pub fn export_checkpoint(&self) -> Result<Vec<String>, LinkError> {
-        let state = self.lock()?;
-        let snapshots: Vec<_> = if state.history.is_empty() {
-            vec![(&state.current, state.committed_next)]
-        } else {
-            state
-                .history
-                .values()
-                .map(|(snapshot, next)| (snapshot, *next))
-                .collect()
-        };
-        Ok(snapshots
-            .into_iter()
-            .enumerate()
-            .map(|(index, (snapshot, next))| {
-                // Exact committed metadata preserves saved branch descriptors
-                // without exposing the current owner's private reservations.
-                journal::encode_format(
-                    snapshot,
-                    next,
-                    if index == 0 { "engine3" } else { "engine1" },
-                )
-            })
-            .collect())
     }
     pub fn begin(&self) -> Result<EngineTransaction<T, L>, LinkError> {
         let mut state = self.lock()?;

@@ -1,7 +1,7 @@
 //! Optional physical compression of complete engine revisions. Own one writer
 //! and reopen through this decorator; the inner stream can contain delta1 rows.
-use super::{error, journal::checksum};
-use crate::{LinkError, TransitionLogStore};
+use super::{error, journal::checksum, MemoryLog};
+use crate::{LinkError, ReplaceableTransitionLogStore, TransitionLogStore};
 
 #[derive(PartialEq, Eq)]
 enum Kind {
@@ -273,5 +273,34 @@ impl<L: TransitionLogStore> TransitionLogStore for DeltaLog<L> {
     }
     fn flush_log(&mut self) -> Result<(), LinkError> {
         self.codec.flush(&mut self.inner)
+    }
+}
+
+impl<L: ReplaceableTransitionLogStore> ReplaceableTransitionLogStore for DeltaLog<L> {
+    fn supports_replacement(&self) -> bool {
+        self.inner.supports_replacement()
+    }
+    fn replace_log_entries(&mut self, entries: &[String]) -> Result<bool, LinkError> {
+        self.codec.check()?;
+        if !self.supports_replacement() {
+            return Err(error("selected log does not support journal replacement"));
+        }
+        // Validate and encode the entire new stream before touching the owner.
+        let mut prepared = Codec::new(self.codec.interval)?;
+        let mut memory = MemoryLog::default();
+        prepared.read(&mut memory)?;
+        for entry in entries {
+            prepared.append(&mut memory, entry)?;
+        }
+        match self.inner.replace_log_entries(&memory.entries) {
+            Ok(changed) => {
+                self.codec = prepared;
+                Ok(changed)
+            }
+            Err(cause) => {
+                self.codec.poisoned = true;
+                Err(cause)
+            }
+        }
     }
 }

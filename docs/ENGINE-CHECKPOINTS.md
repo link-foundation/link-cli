@@ -47,8 +47,17 @@ It measures logical payloads, not network framing, disk I/O or latency.
 Partitioned stores publish a new immutable object and atomically change catalog
 pointers. Old objects remain immutable; this feature does not reclaim them or
 provide reader leases. The catalog remains the atomic publication boundary.
-Local append-only file/page journals are unchanged; callers can separately export
-an independent checkpoint via the public engine APIs. See the
+Callers can separately export an independent checkpoint via the public engine
+APIs, or explicitly compact through a replacement-capable local page journal.
+Rust `engine.compact_journal()`, C# `engine.CompactJournal()` and JS
+`engine.compactJournal()` retain the commit lock through construction and atomic
+publication. Default logs reject this optional operation without mutation.
+Select the portable two-bank log and optionally wrap it with physical delta
+compression; its [protocol and costs](protocol/checkpoint-pages.md) describe
+ownership, synchronization and uncertain-outcome fencing. The
+[72-configuration example](../examples/journal-checkpoints/compact.mjs) runs on
+actual WASM in Node, Bun and Deno. Native owning factories remain a separate
+unfinished integration in the local checkpoint plan. See also the
 [wire and ownership contract](protocol/engine-checkpoints.md).
 The physical delta decorator accepts an initial engine3 record unchanged, then
 enforces consecutive engine1/engine2 revisions. Complete checkpoint rows can be

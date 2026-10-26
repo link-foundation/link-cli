@@ -1,5 +1,6 @@
 // Optional physical journal compression. Reopen the stream through this
 // decorator, with one externally fenced writer and caller-owned resources.
+import { MemoryCommitLog } from './engine-logs.js';
 const U32 = 0xffff_ffffn;
 const U64 = (1n << 64n) - 1n;
 const U128 = (1n << 128n) - 1n;
@@ -67,7 +68,7 @@ const complete = (value) => {
   if (value !== undefined) throw TypeError('log operations must complete synchronously and return undefined');
 };
 
-/** Compress full snapshots; logical change records pass through, without compaction. */
+/** Compress full snapshots; logical change records pass through, with optional atomic replacement. */
 export class DeltaCommitLog {
   #inner;
   #interval;
@@ -82,6 +83,24 @@ export class DeltaCommitLog {
     this.#interval = checkpointInterval;
   }
   get supportsDurableFlush() { return this.#inner.supportsDurableFlush === true; }
+  get supportsReplacement() { return this.#inner.supportsReplacement === true; }
+  replace(records) {
+    this.#check();
+    if (!this.supportsReplacement) throw Error('selected log does not support journal replacement');
+    if (!Array.isArray(records)) throw TypeError('replacement requires an array of strings');
+    const copy = [...records];
+    if (copy.some((record) => typeof record !== 'string')) throw TypeError('replacement requires an array of strings');
+    const memory = new MemoryCommitLog();
+    const prepared = new DeltaCommitLog(memory, { checkpointInterval: this.#interval });
+    prepared.read();
+    for (const record of copy) prepared.append(record);
+    try {
+      const changed = this.#inner.replace(JSON.parse(memory.read()));
+      if (typeof changed !== 'boolean') throw TypeError('log replacement must complete synchronously and return boolean');
+      this.#previous = prepared.#previous; this.#streak = prepared.#streak; this.#ready = true;
+      return changed;
+    } catch (error) { this.#poisoned = true; throw error; }
+  }
   #check() { if (this.#poisoned) throw Error('indeterminate delta journal outcome; reopen the decorator'); }
   read() {
     this.#check();

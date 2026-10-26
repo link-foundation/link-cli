@@ -250,6 +250,14 @@ separate `./engine-checkpoint-pages` entry accepts a raw root device and two
 page-bank devices. Keep all devices under one exclusive owner. It synchronizes
 the inactive bank before publishing its epoch-bound root; uncertain operations
 require reopening. See [protocol, ownership and costs](../../docs/protocol/checkpoint-pages.md).
+
+With a replacement-capable log, call `engine.compactJournal()` to publish retained
+committed snapshots while holding the engine commit lock. It returns false for
+an identical journal and preserves pending work and pinned history. An uncertain
+publication fences the engine until reopening. `DeltaCommitLog` forwards this
+optional capability and prepares its new physical stream before inner writes.
+The [actual-WASM example](../../examples/journal-checkpoints/compact.mjs) covers
+both bank modes and all state, encoding and retention choices.
 For a physical page WAL use the separate `./engine-sqlite-log` entry with a
 dedicated synchronous Node/Bun/Deno SQLite connection. It imports no provider
 into the universal entry. The adapter requires SQLite >= 3.51.3, enforces WAL/FULL,

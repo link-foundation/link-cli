@@ -176,6 +176,7 @@ version = "2.4.0"
 dependencies = [
  "anyhow",
  "console_error_panic_hook",
+ "js-sys",
  "link-cli",
  "links-notation",
  "minicov",

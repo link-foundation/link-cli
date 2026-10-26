@@ -5,7 +5,7 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 /// <summary>Optional single-span physical compression of complete revisions.
 /// Reopen through this decorator; one writer owns the inner log and its fencing.
 /// Logical changes pass through unchanged. Resources remain caller-owned.</summary>
-public sealed class DeltaCommitLog : ICommitLog
+public sealed class DeltaCommitLog : IReplaceableCommitLog
 {
     private readonly ICommitLog _inner;
     private readonly uint _interval;
@@ -29,6 +29,25 @@ public sealed class DeltaCommitLog : ICommitLog
         _interval = checkpointInterval;
     }
     public bool SupportsDurableFlush => _inner.SupportsDurableFlush;
+    public bool SupportsReplacement => _inner is IReplaceableCommitLog { SupportsReplacement: true };
+    public bool Replace(IReadOnlyList<string> records)
+    {
+        Check();
+        if (_inner is not IReplaceableCommitLog { SupportsReplacement: true } replacement)
+            throw new NotSupportedException("Selected log does not support journal replacement.");
+        ArgumentNullException.ThrowIfNull(records);
+        var memory = new MemoryCommitLog();
+        var prepared = new DeltaCommitLog(memory, _interval);
+        prepared.Read();
+        foreach (string record in records.ToArray()) prepared.Append(record);
+        try
+        {
+            bool changed = replacement.Replace(memory.Read());
+            _previous = prepared._previous; _streak = prepared._streak; _ready = true;
+            return changed;
+        }
+        catch { _poisoned = true; throw; }
+    }
     private void Check()
     {
         if (_poisoned) throw new IOException("Indeterminate delta journal outcome; reopen the decorator.");

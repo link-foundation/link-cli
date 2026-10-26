@@ -18,5 +18,5 @@ export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER=wasm-bindgen-test-runner
 export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zcoverage-options=branch -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage ${WASM_COVERAGE_EXTRA_RUSTFLAGS:-}"
 "${CARGO_LLVM_COV_BIN:-cargo-llvm-cov}" llvm-cov test \
   --manifest-path rust/wasm/Cargo.toml --target wasm32-unknown-unknown \
-  --test web --test engine --test group_commit --test core --test protocol --test storage --branch --json \
+  --lib --test web --test engine --test engine_compaction --test group_commit --test core --test protocol --test storage --branch --json \
   --output-path "$repo_root/experiments/issue-138/wasm-coverage.json"
