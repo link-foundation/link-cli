@@ -51,17 +51,22 @@ public class NativeCheckpointExitTests
         Assert.True(child.ExitCode == (point < 0 ? 0 : 73), $"point {point}: exit {child.ExitCode}: {error}"); return output;
     }
 
+    // Keep every observed cut while bounding each xUnit case independently.
+    // The full mirrored/root matrix exceeded 120 seconds in Windows CI;
+    // slicing bounds each case's process and synchronized-file work.
+    private const int Batches = 4;
+    public static IEnumerable<object[]> Cases()
+    {
+        var configurations = new[] {
+            (false,false,"replace"),(true,false,"replace"),(true,false,"repair"),
+            (false,true,"replace"),(true,true,"replace"),(true,true,"repair"),
+            (false,true,"root-repair"),(true,true,"root-repair"),(true,true,"both-repair") };
+        foreach (var (mirrored, root, phase) in configurations)
+            for (int batch = 0; batch < Batches; batch++) yield return new object[] { mirrored, root, phase, batch };
+    }
     [Theory(Timeout = 120000)]
-    [InlineData(false, false, "replace")]
-    [InlineData(true, false, "replace")]
-    [InlineData(true, false, "repair")]
-    [InlineData(false, true, "replace")]
-    [InlineData(true, true, "replace")]
-    [InlineData(true, true, "repair")]
-    [InlineData(false, true, "root-repair")]
-    [InlineData(true, true, "root-repair")]
-    [InlineData(true, true, "both-repair")]
-    public async Task EveryRealNativeMutationSurvivesBeforeAndAfterProcessExit(bool mirrored, bool mirroredRoot, string phase)
+    [MemberData(nameof(Cases))]
+    public async Task EveryRealNativeMutationSurvivesBeforeAndAfterProcessExit(bool mirrored, bool mirroredRoot, string phase, int batch)
     {
         string directory = Directory.CreateTempSubdirectory("checkpoint-cut-").FullName;
         try
@@ -70,7 +75,7 @@ public class NativeCheckpointExitTests
             string[] points = JsonSerializer.Deserialize<string[]>(await RunChild(baseline, mirrored, -1, phase, mirroredRoot))!; Assert.InRange(points.Length, phase == "replace" ? 30 : phase == "root-repair" ? 6 : 12, 150);
             foreach (string operation in new[] { "write", "truncate", "sync" }) Assert.Contains(points, value => value.Contains(operation, StringComparison.Ordinal));
             Assert.Contains(points, value => value.StartsWith(phase == "replace" ? ".meta1:write:" : phase == "root-repair" ? ".meta0:write:" : ".bank0:write:", StringComparison.Ordinal));
-            for (int point = 0; point < points.Length; point++)
+            for (int point = batch; point < points.Length; point += Batches)
             {
                 string path = Path.Combine(directory, $"case-{point}"); Seed(path, mirrored, mirroredRoot, phase); await RunChild(path, mirrored, point, phase, mirroredRoot);
                 Assert.Throws<IOException>(() => new FileCheckpointPagedCommitLog(path, mirrored, mirroredRoot));
@@ -84,7 +89,7 @@ public class NativeCheckpointExitTests
                 Assert.True(recovered.Replace(new[] { "compacted after exit" })); recovered.Dispose();
                 using var again = new FileCheckpointPagedCommitLog(path, mirrored, mirroredRoot); Assert.Equal(new[] { "compacted after exit" }, again.Read());
             }
-            Console.WriteLine($"native checkpoint mirroredBanks={mirrored} mirroredRoot={mirroredRoot} phase={phase}: {points.Length} bounded before/after process exits");
+            Console.WriteLine($"native checkpoint mirroredBanks={mirrored} mirroredRoot={mirroredRoot} phase={phase} batch={batch}/{Batches}: {points.Length} total points; {(points.Length + Batches - 1 - batch) / Batches} bounded before/after process exits");
         }
         finally { Directory.Delete(directory, true); }
     }

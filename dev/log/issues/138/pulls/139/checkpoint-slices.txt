@@ -1,0 +1,27 @@
+Checkpoint process-exit matrix case correction; https://github.com/link-foundation/link-cli/pull/139
+Published source 9a9a95c: eight workflows pass; C# Linux/macOS pass; C# Windows fails.
+https://github.com/link-foundation/link-cli/actions/runs/40416245668
+Preserved log experiments/issue-138/ci-logs/csharp-40416245668.log lines26794-26810:
+[xUnit.net 00:05:52.17] NativeCheckpointExitTests mirrored=True mirroredRoot=True phase=replace [FAIL]
+Test execution timed out after 120000 milliseconds.
+The log reports no child deadline or persistence assertion failure.
+
+Before: one xUnit case executes every observed process boundary sequentially.
+After: four disjoint ordinal slices preserve every boundary and recovery assertion.
+Unchanged deadlines: 120s per case, 10s per child; timed-out children are killed and reaped.
+All 36 focused native process cases pass locally with complete child cleanup.
+('False', 'False', 'replace'): 34 original before/after boundaries across four nonoverlapping slices
+('False', 'True', 'replace'): 40 original before/after boundaries across four nonoverlapping slices
+('False', 'True', 'root-repair'): 6 original before/after boundaries across four nonoverlapping slices
+('True', 'False', 'repair'): 12 original before/after boundaries across four nonoverlapping slices
+('True', 'False', 'replace'): 62 original before/after boundaries across four nonoverlapping slices
+('True', 'True', 'both-repair'): 18 original before/after boundaries across four nonoverlapping slices
+('True', 'True', 'repair'): 12 original before/after boundaries across four nonoverlapping slices
+('True', 'True', 'replace'): 68 original before/after boundaries across four nonoverlapping slices
+('True', 'True', 'root-repair'): 6 original before/after boundaries across four nonoverlapping slices
+Total original process cut points: 258
+No production storage source change is part of this correction.
+The combined workspace, including the separately implemented sorted-table feature,
+passes all 2,349 C# tests in both Debug and Release. That total includes eight
+new table tests; the test scheduling correction alone adds 27 discovered cases.
+Formatting and all 221 repository checks pass. Fresh exact-head Windows CI is pending.
