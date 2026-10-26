@@ -12,6 +12,8 @@ internal static class ProbeProgram
         try
         {
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
+            if (args is ["async-worker-pool", "blocking-control"]) return AsyncWorkerPool(blockingControl: true, schedulingControl: true);
+            if (args is ["async-worker-pool", "scheduling-control"]) return AsyncWorkerPool(schedulingControl: true);
             if (args is ["mapping-quota", var mappingDirectory]) return MappedGrowthTests.QuotaChild(mappingDirectory);
             if (args is ["deep-structure", var structureDirectory]) return StructureDepthTests.Child(structureDirectory);
             if (args is ["unicode-cycle", var unicodeOperation, var unicodeDirectory]) return UnicodeGraphCycleTests.Child(unicodeOperation, unicodeDirectory);
@@ -47,7 +49,7 @@ internal static class ProbeProgram
         }
     }
 
-    private static int AsyncWorkerPool()
+    private static int AsyncWorkerPool(bool blockingControl = false, bool schedulingControl = false)
     {
         ThreadPool.GetMinThreads(out _, out var completionMin);
         ThreadPool.GetMaxThreads(out _, out var completionMax);
@@ -57,6 +59,13 @@ internal static class ProbeProgram
         var stores = new List<NamedTypesDecorator<uint>>();
         var owners = new List<TransactionsDecorator>();
         using var canary = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        using var entered = new CountdownEvent(2);
+        using var exited = new CountdownEvent(2);
+        int flushes = 0;
+        // Scheduling controls isolate callback admission from physical fsync latency.
+        // The original physical checkpoint probe remains independently exercised.
+        void Flush() => Interlocked.Increment(ref flushes);
         try
         {
             for (var index = 0; index < 4; ++index)
@@ -65,18 +74,35 @@ internal static class ProbeProgram
                 stores.Add(data);
                 var log = new NamedTypesDecorator<uint>(Path.Combine(directory, $"log{index}.links"));
                 stores.Add(log);
-                owners.Add(new TransactionsDecorator(data, log, commitMode: index == 3 ? CommitMode.Async : CommitMode.Sync));
+                owners.Add(new TransactionsDecorator(data, log, commitMode: index == 3 ? CommitMode.Async : CommitMode.Sync,
+                    trace: true, flushData: schedulingControl ? Flush : null, flushLog: schedulingControl ? Flush : null));
+            }
+            if (blockingControl)
+            {
+                for (int worker = 0; worker < 2; worker++) ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    entered.Signal();
+                    try { release.Wait(TimeSpan.FromSeconds(10)); }
+                    finally { exited.Signal(); }
+                });
+                if (!entered.Wait(TimeSpan.FromSeconds(3))) throw new TimeoutException("Blocking control did not occupy both workers.");
             }
             var active = owners[^1];
             active.CreateAndUpdate(11u, 12u);
             ThreadPool.QueueUserWorkItem(_ => canary.Set());
             var responsive = canary.Wait(TimeSpan.FromSeconds(3));
             var applied = responsive && SpinWait.SpinUntil(() => active.AppliedSequence == active.LastLoggedSequence, TimeSpan.FromSeconds(3));
-            Console.WriteLine($"Two-worker pool: responsive={responsive}, checkpoint={applied}");
+            Console.WriteLine($"Two-worker pool: responsive={responsive}, checkpoint={applied}, applied={active.AppliedSequence}, logged={active.LastLoggedSequence}, flushes={Volatile.Read(ref flushes)}");
             return responsive && applied ? 0 : 1;
         }
         finally
         {
+            release.Set();
+            if (blockingControl)
+            {
+                if (!exited.Wait(TimeSpan.FromSeconds(3))) throw new TimeoutException("Blocking controls failed to exit.");
+                if (!canary.Wait(TimeSpan.FromSeconds(3))) throw new TimeoutException("Blocked canary failed to drain.");
+            }
             // Creation order releases the earliest blocking baseline workers.
             foreach (var owner in owners) owner.Shutdown();
             foreach (var store in stores.AsEnumerable().Reverse()) store.Dispose();

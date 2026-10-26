@@ -32,3 +32,15 @@ limits never change in the ordinary testhost. Existing wait timeouts are unchang
 - [x] Verify fresh exact-head Windows/Linux/macOS CI after publishing this fix;
       all nine workflows pass on 24554b0. See async-worker-ci.txt for timestamps
       and permanent run URLs; historical failed logs remain preserved.
+
+## Following native ownership CI audit
+
+C# run 40380335548 on `600cf5f` fails the original physical-checkpoint
+child on Windows: the canary runs, but checkpoint progress is false during
+the existing observation. This differs from the original occupied-worker
+reproduction and does not establish its cause. Preserve the physical test,
+add trace and sequence diagnostics, and separately exercise callback-only
+positive scheduling and deliberately occupied-worker negative controls.
+All waits stay finite and unchanged; the child limits its heap and drains
+callbacks before releasing borrowed stores. See native-checkpoint-ci-before.txt
+for exact historical log locations. Fresh Windows evidence remains required.

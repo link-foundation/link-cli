@@ -3064,3 +3064,22 @@ Root-media redundancy/repair, legacy mapped repair/efficient page undo, physical
 LSM, persistent object reclamation, wider algorithms and every other unmet
 criterion remain active. Truthful synchronization is assumed; finite process
 exits do not certify physical power-loss behavior.
+
+## Native checkpoint Windows test audit
+
+Published head `600cf5f` passes eight workflows. C# Linux/macOS pass; Windows
+fails an exclusive-file byte comparison and the existing physical-checkpoint
+worker probe. See native-checkpoint-ci-before.txt for exact run timestamps,
+URLs and downloaded log locations. Close the recovered owner before comparing
+bank bytes, then reopen for following writes. Preserve the physical worker
+probe and unchanged deadlines; add trace/sequence diagnostics, callback-only
+positive scheduling and bounded occupied-worker negative controls.
+
+An isolated base archive plus only these three test-file changes passes all
+2,229 tests in both Debug and Release, formatting and 221 repository checks.
+A stale archived Release assembly was detected by its 2,228-case count; its
+report is retained separately, and a forced rebuild verifies all final cases.
+See native-checkpoint-ci-fix.txt. This local pass does not establish the cause
+of the historical checkpoint-progress failure. Fresh Windows CI and every
+broader criterion remain unfinished; the following root-mirroring source is
+excluded from this test-patch verification.

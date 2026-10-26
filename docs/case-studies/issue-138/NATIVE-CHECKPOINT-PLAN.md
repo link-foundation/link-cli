@@ -65,3 +65,12 @@ masked original errors in JS. Four finite combinations now retain both original
 error identities and every raw cleanup error, preserve acknowledged records and
 verify following reopening. The complete nine-case raw fault suite and final
 complete JS validation pass; native Rust/C# source and their checks are unchanged.
+
+The published ownership head `600cf5f` has eight passing workflows and a C#
+Windows failure. The new recovery fixture compared exclusive bank files before
+its owner closed. Its byte comparison now follows disposal and a new owner
+performs subsequent writes. A separate existing async probe reports a responsive
+canary without checkpoint progress; retain it and add independent controls and
+trace diagnostics before drawing a root-cause conclusion. See
+native-checkpoint-ci-before.txt for run timestamps, permanent URLs and exact log
+lines. Earlier all-pass CI does not validate this head.

@@ -75,8 +75,10 @@ public class NativeCheckpointFactoryTests
                 Assert.Equal("foreign owner", File.ReadAllText(foreign + ".writer")); File.Delete(foreign + ".writer");
             }
             using var recovered = new FileCheckpointPagedCommitLog(path, mirrored); Assert.Equal(new[] { "acknowledged 雪" }, recovered.Read());
+            recovered.Dispose(); // Windows also enforces the native owner's exclusive sharing mode.
             if (mirrored) Assert.Equal(File.ReadAllBytes(selected), File.ReadAllBytes(selected + ".mirror"));
-            recovered.Append("following"); recovered.Flush(); Assert.True(recovered.Replace(new[] { "compacted" })); recovered.Dispose();
+            using var following = new FileCheckpointPagedCommitLog(path, mirrored);
+            following.Append("following"); following.Flush(); Assert.True(following.Replace(new[] { "compacted" })); following.Dispose();
             using var again = new FileCheckpointPagedCommitLog(path, mirrored); Assert.Equal(new[] { "compacted" }, again.Read());
         }
         finally { Directory.Delete(directory, true); }

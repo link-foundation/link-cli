@@ -4,8 +4,11 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public class AsyncWorkerPoolTests
 {
-    [Fact(Timeout = 30000)]
-    public async Task IdleSynchronousOwnersLeaveWorkersAvailableForAsyncCheckpoints()
+    [Theory(Timeout = 30000)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task IdleSynchronousOwnersLeaveWorkersAvailableForAsyncCheckpoints(bool blockingControl, bool schedulingControl)
     {
         var info = new ProcessStartInfo("dotnet")
         {
@@ -14,6 +17,9 @@ public class AsyncWorkerPoolTests
         };
         info.ArgumentList.Add(typeof(AsyncWorkerPoolTests).Assembly.Location);
         info.ArgumentList.Add("async-worker-pool");
+        if (blockingControl) info.ArgumentList.Add("blocking-control");
+        else if (schedulingControl) info.ArgumentList.Add("scheduling-control");
+        info.Environment["DOTNET_GCHeapHardLimit"] = "0x6000000";
         using var process = Process.Start(info)!;
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
@@ -28,6 +34,8 @@ public class AsyncWorkerPoolTests
             await process.WaitForExitAsync();
             throw new TimeoutException("Finite worker-pool child failed to stop.");
         }
-        Assert.True(process.ExitCode == 0, $"Finite worker-pool child exited {process.ExitCode}:\n{await stdout}\n{await stderr}");
+        string output = await stdout, errors = await stderr;
+        Assert.True(process.ExitCode == (blockingControl ? 1 : 0), $"Finite worker-pool child exited {process.ExitCode}:\n{output}\n{errors}");
+        Assert.Contains(blockingControl ? "responsive=False, checkpoint=False" : "responsive=True, checkpoint=True", output);
     }
 }

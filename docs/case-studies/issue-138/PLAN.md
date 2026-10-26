@@ -515,3 +515,14 @@ complete the overall issue or authorize marking the draft ready early.
     etcd and runtime comparisons pass. NATIVE-CHECKPOINT-PLAN.md and
     native-checkpoint{,-before}.txt retain exact coverage and selected costs.
     Commit, fresh exact-head CI and every wider unmet criterion remain active.
+
+The native checkpoint head `600cf5f` passes eight workflows, while C# Windows
+fails an exclusive-file test snapshot and an existing physical async probe.
+The independent test correction closes before snapshotting and keeps that
+physical probe with unchanged deadlines, adding trace and positive/negative
+scheduling controls. An isolated base-plus-test-patch archive passes 2,229
+tests per C# configuration and 221 repository checks. See
+native-checkpoint-ci-before.txt and native-checkpoint-ci-fix.txt. Publish this
+atomic test correction and inspect fresh Windows logs before assigning a cause
+to its checkpoint-progress observation. The selected mirrored-root batch and
+every broader acceptance criterion continue independently.

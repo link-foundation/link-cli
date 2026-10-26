@@ -1,0 +1,39 @@
+Native checkpoint CI-test correction and diagnostic controls
+PR: https://github.com/link-foundation/link-cli/pull/139
+Base: 600cf5f0a25741c865f8730ce23d08363f76c932
+
+Validate an isolated git archive of the base plus exactly the three test-file
+patches, excluding the following in-progress mirrored-root feature. Byte-compare
+all three archived sources with the reviewed test patch. No production code or
+existing deadlines change.
+
+.NET SDK 10.0.403, 640 MiB parent heap cap, one MSBuild worker:
+Debug:   2,229 passed, zero failed/skipped; 2 m 22 s.
+Release: 2,229 passed, zero failed/skipped; 2 m 23 s.
+The suite includes the original physical-checkpoint child, a callback-only
+positive scheduling control and a deliberately occupied-two-worker negative
+control. The child heap is bounded to 96 MiB, occupancy waits are finite and the
+parent kills/reaps a child that exceeds its existing fifteen-second deadline.
+
+Validation discipline: an earlier archived Release assembly contained 2,228
+cases because source copies preserved timestamps older than the compiled output.
+Its old report remains preserved; it is not final validation. Refreshing source
+timestamps forces recompilation. The rebuilt report contains all 2,229 cases.
+The reusable driver now checks the exact case count as well as process status.
+
+Complete logs under experiments/issue-138:
+  native-checkpoint-ci-fix-final-Debug.log
+  native-checkpoint-ci-fix-final-Release-rebuilt.log
+  native-checkpoint-ci-fix-final-format.log
+  native-checkpoint-ci-fix-final-all-repository.log (221 passed)
+  native-checkpoint-ci-fix-final-{changeset,size,repository}.log
+  native-checkpoint-ci-fix-main-fetch.log
+All three archived test files match the final reviewed sources byte-for-byte.
+Formatting, release/source-size checks, repository tests and git diff --check pass.
+Fresh origin/main remains an ancestor of the prepared branch. Issue comments,
+all PR conversation/inline comments and reviews were refreshed; no new feedback.
+
+Historical Windows evidence and exact failure locations are retained separately
+in native-checkpoint-ci-before.txt. The sharing-order error is corrected; the
+historical checkpoint-progress observation has no established root cause yet.
+Fresh exact-head Windows CI and the broader issue requirements remain open.
