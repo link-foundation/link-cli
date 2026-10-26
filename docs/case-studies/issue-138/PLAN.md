@@ -238,5 +238,15 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     audit addresses observed whitespace truncation in Rust's legacy inline-name
     text parser. Wider criteria remain unfinished.
 
+18. SQLite optionality now has automated resolved-dependency guards for default,
+    bare and WASM Rust targets, C# core packages and JS root/native-file paths.
+    Explicit provider selection and a deliberate rejected JS SQL import verify
+    the guards. All guards pass locally, including Node 24; 26 native mapped
+    store/file-journal tests pass without optional providers. CI invokes these
+    checks; fresh exact-head runs are pending. ENGINE-SQLITE.md maps native
+    implementations separately from unfinished physical strategies. A pinned
+    LMDB shadow-page source study evaluates the next native candidate without
+    claiming implementation. See SQLITE-OPTIONALITY-PLAN.md and sqlite-optional.txt.
+
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

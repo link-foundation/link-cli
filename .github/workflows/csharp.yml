@@ -11,6 +11,7 @@ on:
       - 'csharp/scripts/**'
       - '.github/workflows/csharp.yml'
       - '.github/scripts/coverage*'
+      - '.github/scripts/check-sqlite-optional.mjs'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -228,6 +229,9 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+
+      - name: Verify core library has no SQLite provider
+        run: node ../.github/scripts/check-sqlite-optional.mjs csharp
 
       - name: Verify formatting
         run: dotnet format --verify-no-changes --verbosity diagnostic

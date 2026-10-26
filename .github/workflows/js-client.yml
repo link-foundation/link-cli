@@ -13,6 +13,7 @@ on:
     paths:
       - '.github/workflows/js-client.yml'
       - '.github/scripts/verify-npm-trust*'
+      - '.github/scripts/check-sqlite-optional.mjs'
       - 'js/client/**'
       - 'rust/**'
       - 'csharp/**'
@@ -27,6 +28,7 @@ on:
     paths:
       - '.github/workflows/js-client.yml'
       - '.github/scripts/verify-npm-trust*'
+      - '.github/scripts/check-sqlite-optional.mjs'
       - 'js/client/**'
       - 'rust/**'
       - 'csharp/**'
@@ -108,6 +110,9 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Verify default imports and native logs need no SQLite
+        run: node ../../.github/scripts/check-sqlite-optional.mjs js
 
       - name: Unit tests and complete production coverage
         run: >-

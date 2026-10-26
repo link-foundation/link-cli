@@ -10,6 +10,7 @@ on:
       - 'rust/**'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
+      - '.github/scripts/check-sqlite-optional.mjs'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -274,6 +275,17 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('rust/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
+
+      - name: Setup Node.js for dependency boundary checks
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Verify SQLite is optional
+        run: node .github/scripts/check-sqlite-optional.mjs rust
+
+      - name: Test native stores without optional providers
+        run: cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests
 
       - name: Run tests
         run: cargo test --manifest-path rust/Cargo.toml --all-features --verbose

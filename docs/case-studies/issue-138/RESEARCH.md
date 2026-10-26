@@ -1,5 +1,27 @@
 # Strategy research (2026-10-24)
 
+## Native shadow-page candidate (2026-10-26)
+
+The latest feedback requires native implementations independently of the
+optional SQL adapter. Inspected LMDB's primary
+[`mdb.c` at `74dd6c3`](https://github.com/LMDB/lmdb/blob/74dd6c3ec648c31857fe0a100f11c2a34619e2d7/libraries/liblmdb/mdb.c):
+metadata occupies two alternating pages (1261–1294); commit flushes dirty pages,
+synchronizes them, then publishes metadata (4214–4220). Metadata publication
+selects synchronous writes unless explicitly weakened and fences failed writes
+(4385–4514). The newest metadata determines the opened snapshot (4529–4535).
+Source SHA-256:
+`2940ef69123c2aee24c1cc716e7d6c433fec9d9ae5196a65147d6f5f7b1e8517`.
+
+Design inference: a separately selected native doublets page store could keep
+committed pages immutable, synchronize new pages before publishing a checked
+root, and recover without opening a partially overwritten tree. This supplies
+a different physical strategy from SQLite's WAL and the existing in-place
+mapped store. It requires its own shared wire specification, torn-write and
+uncertain-sync tests, ownership, bounded graph validation, language parity and
+explicit space/reclamation costs. It is a candidate, not an implemented guarantee
+or a claim of LMDB format compatibility. The native physical-storage criterion
+remains unfinished.
+
 This is a bounded survey of established designs, not a claim to have inspected
 every successful DBMS. Each row records a primary reference, relevant source,
 and an implementation implication. Similar settings do not imply equivalent

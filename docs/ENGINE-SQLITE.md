@@ -13,6 +13,38 @@ SQLite provider. This component does not replace legacy mapped Doublets files.
 | JS/TS | Separate `engine-sqlite-log` entry; synchronous `exec/prepare/all/run/close` connection | Universal entry imports no provider |
 | WASM | Existing JS commit-log bridge, with that JS connection | No bare-WASM filesystem/VFS durability claim |
 
+### Native paths and dependency checks
+
+SQLite is an optional provider at the ordered-log boundary. The following
+paths use this project's doublets and journal implementations without SQL:
+
+| Selected behavior | Native implementation |
+| --- | --- |
+| Bare cache and mapped doublets | `LinkStorage` / `DoubletsStorage` in Rust; the ordinary C# doublets store; in-memory Rust-backed WASM |
+| Staging, validation, immutable history and branches | The links engine over its selected in-memory or persistent doublets rows |
+| Durable ordered logical records | Rust `FileTransitionLog`, C# `FileCommitLog`, JS `FileCommitLog`; WASM uses the JS host bridge |
+| Logical pre-effect undo in legacy stores | Selected full logical row/name images and native transaction journals |
+| Replica acknowledgements and catch-up | Ordered-log replication decorators over the chosen native logs |
+| Shards and atomic catalog publication | Native immutable-object, routing and catalog adapters; the optional etcd adapter delegates consensus to etcd |
+
+The CI guard in `.github/scripts/check-sqlite-optional.mjs` resolves actual
+Cargo production dependency trees for default, bare and WASM targets, with an
+explicit SQLite feature as its positive control. It checks the C# library's
+resolved direct/transitive packages independently of SQL test/example providers.
+Its JS guard rejects SQLite module resolution while importing the root entry,
+replicating in memory and reopening a native file journal; a deliberate import
+of the optional SQL entry verifies that the guard can detect a dependency.
+Rust CI also exercises mapped doublets and file journals with all optional
+providers disabled.
+
+These checks establish dependency optionality. Native logical records and undo
+images do not supply a physical pager or repair unreadable/torn mapped pages.
+Native page repair, page undo/doublewrite, LSM, persistent object retention,
+incremental whole-journal replay, automatic balancing and the remaining
+distributed algorithms are unfinished requirements in the
+[acceptance inventory](case-studies/issue-138/REQUIREMENTS.md). The selected
+SQLite pager does not complete those native requirements.
+
 The common [storage protocol](protocol/sqlite-log.md) uses exact schema and
 identity versions, contiguous signed-i64 sequences and strict UTF-8 BLOBs.
 Empty strings, NUL, leading U+FEFF, Unicode and protocol delimiters round-trip.
