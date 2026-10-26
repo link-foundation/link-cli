@@ -8,6 +8,9 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 /// persist preceding file writes. A mutation failure requires reopening.</summary>
 public interface IPageDevice
 {
+    uint MetadataFlags => 0;
+    byte[] ReadCheckedPage(ulong index, ulong expected) => ReadPage(index);
+    void CompleteRecovery() { }
     bool SupportsDurableFlush => false;
     byte[] NewDatabaseId();
     long DataLength { get; }
@@ -18,6 +21,13 @@ public interface IPageDevice
     void WritePage(ulong index, ReadOnlySpan<byte> bytes);
     void SyncData();
     void TruncateData(long length);
+}
+
+/// <summary>Privileged repair of an existing page or contiguous missing suffix.
+/// Validate the surviving copy and complete logical prefix before calling.</summary>
+public interface IRepairPageDevice : IPageDevice
+{
+    void RepairPage(ulong index, ReadOnlySpan<byte> bytes);
 }
 
 /// <summary>Optional SQL-free immutable doublets pages with alternating metadata.
@@ -41,14 +51,16 @@ public sealed class PagedCommitLog : ICommitLog
         ArgumentNullException.ThrowIfNull(device);
         if (maxPages == 0 || maxPages > MaximumPages) throw new ArgumentOutOfRangeException(nameof(maxPages));
         _device = device; _maxPages = maxPages;
+        uint flags = device.MetadataFlags;
+        if (flags > 1) throw Invalid("unsupported device mode");
         var raw = new[] { device.ReadMetadata(0), device.ReadMetadata(1) };
-        var first = Metadata.Decode(raw[0]); var second = Metadata.Decode(raw[1]);
+        var first = Metadata.Decode(raw[0], flags); var second = Metadata.Decode(raw[1], flags);
         if (first is null && second is null)
         {
             if (raw.Any(bytes => bytes is { Length: > 0 }) || device.DataLength != 0) throw Invalid("no valid metadata decision");
             byte[] id = device.NewDatabaseId();
             if (id.Length != 16) throw Invalid("database identity length");
-            _state = new Metadata((byte[])id.Clone());
+            _state = new Metadata((byte[])id.Clone(), Flags: flags);
             device.SyncData(); device.WriteMetadata(0, _state.Encode()); device.SyncMetadata(0);
         }
         else
@@ -61,7 +73,7 @@ public sealed class PagedCommitLog : ICommitLog
         if (_state.Pages > maxPages) throw Invalid("committed pages exceed selected limit");
         long length = device.DataLength, committed = checked((long)_state.Pages * PageSize);
         if (length < committed) throw Invalid("truncated committed pages");
-        ReadCommitted(retain: false);
+        ReadCommitted(retain: false); device.CompleteRecovery();
         if (length > committed) { device.TruncateData(committed); device.SyncData(); }
     }
     private void Check()
@@ -82,7 +94,7 @@ public sealed class PagedCommitLog : ICommitLog
         Check();
         try
         {
-            var records = ReadCommitted(retain: true);
+            var records = ReadCommitted(retain: true); _device.CompleteRecovery();
             records.AddRange(_pending.Select(bytes => Utf8.GetString(bytes))); return records;
         }
         catch { _fenced = true; throw; }
@@ -141,7 +153,7 @@ public sealed class PagedCommitLog : ICommitLog
         internal ulong Current => _index < 0 ? 0 : (ulong)_index * Cells + (ulong)_count;
         internal void Load()
         {
-            _page = device.ReadPage((ulong)_index);
+            _page = device.ReadCheckedPage((ulong)_index, _expected);
             if (_page.Length != PageSize) throw Invalid("page length");
             ulong actual = PageHash(_page);
             if (!_page.AsSpan(0, 8).SequenceEqual(PageMagic) || !_page.AsSpan(8, 16).SequenceEqual(state.Identity) ||

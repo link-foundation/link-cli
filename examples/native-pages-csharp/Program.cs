@@ -1,8 +1,9 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
-// dotnet run --project examples/native-pages-csharp -- <database> [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
+// dotnet run --project examples/native-pages-csharp -- <database> [--mirrored] [--delta] [--flat] [--snapshot] [--references] [--indexed-constraints]
 var path = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal)) ?? throw new ArgumentException("Provide a dedicated Native pages database path.");
-using var device = new FilePageDevice(path);
+IPageDevice device = args.Contains("--mirrored") ? new FileMirroredPageDevice(path) : new FilePageDevice(path);
+using var ownership = (IDisposable)device;
 var physical = new PagedCommitLog(device);
 ICommitLog log = args.Contains("--delta") ? new DeltaCommitLog(physical) : physical;
 var engine = new LinksEngine<ulong>(log, new()

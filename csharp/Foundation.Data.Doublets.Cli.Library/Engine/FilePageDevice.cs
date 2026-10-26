@@ -8,7 +8,7 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 /// <summary>Native exclusive page I/O, independent of SQL. Parent must exist.
 /// Atomic .writer ownership is never stolen. After a close error the ownership
 /// file remains; externally fence the old process before explicit removal.</summary>
-public sealed class FilePageDevice : IPageDevice, IDisposable
+public sealed class FilePageDevice : IRepairPageDevice, IDisposable
 {
     private readonly List<FileStream> _files = new();
     private readonly FileStream _owner;
@@ -76,6 +76,13 @@ public sealed class FilePageDevice : IPageDevice, IDisposable
         if (bytes.Length != PageSize) throw Invalid("page length");
         long position = Position(index); var file = File(0);
         if (file.Length != position) throw Invalid("native page file changed during ownership");
+        file.Position = position; file.Write(bytes);
+    }
+    public void RepairPage(ulong index, ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length != PageSize) throw Invalid("repair page length");
+        long position = Position(index); var file = File(0);
+        if (file.Length < position) throw Invalid("repair would create a hole");
         file.Position = position; file.Write(bytes);
     }
     public void SyncData() => File(0).Flush(flushToDisk: true);

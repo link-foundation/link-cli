@@ -18,6 +18,7 @@ internal static class ProbeProgram
             if (args is ["group-exit", var encodedPath, var encodedPoint, var physicalDelta, var encoding, var structure])
                 return EngineGroupExitTests.Child(encodedPath, encodedPoint, bool.Parse(physicalDelta),
                     Enum.Parse<Engine.RevisionEncoding>(encoding), Enum.Parse<Engine.StateStructure>(structure));
+            if (args is ["mirrored-pages-exit", var mirrorPath, var mirrorPoint]) return MirroredFileExitTests.Child(mirrorPath, mirrorPoint);
             if (args is ["pages-exit", var pagesPath, var pagesPoint]) return PagedFileExitTests.Child(pagesPath, pagesPoint);
             if (args is ["sqlite-exit", var sqlitePath, var sqlitePoint, var sqliteDelta, var sqliteEncoding, var sqliteStructure])
                 return EngineSqliteExitTests.Child(sqlitePath, sqlitePoint, bool.Parse(sqliteDelta),

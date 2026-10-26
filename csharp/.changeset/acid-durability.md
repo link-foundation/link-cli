@@ -218,3 +218,8 @@ and replication strategies. Validate canonical versioned pages and decisions,
 stage group writes, fence uncertain owners and reject committed corruption.
 Provide an exclusive native file device with bounded reads, durable flush,
 POSIX parent synchronization and explicit close-error ownership fencing.
+
+Select two-copy native page repair separately from revision, validation and
+replication policies. Synchronize both copies before acknowledgement and validate
+the entire expected prefix before repairing a damaged copy. Preserve the default
+single-copy format and costs, and retain uncertain native ownership fences.

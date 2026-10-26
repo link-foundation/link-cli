@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <None Include="../../docs/protocol/native-pages-v1.json" Link="Protocol/native-pages-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/native-pages-mirrored-v1.json" Link="Protocol/native-pages-mirrored-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/sqlite-log-vectors.json" Link="Protocol/sqlite-log-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/engine-change-vectors.json" Link="Protocol/engine-change-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/transaction-undo-vectors.json" Link="Protocol/transaction-undo-vectors.json" CopyToOutputDirectory="PreserveNewest" />

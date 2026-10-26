@@ -26,23 +26,24 @@ internal static class PageFormat
     internal static ulong PageHash(ReadOnlySpan<byte> page) => Hash(page[64..], Hash(page[..56]));
 
     internal sealed record Metadata(byte[] Identity, ulong Generation = 0, ulong Pages = 0, ulong Rows = 0,
-        ulong Records = 0, ulong Root = 0, ulong LastHash = 0)
+        ulong Records = 0, ulong Root = 0, ulong LastHash = 0, uint Flags = 0)
     {
         internal byte[] Encode()
         {
             var bytes = new byte[128]; MetaMagic.CopyTo(bytes); BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(8), 1);
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes.AsSpan(12), Flags);
             Identity.CopyTo(bytes, 16);
             var values = new[] { Generation, Pages, Rows, Records, Root, LastHash };
             for (int i = 0; i < values.Length; i++) Put(bytes, 32 + 8 * i, values[i]);
             Put(bytes, 120, Hash(bytes.AsSpan(0, 120))); return bytes;
         }
-        internal static Metadata? Decode(byte[]? bytes)
+        internal static Metadata? Decode(byte[]? bytes, uint flags)
         {
             if (bytes is not { Length: 128 } || Hash(bytes.AsSpan(0, 120)) != U64(bytes, 120)) return null;
             if (!bytes.AsSpan(0, 8).SequenceEqual(MetaMagic) || U32(bytes, 8) != 1) throw Invalid("unsupported metadata version");
-            if (U32(bytes, 12) != 0 || bytes.AsSpan(80, 40).ContainsAnyExcept((byte)0)) throw Invalid("unsupported metadata flags");
+            if (U32(bytes, 12) != flags || bytes.AsSpan(80, 40).ContainsAnyExcept((byte)0)) throw Invalid("unsupported metadata flags");
             var state = new Metadata(bytes.AsSpan(16, 16).ToArray(), Portable(U64(bytes, 32)), Portable(U64(bytes, 40)),
-                Portable(U64(bytes, 48)), Portable(U64(bytes, 56)), Portable(U64(bytes, 64)), U64(bytes, 72));
+                Portable(U64(bytes, 48)), Portable(U64(bytes, 56)), Portable(U64(bytes, 64)), U64(bytes, 72), flags);
             if (state.Pages > MaxPages || state.Generation > state.Pages || state.Rows > state.Pages * Cells || state.Records > state.Rows ||
                 state.Rows < state.Pages || state.Records < state.Generation) throw Invalid("metadata counts");
             bool invalid = state.Pages == 0
