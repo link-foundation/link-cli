@@ -110,6 +110,13 @@ public sealed class LinksServer : IDisposable
             {
                 break;
             }
+            catch (NullReferenceException) when (_stopping)
+            {
+                // .NET 10 TcpListener.Stop clears its socket after disposing it.
+                // AcceptTcpClient can pass its active check before that clear,
+                // then dereference the cleared socket. Only shutdown permits it.
+                break;
+            }
             if (Register(client) is not { } stream)
             {
                 continue;

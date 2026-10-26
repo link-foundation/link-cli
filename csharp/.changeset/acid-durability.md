@@ -208,3 +208,7 @@ malformed persisted names on repeated reopening.
 Format deep link structures iteratively with one StringBuilder. Preserve
 source-only expansion, cycle references and deepest-first name lookups while
 avoiding call-stack exhaustion and repeated whole-subtree copying.
+
+Treat the .NET 10 listener socket-clear race as a clean accept-loop exit only
+after server shutdown starts. Preserve unexpected null-reference failures
+outside shutdown and join accepted connection workers before returning.
