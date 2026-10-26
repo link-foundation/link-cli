@@ -14,7 +14,7 @@ remains the target. Focused success or a higher percentage does not close R8.
       failures, trigger removal and subsequent successful database commands.
 - [x] Compare complete Debug/Release and native coverage, preserving the full
       denominator and all remaining gaps. Run appropriate full local checks.
-- [ ] Preserve atomic changes, update public examples/documentation and obtain
+- [x] Preserve atomic changes, update public examples/documentation and obtain
       fresh exact-head CI before treating the command batch as verified.
 
 The initial complete C# Release mirror report leaves 108 uncovered command
@@ -70,3 +70,7 @@ totals retain every measured production file: Rust 12,815/13,646 lines and
 6,072/6,296 and 4,194/4,605. These remain below the requested 100% target.
 The 539-case actual-WASM mirror run remains current for its unchanged portable
 sources; the changed native command parser does not run inside WASM.
+
+All nine workflows pass on command head 63ccbc7, including Linux/macOS/Windows
+native tests and actual WASM coverage. cli-ci.txt preserves the exact SHA,
+creation timestamps and links. Later code still requires fresh exact-head CI.

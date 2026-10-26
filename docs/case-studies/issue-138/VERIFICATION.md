@@ -2763,4 +2763,24 @@ behavior is claimed. See CLI-COVERAGE-PLAN.md and cli-before.txt.
 
 Whole-project 100% and the wider inventory remain unfinished. The next audit
 continues through uncovered public query compatibility paths. Command publication
-requires its own fresh exact-head CI.
+now passes all nine workflows on 63ccbc7, including native platform matrices;
+cli-ci.txt preserves exact SHA, timestamps and links. Later commits require
+their own fresh exact-head CI.
+
+## Retained public query compatibility
+
+Thirty-three new contracts pass without production changes: empty/comment/leaf/
+incomplete shapes preserve exact rows, names and notifications in all three
+retained C# processors, including native reopening and subsequent edits. Mixed
+wildcard rejection, argument errors, existing-pair reuse and basic update-count
+diagnostics preserve established semantics. The suspected leaf null-list issue
+does not reproduce with the installed parser. An initial unsupported // comment
+test was corrected to LiNo's # syntax; it is not product before-failure evidence.
+
+Both full configurations pass 2,124 tests, with no failures or skips. All
+production files remain measured: Debug 7,938/8,259 lines (96.11%) and
+4,259/4,632 branches (91.95%); Release 6,094/6,296 lines (96.79%) and
+4,214/4,605 branches (91.51%). See query-compatibility.txt and
+QUERY-COMPATIBILITY-PLAN.md. Rust/actual-WASM/JS source is unchanged from the
+recorded 923/539/209-test runs. Whole-project coverage and all broader criteria
+remain unfinished; new publication requires fresh exact-head CI.

@@ -354,3 +354,13 @@ and 96.44% Release lines, still below target. Both native public tag-name exampl
 and finite declared-nesting-limit controls pass. See CLI-COVERAGE-PLAN.md,
 VERIFICATION.md and cli-before.txt. Fresh exact-head CI and all wider inventoried
 criteria remain unfinished.
+
+Retained C# public query compatibility (R1/R7/R8/R9/R12) now has 33 additional
+contracts without production changes. All three processors preserve exact rows,
+names, notifications, following edits and native reopening for no-op shapes;
+existing rejection/reuse/diagnostic semantics also pass. No suspected leaf-list
+bug reproduces. Both complete configurations pass 2,124 tests. Complete measured
+lines reach 96.11% Debug / 96.79% Release, still below R8's target. See
+QUERY-COMPATIBILITY-PLAN.md and query-compatibility.txt. Command head 63ccbc7
+passes all nine workflows, preserved in cli-ci.txt; later changes require fresh
+CI. Every wider inventoried gap remains unfinished.

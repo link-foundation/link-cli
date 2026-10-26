@@ -1,0 +1,30 @@
+Public query compatibility; PR https://github.com/link-foundation/link-cli/pull/139
+Run: bash experiments/issue-138/validate-query-compatibility.sh
+.NET GC heap cap: 640 MiB; one compiler job. No production source changes.
+Focused contracts: 33 passed, 0 failed/skipped.
+
+Complete C# Debug: 2124 passed, 0 failed/skipped.
+lines: 7938/8259 (96.11333%)
+branches: 4259/4632 (91.94732%)
+BasicQueryProcessor.cs unique lines: 79/81
+MixedQueryProcessor.cs unique lines: 236/258
+AdvancedMixedQueryProcessor.cs unique lines: 310/331
+Report: experiments/issue-138/query-csharp-Debug-results/256282f7-aba1-4753-a9d3-af1c69ef780e/coverage.cobertura.xml
+
+Complete C# Release: 2124 passed, 0 failed/skipped.
+lines: 6094/6296 (96.79161%)
+branches: 4214/4605 (91.50923%)
+BasicQueryProcessor.cs unique lines: 54/56
+MixedQueryProcessor.cs unique lines: 158/170
+AdvancedMixedQueryProcessor.cs unique lines: 212/226
+Report: experiments/issue-138/query-csharp-Release-results/133fd675-ee95-44af-868e-bd26b69c9c71/coverage.cobertura.xml
+
+Empty/comment/leaf/incomplete shapes preserve rows, names and notifications across
+all three retained processors, including following edits and native reopening.
+Missing arguments, rejected mixed wildcards, existing-pair reuse and basic update
+count diagnostics preserve the established public semantics and following edits.
+No leaf null-list crash reproduced: the installed parser supplies empty lists.
+The initial // comment control was an incorrect oracle; LiNo comments use #.
+Formatting, release/source-size checks and 221 repository tests pass.
+Native Rust 923 / actual WASM 539 / JS 209 unchanged since their recorded runs.
+All production files remain measured; whole-project 100% and wider criteria stay open.

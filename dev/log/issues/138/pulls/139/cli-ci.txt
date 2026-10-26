@@ -1,0 +1,17 @@
+Public command contracts: exact-head GitHub Actions evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 63ccbc796e58d0c73f29a191160067d32f378404
+All nine workflows completed successfully; created after the commit was pushed.
+
+Broken Link Checker: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512853
+C# CI/CD Pipeline: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512700
+Dependencies: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512663
+Docs: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512632
+JS client CI: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512810
+Rust CI/CD Pipeline: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512740
+Security: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512634
+WebAssembly CI: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512775
+Workflows: success; created 2026-10-26T08:37:04Z; https://github.com/link-foundation/link-cli/actions/runs/40293512713
+
+Both native Linux/macOS/Windows matrices pass. Later commits require fresh CI.
+The broader issue remains unfinished; passing CI does not complete its acceptance inventory.

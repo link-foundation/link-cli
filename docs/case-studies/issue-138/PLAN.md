@@ -319,5 +319,17 @@ complete the overall issue or authorize marking the draft ready early.
     configuration. C# command coverage improves from 597/759 to 736/767 Debug
     lines and 626/734 to 714/742 Release lines. Bounded nesting controls confirm
     the existing declared parser limit and subsequent usable files. See
-    CLI-COVERAGE-PLAN.md and cli-before.txt; fresh exact-head CI is required.
+    CLI-COVERAGE-PLAN.md and cli-before.txt. All nine workflows pass on 63ccbc7;
+    cli-ci.txt preserves the exact head, creation timestamps and links.
     Whole-project 100% and all wider inventoried criteria remain open.
+
+26. Thirty-three public query compatibility contracts preserve empty/comment/
+    leaf/incomplete shapes across all three retained C# processors. Exact rows,
+    names, notifications, following edits and native reopening pass. Rejected
+    arguments/wildcards, existing-pair reuse and basic mismatched-update
+    diagnostics retain established behavior. No null-list defect reproduces,
+    so production code remains unchanged. Both complete C# configurations pass
+    2,124 tests; complete measured lines reach 96.11% Debug and 96.79% Release,
+    still below the target. See QUERY-COMPATIBILITY-PLAN.md and
+    query-compatibility.txt. Publication requires fresh exact-head CI; every
+    wider unfinished requirement stays active.
