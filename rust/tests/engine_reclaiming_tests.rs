@@ -159,3 +159,6 @@ mod boundaries;
 
 #[path = "engine_reclaiming/concurrent.rs"]
 mod concurrent;
+
+#[path = "engine_reclaiming/contracts.rs"]
+mod contracts;

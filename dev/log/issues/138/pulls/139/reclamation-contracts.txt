@@ -1,0 +1,60 @@
+Reclamation public contract audit; https://github.com/link-foundation/link-cli/pull/139
+Published production baseline: 419f7c7c56f68f9d1669658cd4e0b507a90b03cb.
+Seven matching public controls per surface; no production correction was needed.
+Reproduce: bash experiments/issue-138/validate-reclamation-contracts.sh
+START native 2026-10-26T22:28:46Z
+PASS native; START csharp 2026-10-26T22:40:36Z
+PASS csharp; START wasm 2026-10-26T22:47:20Z
+PASS wasm; START javascript 2026-10-26T22:51:38Z
+PASS javascript; START repository 2026-10-26T22:53:24Z
+PASS repository; ALL PASSED 2026-10-26T22:53:33Z
+Sequential compilers: Cargo jobs1/reduced debug, .NET640MiB, actual-WASM max256MiB.
+
+Native Rust: 1064 passed; 18 child entries ignored by direct discovery.
+Complete lines: 14485/15307 (94.62991%)
+Complete branches: 2739/3164 (86.56764%)
+Complete functions: 1868/2008 (93.02789%)
+Component src/engine/reclaiming.rs
+lines: 203/207 (98.06763%)
+branches: 39/46 (84.78261%)
+functions: 14/14 (100.00000%)
+Component src/engine/reclaiming/codec.rs
+lines: 163/166 (98.19277%)
+branches: 47/50 (94.00000%)
+functions: 22/24 (91.66667%)
+Component src/engine/reclaiming/collector.rs
+lines: 57/58 (98.27586%)
+branches: 14/14 (100.00000%)
+functions: 3/4 (75.00000%)
+
+Actual WASM: 663 passed; 0 child entries ignored by direct discovery.
+Complete lines: 11672/14037 (83.15167%)
+Complete branches: 2296/2747 (83.58209%)
+Complete functions: 1470/1848 (79.54545%)
+Component src/engine/reclaiming.rs
+lines: 203/207 (98.06763%)
+branches: 39/46 (84.78261%)
+functions: 14/14 (100.00000%)
+Component src/engine/reclaiming/codec.rs
+lines: 163/166 (98.19277%)
+branches: 47/50 (94.00000%)
+functions: 22/24 (91.66667%)
+Component src/engine/reclaiming/collector.rs
+lines: 57/58 (98.27586%)
+branches: 14/14 (100.00000%)
+functions: 3/4 (75.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.87s
+
+C# Debug: 2314 passed; zero failed/skipped.
+Complete lines: 8627/8921 (96.70441%)
+Complete branches: 4853/5228 (92.82708%)
+
+C# Release: 2314 passed; zero failed/skipped.
+Complete lines: 6627/6813 (97.26993%)
+Complete branches: 4798/5191 (92.42920%)
+JS: {'tests': 525, 'pass': 525, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Bun/Deno: all 166 selected tests each; strict TypeScript and JS 100% production coverage pass.
+Formatting, strict Clippy, SQLite optionality, source limits, changesets, actionlint and ShellCheck pass.
+The unchanged production integration is separately preserved in reclamation.txt and reclamation-ci.txt.
+Whole-project coverage and all wider unmet R1-R12 criteria remain unfinished.

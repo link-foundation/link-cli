@@ -3306,3 +3306,45 @@ with run creation 2026-10-26T22:19:35Z after that commit. Rust and C# each pass
 Linux/macOS/Windows; actual-WASM and JS integration pass. `reclamation-ci.txt`
 retains permanent run/job URLs and exact timestamps. Subsequent contract tests
 are tracked separately and require fresh CI after publication.
+
+
+## Reclamation public contract audit
+
+Seven matching Rust/C#/JS controls exercise invalid partition construction,
+pre-I/O route validation with read-only dependencies, all eight durability
+capability combinations, lost initialization confirmation, lost staging
+confirmation and interrupted catalog/object refresh. They pass on published
+production source `419f7c7`; no production bug or correction is claimed.
+Failed confirmation does not replay acknowledged mutations; an unpublished
+staged object can be collected. Interrupted refresh returns no partial group,
+then a fresh read observes a coherent group. Rust controls also run in actual
+WASM. The native/C# controls and JS controls use the existing deterministic
+providers and bounded inputs; asynchronous JS/C# controls have 10-second limits.
+
+The complete sequential audit passes from 2026-10-26T22:28:46Z through
+22:53:33Z. Reproduce with
+`bash experiments/issue-138/validate-reclamation-contracts.sh`.
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,064 plus six doctests | 14,485 / 15,307 | 2,739 / 3,164 | 1,868 / 2,008 |
+| Actual WASM, linked source | 663 | 11,672 / 14,037 | 2,296 / 2,747 | 1,470 / 1,848 |
+| C# Debug | 2,314 | 8,627 / 8,921 | 4,853 / 5,228 | not reported |
+| C# Release | 2,314 | 6,627 / 6,813 | 4,798 / 5,191 | not reported |
+| JS production modules | 525 | 100% | 100% | 100% |
+
+Eighteen native child entries run through their bounded parents; one legacy
+doctest remains ignored. The Rust reclamation store now measures 203/207 lines,
+39/46 branches and 14/14 functions, equally in native and actual WASM. The codec
+and collector totals remain 163/166, 47/50, 22/24 and 57/58, 14/14, 3/4.
+No denominator is reduced. Bun/Deno each pass all166 selected cases and all221
+repository checks pass. Strict native/WASM Clippy, formatting, TypeScript, JS
+coverage thresholds, SQL optionality, source limits, changesets, actionlint and
+ShellCheck pass. Compilers run sequentially; actual-WASM modules retain verified
+256 MiB caps. No OOM event occurs.
+
+`reclamation-contracts.txt` preserves the complete audit totals. Production
+integration is unchanged and remains separately verified by `reclamation.txt`
+and all nine workflows on `419f7c7` in `reclamation-ci.txt`. Fresh exact-head
+CI must verify this test batch after publication. Whole-project 100% coverage
+and every wider unfinished criterion remain active; PR139 stays unmerged.

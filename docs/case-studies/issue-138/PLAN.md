@@ -563,3 +563,14 @@ acceptance criterion continue independently.
     and catalog generation change. Tests and finite models precede implementation;
     RECLAMATION-PLAN.md tracks complete validation, publication and fresh CI.
     Wider acceptance gaps remain active throughout this batch.
+
+
+43. Reclamation public contract controls now cover seven matching construction,
+    routing, capability and interrupted-I/O behaviors in Rust/C#/JS, including
+    actual WASM. No production correction is needed. Complete sequential suites
+    pass 1,064 native Rust plus six doctests, 663 actual WASM, 2,314 C# per
+    configuration, 525 JS, 166 selected Bun/Deno each and 221 repository checks.
+    Full coverage denominators remain intact; whole-project coverage is open.
+    All nine preceding production workflows pass on `419f7c7` across native
+    platforms. RECLAMATION-CONTRACT-PLAN.md tracks the new test publication and
+    exact-head CI; every wider unmet acceptance criterion remains active.
