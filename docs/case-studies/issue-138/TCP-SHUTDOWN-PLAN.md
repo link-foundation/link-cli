@@ -9,7 +9,7 @@ in tcp-shutdown-before.txt with the actual exception and source line.
 - [x] Trace the runtime's listener shutdown/accept interleaving.
 - [x] Handle the known null-reference exception only after shutdown starts.
 - [x] Rerun all 2,027 C# tests in Debug and Release with coverage.
-- [ ] Publish the correction with its evidence and verify fresh exact-head CI.
+- [x] Publish the correction with its evidence and verify fresh exact-head CI.
 
 The [.NET 10 listener source](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Net.Sockets/src/System/Net/Sockets/TCPListener.cs)
 checks `_active` before using `_serverSocket` in `AcceptTcpClient`; `Stop`
@@ -23,3 +23,6 @@ propagates. Ordinary shutdown and worker joining retain their existing flow.
 Both complete C# configurations now pass, including the same 200-connection
 regression. This is finite race evidence, not an exhaustive scheduling proof.
 The broader issue and whole-project coverage criterion remain unfinished.
+
+All nine workflows pass on published head `b125e6d`, including both native
+language matrices. See inline-names-ci.txt for exact timestamps and links.

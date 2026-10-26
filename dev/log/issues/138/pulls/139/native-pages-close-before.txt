@@ -13,9 +13,9 @@
 test at js/client/test/engine-file-paged-faults.test.mjs:96:1
 ✖ uncertain close attempts every handle and retains the writer fence (29.408389ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   false !== true
-  
+
       at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/js/client/test/engine-file-paged-faults.test.mjs:107:37)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)

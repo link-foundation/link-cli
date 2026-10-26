@@ -260,9 +260,18 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     plus runtime conformance and the native document-label example. The existing
     TCP shutdown regression exposed a runtime socket-clear race during Release
     validation; a shutdown-only catch fixes it and both configurations pass.
-    See INLINE-NAMES-PLAN.md, TCP-SHUTDOWN-PLAN.md and inline-names.txt. Publication
-    and fresh exact-head CI are pending. Native physical strategies remain open;
+    See INLINE-NAMES-PLAN.md, TCP-SHUTDOWN-PLAN.md and inline-names.txt. All nine
+    workflows pass on `b125e6d`; inline-names-ci.txt records exact timestamps
+    and links. Native physical strategies remain open;
     NATIVE-PAGES-PLAN.md records the next implementation and independent vectors.
+
+20. The SQL-free JS/TS native doublets page journal now has independent wire
+    vectors, finite I/O/corruption/ownership contracts and public exports/types.
+    Full JS tests pass 197 cases with 100% production coverage, plus 221
+    repository checks and 16 actual-WASM configurations in each of Node/Bun/Deno.
+    New-group writes stay constant after 0/1/32 preceding groups. See
+    native-pages-js.txt and NATIVE-PAGES-PLAN.md. Rust/C# parity, redundant
+    repair, cross-language files and fresh CI remain unfinished.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

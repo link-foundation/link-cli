@@ -17,7 +17,7 @@ separate round-trip defect in Rust's legacy `LinkStorage` text format.
       preserve live rows, names, indexes and allocation on read/parse failure.
 - [x] Verify existing native/C#/actual-WASM name/query/output behavior and the
       complete local suites, coverage, formatting and release fragments.
-- [ ] Publish the correction and verify fresh exact-head CI.
+- [x] Publish the correction and verify fresh exact-head CI.
 - [x] Record file compatibility, chosen costs and limitations in the case study
       and PR; preserve the wider native-storage and coverage criteria as open.
 
@@ -37,7 +37,8 @@ repository checks, plus all three generated-WASM client runtimes. The native
 text-format component measures 100% lines/branches/functions. Whole-project
 totals remain below target. The runnable native document-label example passes
 without optional providers. See inline-names.txt and TEXT-STORAGE.md;
-publication and fresh exact-head CI remain required.
+all nine workflows pass on published head `b125e6d`; inline-names-ci.txt
+preserves the exact head, timestamps and links.
 
 Compatibility choice: encoded text belongs only to a versioned comment
 namespace, not an ambiguous new meaning for legacy unquoted `~1{31}` names.
