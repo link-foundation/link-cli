@@ -17,12 +17,15 @@ public class MirroredFileTests
             { var log = new PagedCommitLog(device); Assert.Equal(new[] { record, "\ufeff\0😀" }, log.Read()); log.Append("next"); log.Flush(); }
             Assert.Equal(File.ReadAllBytes(path), File.ReadAllBytes(path + ".mirror"));
             using (var device = new FilePageDevice(path)) Assert.Throws<IOException>(() => new PagedCommitLog(device));
-            using (var device = new FilePageDevice(path))
+            byte[] before = File.ReadAllBytes(path);
+            var closed = new FilePageDevice(path);
+            using (var device = closed)
             {
-                byte[] before = File.ReadAllBytes(path); Assert.Throws<IOException>(() => device.RepairPage(ulong.MaxValue, new byte[4096]));
+                Assert.Throws<IOException>(() => device.RepairPage(ulong.MaxValue, new byte[4096]));
                 Assert.Throws<IOException>(() => device.RepairPage(99, new byte[4096])); Assert.Throws<IOException>(() => device.RepairPage(0, new byte[1]));
-                Assert.Equal(before, File.ReadAllBytes(path)); device.Dispose(); Assert.Throws<ObjectDisposedException>(() => device.RepairPage(0, new byte[4096]));
             }
+            Assert.Equal(before, File.ReadAllBytes(path));
+            Assert.Throws<ObjectDisposedException>(() => closed.RepairPage(0, new byte[4096]));
         }
         finally { Directory.Delete(directory, recursive: true); }
     }

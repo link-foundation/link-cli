@@ -71,8 +71,11 @@ public class MirroredPageDevice : IPageDevice
             _devices[repair.Destination].RepairPage(index, page);
         }
         if (_pages.Count > 0) foreach (var device in _devices) device.SyncData();
-        foreach (var (slot, repair) in _metadata) foreach (int side in repair.Sides)
+        foreach (var (slot, repair) in _metadata)
+        {
+            foreach (int side in repair.Sides)
             { _devices[side].WriteMetadata(slot, repair.Bytes); _devices[side].SyncMetadata(slot); }
+        }
         _pages.Clear(); _metadata.Clear();
     });
     public void WritePage(ulong index, ReadOnlySpan<byte> bytes) => BothWrite(bytes, (d, b) => d.WritePage(index, b));

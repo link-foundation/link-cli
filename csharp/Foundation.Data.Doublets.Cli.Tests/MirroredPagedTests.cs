@@ -42,12 +42,15 @@ public class MirroredPagedTests
     {
         var (image, prior) = MirroredFixture("oneGroup"); string next = string.Concat(Enumerable.Repeat("雪", 700));
         var probe = new Pair(image, image); var complete = probe.Open(); probe.Mutations.Calls.Clear(); complete.Append(next); complete.Flush();
-        for (int at = 1; at <= probe.Mutations.Calls.Count; at++) foreach (bool after in new[] { false, true })
+        for (int at = 1; at <= probe.Mutations.Calls.Count; at++)
+        {
+            foreach (bool after in new[] { false, true })
             {
                 var pair = new Pair(image, image); var log = pair.Open(); pair.Mutations.Calls.Clear(); pair.Mutations.Fault = (at, after);
                 log.Append(next); Assert.Throws<IOException>(() => log.Flush()); Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Append("retry")); Assert.Throws<IOException>(() => log.Flush());
                 var recovered = pair.Crash(); var actual = recovered.Open().Read(); Assert.Equal(actual.Count > prior.Length ? prior.Append(next) : prior, actual); recovered.Following(actual);
             }
+        }
     }
     [Fact]
     public void EveryRepairFaultBeforeAfterPreservesASurvivingSource()
@@ -57,11 +60,14 @@ public class MirroredPagedTests
         {
             var images = new[] { healthy.Copy(), healthy.Copy() }; images[side].Pages.Clear(); images[side].Metadata[0] = new byte[17];
             var probe = new Pair(images[0], images[1]); probe.Open();
-            for (int at = 1; at <= probe.Mutations.Calls.Count; at++) foreach (bool after in new[] { false, true })
+            for (int at = 1; at <= probe.Mutations.Calls.Count; at++)
+            {
+                foreach (bool after in new[] { false, true })
                 {
                     var pair = new Pair(images[0], images[1]); pair.Mutations.Fault = (at, after); Assert.Throws<IOException>(() => pair.Open());
                     Same(healthy, pair.Devices[1 - side].Durable); var recovered = pair.Crash(); Assert.Equal(records, recovered.Open().Read()); recovered.Following(records);
                 }
+            }
         }
     }
     [Fact]
@@ -103,13 +109,16 @@ public class MirroredPagedTests
     public void EveryTailRepairFailureFencesTheDeviceAndCanRecoverAgain()
     {
         var (healthy, records) = MirroredFixture("twoGroups"); var extra = healthy.Copy(); extra.Pages.Add(new byte[4096]);
-        for (int at = 1; at <= 4; at++) foreach (bool after in new[] { false, true })
+        for (int at = 1; at <= 4; at++)
+        {
+            foreach (bool after in new[] { false, true })
             {
                 var pair = new Pair(extra, extra); pair.Mutations.Fault = (at, after); var device = new MirroredPageDevice(pair.Devices[0], pair.Devices[1]);
                 Assert.Throws<IOException>(() => new PagedCommitLog(device)); Assert.Throws<IOException>(() => device.SyncData()); Assert.Throws<IOException>(() => device.ReadMetadata(0));
                 Assert.Throws<IOException>(() => device.ReadCheckedPage(0, 0)); Assert.Throws<IOException>(() => device.CompleteRecovery()); Assert.Throws<IOException>(() => device.NewDatabaseId());
                 Assert.Throws<IOException>(() => device.DataLength); pair.Crash().Following(records);
             }
+        }
         var okay = new Pair(healthy, healthy); var raw = new MirroredPageDevice(okay.Devices[0], okay.Devices[1]); Assert.Throws<IOException>(() => raw.ReadMetadata(2));
     }
     [Fact]
