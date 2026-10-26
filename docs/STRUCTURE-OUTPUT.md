@@ -32,9 +32,9 @@ shallow oracles verify names, cycles, shared children and failure ordering.
 Portable Rust contracts also execute in actual WASM. Native persistence checks
 reopen the ordinary Unicode named store twice.
 
-The separate legacy Rust inline text-name parser still has an observed
-whitespace truncation bug; that is tracked independently from this traversal
-change. This document does not claim all persistence or coverage requirements
+The separate [legacy Rust text-name format](TEXT-STORAGE.md) has its own
+lossless-name regression tests and versioned metadata. That persistence change
+is tracked independently from traversal. This document does not claim all persistence or coverage requirements
 are complete. See the [execution plan](case-studies/issue-138/STRUCTURE-DEPTH-PLAN.md),
 [before evidence](../dev/log/issues/138/pulls/139/structure-depth-before.txt) and
 `experiments/issue-138/validate-structure-depth.sh`.

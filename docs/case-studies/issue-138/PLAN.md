@@ -233,7 +233,8 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     buffer. Complete local suites pass: 882 native, 520 actual WASM, 2,027 C#
     per configuration, 177 JS and 221 repository checks, plus Node/Bun/Deno
     generated-WASM conformance. Whole-project coverage remains below target.
-    Publication and fresh exact-head CI are in progress. See
+    All nine workflows pass on `faf191d`; structure-depth-ci.txt records the
+    exact head, timestamps and links. See
     STRUCTURE-DEPTH-PLAN.md and structure-depth.txt. The next independent
     audit addresses observed whitespace truncation in Rust's legacy inline-name
     text parser. Wider criteria remain unfinished.
@@ -243,10 +244,25 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     Explicit provider selection and a deliberate rejected JS SQL import verify
     the guards. All guards pass locally, including Node 24; 26 native mapped
     store/file-journal tests pass without optional providers. CI invokes these
-    checks; fresh exact-head runs are pending. ENGINE-SQLITE.md maps native
+    checks; all nine workflows pass on `faf191d`, including all new guards on
+    their supported platforms. ENGINE-SQLITE.md maps native
     implementations separately from unfinished physical strategies. A pinned
     LMDB shadow-page source study evaluates the next native candidate without
     claiming implementation. See SQLITE-OPTIONALITY-PLAN.md and sqlite-optional.txt.
+
+19. Rust legacy inline names now round-trip exact whitespace, quote edges,
+    controls, line breaks and absent-address names without introducing rows.
+    Seven automated before failures also reproduce destructive failed reload;
+    temporary load/index construction now preserves the live state on error.
+    Independent wire vectors, malformed/future metadata, repeated reopen/edit
+    cycles and portable memory reload pass. Full local suites pass: 894 native,
+    521 actual WASM, 2,027 C# per configuration, 177 JS and 221 repository checks,
+    plus runtime conformance and the native document-label example. The existing
+    TCP shutdown regression exposed a runtime socket-clear race during Release
+    validation; a shutdown-only catch fixes it and both configurations pass.
+    See INLINE-NAMES-PLAN.md, TCP-SHUTDOWN-PLAN.md and inline-names.txt. Publication
+    and fresh exact-head CI are pending. Native physical strategies remain open;
+    NATIVE-PAGES-PLAN.md records the next implementation and independent vectors.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

@@ -13,7 +13,7 @@ expand the source spine; targets remain references.
 - [x] Verify independent shallow oracles, deep finite output, shared children,
       cycles, persistence and actual WASM.
 - [x] Run complete local checks and coverage; record costs and limitations.
-- [ ] Publish an atomic step, update PR 139 and verify fresh exact-head CI.
+- [x] Publish an atomic step, update PR 139 and verify fresh exact-head CI.
 
 No probe may run without finite input and isolated stack/memory/CPU bounds.
 Keep the wider issue and its 100% whole-project coverage criterion unfinished.
@@ -26,6 +26,7 @@ independent self-cycle; the formatter itself was not entered by that failure.
 Full sequential validation passes: 882 native Rust, 520 actual WASM, 2,027 C#
 in each configuration, 177 JS and 221 repository checks, plus all three generated
 client runtimes. Complete coverage remains below 100%; see structure-depth.txt
-and VERIFICATION.md. Publication and fresh exact-head CI are still required.
+and VERIFICATION.md. All nine workflows pass on published head `faf191d`;
+structure-depth-ci.txt records their exact SHA, creation timestamp and links.
 A separately observed Rust legacy inline
 text-name truncation is recorded for the next atomic audit in this same PR.

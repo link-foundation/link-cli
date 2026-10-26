@@ -12,6 +12,29 @@ use tempfile::NamedTempFile;
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn test_memory_reload_clears_rows_names_and_allocator() -> Result<()> {
+    for indexed in [false, true] {
+        let mut storage = LinkStorage::in_memory(false);
+        if indexed {
+            storage = storage.with_indexed_lookups();
+        }
+        storage.create(10, 11);
+        storage.create(20, 21);
+        storage.set_name(1, "stored");
+        storage.set_name(0, "external");
+        storage.reload_from_disk()?;
+        assert!(storage.all().is_empty());
+        assert_eq!(storage.get_by_name("stored"), None);
+        assert_eq!(storage.get_by_name("external"), None);
+        assert_eq!(storage.search(10, 11), None);
+        assert_eq!(storage.create(30, 31), 1);
+        assert_eq!(storage.search(30, 31), Some(1));
+    }
+    Ok(())
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_create() -> Result<()> {
     let (_temp_file, mut storage) = test_store::links()?;
     let id = storage.create(2, 3);

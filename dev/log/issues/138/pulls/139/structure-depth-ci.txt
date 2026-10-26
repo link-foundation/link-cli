@@ -1,0 +1,23 @@
+Published verification for faf191d10f1dc6fab561dd46dafb0d67561e0963
+All nine runs were created 2026-10-26T04:51:55Z after publication.
+
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40271233122
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40271233141
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40271233149
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40271233136
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40271233187
+Dependencies: success; https://github.com/link-foundation/link-cli/actions/runs/40271233131
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40271233194
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40271233126
+
+Resolved SQLite optionality guard steps:
+rust: Test (ubuntu-24.04) / Verify SQLite is optional: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272/job/121404728203
+rust: Test (ubuntu-24.04) / Test native stores without optional providers: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272/job/121404728203
+rust: Test (windows-2025) / Verify SQLite is optional: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272/job/121404728239
+rust: Test (windows-2025) / Test native stores without optional providers: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272/job/121404728239
+rust: Test (macos-26) / Verify SQLite is optional: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272/job/121404728251
+rust: Test (macos-26) / Test native stores without optional providers: success; https://github.com/link-foundation/link-cli/actions/runs/40271233272/job/121404728251
+csharp: Lint and Format Check / Verify core library has no SQLite provider: success; https://github.com/link-foundation/link-cli/actions/runs/40271233194/job/121404330220
+js: Unit tests and types / Verify default imports and native logs need no SQLite: success; https://github.com/link-foundation/link-cli/actions/runs/40271233141/job/121404288885
+js: Conformance on Node.js, Bun and Deno / SQLite journal providers and cross-language reopening: success; https://github.com/link-foundation/link-cli/actions/runs/40271233141/job/121404289065

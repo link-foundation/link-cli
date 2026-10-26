@@ -15,6 +15,9 @@ use crate::indexed_links::LinksMap;
 use crate::link::Link;
 use crate::named_type_links::escape_lino_reference;
 use crate::storage::StorageRevision;
+use crate::text_storage_format::{
+    name_metadata, needs_name_metadata, parse_link_line, parse_name_metadata, NAME_HEADER,
+};
 
 /// Callback invoked once per `(before, after)` change a write produced.
 ///
@@ -177,20 +180,17 @@ impl LinkStorage {
         Ok(())
     }
 
-    /// Discards in-memory state and re-reads the database file.
+    /// Replaces in-memory state only after the entire database loads successfully.
     pub fn reload_from_disk(&mut self) -> Result<()> {
-        self.links.clear();
-        self.names.clear();
-        self.name_to_id.clear();
-        self.allocated = 0;
-        self.unused.clear();
-        if self.is_in_memory() {
-            return Ok(());
+        let mut loaded = if self.is_in_memory() {
+            Self::in_memory(self.trace)
+        } else {
+            Self::new(&self.db_path, self.trace)?
+        };
+        if self.links.indexed().is_some() {
+            loaded.enable_indexed_lookups();
         }
-        if self.db_path.exists() {
-            self.load()?;
-        }
-        self.revision = StorageRevision::of(&self.db_path)?;
+        *self = loaded;
         Ok(())
     }
 
@@ -202,12 +202,30 @@ impl LinkStorage {
         let reader = BufReader::new(file);
         let mut recorded_unused = None;
 
-        for line in reader.lines() {
-            let line = line?;
+        for (number, line) in reader.lines().enumerate() {
+            let line = line.with_context(|| {
+                format!(
+                    "Failed to read {} at line {}",
+                    self.db_path.display(),
+                    number + 1
+                )
+            })?;
             let line = line.trim();
 
             if let Some(addresses) = line.strip_prefix(UNUSED_HEADER) {
                 recorded_unused = Some(Self::parse_unused_header(addresses));
+                continue;
+            }
+
+            if let Some(metadata) = line.strip_prefix(NAME_HEADER) {
+                let (id, name) = parse_name_metadata(metadata).with_context(|| {
+                    format!(
+                        "Invalid name metadata in {} at line {}",
+                        self.db_path.display(),
+                        number + 1
+                    )
+                })?;
+                self.set_name(id, &name);
                 continue;
             }
 
@@ -216,14 +234,13 @@ impl LinkStorage {
             }
 
             // Parse link format: (index source target) or (index source target "name")
-            if let Some((link, name)) = self.parse_link_line(line) {
+            if let Some((link, name)) = parse_link_line(line) {
                 self.links.insert(link.index, link);
                 if link.index > self.allocated {
                     self.allocated = link.index;
                 }
                 if let Some(name) = name {
-                    self.names.insert(link.index, name.clone());
-                    self.name_to_id.insert(name, link.index);
+                    self.set_name(link.index, &name);
                 }
             }
         }
@@ -239,27 +256,6 @@ impl LinkStorage {
         }
 
         Ok(())
-    }
-
-    /// Parses a single link line from the database
-    fn parse_link_line(&self, line: &str) -> Option<(Link, Option<String>)> {
-        // Simple format: (index source target) or (index source target "name")
-        let line = line.trim_matches(|c| c == '(' || c == ')');
-        let parts: Vec<&str> = line.split_whitespace().collect();
-
-        if parts.len() >= 3 {
-            let index = parts[0].parse().ok()?;
-            let source = parts[1].parse().ok()?;
-            let target = parts[2].parse().ok()?;
-            let name = if parts.len() > 3 {
-                Some(parts[3].trim_matches('"').to_string())
-            } else {
-                None
-            };
-            return Some((Link::new(index, source, target), name));
-        }
-
-        None
     }
 
     /// Parses the addresses recorded by an [`UNUSED_HEADER`] line into the
@@ -387,7 +383,11 @@ impl LinkStorage {
         links.sort_by_key(|l| l.index);
 
         for link in links {
-            if let Some(name) = self.names.get(&link.index) {
+            if let Some(name) = self
+                .names
+                .get(&link.index)
+                .filter(|name| !needs_name_metadata(name))
+            {
                 writeln!(
                     writer,
                     "({} {} {} \"{}\")",
@@ -396,6 +396,18 @@ impl LinkStorage {
             } else {
                 writeln!(writer, "({} {} {})", link.index, link.source, link.target)?;
             }
+        }
+
+        // Names need not have rows. Controls use this versioned comment rather
+        // than inserting line breaks into the line-oriented row grammar.
+        let mut metadata = self
+            .names
+            .iter()
+            .filter(|(id, name)| !self.links.contains_key(*id) || needs_name_metadata(name))
+            .collect::<Vec<_>>();
+        metadata.sort_by_key(|(id, _)| **id);
+        for (id, name) in metadata {
+            writeln!(writer, "{}", name_metadata(*id, name))?;
         }
 
         writer.flush()?;
