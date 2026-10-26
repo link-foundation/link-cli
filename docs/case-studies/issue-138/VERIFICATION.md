@@ -3163,3 +3163,9 @@ still rejects more than 300 files with HTTP406; preserved diagnostics and local
 base/batch diffs provide review evidence. See MIRRORED-ROOT-PLAN.md, the native
 recipe, root protocol and mirrored-root.txt. Fresh exact-head CI follows the
 commit. All broader unmet criteria and the draft status remain active.
+
+
+All nine workflows pass on mirrored-root head `df6e01c`, including Linux/macOS/
+Windows native tests and actual WASM. `mirrored-root-ci.txt` preserves exact run
+IDs and timestamps. This does not complete the wider acceptance criteria; later
+maintenance work needs independent exact-head validation.

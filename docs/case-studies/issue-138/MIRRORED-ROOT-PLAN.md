@@ -20,7 +20,7 @@ complete acceptance inventory; this batch addresses root redundancy only.
       persistent handoffs. Keep SQLite optional and old controls passing.
 - [x] Run full local checks and measured coverage sequentially; document mode
       compatibility, selected costs and remaining uncovered requirements.
-- [ ] Review diffs/comments/main, commit to the prepared branch, update PR #139
+- [x] Review diffs/comments/main, commit to the prepared branch, update PR #139
       and verify all exact-head CI/native platforms. Keep the PR draft until
       every wider criterion is verified.
 
@@ -43,4 +43,6 @@ JS 261 at enforced 100% production coverage and repository checks 221. Each
 native language executes 258 before/after process exits. Compaction passes
 96 configurations/576 writers; ordinary/imported controls retain 48/288 each.
 mirrored-root.txt records complete coverage denominators and broader gaps.
-Fresh exact-head CI is required after publication.
+All nine exact-head workflows pass on df6e01c, including every native platform;
+mirrored-root-ci.txt records run IDs and native job timestamps. Later code
+requires fresh exact-head CI.

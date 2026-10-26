@@ -583,3 +583,9 @@ with independent closed root/bank damage; ordinary/imported controls retain
 48/288 each. MIRRORED-ROOT-PLAN.md and mirrored-root.txt record exact coverage,
 wire compatibility, selected costs and limits. Fresh exact-head CI is required;
 all wider unfinished criteria stay active.
+
+
+All nine workflows pass on mirrored-root head `df6e01c`, including Linux/macOS/
+Windows native tests and actual WASM. `mirrored-root-ci.txt` preserves exact run
+IDs and timestamps. This does not complete the wider acceptance criteria; later
+maintenance work needs independent exact-head validation.
