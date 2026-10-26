@@ -83,17 +83,17 @@ public class CheckpointPagesTests
         var success = Setup(images); success.Trace.Calls.Clear(); success.Log.Replace(replacement);
         int operations = success.Trace.Calls.Count; Assert.InRange(operations, 12, 40);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
-            {
-                var (log, devices, trace) = Setup(images); trace.Calls.Clear(); trace.Fault = (at, after);
-                Assert.Contains("injected", Assert.Throws<IOException>(() => log.Replace(replacement)).Message);
-                int count = trace.Calls.Count;
-                Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Append("rejected"));
-                Assert.Throws<IOException>(() => log.Flush()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" }));
-                Assert.Equal(count, trace.Calls.Count);
-                var reopened = Setup(Durable(devices)); var found = reopened.Log.Read().ToArray();
-                Assert.True(found.SequenceEqual(new[] { "acknowledged" }) || found.SequenceEqual(replacement));
-                reopened.Log.Append("next"); reopened.Log.Flush(); Assert.Equal(found.Append("next"), Setup(Durable(reopened.Devices)).Log.Read());
-            }
+        {
+            var (log, devices, trace) = Setup(images); trace.Calls.Clear(); trace.Fault = (at, after);
+            Assert.Contains("injected", Assert.Throws<IOException>(() => log.Replace(replacement)).Message);
+            int count = trace.Calls.Count;
+            Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Append("rejected"));
+            Assert.Throws<IOException>(() => log.Flush()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" }));
+            Assert.Equal(count, trace.Calls.Count);
+            var reopened = Setup(Durable(devices)); var found = reopened.Log.Read().ToArray();
+            Assert.True(found.SequenceEqual(new[] { "acknowledged" }) || found.SequenceEqual(replacement));
+            reopened.Log.Append("next"); reopened.Log.Flush(); Assert.Equal(found.Append("next"), Setup(Durable(reopened.Devices)).Log.Read());
+        }
     }
 
     [Fact]
@@ -193,11 +193,11 @@ public class CheckpointPagesTests
     {
         int operations = Setup().Trace.Calls.Count; Assert.InRange(operations, 20, 40);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
-            {
-                var (devices, trace) = Devices(); trace.Fault = (at, after); Assert.Throws<IOException>(() => Open(devices));
-                var recovered = Setup(Durable(devices)); Assert.Empty(recovered.Log.Read());
-                recovered.Log.Append("following"); recovered.Log.Flush(); Assert.Equal(new[] { "following" }, Setup(Durable(recovered.Devices)).Log.Read());
-            }
+        {
+            var (devices, trace) = Devices(); trace.Fault = (at, after); Assert.Throws<IOException>(() => Open(devices));
+            var recovered = Setup(Durable(devices)); Assert.Empty(recovered.Log.Read());
+            recovered.Log.Append("following"); recovered.Log.Flush(); Assert.Equal(new[] { "following" }, Setup(Durable(recovered.Devices)).Log.Read());
+        }
     }
 
     [Fact]
@@ -234,17 +234,17 @@ public class CheckpointPagesTests
         var probe = Devices(images); var success = Mirrored(probe.Devices); probe.Trace.Calls.Clear(); success.Replace(replacement);
         int operations = probe.Trace.Calls.Count; Assert.InRange(operations, 30, 90);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
+        {
+            var (devices, trace) = Devices(images); var log = Mirrored(devices); trace.Calls.Clear(); trace.Fault = (at, after);
+            try { log.Replace(replacement); }
+            catch (IOException error)
             {
-                var (devices, trace) = Devices(images); var log = Mirrored(devices); trace.Calls.Clear(); trace.Fault = (at, after);
-                try { log.Replace(replacement); }
-                catch (IOException error)
-                {
-                    Assert.Contains("injected", error.Message); int count = trace.Calls.Count;
-                    Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" })); Assert.Equal(count, trace.Calls.Count);
-                }
-                var recovered = Devices(Durable(devices)); var reopened = Mirrored(recovered.Devices); var found = reopened.Read().ToArray();
-                Assert.True(found.SequenceEqual(new[] { "old" }) || found.SequenceEqual(replacement));
-                reopened.Replace(new[] { "after recovery" }); Assert.Equal(new[] { "after recovery" }, Mirrored(Devices(Durable(recovered.Devices)).Devices).Read());
+                Assert.Contains("injected", error.Message); int count = trace.Calls.Count;
+                Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" })); Assert.Equal(count, trace.Calls.Count);
             }
+            var recovered = Devices(Durable(devices)); var reopened = Mirrored(recovered.Devices); var found = reopened.Read().ToArray();
+            Assert.True(found.SequenceEqual(new[] { "old" }) || found.SequenceEqual(replacement));
+            reopened.Replace(new[] { "after recovery" }); Assert.Equal(new[] { "after recovery" }, Mirrored(Devices(Durable(recovered.Devices)).Devices).Read());
+        }
     }
 }
