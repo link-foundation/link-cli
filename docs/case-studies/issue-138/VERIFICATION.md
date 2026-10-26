@@ -2536,3 +2536,66 @@ legacy physical repair, LSM, physical power loss, full journal transfer/replay,
 persistent object retention, automatic balancing, multi-catalog transactions
 and wider competitor requirements remain unfinished. The goal remains active
 and PR 139 remains draft; publication requires fresh exact-head CI.
+
+
+## Deep structure output
+
+Reproduce with experiments/issue-138/validate-structure-depth.sh and summarize-
+structure-depth.py after the documented LLVM/wasm-bindgen tooling setup. Heavy
+compilers run sequentially with one Rust build job and bounded .NET heaps.
+
+structure-depth-before.txt preserves real automated failures: a finite 2048-node
+source chain overflows isolated native stacks in concrete Rust, generic Rust
+and C#. The child processes have finite memory/CPU limits, parent deadlines and
+dumps disabled; all are reaped. Corrected entry points use explicit frames and
+one growable output buffer. Target references remain unexpanded. Both Rust
+entry points reuse one formatter, and C# uses its standard StringBuilder.
+
+Independent shallow oracles cover names/quoting, self/two-node source cycles,
+shared children, missing roots, exact deepest-first name reads and failures at
+every reference position. Rust also verifies caller-provided visited sets and
+error path progress. Native bounded tests verify exact output at depth 2048;
+portable Rust cases do the same in actual WASM. Ordinary Unicode named stores
+reopen twice in both native languages. The independent existing output suites
+also pass. A broader initial C# test fixture aborted in usage repointing when
+merging an existing cyclic pair during setup; creating a separate self-cycle
+corrects the fixture. That execution did not reach the output formatter.
+
+Complete local validation:
+- Native Rust all-features LLVM coverage: 882 passes, zero failed; fifteen
+  ignored child entries are exercised by bounded parents. Custom stdout passes.
+- C# Debug and Release with Coverlet: 2027 each, zero failed/skipped.
+- Actual WASM with LLVM coverage: 520 passes, zero failed/ignored; all six
+  executed modules declare the independently verified 256 MiB linear-memory cap.
+- JS: 177 tests and all eighteen modules at enforced 100% lines/branches/functions.
+  Strict TypeScript and 221 repository checks pass.
+- Native/WASM/C# formatting, strict native/WASM Clippy, release fragments,
+  source sizes, ShellCheck, actionlint and whitespace checks pass.
+- Node, Bun and Deno generated actual-WASM client conformance passes.
+
+Official complete-run coverage (no filtered project denominator):
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,946/12,749 (93.70%) | 2,165/2,574 (84.11%) | 1,536/1,664 (92.31%) |
+| Actual WASM, complete linked source | 8,966/12,058 (74.36%) | 1,691/2,229 (75.86%) | 1,172/1,614 (72.61%) |
+| C# Debug | 7,398/7,892 (93.74%) | 3,882/4,314 (89.99%) | Not reported by this collector |
+| C# Release | 5,689/5,995 (94.90%) | 3,849/4,289 (89.74%) | Not reported by this collector |
+
+Shared Rust formatter component: Native Rust: 39/39 lines, 6/6 branches, 1/1 functions; Actual WASM, complete linked source: 39/39 lines, 6/6 branches, 1/1 functions.
+All three actual-WASM wrappers retain 100% lines/reported branches/functions.
+The C# output-file component includes its other existing output methods; inspect
+its complete Coverlet report rather than treating file coverage as method scope.
+
+Metadata costs O(depth) plus resolved reference text and output. Assembly is
+linear in output bytes; store lookups and name decoding retain their own costs.
+No decoded-output limit, new stored representation, repair or stronger physical
+durability is added. A separate observed legacy Rust inline text-name whitespace
+truncation remains for the next atomic audit in this same PR; this traversal's
+persistent controls use the ordinary Unicode named store.
+
+Whole-project native Rust, C# and linked WASM coverage remain below 100%. Finer
+composition, legacy physical repair, LSM, real power loss, full journal replay,
+persistent object retention, balancing, multi-catalog transactions and wider
+competitor requirements remain unfinished. Keep the goal active and PR draft;
+publication requires fresh exact-head CI.

@@ -42,3 +42,34 @@ The overall R1–R12 objective remains active. In particular, broader competitor
 strategies, ordinary legacy name/history atomicity and complete project coverage
 were not completed by the interrupted session. See [requirements](REQUIREMENTS.md)
 and [the resumed checklist](SESSION-RECOVERY-PLAN.md).
+
+## Second recovery: structure output
+
+The [next maintainer comment](https://github.com/link-foundation/link-cli/pull/139#issuecomment-6407850523)
+requests recovery of another interrupted session, reporting it to OpenAI, and
+verification that SQLite remains optional while native doublets implementations
+cover the requested guarantees. These are additional requirements; selecting the
+SQLite adapter does not complete the remaining native storage criteria.
+
+The linked public log has 110,895 lines. Its final failure is at
+2026-10-25 21:15:12 UTC. It preserves bounded stack-overflow reproductions and an
+iterative structure formatter, but the complete coverage run was interrupted.
+The wrapper saved 18 files in commit
+`500ec8f951b4e7ebf5904488400b11acecacca29` on the recovery branch. The prepared
+PR branch was fast-forwarded to that commit without rewriting its history.
+Complete local validation has been rerun successfully, including native Rust,
+both C# configurations, actual WASM, JS coverage and all three client runtimes.
+Interrupted partial results were not counted as a completed run. See
+[the structure plan](STRUCTURE-DEPTH-PLAN.md) and structure-depth.txt.
+
+All nine workflows passed on the previously published Unicode-graph head
+`1a482ac1a4d51b122a4864a3361d44e7258b3a0c`; they were created at
+2026-10-25 20:56:54–55 UTC. Those runs do not verify the recovered changes.
+No required sub-issues, issue comments, inline review comments or reviews were
+returned on the refreshed paginated endpoints.
+
+The second interruption was reported in the
+[existing OpenAI issue](https://github.com/openai/codex/issues/56475#issuecomment-6408065263).
+The report distinguishes the observed failed turn from its unknown internal
+cause and links the public evidence and database task. It does not claim that
+an interactive `/feedback` report was submitted.

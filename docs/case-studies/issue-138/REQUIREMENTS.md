@@ -8,7 +8,10 @@ session and reporting the interruption to Codex/OpenAI. The preserved ancestry
 commit has been recovered; validation continues under DEEP-ANCESTRY-PLAN.md.
 The reporting request is fulfilled by the linked public report in
 [SESSION-RECOVERY.md](SESSION-RECOVERY.md). That request does not change or
-complete the original R1–R12 acceptance criteria.
+complete the original R1–R12 acceptance criteria. A second recovery/reporting
+request and the explicit requirement for optional SQLite with native doublets
+implementations are recorded in SESSION-RECOVERY.md. Native physical storage
+gaps remain unfinished even when an optional SQLite configuration passes.
 
 | ID | Issue requirement | Solution and verification plan | Status |
 | --- | --- | --- | --- |
@@ -19,7 +22,7 @@ complete the original R1–R12 acceptance criteria.
 | R5 | Study competitor source and best strategies | Primary documentation and source survey covering SQLite, PostgreSQL, RocksDB, Redis, etcd and TiKV; costs/guarantee comparison and reusable component evaluation. | In progress; expanded primary-source audit and implemented independent-session group commit distinguish InnoDB flush sharing, MongoDB durable acknowledgement, Cassandra ordinary quorum/repair and current Accord routing; see RESEARCH.md |
 | R6 | Same API / costs only for selected guarantees | Keep existing bare-store cache path; add optional control/history/journal/replication composition with explicit complexity and allocation costs. | Existing raw interfaces implemented by staged sessions; optional journals, delta encoding and replica decorators supplied. Bare stores incur no engine overhead. Delta encoding reduces physical bytes for localized edits. Independently selected shared immutable rows retain unchanged paths in candidates, scans and history; independently selected changed-row encoding avoids full serialization for localized edits; independently selected persistent constraint indexes avoid full validation scans for small edits, allocating only for selected constraints; default scan costs remain explicit. An independently selected immutable-object cache avoids repeat data downloads while retaining fresh catalog reads and complete staging comparisons; zero retains no cache. Serializable read-set validation is independently selected and tracks only observed addresses; scans retain revision checks. Conflict metadata is skipped for exclusive/optimistic whole-revision serializable modes, allocated lazily for overlapping sessions that need it, and reclaimed after the last validation. Optional point-write ownership allocates only for selected sessions/addresses, releases on every terminal path and rejects use in uncoordinated cluster workspaces. Finer independent validation/history decorator composition remains to study. |
 | R7 | Implement all supported languages | Native Rust and C# library surfaces, portable JS/TS surface and declared backend capabilities; shared wire vectors and scenario tests. | Staged engine surfaces implemented. Compiled WASM conformance passes Node, Bun and Deno; shared fixtures are consumed by Rust, C# and actual WASM. Ordinary legacy transactions/history now execute in actual WASM using portable timestamps; shared fault/recovery contracts verify checkpoint ownership. Newly added distributed strategies must maintain parity. |
-| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 516 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 74.07% lines / 75.68% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
+| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 520 actual WASM tests, including shared native engine, model, query and storage contracts; complete linked coverage measures 74.36% lines / 75.86% branches and remains below 100%. Native Rust/C# project coverage remains below the required scope. |
 | R9 | Document each scenario | Runnable cache, durable store and replicated/sharded examples with failure semantics, ownership and persistence settings. | docs/ENGINE-STRATEGIES.md, docs/ENGINE-CLUSTERS.md and Rust/C#/JS examples cover implemented options, including consensus-backed shard groups. Further deployment strategies need their own recipes. |
 | R10 | Horizontal cluster, shared and shared-nothing options | TCP/advisory shared stores, independent shard namespaces, replicated logs and consensus-backed atomic shard groups. | Shared coordination and immutable journals on independently routed data groups implemented in all languages. Real leader failover, data-group outage, atomic pointer publication and native/WASM interoperability verified. Optional bounded immutable-object caching avoids repeated data downloads and supports previously verified reads during a data-group outage; catalog availability remains required. Catalog throughput, whole-journal updates/replay and persistent object retention limit scale; automatic balancing and multi-catalog transactions are not supplied. |
 | R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus, cross-shard coordination and a selected SQLite pager/WAL component are implemented. Legacy physical repair, LSM and other listed algorithm gaps remain unfinished. |
@@ -273,5 +276,18 @@ New walker components reach 100% measured coverage in native Rust, actual WASM
 and both C# configurations. All six actual-WASM coverage modules declare the
 verified 256 MiB test-memory cap. See UNICODE-GRAPH-PLAN.md, unicode-graph.txt
 and the reproduction recipe for official totals and O(depth) metadata costs.
-Whole-project coverage, physical repair and the wider criteria remain unfinished;
-publication and fresh exact-head CI are pending.
+Whole-project coverage, physical repair and the wider criteria remain unfinished.
+All nine workflows pass on Unicode head `1a482ac`; later code needs fresh CI.
+
+
+Deep structure output (R1/R7/R8/R12) now uses explicit source-spine frames and
+one output buffer. Bounded before tests fail with native stack overflow in both
+Rust entry points and C#. Independent shallow oracles preserve names, cycles,
+shared children, reference order, caller paths and error progress; finite depth
+2,048 controls and persistent Unicode named stores pass. Complete local suites
+pass: 882 native Rust, 520 actual WASM, 2,027 C# per configuration, 177 JS and
+221 repository checks. Node/Bun/Deno generated-WASM conformance also passes.
+The shared Rust formatter reaches 100% measured component coverage; complete
+project totals remain below target. See STRUCTURE-DEPTH-PLAN.md and
+structure-depth.txt. Publication requires fresh exact-head CI. The native
+physical-storage and broader criteria remain open.
