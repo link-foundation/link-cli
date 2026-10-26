@@ -212,3 +212,9 @@ avoiding call-stack exhaustion and repeated whole-subtree copying.
 Treat the .NET 10 listener socket-clear race as a clean accept-loop exit only
 after server shutdown starts. Preserve unexpected null-reference failures
 outside shutdown and join accepted connection workers before returning.
+
+Select a SQL-free native doublets page journal independently of logical engine
+and replication strategies. Validate canonical versioned pages and decisions,
+stage group writes, fence uncertain owners and reject committed corruption.
+Provide an exclusive native file device with bounded reads, durable flush,
+POSIX parent synchronization and explicit close-error ownership fencing.

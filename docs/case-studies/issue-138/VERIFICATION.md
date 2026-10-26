@@ -1,5 +1,17 @@
 # Verification record
 
+Latest native-page validation: 910 native Rust tests (16 child entry points
+ignored), 531 actual WASM tests and 2,045 C# tests in each configuration pass.
+Independent vectors, finite I/O/corruption/ownership contracts, bounded process
+exits and all 16 Rust/Node/Bun/C#/Deno/Rust shared-file configurations pass.
+Native coverage is 12,531/13,356 lines, 2,343/2,774 branches and 1,594/1,726
+functions. Actual WASM is 9,334/12,483 lines, 1,835/2,385 branches and 1,200/1,654
+functions. C# Debug is 7,654/8,156 lines and 4,100/4,546 branches; Release is
+5,893/6,204 lines and 4,063/4,521 branches. These complete-project totals leave
+100% coverage unfinished. Selected redundant repair and the wider inventory
+remain open. Exact commands and evidence: native-pages-rust.txt,
+native-pages-csharp.txt and NATIVE-PAGES-PLAN.md.
+
 This is evidence for [PR 139](https://github.com/link-foundation/link-cli/pull/139),
 not a claim that the open-ended issue is complete. Commands run with one Cargo
 build job and reduced debug information under a 2.92 GiB container limit.

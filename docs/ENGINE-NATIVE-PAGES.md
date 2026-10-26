@@ -10,8 +10,11 @@ codec is a separate `./engine-paged-log` entry accepting a synchronous `PageDevi
 Rust provides the portable `engine::paged::PagedLog<D>` on native and WASM
 targets. Feature `native-pages` selects `FilePageDevice`; it introduces no SQL
 dependency and its native dependencies are excluded from WASM. Rust, Node, Bun
-and Deno reopen the same files in all 16 example policy combinations.
-C# parity and independently selected redundant page repair are in progress.
+and Deno reopen the same files in all 16 example policy combinations. C# provides
+`PagedCommitLog` over caller-owned `IPageDevice`, with `FilePageDevice` for native
+files. The public C# library adds no SQL package. All five runtime examples
+reopen the same files and verify the preceding writers' exact records.
+Independently selected redundant page repair is in progress.
 This provider does not implement
 repair of legacy mapped Doublets files, LSM or efficient page undo. Its two
 metadata decisions recover torn unacknowledged writes under the stated model;
@@ -73,6 +76,8 @@ The Rust example accepts the same path and policy flags:
 
 ```sh
 cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages --example engine_native_pages -- existing-directory/journal
+dotnet build examples/native-pages-csharp
+dotnet run --project examples/native-pages-csharp -- existing-directory/journal
 CLINK_WASM="$PWD/js/pkg" bash examples/native-pages/run-interop.sh
 ```
 
@@ -81,6 +86,20 @@ log through the existing `TransitionLogStore` interface. After releasing the
 engine, `log.into_device().close()?` reports close errors. Device extraction does
 not flush pending records. Dropping the file device attempts cleanup; explicit
 close lets the caller observe uncertain ownership and retain the fencing file.
+
+C# keeps device ownership explicit:
+
+```csharp
+using var device = new FilePageDevice("existing-directory/journal");
+ICommitLog journal = new PagedCommitLog(device, maxPages: 1024);
+var engine = new LinksEngine<ulong>(journal,
+    new() { RequireDurableFlush = true });
+```
+
+Keep the device alive while using the engine and sessions. Disposing it closes
+every acquired handle and reports cleanup failures as an `AggregateException`;
+uncertain close outcomes retain the ownership file. Disposing never silently
+flushes staged records.
 
 Tests consume independently generated wire vectors, inject finite durable-image
 write/sync failures, reject malformed checksummed structures, reopen actual

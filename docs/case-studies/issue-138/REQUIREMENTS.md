@@ -320,6 +320,9 @@ counters and bounded process exits are recorded in native-pages-js.txt.
 All nine workflows pass on `21847f9`, recorded in native-pages-js-ci.txt.
 Rust now passes ten portable contracts both natively and in actual WASM, five
 native-file contracts, strict Clippy and 16 Rust/Node/Bun/Deno shared-file
-configurations. Full native/WASM suites are running. C# parity, redundant
-physical repair and fresh CI for these Rust additions remain unfinished;
+configurations. Full suites now pass 910 native, 531 actual WASM and 2,045 C#
+tests per configuration. Matching C# files pass all 16 runtime configurations,
+ending with 12 revisions and exact prior names. Independent corruption/fault
+vectors, close fencing, quotas, following writes and bounded exits pass in each
+native provider. Redundant physical repair and fresh CI remain unfinished;
 NATIVE-PAGES-PLAN.md tracks those and the wider gaps.

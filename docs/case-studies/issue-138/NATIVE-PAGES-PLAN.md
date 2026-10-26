@@ -8,15 +8,15 @@ neither LMDB compatibility nor equivalent implementation maturity is claimed.
 
 - [x] Specify an independent binary wire vector before implementing codecs.
 - [x] Add failing public ordered-log contracts before provider implementation.
-- [ ] Implement immutable, checksummed native doublets pages and alternating
+- [x] Implement immutable, checksummed native doublets pages and alternating
       metadata decisions behind the existing commit-log API, without SQL.
-- [ ] Preserve matching Rust, C# and JS implementations, including actual WASM
+- [x] Preserve matching Rust, C# and JS implementations, including actual WASM
       engine use through its host log and Node/Bun/Deno cross-language reopening.
-- [ ] Exercise finite durable-image write/sync failures, torn decisions/pages,
+- [x] Exercise finite durable-image write/sync failures, torn decisions/pages,
       corrupt committed data, stale database pages and uncertain owner fencing.
-- [ ] Exercise bounded real child exits and subsequent writes in each native
+- [x] Exercise bounded real child exits and subsequent writes in each native
       provider. Never automatically steal a crashed writer's exclusive-create lock.
-- [ ] Verify selected costs with finite page/byte counters, preserving existing
+- [x] Verify selected costs with finite page/byte counters, preserving existing
       default stores and independent logical encoding/replication strategies.
 - [ ] Add independently selected mirrored page repair with matching finite
       corruption tests; distinguish its storage cost from a doublewrite buffer.
@@ -72,7 +72,19 @@ checksummed malformed structures, uncertain close ownership, bounded child exits
 and all 16 engine policy combinations. Rust/Node/Bun/Deno sequential reopening
 of one file passes all 16 configurations. Strict native/WASM Clippy, formatting,
 optional-dependency guards and 221 repository checks pass. Full native/WASM
-suites and coverage are running; this focused evidence does not replace them.
+suites now pass 910 native checks (16 child entries ignored) and 531 actual WASM
+checks. Complete-project coverage remains below 100%.
 See native-pages-rust-before.txt and native-pages-rust.txt. All nine workflows
 on the preceding JS-only head `21847f9` pass; native-pages-js-ci.txt records their
-exact SHA, timestamps and links. C# parity and redundant repair remain open.
+exact SHA, timestamps and links.
+
+C# parity now passes 18 focused contracts, both complete configurations with
+2,045 tests each, formatting, dependency guards, source-size/release checks and
+221 repository checks. Rust -> Node -> Bun -> C# -> Deno -> Rust sequential file
+interchange passes all 16 configurations, ending with 12 verified revisions per
+file. All three languages exercise independent vectors and finite persistence
+faults before/after each operation, and all native providers have bounded real
+process-exit controls. See native-pages-csharp-before.txt and native-pages-csharp.txt.
+The selected mirrored extension is tracked separately in MIRRORED-PAGES-PLAN.md;
+it and fresh exact-head CI remain unchecked above. No wider criterion is closed
+by completing this one native representation.

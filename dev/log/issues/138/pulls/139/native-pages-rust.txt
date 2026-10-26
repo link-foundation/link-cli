@@ -18,7 +18,11 @@ Strict native all-target/all-feature Clippy and WASM target Clippy passed.
 Rust/WASM formatting, optional-SQL dependency guards, actionlint and shellcheck
 passed. Complete repository suite: 221 passed; source-size and changesets passed.
 
-Full native/WASM suites and coverage are running. Their earlier run was
-interrupted by a worker restart and is not counted as a completed check.
+Full native suites: 910 passed, 16 ignored child entries, 0 failed.
+Full actual WASM suites: 531 passed, 0 ignored, 0 failed.
+Native coverage: 12,531/13,356 lines (93.82%), 2,343/2,774 branches (84.46%),
+1,594/1,726 functions (92.35%). Actual WASM: 9,334/12,483 lines (74.77%),
+1,835/2,385 branches (76.94%), 1,200/1,654 functions (72.55%).
+The earlier run was interrupted by a worker restart and is not counted.
 This evidence does not claim C# parity, redundant page repair, physical
 power-loss certification or whole-project 100% coverage.

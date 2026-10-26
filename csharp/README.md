@@ -219,3 +219,10 @@ Version sidecars preserve delimiter text, Unicode, NUL and newline in branch,
 parent and tag names. New branch markers use a versioned encoding and ordinary
 legacy markers remain readable; see the [marker protocol](../docs/protocol/version-metadata.md)
 for compatibility and upgrade limits.
+
+The optional `Engine.PagedCommitLog` stores ordered records as immutable native
+doublets pages without SQL. Its caller-owned `IPageDevice` can be a native
+`FilePageDevice`; select a positive page quota with the log constructor. Keep the
+device alive while using the engine. Explicit disposal reports uncertain close
+outcomes and preserves ownership fencing; it never flushes staged records.
+See [native page guarantees, costs and examples](../docs/ENGINE-NATIVE-PAGES.md).

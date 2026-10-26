@@ -279,8 +279,15 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     strict native/WASM Clippy and 221 repository checks. The public example
     reopens the same files through Rust/Node/Bun/Deno in all 16 configurations.
     The optional file feature adds no SQL dependency and no native dependencies
-    to WASM. Full native/WASM validation is running; C# parity and independently
-    selected redundant repair remain unfinished. See native-pages-rust.txt.
+    to WASM. Complete suites pass 910 native and 531 actual WASM checks.
+    See native-pages-rust.txt.
+
+22. Matching C# native pages now pass 18 focused contracts and both full suites
+    with 2,045 tests per configuration, plus formatting, dependency guards and
+    221 repository checks. Rust/Node/Bun/C#/Deno/Rust sequential reopening passes
+    all 16 policy configurations, ending with 12 exact revisions per file.
+    See native-pages-csharp.txt. Independently selected mirrored repair and
+    fresh exact-head CI remain unfinished, as do the wider inventoried criteria.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

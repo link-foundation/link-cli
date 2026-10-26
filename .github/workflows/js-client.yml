@@ -21,6 +21,7 @@ on:
       - 'examples/cluster-csharp/**'
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
+      - 'examples/native-pages-csharp/**'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
@@ -38,6 +39,7 @@ on:
       - 'examples/cluster-csharp/**'
       - 'examples/sqlite-csharp/**'
       - 'examples/native-pages/**'
+      - 'examples/native-pages-csharp/**'
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
@@ -270,8 +272,10 @@ jobs:
         env:
           CLINK_WASM: ${{ github.workspace }}/js/pkg
           NATIVE_PAGES_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/engine_native_pages
+          NATIVE_PAGES_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/native-pages-csharp/bin/Release/net10.0/NativePagesExample.dll
         run: |
           cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages --example engine_native_pages
+          dotnet build examples/native-pages-csharp --configuration Release
           bash examples/native-pages/run-interop.sh
 
       # A small run of the acceptance benchmark: it exits non-zero unless a

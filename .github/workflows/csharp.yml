@@ -12,6 +12,7 @@ on:
       - '.github/workflows/csharp.yml'
       - '.github/scripts/coverage*'
       - '.github/scripts/check-sqlite-optional.mjs'
+      - 'docs/protocol/native-pages*'
   workflow_dispatch:
     inputs:
       release_mode:

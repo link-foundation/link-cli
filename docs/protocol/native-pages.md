@@ -1,8 +1,8 @@
 # Native doublets page protocol, version 1
 
-This independently specified protocol is implemented by the Rust and JS/TS page
-journals, including the portable Rust WASM codec. C# parity and selected
-redundant repair are still in progress.
+This independently specified protocol is implemented by the Rust, C# and JS/TS
+page journals, including the portable Rust WASM codec. Selected redundant repair
+is still in progress.
 It is a selected physical representation for the existing ordered record log;
 logical engine revision, delta, isolation, history and replication policies are
 separate. The prototype imports no SQLite provider.
