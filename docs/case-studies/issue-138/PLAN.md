@@ -379,5 +379,21 @@ complete the overall issue or authorize marking the draft ready early.
     pass 288 shared-file writers, including mirrored damage and repair. Complete
     coverage remains below target; exact values and the initial wrapper-script
     error are preserved in sorted-runs.txt and sorted-runs-wrapper-before.txt.
-    See SORTED-RUNS-PLAN.md. Fresh exact-head CI remains required. Physical
-    SSTables and every wider unmet criterion remain unfinished.
+    See SORTED-RUNS-PLAN.md. All nine exact-head workflows pass at a1f12fec,
+    including Linux, macOS and Windows; sorted-runs-ci.txt retains the evidence.
+    Physical SSTables and every wider unmet criterion remain unfinished.
+
+31. Fallible allocation now composes through persistent transformations,
+    query planning and transaction/version owners. Ten real-filesystem tests
+    first reproduce journal-error panics; two portable tests reproduce ignored
+    faults and wrong dispatch. Four portable contracts now verify eleven
+    bookkeeping fault positions, successful/no-op triggers and parked errors;
+    five C# cases are exception-propagation controls without production changes.
+    Full suites pass 949 native plus six doctests, 550 actual-WASM, 2,169 C# per
+    configuration and 209 JS, plus strict types and 221 repository checks.
+    Cleanup, following writes and two exact native reopenings pass. See
+    FALLIBLE-COMPOSITION-PLAN.md and fallible-composition{,-before}.txt. All 48
+    physical/policy choices pass 288 shared-file writers with mirrored repair.
+    Fresh exact-head CI remains in progress.
+    Import allocation bypasses are traced separately in IMPORT-ALLOCATION-PLAN.md;
+    those and every wider unmet acceptance criterion stay active.

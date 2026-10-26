@@ -114,3 +114,6 @@ mod version_movement_recovery;
 
 #[path = "../../tests/transactions_replay_owner_tests.rs"]
 mod transactions_replay_owner;
+
+#[path = "../../tests/fallible_composition_tests.rs"]
+mod fallible_composition;

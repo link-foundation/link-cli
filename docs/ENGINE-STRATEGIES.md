@@ -276,6 +276,12 @@ adapter for other backends compares complete before/after row maps, costing
 O(N log N) time and O(N) space for this operation; a backend can provide its own
 allocation callbacks. Bare `ensure_link_created` keeps its existing cost.
 
+Fallible Rust allocation methods preserve journal and trigger errors through
+transaction/version/query composition. Existing-address and existing-pair calls
+do not fire triggers. Failed operations can retain partial effects and recovery
+ownership; see [allocation errors through decorators](FALLIBLE-COMPOSITION.md)
+for adapter requirements, costs and cleanup semantics.
+
 ## Branches and merge recovery
 
 A fork copies the parent's current committed rows into revision 1 of an empty,

@@ -77,6 +77,13 @@ pub trait NamedTypeLinks {
     fn all_links(&mut self) -> Vec<Link>;
     fn search(&mut self, source: u32, target: u32) -> Option<u32>;
     fn get_or_create(&mut self, source: u32, target: u32) -> u32;
+    /// Fallible pair lookup/allocation for composable query and decorator writes.
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        if let Some(id) = self.search(source, target) {
+            return Ok(id);
+        }
+        self.try_create(source, target)
+    }
     fn get_name(&mut self, id: u32) -> Result<Option<String>>;
     fn set_name(&mut self, id: u32, name: &str) -> Result<u32>;
     fn get_by_name(&mut self, name: &str) -> Result<Option<u32>>;
@@ -313,6 +320,12 @@ impl NamedTypeLinks for NamedTypesDecorator {
 }
 
 impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        Ok(crate::transactions::TransactionsDecorator::get_or_create(
+            self, source, target,
+        )?)
+    }
+
     fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
         Ok(crate::transactions::TransactionsDecorator::create(
             self, source, target,
@@ -403,6 +416,10 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
 impl<B: NamedTypeLinks> NamedTypeLinks
     for crate::version_control::GenericVersionControlDecorator<B>
 {
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        crate::version_control::GenericVersionControlDecorator::get_or_create(self, source, target)
+    }
+
     fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
         crate::version_control::GenericVersionControlDecorator::create(self, source, target)
     }

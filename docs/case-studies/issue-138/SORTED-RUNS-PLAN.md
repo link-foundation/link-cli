@@ -18,7 +18,7 @@ Requirement mapping: R5/R6/R7/R8/R9/R11/R12. Every wider criterion remains activ
       default flat/shared behavior and optional dependency guarantees.
 - [x] Run complete native/C#/actual-WASM/JS suites, coverage, lint/types/format,
       interoperation and repository checks.
-- [ ] Commit, push and obtain all fresh exact-head workflows.
+- [x] Commit, push and obtain all fresh exact-head workflows.
 
 The selected design is binary carry over immutable sorted runs. A point edit
 starts a one-entry run. Occupied event-count tiers merge with newer values
@@ -74,4 +74,6 @@ Native sorted-run coverage is 88/88 lines, 18/18 branches and 10/10 functions.
 Actual-WASM sorted-run coverage is 87/88 lines, 17/18 branches and 10/10 functions.
 The three wrapper modules reach 100%; complete linked/native/C# totals remain
 below target. No source-coordinate union is substituted for official totals.
-Fresh exact-head CI remains required before this feature batch is verified.
+All nine workflows pass at a1f12fec, including all three native platforms and
+actual WASM. sorted-runs-ci.txt records exact heads, timestamps and run URLs.
+Later changes require fresh CI; the wider unfinished criteria remain active.

@@ -205,7 +205,9 @@ impl LinkReferenceValidator {
     /// reverse leaves the store exactly as it was, and is the one way to ask
     /// any store, a remote one included.
     fn next_created_addresses(storage: &mut impl NamedTypeLinks, count: usize) -> Result<Vec<u32>> {
-        let addresses: Vec<u32> = (0..count).map(|_| storage.create(0, 0)).collect();
+        let addresses: Vec<u32> = (0..count)
+            .map(|_| storage.try_create(0, 0))
+            .collect::<Result<_>>()?;
         for &address in addresses.iter().rev() {
             storage.delete(address)?;
         }

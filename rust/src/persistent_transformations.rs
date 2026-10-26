@@ -222,11 +222,11 @@ fn ensure_schema<L: NamedTypeLinks + ?Sized>(links: &mut L) -> Result<TriggerSch
     let condition = links.get_or_create_named("Condition")?;
     let substitution = links.get_or_create_named("Substitution")?;
 
-    links.get_or_create(r#type, trigger);
-    links.get_or_create(trigger, once);
-    links.get_or_create(trigger, always);
-    links.get_or_create(r#type, condition);
-    links.get_or_create(r#type, substitution);
+    links.try_get_or_create(r#type, trigger)?;
+    links.try_get_or_create(trigger, once)?;
+    links.try_get_or_create(trigger, always)?;
+    links.try_get_or_create(r#type, condition)?;
+    links.try_get_or_create(r#type, substitution)?;
 
     Ok(TriggerSchema {
         once,
@@ -323,14 +323,14 @@ fn store_trigger_in<L: NamedTypeLinks + ?Sized>(
     let condition_text = links.get_or_create_named(&condition_text_name(&parsed.condition))?;
     let substitution_text =
         links.get_or_create_named(&substitution_text_name(&parsed.substitution))?;
-    let condition_record = links.get_or_create(schema.condition, condition_text);
-    let substitution_record = links.get_or_create(schema.substitution, substitution_text);
-    let payload = links.get_or_create(condition_record, substitution_record);
+    let condition_record = links.try_get_or_create(schema.condition, condition_text)?;
+    let substitution_record = links.try_get_or_create(schema.substitution, substitution_text)?;
+    let payload = links.try_get_or_create(condition_record, substitution_record)?;
     let trigger_type = match kind {
         PersistentTransformationKind::Always => schema.always,
         PersistentTransformationKind::Once => schema.once,
     };
-    Ok(links.get_or_create(trigger_type, payload))
+    links.try_get_or_create(trigger_type, payload)
 }
 
 /// Deletes the `(kind payload)` root link, leaving the shared schema and text
@@ -568,6 +568,33 @@ impl<L: NamedTypeLinks> PersistentTransformationDecorator<L> {
 }
 
 impl<L: NamedTypeLinks> NamedTypeLinks for PersistentTransformationDecorator<L> {
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        let index = self.links.try_create(source, target)?;
+        self.apply_triggers_after_operation()?;
+        self.take_pending_error()?;
+        Ok(index)
+    }
+
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        let existed = self.links.exists(id);
+        let index = self.links.try_ensure_created(id)?;
+        if !existed {
+            self.apply_triggers_after_operation()?;
+        }
+        self.take_pending_error()?;
+        Ok(index)
+    }
+
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        let existed = self.links.search(source, target).is_some();
+        let index = self.links.try_get_or_create(source, target)?;
+        if !existed {
+            self.apply_triggers_after_operation()?;
+        }
+        self.take_pending_error()?;
+        Ok(index)
+    }
+
     fn create(&mut self, source: u32, target: u32) -> u32 {
         let index = self.links.create(source, target);
         self.after_write();
