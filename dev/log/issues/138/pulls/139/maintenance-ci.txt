@@ -1,0 +1,26 @@
+Optional namespace maintenance: exact-head CI
+Head: 44e0fa889e291db571b7e987cc1b7e06764f8ae7
+All nine root workflows pass. Run creation: 2026-10-26T21:15:13Z.
+
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40402774732
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40402774560
+Dependencies: success; https://github.com/link-foundation/link-cli/actions/runs/40402774741
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40402774719
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40402774547
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40402774545
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40402774733
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40402774823
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40402774727
+
+rust native platform jobs:
+Test (macos-26): success; 2026-10-26T21:21:44Z through 2026-10-26T21:27:08Z; https://github.com/link-foundation/link-cli/actions/runs/40402774545/job/121855789839
+Test (windows-2025): success; 2026-10-26T21:21:55Z through 2026-10-26T21:32:17Z; https://github.com/link-foundation/link-cli/actions/runs/40402774545/job/121855789939
+Test (ubuntu-24.04): success; 2026-10-26T21:21:50Z through 2026-10-26T21:25:15Z; https://github.com/link-foundation/link-cli/actions/runs/40402774545/job/121855789979
+
+csharp native platform jobs:
+Test (windows-2025): success; 2026-10-26T21:18:48Z through 2026-10-26T21:26:31Z; https://github.com/link-foundation/link-cli/actions/runs/40402774560/job/121854439264
+Test (macos-26): success; 2026-10-26T21:21:17Z through 2026-10-26T21:24:13Z; https://github.com/link-foundation/link-cli/actions/runs/40402774560/job/121854439455
+Test (ubuntu-24.04): success; 2026-10-26T21:21:41Z through 2026-10-26T21:23:09Z; https://github.com/link-foundation/link-cli/actions/runs/40402774560/job/121854439538
+
+The following epoch-fenced reclamation work is not covered by these runs.
+Whole-issue gaps in REQUIREMENTS.md remain unfinished.

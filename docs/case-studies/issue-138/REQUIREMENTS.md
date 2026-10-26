@@ -603,3 +603,8 @@ target. See MAINTENANCE-PLAN.md, maintenance-before.txt, maintenance.txt and the
 maintenance recipe. Fresh exact-head CI is required after publication. This
 capability alone does not implement object collection; fencing, complete root
 discovery and coherent reader refresh remain required and unfinished.
+
+All nine workflows pass on maintenance head `44e0fa8`, including both native
+Linux/macOS/Windows matrices. `maintenance-ci.txt` preserves exact heads, run
+timestamps and job URLs. The following selected reclamation batch needs its own
+complete local and exact-head CI evidence; wider acceptance gaps remain active.

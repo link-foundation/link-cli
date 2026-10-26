@@ -3220,3 +3220,8 @@ batch diffs support review. See MAINTENANCE-PLAN.md, maintenance-before.txt,
 maintenance.txt and docs/ENGINE-MAINTENANCE.md. Fresh exact-head CI follows
 publication. Actual epoch-fenced reclamation, whole-project 100% coverage,
 physical power-loss verification and the wider listed criteria remain unfinished.
+
+All nine exact-head workflows pass on maintenance head `44e0fa8`, including
+Linux/macOS/Windows Rust and C# test matrices. See maintenance-ci.txt for run and
+job URLs with timestamps. This validates the maintenance capability; later
+reclamation changes require independent verification.

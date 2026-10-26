@@ -14,7 +14,7 @@ AtomicJournalStore implementations or existing partitioned-store behavior.
 - [x] Exercise actual etcd and native/Node/Bun/Deno capability parity.
 - [x] Preserve full coverage denominators; run appropriate complete local checks.
 - [x] Update docs/releases and review complete local/batch changes.
-- [ ] Commit, push only prepared branch and inspect fresh exact-head CI.
+- [x] Commit, push only prepared branch and inspect fresh exact-head CI.
 - [ ] Continue actual epoch-fenced reclamation afterward: this capability alone
       does not satisfy object GC or the wider unfinished issue criteria.
 
@@ -38,3 +38,7 @@ and the final real-etcd run include the lazy-codec changes. The root-import
 loader guard proves ordinary read/CAS avoids the selected JS helpers. The provider capability cannot establish object liveness:
 epoch-fenced publication, complete root discovery and coherent reader refresh
 remain required before immutable-object collection is implemented.
+
+All nine workflows pass on 44e0fa8, including both native platform matrices.
+maintenance-ci.txt preserves exact heads, timestamps and permanent run URLs.
+Actual collection is the next implementation batch and remains unfinished.
