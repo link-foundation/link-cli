@@ -7,8 +7,12 @@ and never overwrites committed data pages. The universal package entry imports
 neither this filesystem adapter nor a SQL provider. The portable `PagedCommitLog`
 codec is a separate `./engine-paged-log` entry accepting a synchronous `PageDevice`.
 
-Rust and C# matching providers, cross-language file interchange and independently
-selected redundant page repair are in progress. This provider does not implement
+Rust provides the portable `engine::paged::PagedLog<D>` on native and WASM
+targets. Feature `native-pages` selects `FilePageDevice`; it introduces no SQL
+dependency and its native dependencies are excluded from WASM. Rust, Node, Bun
+and Deno reopen the same files in all 16 example policy combinations.
+C# parity and independently selected redundant page repair are in progress.
+This provider does not implement
 repair of legacy mapped Doublets files, LSM or efficient page undo. Its two
 metadata decisions recover torn unacknowledged writes under the stated model;
 they do not repair corruption of an acknowledged decision. Committed data-page
@@ -64,6 +68,19 @@ Each invocation verifies all prior exact names and commits two sessions in one
 flush, retaining their separate revisions and pinned predecessor. `--flat`,
 `--snapshot`, `--delta`, `--references` and `--indexed-constraints` select independent
 policies. Reopen with compatible constraints and the same physical delta choice.
+
+The Rust example accepts the same path and policy flags:
+
+```sh
+cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages --example engine_native_pages -- existing-directory/journal
+CLINK_WASM="$PWD/js/pkg" bash examples/native-pages/run-interop.sh
+```
+
+Rust callers pass `FilePageDevice::open(path)?` to `PagedLog::open`, then use the
+log through the existing `TransitionLogStore` interface. After releasing the
+engine, `log.into_device().close()?` reports close errors. Device extraction does
+not flush pending records. Dropping the file device attempts cleanup; explicit
+close lets the caller observe uncertain ownership and retain the fencing file.
 
 Tests consume independently generated wire vectors, inject finite durable-image
 write/sync failures, reject malformed checksummed structures, reopen actual

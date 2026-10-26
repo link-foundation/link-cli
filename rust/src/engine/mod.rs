@@ -22,6 +22,7 @@ mod group;
 mod journal;
 mod named;
 mod object_cache;
+pub mod paged;
 pub mod partitioned;
 mod pessimistic;
 pub mod replication;

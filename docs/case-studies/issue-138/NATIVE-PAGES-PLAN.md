@@ -1,7 +1,7 @@
 # Native immutable doublets pages
 
 Requirement mapping: R1/R5/R6/R7/R8/R9/R11 and the maintainer's native-storage
-request. This is an implementation plan, not evidence of a completed provider.
+request. Unchecked items below remain incomplete across the required languages.
 The pinned LMDB source study in RESEARCH.md motivates alternating durable roots
 and immutable committed pages. The proposed format is our own doublets format;
 neither LMDB compatibility nor equivalent implementation maturity is claimed.
@@ -63,3 +63,16 @@ an uncertain-close fence regression and its passing correction. See
 native-pages-js.txt and ENGINE-NATIVE-PAGES.md. Rust/C# parity, cross-language
 files and selected redundant repair remain required before the main boxes can
 be checked. The existing 0.2.0 client release preparation covers the new exports.
+
+Rust now implements the matching portable codec and optional native file device.
+Ten portable contracts pass both natively and in actual WASM, five native file
+contracts pass (plus one ignored child entry), and the native private close-fault
+control passes. They cover independent wire bytes, finite write/sync faults,
+checksummed malformed structures, uncertain close ownership, bounded child exits
+and all 16 engine policy combinations. Rust/Node/Bun/Deno sequential reopening
+of one file passes all 16 configurations. Strict native/WASM Clippy, formatting,
+optional-dependency guards and 221 repository checks pass. Full native/WASM
+suites and coverage are running; this focused evidence does not replace them.
+See native-pages-rust-before.txt and native-pages-rust.txt. All nine workflows
+on the preceding JS-only head `21847f9` pass; native-pages-js-ci.txt records their
+exact SHA, timestamps and links. C# parity and redundant repair remain open.

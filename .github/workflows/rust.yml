@@ -8,6 +8,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'rust/**'
+      - 'docs/protocol/native-pages*'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
       - '.github/scripts/check-sqlite-optional.mjs'

@@ -21,12 +21,14 @@ if (mode === 'rust') {
   const configurations = [
     ['default native', 'rust/Cargo.toml', []],
     ['bare native', 'rust/Cargo.toml', ['--no-default-features']],
+    ['native pages', 'rust/Cargo.toml', ['--no-default-features', '--features', 'native-pages']],
     ['default WASM', 'rust/wasm/Cargo.toml', ['--target', 'wasm32-unknown-unknown']],
-    ['WASM with native-only feature', 'rust/Cargo.toml', ['--target', 'wasm32-unknown-unknown', '--features', 'sqlite']],
+    ['WASM with native-only feature', 'rust/Cargo.toml', ['--target', 'wasm32-unknown-unknown', '--features', 'sqlite,native-pages']],
   ];
   for (const [label, manifest, extra] of configurations) {
     const resolved = tree(manifest, extra);
     assert.equal([...resolved.matchAll(sqlite)].length, 0, `${label} unexpectedly resolves SQLite:\n${resolved}`);
+    if (label.includes('WASM')) assert.doesNotMatch(resolved, /^(?:getrandom|libc|windows-sys) v/m, `${label} resolves native page I/O`);
     console.log(`${label}: no SQLite production dependency`);
   }
   const selected = tree('rust/Cargo.toml', ['--features', 'sqlite']);

@@ -12,6 +12,7 @@ on:
       - 'experiments/issue-138/wasm-coverage.sh'
       - 'js/**'
       - 'rust/**'
+      - 'docs/protocol/native-pages*'
   pull_request:
     branches:
       - main
@@ -20,6 +21,7 @@ on:
       - 'experiments/issue-138/wasm-coverage.sh'
       - 'js/**'
       - 'rust/**'
+      - 'docs/protocol/native-pages*'
   workflow_dispatch:
 
 # Concurrency is set per job (issue #134): superseded read-only checks are

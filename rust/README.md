@@ -213,3 +213,9 @@ Legacy version sidecars preserve delimiter text, Unicode, NUL and newline in
 branch, parent and tag names. New branch markers use a versioned encoding and
 ordinary legacy markers remain readable; see the [marker protocol](../docs/protocol/version-metadata.md)
 for compatibility and upgrade limits.
+
+The portable `engine::paged::PagedLog<D>` stores ordered records as immutable
+native doublets pages without SQL. Feature `native-pages` adds the exclusive
+`FilePageDevice` adapter. Select a page quota with `PagedLog::with_max_pages`;
+explicit `log.into_device().close()?` reports uncertain close outcomes without
+flushing pending records. See [native page guarantees, costs and examples](../docs/ENGINE-NATIVE-PAGES.md).

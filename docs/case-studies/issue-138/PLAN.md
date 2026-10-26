@@ -271,7 +271,16 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
     repository checks and 16 actual-WASM configurations in each of Node/Bun/Deno.
     New-group writes stay constant after 0/1/32 preceding groups. See
     native-pages-js.txt and NATIVE-PAGES-PLAN.md. Rust/C# parity, redundant
-    repair, cross-language files and fresh CI remain unfinished.
+    repair and Rust/C# parity remain unfinished. All nine workflows pass on
+    `21847f9`; native-pages-js-ci.txt records exact timestamps and links.
+
+21. Rust native doublets pages now pass ten portable contracts on native and
+    actual WASM, five real-file contracts, the private uncertain-close control,
+    strict native/WASM Clippy and 221 repository checks. The public example
+    reopens the same files through Rust/Node/Bun/Deno in all 16 configurations.
+    The optional file feature adds no SQL dependency and no native dependencies
+    to WASM. Full native/WASM validation is running; C# parity and independently
+    selected redundant repair remain unfinished. See native-pages-rust.txt.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.

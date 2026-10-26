@@ -55,3 +55,6 @@ mod changes_fault;
 
 #[path = "../../tests/engine_constraint_index_tests.rs"]
 mod constraint_index;
+
+#[path = "../../tests/engine_paged_tests.rs"]
+mod engine_paged_tests;

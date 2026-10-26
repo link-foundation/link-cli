@@ -317,5 +317,9 @@ contracts. Full JS suites pass 197 tests and enforced 100% complete production
 coverage, plus strict types, 221 repository tests and Node/Bun/Deno actual-WASM
 conformance under 16 independent configurations. Constant new-group write
 counters and bounded process exits are recorded in native-pages-js.txt.
-Rust/C# parity, cross-language files, redundant physical repair and fresh CI
-remain unfinished; NATIVE-PAGES-PLAN.md tracks those and the wider gaps.
+All nine workflows pass on `21847f9`, recorded in native-pages-js-ci.txt.
+Rust now passes ten portable contracts both natively and in actual WASM, five
+native-file contracts, strict Clippy and 16 Rust/Node/Bun/Deno shared-file
+configurations. Full native/WASM suites are running. C# parity, redundant
+physical repair and fresh CI for these Rust additions remain unfinished;
+NATIVE-PAGES-PLAN.md tracks those and the wider gaps.

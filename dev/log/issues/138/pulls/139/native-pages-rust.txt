@@ -1,0 +1,24 @@
+Rust optional native doublets pages: focused validation
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Portable contracts: 10 passed natively and 10 passed in actual WASM.
+Native files: 5 passed, 1 ignored child entry; private close-fault control passed.
+Independent protocol vectors, finite I/O faults before/after every operation,
+malformed checksummed metadata/pages, canonical UTF-8/record structure, quotas,
+unchanged committed bytes and constant new-group I/O after 0/1/32 prior groups.
+All 16 independent state/revision/delta/constraint configurations, separate
+revisions in a shared flush, two-copy acknowledgement, exact names/history pins,
+rejected constraints without I/O, rollback and following commits.
+Bounded real child exits before/after flush, known-exited owner fencing and
+following writes; all native handles attempted before ownership release.
+
+Real shared-file example: Rust -> Node -> Bun -> Deno -> Rust; all 16
+configurations passed, each ending with 10 revisions and verified prior names.
+Strict native all-target/all-feature Clippy and WASM target Clippy passed.
+Rust/WASM formatting, optional-SQL dependency guards, actionlint and shellcheck
+passed. Complete repository suite: 221 passed; source-size and changesets passed.
+
+Full native/WASM suites and coverage are running. Their earlier run was
+interrupted by a worker restart and is not counted as a completed check.
+This evidence does not claim C# parity, redundant page repair, physical
+power-loss certification or whole-project 100% coverage.
