@@ -3080,6 +3080,10 @@ An isolated base archive plus only these three test-file changes passes all
 A stale archived Release assembly was detected by its 2,228-case count; its
 report is retained separately, and a forced rebuild verifies all final cases.
 See native-checkpoint-ci-fix.txt. This local pass does not establish the cause
-of the historical checkpoint-progress failure. Fresh Windows CI and every
-broader criterion remain unfinished; the following root-mirroring source is
-excluded from this test-patch verification.
+of the historical checkpoint-progress failure. The test correction is published
+as `6a0f7c9`; all nine exact-head workflows pass, including Windows with the
+unchanged physical probe and both scheduling controls. Rust and C# both pass
+Linux/macOS/Windows. native-checkpoint-ci-fix.txt records exact timestamps,
+permanent run URLs and saved job/log evidence. Every broader unmet criterion
+remains active; the following root-mirroring source is excluded from this
+test-patch verification.

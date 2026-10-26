@@ -36,4 +36,27 @@ all PR conversation/inline comments and reviews were refreshed; no new feedback.
 Historical Windows evidence and exact failure locations are retained separately
 in native-checkpoint-ci-before.txt. The sharing-order error is corrected; the
 historical checkpoint-progress observation has no established root cause yet.
-Fresh exact-head Windows CI and the broader issue requirements remain open.
+Fresh exact-head CI now passes all nine workflows on
+6a0f7c96850ca6b507f924fcfcbe429357b32864. All runs were created at
+2026-10-26T19:20:21Z, after this commit. C# Windows completed successfully at
+19:28:16Z, with Linux/macOS and package/format checks also passing. Rust Windows
+completed at 19:36:30Z; Rust packaging completed at 19:37:20Z.
+
+Permanent run URLs:
+https://github.com/link-foundation/link-cli/actions/runs/40385839526 (C#)
+https://github.com/link-foundation/link-cli/actions/runs/40385839435 (Rust)
+https://github.com/link-foundation/link-cli/actions/runs/40385839536 (WASM)
+https://github.com/link-foundation/link-cli/actions/runs/40385839452 (JS)
+https://github.com/link-foundation/link-cli/actions/runs/40385839382 (links)
+https://github.com/link-foundation/link-cli/actions/runs/40385839314 (workflows)
+https://github.com/link-foundation/link-cli/actions/runs/40385839355 (dependencies)
+https://github.com/link-foundation/link-cli/actions/runs/40385839403 (security)
+https://github.com/link-foundation/link-cli/actions/runs/40385839235 (docs)
+
+Saved latest-runs and native job JSON are under experiments/issue-138 with the
+native-checkpoint-ci-fix prefix. The complete successful C# log is
+ci-logs/native-checkpoint-ci-fix-csharp-40385839526.log. The unchanged physical
+probe and both independent controls pass Windows. This observed pass does not
+establish the cause of the earlier checkpoint-progress observation. Following
+mirrored-root changes require their own validation; broader issue criteria stay
+unfinished and the pull request remains draft.

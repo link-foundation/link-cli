@@ -522,7 +522,10 @@ The independent test correction closes before snapshotting and keeps that
 physical probe with unchanged deadlines, adding trace and positive/negative
 scheduling controls. An isolated base-plus-test-patch archive passes 2,229
 tests per C# configuration and 221 repository checks. See
-native-checkpoint-ci-before.txt and native-checkpoint-ci-fix.txt. Publish this
-atomic test correction and inspect fresh Windows logs before assigning a cause
-to its checkpoint-progress observation. The selected mirrored-root batch and
-every broader acceptance criterion continue independently.
+native-checkpoint-ci-before.txt and native-checkpoint-ci-fix.txt. The atomic
+test correction is now published as `6a0f7c9`: all nine workflows and
+both native platform matrices pass, including the unchanged physical probe and
+independent controls on Windows. native-checkpoint-ci-fix.txt records exact
+timestamps and run URLs. Its earlier checkpoint-progress observation still has
+no established cause. The selected mirrored-root batch and every broader
+acceptance criterion continue independently.

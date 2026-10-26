@@ -557,3 +557,11 @@ new Rust factory measures 214/221 lines, 5/6 branches and 57/58 functions. Compl
 project denominators remain below target. See NATIVE-CHECKPOINT-PLAN.md and
 native-checkpoint{,-before}.txt. Fresh native-batch CI and all wider unfinished
 acceptance criteria remain active; process exits do not certify hardware power loss.
+
+The native ownership CI correction now passes all nine exact-head workflows on
+`6a0f7c9`, including both native platform matrices. Windows runs the unchanged
+physical checkpoint probe and independent positive/negative scheduling controls.
+native-checkpoint-ci-fix.txt preserves exact timestamps, permanent URLs and saved
+logs. The earlier progress observation has no established cause. This evidence
+does not validate the following uncommitted mirrored-root feature or complete
+any wider unmet criterion.

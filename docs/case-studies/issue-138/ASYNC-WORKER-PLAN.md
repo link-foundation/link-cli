@@ -43,4 +43,7 @@ add trace and sequence diagnostics, and separately exercise callback-only
 positive scheduling and deliberately occupied-worker negative controls.
 All waits stay finite and unchanged; the child limits its heap and drains
 callbacks before releasing borrowed stores. See native-checkpoint-ci-before.txt
-for exact historical log locations. Fresh Windows evidence remains required.
+for exact historical log locations. All nine fresh workflows pass on `6a0f7c9`,
+including Windows with the unchanged physical probe and both independent
+scheduling controls. native-checkpoint-ci-fix.txt records exact timestamps, run
+URLs and saved logs. This pass does not establish the earlier failure's cause.

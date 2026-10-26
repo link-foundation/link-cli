@@ -29,7 +29,7 @@ The complete acceptance inventory remains active.
 - [x] Run full suites and measured coverage sequentially within the container
       budget; document fixed paths, upgrades, ownership and selected costs.
       Preserve complete reports and uncovered scope without reducing denominators.
-- [ ] Review local/PR diffs, refresh main/comments, commit only to the prepared
+- [x] Review local/PR diffs, refresh main/comments, commit only to the prepared
       branch, update the PR and inspect all exact-head workflows/native platforms.
       Keep the PR draft and every wider unmet criterion active.
 
@@ -74,3 +74,10 @@ canary without checkpoint progress; retain it and add independent controls and
 trace diagnostics before drawing a root-cause conclusion. See
 native-checkpoint-ci-before.txt for run timestamps, permanent URLs and exact log
 lines. Earlier all-pass CI does not validate this head.
+
+The separate test correction is published as `6a0f7c9`. All nine exact-head
+workflows pass, including both native Windows/Linux/macOS matrices. The physical
+checkpoint probe and independent positive/negative controls pass Windows with
+unchanged deadlines. See native-checkpoint-ci-fix.txt for timestamps, permanent
+run URLs and saved logs. The earlier progress observation still has no established
+cause. Root mirroring and every broader unmet criterion continue separately.
