@@ -57,6 +57,14 @@
     "./engine-file-paged-log": {
       "types": "./types/engine-file-paged-log.d.ts",
       "default": "./src/engine-file-paged-log.js"
+    },
+    "./engine-mirrored-pages": {
+      "types": "./types/engine-mirrored-pages.d.ts",
+      "default": "./src/engine-mirrored-pages.js"
+    },
+    "./engine-file-mirrored-pages": {
+      "types": "./types/engine-file-mirrored-pages.d.ts",
+      "default": "./src/engine-file-mirrored-pages.js"
     }
   },
   "files": [

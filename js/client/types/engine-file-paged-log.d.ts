@@ -1,8 +1,8 @@
-import { PagedCommitLog, type PageDevice, type PagedLogOptions } from './engine-paged-log.js';
+import { PagedCommitLog, type RepairPageDevice, type PagedLogOptions } from './engine-paged-log.js';
 /** Native Node/Bun/Deno file device. Parent must exist. Atomic exclusive
  * creation of path + '.writer' excludes all cooperating language providers.
  * Crash recovery requires fencing the old owner before explicit lock removal. */
-export class FilePageDevice implements PageDevice {
+export class FilePageDevice implements RepairPageDevice {
   constructor(path: string);
   readonly supportsDurableFlush: true;
   readonly dataLength: number;
@@ -12,6 +12,7 @@ export class FilePageDevice implements PageDevice {
   syncMetadata(slot: number): void;
   readPage(index: number): Uint8Array;
   writePage(index: number, bytes: Uint8Array): void;
+  repairPage(index: number, bytes: Uint8Array): void;
   syncData(): void;
   truncateData(length: number): void;
   close(): void;

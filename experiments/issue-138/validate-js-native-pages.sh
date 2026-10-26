@@ -12,5 +12,7 @@ done
 deno run --allow-all js/client/test/conformance/run.mjs > experiments/issue-138/paged-deno-conformance.log 2>&1
 python3 experiments/issue-138/make-native-page-vectors.py experiments/issue-138/native-pages-regenerated.json
 cmp docs/protocol/native-pages-v1.json experiments/issue-138/native-pages-regenerated.json
+python3 experiments/issue-138/make-mirrored-page-vectors.py experiments/issue-138/mirrored-pages-regenerated.json
+cmp docs/protocol/native-pages-mirrored-v1.json experiments/issue-138/mirrored-pages-regenerated.json
 git diff --check
 printf 'JS full coverage, types, dependency guard, repository tests, Node/Bun/Deno actual-WASM and independent vectors passed\n'

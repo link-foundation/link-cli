@@ -291,3 +291,11 @@ No direct merges or default-branch pushes. Preserve forward-moving history.
 
 This sequence tracks remaining work; passing one audit or CI batch does not
 complete the overall issue or authorize marking the draft ready early.
+
+23. The independently selected JS/TS mirror now passes 12 new contracts, 209
+    complete JS tests at enforced 100% production coverage on Node 26 and 24,
+    strict types and 221 repository checks. Each JS runtime passes 32 actual-WASM
+    configurations, including physical corruption, validated repair and following
+    commits. Independent mode-1 vectors and 36 damaged-copy cases are preserved.
+    Matching Rust/C# mirrors and all-language interchange remain in progress.
+    See MIRRORED-PAGES-PLAN.md and mirrored-pages-js.txt.

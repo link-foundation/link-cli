@@ -108,3 +108,22 @@ function nativePageTypes(device: PageDevice) {
   new PagedCommitLog(device, { maxPages: '1024' });
   return portable.read();
 }
+
+import type { RepairPageDevice } from '../types/engine-paged-log.js';
+import { MirroredPageDevice } from '../types/engine-mirrored-pages.js';
+import { FileMirroredPagedCommitLog } from '../types/engine-file-mirrored-pages.js';
+function mirroredPageTypes(primary: RepairPageDevice, secondary: RepairPageDevice, plain: PageDevice) {
+  const device: PageDevice = new MirroredPageDevice(primary, secondary);
+  const mode: 0 | 1 | undefined = device.metadataFlags;
+  device.readCheckedPage?.(0, 0n);
+  using file = new FileMirroredPagedCommitLog('mirrored-pages');
+  const log: CommitLog = new PagedCommitLog(device);
+  // @ts-expect-error Mirroring requires an explicit repair capability.
+  new MirroredPageDevice(plain, secondary);
+  // @ts-expect-error Checksums preserve all 64 bits.
+  device.readCheckedPage?.(0, 0);
+  // @ts-expect-error Unsupported format modes cannot silently select a fallback.
+  const unsupported: PageDevice = { ...primary, metadataFlags: 2 };
+  void unsupported;
+  return [mode, file.read(), log.read()];
+}

@@ -268,3 +268,8 @@ independent allocations of the same address with different values. A failed
 flush reports `LinksError.outcome === 'unknown'` and requires reopening the
 parent for outcome discovery. Close the branch and every session before closing
 its caller-owned journal adapter.
+
+The optional `engine-mirrored-pages` and `engine-file-mirrored-pages` entries add
+two-copy native page repair without importing filesystem or SQL dependencies
+into the universal entry. See [native page recipes](../../docs/ENGINE-NATIVE-PAGES.md)
+for ownership, synchronization, immutable mode and corruption limits.

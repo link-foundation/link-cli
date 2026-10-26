@@ -9,7 +9,9 @@ const path = process.argv.slice(2).find(arg => !arg.startsWith('--'));
 if (!path || !process.env.CLINK_WASM) throw new Error('provide a dedicated database path and CLINK_WASM web package');
 const binding = await import(pathToFileURL(join(process.env.CLINK_WASM, 'clink_wasm.js')).href);
 binding.initSync({ module: readFileSync(join(process.env.CLINK_WASM, 'clink_wasm_bg.wasm')) });
-using physical = new FilePagedCommitLog(path);
+const Provider = process.argv.includes('--mirrored')
+  ? (await import('../src/engine-file-mirrored-pages.js')).FileMirroredPagedCommitLog : FilePagedCommitLog;
+using physical = new Provider(path);
 using engine = new WasmEngine(binding, {
   isolation: 'snapshot', history: 'all', requireDurableFlush: true,
   stateStructure: process.argv.includes('--flat') ? 'flat' : 'shared',

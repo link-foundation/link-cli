@@ -58,6 +58,7 @@ if (mode === 'rust') {
     const { MemoryCommitLog, ReplicatedCommitLog } = await import('../../js/client/src/index.js');
     const { FileCommitLog } = await import('../../js/client/src/engine-file-log.js');
     const { FilePagedCommitLog } = await import('../../js/client/src/engine-file-paged-log.js');
+    const { FileMirroredPagedCommitLog } = await import('../../js/client/src/engine-file-mirrored-pages.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);
     const replica = new MemoryCommitLog();
     const memory = new ReplicatedCommitLog(new MemoryCommitLog(), [replica], { acknowledgements: 2 });
@@ -76,6 +77,11 @@ if (mode === 'rust') {
     pages.append('native \ufeff\0雪'); pages.flush(); pages.close();
     using reopenedPages = new FilePagedCommitLog(pagePath);
     assert.deepEqual(JSON.parse(reopenedPages.read()), ['native \ufeff\0雪']);
+    const mirroredPath = join(directory, 'mirrored-pages');
+    using mirrored = new FileMirroredPagedCommitLog(mirroredPath);
+    mirrored.append('mirrored 雪'); mirrored.flush(); mirrored.close();
+    using reopenedMirror = new FileMirroredPagedCommitLog(mirroredPath);
+    assert.deepEqual(JSON.parse(reopenedMirror.read()), ['mirrored 雪']);
     console.log('JS root, memory replication and native file/page reopening: no SQLite module loads');
   } finally {
     hook.deregister();

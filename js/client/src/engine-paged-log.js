@@ -1,50 +1,5 @@
-// SQL-free native doublets pages under the synchronous ordered-log contract.
-// Wire format and persistence assumptions: docs/protocol/native-pages.md.
-const PAGE = 4096, CELLS = 252, MAX_PAGES = Math.floor(Number.MAX_SAFE_INTEGER / PAGE);
-const encoder = new TextEncoder();
-const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
-const META_MAGIC = encoder.encode('LNKDMT01'), PAGE_MAGIC = encoder.encode('LNKDPG01');
-const EXTERNAL = 1n << 63n, PAYLOAD = (1n << 56n) - 1n;
-const fail = (text) => { throw new Error('invalid native pages: ' + text); };
-const same = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
-const view = (bytes) => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-const hash = (bytes, initial = 0xcbf29ce484222325n) => {
-  let result = initial;
-  for (const byte of bytes) result = BigInt.asUintN(64, (result ^ BigInt(byte)) * 0x100000001b3n);
-  return result;
-};
-const pageHash = (bytes) => hash(bytes.subarray(64), hash(bytes.subarray(0, 56)));
-const number = (value) => {
-  if (value > BigInt(Number.MAX_SAFE_INTEGER)) fail('integer exceeds portable range');
-  return Number(value);
-};
-const finish = (value) => { if (value !== undefined) throw new TypeError('page I/O must complete synchronously'); };
-
-function metadata(state) {
-  const bytes = new Uint8Array(128), data = view(bytes);
-  bytes.set(META_MAGIC); data.setUint32(8, 1, true); bytes.set(state.identity, 16);
-  for (const [index, value] of [state.generation, state.pages, state.rows, state.records, state.root, state.lastHash].entries())
-    data.setBigUint64(32 + index * 8, BigInt(value), true);
-  data.setBigUint64(120, hash(bytes.subarray(0, 120)), true);
-  return bytes;
-}
-function decodeMetadata(bytes) {
-  if (bytes === undefined || bytes.length === 0) return undefined;
-  if (!(bytes instanceof Uint8Array)) fail('metadata bytes');
-  if (bytes.length !== 128) return null;
-  const data = view(bytes);
-  if (hash(bytes.subarray(0, 120)) !== data.getBigUint64(120, true)) return null;
-  if (!same(bytes.subarray(0, 8), META_MAGIC) || data.getUint32(8, true) !== 1) fail('unsupported metadata version');
-  if (data.getUint32(12, true) !== 0 || bytes.subarray(80, 120).some(Boolean)) fail('unsupported metadata flags');
-  const values = Array.from({ length: 5 }, (_, i) => number(data.getBigUint64(32 + i * 8, true)));
-  const [generation, pages, rows, records, root] = values;
-  const lastHash = data.getBigUint64(72, true);
-  if (pages > MAX_PAGES || generation > pages || rows > pages * CELLS || records > rows || rows < pages || records < generation)
-    fail('metadata counts');
-  if (pages === 0 ? values.some(Boolean) || lastHash !== 0n
-    : generation === 0 || root <= (pages - 1) * CELLS || root > pages * CELLS) fail('metadata root');
-  return { identity: bytes.slice(16, 32), generation, pages, rows, records, root, lastHash };
-}
+// SQL-free ordered log; internal page wire helpers are shared with repair.
+import { PAGE, CELLS, MAX_PAGES, encoder, decoder, PAGE_MAGIC, EXTERNAL, PAYLOAD, fail, same, view, pageHash, number, finish, metadata, decodeMetadata } from './engine-page-format.js';
 
 export class PagedCommitLog {
   #device;
@@ -57,14 +12,16 @@ export class PagedCommitLog {
     if (!Number.isSafeInteger(maxPages) || maxPages < 1 || maxPages > MAX_PAGES) throw new RangeError('invalid native page limit');
     this.#maxPages = maxPages;
     this.#device = device;
+    const flags = device.metadataFlags ?? 0;
+    if (flags !== 0 && flags !== 1) fail('unsupported device mode');
     const raw = [device.readMetadata(0), device.readMetadata(1)];
-    const states = raw.map(decodeMetadata);
+    const states = raw.map((bytes) => decodeMetadata(bytes, flags));
     const valid = states.filter((state) => state !== null && state !== undefined);
     if (valid.length === 0) {
       if (states.some((state) => state === null) || device.dataLength !== 0) fail('no valid metadata decision');
       const identity = device.newDatabaseId();
       if (!(identity instanceof Uint8Array) || identity.length !== 16) fail('database identity');
-      this.#state = { identity: identity.slice(), generation: 0, pages: 0, rows: 0, records: 0, root: 0, lastHash: 0n };
+      this.#state = { flags, identity: identity.slice(), generation: 0, pages: 0, rows: 0, records: 0, root: 0, lastHash: 0n };
       finish(device.syncData());
       finish(device.writeMetadata(0, metadata(this.#state))); finish(device.syncMetadata(0));
     } else {
@@ -74,7 +31,7 @@ export class PagedCommitLog {
       if (this.#state.pages > maxPages) fail('committed pages exceed selected limit');
       const committedLength = this.#state.pages * PAGE;
       if (!Number.isSafeInteger(device.dataLength) || device.dataLength < committedLength) fail('truncated committed pages');
-      this.#readCommitted(false);
+      this.#readCommitted(false); finish(device.completeRecovery?.());
       if (device.dataLength > committedLength) { finish(device.truncateData(committedLength)); finish(device.syncData()); }
     }
   }
@@ -82,7 +39,10 @@ export class PagedCommitLog {
   #check() { if (this.#fenced) throw new Error('uncertain native page owner is fenced; reopen the log'); }
   read() {
     this.#check();
-    try { return JSON.stringify([...this.#readCommitted(true), ...this.#pending.map((entry) => entry.record)]); }
+    try {
+      const committed = this.#readCommitted(true); finish(this.#device.completeRecovery?.());
+      return JSON.stringify([...committed, ...this.#pending.map((entry) => entry.record)]);
+    }
     catch (error) { this.#fenced = true; throw error; }
   }
   append(record) {
@@ -137,7 +97,8 @@ export class PagedCommitLog {
     let index = state.pages - 1, expected = state.lastHash, generation = state.generation;
     let page, count = 0, consumed = 0, recordCount = 0;
     const load = () => {
-      page = this.#device.readPage(index);
+      page = this.#device.readCheckedPage === undefined
+        ? this.#device.readPage(index) : this.#device.readCheckedPage(index, expected);
       if (!(page instanceof Uint8Array) || page.length !== PAGE) fail('short page');
       const data = view(page), actualHash = pageHash(page);
       if (!same(page.subarray(0, 8), PAGE_MAGIC) || !same(page.subarray(8, 24), state.identity)

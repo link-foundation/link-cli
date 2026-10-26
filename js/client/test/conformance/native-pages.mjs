@@ -1,19 +1,22 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { WasmEngine, ReplicatedCommitLog, DeltaCommitLog } from '../../src/index.js';
 import { FilePagedCommitLog } from '../../src/engine-file-paged-log.js';
 
+import { FileMirroredPagedCommitLog } from '../../src/engine-file-mirrored-pages.js';
+
 /** Real native files and actual wasm-bindgen calls, without a SQL provider. */
 export async function nativePageConformance(binding) {
   const directory = mkdtempSync(join(tmpdir(), 'clink-wasm-pages-'));
-  class CountedLog extends FilePagedCommitLog {
-    flushes = 0;
-    flush() { this.flushes++; super.flush(); }
-  }
   try {
     let configuration = 0;
+    for (const Provider of [FilePagedCommitLog, FileMirroredPagedCommitLog]) {
+    class CountedLog extends Provider {
+      flushes = 0;
+      flush() { this.flushes++; super.flush(); }
+    }
     for (const stateStructure of ['flat', 'shared'])
       for (const revisionEncoding of ['snapshot', 'changes'])
         for (const constraintValidation of ['scan', 'indexed'])
@@ -21,6 +24,13 @@ export async function nativePageConformance(binding) {
             const path = join(directory, String(configuration++));
             const expected = [];
             for (let round = 0; round < 2; round++) {
+              if (round === 1 && Provider === FileMirroredPagedCommitLog) {
+                // Damage a committed primary copy only after both handles close.
+                for (const file of [path, path + '.replica']) {
+                  const bytes = readFileSync(file); bytes[56] ^= 1; writeFileSync(file, bytes);
+                  writeFileSync(file + '.meta0', new Uint8Array(17));
+                }
+              }
               using primary = new CountedLog(path);
               using replica = new CountedLog(path + '.replica');
               const copies = new ReplicatedCommitLog(primary, [replica], { acknowledgements: 2 });
@@ -65,6 +75,7 @@ export async function nativePageConformance(binding) {
               assert.deepEqual(engine.snapshot().rows, expected);
             }
           }
-    console.log('ok wasm native pages: 16 independent policies, real-file reopen, exact names, shared flush, replica acknowledgement, rejected constraints and following writes');
+    }
+    console.log('ok wasm native pages: 32 independent policies, plain/mirrored real-file reopen and repair, exact names, shared flush, replica acknowledgement, rejected constraints and following writes');
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }

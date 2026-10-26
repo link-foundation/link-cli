@@ -25,6 +25,7 @@ on:
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
+      - 'experiments/issue-138/make-mirrored-page-vectors.py'
   pull_request:
     branches:
       - main
@@ -43,6 +44,7 @@ on:
       - 'experiments/issue-138/etcd-*.mjs'
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
+      - 'experiments/issue-138/make-mirrored-page-vectors.py'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -124,6 +126,8 @@ jobs:
         run: |
           python3 ../../experiments/issue-138/make-native-page-vectors.py ../../experiments/issue-138/native-pages-regenerated.json
           cmp ../../docs/protocol/native-pages-v1.json ../../experiments/issue-138/native-pages-regenerated.json
+          python3 ../../experiments/issue-138/make-mirrored-page-vectors.py ../../experiments/issue-138/mirrored-pages-regenerated.json
+          cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
 
       - name: Unit tests and complete production coverage
         run: >-

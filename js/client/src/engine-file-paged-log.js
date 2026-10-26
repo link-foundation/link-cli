@@ -62,6 +62,14 @@ export class FilePageDevice {
     if (fstatSync(this.#files[0]).size !== index * 4096) throw new Error('native page file changed during ownership');
     writeExactly(this.#files[0], bytes, index * 4096);
   }
+  // Used only by a selected repair decorator after complete logical validation.
+  repairPage(index, bytes) {
+    this.#check();
+    if (!Number.isSafeInteger(index) || index < 0 || index >= Math.floor(Number.MAX_SAFE_INTEGER / 4096)
+      || !(bytes instanceof Uint8Array) || bytes.length !== 4096) throw new RangeError('invalid repair page');
+    if (fstatSync(this.#files[0]).size < index * 4096) throw new Error('repair cannot create a page hole');
+    writeExactly(this.#files[0], bytes, index * 4096);
+  }
   syncData() { this.#check(); fsyncSync(this.#files[0]); }
   truncateData(length) { this.#check(); ftruncateSync(this.#files[0], length); }
   close() {

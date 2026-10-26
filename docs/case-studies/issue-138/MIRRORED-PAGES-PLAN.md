@@ -1,12 +1,12 @@
 # Independently selected native page repair
 
-Required extension of NATIVE-PAGES-PLAN.md; implementation and evidence remain
-open. This strategy duplicates a selected native page device. It is not an
+Required extension of NATIVE-PAGES-PLAN.md; matching Rust/C# implementation
+and complete cross-language evidence remain open. This strategy duplicates a selected native page device. It is not an
 InnoDB doublewrite buffer and does not repair legacy mapped Doublets files.
 
-- [ ] Specify format mode and independent damaged/stale-copy vectors first.
-- [ ] Add finite failing repair contracts before implementing the decorator.
-- [ ] Preserve the default single-copy provider and its public file format.
+- [x] Specify format mode and independent damaged/stale-copy vectors first.
+- [x] Add finite failing JS repair contracts before implementing the decorator.
+- [x] Preserve the default single-copy provider and its public file format.
 - [ ] Implement matching Rust, C# and JS/TS device decorators and native recipes.
 - [ ] Test every write/sync/repair fault before and after its effect, repeated
       recovery, committed metadata/data corruption, short and stale valid copies,
@@ -45,3 +45,10 @@ separate and retains its own fixed-membership acknowledgement costs. Mirroring
 within one failure domain is not consensus, backup or proof against physical
 power loss. The persistence model must state which copy/device failures it
 covers, and tests must distinguish process exit from device power failure.
+
+JS production evidence: mirrored-pages-js.txt. All 209 tests pass with enforced
+100% production line/branch/function coverage in Node 26 and Node 24, strict
+TypeScript passes, and 221 repository checks pass. Each of Node/Bun/Deno passes
+32 actual-WASM configurations with real-file damage, repair and following commits.
+The public exports are independent of the universal root and SQL provider.
+The remaining language/interop boxes above are intentionally still open.

@@ -14,7 +14,8 @@ and Deno reopen the same files in all 16 example policy combinations. C# provide
 `PagedCommitLog` over caller-owned `IPageDevice`, with `FilePageDevice` for native
 files. The public C# library adds no SQL package. All five runtime examples
 reopen the same files and verify the preceding writers' exact records.
-Independently selected redundant page repair is in progress.
+JS/TS also provides independently selected redundant repair; matching Rust/C#
+decorators are in progress. See [mirrored mode](protocol/native-pages-mirrored.md).
 This provider does not implement
 repair of legacy mapped Doublets files, LSM or efficient page undo. Its two
 metadata decisions recover torn unacknowledged writes under the stated model;
@@ -107,3 +108,24 @@ files and bound real process-exit probes. The normal actual-WASM conformance
 runner exercises 16 combinations under all three JS runtimes, including two
 real-file opens, shared flushes, replica acknowledgement, rejected constraints
 and following writes. Finite tests are not physical power-loss certification.
+
+Select two-copy repair in JavaScript with a separate import:
+
+```js
+import { FileMirroredPagedCommitLog } from '@link-foundation/link-cli-client/engine-file-mirrored-pages';
+using log = new FileMirroredPagedCommitLog('existing-directory/mirrored-journal');
+```
+
+The portable `./engine-mirrored-pages` entry exports `MirroredPageDevice`, which
+wraps two distinct caller-owned `RepairPageDevice` instances. It exposes the same
+`PageDevice` contract to `PagedCommitLog`. A repair-capable device can overwrite
+existing pages or fill a contiguous missing suffix; the decorator invokes this
+privileged operation only after validating the complete logical prefix. Native
+files use `path` and `path + '.mirror'`, each with metadata and its own exclusive
+writer file. A plain reader rejects mirrored metadata rather than dropping the
+second-copy requirement. The JS example accepts `--mirrored` for new databases.
+Use the same immutable physical mode on every subsequent open. Both copies must
+be synchronized before acknowledgement; selected storage and writes double.
+One-copy damage is repairable only while the expected valid page/decision
+survives in the other copy. Losing both copies is outside that guarantee. This
+strategy adds neither consensus nor physical power-loss certification.
