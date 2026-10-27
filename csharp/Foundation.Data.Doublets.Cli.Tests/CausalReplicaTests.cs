@@ -18,12 +18,14 @@ public class CausalReplicaTests
         internal int Calls, Failure;
         internal Action? BeforeCompare;
         internal IReadOnlyList<JournalVersion>? Corrupt;
+        internal bool NullRead;
+        internal string Key = "replica";
         public IReadOnlyList<JournalVersion> Read(IReadOnlyList<string> keys)
-        { Assert.Equal(new[] { "replica" }, keys); return Corrupt ?? [new(Generation, Entries.ToArray())]; }
+        { Assert.Equal(new[] { Key }, keys); return NullRead ? null! : Corrupt ?? [new(Generation, Entries.ToArray())]; }
         public bool CompareExchange(IReadOnlyList<string> keys, IReadOnlyList<JournalVersion> expected,
             IReadOnlyList<IReadOnlyList<string>?> updates)
         {
-            Assert.Equal(new[] { "replica" }, keys); Calls++;
+            Assert.Equal(new[] { Key }, keys); Calls++;
             int failure = Failure; Failure = 0;
             if (failure == 1) throw new IOException("Before publication.");
             var before = BeforeCompare; BeforeCompare = null; before?.Invoke();
@@ -173,7 +175,8 @@ public class CausalReplicaTests
             Assert.Throws<InvalidDataException>(() => reader.Snapshot()); Assert.Equal(published, corrupt.Calls);
         }
         corrupt.Entries = original;
-        foreach (string entry in new[] { "[\"causal-receive1\",null]", "[\"causal-receive1\",[],null]",
+        foreach (string entry in new[] { "[]", "[0]", "[\"unknown\",null,null,null]", "[\"causal-write1\",0,[],null]",
+            "[\"causal-receive1\",null]", "[\"causal-receive1\",[],null]",
             "[\"causal-receive1\",[" + string.Join(",", Enumerable.Repeat(CausalVersion.Advance(1, Bob, 0, [], null).Encode(), 65)) + "]]" })
         {
             corrupt.Entries = [original[0], entry];
@@ -201,13 +204,26 @@ public class CausalReplicaTests
             Assert.Throws<InvalidDataException>(() => Owner(store, author));
         foreach (string key in new[] { null!, new string('x', 129), "bad/key" })
             Assert.Throws<InvalidDataException>(() => new CausalReplica(store, key, Alice));
-        Assert.Throws<InvalidDataException>(() => Owner(store, options: new(MaxEntries: 1)));
-        Assert.Throws<InvalidDataException>(() => Owner(store, options: new(MaxBytes: 0)));
+        foreach (string key in new[] { ".", "_", "-", "a.Z_0-9", new string('x', 128) })
+        {
+            var keyed = new Store { Key = key };
+            var accepted = new CausalReplica(keyed, key, Alice);
+            var written = accepted.Write(Token(1), 1, [], Row("accepted key"));
+            Assert.Equal(written.Encode(), accepted.Read(1).Single().Encode());
+        }
+        foreach (int limit in new[] { 1, 4097 })
+            Assert.Throws<InvalidDataException>(() => Owner(store, options: new(MaxEntries: limit)));
+        foreach (int limit in new[] { 0, 8_388_609 })
+            Assert.Throws<InvalidDataException>(() => Owner(store, options: new(MaxBytes: limit)));
         Assert.Throws<InvalidDataException>(() => Owner(store, options: new(RequireDurableFlush: true)));
         var owner = Owner(store); Assert.Empty(owner.Snapshot().Versions);
         Assert.Throws<InvalidDataException>(() => owner.Read(0));
         Assert.Throws<InvalidDataException>(() => owner.Write("invalid", 1, [], null));
-        foreach (var snapshot in new IReadOnlyList<JournalVersion>[] { [], [new(0, ["unexpected"])], [new(1, [null!])] })
+        store.NullRead = true;
+        Assert.Throws<InvalidDataException>(() => owner.Snapshot());
+        store.NullRead = false;
+        foreach (var snapshot in new IReadOnlyList<JournalVersion>[] { [], [null!], [new(1, null!)],
+            [new(0, ["unexpected"])], [new(1, [null!])] })
         { store.Corrupt = snapshot; Assert.Throws<InvalidDataException>(() => owner.Snapshot()); }
         Assert.Equal(0, store.Calls);
     }

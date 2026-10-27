@@ -1,0 +1,10 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Local-owner admission coverage after additional public controls.
+Production CausalReplica.cs is unchanged; complete validation also includes the separately staged Merkle component.
+Eight local-owner contracts remain; added assertions cover actual missing key, provider, journal and upper-limit branches.
+Debug: complete suite 2484 passed, zero failed/skipped; CausalReplica.cs 136/136 executable lines and 180/180 branches.
+Complete XML SHA256: c52b30dde34716aa09ec1c08982e0e633ed1c41bc6f39aab2b3878a5a41ad88c.
+Release: complete suite 2484 passed, zero failed/skipped; CausalReplica.cs 108/108 executable lines and 180/180 branches.
+Complete XML SHA256: 36261fe3f6a606f03c38e050ec3ad7d716adf41c711e0a77cbabac549c589c68.
+Final Debug/Release run completed 2026-10-27T15:59:59Z. Full project denominators remain included and below 100%; see causal-merkle.txt.
+Rejected malformed provider/journal shapes publish nothing; real allowed-key writes preserve following reads.
