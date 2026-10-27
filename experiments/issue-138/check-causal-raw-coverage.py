@@ -11,11 +11,14 @@ args = parser.parse_args()
 raw = args.report.read_bytes()
 print(f"{args.report}: {len(raw)} bytes; SHA256 {hashlib.sha256(raw).hexdigest()}")
 files = {}
+required = {"CausalBatch.cs", "CausalMerkle.cs", "CausalProjection.cs",
+            "CausalReplica.cs", "CausalVersion.cs"}
 for documents in json.loads(raw).values():
     for filename, classes in documents.items():
-        name = Path(filename).name
-        if name not in {"CausalBatch.cs", "CausalMerkle.cs", "CausalProjection.cs",
-                        "CausalReplica.cs", "CausalVersion.cs"}:
+        # Coverlet records the producer's paths, including Windows backslashes
+        # when its archive is inspected later on Linux or macOS.
+        name = Path(filename.replace('\\', '/')).name
+        if name not in required | {"CausalSession.cs"}:
             continue
         branches = files.setdefault(name, [])
         for methods in classes.values():
@@ -24,7 +27,7 @@ for documents in json.loads(raw).values():
                     branches.append(branch)
                     if branch["Hits"] == 0:
                         print(f"UNCOVERED {name}: {method}; source lines={len(evidence['Lines'])}; {branch}")
-assert len(files) == 5, sorted(files)
+assert required <= files.keys(), sorted(files)
 missing = 0
 for name, branches in sorted(files.items()):
     covered = sum(branch["Hits"] > 0 for branch in branches)

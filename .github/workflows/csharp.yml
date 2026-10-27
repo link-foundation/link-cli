@@ -288,6 +288,15 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage;Format=json,cobertura"
 
+      - name: Verify every compiled causal branch
+        working-directory: .
+        shell: bash
+        run: |
+          reports=(csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/*/coverage.json)
+          test "${#reports[@]}" -eq 1
+          test -f "${reports[0]}"
+          python3 experiments/issue-138/check-causal-raw-coverage.py "${reports[0]}"
+
       - name: Native file LSM cluster consumers
         working-directory: .
         run: |
