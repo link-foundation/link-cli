@@ -966,3 +966,17 @@ costs and bounds. Fresh exact-head platform CI, ordinary-links projection,
 global allocation, safe membership/history reclamation, generic mapped failures,
 legacy physical repair, complete coverage and all wider unmet R1-R12 criteria
 remain unfinished. PR139 stays draft and unmerged.
+
+
+Merkle address admission controls finish complete local validation at
+2026-10-27T16:39:15Z. Empty/21-digit canonical-frame mutations cover previously
+unobserved guards without changing production source. Native and actual WASM
+retain all denominators: 18269/19163 lines, 3592/4090 branches; 14245/16872,
+2961/3479 respectively. The component measures 512/516 lines, 114/116 branches
+and 63/67 functions on both surfaces; remaining unused closure instantiations
+are not fabricated into covered states. Both guard conditions now observe
+true=4 and false=36/32. Complete 1219 native/six doctest/745 actual-WASM and
+221 repository checks pass, as do strict native/WASM checks. The report hashes,
+commands and prior zero-true counts are in merkle-admission{,-before}.txt.
+This step precedes the new batch implementation work; full project 100% and
+all other unmet criteria remain unfinished, with fresh CI still required.

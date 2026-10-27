@@ -1040,3 +1040,13 @@ acceptance criterion continue independently.
     lines/branches/functions. causal-merkle.txt retains complete native/C#/linked-
     WASM denominators and remaining gaps. Fresh exact-head CI is required. Retain
     concurrent versions and deletions; absence never authorizes deletion.
+
+72. Add missing empty/overlong address admission controls to independently
+    authored Merkle leaf frames. Complete native/actual-WASM coverage passes
+    16:39:15Z with identical source and denominators. Both guards now observe
+    true/false; component coverage is 512/516 lines, 114/116 branches, 63/67
+    functions. The complete suites retain 1219 native, six doctests, 745 WASM
+    and 221 repository passes. Preserve merkle-admission{,-before}.txt;
+    MERKLE-ADMISSION-PLAN.md tracks publication/fresh CI. Continue ordinary
+    local batches and projection under CAUSAL-SESSIONS-PLAN.md; its models
+    and drafts do not complete the remaining runtime/physical/API criteria.

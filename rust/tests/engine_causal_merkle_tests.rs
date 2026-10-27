@@ -324,6 +324,8 @@ fn malformed_mixed_and_changed_proofs_reject() {
         for (index, changed) in [
             (1, Value::Null),
             (2, serde_json::json!(1)),
+            (2, serde_json::json!("")),
+            (2, serde_json::json!("100000000000000000000")),
             (2, serde_json::json!("01")),
             (2, serde_json::json!("0")),
             (2, serde_json::json!("18446744073709551616")),
@@ -336,7 +338,11 @@ fn malformed_mixed_and_changed_proofs_reject() {
         ] {
             let mut bad = original.clone();
             bad[index] = changed;
-            assert!(CausalMerkleSnapshot::decode_leaf(expected_root, &bad.to_string()).is_err());
+            assert!(
+                CausalMerkleSnapshot::decode_leaf(expected_root, &bad.to_string()).is_err(),
+                "invalid leaf field {index}: {}",
+                bad[index]
+            );
         }
     }
     let wire = cases["nodes"][1]["wire"].as_str().unwrap();

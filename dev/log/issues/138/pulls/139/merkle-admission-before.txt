@@ -1,0 +1,30 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Unchanged production source SHA256: 7eadb5caee24647d074859bcf151ed44e3a03d255d3f9aa0f04499a1be439f6c
+Report experiments/issue-138/causal-merkle-native-coverage.json: 21866311 bytes; SHA256 6134a7b00b2601b1d2454806f56ecc54d476ff8153e88fb99d941267b49a3418.
+Complete production lines: 18268/19163 (95.32954%).
+Complete production branches: 3590/4090 (87.77506%).
+Complete production functions: 2346/2515 (93.28032%).
+Complete production regions: 28154/30381 (92.66976%).
+Complete production instantiations: 12537/22433 (55.88642%).
+Merkle component lines: 511/516 (99.03101%).
+Merkle component branches: 112/116 (96.55172%).
+Merkle component functions: 63/67 (94.02985%).
+Merkle component regions: 808/837 (96.53524%).
+Merkle component instantiations: 66/146 (45.20548%).
+Address guard (415, 12, 415, 26): true=0, false=32.
+Address guard (415, 30, 415, 44): true=0, false=32.
+Report experiments/issue-138/causal-merkle-wasm-coverage.json: 24871507 bytes; SHA256 1951ca0142f22a281d68876b274f7834c0b137e40bd7408a6372bcb4058a5782.
+Complete production lines: 14244/16872 (84.42390%).
+Complete production branches: 2959/3479 (85.05318%).
+Complete production functions: 1764/2193 (80.43776%).
+Complete production regions: 21985/26635 (82.54177%).
+Complete production instantiations: 4482/7664 (58.48121%).
+Merkle component lines: 511/516 (99.03101%).
+Merkle component branches: 112/116 (96.55172%).
+Merkle component functions: 63/67 (94.02985%).
+Merkle component regions: 808/837 (96.53524%).
+Merkle component instantiations: 66/79 (83.54430%).
+Address guard (415, 12, 415, 26): true=0, false=32.
+Address guard (415, 30, 415, 44): true=0, false=32.
+All original production files and denominators remain in each complete report.
+Coverage outside these two guards, generic mapped failures and all wider unmet requirements remain open.
