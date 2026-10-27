@@ -230,8 +230,17 @@ impl<T> RawMem for PersistentFileMapped<T> {
             .ok_or(doublets::mem::Error::CapacityOverflow)?;
         std::alloc::Layout::array::<T>(capacity)
             .map_err(|_| doublets::mem::Error::CapacityOverflow)?;
+        // Upstream counts its minimum-page padding as initialized data. Only
+        // bytes known before that padding (or from successful growth) contain
+        // application values that the caller may skip when filling the tail.
+        let initialized = (self.initialized_bytes / mem::size_of::<T>() as u64)
+            .saturating_sub(previous_len as u64)
+            .min(addition as u64) as usize;
         self.flush.invalidate();
-        unsafe { self.inner.grow(addition, fill) }?;
+        unsafe {
+            self.inner
+                .grow(addition, |_, slices| fill(initialized, slices))
+        }?;
         self.initialized_bytes = self
             .initialized_bytes
             .max(mem::size_of_val(self.inner.allocated()) as u64);
@@ -267,8 +276,8 @@ impl<T> RawMem for PersistentFileMapped<T> {
         Self::Item: Clone,
     {
         // SAFETY: growth reports only genuinely initialized file items below
-        // `inited`; the closure fills every remaining item. Plain-data growth
-        // excludes minimum-page padding and unsuccessful extension attempts.
+        // `inited`; the closure fills every remaining item. Minimum-page
+        // padding is excluded for both plain and destructor-bearing values.
         unsafe { self.grow_filled_exact(cap, value) }
     }
 }

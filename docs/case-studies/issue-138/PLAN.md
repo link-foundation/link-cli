@@ -951,3 +951,18 @@ acceptance criterion continue independently.
     against GitHub and report complete metrics in csharp-platform-coverage.txt.
     CSHARP-PLATFORM-COVERAGE-PLAN.md retains platform differences. This does not
     complete the 100% requirement or infer a gain from retaining evidence.
+
+67. Correct logical initialization for destructor-bearing Rust mappings.
+    Three finite controls first fail against immutable 9bb985f and current
+    pre-fix 40d850f, using only valid transparent-u64 representations. Forward
+    the known initialized tail rather than upstream's minimum-page count.
+    Both feature configurations preserve original values, within/cross-page
+    growth, following edits, checked flush and exact destructor retirement.
+    Complete sequential checks finish 12:19:05Z with 1,197 native tests, six
+    doctests, 723 actual-WASM tests and all 221 repository checks passing.
+    All production coverage denominators remain included; actual metrics and
+    controls are retained in mapped-generic-initialization{,-before}.txt.
+    Publish this atomic correction and inspect fresh exact-head platform CI
+    under RUST-GENERIC-INITIALIZATION-PLAN.md. Genuine generic resize/partial
+    shrink failures, callback/destructor panic, representation safety and all
+    wider unmet criteria remain unfinished.

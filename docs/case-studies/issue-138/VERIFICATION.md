@@ -4148,3 +4148,32 @@ The immutable baseline independently rejects the absent Windows/macOS reports.
 This completes evidence retention only: native/C#/linked-WASM 100%, later
 changes' fresh CI and every other unmet criterion remain unfinished. PR139
 remains draft and unmerged.
+
+## Generic mapped logical initialization (2026-10-27T12:19Z)
+
+Three finite public controls first fail against immutable 9bb985f and current
+pre-fix 40d850f. Fresh/cross-page filled growth skips requested values; a raw
+callback reports 24 initialized tail items rather than the known eight. All
+representations are transparent u64 with distinct destructor counters, so every
+baseline byte pattern is valid. Negative controls never panic inside an
+initialization callback or persist pointers. The generic path now forwards the
+known initialized byte boundary, with no new allocation, copying, lock or I/O.
+
+Both feature configurations pass all three new and existing admission, growth,
+flush and empty/shrink controls; nine ownership units and the bounded EFBIG
+probe pass. Complete sequential validation finishes 12:19:05Z: 1,197 native
+tests, six doctests, 723 actual-WASM tests and all 221 repository checks pass.
+Formatting, strict native/WASM Clippy, source/changeset, dependency freshness,
+workflow/ShellCheck and whitespace checks pass. Twenty-two native entries are
+parent-driven; one legacy doctest remains ignored.
+
+Complete native LLVM reports 17,168/18,051 lines, 3,294/3,782 branches,
+2,218/2,380 functions, 26,413/28,565 regions and 12,397/22,130 instantiations.
+Complete linked WASM reports 13,144/15,760 lines, 2,663/3,171 branches,
+1,636/2,058 functions, 20,244/24,819 regions and 4,342/7,496 instantiations.
+All production denominators remain included, including native mapped source
+with zero linked-WASM coverage. mapped-generic-initialization{,-before}.txt
+preserves commands, component metrics and limits. Generic real resize/partial
+shrink failures, nonzero callback/destructor panic, arbitrary persisted
+representations and physical power-loss repair remain unfinished. Fresh
+platform CI and every wider R1-R12 gap remain active; PR139 stays draft/unmerged.
