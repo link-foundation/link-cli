@@ -1,0 +1,41 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact head: 80c41ad3196cb87f4f5291eb16e459bbd741afce
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40558747229
+
+linux: https://github.com/link-foundation/link-cli/actions/runs/40558747229/job/122382118519
+experiments/issue-138/ci-logs/causal-batch-csharp-linux-12757789878.zip: 136159 bytes; SHA256 0d2d42ef9c1149d9051858a385452fa0d1e2170139c006284d3e5af62deb84d4.
+d7d0804e-14a9-490e-824c-5cf522c8db19/coverage.cobertura.xml: 2316494 bytes; SHA256 8bec509ad9c45cf4e96753db32d55b725aac30fbc3f174be18a992237c71ac08.
+Complete lines: 7735/7936 (97.46724%).
+Complete branches: 6396/6859 (93.24974%).
+CausalVersion.cs: distinct source lines 74/74; source-line branch records 138/138.
+CausalReplica.cs: distinct source lines 108/108; source-line branch records 180/180.
+CausalMerkle.cs: distinct source lines 160/160; source-line branch records 246/246.
+CausalBatch.cs: distinct source lines 123/123; source-line branch records 178/178.
+Class aggregate Foundation.Data.Doublets.Cli.Engine.CausalBatch: branch-rate=0.9945999999999999; complexity=196.
+
+macos: https://github.com/link-foundation/link-cli/actions/runs/40558747229/job/122382118629
+experiments/issue-138/ci-logs/causal-batch-csharp-macos-12758846294.zip: 136154 bytes; SHA256 a6f3e6aebcbb9e01c5c17922cfbb66e6cedac7bd0ab2947f6d5776370e21f092.
+057934cc-26c2-4ce8-8a9b-dca317f2b617/coverage.cobertura.xml: 2316461 bytes; SHA256 f5530eca136a2a11ad5bff8f7cd3fac641478128c265fe8540f9e8f9e43992ee.
+Complete lines: 7730/7936 (97.40423%).
+Complete branches: 6391/6859 (93.17685%).
+CausalVersion.cs: distinct source lines 74/74; source-line branch records 138/138.
+CausalReplica.cs: distinct source lines 108/108; source-line branch records 180/180.
+CausalMerkle.cs: distinct source lines 160/160; source-line branch records 246/246.
+CausalBatch.cs: distinct source lines 123/123; source-line branch records 178/178.
+Class aggregate Foundation.Data.Doublets.Cli.Engine.CausalBatch: branch-rate=0.9945999999999999; complexity=196.
+
+windows: https://github.com/link-foundation/link-cli/actions/runs/40558747229/job/122382118801
+experiments/issue-138/ci-logs/causal-batch-csharp-windows-12760910361.zip: 136949 bytes; SHA256 f882261f55f945bd8f8a1eb64aba3065bb6558aa98dc1fd1d5a7e19b9c4d622d.
+d881374a-4bd7-474a-8cd1-831708c790e1/coverage.cobertura.xml: 2359058 bytes; SHA256 f5dc0227aa19f57e8b22056abb20c6b691fa0d92d75a690ceb39a0cfd6747361.
+Complete lines: 7721/7936 (97.29083%).
+Complete branches: 6376/6859 (92.95816%).
+CausalVersion.cs: distinct source lines 74/74; source-line branch records 138/138.
+CausalReplica.cs: distinct source lines 108/108; source-line branch records 180/180.
+CausalMerkle.cs: distinct source lines 160/160; source-line branch records 246/246.
+CausalBatch.cs: distinct source lines 123/123; source-line branch records 178/178.
+Class aggregate Foundation.Data.Doublets.Cli.Engine.CausalBatch: branch-rate=0.9945999999999999; complexity=196.
+
+Class aggregate counters can include methods without source lines that the Cobertura source-line listing omits.
+Source-line branch sums alone do not prove complete compiled branch coverage. Raw JSON investigation remains active; all whole-project native/C#/WASM gaps remain unfinished.
+These immutable archives cover the published batch head, before the causal projection changes.
+experiments/issue-138/causal-batch-csharp-artifacts-current.json: 2884 bytes; SHA256 2bb08f0c4932936464dde263c1127d4793fba6804787087967fe749b64cd7ff0.

@@ -16,6 +16,10 @@ compare-exchange. Reject stale bases, child-token collisions and invalid later
 edits before publication; discover exact retries after lost replies and later
 writes. Preserve standalone owner compatibility and caller-owned store lifetime.
 
+Select owned causal row/name projection with explicit conflict rejection or
+maximum-dot selection. Preserve complete retained siblings including deletions,
+validate complete input before pruning, and bound version count and wire bytes.
+
 Preserve the current mapped view and owned file handle when capacity growth is
 rejected. Construct a replacement before publishing its pointer, retaining
 flush, retry, following edits and exact used-length disposal after an I/O error.

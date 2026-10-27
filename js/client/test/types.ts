@@ -1,3 +1,17 @@
+import { CausalProjection, type CausalProjectedRow } from '../types/engine-causal-projection.js';
+function causalProjectionTypes(values: readonly CausalValue[]) {
+  const projection = new CausalProjection(values, 'max-dot', { maxVersions: 64 });
+  const rows: CausalProjectedRow[] = projection.rows();
+  const retained: CausalValue[] = projection.versions();
+  // @ts-expect-error Conflict policy is explicit.
+  new CausalProjection(values);
+  // @ts-expect-error Policy cannot silently fall back.
+  new CausalProjection(values, 'latest');
+  // @ts-expect-error Row indexes preserve the full canonical u64 range.
+  const invalid: CausalProjectedRow = { index: 1, source: '0', target: '0', name: null };
+  void invalid;
+  return [rows, retained, projection.selected()];
+}
 import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links } from '../types/index.js';
 import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';

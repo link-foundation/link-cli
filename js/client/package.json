@@ -106,6 +106,10 @@
       "types": "./types/engine-causal-merkle.d.ts",
       "default": "./src/engine-causal-merkle.js"
     },
+    "./engine-causal-projection": {
+      "types": "./types/engine-causal-projection.d.ts",
+      "default": "./src/engine-causal-projection.js"
+    },
     "./engine-causal-batch": {
       "types": "./types/engine-causal-batch.d.ts",
       "default": "./src/engine-causal-batch.js"

@@ -30,6 +30,9 @@ snapshots, canonical proof frames and resumable differing-range pulls. See
 The selected `./engine-causal-batch` export stages up to 64 ordered row edits
 and publishes the owner and batch receipts with one local two-key CAS. See
 [request identity, complete-journal costs and limits](../../docs/ENGINE-CAUSAL-BATCHES.md).
+The separate `./engine-causal-projection` export supplies owned rows and names
+under explicit conflict rejection or maximum-dot selection while retaining every
+causal sibling. See [visibility, bounds and costs](../../docs/ENGINE-CAUSAL-PROJECTION.md).
 Ordinary links projection and safe reclamation remain in progress.
 
 ## Use

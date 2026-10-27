@@ -95,3 +95,6 @@ mod engine_mirrored_pages_tests;
 mod causal_batch;
 #[path = "../../tests/engine_compaction_tests.rs"]
 mod compaction;
+
+#[path = "../../tests/engine_causal_projection_tests.rs"]
+mod causal_projection;

@@ -13,6 +13,8 @@ pub mod causal;
 pub mod causal_batch;
 #[cfg(feature = "causal-merkle")]
 pub mod causal_merkle;
+#[cfg(feature = "causal-projection")]
+pub mod causal_projection;
 #[cfg(feature = "causal")]
 pub mod causal_replica;
 mod changes;

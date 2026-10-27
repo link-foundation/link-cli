@@ -31,10 +31,13 @@ implementation criterion rather than an external dependency.
       A real physical-LSM contract also guards opaque owner generations:
       receipt-only publication need not change that key, and a following
       change can jump over another key's generation.
-- [ ] Add an owned snapshot projection with explicit conflict rejection or a
+- [x] Add an owned snapshot projection with explicit conflict rejection or a
       deterministic dot order. Choose from complete causal siblings, including
       retained deletion markers, before deciding whether a row is visible.
       Projection must not mutate or discard the retained causal evidence.
+      Five matching native/C#/Node/Bun/Deno/actual-WASM contracts and all 132
+      independent vectors pass; complete 19:07:39Z validation is recorded in
+      causal-projection.txt and CAUSAL-PROJECTION-PLAN.md.
 - [ ] Implement the standard links and names session APIs over a private
       write set and one local batch publication. Keep conflict policy and
       reserved address allocation explicit; independent writers require
@@ -54,8 +57,11 @@ implementation criterion rather than an external dependency.
       1226 native tests plus six doctests, 752 actual WASM, 2491 C# per
       configuration, 681 Node and 221 repository checks pass. The causal-batch
       receipts retain all denominators, admission controls and remaining gaps.
-- [ ] Commit/push the prepared branch and inspect all
-      exact-head platform checks and actual coverage artifacts.
+- [x] Commit/push the local batch step and inspect all
+      exact-head platform checks and actual coverage artifacts. Published
+      80c41ad passes all nine workflows, native Linux/macOS/Windows jobs and
+      three independently verified C# coverage archives. Subsequent projection
+      and session changes still require their own fresh exact-head CI.
 
 Local atomic publication does not make separately transferred remote leaves
 atomic as a group. Causal convergence does not establish global uniqueness,

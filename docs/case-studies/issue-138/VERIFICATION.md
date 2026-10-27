@@ -4373,8 +4373,11 @@ covers 362/366 lines, 88/88 branches, 29/32 functions and 540/567 regions on
 both surfaces; unused closure instantiations remain in the denominator.
 
 C# Debug covers 10024/10333 lines and 6455/6900 branches; Release covers
-7735/7936 and 6396/6859. All four causal components cover every executable
-line/branch in both configurations. Initial Release coverage exposes a null
+7735/7936 and 6396/6859. All four causal components cover all reported source lines and source-line
+branch conditions in both configurations. A subsequent audit of the actual
+80c41ad platform archives finds a 99.46% Release batch class aggregate despite
+178/178 source-line branch conditions; raw method records are being investigated.
+The source-line totals alone do not establish complete compiled branch coverage. Initial Release coverage exposes a null
 retry-token path (7/8 outcomes); the existing contract gains that control and
 both complete configurations rerun. Native coverage exposes the untested
 65-supplied-observation rejection (true=0,false=334). Seven focused contracts
@@ -4399,3 +4402,58 @@ leaf transfers atomic as a group. Fresh platform CI and actual coverage archives
 ordinary links/name projection and sessions, global allocation, safe reclamation,
 generic mapped failures, full project 100% and all wider unmet criteria remain
 unfinished. PR139 stays draft and unmerged.
+
+
+Published batch head 80c41ad passes all nine workflows created at
+2026-10-27T18:18:31Z; the final Rust workflow completes 18:54:08Z.
+causal-batch-ci.txt retains exact run/job identities, complete native platform
+result groups and downloaded log hashes. All three actual C# coverage archives
+verify GitHub metadata, byte counts and SHA256 in
+causal-batch-platform-coverage.txt. These workflows validate the published
+batch implementation; they do not validate subsequent projection/session work
+or close any wider unmet criterion. The Release batch aggregate gap remains
+explicit despite complete source-line branch conditions. PR139 stays draft.
+
+
+Owned causal projection completes local validation at 2026-10-27T19:07:39Z.
+Five matching native Rust/C#/Node/Bun/Deno/actual-WASM contracts consume 132
+independent vectors after missing-API and wrong-visibility-order controls.
+The independent model checks 128 finite scenarios and 3914 permutations and
+duplicate replays under 192 MiB address-space and 8 MiB stack limits. Selection
+includes deletion markers before visibility, retains losing siblings, validates
+all supplied contradictions before pruning, and owns every returned snapshot.
+Complete input limits are 4096 versions/8 MiB and 64 supplied versions per row;
+exact valid maxima pass and the next supplied input rejects.
+
+Complete suites pass 1231 native tests plus six doctests, 757 actual-WASM,
+2496 C# per Debug/Release configuration, 686 Node and 221 repository checks.
+JS enforces 100% production lines/branches/functions. The new projection covers
+69/69 lines, 16/16 branches and 9/9 functions on native/WASM, while regions
+remain 108/109 and native instantiations 9/18 (actual-WASM 9/9). C# projection
+covers all reported lines, all 42 branch edges and class aggregates in both
+configurations. The existing Release batch class aggregate remains 99.46%;
+complete source-line branch conditions alone do not prove compiled coverage.
+
+All production denominators remain included. Native LLVM reports 18700/19598
+lines, 3696/4194 branches, 2384/2556 functions, 28803/31057 regions and
+12580/22534 instantiations. Complete linked WASM reports 14676/17307 lines,
+3065/3583 branches, 1802/2234 functions, 22634/27311 regions and 4535/7734
+instantiations. C# Debug reports 10063/10372 lines and 6497/6942 branches;
+Release reports 7769/7970 and 6438/6901. causal-projection{,-before}.txt retains
+commands, complete results and raw byte counts/SHA256. Initial strict Clippy
+rejects test-only remainder predicates; using the existing is_multiple_of
+pattern resolves them before the full run. No production threshold is lowered.
+
+Formats, strict native/WASM Clippy, TS declarations, source/release checks,
+127 fresh dependencies/locks, workflow/ShellCheck and whitespace pass. The
+SQL-free cache recipe passes Node, Bun and Deno, including concurrent deletion,
+explicit observed resolution and a refreshed view independent of its old view.
+Deno requires environment permission to locate the temporary directory. CI
+runs the Node recipe. Bare Rust excludes JSON/SQL/SHA; selecting projection adds
+neither SQL nor SHA. ENGINE-CAUSAL-PROJECTION.md documents O(V log V + sum(r²W))
+merge/encoding costs, O(VW) retained space and owned-read allocation.
+
+Fresh exact-head platform CI, ordinary mutable session APIs and their physical
+matrix, global allocation, safe membership/history reclamation, generic mapped
+failures, full project 100% and every wider unmet criterion remain unfinished.
+PR139 stays draft and unmerged.

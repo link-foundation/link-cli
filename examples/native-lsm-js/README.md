@@ -90,3 +90,14 @@ Unicode names, retained deletions, whole-batch retry after later edits, an empty
 batch and process exits immediately before/after publication. Every child is
 reaped before explicit stale-marker quarantine. Local batch atomicity does not
 make independently transferred remote leaves atomic as a group.
+
+Run `node examples/native-lsm-js/projection-cache.mjs` from the repository root
+for an owned read-only causal cache over a temporary SQL-free physical store.
+Bun runs the same file; Deno uses `deno run --allow-read --allow-write --allow-env` followed
+by that path. The example retains concurrent live/deleted evidence, requires an
+explicit visibility policy, resolves it through an observed batch write and
+refreshes the cache. The old view remains unchanged. It closes the store and
+removes its own temporary directory. See the
+[projection guarantees and costs](../../docs/ENGINE-CAUSAL-PROJECTION.md).
+The example selects required durable flush and therefore needs a platform where
+the physical provider advertises that capability.

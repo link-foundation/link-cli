@@ -1,0 +1,36 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact published head: 80c41ad3196cb87f4f5291eb16e459bbd741afce; workflows created 2026-10-27T18:18:31Z.
+Broken Link Checker: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747263
+C# CI/CD Pipeline: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747229
+Dependencies: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747410
+Docs: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747671
+JS client CI: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747455
+Rust CI/CD Pipeline: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747374
+Security: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747230
+WebAssembly CI: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747279
+Workflows: PASS https://github.com/link-foundation/link-cli/actions/runs/40558747268
+
+macos-26: https://github.com/link-foundation/link-cli/actions/runs/40558747374/job/122382826889
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 26 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1208 passed, 0 failed, 17 ignored across 148 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+experiments/issue-138/ci-logs/causal-batch-rust-122382826889.log: 1632827 bytes; SHA256 e1fd060a99c92874655c88322b1a4660f3577866eb74d083cb073db1ec8d4d8f; 8409 lines.
+
+ubuntu-24.04: https://github.com/link-foundation/link-cli/actions/runs/40558747374/job/122382827038
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 26 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1232 passed, 0 failed, 23 ignored across 148 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+experiments/issue-138/ci-logs/causal-batch-rust-122382827038.log: 1730814 bytes; SHA256 8ab2a62f62e2e0e8ea5db207f7208595768a289edf88a6f0256a761a2f3d6a40; 8653 lines.
+
+windows-2025: https://github.com/link-foundation/link-cli/actions/runs/40558747374/job/122382826807
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 25 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1205 passed, 0 failed, 17 ignored across 148 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+experiments/issue-138/ci-logs/causal-batch-rust-122382826807.log: 1624706 bytes; SHA256 83c90370161396429b0c999e548354f90789f424128855dad8c3aa13a686ec18; 8442 lines.
+
+All-features includes six passing doctests and one existing ignored doctest; the separate doc command repeats them.
+Focused no-default-feature tests are recorded separately and are not added to the full-suite count.
+Actual Linux/macOS/Windows C# archives are admitted independently in causal-batch-platform-coverage.txt.
+All reported C# source-line branch conditions are covered, but the Release batch class aggregate is below 100%; raw method records are investigated separately.
+These workflows validate the published batch implementation, not subsequent projection/session work or all unmet R1-R12 criteria.
+experiments/issue-138/causal-batch-runs-current.json: 1637 bytes; SHA256 ffb2dc760f013f483491231fc8d0f3d0958b9b9e8558af83df02730bb1e6082c.

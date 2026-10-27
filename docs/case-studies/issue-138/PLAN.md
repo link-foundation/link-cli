@@ -1072,6 +1072,23 @@ acceptance criterion continue independently.
     repository checks pass. The causal-batch receipts retain every complete
     denominator, missing null/65-observation admission controls, interrupted
     driver evidence and final reruns. JS enforces 100%; all four C# causal
-    components cover every executable line/branch. Publication and exact-head
-    platform CI remain required. Ordinary links/name sessions and all wider
-    unmet criteria remain unfinished.
+    components cover all reported source lines/source-line branch conditions.
+    The Release batch class aggregate is 99.46% despite those complete source
+    conditions; raw method records are being investigated. Published 80c41ad
+    passes all nine workflows, including native Linux/macOS/Windows jobs.
+    Actual three-platform C# coverage archives and native job logs are verified
+    in causal-batch-ci.txt and causal-batch-platform-coverage.txt. Ordinary
+    links/name sessions and all wider unmet criteria remain unfinished.
+
+
+74. Publish selected owned causal row/name projection under
+    CAUSAL-PROJECTION-PLAN.md. Missing-API tests precede all three ports,
+    and a frozen filter-before-select control resurrects a losing live row.
+    Five matching portable contracts consume all 132 independent vectors.
+    Complete 19:07:39Z validation passes 1231 native tests plus six doctests,
+    757 actual-WASM, 2496 C# per configuration, 686 Node and 221 repository
+    checks. Native/WASM projection lines/branches/functions and C# projection
+    lines/branches are complete; regions/instantiations and whole-project
+    coverage gaps remain in causal-projection.txt. The SQL-free physical cache
+    recipe passes Node/Bun/Deno. Fresh exact-head CI, ordinary mutable sessions
+    and every wider unmet criterion remain unfinished.

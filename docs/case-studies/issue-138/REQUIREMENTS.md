@@ -100,7 +100,7 @@ gaps remain unfinished even when an optional SQLite configuration passes.
 | R5 | Study competitor source and best strategies | Primary documentation and source survey covering SQLite, PostgreSQL, RocksDB, Redis, etcd and TiKV; costs/guarantee comparison and reusable component evaluation. | In progress; expanded primary-source audit and implemented independent-session group commit distinguish InnoDB flush sharing, MongoDB durable acknowledgement, Cassandra ordinary quorum/repair and current Accord routing; see RESEARCH.md |
 | R6 | Same API / costs only for selected guarantees | Keep existing bare-store cache path; add optional control/history/journal/replication composition with explicit complexity and allocation costs. | Existing raw interfaces implemented by staged sessions; optional journals, delta encoding and replica decorators supplied. Bare stores incur no engine overhead. Delta encoding reduces physical bytes for localized edits. Independently selected shared immutable rows retain unchanged paths in candidates, scans and history; independently selected changed-row encoding avoids full serialization for localized edits; independently selected persistent constraint indexes avoid full validation scans for small edits, allocating only for selected constraints; default scan costs remain explicit. An independently selected immutable-object cache avoids repeat data downloads while retaining fresh catalog reads and complete staging comparisons; zero retains no cache. Serializable read-set validation is independently selected and tracks only observed addresses; scans retain revision checks. Conflict metadata is skipped for exclusive/optimistic whole-revision serializable modes, allocated lazily for overlapping sessions that need it, and reclaimed after the last validation. Optional point-write ownership allocates only for selected sessions/addresses, releases on every terminal path and rejects use in uncoordinated cluster workspaces. Independently selected immutable sorted runs share array roots and merge effective edits, with explicit scan-materialization and carry costs. Finer independent validation/history decorator composition remains to study. |
 | R7 | Implement all supported languages | Native Rust and C# library surfaces, portable JS/TS surface and declared backend capabilities; shared wire vectors and scenario tests. | Staged engine surfaces implemented. Compiled WASM conformance passes Node, Bun and Deno; shared fixtures are consumed by Rust, C# and actual WASM. Ordinary legacy transactions/history now execute in actual WASM using portable timestamps; shared fault/recovery contracts verify checkpoint ownership. Newly added distributed strategies must maintain parity. |
-| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | Latest complete local suites pass 1219 native tests plus six doctests, 745 actual-WASM, 2484 C# per configuration and 666 JS. JS enforces 100% production lines/branches/functions. All three causal C# components cover every executable line/branch in Debug/Release. Complete native LLVM (18268/19163 lines, 3590/4090 branches), linked WASM (14244/16872, 2959/3479) and C# remain below 100%. causal-merkle.txt and VERIFICATION.md retain every complete denominator; fresh platform CI remains required. |
+| R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | Latest complete suites pass 1231 native tests plus six doctests, 757 actual-WASM, 2496 C# per configuration and 686 JS. JS enforces 100% production lines/branches/functions. The new projection covers all measured lines/branches/functions on native/WASM and all C# branches; retained regions/instantiations and the Release batch aggregate still have gaps. Complete native LLVM (18700/19598 lines, 3696/4194 branches), linked WASM (14676/17307, 3065/3583) and C# remain below 100%. causal-projection.txt and VERIFICATION.md retain every complete denominator; fresh platform CI remains required. |
 | R9 | Document each scenario | Runnable cache, durable store and replicated/sharded examples with failure semantics, ownership and persistence settings. | docs/ENGINE-STRATEGIES.md, docs/ENGINE-CLUSTERS.md and Rust/C#/JS examples cover implemented options, including consensus-backed shard groups. Further deployment strategies need their own recipes. |
 | R10 | Horizontal cluster, shared and shared-nothing options | TCP/advisory shared stores, independent shard namespaces, replicated logs and consensus-backed atomic shard groups. | Shared coordination and immutable journals on independently routed data groups implemented in all languages. Real leader failover, data-group outage, atomic pointer publication and native/WASM interoperability verified. Optional bounded immutable-object caching avoids repeated data downloads and supports previously verified reads during a data-group outage; catalog availability remains required. Selected epoch-fenced reclamation retires unprotected objects through complete bounded namespace listings and exact-generation deletion. Catalog throughput, whole-journal updates/replay and listing bounds still limit scale; automatic balancing and multi-catalog transactions are not supplied. |
 | R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus, cross-shard coordination and a selected SQLite pager/WAL component are implemented. Native Rust/C#/JS LSM directory discovery and five-runtime whole-store interchange now pass locally; legacy physical repair and other listed algorithm gaps remain unfinished. |
@@ -993,8 +993,9 @@ blocked opens and one hundred recovered sequences pass all five runtimes.
 
 Complete suites pass 1226 native tests plus six doctests, 752 actual WASM,
 2491 C# per configuration, 681 Node and 221 repository checks. JS enforces
-100% production coverage. All four C# causal components cover every executable
-line/branch, but complete project coverage remains below 100%. Native measures
+100% production coverage. All four C# causal components cover all reported source lines and source-line
+branch conditions. The batch class aggregate in Release is 99.46%; raw method
+records are being investigated. Complete project coverage remains below 100%. Native measures
 18631/19529 lines and 3680/4178 branches; linked WASM 14607/17238 and 3049/3567;
 C# Debug 10024/10333 and 6455/6900, Release 7735/7936 and 6396/6859.
 causal-batch{,-before}.txt retains raw hashes, admission-before controls and
@@ -1004,3 +1005,58 @@ transfer as an atomic group through per-leaf exchange. Fresh platform CI,
 ordinary links/name projection and mutable sessions, global allocation,
 safe membership/history reclamation, generic mapped failures, full coverage
 and every wider unmet criterion remain unfinished. PR139 stays draft/unmerged.
+
+
+Published batch head 80c41ad passes all nine workflows created at
+2026-10-27T18:18:31Z; the final Rust workflow completes 18:54:08Z.
+causal-batch-ci.txt retains exact run/job identities, complete native platform
+result groups and downloaded log hashes. All three actual C# coverage archives
+verify GitHub metadata, byte counts and SHA256 in
+causal-batch-platform-coverage.txt. These workflows validate the published
+batch implementation; they do not validate subsequent projection/session work
+or close any wider unmet criterion. The Release batch aggregate gap remains
+explicit despite complete source-line branch conditions. PR139 stays draft.
+
+
+Owned causal projection completes local validation at 2026-10-27T19:07:39Z.
+Five matching native Rust/C#/Node/Bun/Deno/actual-WASM contracts consume 132
+independent vectors after missing-API and wrong-visibility-order controls.
+The independent model checks 128 finite scenarios and 3914 permutations and
+duplicate replays under 192 MiB address-space and 8 MiB stack limits. Selection
+includes deletion markers before visibility, retains losing siblings, validates
+all supplied contradictions before pruning, and owns every returned snapshot.
+Complete input limits are 4096 versions/8 MiB and 64 supplied versions per row;
+exact valid maxima pass and the next supplied input rejects.
+
+Complete suites pass 1231 native tests plus six doctests, 757 actual-WASM,
+2496 C# per Debug/Release configuration, 686 Node and 221 repository checks.
+JS enforces 100% production lines/branches/functions. The new projection covers
+69/69 lines, 16/16 branches and 9/9 functions on native/WASM, while regions
+remain 108/109 and native instantiations 9/18 (actual-WASM 9/9). C# projection
+covers all reported lines, all 42 branch edges and class aggregates in both
+configurations. The existing Release batch class aggregate remains 99.46%;
+complete source-line branch conditions alone do not prove compiled coverage.
+
+All production denominators remain included. Native LLVM reports 18700/19598
+lines, 3696/4194 branches, 2384/2556 functions, 28803/31057 regions and
+12580/22534 instantiations. Complete linked WASM reports 14676/17307 lines,
+3065/3583 branches, 1802/2234 functions, 22634/27311 regions and 4535/7734
+instantiations. C# Debug reports 10063/10372 lines and 6497/6942 branches;
+Release reports 7769/7970 and 6438/6901. causal-projection{,-before}.txt retains
+commands, complete results and raw byte counts/SHA256. Initial strict Clippy
+rejects test-only remainder predicates; using the existing is_multiple_of
+pattern resolves them before the full run. No production threshold is lowered.
+
+Formats, strict native/WASM Clippy, TS declarations, source/release checks,
+127 fresh dependencies/locks, workflow/ShellCheck and whitespace pass. The
+SQL-free cache recipe passes Node, Bun and Deno, including concurrent deletion,
+explicit observed resolution and a refreshed view independent of its old view.
+Deno requires environment permission to locate the temporary directory. CI
+runs the Node recipe. Bare Rust excludes JSON/SQL/SHA; selecting projection adds
+neither SQL nor SHA. ENGINE-CAUSAL-PROJECTION.md documents O(V log V + sum(r²W))
+merge/encoding costs, O(VW) retained space and owned-read allocation.
+
+Fresh exact-head platform CI, ordinary mutable session APIs and their physical
+matrix, global allocation, safe membership/history reclamation, generic mapped
+failures, full project 100% and every wider unmet criterion remain unfinished.
+PR139 stays draft and unmerged.
