@@ -19,7 +19,7 @@ acceptance inventory remains open.
       object. Restore the provider and verify following reads and writes.
 - [x] Run focused contracts, full relevant suites, complete coverage and local
       repository checks, retaining precise totals and limitations.
-- [ ] Review, commit and publish the useful test step, inspect fresh exact-head
+- [x] Review, commit and publish the useful test step, inspect fresh exact-head
       CI, and update the PR without claiming wider completion.
 
 These are coverage-driven controls for existing behavior. They do not establish
@@ -45,3 +45,8 @@ format/lint/types, changeset, 126 dependency declarations and workflow checks
 pass. The local root-level CI-log layout failure and unchanged-check rerun are
 recorded under PHASE-CONTEXT-PLAN.md. reclamation-admission.txt preserves all
 five LLVM metrics and full C# denominators; none is excluded or declared 100%.
+
+Published head 7e9799a passes all nine workflows, including all native Rust and
+C# test platforms. `phase-context-ci-after.txt` records exact commit/run
+timestamps and links. This closes verification for these controls; subsequent
+source changes and every wider unmet criterion require their own evidence.

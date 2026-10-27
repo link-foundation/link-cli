@@ -15,7 +15,7 @@ completed phases and child exit 0. The complete log is preserved locally at
       keep strict phase validation and unconditional child reaping.
 - [x] Add a durable automated regression, rerun all C# tests in both
       configurations and the actual process controls, and preserve evidence.
-- [ ] Publish the correction and inspect fresh Windows and other exact-head CI.
+- [x] Publish the correction and inspect fresh Windows and other exact-head CI.
 
 This concerns test-process supervision. It does not strengthen production
 persistence guarantees or finish the wider R1–R12 inventory.
@@ -30,5 +30,8 @@ Debug and Release; the repository's 221 checks, type checks, source limits,
 changeset, 126 dependency declarations and workflow lint pass. The initial
 repository-layout check rejects root-level `ci-logs`; moving the ignored logs
 under `experiments/issue-138/ci-logs` resolves it without changing the check.
-`phase-context.txt` records the after evidence. Fresh Windows CI remains
-required before publication verification is claimed.
+`phase-context.txt` records the local after evidence. All nine workflows pass
+on exact published head 7e9799a. C# passes 2,447 tests on Windows/Linux/macOS;
+both finite progress controls pass on Windows. `phase-context-ci-after.txt`
+preserves commit/run timestamps, run links and the successful log line numbers.
+Subsequent source changes still require fresh exact-head CI.

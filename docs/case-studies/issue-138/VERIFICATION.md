@@ -3866,3 +3866,62 @@ Five-runtime file handoffs and both real three-member etcd layouts remain
 verified at c1abe42 under reclaiming-chunks.txt; this step changes no production
 source. Fresh exact-head CI remains required. All wider unmet criteria remain
 active; PR139 stays draft and unmerged.
+
+The published helper/admission head 7e9799a now passes all nine workflows.
+Every run is created 2026-10-27T08:24:50Z, after the 08:24:39Z commit, and reports
+the same full SHA. C# run 40473315951 passes 2,447 tests on Windows/Linux/macOS;
+the deferred-context regression and previously failing finite-progress control
+both pass on Windows. Rust run 40473315935 also passes all native platforms.
+phase-context-ci-after.txt preserves every run link and timestamp. This closes
+the earlier helper's platform-verification gap, not a production durability gap.
+
+## Owned Rust mapped-view barriers (2026-10-27)
+
+Microsoft's FlushViewOfFile documentation requires view synchronization before
+file-buffer synchronization. Upstream platform-mem 0.3.0 and the previous Rust
+adapter synchronized only file handles. This establishes the missing Windows
+barrier from primary sources; readback is not a hardware power-loss reproduction.
+The native API controls first fail with E0599 against immutable 7e9799a. The
+reproducer isolates source and target artifacts; an initial shared target cache
+collision is recorded separately. A further independent current-allocation
+assertion first rejects the draft's tail-only descriptor, then passes when
+publication covers the complete current mapping. mapped-flush-before.txt
+preserves the exact diagnostics and reproduction commands.
+
+The owned barrier invalidates before unmap, publishes after successful remap and
+closes before Drop. One shared lock protects the view through both ordered I/O
+barriers. Independent mocks verify each failure, retry and absence of later
+barriers; real file controls verify growth, shrink, prefix/tail contents and
+reopening. Closed, failed-remap and poisoned ownership reject without stale
+access. Drop releases the duplicated file even when logical handles survive.
+Generic adopted stores explicitly attach their matching handle; map_store
+preserves it through decorators. A replaced owner rejects before mtime/revision
+publication until its replacement handle is attached. The runnable adoption
+example verifies following edits and reopening.
+
+Sequential validation finishes 09:13:25Z. All six API controls, six independent
+unit controls, six default-feature controls, the example, 1,175 complete native
+tests plus six doctests, 723 actual-WASM tests and 221 repository checks pass.
+Formatting, strict native/WASM Clippy, source-size checks, the existing minor
+changeset, 126 dependency declarations, workflows/ShellCheck and whitespace
+checks pass. Twenty-one native child entries remain parent-driven, and one
+legacy doctest remains ignored. No C#/JS production code changed; their prior
+complete suites and exact 7e9799a CI remain preserved separately.
+
+Complete native LLVM: 17,080/17,958 lines, 3,288/3,774 branches, 2,210/2,372
+functions, 26,285/28,420 regions and 12,218/21,855 instantiations. Complete linked
+WASM: 13,144/15,667 lines, 2,663/3,171 branches, 1,636/2,050 functions,
+20,244/24,674 regions and 4,342/7,488 instantiations. The new barrier source
+reaches 66/66 native lines, 4/4 branches and 14/14 functions, while its generic
+instantiations remain 40/64. Native-only mapped code remains in the complete
+linked WASM denominator with zero coverage. No production denominator is
+excluded, and complete native/C#/linked-WASM 100% remains unfinished.
+mapped-flush.txt retains all full and component metrics.
+
+The selected mapping adds one duplicated file handle and shared mutex allocation
+per owner, two lock acquisitions per resize and one per explicit barrier;
+ordinary link edits gain no extra lock. Drop cannot report failures. The barrier
+does not fix upstream failed-resize safety, torn-page repair or in-place atomicity,
+and ordinary file readback does not certify physical power-loss recovery. Fresh
+exact-head Windows/Linux/macOS CI remains required for this production change.
+Every wider unmet criterion stays active; PR139 remains draft and unmerged.

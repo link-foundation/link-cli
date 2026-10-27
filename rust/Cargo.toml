@@ -63,12 +63,12 @@ libc = { version = "0.2.191", optional = true }
 errno = { version = "0.3.14", optional = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem"], optional = true }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Memory"] }
 
 [features]
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
 sqlite = ["dep:rusqlite"]
-native-pages = ["dep:getrandom", "dep:libc", "dep:errno", "dep:windows-sys"]
+native-pages = ["dep:getrandom", "dep:libc", "dep:errno"]
 sorted-tables = ["dep:serde_json"]
 physical-lsm = ["sorted-tables"]
 

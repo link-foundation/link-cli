@@ -456,6 +456,23 @@ if names construction fails. A failed constructor over a caller-supplied store
 leaves that store usable. Partially initialized names mappings are released on
 both raw-facade and names-content errors; no GC/finalizer wait is required.
 
+Rust's owned `PersistentFileMapped` supplies a lifetime-checked `MappedFlush`
+barrier. `DoubletsStorage::open` retains it automatically through decorators.
+On Windows it flushes the live view before synchronizing the actual owned file;
+on Unix it synchronizes the file's shared page cache. Both errors propagate.
+Drop attempts the barrier before unmapping but cannot report errors. This costs
+one duplicated file handle and one shared mutex allocation per mapped owner,
+two lock acquisitions per resize and one lock per explicit barrier; ordinary
+link edits gain no extra lock. The in-memory path keeps its existing behavior.
+When adopting a mapping, retain `flush_handle()` before constructing the store
+and attach it with `with_mapped_flush`. A path alone cannot discover a foreign
+view. Handles follow successful remaps and reject failed remaps and closed
+owners. A failed remap requires reopening; this barrier does not repair the
+upstream allocator's failure behavior. See the self-checking
+[adoption example](../rust/examples/owned_mapped_flush.rs). The ordering follows
+[Microsoft's FlushViewOfFile contract](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-flushviewoffile);
+ordinary readback does not certify hardware power-loss safety or torn-page repair.
+
 The legacy transaction decorators retain every observed undo record before
 appending a logical operation's journal batch. An append failure makes an
 explicit transaction rollback-only: roll it back before writing again. Automatic

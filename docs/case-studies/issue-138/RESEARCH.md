@@ -408,3 +408,34 @@ independent finite bounds. The existing epoch collector must reject the new
 format until it can follow its complete reference graph safely. No source or
 format is copied. See [protocol](../../protocol/chunked-journal.md) and
 [execution plan](SEGMENTED-JOURNAL-PLAN.md).
+
+## Owned mapped-view barriers (2026-10-27)
+
+Microsoft's [FlushViewOfFile contract](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-flushviewoffile)
+requires flushing the view before flushing the file buffers for durable mapped
+writes. Its [MapViewOfFile contract](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile)
+distinguishes local view coherence from remote files and ordinary file I/O.
+Downloads retained for this audit have SHA-256
+`98facb3e5778cb5b8200604a8accbb763d51979bd734208361228fe8b78d1f63`
+and `2388f63134e9640273823c4a9a29b568db382bb38f994d8881924b3ba941d15c`.
+
+The published [platform-mem 0.3.0 source](https://docs.rs/crate/platform-mem/0.3.0/source/src/file_mapped.rs)
+has SHA-256 `6c27511dd32308d6e061bbfde6d3b3bb399395a9c2b245a99e9503d311815337`.
+Its mapping field is private; Drop synchronizes only the file handle. Our Rust
+adapter also synchronized only a separately opened file. C# already owns an
+ordered view/file barrier. A file path alone cannot recover a foreign view's
+address or lifetime.
+
+Design inference: retain an explicit flush owner alongside the existing public
+mapped wrapper. Share its current view descriptor under a mutex; invalidate
+before unmap, publish only after successful remap and close before owner Drop.
+Carry that owner through storage decorators, and require explicit attachment
+when adopting generic stores. Propagate each barrier error without publishing
+the path's revision. This preserves the wrapped raw mapping API and avoids
+changing ordinary link edits. The cost and adoption recipe are in
+[ENGINE-STRATEGIES.md](../../ENGINE-STRATEGIES.md).
+
+Finite API, lifetime and independent syscall-order controls verify this narrower
+contract. Readback and successful process exits do not demonstrate hardware
+power-loss recovery. The upstream failed-resize lifecycle and legacy torn-page
+repair remain separate open criteria; see [the execution plan](MAPPED-VIEW-FLUSH-PLAN.md).

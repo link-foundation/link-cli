@@ -176,10 +176,14 @@ A runnable, self-checking version of this is
 - **In-place mutation.** A file-mapped store is written through its mapping, so
   the inode never changes and other processes that mapped the same file keep
   observing the same data. Nothing is replaced through a temporary file.
-- **Durability.** Writes to a file-mapped store survive a *process* crash
-  without any `save()` — the mapping is the page cache. Surviving a *machine*
-  crash needs the `fsync` that `LinksStorage::flush` performs (a clean drop also
-  syncs). In-memory stores keep everything in memory until `flush`/`save`.
+- **Durability.** `LinksStorage::flush` synchronizes an owned mapped store's
+  file. On Windows it first flushes the mapped view, then the file buffers.
+  Explicit flush propagates both errors; Drop attempts the same ordering.
+  Adopted mappings attach their matching `PersistentFileMapped::flush_handle()`
+  with `DoubletsStorage::with_mapped_flush`; a path alone cannot discover a
+  foreign store's view. These barriers do not supply torn-page repair or
+  certify hardware power-loss safety. In-memory stores keep everything in
+  memory until `flush`/`save`.
   Recovery runs when the decorator is created: committed-but-unapplied
   transitions are replayed, uncommitted ones are rolled back.
   A known durable commit retains ownership after a checkpoint error: retry

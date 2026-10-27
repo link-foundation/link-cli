@@ -352,6 +352,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "web-time",
+ "windows-sys",
 ]
 
 [[package]]

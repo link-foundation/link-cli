@@ -1,0 +1,23 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 7e9799a7b7ef417d54a456f9dc9606ae6ef35439
+Commit timestamp: 2026-10-27T08:24:39+00:00
+All nine workflow runs were created after this exact commit and completed successfully.
+2026-10-27T08:24:50Z Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40473316037
+2026-10-27T08:24:50Z Docs: success https://github.com/link-foundation/link-cli/actions/runs/40473315984
+2026-10-27T08:24:50Z Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40473315822
+2026-10-27T08:24:50Z Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40473316186
+2026-10-27T08:24:50Z WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40473315802
+2026-10-27T08:24:50Z Security: success https://github.com/link-foundation/link-cli/actions/runs/40473315978
+2026-10-27T08:24:50Z JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40473315985
+2026-10-27T08:24:50Z C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40473315951
+2026-10-27T08:24:50Z Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40473315935
+
+C# run 40473315951: 2,447 passing tests on Ubuntu, Windows and macOS.
+Complete log: experiments/issue-138/ci-logs/csharp-40473315951.log
+Windows deferred-caller-context regression passes at line 23185.
+Windows distinct finite-progress regression passes at line 23871.
+Windows successful test run and total 2447 are at lines 25247-25248.
+No helper idle/test bounds were increased. All children are reaped.
+This verifies the published caller-context correction and admission controls.
+Subsequent mapped-view source changes require their own fresh exact-head CI.
+The wider R1-R12 acceptance criteria remain open; PR remains draft/unmerged.

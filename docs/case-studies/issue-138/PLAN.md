@@ -821,3 +821,29 @@ acceptance criterion continue independently.
     repository checks pass. Preserve reclamation-admission.txt, publish the
     atomic tests/docs step and inspect fresh exact-head CI. These controls add
     no production protocol and do not complete the wider R1-R12 inventory.
+
+    Both steps 57–58 now pass all nine workflows on exact published head
+    7e9799a, created after its 08:24:39Z commit. C# passes all 2,447 tests on
+    Windows/Linux/macOS, including the previously failing progress control and
+    the deferred-context regression. phase-context-ci-after.txt records every
+    exact SHA, timestamp and run link. This establishes the helper correction's
+    platform verification; every wider unmet criterion remains active.
+
+59. Retain a lifetime-checked flush owner for Rust's legacy mapping. Primary
+    Windows documentation requires mapped-view flush before file-buffer flush;
+    the prior adapter and upstream Drop synchronized only the file. New public
+    API controls first fail against immutable 7e9799a. Independent syscall mocks
+    verify ordering, both failures and retry; actual allocations verify the
+    complete range after growth/shrink. The independent range assertion first
+    catches a tail-only draft descriptor. Closed/failed-remap handles reject
+    before revision publication, owner Drop releases retained files, and generic
+    adopted stores retain explicitly attached ownership through decorators.
+    Twelve new controls, six default-feature controls and a runnable adoption
+    example pass. Full sequential validation finishes 09:13:25Z: 1,175 native
+    plus six doctests, 723 actual-WASM, all 221 repository checks and strict local
+    checks pass. Full coverage retains every production denominator below 100%.
+    mapped-flush{,-before}.txt and MAPPED-VIEW-FLUSH-PLAN.md preserve evidence,
+    cost and limits. Publish this atomic step and verify fresh exact-head native
+    Windows/Linux/macOS CI. Upstream failed-resize safety, physical legacy repair,
+    hardware power-loss verification and every wider unmet requirement remain
+    unfinished; this barrier must not be presented as their completion.
