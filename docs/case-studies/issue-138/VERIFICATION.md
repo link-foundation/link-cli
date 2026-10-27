@@ -4193,3 +4193,15 @@ malformed canonical bytes and dominated identity contradictions. These are
 contract inputs and expected outputs, not proof of durable production parity.
 Actual runtime, ownership, transfer, restart and broader R1-R12 verification
 remain unfinished under ANTI-ENTROPY-PLAN.md. PR139 stays draft and unmerged.
+
+## Fresh growth-admission/platform-retention CI (2026-10-27T12:27Z)
+
+All nine workflows pass on exact published 3cd89e9, created 11:57:46Z after
+its commit. Rust Windows/Linux/macOS, full coverage, native LSM consumers,
+merge, lint and packaging pass. C# passes all 2,462 tests on every platform;
+all three complete archives are downloaded and verified in the independent
+artifact receipt. growth-admission-ci-after.txt preserves exact SHA, timestamps,
+run URLs and actual result lines in rust-40500064468.log, retaining native cfg
+differences and separate doctest accounting. Later logical initialization and
+causal semantics require fresh CI. All wider unmet requirements remain active;
+PR139 remains draft and unmerged.

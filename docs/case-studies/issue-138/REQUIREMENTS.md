@@ -16,13 +16,14 @@ preserve commands and limits. Genuine generic I/O/partial-shrink failure,
 callback/destructor panic and arbitrary persisted representation adoption remain
 unfinished. Fresh CI and every wider unmet criterion remain required.
 
-All nine workflows pass on published 9bb985f, including native Rust on
-Windows/Linux/macOS and 2,462 C# tests on each platform. This verifies the
-empty/rejected-shrink and returned-creation progress corrections; it does not
-identify the earlier intermittent Windows timeout's host cause.
-version-setup-ci-after.txt preserves exact head, timestamps, run URLs and
-actual C# log lines. Later growth admission/initialization and coverage
-retention changes require their own fresh CI. Every wider gap remains open.
+All nine workflows pass on published 3cd89e9, including native Rust on
+Windows/Linux/macOS, full coverage, native LSM consumers, merge, lint and
+packaging, and 2,462 C# tests per platform. growth-admission-ci-after.txt
+preserves exact head, timestamps, run URLs and actual platform result lines.
+This includes generic growth admission and retaining all three complete C#
+reports. Later logical initialization/causal changes require fresh CI.
+The earlier intermittent Windows timeout's host cause remains unestablished,
+and every wider gap remains open.
 
 C# coverage retention (R8) now publishes the existing complete Windows and
 macOS reports as distinct artifacts alongside the established Linux artifact.

@@ -935,8 +935,9 @@ acceptance criterion continue independently.
     growth and forty exact destructor retirements. Complete sequential checks
     finish 11:50:17Z with 1,194 native tests, six doctests, 723 actual-WASM tests
     and 221 repository checks passing. Complete coverage denominators remain
-    included. Publish this atomic correction and inspect fresh platform CI
-    under RUST-GROW-ADMISSION-PLAN.md. Real resize I/O failure, nonzero callback
+    included. All nine workflows pass on exact published 3cd89e9; actual native
+    platform counts and log lines are in growth-admission-ci-after.txt under
+    RUST-GROW-ADMISSION-PLAN.md. Real resize I/O failure, nonzero callback
     panic, failed shrink, representation safety and all wider unmet criteria
     remain unfinished.
 

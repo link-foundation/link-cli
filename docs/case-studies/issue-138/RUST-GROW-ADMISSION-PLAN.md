@@ -20,7 +20,7 @@ an otherwise harmless callback panic leaves a valid view's barrier invalid.
       Preserve the current callback/return contract and one typed owner.
 - [x] Run both feature configurations, complete sequential native/actual-WASM
       suites, all local strict checks and complete coverage denominators.
-- [ ] Commit, push only the prepared branch and inspect fresh exact-head CI.
+- [x] Commit, push only the prepared branch and inspect fresh exact-head CI.
 
 This does not repair genuine resize I/O failures, arbitrary nonzero callback
 panic states, destructor panic during shrink, torn pages or hardware power
@@ -30,4 +30,8 @@ All wider unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged.
 Complete validation finishes 2026-10-27T11:50:17Z: 1,194 native tests, six
 doctests, 723 actual-WASM tests and 221 repository checks pass. The before/after
 receipts preserve the actual failures, complete coverage totals and remaining
-generic resize/panic hazards. Fresh platform CI is still required.
+generic resize/panic hazards. All nine workflows pass on exact published
+3cd89e9, including Rust Windows/Linux/macOS, full coverage, lint, merge and
+packaging. growth-admission-ci-after.txt preserves actual platform counts,
+complete log/result line references, run URLs and timestamps. Later logical
+initialization and causal changes require their own fresh CI.
