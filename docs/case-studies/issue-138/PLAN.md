@@ -758,7 +758,11 @@ acceptance criterion continue independently.
     passes 1,146 native tests plus six doctests, 706 actual-WASM and 2,429 C#
     tests in each configuration. Full denominators remain included below 100%.
     Both fifty-handoff layouts and actual-engine payload/cost checks pass.
-    Publication and fresh exact-head CI remain pending. SEGMENTED-JOURNAL-PLAN.md records selected costs and open chunk
+    Published as 860a47f; a newly released lucide-react dependency fails the
+    freshness check and is corrected separately in 58d35f8. All nine correction-
+    head workflows pass, including native Windows, Linux and macOS. Exact runs
+    and timestamps are preserved in journal-chunks-ci-after.txt.
+    SEGMENTED-JOURNAL-PLAN.md records selected costs and open chunk
     reclamation work. Every wider unmet R1–R12 criterion remains active.
 
 56. Extend the separately selected epoch collector to the chunk reference graph.
@@ -766,7 +770,18 @@ acceptance criterion continue independently.
     keys are reused or epoch CAS is omitted. Current-epoch staging passes all
     modeled interleavings, including two writers/two collectors, under finite
     state and memory limits. A separate JS API control first reproduces ignored
-    chunk selection (blob2 instead of chunks2). Production changes and all
-    language/fault/actual-engine verification remain unfinished; see
-    CHUNK-RECLAMATION-PLAN.md. This next step must not be presented as completed
-    by the append-only chunks1 implementation or its safe collector refusal.
+    chunk selection (blob2 instead of chunks2); native Rust/C# API controls also
+    fail before production changes. The selected chunks2 codecs, complete graph
+    protection, current-epoch staging and whole-group refresh pass 46 focused
+    Rust tests, 60 C# tests, all 640 Node tests with enforced 100% production
+    coverage and fourteen new controls in Bun/Deno. Every four-chunk cache mask,
+    ten staging/publication cuts, overlapping collectors and following edits
+    pass. Full sequential checks finish 07:27:05Z: 1,159 native plus six
+    doctests, 719 actual-WASM, 2,442 C# per configuration, five real compositions,
+    150 complete-store handoffs and both real three-member etcd layouts pass.
+    All children are reaped and the isolated original three-language controls
+    reproduce again. Full production denominators remain included below 100%;
+    exact commands, costs and limits are in reclaiming-chunks{,-before}.txt.
+    Publish and inspect fresh exact-head CI under CHUNK-RECLAMATION-PLAN.md.
+    Every wider unmet R1-R12 criterion stays active; append-only chunks1's safe
+    refusal alone did not establish this selected reclamation behavior.

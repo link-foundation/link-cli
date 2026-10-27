@@ -1,0 +1,35 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact tested head: 58d35f8800f92b81342d97ed982459960a4d86d7
+Append-only chunks: 860a47f06823f00d9f18190b5f363e80298da80e
+Dependency freshness correction: 58d35f8 (lucide-react 1.61.0 -> 1.62.0).
+All nine workflows succeed on the correction head; all runs were created
+2026-10-27T06:36:21Z through 06:36:23Z after that commit/push.
+
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40462101955
+Dependencies: success; https://github.com/link-foundation/link-cli/actions/runs/40462100313
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40462100346
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40462100300
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40462100225
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40462100279
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40462100247
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40462100177
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40462100183
+
+rust created 2026-10-27T06:36:21Z; completed 2026-10-27T07:03:22Z.
+Test (windows-2025): 2026-10-27T06:38:01Z through 2026-10-27T07:03:21Z; success.
+Test (macos-26): 2026-10-27T06:38:14Z through 2026-10-27T06:45:45Z; success.
+Test (ubuntu-24.04): 2026-10-27T06:37:45Z through 2026-10-27T06:41:57Z; success.
+
+csharp created 2026-10-27T06:36:22Z; completed 2026-10-27T06:47:38Z.
+Test (ubuntu-24.04): 2026-10-27T06:36:58Z through 2026-10-27T06:39:15Z; success.
+Test (macos-26): 2026-10-27T06:36:58Z through 2026-10-27T06:40:10Z; success.
+Test (windows-2025): 2026-10-27T06:38:00Z through 2026-10-27T06:46:50Z; success.
+
+Original freshness failure 40461446999 was created for 860a47f at
+06:29:54Z. Preserved ci-logs/dependencies-40461446999.log lines 194-204
+identify the newly released lucide-react version; journal-chunks-dependency-ci.txt
+preserves its exact fix and local validation. Superseded native/WASM/C# runs
+were cancelled by the newer push; they do not establish a source failure.
+These results verify the published append-only step. They do not verify
+unpublished chunks2 reclamation or finish wider R1-R12 acceptance criteria.
+Keep PR139 draft and unmerged.

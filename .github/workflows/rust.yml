@@ -14,6 +14,7 @@ on:
       - 'docs/protocol/journal-maintenance-v1.json'
       - 'docs/protocol/reclamation-v1.json'
       - 'docs/protocol/chunked-journal*'
+      - 'docs/protocol/reclaiming-chunks*'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
       - '.github/scripts/check-sqlite-optional.mjs'
@@ -307,6 +308,7 @@ jobs:
           cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster partitioned
           cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster chunks
           cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming-chunks
 
   # === COVERAGE MEASUREMENT ===
   coverage:

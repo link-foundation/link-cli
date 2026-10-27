@@ -121,7 +121,10 @@ record/UTF-8-byte/chunk limits on the same partitioned store. Every update and
 route is admitted before staging, and one catalog CAS still checks the complete
 group. Fresh staging compares all object contents; full reads and replay remain
 linear and catalog metadata grows with chunk count. This policy does not supply
-automatic balancing, multi-catalog transactions or epoch-fenced chunk deletion.
+automatic balancing or multi-catalog transactions. The separately selected
+[reclaiming chunk layout](protocol/reclaiming-chunks.md) adds epoch-fenced
+physical retirement. Prefix reuse is limited to one epoch; after a collection
+fence, the next publication restages its complete selected journal.
 
 ## Configuration and ownership
 

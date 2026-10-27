@@ -18,7 +18,7 @@ impl Default for JournalChunkOptions {
     }
 }
 impl JournalChunkOptions {
-    pub(super) fn validate(self) -> Result<Self, LinkError> {
+    pub(crate) fn validate(self) -> Result<Self, LinkError> {
         if self.max_records == 0
             || self.max_records > 65536
             || self.max_bytes == 0
@@ -30,7 +30,7 @@ impl JournalChunkOptions {
         }
         Ok(self)
     }
-    pub(super) fn split<'a>(&self, records: &'a [String]) -> Result<Vec<&'a [String]>, LinkError> {
+    pub(crate) fn split<'a>(&self, records: &'a [String]) -> Result<Vec<&'a [String]>, LinkError> {
         let mut chunks = Vec::new();
         let (mut start, mut bytes) = (0, 0);
         for (index, record) in records.iter().enumerate() {
@@ -125,7 +125,7 @@ pub(super) fn manifest(parts: &[String]) -> Result<Manifest, LinkError> {
         references,
     })
 }
-pub(super) fn validate(records: &[String], count: Option<usize>) -> Result<(), LinkError> {
+pub(crate) fn validate(records: &[String], count: Option<usize>) -> Result<(), LinkError> {
     if let Some(count) = count {
         if records.len() != count
             || records

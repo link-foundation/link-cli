@@ -4,7 +4,8 @@ var endpoints = args[0].Split(',').Select(value => new Uri(value)).ToArray();
 using var catalog = new EtcdJournalStore(endpoints, $"{args[1]}catalog/");
 using var east = new EtcdJournalStore(endpoints, $"{args[1]}east/");
 using var west = new EtcdJournalStore(endpoints, $"{args[1]}west/");
-var store = ReclaimingPartitionedJournalStore.Open(catalog, new Dictionary<string, IJournalMaintenanceStore> { ["east"] = east, ["west"] = west }, key => key == "a" ? "east" : "west", new(PageKeys: 1, CacheBytes: 65536));
+var chunked = Environment.GetEnvironmentVariable("RECLAMATION_CHUNKS") == "1";
+var store = ReclaimingPartitionedJournalStore.Open(catalog, new Dictionary<string, IJournalMaintenanceStore> { ["east"] = east, ["west"] = west }, key => key == "a" ? "east" : "west", new(PageKeys: 1, CacheBytes: 65536), chunked ? new JournalChunkOptions(MaxRecords: 2) : null);
 void Check(bool condition) { if (!condition) throw new InvalidDataException("Reclamation contract failed."); }
 ulong Verify()
 {
@@ -25,6 +26,7 @@ ulong Verify()
     Check(revisions[0] == revisions[1]); return revisions[0];
 }
 var revision = Verify(); Check(revision < 32);
+var retired = catalog.Read(new[] { "a", "b" }).Sum(root => root.Generation == 0 ? 0 : root.Entries[0] == "chunks2" ? int.Parse(root.Entries[3], System.Globalization.CultureInfo.InvariantCulture) : root.Entries[0] == "blob2" ? 1 : throw new InvalidDataException("Unexpected layout."));
 var engine = new ClusterEngine<uint>(store, new() { HistoryLimit = null, RequireDurableFlush = true }, journalCheckpointInterval: 1);
 using var stale = engine.Begin("a", "b"); using var write = engine.Begin("a", "b");
 foreach (var key in new[] { "a", "b" })
@@ -36,7 +38,7 @@ foreach (var key in new[] { "a", "b" })
 }
 write.Commit();
 var collected = store.CollectGarbage() ?? throw new InvalidOperationException("Unexpected competing collector.");
-Check(collected.Deleted == (revision == 0 ? 0 : 2));
+Check(collected.Deleted == retired);
 if (revision > 0) Check(stale.Shard("a").GetName(1) == $"revision-{revision} 雪");
 bool conflicted = false;
 try { stale.Commit(); } catch (InvalidOperationException error) when (error.Message.Contains("conflict", StringComparison.OrdinalIgnoreCase)) { conflicted = true; }

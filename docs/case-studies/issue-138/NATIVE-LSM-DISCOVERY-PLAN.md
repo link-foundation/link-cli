@@ -40,7 +40,7 @@ been validated. This continues the unfinished native portion of
       selected files and preservation of corrupt evidence before failure.
 - [x] Run complete native Rust/C#/Node/Bun/Deno whole-store file interchange,
       verify read-only file hashes and demonstrate real cluster consumers.
-- [ ] Run local gates, review the complete diff, publish an atomic verified
+- [x] Run local gates, review the complete diff, publish an atomic verified
       step and inspect the resulting exact-head CI before updating evidence.
 
 The extra validation pass performs bounded reads twice under the same exclusive
@@ -107,7 +107,7 @@ exact-head CI. The Rust port and complete five-runtime matrix remain active.
       correction, then inspect fresh Windows phase evidence on the exact head.
       The underlying Windows timeout cause remains unestablished; deadlines and
       persistence guarantees remain unchanged during this investigation.
-- [ ] Publish the Rust step with receipts, review its diff and inspect fresh
+- [x] Publish the Rust step with receipts, review its diff and inspect fresh
       exact-head CI before changing completion claims for the broader issue.
 
 C# diagnostic head 78e2c2a passes every C# job, including all 2,412 tests on
@@ -143,3 +143,12 @@ changed naming at 14.640s. This establishes progress until an aggregate deadline
 it does not establish the underlying filesystem-latency cause. Add deterministic
 finite controls before using phase-aware idle supervision with the same 15-second
 idle bound, at most 64 consecutive phases, bounded captures and mandatory reap.
+
+The Rust facade and finite C# supervision correction are published in 7f91ec9
+and 8d2ecdf. All nine exact-head workflows succeed on 8d2ecdf, including Rust
+Windows and C# Windows/Linux/macOS. native-lsm-rust-ci-after.txt and
+csharp-phase-progress-ci-after.txt preserve exact SHA, runs, timestamps and
+the formerly failing cases. This verifies the publication gates above; wider
+physical power-loss, legacy repair and whole-project coverage criteria remain
+unfinished. Later append-only chunks also pass all nine workflows on 58d35f8;
+journal-chunks-ci-after.txt records that separate publication evidence.

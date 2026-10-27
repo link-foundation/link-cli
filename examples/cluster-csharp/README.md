@@ -7,6 +7,7 @@ dotnet run --project examples/cluster-csharp -- --native-lsm direct
 dotnet run --project examples/cluster-csharp -- --native-lsm partitioned
 dotnet run --project examples/cluster-csharp -- --native-lsm chunks
 dotnet run --project examples/cluster-csharp -- --native-lsm reclaiming
+dotnet run --project examples/cluster-csharp -- --native-lsm reclaiming-chunks
 ```
 
 Each finite example uses private temporary doublets directories, actual links
@@ -20,8 +21,9 @@ power-loss durability. See the [native directory contract](../../docs/protocol/n
 The `chunks` composition explicitly selects two-record immutable chunks on the
 ordinary partitioned journal store. Default whole-journal writes remain available.
 Its cache, staging reads, full replay and retention costs are described in the
-[chunk protocol](../../docs/protocol/chunked-journal.md); chunk reclamation is a
-separate unfinished combination.
+[chunk protocol](../../docs/protocol/chunked-journal.md). `reclaiming-chunks`
+selects the [epoch-fenced chunk protocol](../../docs/protocol/reclaiming-chunks.md)
+and verifies physical retirement while preserving retained engine history.
 
 Start a durable etcd deployment with its v3 HTTP JSON gateway enabled. For a
 local disposable demonstration, `etcd --data-dir ./demo-etcd` listens on port

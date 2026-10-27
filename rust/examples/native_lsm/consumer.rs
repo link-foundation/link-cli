@@ -133,7 +133,7 @@ fn open(directory: &Path, name: &str) -> Result<Shared<FileLsmJournalStore>, Lin
 pub(super) fn run(mode: &str) -> Result<(), LinkError> {
     assert!(matches!(
         mode,
-        "direct" | "partitioned" | "chunks" | "reclaiming"
+        "direct" | "partitioned" | "chunks" | "reclaiming" | "reclaiming-chunks"
     ));
     let directory = tempfile::tempdir()?;
     for write in [true, false] {
@@ -158,12 +158,25 @@ pub(super) fn run(mode: &str) -> Result<(), LinkError> {
                 };
                 exercise(store, write)?;
             } else {
-                let store = Shared::new(ReclaimingPartitionedJournalStore::open(
-                    catalog,
-                    parts,
-                    route,
-                    ReclamationOptions::default(),
-                )?);
+                let store = Shared::new(if mode == "reclaiming-chunks" {
+                    ReclaimingPartitionedJournalStore::open_chunked(
+                        catalog,
+                        parts,
+                        route,
+                        ReclamationOptions::default(),
+                        JournalChunkOptions {
+                            max_records: 2,
+                            ..Default::default()
+                        },
+                    )?
+                } else {
+                    ReclaimingPartitionedJournalStore::open(
+                        catalog,
+                        parts,
+                        route,
+                        ReclamationOptions::default(),
+                    )?
+                });
                 exercise(store.clone(), write)?;
                 if write {
                     assert!(store.with(|s| s.collect_garbage())?.unwrap().deleted > 0);

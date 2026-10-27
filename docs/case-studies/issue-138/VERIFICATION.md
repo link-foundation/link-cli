@@ -3750,3 +3750,64 @@ and establish no durability, latency or throughput result. Full staging and
 engine replay remain linear. journal-chunks{,-before}.txt preserves exact scope,
 commands and logs; fresh publication CI remains required. Chunk reclamation and
 every wider unmet requirement remain active in this draft, unmerged PR.
+
+
+Published append-only chunks and the separate dependency freshness correction
+now pass all nine workflows on exact head 58d35f8. Rust Windows completes at
+2026-10-27T07:03:21Z; native Linux/macOS and C# Windows/Linux/macOS all pass.
+See journal-chunks-ci-after.txt for exact SHA, run links and timestamps.
+This establishes publication verification for append-only chunks; subsequent
+chunks2 reclamation and all wider unmet requirements still need verification.
+
+
+## Epoch-fenced chunk reclamation, 2026-10-27
+
+Full sequential validation finishes 07:27:05Z. Missing selected APIs and JS blob2
+publication first fail against unchanged 58d35f8; an isolated immutable-source
+rerun reproduces all three controls. Current-epoch staging, complete live graph
+protection and whole-group retry preserve defaults and owned reads. Every
+four-chunk cache mask, second retirement, ten before/after mutation cuts,
+overlapping collectors, exact-generation ABA, late scan failures, aliases,
+corruption and following edits pass matching native/C#/actual-WASM controls.
+Eighteen independently generated shared vectors cover UTF-8 and epoch bounds.
+The two finite models retain unsafe negative controls and their memory/state
+bounds; their passing states do not replace production verification.
+
+Complete suites pass 1,159 native Rust tests plus six doctests, 719 actual-WASM
+tests and 2,442 C# tests per configuration. All 640 Node tests include every
+production module at enforced 100% lines/branches/functions. Fourteen new tests
+pass in Bun/Deno; strict types, 221 repository and 655 source-size checks,
+SDK10.0.403 formatting, strict native/WASM Clippy, workflows/ShellCheck, optional
+SQL, one minor changeset and 126 dependency declarations/Cargo.lock checks pass.
+
+Whole native LLVM: 16,956/17,858 lines, 3,277/3,766 branches, 2,188/2,355 functions,
+26,130/28,286 regions and 12,084/21,687 instantiations. Whole linked WASM:
+13,144/15,567 lines, 2,659/3,169 branches, 1,636/2,033 functions, 20,243/24,540
+regions and 4,342/7,471 instantiations. C# Debug: 9,400/9,726 lines and
+5,695/6,144 branches; Release: 7,253/7,471 lines and 5,639/6,105 branches.
+All three wrapper sources reach 100% lines/functions/reported branches; complete
+regions/instantiations remain included. Full native/C#/linked-WASM 100% remains
+unfinished. Twenty-one native child entries are parent-driven; one legacy
+doctest is ignored. No production denominator is excluded.
+
+Five actual native/actual-WASM cluster compositions and all 150 directed plain/
+mirrored Rust/C#/Node/Bun/Deno complete-store handoffs pass with read-only file
+hash preservation. Two separate real three-member etcd clusters verify blob2
+and chunks2. Each passes native/WASM retained-history/checkpoint handoffs, ten
+lost-reply cuts without automatic mutation replay, retired group refresh,
+warm-cache data outage, leader loss and majority loss without partial success.
+Every child/server is shut down and reaped; CI now preserves maintenance and
+reclamation member logs as well as the existing cluster logs.
+
+The actual-engine finite cost example yields byte-identical Node/Bun/Deno JSON.
+Without collection, two-record chunks write 2,958 data payload bytes versus
+16,530 for whole journals; catalog payload grows from 1,586 to 6,376. Collecting
+every fourth revision writes 5,860 data bytes and retains sixteen objects;
+collecting every revision writes 16,530 bytes and removes this workload's write
+savings. Record payload counters exclude keys, framing, physical I/O, latency
+and throughput. Final replay/collection checks preserve owned journals, every
+retained name and following edits. Full replay, bounded complete listings and
+one catalog remain costs; automatic balancing/multi-catalog atomicity remain
+unfinished. reclaiming-chunks{,-before}.txt records exact scope and commands.
+Fresh exact-head publication CI remains required. All wider unmet R1-R12
+criteria stay active and PR139 remains draft/unmerged.

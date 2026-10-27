@@ -68,9 +68,33 @@ pub(super) fn address(epoch: u64, records: &[String]) -> String {
 }
 pub(super) struct Pointer {
     pub partition: String,
+    pub references: Vec<Reference>,
+}
+pub(super) struct Reference {
     pub key: String,
     pub generation: u64,
     pub epoch: u64,
+    pub records: Option<usize>,
+}
+fn reference(
+    key: &str,
+    text: &str,
+    records: Option<usize>,
+    epoch: u64,
+) -> Result<Reference, LinkError> {
+    let generation = canonical(text)
+        .filter(|value| *value > 0)
+        .ok_or_else(|| error("invalid reclamation object generation"))?;
+    let object_epoch = key_epoch(key)?;
+    if object_epoch > epoch {
+        return Err(error("pointer epoch exceeds catalog epoch"));
+    }
+    Ok(Reference {
+        key: key.into(),
+        generation,
+        epoch: object_epoch,
+        records,
+    })
 }
 pub(super) fn pointer<D>(
     value: &JournalVersion,
@@ -82,21 +106,44 @@ pub(super) fn pointer<D>(
         return Ok(None);
     }
     let parts = &value.entries;
-    if parts.len() != 4 || parts[0] != "blob2" || !partitions.contains_key(&parts[1]) {
+    if parts.len() < 4 || !partitions.contains_key(&parts[1]) {
         return Err(error("invalid reclamation pointer"));
     }
-    let generation = canonical(&parts[3])
-        .filter(|value| *value > 0)
-        .ok_or_else(|| error("invalid reclamation object generation"))?;
-    let object_epoch = key_epoch(&parts[2])?;
-    if object_epoch > epoch {
-        return Err(error("pointer epoch exceeds catalog epoch"));
-    }
+    let references = if parts.len() == 4 && parts[0] == "blob2" {
+        vec![reference(&parts[2], &parts[3], None, epoch)?]
+    } else {
+        let invalid = || error("invalid reclamation chunk manifest");
+        let total = canonical(&parts[2])
+            .filter(|n| *n <= u32::MAX.into())
+            .ok_or_else(invalid)?;
+        let count = canonical(&parts[3])
+            .filter(|n| *n <= 4096)
+            .ok_or_else(invalid)? as usize;
+        if parts[0] != "chunks2" || parts.len() != 4 + 3 * count {
+            return Err(invalid());
+        }
+        let mut references = Vec::with_capacity(count);
+        let mut sum = 0;
+        for triple in parts[4..].as_chunks::<3>().0 {
+            let records = canonical(&triple[2])
+                .filter(|n| (1..=65536).contains(n))
+                .ok_or_else(invalid)?;
+            sum += records;
+            references.push(reference(
+                &triple[0],
+                &triple[1],
+                Some(records as usize),
+                epoch,
+            )?);
+        }
+        if sum != total {
+            return Err(invalid());
+        }
+        references
+    };
     Ok(Some(Pointer {
         partition: parts[1].clone(),
-        key: parts[2].clone(),
-        generation,
-        epoch: object_epoch,
+        references,
     }))
 }
 pub(super) fn scan<S: JournalMaintenanceStore>(
@@ -156,10 +203,14 @@ pub(super) fn catalog<D>(
         }
         let pointer = pointer(&item.version, epoch, partitions)?
             .ok_or_else(|| error("absent catalog entry"))?;
-        if let Some(prior) = protected.insert((pointer.partition, pointer.key), pointer.generation)
-        {
-            if prior != pointer.generation {
-                return Err(error("contradictory protected generations"));
+        for reference in pointer.references {
+            if let Some(prior) = protected.insert(
+                (pointer.partition.clone(), reference.key),
+                reference.generation,
+            ) {
+                if prior != reference.generation {
+                    return Err(error("contradictory protected generations"));
+                }
             }
         }
     }

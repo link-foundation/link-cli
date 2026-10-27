@@ -42,5 +42,30 @@ Stable complete chunks reduce newly written data payload. Fresh staging still
 reads every reference and compares complete contents; the optional read cache
 does not weaken that validation. Smaller chunks increase catalog metadata and
 can increase requests. This append-only example retains abandoned objects.
-Epoch-fenced chunk reclamation, bounded replay and multi-catalog scaling remain
-separate required work. See [the format and selected costs](../../docs/protocol/chunked-journal.md).
+The separate [epoch-fenced chunk layout](../../docs/protocol/reclaiming-chunks.md)
+supports explicit collection. Bounded replay and multi-catalog scaling remain
+required work. See [the append-only format](../../docs/protocol/chunked-journal.md).
+
+Run `examples/journal-chunks/reclaim.mjs` with the same three runtimes and WASM
+binding to compare collection frequencies. It uses a finite, non-durable
+maintenance provider and the actual engine, two shards, sixteen revisions,
+complete retained history, independent 256KiB caching and following allocator
+edits. The provider is explicitly shared with the deterministic maintenance
+fixtures; it is measurement scaffolding. CI compares the complete JSON across
+Node/Bun/Deno. Counts stop before separate read/replay and final-collection checks.
+
+| Layout / collection frequency | Data written | Data read requests | Catalog written | Namespace scans | Deleted / retained objects |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Whole / none | 16,530 | 94 | 1,586 | 4 | 0 / 32 |
+| Two-record chunks / none | 2,958 | 206 | 6,376 | 4 | 0 / 32 |
+| Two-record chunks / every fourth revision | 5,860 | 254 | 6,468 | 16 | 40 / 16 |
+| Two-record chunks / every revision | 16,530 | 416 | 6,573 | 52 | 128 / 16 |
+
+Collection fences force later publications to restage complete current-epoch
+chunks. In this workload, fencing after every revision removes the data-write
+savings while bounding retained objects; fencing every fourth revision retains
+some prefix reuse. Catalog scans include manifest record payloads; data scans
+are keys-only and report zero record payload bytes. Request counts include scans
+and deletion separately. Keys, generations, framing, transport, physical I/O,
+latency and throughput are excluded. Final collection preserves every owned
+journal, retained revision name and following edit.

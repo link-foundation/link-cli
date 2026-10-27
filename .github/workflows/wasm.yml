@@ -16,6 +16,7 @@ on:
       - 'docs/protocol/native-lsm-wal*'
       - 'docs/protocol/reclamation-v1.json'
       - 'docs/protocol/chunked-journal*'
+      - 'docs/protocol/reclaiming-chunks*'
   pull_request:
     branches:
       - main
@@ -28,6 +29,7 @@ on:
       - 'docs/protocol/native-lsm-wal*'
       - 'docs/protocol/reclamation-v1.json'
       - 'docs/protocol/chunked-journal*'
+      - 'docs/protocol/reclaiming-chunks*'
   workflow_dispatch:
 
 # Concurrency is set per job (issue #134): superseded read-only checks are

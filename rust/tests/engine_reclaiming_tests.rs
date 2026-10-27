@@ -162,3 +162,12 @@ mod concurrent;
 
 #[path = "engine_reclaiming/contracts.rs"]
 mod contracts;
+
+#[path = "engine_reclaiming/chunk_faults.rs"]
+mod chunk_faults;
+#[path = "engine_reclaiming/chunk_races.rs"]
+mod chunk_races;
+#[path = "engine_reclaiming/chunk_vectors.rs"]
+mod chunk_vectors;
+#[path = "engine_reclaiming/chunks.rs"]
+mod chunks;

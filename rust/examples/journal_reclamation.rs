@@ -2,6 +2,7 @@
 use link_cli::engine::{
     cluster::{AtomicJournalStore, ClusterEngine},
     etcd::EtcdJournalStore,
+    partitioned::JournalChunkOptions,
     reclaiming::{ReclaimingPartitionedJournalStore, ReclamationOptions},
     Engine, EngineOptions, HistoryPolicy, MemoryLog,
 };
@@ -10,19 +11,33 @@ use std::collections::BTreeMap;
 type Store = ReclaimingPartitionedJournalStore<EtcdJournalStore, EtcdJournalStore>;
 fn open(endpoints: &[String], prefix: &str) -> Result<Store, Box<dyn std::error::Error>> {
     let provider = |name| EtcdJournalStore::new(endpoints.to_vec(), format!("{prefix}{name}/"));
-    Ok(Store::open(
-        provider("catalog")?,
-        BTreeMap::from([
-            ("east".into(), provider("east")?),
-            ("west".into(), provider("west")?),
-        ]),
-        |key| if key == "a" { "east" } else { "west" }.into(),
-        ReclamationOptions {
-            page_keys: 1,
-            cache_bytes: 65536,
-            ..Default::default()
+    let catalog = provider("catalog")?;
+    let partitions = BTreeMap::from([
+        ("east".into(), provider("east")?),
+        ("west".into(), provider("west")?),
+    ]);
+    let route = |key: &str| if key == "a" { "east" } else { "west" }.into();
+    let options = ReclamationOptions {
+        page_keys: 1,
+        cache_bytes: 65536,
+        ..Default::default()
+    };
+    Ok(
+        if std::env::var("RECLAMATION_CHUNKS").as_deref() == Ok("1") {
+            Store::open_chunked(
+                catalog,
+                partitions,
+                route,
+                options,
+                JournalChunkOptions {
+                    max_records: 2,
+                    ..Default::default()
+                },
+            )?
+        } else {
+            Store::open(catalog, partitions, route, options)?
         },
-    )?)
+    )
 }
 fn verify(store: &mut Store) -> Result<u64, Box<dyn std::error::Error>> {
     let journals = store.read(&["a".into(), "b".into()])?;
@@ -70,6 +85,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let endpoints: Vec<_> = args[1].split(',').map(String::from).collect();
     let mut collector = open(&endpoints, &args[2])?;
     let revision = verify(&mut collector)?;
+    // Count the exact old reference graph before publication. With chunks,
+    // retained history can occupy more than one object per shard.
+    let mut catalog = EtcdJournalStore::new(endpoints.clone(), format!("{}catalog/", args[2]))?;
+    let retired: usize = catalog
+        .read(&["a".into(), "b".into()])?
+        .iter()
+        .map(|root| {
+            if root.generation == 0 {
+                0
+            } else if root.entries[0] == "chunks2" {
+                root.entries[3]
+                    .parse::<usize>()
+                    .expect("verified chunk count")
+            } else {
+                assert_eq!(root.entries[0], "blob2");
+                1
+            }
+        })
+        .sum();
     // The bounded example is intended for sequential language handoffs.
     assert!(revision < 32);
     let engine = ClusterEngine::<u32, _>::new(
@@ -95,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     write.commit()?;
     let collected = collector.collect_garbage()?.expect("uncontended fence");
-    assert_eq!(collected.deleted, if revision == 0 { 0 } else { 2 });
+    assert_eq!(collected.deleted, retired);
     if revision > 0 {
         assert_eq!(
             stale.shard("a")?.get_name(1),

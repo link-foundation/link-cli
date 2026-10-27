@@ -10,6 +10,7 @@ import { waitForMembers } from './etcd-harness.mjs';
 const directory = mkdtempSync(resolve('experiments/issue-138/etcd/reclamation-'));
 const binary = process.env.ETCD_BIN ?? resolve('experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd');
 const nodes = []; const reservations = []; const ports = [];
+const chunked = process.env.RECLAMATION_CHUNKS === '1';
 for (let i = 0; i < 6; i++) {
   const server = net.createServer(); reservations.push(server);
   await new Promise((done, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', done); });
@@ -29,8 +30,9 @@ function providers(prefix, fetches = {}, selected = endpoints) {
   return { catalog: provider('catalog'), east: provider('east'), west: provider('west') };
 }
 async function open(group, cacheBytes = 0) {
-  return ReclaimingPartitionedJournalStore.open(group.catalog, { east: group.east, west: group.west }, (key) => key === 'a' ? 'east' : 'west', { pageKeys: 1, cacheBytes });
+  return ReclaimingPartitionedJournalStore.open(group.catalog, { east: group.east, west: group.west }, (key) => key === 'a' ? 'east' : 'west', { pageKeys: 1, cacheBytes, chunks: chunked ? { maxRecords: 2 } : null });
 }
+const values = (name) => ['a', 'b'].map((shard) => chunked ? [`${name}-${shard}-prefix-1`, `${name}-${shard}-prefix-2`, `${name}-${shard}-tail`] : [`${name}-${shard}`]);
 async function publish(store, values) { assert.equal(await store.compareExchange(['a', 'b'], await store.read(['a', 'b']), values), true); }
 const key = (request) => Buffer.from(request.key, 'base64').toString();
 async function lossCases() {
@@ -54,16 +56,16 @@ async function lossCases() {
     const selected = providers(prefix, { [affected]: lossy });
     if (phase === 'initialization') await assert.rejects(open(selected), { outcome: 'unknown' });
     else {
-      const writer = await open(healthy); await publish(writer, [['old-a'], ['old-b']]);
-      if (phase === 'deletion') await publish(writer, [['new-a'], ['new-b']]);
+      const writer = await open(healthy); await publish(writer, values('old'));
+      if (phase === 'deletion') await publish(writer, values('new'));
       const attempt = await open(selected); armed = true;
-      if (phase === 'staging' || phase === 'publication') await assert.rejects(publish(attempt, [['new-a'], ['new-b']]), { outcome: 'unknown' });
+      if (phase === 'staging' || phase === 'publication') await assert.rejects(publish(attempt, values('new')), { outcome: 'unknown' });
       else await assert.rejects(attempt.collectGarbage(), { outcome: 'unknown' });
     }
     assert.equal(sends, 1, `${phase} must send once`);
     const recovered = await open(healthy); const current = await recovered.read(['a', 'b']);
     if (phase === 'initialization') assert.deepEqual(current.map((item) => item.entries), [[], []]);
-    else assert.deepEqual(current.map((item) => item.entries), phase === 'deletion' || (phase === 'publication' && after) ? [['new-a'], ['new-b']] : [['old-a'], ['old-b']]);
+    else assert.deepEqual(current.map((item) => item.entries), phase === 'deletion' || (phase === 'publication' && after) ? values('new') : values('old'));
     if (phase === 'fence') assert.equal((await healthy.catalog.read(['__link_gc_epoch']))[0].entries[1], after ? '1' : '0');
     assert.ok(await recovered.collectGarbage());
     assert.deepEqual((await recovered.read(['a', 'b'])).map((item) => item.entries), current.map((item) => item.entries));
@@ -72,16 +74,16 @@ async function lossCases() {
 }
 async function readerCases() {
   const prefix = '/reclamation-reader/'; const healthy = providers(prefix); const writer = await open(healthy);
-  await publish(writer, [['old-a'], ['old-b']]); let armed = false; let refreshed = false;
+  await publish(writer, values('old')); let armed = false; let refreshed = false;
   const racing = providers(prefix, { catalog: async (url, request) => {
     const body = JSON.parse(request.body); const response = await fetch(url, request);
     if (armed && !refreshed && !body.compare && body.success?.length === 3) {
-      refreshed = true; await publish(writer, [['new-a'], ['new-b']]); assert.equal((await writer.collectGarbage()).deleted, 2);
+      refreshed = true; await publish(writer, values('new')); assert.equal((await writer.collectGarbage()).deleted, chunked ? 4 : 2);
     }
     return response;
   } });
   const reader = await open(racing); armed = true;
-  assert.deepEqual((await reader.read(['a', 'b'])).map((item) => item.entries), [['new-a'], ['new-b']]); assert.ok(refreshed);
+  assert.deepEqual((await reader.read(['a', 'b'])).map((item) => item.entries), values('new')); assert.ok(refreshed);
   console.log('PASS real etcd: retired two-shard snapshot refresh returns one complete new group');
   let dataDown = false; let catalogDown = false;
   const cached = await open(providers(prefix, Object.fromEntries(['catalog', 'east', 'west'].map((name) => [name, async (url, request) => {
@@ -89,10 +91,10 @@ async function readerCases() {
     return fetch(url, request);
   }]))), 65536);
   const owned = await cached.read(['a', 'b']);
-  await publish(writer, [['later-a'], ['later-b']]); assert.equal((await writer.collectGarbage()).deleted, 2);
-  assert.deepEqual(owned.map((item) => item.entries), [['new-a'], ['new-b']]);
+  await publish(writer, values('later')); assert.equal((await writer.collectGarbage()).deleted, chunked ? 4 : 2);
+  assert.deepEqual(owned.map((item) => item.entries), values('new'));
   await cached.read(['a', 'b']); dataDown = true;
-  assert.deepEqual((await cached.read(['a', 'b'])).map((item) => item.entries), [['later-a'], ['later-b']]);
+  assert.deepEqual((await cached.read(['a', 'b'])).map((item) => item.entries), values('later'));
   catalogDown = true; await assert.rejects(cached.read(['a', 'b']));
   console.log('PASS real etcd: owned retired journals, warm-cache data outage, catalog remains required');
 }
@@ -145,4 +147,4 @@ try {
   clearTimeout(deadline); await Promise.all(nodes.map(stop));
   await Promise.all(nodes.map(({ log }) => new Promise((done) => log.end(done))));
 }
-console.log(`PASS all reclamation integration contracts; retained server logs ${directory}`);
+console.log(`PASS all ${chunked ? 'chunks2' : 'blob2'} reclamation integration contracts; retained server logs ${directory}`);

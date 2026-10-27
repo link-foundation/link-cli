@@ -263,6 +263,10 @@ async function physicalLsmTypes(wal: ReplaceableCommitLog, namespace: LsmTableNa
   const engine = new ClusterEngine(binding, store);
   const partitioned = new PartitionedJournalStore(store, { east: store }, () => 'east');
   const reclaiming = await ReclaimingPartitionedJournalStore.open(store, { east: store }, () => 'east');
+  await ReclaimingPartitionedJournalStore.open(store, { east: store }, () => 'east', { chunks: { maxRecords: 64, maxBytes: 65536, maxChunks: 1024 }, cacheBytes: 0 });
+  await ReclaimingPartitionedJournalStore.open(store, { east: store }, () => 'east', { chunks: null });
+  // @ts-expect-error Chunk counts use numeric bounds.
+  await ReclaimingPartitionedJournalStore.open(store, { east: store }, () => 'east', { chunks: { maxChunks: '1024' } });
   // @ts-expect-error A synchronous store does not advertise Promise-only methods.
   const asyncOnly: AtomicJournalStore = store;
   // @ts-expect-error Table namespace admission is numeric.

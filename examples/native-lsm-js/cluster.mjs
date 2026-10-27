@@ -11,7 +11,7 @@ const packagePath = resolve(process.env.CLINK_WASM ?? 'js/pkg');
 const binding = await import(pathToFileURL(join(packagePath, 'clink_wasm.js')).href);
 binding.initSync({ module: readFileSync(join(packagePath, 'clink_wasm_bg.wasm')) });
 const options = { maxKeys: 256, maxBytes: 1048576, bufferKeys: 64, bufferBytes: 262144, maxPages: 128 };
-for (const mode of ['direct', 'partitioned', 'chunks', 'reclaiming']) {
+for (const mode of ['direct', 'partitioned', 'chunks', 'reclaiming', 'reclaiming-chunks']) {
   const directory = mkdtempSync(join(tmpdir(), 'clink-lsm-consumer-'));
   let stores = [];
   async function open() {
@@ -22,7 +22,7 @@ for (const mode of ['direct', 'partitioned', 'chunks', 'reclaiming']) {
     });
     if (mode === 'direct') return stores[0];
     const args = [stores[0], { east: stores[1], west: stores[2] }, key => key === 'a' ? 'east' : 'west'];
-    return mode === 'chunks' ? new PartitionedJournalStore(...args, { chunks: { maxRecords: 2 } }) : mode === 'partitioned' ? new PartitionedJournalStore(...args) : await ReclaimingPartitionedJournalStore.open(...args);
+    return mode === 'chunks' ? new PartitionedJournalStore(...args, { chunks: { maxRecords: 2 } }) : mode === 'partitioned' ? new PartitionedJournalStore(...args) : await ReclaimingPartitionedJournalStore.open(...args, { chunks: mode === 'reclaiming-chunks' ? { maxRecords: 2 } : null });
   }
   function close() { for (const store of stores) { store.compact(); store.close(); } stores = []; }
   try {
@@ -42,7 +42,7 @@ for (const mode of ['direct', 'partitioned', 'chunks', 'reclaiming']) {
     await winner.shard('a').setName(1, 'winner'); await winner.commit(); await winner.close();
     await stale.shard('b').setName(1, 'lost'); await assert.rejects(stale.commit(), { outcome: 'failed' });
     await assert.rejects(stale.close(), { outcome: 'failed' });
-    if (mode === 'reclaiming') { const result = await journals.collectGarbage(); assert.ok(result.deleted > 0); }
+    if (mode.startsWith('reclaiming')) { const result = await journals.collectGarbage(); assert.ok(result.deleted > 0); }
     close(); journals = await open();
     engine = new ClusterEngine(binding, journals, { requireDurableFlush: process.platform !== 'win32' });
     const reader = await engine.begin(['a', 'b']);

@@ -39,7 +39,7 @@ separate explicit history cost. Preserve all those existing choices and bytes.
       blob reclamation must reject an unsupported manifest, without deleting
       referenced chunks. Reader epochs and exact-generation deletion remain
       necessary if chunk deletion is selected.
-- [ ] Run complete local checks and coverage, review and publish an atomic
+- [x] Run complete local checks and coverage, review and publish an atomic
       useful step, then inspect all fresh exact-head CI and preserve evidence.
 
 Proposed first policy: deterministic record/UTF-8-byte bounded chunks, a finite
@@ -91,8 +91,8 @@ checks, source-size, changeset, workflow and shell checks pass locally.
 The existing epoch-fenced collector now has a negative compatibility control in
 every language: it rejects valid unsupported chunks1 metadata before deleting
 anything. This establishes safe refusal, rather than completing chunk reclamation.
-Full native/WASM/C# coverage validation and fresh publication CI remain required.
-No chunk production behavior is published yet.
+That compatibility control does not establish safe chunk deletion; the separate
+CHUNK-RECLAMATION-PLAN.md tracks that implementation and its verification.
 
 
 Complete local validation now passes 1,146 native tests plus six doctests,
@@ -101,5 +101,8 @@ full production coverage. Both complete-store layouts pass fifty five-runtime
 handoffs. A consumer-only rerun verifies the generated WASM binding's explicit
 256MiB memory cap and repeats all consumers, costs, handoffs and conformance.
 journal-chunks.txt preserves every whole-project coverage denominator and cost.
-Publication and fresh exact-head CI remain to be verified before checking the
-final item; the chunk-reclamation item remains independently unfinished.
+Published as 860a47f with the dependency correction in 58d35f8, this step now
+passes all nine exact-head workflows, including native Windows, Linux and macOS.
+journal-chunks-ci-after.txt preserves exact SHA, runs and timestamps. The
+chunk-reclamation item remains independently unfinished until its own full
+validation and publication; every wider unmet criterion remains required.

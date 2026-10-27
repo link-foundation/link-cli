@@ -383,8 +383,8 @@ export class PartitionedJournalStore implements AtomicJournalStore {
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
 }
 
-/** Dedicated blob2 namespaces; collection is caller-selected and never automatic. */
-export interface ReclamationOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; cacheBytes?: number }
+/** Dedicated epoch-fenced namespaces; collection is caller-selected and never automatic. */
+export interface ReclamationOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; cacheBytes?: number; chunks?: JournalChunkOptions | null }
 export interface ReclamationResult { epoch: string; examined: number; deleted: number }
 export class ReclaimingPartitionedJournalStore implements AtomicJournalStore {
   private constructor();

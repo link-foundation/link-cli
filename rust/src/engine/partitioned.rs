@@ -7,7 +7,7 @@ use super::{
 use crate::LinkError;
 use std::collections::BTreeMap;
 #[path = "partitioned/chunks.rs"]
-mod chunks;
+pub(crate) mod chunks;
 pub use chunks::JournalChunkOptions;
 
 pub struct PartitionedJournalStore<C, D> {

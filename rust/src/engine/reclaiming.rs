@@ -4,11 +4,13 @@ use super::{
     error,
     maintenance::{JournalMaintenanceStore, JournalNamespaceEntry, JournalScanOptions},
     object_cache::ObjectCache,
+    partitioned::JournalChunkOptions,
 };
 use crate::LinkError;
 use std::collections::BTreeMap;
 mod codec;
 mod collector;
+mod objects;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ReclamationOptions {
@@ -42,6 +44,7 @@ pub struct ReclaimingPartitionedJournalStore<C, D> {
     route: Box<dyn Fn(&str) -> String + Send + Sync>,
     options: ReclamationOptions,
     cache: Option<ObjectCache>,
+    chunks: Option<JournalChunkOptions>,
 }
 struct Snapshot {
     values: Vec<JournalVersion>,
@@ -57,10 +60,36 @@ impl<C: JournalMaintenanceStore, D: JournalMaintenanceStore>
     ReclaimingPartitionedJournalStore<C, D>
 {
     pub fn open(
+        catalog: C,
+        partitions: BTreeMap<String, D>,
+        route: impl Fn(&str) -> String + Send + Sync + 'static,
+        options: ReclamationOptions,
+    ) -> Result<Self, LinkError> {
+        Self::open_configured(catalog, partitions, route, options, None)
+    }
+    /// Select bounded chunks for new writes. Existing blob2 and chunks2 roots
+    /// remain readable. Every staged chunk uses the captured catalog epoch.
+    pub fn open_chunked(
+        catalog: C,
+        partitions: BTreeMap<String, D>,
+        route: impl Fn(&str) -> String + Send + Sync + 'static,
+        options: ReclamationOptions,
+        chunks: JournalChunkOptions,
+    ) -> Result<Self, LinkError> {
+        Self::open_configured(
+            catalog,
+            partitions,
+            route,
+            options,
+            Some(chunks.validate()?),
+        )
+    }
+    fn open_configured(
         mut catalog: C,
         mut partitions: BTreeMap<String, D>,
         route: impl Fn(&str) -> String + Send + Sync + 'static,
         options: ReclamationOptions,
+        chunks: Option<JournalChunkOptions>,
     ) -> Result<Self, LinkError> {
         if options.max_keys == 0
             || options.max_bytes == 0
@@ -96,6 +125,7 @@ impl<C: JournalMaintenanceStore, D: JournalMaintenanceStore>
             route: Box::new(route),
             options,
             cache: (options.cache_bytes > 0).then(|| ObjectCache::new(options.cache_bytes)),
+            chunks,
         })
     }
     fn snapshot(&mut self, keys: &[String]) -> Result<Snapshot, LinkError> {
@@ -122,41 +152,16 @@ impl<C: JournalMaintenanceStore, D: JournalMaintenanceStore>
                 result.push(JournalVersion::default());
                 continue;
             };
-            if let Some(entries) = self
-                .cache
-                .as_mut()
-                .and_then(|cache| cache.get(&pointer.partition, &pointer.key, pointer.generation))
-            {
-                result.push(JournalVersion {
-                    generation: item.generation,
-                    entries,
-                });
-                continue;
-            }
-            let provider = self
-                .partitions
-                .get_mut(&pointer.partition)
-                .expect("validated pointer partition");
-            let object = codec::read(provider, std::slice::from_ref(&pointer.key))?.remove(0);
-            if object.generation == 0 {
-                return Ok(Group::Missing(index));
-            }
-            if object.generation != pointer.generation
-                || codec::address(pointer.epoch, &object.entries) != pointer.key
-            {
-                return Err(error("modified immutable reclamation object"));
-            }
-            if let Some(cache) = &mut self.cache {
-                cache.remember(
-                    &pointer.partition,
-                    &pointer.key,
-                    pointer.generation,
-                    &object.entries,
-                );
+            let mut entries = Vec::new();
+            for reference in &pointer.references {
+                let Some(records) = self.read_object(&pointer.partition, reference)? else {
+                    return Ok(Group::Missing(index));
+                };
+                entries.extend(records);
             }
             result.push(JournalVersion {
                 generation: item.generation,
-                entries: object.entries,
+                entries,
             });
         }
         Ok(Group::Complete(result))
@@ -219,7 +224,15 @@ impl<C: JournalMaintenanceStore, D: JournalMaintenanceStore> AtomicJournalStore
                         if !self.partitions.contains_key(&partition) {
                             return Err(error("route must select a configured partition"));
                         }
-                        Ok((partition, data.clone()))
+                        let chunks = match self.chunks {
+                            Some(options) => options
+                                .split(data)?
+                                .into_iter()
+                                .map(<[String]>::to_vec)
+                                .collect(),
+                            None => vec![data.clone()],
+                        };
+                        Ok((partition, data.len(), chunks))
                     })
                     .transpose()
             })
@@ -235,33 +248,28 @@ impl<C: JournalMaintenanceStore, D: JournalMaintenanceStore> AtomicJournalStore
         }
         let mut pointers = Vec::new();
         for item in staged {
-            let Some((partition, data)) = item else {
+            let Some((partition, total, chunks)) = item else {
                 pointers.push(None);
                 continue;
             };
-            let key = codec::address(current.epoch, &data);
-            let provider = self
-                .partitions
-                .get_mut(&partition)
-                .expect("validated route");
-            let mut object = codec::read(provider, std::slice::from_ref(&key))?.remove(0);
-            if object.generation == 0 {
-                provider.compare_exchange(
-                    std::slice::from_ref(&key),
-                    &[object],
-                    &[Some(data.clone())],
-                )?;
-                object = codec::read(provider, std::slice::from_ref(&key))?.remove(0);
+            let mut pointer = if self.chunks.is_some() {
+                vec![
+                    "chunks2".into(),
+                    partition.clone(),
+                    total.to_string(),
+                    chunks.len().to_string(),
+                ]
+            } else {
+                vec!["blob2".into(), partition.clone()]
+            };
+            for records in chunks {
+                let (key, generation) = self.stage_object(&partition, current.epoch, &records)?;
+                pointer.extend([key, generation.to_string()]);
+                if self.chunks.is_some() {
+                    pointer.push(records.len().to_string());
+                }
             }
-            if object.generation == 0 || object.entries != data {
-                return Err(error("immutable object collision or staging conflict"));
-            }
-            pointers.push(Some(vec![
-                "blob2".into(),
-                partition,
-                key,
-                object.generation.to_string(),
-            ]));
+            pointers.push(Some(pointer));
         }
         let mut selected = keys.to_vec();
         selected.push(codec::EPOCH_KEY.into());

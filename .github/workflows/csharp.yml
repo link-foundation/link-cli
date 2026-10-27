@@ -18,6 +18,7 @@ on:
       - 'docs/protocol/journal-maintenance-v1.json'
       - 'docs/protocol/reclamation-v1.json'
       - 'docs/protocol/chunked-journal*'
+      - 'docs/protocol/reclaiming-chunks*'
       - 'examples/cluster-csharp/**'
   workflow_dispatch:
     inputs:
@@ -294,6 +295,7 @@ jobs:
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm partitioned
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm chunks
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming-chunks
 
       - name: Setup Node.js for coverage
         if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}

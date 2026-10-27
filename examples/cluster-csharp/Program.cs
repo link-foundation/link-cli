@@ -3,6 +3,7 @@ using Foundation.Data.Doublets.Cli.Engine;
 if (args is ["--native-lsm", var mode]) { NativeLsmExample.Run(mode); return; }
 if (args is ["--native-lsm-files", var action, var directory, var mirrors]) { NativeLsmInterop.Run(action, directory, mirrors); return; }
 if (args is ["--native-lsm-chunks", var chunkAction, var chunkDirectory, var chunkMirrors]) { ChunkInterop.Run(chunkAction, chunkDirectory, chunkMirrors); return; }
+if (args is ["--native-lsm-reclaiming-chunks", var reclaimAction, var reclaimDirectory, var reclaimMirrors]) { ChunkInterop.Run(reclaimAction, reclaimDirectory, reclaimMirrors, true); return; }
 
 var cache = args.Contains("--cache"); var checkpoint = args.Contains("--checkpoint"); args = args.Where(value => value != "--cache" && value != "--checkpoint").ToArray();
 if ((args.Length != 2 && args.Length != 4) || (cache && args.Length != 4)) throw new ArgumentException("usage: ClusterExample catalog-endpoints prefix/ [east-endpoints west-endpoints [--cache]] [--checkpoint]");

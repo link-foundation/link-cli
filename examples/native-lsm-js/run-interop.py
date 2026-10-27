@@ -20,13 +20,13 @@ RUNTIMES = {
 if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
     RUNTIMES = {name: RUNTIMES[name] for name in selected.split(",")}
 LAYOUT = os.environ.get("NATIVE_LSM_LAYOUT", "whole")
-assert LAYOUT in ("whole", "chunks")
-if LAYOUT == "chunks":
+assert LAYOUT in ("whole", "chunks", "reclaiming-chunks")
+if LAYOUT != "whole":
     for name, command in RUNTIMES.items():
         if name == "rust":
-            command[-1] = "chunks"
+            command[-1] = LAYOUT
         elif name == "csharp":
-            command[-1] = "--native-lsm-chunks"
+            command[-1] = "--native-lsm-" + LAYOUT
         else:
             command[-1] = "examples/native-lsm-js/chunks-interop.mjs"
 

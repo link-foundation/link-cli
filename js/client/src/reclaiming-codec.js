@@ -1,5 +1,6 @@
 // Loaded only by the explicitly opened reclamation strategy.
 import { LinksError } from './errors.js';
+import { chunkOptions } from './journal-chunks.js';
 export const epochKey = '__link_gc_epoch';
 export const maximum = 18446744073709551615n;
 export const encoder = new TextEncoder();
@@ -31,9 +32,9 @@ export function keysOf(keys) {
   if (!Array.isArray(keys) || keys.length < 1 || keys.length > 31 || new Set(keys).size !== keys.length || Array.from(keys).some((key) => !validName(key) || key === epochKey)) throw new TypeError('select 1..31 distinct nonreserved shard names');
   return [...keys];
 }
-export function optionsOf({ maxKeys = 4096, maxBytes = 8388608, pageKeys = 128, cacheBytes = 0 } = {}) {
+export function optionsOf({ maxKeys = 4096, maxBytes = 8388608, pageKeys = 128, cacheBytes = 0, chunks = null } = {}) {
   if ([maxKeys, maxBytes, pageKeys].some((item) => !Number.isSafeInteger(item) || item <= 0) || pageKeys > 256 || !Number.isSafeInteger(cacheBytes) || cacheBytes < 0) throw new TypeError('invalid reclamation limits');
-  return { maxKeys, maxBytes, pageKeys, cacheBytes };
+  return { maxKeys, maxBytes, pageKeys, cacheBytes, chunks: chunkOptions(chunks) };
 }
 export function epochOf(item) {
   item = version(item, false);
@@ -54,10 +55,27 @@ export function address(epoch, items) {
 export function pointerOf(item, epoch, partitions) {
   if (item.generation === '0' && item.entries.length === 0) return null;
   const parts = item.entries;
-  if (item.generation === '0' || parts.length !== 4 || parts[0] !== 'blob2' || !partitions.has(parts[1]) || !generation(parts[3]) || parts[3] === '0') fail('invalid reclamation pointer');
-  const objectEpoch = keyEpoch(parts[2]);
-  if (objectEpoch > epoch) fail('pointer epoch exceeds catalog epoch');
-  return { partition: parts[1], key: parts[2], generation: parts[3], epoch: objectEpoch };
+  if (item.generation === '0' || !partitions.has(parts[1])) fail('invalid reclamation pointer');
+  const references = [];
+  const reference = (key, value, records) => {
+    if (!generation(value) || value === '0') fail('invalid reclamation object generation');
+    const objectEpoch = keyEpoch(key);
+    if (objectEpoch > epoch) fail('pointer epoch exceeds catalog epoch');
+    return { key, generation: value, epoch: objectEpoch, records };
+  };
+  if (parts.length === 4 && parts[0] === 'blob2') references.push(reference(parts[2], parts[3]));
+  else {
+    const bounded = (value, maximum) => generation(value) && BigInt(value) <= maximum;
+    if (parts.length < 4 || parts[0] !== 'chunks2' || !bounded(parts[2], 4294967295n) || !bounded(parts[3], 4096n) || parts.length !== 4 + Number(parts[3]) * 3) fail('invalid reclamation pointer or chunk manifest');
+    let total = 0;
+    for (let i = 4; i < parts.length; i += 3) {
+      if (!bounded(parts[i + 2], 65536n) || parts[i + 2] === '0') fail('invalid reclamation chunk count');
+      const count = Number(parts[i + 2]); total += count;
+      references.push(reference(parts[i], parts[i + 1], count));
+    }
+    if (total !== Number(parts[2])) fail('invalid reclamation chunk total');
+  }
+  return { partition: parts[1], references };
 }
 export function acknowledged(value) {
   if (typeof value !== 'boolean') throw new LinksError('indeterminate mutation acknowledgement; read fresh state', { outcome: 'unknown' });
@@ -85,9 +103,11 @@ export function catalogOf(items, partitions) {
   for (const item of items) {
     if (item.key === epochKey) continue;
     const pointer = pointerOf(item.version, epoch, partitions);
-    const identity = `${pointer.partition}/${pointer.key}`;
-    if (protectedObjects.has(identity) && protectedObjects.get(identity) !== pointer.generation) fail('contradictory protected generations');
-    protectedObjects.set(identity, pointer.generation);
+    for (const reference of pointer.references) {
+      const identity = `${pointer.partition}/${reference.key}`;
+      if (protectedObjects.has(identity) && protectedObjects.get(identity) !== reference.generation) fail('contradictory protected generations');
+      protectedObjects.set(identity, reference.generation);
+    }
   }
   return { epoch, protectedObjects };
 }

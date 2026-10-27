@@ -4,15 +4,17 @@ use link_cli::{
         cluster::{AtomicJournalStore, JournalVersion},
         lsm::{FileLsmJournalStore, FileLsmOptions, LsmOptions, LsmStoreOptions},
         partitioned::{JournalChunkOptions, PartitionedJournalStore},
+        reclaiming::{ReclaimingPartitionedJournalStore, ReclamationOptions},
     },
     LinkError,
 };
 use std::{collections::BTreeMap, path::Path};
 
-fn check<S: AtomicJournalStore>(
+fn check<S: AtomicJournalStore + ?Sized>(
     store: &mut S,
     seed: &[String],
     advanced: bool,
+    reclaiming: bool,
 ) -> Result<(), LinkError> {
     let mut entries = seed.to_vec();
     if advanced {
@@ -22,18 +24,33 @@ fn check<S: AtomicJournalStore>(
         store.read(&["a".into(), "b".into()])?,
         vec![
             JournalVersion {
-                generation: if advanced { 2 } else { 1 },
+                generation: if reclaiming {
+                    if advanced {
+                        4
+                    } else {
+                        2
+                    }
+                } else if advanced {
+                    2
+                } else {
+                    1
+                },
                 entries
             },
             JournalVersion {
-                generation: 1,
+                generation: if reclaiming { 2 } else { 1 },
                 entries: vec![]
             },
         ]
     );
     Ok(())
 }
-pub(super) fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError> {
+pub(super) fn run(
+    action: &str,
+    directory: &str,
+    mirrors: &str,
+    reclaiming: bool,
+) -> Result<(), LinkError> {
     assert!(matches!(
         action,
         "write" | "read" | "mutate" | "read-advanced"
@@ -71,17 +88,37 @@ pub(super) fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), Li
     };
     let catalog = open("catalog")?;
     let east = open("east")?;
-    let mut store = PartitionedJournalStore::new(
-        catalog.clone(),
-        BTreeMap::from([("east".into(), east.clone())]),
-        |_| "east".into(),
-    )?
-    .with_object_cache(256)
-    .with_chunks(JournalChunkOptions {
+    let parts = BTreeMap::from([("east".into(), east.clone())]);
+    let chunks = JournalChunkOptions {
         max_records: if action == "mutate" { 3 } else { 2 },
         max_bytes: 64,
         max_chunks: 32,
-    })?;
+    };
+    let collector = if reclaiming {
+        Some(Shared::new(
+            ReclaimingPartitionedJournalStore::open_chunked(
+                catalog.clone(),
+                parts.clone(),
+                |_| "east".into(),
+                ReclamationOptions {
+                    cache_bytes: 256,
+                    ..Default::default()
+                },
+                chunks,
+            )?,
+        ))
+    } else {
+        None
+    };
+    let mut store: Box<dyn AtomicJournalStore> = if let Some(collector) = &collector {
+        Box::new(collector.clone())
+    } else {
+        Box::new(
+            PartitionedJournalStore::new(catalog.clone(), parts, |_| "east".into())?
+                .with_object_cache(256)
+                .with_chunks(chunks)?,
+        )
+    };
     let keys = vec!["a".into(), "b".into()];
     let seed = ["aa", "bb", "\u{feff}雪", "😀\0", "tail"]
         .map(String::from)
@@ -90,15 +127,21 @@ pub(super) fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), Li
         let base = store.read(&keys)?;
         assert!(store.compare_exchange(&keys, &base, &[Some(seed.clone()), Some(vec![])])?);
     }
-    check(&mut store, &seed, action == "read-advanced")?;
+    check(&mut *store, &seed, action == "read-advanced", reclaiming)?;
     if action == "mutate" {
         let before = store.read(&keys)?;
+        if let Some(collector) = &collector {
+            assert_eq!(collector.with(|s| s.collect_garbage())?.unwrap().epoch, 1);
+        }
         let mut advanced = seed.clone();
         advanced.push("next".into());
         assert!(store.compare_exchange(&keys, &before, &[Some(advanced), None])?);
         assert_eq!(before[0].entries, seed);
         assert!(!store.compare_exchange(&keys, &before, &[Some(vec!["stale".into()]), None])?);
-        check(&mut store, &seed, true)?;
+        check(&mut *store, &seed, true, reclaiming)?;
+        if let Some(collector) = &collector {
+            assert_eq!(collector.with(|s| s.collect_garbage())?.unwrap().deleted, 3);
+        }
     }
     for files in [catalog, east] {
         if action == "write" || action == "mutate" {
@@ -107,6 +150,6 @@ pub(super) fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), Li
         }
         files.with(FileLsmJournalStore::close)?;
     }
-    println!("PASS Rust native chunks {action} {mirrors}");
+    println!("PASS Rust native chunks reclaiming={reclaiming} {action} {mirrors}");
     Ok(())
 }

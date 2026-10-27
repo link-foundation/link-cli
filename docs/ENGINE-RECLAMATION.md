@@ -127,6 +127,17 @@ objects. Out-of-protocol mutation cannot be detected by an existing cache hit.
 
 ## Runnable native and WASM handoffs
 
+Select an independent [bounded chunk policy](protocol/reclaiming-chunks.md) to
+reuse unchanged prefixes between collection fences. Rust supplies
+`open_chunked(..., ReclamationOptions, JournalChunkOptions)`, C# supplies the
+five-argument `Open(..., options, chunks)` overload, and JS supplies
+`{ chunks: { maxRecords: 2 } }` in its existing options. Cache and scan limits
+remain separate. Omitted chunk selection keeps whole-journal blob2 writes.
+Upgraded readers accept both formats, including live empty chunk journals.
+Every referenced object is protected during collection. After a fence, writers
+restage the complete journal under the captured new epoch. Full staging reads,
+replay and bounded complete namespace scans remain explicit costs.
+
 Each example appends one coordinated revision to shards `a`/`b`, publishes
 retained-history checkpoints, collects retired objects and checks all retained
 names, a deleted allocator reservation and an owned stale-workspace conflict.
@@ -144,7 +155,11 @@ node js/client/examples/journal-reclamation.mjs \
 
 The JS example also runs with Bun and `deno run --allow-net --allow-read
 --allow-env`. `CLINK_WASM` selects another built module directory. The example
-bounds handoffs to 32 revisions. The finite three-member integration harness
+binaries and integration harness select the chunk layout with the explicit
+`RECLAMATION_CHUNKS=1` environment variable; use a new dedicated prefix for a
+separate demonstration. Each handoff checks the exact number of retired
+references from the previous catalog snapshot, including retained-history chunks.
+Handoffs are bounded to 32 revisions. The finite three-member integration harness
 also tests response loss before/after every mutation phase, whole-group reader
 refresh, cache/data outages, leader loss and majority loss. Etcd supplies consensus
 and its declared durable storage; process/network fault probes do not establish

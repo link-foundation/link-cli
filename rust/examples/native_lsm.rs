@@ -131,9 +131,10 @@ fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
         ["files", action, directory, mirrors] => files(action, directory, mirrors)?,
-        ["chunks", action, directory, mirrors] => chunks::run(action, directory, mirrors)?,
+        ["chunks", action, directory, mirrors] => chunks::run(action, directory, mirrors, false)?,
+        ["reclaiming-chunks", action, directory, mirrors] => chunks::run(action, directory, mirrors, true)?,
         ["cluster", mode] => consumer::run(mode)?,
-        _ => anyhow::bail!("Use files|chunks write|read|mutate|read-advanced <directory> plain|mirrored or cluster direct|partitioned|chunks|reclaiming"),
+        _ => anyhow::bail!("Use files|chunks|reclaiming-chunks write|read|mutate|read-advanced <directory> plain|mirrored or cluster direct|partitioned|chunks|reclaiming|reclaiming-chunks"),
     }
     Ok(())
 }

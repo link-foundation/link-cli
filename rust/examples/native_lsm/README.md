@@ -8,6 +8,7 @@ rust/target/debug/examples/native_lsm cluster direct
 rust/target/debug/examples/native_lsm cluster partitioned
 rust/target/debug/examples/native_lsm cluster chunks
 rust/target/debug/examples/native_lsm cluster reclaiming
+rust/target/debug/examples/native_lsm cluster reclaiming-chunks
 ```
 
 Each finite consumer uses the actual `ClusterEngine<u32>` and native files in a

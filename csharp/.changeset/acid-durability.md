@@ -306,3 +306,8 @@ defaults, atomic catalog generation checks, owned reads and fresh full-content
 staging comparisons. Validate every manifest before fetching data and every
 update before staging. Preserve native Rust/C#/JS file interchange; keep the
 epoch-reclamation format separate and reject unsupported roots before deletion.
+
+Select bounded journal chunks independently on the epoch-fenced reclaiming store.
+Protect every live reference during collection, restage complete objects after a
+fence, and refresh the complete reader group if a chunk retires. Preserve blob2
+writing by default and interoperable native file/consensus consumers.

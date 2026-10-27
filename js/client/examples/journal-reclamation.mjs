@@ -10,7 +10,8 @@ const directory = resolve(process.env.CLINK_WASM ?? 'js/pkg');
 const binding = await import(pathToFileURL(resolve(directory, 'clink_wasm.js')).href);
 binding.initSync({ module: await readFile(resolve(directory, 'clink_wasm_bg.wasm')) });
 const provider = (name) => new EtcdJournalStore(endpoints.split(','), { prefix: `${prefix}${name}/` });
-const store = await ReclaimingPartitionedJournalStore.open(provider('catalog'), { east: provider('east'), west: provider('west') }, (key) => key === 'a' ? 'east' : 'west', { pageKeys: 1, cacheBytes: 65536 });
+const catalog = provider('catalog');
+const store = await ReclaimingPartitionedJournalStore.open(catalog, { east: provider('east'), west: provider('west') }, (key) => key === 'a' ? 'east' : 'west', { pageKeys: 1, cacheBytes: 65536, chunks: process.env.RECLAMATION_CHUNKS === '1' ? { maxRecords: 2 } : null });
 async function verify() {
   const revisions = [];
   for (const journal of await store.read(['a', 'b'])) {
@@ -30,6 +31,11 @@ async function verify() {
   assert.equal(revisions[0], revisions[1]); return revisions[0];
 }
 const revision = await verify(); assert.ok(revision < 32n);
+const retired = (await catalog.read(['a', 'b'])).reduce((sum, root) => {
+  if (root.generation === '0') return sum;
+  if (root.entries[0] === 'chunks2') return sum + Number(root.entries[3]);
+  assert.equal(root.entries[0], 'blob2'); return sum + 1;
+}, 0);
 const engine = new ClusterEngine(binding, store, { history: 'all', requireDurableFlush: true, journalCheckpointInterval: 1 });
 const stale = await engine.begin(['a', 'b']); const write = await engine.begin(['a', 'b']);
 let conflicted = false;
@@ -42,7 +48,7 @@ try {
   }
   await write.commit();
   const collected = await store.collectGarbage(); assert.ok(collected);
-  assert.equal(collected.deleted, revision === 0n ? 0 : 2);
+  assert.equal(collected.deleted, retired);
   if (revision > 0n) assert.equal(await stale.shard('a').getName(1), `revision-${revision} 雪`);
   await assert.rejects(stale.commit(), /conflict/);
   conflicted = true;

@@ -10,9 +10,9 @@ CLINK_WASM=js/pkg deno run --allow-all examples/native-lsm-js/cluster.mjs
 ```
 
 The example uses the actual WASM links engine and actual native files in temporary
-directories. It checks four finite compositions: a direct journal store, an
+directories. It checks five finite compositions: a direct journal store, an
 atomic catalog over two data stores, selected bounded journal chunks, and
-epoch-fenced reclamation. Each runs three coordinated revisions with retained-history checkpoint
+epoch-fenced reclamation with whole journals or selected chunks. Each runs three coordinated revisions with retained-history checkpoint
 journals, rejects a stale group after a competing commit, compacts, closes and
 reopens the physical stores, then reads the original link names. The reclamation
 case also deletes obsolete immutable objects before reopening.
@@ -33,6 +33,7 @@ dotnet build examples/cluster-csharp --configuration Release
 cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
 python3 examples/native-lsm-js/run-interop.py
 NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
+NATIVE_LSM_LAYOUT=reclaiming-chunks python3 examples/native-lsm-js/run-interop.py
 ```
 
 Rust, C#, Node, Bun and Deno each write plain and fully mirrored stores. Every runtime
@@ -56,3 +57,10 @@ per chunk; advancing readers select three, verifying read compatibility across
 write policies. Live empty journals, Unicode/BOM/NUL, stale groups, owned prior
 snapshots and byte-preserving read-only reopening remain checked. This matrix
 does not select deletion of chunk objects. See the [chunk contract and costs](../../docs/protocol/chunked-journal.md).
+
+The third matrix runs 50 handoffs with epoch-fenced chunks2 manifests. Each
+advancing reader collects after acquiring ownership, publishes under the new
+epoch, rejects its old owned generation, then collects exactly the three retired
+seed chunks. Read-only reopening preserves every physical file hash. The actual
+WASM cluster consumer separately verifies retained checkpoint history. See the
+[reclamation contract and restaging costs](../../docs/protocol/reclaiming-chunks.md).

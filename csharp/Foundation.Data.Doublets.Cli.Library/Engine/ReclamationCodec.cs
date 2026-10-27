@@ -9,7 +9,8 @@ internal static class ReclamationCodec
     static ReclamationCodec() { }
     private static readonly UTF8Encoding Encoding = new(false, true);
     internal const string EpochKey = "__link_gc_epoch";
-    internal sealed record Pointer(string Partition, string Key, ulong Generation, ulong Epoch);
+    internal sealed record Reference(string Key, ulong Generation, ulong Epoch, int? Records);
+    internal sealed record Pointer(string Partition, Reference[] References);
     internal static string[] Keys(IReadOnlyList<string> keys)
     {
         ClusterEngine<uint>.ValidateKeys(keys);
@@ -58,15 +59,29 @@ internal static class ReclamationCodec
         foreach (var record in records) { var bytes = Encoding.GetBytes(record); Add(Encoding.GetBytes(bytes.Length.ToString(CultureInfo.InvariantCulture) + ":")); Add(bytes); }
         return "blob2-" + epoch.ToString("x16", CultureInfo.InvariantCulture) + "-" + hash.ToString("x16", CultureInfo.InvariantCulture);
     }
+    private static Reference ParseReference(string key, string text, int? records, ulong epoch)
+    {
+        if (!Canonical(text, out var generation) || generation == 0) throw new InvalidDataException("Invalid reclamation object generation.");
+        var objectEpoch = KeyEpoch(key);
+        if (objectEpoch > epoch) throw new InvalidDataException("Pointer epoch exceeds catalog epoch.");
+        return new(key, generation, objectEpoch, records);
+    }
     internal static Pointer? ParsePointer(JournalVersion value, ulong epoch, IReadOnlyDictionary<string, IJournalMaintenanceStore> partitions)
     {
         value = Version(value);
         if (value.Generation == 0) return null;
         var parts = value.Entries;
-        if (parts.Count != 4 || parts[0] != "blob2" || !partitions.ContainsKey(parts[1]) || !Canonical(parts[3], out var generation) || generation == 0) throw new InvalidDataException("Invalid reclamation pointer.");
-        var objectEpoch = KeyEpoch(parts[2]);
-        if (objectEpoch > epoch) throw new InvalidDataException("Pointer epoch exceeds catalog epoch.");
-        return new(parts[1], parts[2], generation, objectEpoch);
+        if (parts.Count < 4 || !partitions.ContainsKey(parts[1])) throw new InvalidDataException("Invalid reclamation pointer.");
+        if (parts.Count == 4 && parts[0] == "blob2") return new(parts[1], new[] { ParseReference(parts[2], parts[3], null, epoch) });
+        if (parts[0] != "chunks2" || !Canonical(parts[2], out var total) || total > uint.MaxValue || !Canonical(parts[3], out var count) || count > 4096 || parts.Count != 4 + (int)count * 3) throw new InvalidDataException("Invalid reclamation chunk manifest.");
+        var references = new List<Reference>(); ulong sum = 0;
+        for (var i = 4; i < parts.Count; i += 3)
+        {
+            if (!Canonical(parts[i + 2], out var records) || records is < 1 or > 65536) throw new InvalidDataException("Invalid reclamation chunk count.");
+            sum += records; references.Add(ParseReference(parts[i], parts[i + 1], (int)records, epoch));
+        }
+        if (sum != total) throw new InvalidDataException("Invalid reclamation chunk total.");
+        return new(parts[1], references.ToArray());
     }
     internal static JournalNamespaceEntry[] Scan(IJournalMaintenanceStore provider, ReclamationOptions options, bool keysOnly)
     {
@@ -94,9 +109,12 @@ internal static class ReclamationCodec
         {
             if (item.Key == EpochKey) continue;
             var pointer = ParsePointer(item.Version, epoch, partitions) ?? throw new InvalidDataException("Absent catalog entry.");
-            var identity = (pointer.Partition, pointer.Key);
-            if (protectedObjects.TryGetValue(identity, out var prior) && prior != pointer.Generation) throw new InvalidDataException("Contradictory protected generations.");
-            protectedObjects[identity] = pointer.Generation;
+            foreach (var reference in pointer.References)
+            {
+                var identity = (pointer.Partition, reference.Key);
+                if (protectedObjects.TryGetValue(identity, out var prior) && prior != reference.Generation) throw new InvalidDataException("Contradictory protected generations.");
+                protectedObjects[identity] = reference.Generation;
+            }
         }
         return (epoch, protectedObjects);
     }

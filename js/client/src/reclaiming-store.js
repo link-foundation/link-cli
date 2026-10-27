@@ -1,5 +1,6 @@
 import { acknowledged, address, catalogOf, encoder, epochKey, epochOf, fail, generation, keysOf, mutation, optionsOf, pointerOf, records, scan, validName, versions } from './reclaiming-codec.js';
 import { collect } from './reclaiming-collector.js';
+import { splitChunks, validateChunk } from './journal-chunks.js';
 const capable = (store) => ['read', 'compareExchange', 'scanNamespace', 'compareDelete'].every((key) => typeof store?.[key] === 'function');
 
 export async function openStore(catalog, partitions, route, options) {
@@ -47,17 +48,25 @@ class Store {
     for (let index = 0; index < snapshot.items.length; index++) {
       const item = snapshot.items[index]; const pointer = snapshot.pointers[index];
       if (pointer === null) { result.push({ generation: '0', entries: [] }); continue; }
-      const identity = `${pointer.partition}/${pointer.key}/${pointer.generation}`;
-      const cached = this.cache?.get(identity);
-      if (cached) {
-        this.cache.delete(identity); this.cache.set(identity, cached);
-        result.push({ generation: item.generation, entries: [...cached.entries] }); continue;
+      const entries = [];
+      for (const reference of pointer.references) {
+        const identity = `${pointer.partition}/${reference.key}/${reference.generation}`;
+        const cached = this.cache?.get(identity);
+        let records;
+        if (cached) {
+          this.cache.delete(identity); this.cache.set(identity, cached); records = [...cached.entries];
+        } else {
+          const [object] = versions(await this.partitions.get(pointer.partition).read([reference.key]), 1);
+          if (object.generation === '0') return { missing: index };
+          if (object.generation !== reference.generation || address(reference.epoch, object.entries) !== reference.key) fail('modified immutable reclamation object');
+          records = object.entries;
+          if (reference.records !== undefined) validateChunk(records, reference.records);
+          this.remember(identity, records);
+        }
+        if (reference.records !== undefined) validateChunk(records, reference.records);
+        for (const record of records) entries.push(record);
       }
-      const [object] = versions(await this.partitions.get(pointer.partition).read([pointer.key]), 1);
-      if (object.generation === '0') return { missing: index };
-      if (object.generation !== pointer.generation || address(pointer.epoch, object.entries) !== pointer.key) fail('modified immutable reclamation object');
-      this.remember(identity, object.entries);
-      result.push({ generation: item.generation, entries: object.entries });
+      result.push({ generation: item.generation, entries });
     }
     return { result };
   }
@@ -81,7 +90,7 @@ class Store {
       if (update === null) return null;
       const data = records(update); const partition = this.route(keys[index]);
       if (!this.partitions.has(partition)) throw new TypeError('route must select a configured partition');
-      return { data, partition };
+      return { data, partition, chunks: this.options.chunks ? splitChunks(data, this.options.chunks) : [data] };
     });
     return mutation(async () => {
       const current = await this.snapshot(keys);
@@ -89,14 +98,22 @@ class Store {
       const pointers = [];
       for (const item of staged) {
         if (item === null) { pointers.push(null); continue; }
-        const key = address(current.epoch, item.data); const provider = this.partitions.get(item.partition);
-        let [object] = versions(await provider.read([key]), 1);
-        if (object.generation === '0') {
-          acknowledged(await provider.compareExchange([key], [object], [item.data]));
-          [object] = versions(await provider.read([key]), 1);
+        const manifest = this.options.chunks
+          ? ['chunks2', item.partition, String(item.data.length), String(item.chunks.length)] : ['blob2', item.partition];
+        const provider = this.partitions.get(item.partition);
+        // Every key uses this captured epoch. Never reuse an old-epoch prefix.
+        for (const records of item.chunks) {
+          const key = address(current.epoch, records);
+          let [object] = versions(await provider.read([key]), 1);
+          if (object.generation === '0') {
+            acknowledged(await provider.compareExchange([key], [object], [records]));
+            [object] = versions(await provider.read([key]), 1);
+          }
+          if (object.generation === '0' || object.entries.length !== records.length || object.entries.some((record, index) => record !== records[index])) fail('immutable object collision or staging conflict');
+          manifest.push(key, object.generation);
+          if (this.options.chunks) manifest.push(String(records.length));
         }
-        if (object.generation === '0' || object.entries.length !== item.data.length || object.entries.some((record, index) => record !== item.data[index])) fail('immutable object collision or staging conflict');
-        pointers.push(['blob2', item.partition, key, object.generation]);
+        pointers.push(manifest);
       }
       return acknowledged(await this.catalog.compareExchange([...keys, epochKey], [...guards, current.root], [...pointers, null]));
     });
