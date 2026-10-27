@@ -597,3 +597,14 @@ acceptance criterion continue independently.
     `LSM-PROTOTYPE-PLAN.md` and lsm-store-{before,prototype}.txt retain evidence.
     Portable production stores, native ownership/discovery, process/interchange
     tests and all wider acceptance criteria remain active.
+
+46. Semantic codec head `d12760f` passes eight workflows; Rust Windows fails
+    three movement parents because the aggregate ten-second child deadline
+    expires during progressing setup, before the intended crash point. The
+    preserved log and exact line references are in movement-progress-ci-before.txt.
+    A finite monotonic phase supervisor keeps the ten-second idle limit, rejects
+    repeated/partial/malformed progress and kills/reaps on errors. All original
+    40 movement/recovery scenarios remain. Three deterministic harness controls,
+    focused execution, formatting, strict Clippy and 221 repository checks pass.
+    A separate clean production archive verifies this test-only correction;
+    fresh exact-head Windows CI follows. Wider R1–R12 work remains active.

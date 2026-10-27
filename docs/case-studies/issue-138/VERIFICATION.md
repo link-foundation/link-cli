@@ -3500,3 +3500,21 @@ ShellCheck, actionlint and repository checks validate that workflow change.
 results supply neither production store APIs nor native directory guarantees,
 actual-WASM store results, process exits or cross-language store interchange.
 Those requirements and every wider unmet acceptance criterion remain active.
+
+## Movement process supervision after semantic codec CI
+
+On exact head `d12760f`, eight workflows pass and Rust Windows fails three
+movement parents during setup. The requested movement cut has not been reached;
+setup logs show finite phases advancing through 7.9 seconds before the aggregate
+ten-second deadline kills the child. No cause is established for the underlying
+Windows barrier latency. movement-progress-ci-before.txt records the full saved
+log path, failure line numbers, job URL and timestamps.
+
+The revised supervisor retains ten seconds between finite phase advances and
+rejects more than 64 phases or 192 bytes, invalid order, regressions and stalled
+or repeated progress. Every supervisor error kills and reaps its child. The
+three added controls and all 40 original movement/recovery scenarios pass in the
+focused six-test target; its two child entries run only through bounded parents.
+Formatting, strict Clippy and all 221 repository checks pass. The isolated clean
+production archive excludes pending physical-store implementation. Fresh Windows
+CI must pass before this correction is considered verified across platforms.

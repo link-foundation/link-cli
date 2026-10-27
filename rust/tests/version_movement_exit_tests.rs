@@ -7,15 +7,35 @@ use link_cli::{
 };
 use std::{
     cell::RefCell,
+    io::Write,
     path::Path,
     process::{Command, Stdio},
     rc::Rc,
+    sync::atomic::{AtomicUsize, Ordering},
     time::{Duration, Instant},
 };
 #[path = "common/version_metadata.rs"]
 mod metadata_fault;
+#[path = "common/movement_progress.rs"]
+mod movement_progress;
 use metadata_fault::{Fault, Metadata};
 const TOPIC: &str = "topic|雪\0🚀";
+
+fn progress_phase() {
+    static PHASE: AtomicUsize = AtomicUsize::new(0);
+    let phase = PHASE.fetch_add(1, Ordering::Relaxed) + 1;
+    assert!(
+        phase <= movement_progress::MAX_PHASES,
+        "finite movement phase bound"
+    );
+    let directory = std::env::var("LINK_MOVEMENT_EXIT_DIRECTORY").unwrap();
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(Path::new(&directory).join("progress"))
+        .unwrap();
+    writeln!(file, "{phase}").unwrap();
+}
 
 fn data(directory: &Path) -> Result<NamedTypesDecorator> {
     NamedTypesDecorator::new(directory.join("data/data.links"), false)
@@ -52,22 +72,20 @@ fn verify(point: &str, switch: bool, recovery_fault: Option<&str>) -> Result<()>
         .stdout(Stdio::from(diagnostics.try_clone()?))
         .stderr(Stdio::from(diagnostics))
         .spawn()?;
-    let deadline = Instant::now() + Duration::from_secs(10);
-    loop {
-        if child.try_wait()?.is_some() {
-            break;
-        }
-        if Instant::now() >= deadline {
-            child.kill()?;
-            child.wait()?;
-            bail!(
-                "Finite movement child did not stop: {point}/{switch}.\n{}",
-                std::fs::read_to_string(&diagnostics_path)?
-            );
-        }
-        std::thread::sleep(Duration::from_millis(10));
-    }
-    let status = child.wait()?;
+    // Setup contains several separate mapped-file persistence barriers. Bound
+    // each interval of observed finite progress, not their accumulated duration.
+    // Repeated/partial heartbeats do not reset the same ten-second deadline.
+    let status = movement_progress::wait(
+        &mut child,
+        &directory.path().join("progress"),
+        Duration::from_secs(10),
+    )
+    .map_err(|cause| {
+        anyhow::anyhow!(
+            "Finite movement child failed: {point}/{switch}: {cause}.\n{}",
+            std::fs::read_to_string(&diagnostics_path).unwrap_or_default()
+        )
+    })?;
     assert!(
         status.success(),
         "{point}/{switch}: {}",
@@ -199,7 +217,10 @@ fn interrupted_recovery_reopens_at_every_metadata_phase() -> Result<()> {
 #[ignore = "Executed only by bounded movement parents"]
 fn movement_exit_child() -> Result<()> {
     let started = Instant::now();
-    let progress = |stage| eprintln!("movement child {:?}: {stage}", started.elapsed());
+    let progress = |stage| {
+        eprintln!("movement child {:?}: {stage}", started.elapsed());
+        progress_phase();
+    };
     progress("opening stores");
     let directory = std::env::var("LINK_MOVEMENT_EXIT_DIRECTORY")?;
     let directory = Path::new(&directory);
@@ -234,6 +255,7 @@ fn movement_exit_child() -> Result<()> {
     fault.borrow_mut().flushes = 0;
     fault.borrow_mut().on_check = Some(|point| {
         eprintln!("movement child metadata: {point}");
+        progress_phase();
         if std::env::var("LINK_MOVEMENT_EXIT_POINT").as_deref() == Ok(point) {
             std::process::exit(0);
         }
