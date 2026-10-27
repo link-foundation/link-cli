@@ -1,6 +1,18 @@
 import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links } from '../types/index.js';
 import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';
+import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
+function causalTypes(wire: string) {
+  const value: CausalValue = CausalVersion.decode(wire);
+  const merged: CausalValue[] = CausalVersion.merge([value], []);
+  const next: CausalValue = CausalVersion.advance(value.address, value.dot.author,
+    value.dot.counter, merged, { source: '0', target: '0', name: '雪' });
+  // @ts-expect-error Numbers cannot preserve every canonical u64 counter.
+  CausalVersion.advance('1', value.dot.author, 1, [], null);
+  // @ts-expect-error Causal row endpoints use canonical decimal strings.
+  CausalVersion.advance('1', value.dot.author, '0', [], { source: 1, target: '0', name: null });
+  return CausalVersion.encode(next);
+}
 class Logging extends LinksDecorator {
   override async create(source: bigint | number, target: bigint | number) { return super.create(source, target); }
 }

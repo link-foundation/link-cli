@@ -15,6 +15,7 @@ on:
       - 'docs/protocol/reclamation-v1.json'
       - 'docs/protocol/chunked-journal*'
       - 'docs/protocol/reclaiming-chunks*'
+      - 'docs/protocol/causal-version*'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
       - '.github/scripts/check-sqlite-optional.mjs'

@@ -40,7 +40,8 @@ features = [
 ]
 
 [features]
-default = ["console_error_panic_hook", "sorted-tables", "physical-lsm"]
+default = ["console_error_panic_hook", "sorted-tables", "physical-lsm", "causal"]
+causal = ["link-cli/causal"]
 sorted-tables = ["link-cli/sorted-tables"]
 physical-lsm = ["link-cli/physical-lsm"]
 

@@ -18,6 +18,11 @@ the other.
 The package has no runtime dependencies. The main entry point imports nothing
 from `node:`, and nothing here needs React or a browser.
 
+The separately imported `./engine-causal-version` component supplies bounded
+causal row encoding, retained-sibling reconciliation and checked counter
+construction. See [configuration, costs and limits](../../docs/ENGINE-CAUSAL-VERSIONS.md).
+It performs no I/O; durable causal storage and anti-entropy remain in progress.
+
 ## Use
 
 ```js

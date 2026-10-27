@@ -17,9 +17,16 @@ be presented as another acknowledgement threshold on the existing log.
       incomparable versions; require explicit application resolution or a
       separately selected deterministic projection for the ordinary links API.
       Reject malformed/equal-clock contradictions before replacing live state.
-      The initial causal-version1 boundary has 46 codec and eleven merge cases;
+      The causal-version1 boundary has 46 codec, eleven merge and nine counter cases;
       see ../../protocol/causal-version-v1.md. Runtime parity is a separate step.
-- [ ] Add failing production conformance tests before the new implementation.
+- [x] Add five test-first portable semantic contracts per implementation,
+      including 46 codec, eleven merge and nine checked-counter vectors,
+      24 delivery orders and 216 state triples. Native Rust, C# and JS pass
+      focused checks; actual WASM and complete suites are being verified.
+      The independent JS baseline fails with the new module absent. Select
+      Rust's `causal` feature or import the separate JS/TS module; neither
+      changes the bare engine's storage, metadata or dependency contract.
+- [ ] Add failing durable replica conformance tests before local storage.
       Include concurrent update/delete, stale reads and retries, duplicate
       deliveries, lost replies, restart, independently writable replicas,
       counter exhaustion, contradictory author histories and following edits.
@@ -51,6 +58,8 @@ component. Local atomicity and causal convergence are distinct from global
 serializability, cross-replica uniqueness, cascade constraints and consensus.
 Applications selecting those guarantees must retain their coordinated strategy.
 
-The current model is design evidence only. Production anti-entropy, durable
+The finite model is design evidence; the selected production codec/merge/counter
+component has separate conformance evidence. Production anti-entropy, durable
 causal state, bounded transfer and all wider unmet criteria remain unfinished;
-PR139 stays draft and unmerged. See anti-entropy-causality-model.txt.
+PR139 stays draft and unmerged. See anti-entropy-causality-model.txt and
+../../ENGINE-CAUSAL-VERSIONS.md.

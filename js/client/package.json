@@ -42,6 +42,10 @@
       "default": "./src/lino.js"
     },
     "./package.json": "./package.json",
+    "./engine-causal-version": {
+      "types": "./types/engine-causal-version.d.ts",
+      "default": "./src/engine-causal-version.js"
+    },
     "./engine-sqlite-log": {
       "types": "./types/engine-sqlite-log.d.ts",
       "default": "./src/engine-sqlite-log.js"

@@ -66,6 +66,7 @@ errno = { version = "0.3.14", optional = true }
 windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Memory", "Win32_Security"] }
 
 [features]
+causal = ["dep:serde_json"]
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
 sqlite = ["dep:rusqlite"]
 native-pages = ["dep:getrandom", "dep:libc", "dep:errno"]

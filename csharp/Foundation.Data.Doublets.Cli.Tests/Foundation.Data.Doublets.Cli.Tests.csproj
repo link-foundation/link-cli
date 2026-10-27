@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../docs/protocol/causal-version-v1.json" Link="Protocol/causal-version-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/engine-checkpoint-vectors.json" Link="Protocol/engine-checkpoint-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/checkpoint-root-mirror-v1.json" Link="Protocol/checkpoint-root-mirror-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/checkpoint-pages-v1.json" Link="Protocol/checkpoint-pages-v1.json" CopyToOutputDirectory="PreserveNewest" />

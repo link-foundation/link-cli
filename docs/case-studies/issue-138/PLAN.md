@@ -980,3 +980,19 @@ acceptance criterion continue independently.
     bounded snapshot/range transfer, process fault verification and all wider
     requirements remain active. An eventual multiwriter backend must not claim
     the global linearizable AtomicJournalStore contract without coordination.
+
+69. Implement the separately selected causal-version semantic boundary in
+    native Rust, C#, JS/TS and the actual-WASM shared test surface. Five tests
+    precede implementation; the missing JS module reproduces the absent API.
+    Independently generated vectors now include nine counter-construction
+    controls alongside 46 codec and eleven merge cases. Reject malformed
+    canonical encodings, contradictory identities before pruning, exhaustion
+    and exceeded author/sibling bounds. Preserve concurrent update/deletion,
+    owned results and deterministic order. Focused native/C#/JS contracts,
+    strict types, formatting, Clippy and the bare dependency boundary pass.
+    The complete 649-test JS suite enforces 100% production coverage. Complete
+    C# Debug/Release, native LLVM and actual-WASM checks are running under the
+    sequential memory bound; record their actual results before claiming them.
+    Publish for fresh exact-head platform CI, retaining all three C# coverage
+    artifacts. Durable counter ownership/publication, bounded Merkle transfer,
+    ordinary links projection and all wider unmet criteria remain unfinished.

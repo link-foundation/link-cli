@@ -55,6 +55,9 @@ safe when an older replica can return.
 [Independent vectors](causal-version-v1.json) include integer limits, Unicode,
 deletions, incompatible identities, malformed encodings and conflicts that
 must reject even when another supplied version dominates them. The generator
-does not import any production codec. Production parity, durable ownership,
+does not import any production codec. Nine shared advancement cases check
+observed resolution, retained counter floors, the final counter, exhaustion,
+address mismatch and the joined author bound without mutating input state.
+Production parity, durable ownership,
 restart and bounded anti-entropy remain active under
 [the plan](../case-studies/issue-138/ANTI-ENTROPY-PLAN.md).

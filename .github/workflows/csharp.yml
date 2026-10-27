@@ -19,6 +19,7 @@ on:
       - 'docs/protocol/reclamation-v1.json'
       - 'docs/protocol/chunked-journal*'
       - 'docs/protocol/reclaiming-chunks*'
+      - 'docs/protocol/causal-version*'
       - 'examples/cluster-csharp/**'
   workflow_dispatch:
     inputs:

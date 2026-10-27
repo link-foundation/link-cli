@@ -109,9 +109,30 @@ for name, other in [
 # Check contradictory duplicate dots before dominance removes both of them.
 merges.append({"name": "dominated-contradiction", "left": [base, resolved],
                "right": [version(payload=["7", "8", None])], "valid": False})
+advances = [
+    {"name": "first-tombstone", "address": "1", "author": A, "lastCounter": "0",
+     "observed": [], "payload": None, "expected": version()},
+    {"name": "observed-sibling-resolution", "address": "1", "author": A, "lastCounter": "2",
+     "observed": [update, deleted], "payload": resolved[4], "expected": resolved},
+    {"name": "retained-global-counter", "address": "1", "author": A, "lastCounter": "7",
+     "observed": [base], "payload": None, "expected": version(counter="8")},
+    {"name": "observed-counter-floor", "address": "1", "author": A, "lastCounter": "0",
+     "observed": [update], "payload": None, "expected": version(counter="3")},
+    {"name": "final-counter", "address": "1", "author": A, "lastCounter": str(int(MAX)-1),
+     "observed": [], "payload": None, "expected": version(counter=MAX)},
+    {"name": "exhausted-local-counter", "address": "1", "author": A, "lastCounter": MAX,
+     "observed": [], "payload": None, "valid": False},
+    {"name": "exhausted-observed-counter", "address": "1", "author": A, "lastCounter": "0",
+     "observed": [version(counter=MAX)], "payload": None, "valid": False},
+    {"name": "wrong-address", "address": "2", "author": A, "lastCounter": "0",
+     "observed": [base], "payload": None, "valid": False},
+    {"name": "joined-clock-author-limit", "address": "1", "author": f"{65:032x}", "lastCounter": "0",
+     "observed": [version(clock=[[f"{i:032x}", "1"] for i in range(1, 65)])],
+     "payload": None, "valid": False},
+]
 result = {"format": "causal-version-v1-vectors", "authors": [A, B, C],
           "cases": cases, "merges": merges,
-          "events": [base, update, deleted, resolved]}
+          "events": [base, update, deleted, resolved], "advances": advances}
 target = ROOT / "docs/protocol/causal-version-v1.json"
 target.write_text(json.dumps(result, indent=2, ensure_ascii=True) + "\n")
-print(f"Wrote {len(cases)} codec cases and {len(merges)} merge cases: {target.relative_to(ROOT)}")
+print(f"Wrote {len(cases)} codec, {len(merges)} merge and {len(advances)} advance cases: {target.relative_to(ROOT)}")

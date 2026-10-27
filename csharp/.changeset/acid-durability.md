@@ -6,6 +6,10 @@ Select immutable sorted runs independently of concurrency, isolation, validation
 retention and journal encoding. Share immutable run arrays between revisions,
 preserve tombstones through merges and retain the existing links/session API.
 
+Add selected causal version encoding, retained-sibling merge and checked counter
+construction with shared Rust, actual-WASM and JS vectors. These semantic
+operations perform no storage I/O, durable author fencing or replication.
+
 Preserve the current mapped view and owned file handle when capacity growth is
 rejected. Construct a replacement before publishing its pointer, retaining
 flush, retry, following edits and exact used-length disposal after an I/O error.
