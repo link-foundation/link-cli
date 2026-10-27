@@ -1,5 +1,18 @@
 # Acceptance inventory
 
+C# version-exit setup progress (R1/R3/R7/R8) now reports returned creation
+before its update starts, retaining the public helper's callback and duplicate
+semantics. An immutable baseline fails the boundary test and passes the
+independent behavior control. All 31 focused controls, 2,462 tests in each
+full Debug/Release suite and 221 repository checks pass at 11:22:31Z. Existing
+tracing is enabled only in the child; idle/phase/capture/reaping bounds remain
+unchanged. version-setup{,-before}.txt preserves evidence. All nine workflows
+pass for prior dec6cb7, including 2,460 C# tests per platform before this
+visibility correction; the original timeout is intermittent and its exact
+host cause remains unestablished. mapped-grow-ci-after.txt preserves SHA and
+timestamps. Later empty-shrink/setup corrections require fresh exact-head CI.
+Every wider unmet criterion remains unfinished; PR139 stays draft/unmerged.
+
 Zero-removal and rejected-shrink boundaries (R1/R6/R7/R8) now preserve Rust's
 live mapped owner. Four finite regressions fail against immutable 2478d59;
 complete shrink and destructor controls already pass. Returning for zero

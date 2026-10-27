@@ -1,11 +1,30 @@
 using Platform.Data;
 using Platform.Data.Doublets;
+using Platform.Data.Doublets.Decorators;
+using Platform.Delegates;
 
 namespace Foundation.Data.Doublets.Cli.Tests;
 
 internal static class VersionExitProbe
 {
     internal const string Topic = "topic|:parent=雪\0";
+
+    private sealed class CreationProgressLinks(INamedTypesLinks<uint> store, Action<string> phase) : LinksDecoratorBase<uint>(store)
+    {
+        public override uint Create(IList<uint>? substitution, WriteHandler<uint>? handler)
+        {
+            uint result = base.Create(substitution, handler);
+            phase("row-allocated");
+            return result;
+        }
+    }
+
+    internal static uint CreateInitialRow(INamedTypesLinks<uint> store, Action<string> phase)
+    {
+        var result = new CreationProgressLinks(store, phase).CreateAndUpdate(11u, 12u);
+        phase("row-created");
+        return result;
+    }
 
     internal static int Run(string directory, string mode, bool automatic, bool names = false)
     {
@@ -22,12 +41,11 @@ internal static class VersionExitProbe
             if (armed) throw new IOException("Injected post-decision checkpoint error.");
             data.Flush();
         }
-        using var tx = new TransactionsDecorator(data, log, flushData: FlushData, flushLog: log.Flush);
+        using var tx = new TransactionsDecorator(data, log, flushData: FlushData, flushLog: log.Flush, trace: true);
         FiniteExitChild.Phase("transactions-open");
-        using var vc = new VersionControlDecorator(tx, branches);
+        using var vc = new VersionControlDecorator(tx, branches, trace: true);
         FiniteExitChild.Phase("version-open");
-        var id = vc.CreateAndUpdate(11u, 12u);
-        FiniteExitChild.Phase("row-created");
+        var id = CreateInitialRow(vc, FiniteExitChild.Phase);
         vc.SetName(id, "original");
         FiniteExitChild.Phase("name-written");
         var original = vc.CurrentSequence;

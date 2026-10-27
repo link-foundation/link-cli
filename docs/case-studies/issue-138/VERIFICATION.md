@@ -4027,3 +4027,36 @@ shrink and destructor-bearing growth remain separate open safety hazards;
 physical torn-page repair and hardware power-loss verification remain open.
 Fresh exact-head platform CI is still required. Every wider unmet requirement
 remains active, and PR139 stays draft and unmerged.
+
+## C# version setup boundary and fresh platform evidence (2026-10-27T11:22Z)
+
+The unchanged combined CreateAndUpdate helper reports no completed step between
+its actual Create and Update. The immutable 950bcb3 boundary test fails; its
+independent duplicate-row behavior control passes. The test child now borrows
+an existing forwarding decorator to observe returned creation without replacing
+the public helper, its callbacks, duplicate results or physical operations.
+Existing transaction/version tracing is enabled only in that child. The
+15-second idle limit, finite 64 consecutive phases, bounded captures and joined
+reaping remain unchanged. No exact Windows scheduling/I/O cause is established.
+
+Complete sequential local validation finishes 2026-10-27T11:22:31Z. All 31
+focused controls pass: two setup boundaries, twelve actual version exits and
+seventeen finite supervision controls. Debug and Release each pass 2,462 tests
+with zero failed/skipped. Complete Debug covers 9,417/9,726 lines and
+5,699/6,144 branches; Release covers 7,270/7,471 lines and 5,643/6,105 branches.
+Both production denominators remain unchanged. All 221 repository tests, TS
+declarations, formatting, source limits, release changeset, all 126 dependency
+declarations, workflow/ShellCheck and whitespace checks pass.
+version-setup{,-before}.txt retains commands, failures, metrics and limits.
+
+All nine workflows now pass for previously published dec6cb7, created
+2026-10-27T10:47:40Z after commit 10:47:33Z. Rust tests pass Windows/Linux/macOS,
+coverage, merge simulation, lint and packaging. C# each platform passes all
+2,460 tests, before this boundary change. The original Windows timeout is thus
+intermittent; a successful run does not establish why it happened.
+mapped-grow-ci-after.txt preserves exact SHA and run URLs/timestamps. Complete
+C# log csharp-40491222901.log has Linux totals at 19043–19045, Windows at
+25427–25429 and macOS at 31362–31364. Later Rust empty-shrink and C# progress
+corrections require fresh exact-head CI. Complete native/C#/linked-WASM 100%,
+physical repair/power-loss and every wider unmet criterion remain unfinished.
+PR139 remains draft and unmerged.

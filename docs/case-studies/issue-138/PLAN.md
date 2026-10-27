@@ -897,10 +897,19 @@ acceptance criterion continue independently.
     unchanged 15-second idle bound. The following compound CreateAndUpdate
     combines two automatic version transactions with no intermediate progress.
     Preserve phase-pool-ci-after.txt, add an actual operation-boundary regression
-    before correction, split those setup calls without changing ownership or
-    persistence, run full sequential verification and inspect fresh platform CI.
+    before correction, observe returned creation through a borrowing forwarding
+    decorator without changing helper callbacks, ownership or persistence, run
+    full sequential verification and inspect fresh platform CI.
     VERSION-SETUP-PROGRESS-PLAN.md records the limits: the log alone does not
     identify which inner flush was slow or establish a physical storage hang.
+    All 31 focused controls and 2,462 Debug/Release tests each now pass;
+    complete production coverage denominators remain unchanged. All 221
+    repository and strict checks pass at 11:22:31Z. version-setup.txt retains
+    the immutable baseline boundary failure and independent duplicate-row
+    behavior control. All nine prior dec6cb7 workflows pass, including 2,460
+    C# tests per platform before this visibility change; its Windows timeout
+    was intermittent. mapped-grow-ci-after.txt preserves that exact-head
+    evidence. Publish the progress correction and inspect its fresh CI.
 
 64. Preserve zero-removal and rejected-shrink ownership boundaries in Rust.
     Six finite tests against immutable 2478d59 first reproduce four failures:

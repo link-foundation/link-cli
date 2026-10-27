@@ -1,0 +1,21 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published commit: dec6cb7590faac1f17f711552e0b0f954fc469b7
+Commit time: 2026-10-27T10:47:33+00:00
+All nine exact-head workflows complete successfully; created after this commit.
+Broken Link Checker: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491223088
+Dependencies: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491222969
+Workflows: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491222890
+Security: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491223113
+JS client CI: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491223002
+Docs: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491222804
+WebAssembly CI: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491222899
+C# CI/CD Pipeline: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491222901
+Rust CI/CD Pipeline: success; created 2026-10-27T10:47:40Z; https://github.com/link-foundation/link-cli/actions/runs/40491222807
+Rust: Windows/Linux/macOS test jobs, complete coverage, fresh-merge, lint and package jobs pass.
+C#: Windows/Linux/macOS each pass 2460 tests before the setup-progress change.
+C# complete log: experiments/issue-138/ci-logs/csharp-40491222901.log.
+Per-platform total lines: Linux 19043-19045; Windows 25427-25429; macOS 31362-31364.
+The earlier Windows version setup timeout is intermittent; this success does not establish its scheduling/I/O cause.
+This head includes retained plain-data growth and native discovery controls.
+The later empty/rejected shrink correction and setup-progress work require fresh exact-head CI.
+Full native/C#/linked-WASM coverage and every other unmet R1-R12 criterion remain unfinished. PR139 stays draft/unmerged.
