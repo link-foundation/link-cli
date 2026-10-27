@@ -11,7 +11,16 @@ public class FiniteExitChildTests
         Console.Out.WriteLine("finite stdout");
         File.WriteAllText(Path.Combine(directory, "ready"), "ready");
         if (mode == "fail") return 9;
-        if (mode == "progress")
+        if (mode == "deferred-context")
+        {
+            var gate = Stopwatch.StartNew();
+            while (!File.Exists(Path.Combine(directory, "continue")))
+            {
+                if (gate.Elapsed > TimeSpan.FromSeconds(5)) return 8;
+                Thread.Sleep(10);
+            }
+        }
+        if (mode is "progress" or "deferred-context")
         {
             // More total work than the parent's idle bound, but each distinct
             // operation completes inside it. This is a finite control.
@@ -63,7 +72,7 @@ public class FiniteExitChildTests
         });
     }
 
-    private static Process Start(string directory, string mode)
+    internal static Process Start(string directory, string mode)
     {
         var info = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true };
         info.Environment["DOTNET_GCHeapHardLimit"] = "0x10000000";

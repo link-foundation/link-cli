@@ -21,7 +21,9 @@ internal static class FiniteExitChild
         var buffer = new char[1024];
         int read;
         bool truncated = false;
-        while ((read = await reader.ReadAsync(buffer)) != 0)
+        // The caller may defer its context while other tests run. Progress
+        // must reset the idle timer when read, independently of that context.
+        while ((read = await reader.ReadAsync(buffer).ConfigureAwait(false)) != 0)
         {
             progress?.Observe(buffer.AsSpan(0, read));
             int keep = Math.Min(read, limit - text.Length);
@@ -37,7 +39,7 @@ internal static class FiniteExitChild
     {
         info.Environment["DOTNET_GCHeapHardLimit"] = "0x10000000";
         using var child = Process.Start(info)!;
-        await Wait(child, expectedExit, description);
+        await Wait(child, expectedExit, description).ConfigureAwait(false);
     }
 
     internal static async Task Wait(Process child, int expectedExit, string description, TimeSpan? limit = null)
@@ -47,20 +49,20 @@ internal static class FiniteExitChild
         var stderr = Capture(child.StandardError, progress);
         var elapsed = Stopwatch.StartNew();
         Exception? failure = null;
-        try { await child.WaitForExitAsync(progress.Token); }
+        try { await child.WaitForExitAsync(progress.Token).ConfigureAwait(false); }
         catch (Exception error) { failure = error; }
         // Reap before either returning or allowing fixture cleanup, including
         // exceptions other than deadline cancellation. Never abandon a child.
         try
         {
             if (!child.HasExited) child.Kill(entireProcessTree: true);
-            await child.WaitForExitAsync();
+            await child.WaitForExitAsync().ConfigureAwait(false);
         }
         catch (Exception cleanup)
         {
             throw failure is null ? cleanup : new AggregateException(failure, cleanup);
         }
-        string output = await stdout, errors = await stderr;
+        string output = await stdout.ConfigureAwait(false), errors = await stderr.ConfigureAwait(false);
         string detail = $"{description}; pid={child.Id}; elapsed={elapsed.Elapsed}; phase={progress.LastPhase}; exited {child.ExitCode}\nstdout:\n{output}\nstderr:\n{errors}";
         if (progress.Failure is not null) throw new InvalidOperationException($"{progress.Failure}; {detail}", failure);
         if (failure is OperationCanceledException) throw new TimeoutException(detail, failure);

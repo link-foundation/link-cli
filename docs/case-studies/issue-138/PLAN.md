@@ -785,3 +785,23 @@ acceptance criterion continue independently.
     Publish and inspect fresh exact-head CI under CHUNK-RECLAMATION-PLAN.md.
     Every wider unmet R1-R12 criterion stays active; append-only chunks1's safe
     refusal alone did not establish this selected reclamation behavior.
+
+    Published c1abe42 passes eight workflows, including all Rust test platforms;
+    C# Windows alone fails the finite progress supervisor despite phase5/exit0.
+    reclaiming-chunks-ci-before.txt preserves all exact-head runs. The following
+    controlled caller-context reproduction must be corrected and verified on
+    fresh Windows CI; this failed head is not reported as fully passing.
+
+57. Reproduce the C# progress supervisor's captured-context dependency before
+    modifying its awaits. A real finite child and the durable regression both
+    report phase5/exit0 with a false timeout. Replay unchanged c1abe42 helper
+    files from an immutable archive to preserve the failure after correction.
+    Keep 500ms/15-second idle limits, finite consecutive phases, bounded streams
+    and unconditional reaping. All 13 focused controls and the linked-helper probe
+    pass with no caller callbacks after ConfigureAwait(false). All 2,447 tests
+    pass in each C# configuration, and all 221 repository checks pass after
+    relocating ignored CI logs to the permitted case-study tree. Type checks,
+    source limits, changeset, 126 dependency declarations and workflow lint pass.
+    Preserve phase-context.txt, publish an atomic correction and
+    inspect fresh exact-head CI under PHASE-CONTEXT-PLAN.md. This test helper
+    change supplies no new production persistence guarantee.

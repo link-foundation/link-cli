@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: c1abe42ab45392621b7b0cae131ec96fb85f5ccc
+Commit: 2026-10-27T07:30:48Z; run created: 2026-10-27T07:30:58Z.
+Failed run: https://github.com/link-foundation/link-cli/actions/runs/40467581526
+Windows job: 122066739089. Other C# test platforms pass on this exact head.
+Complete local log: experiments/issue-138/ci-logs/csharp-40467581526.log (31,210 lines).
+
+Specific complete-log evidence:
+29273-29327 DistinctFiniteProgressSurvivesAnAggregateDeadline fails with
+TimeoutException/TaskCanceledException at FiniteExitChild.cs:50/66, despite
+phase=5 and actual child exit 0. Child stderr contains five consecutive phases
+at 1,202,404,606,807ms; parent elapsed 792ms. Windows total 2,442, failed 1.
+No filesystem-latency or power-loss cause is established by this evidence.
+
+The helper captures its caller's SynchronizationContext at ReadAsync and the
+process/stream awaits. A deferred context queues progress parsing while the
+CancellationTokenSource timer runs independently. Once cancellation occurs,
+parsing all buffered phases afterward cannot undo it. The following finite
+reproduction establishes that dependency locally with the same observed
+phase5/exit0 symptom. It does not observe Windows runner scheduling directly.
+
+Before any helper changes:
+  DOTNET_GCHeapHardLimit=0x10000000 dotnet run --project experiments/issue-138/phase-context-probe --configuration Release --disable-build-servers
+phase-context-before.log: child exit 0, three queued callbacks, TimeoutException,
+phase 5; child phases 18,220,421,622,822ms. Exit 1. Actual child is reaped.
+
+Durable regression, also before helper changes:
+  DOTNET_GCHeapHardLimit=0x28000000 dotnet test csharp --configuration Release --disable-build-servers -m:1 --filter FullyQualifiedName~DeferredCallerContextCannotDelayFiniteProgressSupervision
+phase-context-regression-before.log: total 1, failed 1; TimeoutException with
+phase5/exit0 and phases 12,217,417,618,819ms. Child is reaped before cleanup.
+
+The standalone csproj accepts -p:SupervisorSourceRoot=/absolute/baseline/path
+containing FiniteExitChild.cs and FinitePhaseWatch.cs from the immutable baseline.
+It links the actual helper, adds no packages and bounds its real child to four
+200ms operations, five-second final wait and 256MiB .NET heap. The durable test
+also waits for ready before starting its unchanged 500ms idle limit, excluding
+process startup from this regression's progress measurement. Existing production
+callers retain 15-second idle detection and strict consecutive finite phases.
+
+The final probe and durable test also hold the child on a finite ready/continue
+gate, releasing its four operations only after supervision starts. This avoids
+a busy runner finishing all work before the controlled await is installed.
+The immutable baseline replays the final probe through:
+  bash experiments/issue-138/run-phase-context-before.sh
+phase-context-baseline-reproduction.log records PASS and the retained archive
+phase-context-baseline.HVQ9Yg. Its linked unchanged helper reports three queued
+callbacks, phase5/exit0 and TimeoutException; the corrected probe reports zero
+callbacks and PASS. The runner never edits or checks out working-branch files.
+
+Correction must preserve malformed/repeated/stalled-phase rejection, bounded
+stdout/stderr, actual exit status, unconditional kill/reap and cleanup errors.
+This concerns test supervision and does not complete wider R1-R12 criteria.

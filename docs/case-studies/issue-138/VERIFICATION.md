@@ -3811,3 +3811,22 @@ one catalog remain costs; automatic balancing/multi-catalog atomicity remain
 unfinished. reclaiming-chunks{,-before}.txt records exact scope and commands.
 Fresh exact-head publication CI remains required. All wider unmet R1-R12
 criteria stay active and PR139 remains draft/unmerged.
+
+Published c1abe42 passes eight workflows, including Rust Windows/Linux/macOS.
+C# Windows alone fails DistinctFiniteProgressSurvivesAnAggregateDeadline with
+phase5/exit0; Linux/macOS and all other C# gates pass. See
+reclaiming-chunks-ci-before.txt and phase-context-before.txt for exact-head run
+timestamps, complete downloaded log locations and the actual exception lines.
+This head does not have all passing CI. The isolated captured-context control
+and durable regression reproduce that false-timeout symptom before helper
+changes. Fresh correction-head Windows verification remains required.
+
+The helper correction leaves capture and process continuations independent of
+the caller context. The final linked-helper probe passes with zero queued
+callbacks; all thirteen focused controls and 2,447 C# tests in each Debug and
+Release configuration pass. Bounds, strict phase rejection and reaping remain
+intact. All 221 repository checks pass after relocating ignored CI logs under
+the case-study tree; type checks, source limits, changeset validation, 126
+dependency declarations and workflow lint also pass. See phase-context.txt.
+This is local verification of the proven helper dependency; fresh Windows CI
+must still establish the published-head result.
