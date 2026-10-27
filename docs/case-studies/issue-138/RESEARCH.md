@@ -439,3 +439,31 @@ Finite API, lifetime and independent syscall-order controls verify this narrower
 contract. Readback and successful process exits do not demonstrate hardware
 power-loss recovery. The upstream failed-resize lifecycle and legacy torn-page
 repair remain separate open criteria; see [the execution plan](MAPPED-VIEW-FLUSH-PLAN.md).
+
+## Retaining mapped allocation ownership (2026-10-27)
+
+The published [platform-mem 0.3.0 FileMapped implementation](https://docs.rs/crate/platform-mem/0.3.0/source/src/file_mapped.rs)
+releases its old mapping before file metadata, extension or replacement mapping
+can fail. Its logical buffer still retains the old address after a returned
+error. A finite Linux quota child reproduces EFBIG followed by SIGSEGV through
+safe allocation access; its within-quota control succeeds. A checked barrier
+alone correctly rejects an invalid descriptor but cannot keep that pointer alive.
+
+Prepare a separate owner while retaining the live view for ordinary types
+without destructor glue. Publish it only after complete initialization. Capture
+real initialized file bytes before minimum-page padding or any failed extension;
+physical file size after an error is not proof that its new items were initialized.
+No upstream private layout or local-only dependency patch is used. Generic
+values with destructors keep their existing single-owner path; general failure
+safety there and rejected shrink remain unfinished.
+
+Microsoft's [CreateFileMapping contract](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw)
+permits increasing the file through a new mapping object. Its
+[SetEndOfFile contract](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setendoffile)
+requires unmapping views and closing mapping objects before changing length.
+The Windows preparation therefore uses a temporary mapping object to extend
+while the old local view remains alive, then creates the replacement owner.
+A failed preparation can leave extra physical bytes; logical capacity and the
+known initialization bound remain unchanged. Overlapping views, a temporary
+file handle and, on Windows, a temporary mapping handle are explicit transient
+costs. None of these controls certify hardware power loss or page atomicity.

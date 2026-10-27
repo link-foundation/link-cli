@@ -48,6 +48,20 @@ impl MappedFlush {
         self.flush_with(&SystemIo)
     }
 
+    pub(super) fn clone_file(&self) -> io::Result<File> {
+        let state = self
+            .0
+            .lock()
+            .map_err(|_| io::Error::other("mapped flush ownership is poisoned"))?;
+        state
+            .file
+            .as_ref()
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::BrokenPipe, "mapped flush file is closed")
+            })?
+            .try_clone()
+    }
+
     fn flush_with(&self, io: &impl FlushIo) -> io::Result<()> {
         let state = self
             .0

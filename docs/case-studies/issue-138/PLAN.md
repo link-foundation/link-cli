@@ -847,3 +847,33 @@ acceptance criterion continue independently.
     Windows/Linux/macOS CI. Upstream failed-resize safety, physical legacy repair,
     hardware power-loss verification and every wider unmet requirement remain
     unfinished; this barrier must not be presented as their completion.
+
+60. Retain the actual Rust mapping through rejected plain-data growth. A finite
+    Linux 4 KiB quota probe first returns EFBIG and then faults through the safe
+    retained allocation API; its within-quota control passes. Five durable
+    regressions first fail. Prepare an overlapping replacement owner before
+    retiring the old view, and remember actual initialization bounds before
+    page padding or failed extension. On Windows extend through a temporary
+    mapping object, preserving the live old view. Quota, overflow, panicking
+    fill and injected mapping failures now retain pointer, prefix, flush owner
+    and successful retry; generic destructor behavior keeps its existing path.
+    Complete sequential local verification passes 1,184 native tests, six
+    doctests, 723 actual-WASM tests and all 221 repository checks at 10:22:42Z.
+    Full production coverage denominators remain in mapped-grow.txt. Publish
+    and inspect fresh exact-head platform CI under RUST-MAPPED-GROWTH-PLAN.md.
+    Failed shrink, arbitrary destructor-growth errors
+    and physical torn-page repair remain separate unfinished work.
+
+61. Investigate the Linux finite-progress failure on exact published 89fbfad.
+    Download the full failing C# log and establish the actual phase 5 / exit 0
+    timeout rather than increasing limits. A bounded occupied-worker child
+    independently reproduces it; all three durable healthy/stalled/invalid
+    controls first fail because supervision needs that worker. Dedicated
+    process/pipe tasks and a monotonic idle clock remove this dependency; all
+    17 focused controls pass without widening any bound. The deferred-context
+    regression and unconditional process reaping remain checked. All 2,451 C#
+    tests pass in each Debug/Release configuration; complete coverage, all 221
+    repository checks and strict local checks pass in phase-pool.txt. Correction
+    950bcb3 is published; fresh exact-head CI remains active under
+    PHASE-POOL-PLAN.md. Record both the successful Rust Windows
+    view-flush checks and the independent C# failure in mapped-flush-ci-after.txt.

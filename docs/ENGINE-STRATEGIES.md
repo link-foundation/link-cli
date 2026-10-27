@@ -462,13 +462,23 @@ On Windows it flushes the live view before synchronizing the actual owned file;
 on Unix it synchronizes the file's shared page cache. Both errors propagate.
 Drop attempts the barrier before unmapping but cannot report errors. This costs
 one duplicated file handle and one shared mutex allocation per mapped owner,
-two lock acquisitions per resize and one lock per explicit barrier; ordinary
-link edits gain no extra lock. The in-memory path keeps its existing behavior.
+one 8-byte initialization length, three brief lock acquisitions per plain-data
+growth, two per shrink and one per explicit barrier; ordinary link edits gain
+no extra lock. The in-memory path
+keeps its existing behavior.
 When adopting a mapping, retain `flush_handle()` before constructing the store
 and attach it with `with_mapped_flush`. A path alone cannot discover a foreign
-view. Handles follow successful remaps and reject failed remaps and closed
-owners. A failed remap requires reopening; this barrier does not repair the
-upstream allocator's failure behavior. See the self-checking
+view. Handles follow successful remaps and reject closed owners. Plain-data
+growth prepares a replacement view before retiring the live view, retaining
+its pointer, contents and barrier after quota, overflow, mapping or initialization
+errors. This temporarily duplicates the file handle and view; Windows also
+uses a temporary mapping handle to extend the file. Fresh padding and bytes
+added by failed preparations are initialized on retry. Logical prefix edits
+made by a failed callback remain observable. Generic values with destructors
+retain their upstream path. Failed shrink and failed destructor growth invalidate
+the barrier and can leave unsafe allocator state; reopening alone does not
+establish safe cleanup of that owner. Their failure safety remains unfinished.
+See the self-checking
 [adoption example](../rust/examples/owned_mapped_flush.rs). The ordering follows
 [Microsoft's FlushViewOfFile contract](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-flushviewoffile);
 ordinary readback does not certify hardware power-loss safety or torn-page repair.

@@ -3925,3 +3925,54 @@ does not fix upstream failed-resize safety, torn-page repair or in-place atomici
 and ordinary file readback does not certify physical power-loss recovery. Fresh
 exact-head Windows/Linux/macOS CI remains required for this production change.
 Every wider unmet criterion stays active; PR139 remains draft and unmerged.
+
+
+## Retained plain-data mapped growth (2026-10-27)
+
+A finite Linux child first reproduces EFBIG followed by SIGSEGV through the
+safe retained allocation API. Its within-quota control passes. Five durable
+regressions fail against immutable 89fbfad; a separate generic destructor
+single-owner control passes. `run-mapped-grow-before.sh` reconstructs isolated
+source and target directories, applies only the new tests and preserves both
+failure forms. mapped-grow-before.txt records exact limits and log lines.
+
+The correction prepares and initializes a replacement owner while the original
+mapping remains live, then retires/publishes under the existing flush lock.
+Known initialization length is captured before minimum-page padding and is not
+advanced after failed physical extension. Windows extends through a temporary
+mapping object rather than SetEndOfFile while the old view remains live. Quota,
+capacity overflow, injected failure after physical extension, clone rejection
+and panicking initialization retain the pointer, prefix and checked barrier.
+Following edits, retries and reopening pass. Zero growth invokes its callback
+without replacing the view. Destructor values retain their single-owner path.
+
+`validate-mapped-grow.sh` runs compilers sequentially with one build job and no
+debug information; actual-WASM memory is capped at 256 MiB. It finishes
+2026-10-27T10:22:42Z. All 1,184 native tests, six doctests, 723 actual-WASM tests
+and 221 repository tests pass. Twenty-two native child entries are executed
+only by their bounded, reaping parents; one legacy doctest remains ignored.
+Both default/all-feature API suites, nine independent unit controls, the
+finite quota probe and owned-flush example pass. Formatting, strict native/
+WASM Clippy, source sizes, the minor release changeset, all 126 dependency
+declarations, workflow/ShellCheck and whitespace checks pass.
+
+Complete native LLVM is 17,176/18,090 lines, 3,291/3,780 branches,
+2,223/2,389 functions, 26,422/28,631 regions and 12,326/21,983 instantiations.
+Complete linked WASM is 13,144/15,737 lines, 2,663/3,171 branches,
+1,636/2,057 functions, 20,244/24,787 regions and 4,342/7,495 instantiations.
+Native-only mapped code remains in the linked WASM denominator at zero
+coverage. The native barrier reaches 82/82 lines, 4/4 branches and 17/17
+functions, while generic instantiations remain 46/74. mapped-grow.txt preserves
+full and component metrics without excluding any production denominator.
+Complete native/C#/linked-WASM 100% remains unfinished.
+
+Selected growth adds an 8-byte known-initialization length, a temporary cloned
+file and overlapping view, three brief lock acquisitions and a Windows mapping
+handle when extending. It copies no old allocation into a heap buffer; ordinary
+link edits add no lock. Failed callback prefix edits remain observable, and
+failed preparation may extend the physical file. Failed shrink and failed
+arbitrary destructor-bearing growth retain unsafe upstream failure states;
+reopening alone cannot establish safe owner cleanup. Physical torn-page repair
+and hardware power-loss verification remain unfinished. Fresh exact-head
+platform CI is required, and every other unmet R1-R12 criterion remains open.
+PR139 remains draft and unmerged.

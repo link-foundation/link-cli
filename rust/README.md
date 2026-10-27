@@ -181,7 +181,12 @@ A runnable, self-checking version of this is
   Explicit flush propagates both errors; Drop attempts the same ordering.
   Adopted mappings attach their matching `PersistentFileMapped::flush_handle()`
   with `DoubletsStorage::with_mapped_flush`; a path alone cannot discover a
-  foreign store's view. These barriers do not supply torn-page repair or
+  foreign store's view. Rejected plain-data growth retains the old view and
+  flush owner until a replacement is fully prepared; fresh padding and failed
+  extension tails receive the requested initializer. This temporarily holds
+  two views and a cloned file handle. Failed shrink and arbitrary destructor
+  growth retain their upstream limitations. These barriers do not supply
+  torn-page repair or
   certify hardware power-loss safety. In-memory stores keep everything in
   memory until `flush`/`save`.
   Recovery runs when the decorator is created: committed-but-unapplied

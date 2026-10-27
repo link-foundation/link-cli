@@ -63,7 +63,7 @@ libc = { version = "0.2.191", optional = true }
 errno = { version = "0.3.14", optional = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Memory"] }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Memory", "Win32_Security"] }
 
 [features]
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]

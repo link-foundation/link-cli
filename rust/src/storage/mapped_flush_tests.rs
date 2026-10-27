@@ -113,6 +113,10 @@ fn publishing_and_close_update_all_handles_without_stale_access() {
     owner.close();
     assert!(handle.0.lock().unwrap().file.is_none());
     assert_eq!(
+        handle.clone_file().unwrap_err().kind(),
+        io::ErrorKind::BrokenPipe
+    );
+    assert_eq!(
         handle.flush().unwrap_err().kind(),
         io::ErrorKind::BrokenPipe
     );
@@ -129,6 +133,11 @@ fn poisoned_ownership_remains_failed_but_can_be_closed_safely() {
     .join()
     .is_err());
     assert!(owner.flush().unwrap_err().to_string().contains("poisoned"));
+    assert!(owner
+        .clone_file()
+        .unwrap_err()
+        .to_string()
+        .contains("poisoned"));
     owner.invalidate();
     owner.publish::<u8>(&[]);
     assert!(owner.flush().is_err());

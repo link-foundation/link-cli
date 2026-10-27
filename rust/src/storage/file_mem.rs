@@ -57,6 +57,9 @@ use doublets::unit::LinkPart;
 
 use super::MappedFlush;
 
+#[path = "file_mem_grow.rs"]
+mod grow;
+
 /// A value whose representation can safely be adopted from existing file bytes.
 ///
 /// This is the safety boundary used by
@@ -96,6 +99,7 @@ unsafe impl<T: FileMappedValue + LinkReference> FileMappedValue for LinkPart<T> 
 pub struct PersistentFileMapped<T> {
     inner: FileMapped<T>,
     flush: MappedFlush,
+    initialized_bytes: u64,
 }
 
 impl<T> PersistentFileMapped<T> {
@@ -112,9 +116,13 @@ impl<T> PersistentFileMapped<T> {
 
     /// Maps an already-opened file.
     pub fn new(file: File) -> io::Result<Self> {
+        // Capture before upstream adds minimum-page padding. Failed growth can
+        // also extend a file before mapping fails; neither is initialized data.
+        let initialized_bytes = file.metadata()?.len();
         Ok(Self {
             inner: FileMapped::new(file.try_clone()?)?,
             flush: MappedFlush::new(file),
+            initialized_bytes,
         })
     }
 
@@ -127,8 +135,10 @@ impl<T> PersistentFileMapped<T> {
     ///
     /// Retain this before adopting the mapping into a generic doublets store,
     /// then attach it with [`DoubletsStorage::with_mapped_flush`](super::DoubletsStorage::with_mapped_flush).
-    /// A failed remap invalidates the barrier; reopen the owner before relying
-    /// on it again. Dropping the owner closes every retained handle.
+    /// Rejected growth of values without drop glue retains the existing view
+    /// and barrier. Failed shrink or destructor growth can leave unsafe upstream
+    /// allocator state and invalidate the barrier. Reopening alone cannot establish
+    /// safe cleanup. Dropping a valid owner closes every retained handle.
     pub fn flush_handle(&self) -> MappedFlush {
         self.flush.clone()
     }
@@ -201,9 +211,17 @@ impl<T> RawMem for PersistentFileMapped<T> {
         addition: usize,
         fill: impl FnOnce(usize, (&mut [Self::Item], &mut [MaybeUninit<Self::Item>])),
     ) -> MemResult<&mut [Self::Item]> {
+        if !mem::needs_drop::<T>() {
+            // Two views may share plain data, but dropping overlapping owners
+            // of destructor values would drop those values twice.
+            return unsafe { self.grow_retained(addition, fill) };
+        }
         self.flush.invalidate();
         let previous_len = self.inner.allocated().len();
         unsafe { self.inner.grow(addition, fill) }?;
+        self.initialized_bytes = self
+            .initialized_bytes
+            .max(mem::size_of_val(self.inner.allocated()) as u64);
         // RawMem::grow returns only the added tail. The barrier must cover
         // the complete current mapping, including writes to its old prefix.
         self.flush.publish(self.inner.allocated());
@@ -213,6 +231,7 @@ impl<T> RawMem for PersistentFileMapped<T> {
     fn shrink(&mut self, cap: usize) -> MemResult<()> {
         self.flush.invalidate();
         self.inner.shrink(cap)?;
+        self.initialized_bytes = mem::size_of_val(self.inner.allocated()) as u64;
         self.flush.publish(self.inner.allocated());
         Ok(())
     }
@@ -223,9 +242,9 @@ impl<T> RawMem for PersistentFileMapped<T> {
     where
         Self::Item: Clone,
     {
-        // SAFETY: `FileMapped::grow` derives `inited` from the size the
-        // file had before growing, so the elements below it really are
-        // initialised (they were written by a previous session).
+        // SAFETY: growth reports only genuinely initialized file items below
+        // `inited`; the closure fills every remaining item. Plain-data growth
+        // excludes minimum-page padding and unsuccessful extension attempts.
         unsafe { self.grow_filled_exact(cap, value) }
     }
 }

@@ -79,7 +79,7 @@ fn adopted_mapping_preserves_flush_ownership_through_decorators() -> Result<()> 
 }
 
 #[test]
-fn failed_remap_invalidates_retained_handles_without_an_allocation_probe() -> Result<()> {
+fn rejected_overflow_preserves_retained_handles_without_an_allocation_probe() -> Result<()> {
     let mut mapped = PersistentFileMapped::<u64>::new(tempfile::tempfile()?)?;
     mapped.grow_filled(32, 0)?[0] = 42;
     let flush = mapped.flush_handle();
@@ -87,11 +87,7 @@ fn failed_remap_invalidates_retained_handles_without_an_allocation_probe() -> Re
     // Existing nonzero capacity plus MAX overflows before upstream can unmap
     // or allocate. No deliberately large mapping or memory allocation occurs.
     assert!(mapped.grow_filled(usize::MAX, 0).is_err());
-    assert!(flush
-        .flush()
-        .unwrap_err()
-        .to_string()
-        .contains("unfinished remap"));
+    flush.flush()?;
     assert_eq!(mapped.allocated()[0], 42);
     drop(mapped);
     assert_eq!(
