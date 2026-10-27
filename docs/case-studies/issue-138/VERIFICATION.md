@@ -4256,3 +4256,10 @@ C# CI passes 2475 tests on Windows/Linux/macOS; all three actual archives
 verify their size and SHA256 in causal-replica-csharp-platform-coverage.txt.
 Eight workflows pass, with Rust's Windows job pending at this receipt. No
 full-project 100% claim or issue completion follows from these passing suites.
+
+Published local-owner head d00e022 now passes all nine exact-head workflows.
+Rust's aggregate completes at 2026-10-27T14:36:23Z; all platform jobs pass.
+causal-replica-ci.txt separates full all-feature suites, repeated doctests and
+focused bare-provider tests, with complete log hashes and run/job links.
+All three actual C# coverage archives verify size and SHA256. Later Merkle
+changes need their own full validation and fresh CI; wider gaps remain open.
