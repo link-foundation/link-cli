@@ -45,6 +45,8 @@ be presented as another acknowledgement threshold on the existing log.
       Validate the snapshot identity throughout transfer, bound tree depth,
       range sizes, bytes and retries, verify received data, and preserve a retry
       path after uncertain publication. Transfer deletions and causal context.
+      CAUSAL-MERKLE-PLAN.md tracks the independent 64-pair/48-proof model,
+      canonical roots/proofs, production ports and bounded publication controls.
 - [ ] Supply native Rust, C# and actual WASM/JS parity with shared vectors,
       independent finite schedule oracles, physical restart/process probes,
       directory interoperability and unchanged optional-SQLite boundaries.
