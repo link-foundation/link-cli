@@ -15,7 +15,7 @@ public interface IReplaceableCommitLog : ICommitLog
 /// distinct, exclusive and caller-owned; this log never closes them. Root data
 /// stays empty. Replacement prepares and synchronizes an inactive bank before
 /// publishing its epoch-bound root. Failed I/O fences until reopening.</summary>
-public sealed class CheckpointPagedCommitLog : IReplaceableCommitLog
+public sealed partial class CheckpointPagedCommitLog : IReplaceableCommitLog
 {
     private readonly IPageDevice _root;
     private readonly IPageDevice[] _banks;

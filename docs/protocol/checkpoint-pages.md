@@ -139,3 +139,29 @@ prepared physical sequence. This explicit operation holds the commit mutex for
 construction, validation and storage synchronization. Ordinary commits do no
 replacement work. See the finite [72-case example](../../examples/journal-checkpoints/compact.mjs)
 and [native factories, recovery checks and file costs](../ENGINE-NATIVE-CHECKPOINTS.md).
+
+
+## Read-only prefix inspection
+
+Before higher-level manifest validation, select the committed physical prefix
+without opening a recovering WAL: Rust `CheckpointPagedLog::inspect(&mut root,
+&mut banks, max_pages)`, C# `CheckpointPagedCommitLog.Inspect(root, first, second,
+maxPages)` and JS `CheckpointPagedCommitLog.inspect(root, banks, { maxPages })`.
+The same exclusive device ownership and root/bank modes apply. Rust borrows the
+devices; C#/JS retain caller ownership. All results contain owned strings.
+
+Inspection validates root decisions, selected epoch identity, metadata conflicts,
+page bounds, complete page chains, records and checksums. Missing or damaged
+selected state fails without fallback. Empty or partially initialized zero-page
+banks return no records without allocating an identity or completing creation.
+Unrooted nonempty banks reject. A finite uncommitted suffix remains untouched;
+inspection never truncates, synchronizes, initializes or completes repair.
+
+Checked mirror reads can stage volatile repair state. If semantic validation of
+the records and every selected table fails, discard those wrappers without
+calling CompleteRecovery. After validation succeeds, ordinary opening revalidates
+the prefix and performs its existing repair/truncation behavior. The native LSM
+facade must hold one exclusive outer owner throughout both passes. This primitive
+does not acquire directory ownership, enumerate files or validate an LSM manifest.
+Its O(selected pages + record bytes) reads and owned-result memory are bounded by
+the selected page limit; callers must select a limit suitable for their budget.

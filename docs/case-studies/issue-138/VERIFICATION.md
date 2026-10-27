@@ -3570,4 +3570,43 @@ startup ordering and costs. An already-constructed WAL can have performed
 recovery effects; the portable API cannot retroactively prevent them. Exclusive
 native namespace discovery, full semantic validation before WAL recovery effects,
 physical store process/interchange and every wider unmet R1–R12 criterion remain
-required. PR139 remains draft and unmerged; this step requires its own fresh CI.
+required. PR139 remains draft and unmerged. All nine exact-head bc364d2 workflows pass;
+lsm-store-ci.txt preserves native platform jobs, timestamps and URLs.
+
+
+## Borrowed checkpoint prefix inspection
+
+The Rust/C#/JS inspection APIs validate the selected physical prefix without
+identity allocation, initialization, truncation, synchronization, repair
+completion or device closure. They retain caller ownership and return owned
+records. Mirrored reads may stage volatile repairs; semantic failure requires
+discarding those wrappers. Ordinary constructors retain their recovery behavior.
+Missing APIs fail before implementation, with exact diagnostics preserved in
+checkpoint-inspect-before.txt. Shared controls cover finite admission, empty
+and partial initialization, mode/identity/decision conflicts, selected corruption,
+ignored suffixes, every observed selected-prefix read failure before/after its
+effect, owned results and deferred actual root/bank mirror repairs.
+
+Complete sequential validation finishes 2026-10-27T02:37:37Z. Native Rust passes
+1,102 tests and six doctests; 19 child entries require their bounded parents and
+one legacy documentation entry remains ignored. Actual WASM passes 698 tests.
+C# Debug and Release each pass 2,375, Node passes 576 with enforced 100% production
+lines/branches/functions, and Bun/Deno each pass all 217 selected controls. All
+25 existing native immutable-table writer/reader pairs preserve file hashes and
+release owners. These are table handoffs rather than whole-store interchange.
+
+Complete denominators: native Rust 15,716/16,589 lines, 3,036/3,518 branches and
+2,014/2,170 functions; actual WASM 12,900/15,319 lines, 2,593/3,101 branches and
+1,615/2,010 functions; C# Debug 9,066/9,369 lines and 5,391/5,826 branches; Release
+6,990/7,184 lines and 5,342/5,789 branches. New Rust inspection measures 61/62 lines,
+32/34 branches and 3/3 functions on both native and actual WASM. No uncovered
+production source is excluded. Complete 100% coverage remains unfinished.
+
+Formatting, strict native/WASM Clippy, types, optional SQL dependency/import
+guards, independent page/table/111-WAL-vector regeneration, lazy root imports,
+source/release/workflow/shell gates and all 221 repository checks pass. Compilers
+run sequentially with jobs1/reduced debug, .NET640MiB and verified WASM256MiB caps.
+Reproduce with experiments/issue-138/validate-checkpoint-inspect.sh; the measured
+report is checkpoint-inspect.txt. The native facade, exclusive directory discovery,
+whole-store file/process interchange and every wider unmet R1–R12 requirement
+remain active. Publication requires fresh exact-head CI. PR139 stays draft.

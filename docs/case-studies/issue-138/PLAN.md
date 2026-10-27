@@ -626,6 +626,21 @@ acceptance criterion continue independently.
     configuration, 568 JS, 209 selected Bun/Deno each, 25 existing native table
     handoffs and 221 repository checks pass. Full coverage denominators remain
     below 100% outside JS. lsm-store.txt retains measured evidence. Publish this
-    verified step and inspect its own fresh exact-head CI. `NATIVE-LSM-DISCOVERY-PLAN.md` tracks the following read-only
+    verified step and inspect its own fresh exact-head CI. All nine workflows pass
+    on bc364d2; lsm-store-ci.txt retains the exact-head jobs and timestamps.
+    `NATIVE-LSM-DISCOVERY-PLAN.md` tracks the following read-only
     checkpoint inspection, exclusive directory ownership and actual file/process
     composition. Every broader unmet R1–R12 criterion remains active.
+
+48. Add borrowed checkpoint inspection before native LSM directory recovery.
+    Rust/C#/JS return owned selected-prefix records, preserve suffixes and staged
+    repairs, and perform no initialization, identity allocation or device close.
+    Actual missing APIs fail first. Complete sequential validation finishes
+    2026-10-27T02:37:37Z: 1,102 native tests plus six doctests, 698 actual WASM,
+    2,375 C# per configuration, 576 JS at enforced 100% production coverage,
+    217 selected Bun/Deno each, all 25 native immutable-table handoffs and 221
+    repository checks pass. Every native/C#/WASM production denominator remains
+    included and below the whole-project target. checkpoint-inspect{,-before}.txt
+    retain measured evidence. Publish this verified prerequisite and check fresh
+    exact-head CI; continue the remaining NATIVE-LSM-DISCOVERY-PLAN.md steps and
+    every wider unmet R1–R12 requirement in this draft PR.

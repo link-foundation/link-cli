@@ -683,3 +683,23 @@ remain below target and are preserved in VERIFICATION.md and lsm-wal.txt.
 LSM-WAL-PLAN.md tracks publication and fresh exact-head CI. Physical selected-file
 validation, buffering/store APIs, publication, ownership, compaction, retirement,
 native process tests and all wider unmet criteria remain unfinished.
+
+
+The selected portable physical LSM store now composes immutable native doublets
+tables, bounded buffering, semantic WAL publication/compaction and maintenance
+consumers in Rust/C#/JS. Full binding/history/capacity validation precedes staged
+repair and orphan retirement. All nine exact-head bc364d2 workflows pass;
+lsm-store{,-before,-ci}.txt preserve reproductions, full counts and platform jobs.
+Its already-constructed WAL still requires separate native discovery ordering.
+
+Borrowed checkpoint inspection (R1/R5/R6/R7/R8/R9/R11/R12 prerequisite) now returns
+owned selected-prefix records before initialization, truncation or repair. Actual
+missing-API failures precede implementation. Complete suites pass 1,102 native
+Rust plus six doctests, 698 actual WASM, 2,375 C# per configuration, 576 JS at
+enforced 100% production coverage, 217 selected Bun/Deno each, all 25 existing
+native table handoffs and 221 repository checks. Every native/C#/linked-WASM
+production denominator remains included and below 100%; checkpoint-inspect.txt
+and VERIFICATION.md retain them. NATIVE-LSM-DISCOVERY-PLAN.md continues native
+exclusive directory ownership, semantic validation before WAL constructor effects,
+whole-store file/process interchange and all wider unmet acceptance criteria.
+Inspection alone does not complete those requirements. PR139 remains draft.

@@ -10,6 +10,7 @@ mod file_checkpoint;
 pub use file_checkpoint::{FileCheckpointOptions, FileCheckpointPagedLog};
 mod checkpoint;
 mod checkpoint_format;
+mod checkpoint_inspect;
 mod checkpoint_root;
 pub use checkpoint_root::MirroredCheckpointRoot;
 mod format;

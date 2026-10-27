@@ -1,4 +1,6 @@
 //! Two-bank publication controls use independent finite durable images.
+#[path = "common/checkpoint_inspect.rs"]
+mod inspection;
 use link_cli::engine::paged::{
     CheckpointPagedLog, MirroredPageDevice, PageDevice, RepairPageDevice,
 };

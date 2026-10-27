@@ -1,0 +1,124 @@
+✖ empty inspection allocates no identity and initializes no files (3.241759ms)
+✖ selected prefix ignores a finite uncommitted suffix without removing it (31.768223ms)
+✖ missing selected table rejects before the WAL suffix is truncated (12.866791ms)
+✖ selected page damage and a lower page bound fail without cleanup (7.719254ms)
+✖ unrooted committed banks and selected identity changes fail without writes (6.604414ms)
+✖ inspection validates finite options and never completes staged repair (5.029275ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 228.45925
+
+✖ failing tests:
+
+test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:22:1
+✖ empty inspection allocates no identity and initializes no files (3.241759ms)
+  TypeError [Error]: CheckpointPagedCommitLog.inspect is not a function
+      at inspectCheckpointPages (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:8:70)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:25:20)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:29:1
+✖ selected prefix ignores a finite uncommitted suffix without removing it (31.768223ms)
+  TypeError [Error]: CheckpointPagedCommitLog.inspect is not a function
+      at inspectCheckpointPages (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:8:70)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:33:19)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:41:1
+✖ missing selected table rejects before the WAL suffix is truncated (12.866791ms)
+  TypeError [Error]: CheckpointPagedCommitLog.inspect is not a function
+      at inspectCheckpointPages (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:8:70)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:45:19)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:53:1
+✖ selected page damage and a lower page bound fail without cleanup (7.719254ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /checksum/. Input:
+  
+  'TypeError: CheckpointPagedCommitLog.inspect is not a function'
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:57:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: CheckpointPagedCommitLog.inspect is not a function
+        at inspectCheckpointPages (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:8:70)
+        at file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:57:23
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:57:10)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1402:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+        at Test.postRun (node:internal/test_runner/test:1542:19)
+        at Test.run (node:internal/test_runner/test:1467:12),
+    expected: /checksum/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:66:1
+✖ unrooted committed banks and selected identity changes fail without writes (6.604414ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /unrooted/. Input:
+  
+  'TypeError: CheckpointPagedCommitLog.inspect is not a function'
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:70:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: CheckpointPagedCommitLog.inspect is not a function
+        at inspectCheckpointPages (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:8:70)
+        at file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:70:23
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:70:10)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1402:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+        at Test.postRun (node:internal/test_runner/test:1542:19)
+        at Test.run (node:internal/test_runner/test:1467:12),
+    expected: /unrooted/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:80:1
+✖ inspection validates finite options and never completes staged repair (5.029275ms)
+  TypeError [Error]: CheckpointPagedCommitLog.inspect is not a function
+      at inspectCheckpointPages (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:8:70)
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:86:13)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

@@ -5,25 +5,26 @@ initializing or retiring files before the complete selected LSM decision has
 been validated. This continues the unfinished native portion of
 [the physical composition plan](PHYSICAL-LSM-PLAN.md).
 
-- [ ] Reproduce the missing read-only checkpoint inspection API in Rust, C#
+- [x] Reproduce the missing read-only checkpoint inspection API in Rust, C#
       and JavaScript before implementing it. Keep the finite independent
       inspection experiment as an additional oracle.
-- [ ] Add matching bounded inspection APIs: Rust
+- [x] Add matching bounded inspection APIs: Rust
       `CheckpointPagedLog::inspect(&mut root, &mut banks, max_pages)`, C#
       `CheckpointPagedCommitLog.Inspect(root, first, second, maxPages)` and
       JavaScript `CheckpointPagedCommitLog.inspect(root, banks, options)`.
       Return owned records without allocating a database identity or completing
       any repair. Do not change the existing opening constructors.
-- [ ] Verify empty/partially initialized devices, selected bank identity,
+- [x] Verify empty/partially initialized devices, selected bank identity,
       conflicting metadata, complete page chains, ignored uncommitted suffixes,
       finite limits and staged mirror repairs. Run shared Rust controls in
       actual WASM, and preserve complete coverage denominators.
 - [ ] Implement exclusive outer directory ownership before acquiring any WAL
       or table handle. Reject stale fences and foreign, malformed or symbolic
       names; never steal another owner's fence.
-- [ ] Bound directory enumeration before collecting it. Check that every
-      selected physical data/metadata file already exists and is regular before
-      calling a lower-level device constructor that can create missing files.
+- [ ] Bound directory enumeration before collecting it. Validate every
+      selected logical image from existing regular files before calling a
+      lower-level constructor that can create missing files. A valid surviving
+      metadata slot or mirrored copy may suffice; do not require both copies.
 - [ ] Validate the inspected semantic WAL and all selected tables through a
       read-only WAL and namespace view. Suppress repair completion and orphan
       deletion in this validation pass. Close its temporary table leases before
@@ -47,3 +48,9 @@ outer owner. It prevents lower-level WAL recovery effects from preceding LSM
 semantic validation. It does not promise protection against an unrelated actor
 modifying files outside the ownership contract. The existing generic physical
 store and lower-level file providers alone do not implement this facade.
+
+The inspection prerequisite passes complete local validation on 2026-10-27 at
+02:37:37Z. checkpoint-inspect{,-before}.txt preserve the actual before failures,
+full native/C#/actual-WASM/runtime results and every coverage denominator. The
+remaining native facade work is active; no native production API follows from
+this prerequisite alone.

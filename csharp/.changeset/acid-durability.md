@@ -285,3 +285,8 @@ tombstone generations, bounded buffering, foreground compaction and maintenance
 consumers; fence uncertain publication and defer table repairs until complete
 selected-state validation. Native directory ownership remains separately selected
 and requires its own read-only discovery before constructing a repairing WAL.
+
+Add borrowed read-only checkpoint inspection in Rust, C# and JavaScript. Return
+owned selected-prefix records with finite page admission, preserving suffixes and
+staged mirror repairs until higher-level semantics validate; allocate no identity,
+initialize no bank and leave ordinary constructor recovery behavior intact.

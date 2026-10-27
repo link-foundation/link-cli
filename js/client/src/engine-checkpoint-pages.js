@@ -2,8 +2,11 @@
 import { PagedCommitLog } from './engine-paged-log.js';
 import { MAX_PAGES, CELLS, encoder, metadata, decodeMetadata, finish, same, fail } from './engine-page-format.js';
 import { bankIdentity, decisionBytes, selectDecision } from './engine-checkpoint-page-format.js';
+import { inspectCheckpointPages } from './engine-checkpoint-inspection.js';
 
 export class CheckpointPagedCommitLog {
+  /** Owned committed records; no initialization, repair completion or truncation. */
+  static inspect(root, banks, options) { return inspectCheckpointPages(root, banks, options); }
   #root; #banks; #active; #decision; #maxPages;
   #pending = false;
   #fenced = false;

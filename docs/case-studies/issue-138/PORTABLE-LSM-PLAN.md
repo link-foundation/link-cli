@@ -36,8 +36,10 @@ physical process-exit interchange, whole-project coverage or the wider issue.
       gates and latest feedback. Review the local diff; GitHub rejects the
       complete PR diff endpoint because the PR exceeds 300 files. The local
       git diff against origin/main supplies the complete review fallback.
-- [ ] Inspect fresh exact-head CI after the portable commit is published.
-- [ ] Commit and publish the verified portable step; continue the unchecked
+- [x] Inspect fresh exact-head CI after the portable commit is published. All
+      nine workflows pass on bc364d2; lsm-store-ci.txt records each URL and
+      native platform, coverage and fresh-merge job timestamp.
+- [x] Commit and publish the verified portable step; continue the unchecked
       native file, process-exit and wider acceptance work in PHYSICAL-LSM-PLAN.md.
 
 Run experiments/issue-138/validate-lsm-store.sh with the repository's pinned

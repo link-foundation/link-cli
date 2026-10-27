@@ -135,6 +135,14 @@ async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]
 import { PagedCommitLog, type PageDevice } from '../types/engine-paged-log.js';
 import { FilePagedCommitLog } from '../types/engine-file-paged-log.js';
 import { CheckpointPagedCommitLog, type ReplaceableCommitLog } from '../types/engine-checkpoint-pages.js';
+function inspectCheckpointTypes(root: PageDevice, first: PageDevice, second: PageDevice) {
+  const records: string[] = CheckpointPagedCommitLog.inspect(root, [first, second], { maxPages:128 });
+  records.push('owned');
+  // @ts-expect-error both banks are required
+  CheckpointPagedCommitLog.inspect(root, [first]);
+  // @ts-expect-error page bounds use portable numbers
+  CheckpointPagedCommitLog.inspect(root, [first,second], { maxPages:1n });
+}
 function checkpointPageTypes(root: PageDevice, first: PageDevice, second: PageDevice) {
   const log: ReplaceableCommitLog = new CheckpointPagedCommitLog(root, [first, second], { maxPages: 1024 });
   const replaced: boolean = log.replace(['opaque'] as const);

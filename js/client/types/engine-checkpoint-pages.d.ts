@@ -13,6 +13,9 @@ export interface ReplaceableCommitLog extends CommitLog {
  * Replacement rejects pending physical records and prepares the inactive bank
  * completely before publishing the root. Failed I/O fences the owner. */
 export class CheckpointPagedCommitLog implements ReplaceableCommitLog {
+  /** Inspect owned committed records without initialization, truncation or repair completion.
+   * Discard staged mirror wrappers if higher-level semantic validation fails. */
+  static inspect(root: PageDevice, banks: readonly [PageDevice, PageDevice], options?: PagedLogOptions): string[];
   constructor(root: PageDevice, banks: readonly [PageDevice, PageDevice], options?: PagedLogOptions);
   readonly epoch: bigint;
   readonly supportsReplacement: true;
