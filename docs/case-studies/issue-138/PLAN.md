@@ -688,3 +688,18 @@ acceptance criterion continue independently.
     consumers, 32 handoffs and repository gates pass with the exact pinned SDK.
     Publish this atomic correction. Fresh Windows CI must establish the remaining timeout
     cause; a passing Linux suite does not complete that criterion.
+
+    Diagnostic head 78e2c2a passes all C# jobs, including all 2,412 tests on each
+    platform and the fresh merge. The preceding timeout cause is not established
+    by this passing run. native-lsm-csharp-ci-after.txt retains the exact evidence.
+
+52. Investigate Rust Windows failures on diagnostic head 78e2c2a. Preserve the
+    complete log, actual failing scenarios and child phase timings. Each failed
+    child progresses through distinct persistence operations until the aggregate
+    ten-second deadline expires. Reuse the existing finite movement supervisor,
+    retaining ten-second idle detection, monotonic bounded phases and kill/reap.
+    All original 12 version/name scenarios remain; focused execution passes the
+    seven parents and three supervisor controls. Formatting, strict Clippy and
+    all 221 repository checks pass. Publish this test-only correction and inspect
+    fresh Windows CI. version-progress-ci-before.txt preserves the reproduction;
+    lower-level Windows filesystem latency and wider issue criteria remain open.

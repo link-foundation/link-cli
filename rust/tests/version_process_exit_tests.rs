@@ -1,5 +1,5 @@
 //! Finite real-process exits skip all version-owner and storage destructors.
-use anyhow::{bail, Result};
+use anyhow::Result;
 use link_cli::{
     CommitMode, LogRetentionPolicy, NamedTypeLinks, NamedTypesDecorator, TransactionsDecorator,
     VersionControlDecorator,
@@ -7,6 +7,8 @@ use link_cli::{
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
+#[path = "common/movement_progress.rs"]
+mod movement_progress;
 
 const TOPIC: &str = "topic|:parent=\u{96ea}\0";
 fn open(directory: &Path) -> Result<VersionControlDecorator> {
@@ -38,21 +40,20 @@ fn verify(mode: &str, automatic: bool, names: bool) -> Result<()> {
         .stdout(Stdio::from(diagnostics.try_clone()?))
         .stderr(Stdio::from(diagnostics))
         .spawn()?;
-    let deadline = Instant::now() + Duration::from_secs(10);
-    let status = loop {
-        if let Some(status) = child.try_wait()? {
-            break status;
-        }
-        if Instant::now() >= deadline {
-            child.kill()?;
-            child.wait()?;
-            bail!(
-                "finite version-exit child did not finish: {mode}/{automatic}/{names}.\n{}",
-                std::fs::read_to_string(&diagnostics_path)?
-            );
-        }
-        std::thread::sleep(Duration::from_millis(10));
-    };
+    // Several separate persistence barriers can exceed ten seconds in total
+    // while each operation still progresses. Reuse the finite movement watch:
+    // unchanged ten-second idle bound, strict monotonic phases, kill and reap.
+    let status = movement_progress::wait(
+        &mut child,
+        &directory.path().join("progress"),
+        Duration::from_secs(10),
+    )
+    .map_err(|cause| {
+        anyhow::anyhow!(
+            "finite version-exit child failed: {mode}/{automatic}/{names}: {cause}.\n{}",
+            std::fs::read_to_string(&diagnostics_path).unwrap_or_default()
+        )
+    })?;
     assert!(
         status.success(),
         "version-exit child failed at {mode}/{automatic}/{names}: {}",
@@ -181,12 +182,27 @@ fn abrupt_name_only_versions_recover_exact_names_and_attribution() -> Result<()>
 #[test]
 #[ignore = "finite child process entry point"]
 fn version_exit_child() -> Result<()> {
-    let started = Instant::now();
-    let phase = |name: &str| eprintln!("version-exit +{:?}: {name}", started.elapsed());
     let Some(directory) = std::env::var_os("LINK_VERSION_EXIT_DIRECTORY") else {
         return Ok(());
     };
     let directory = Path::new(&directory);
+    let started = Instant::now();
+    let mut count = 0;
+    let mut phase = |name: &str| {
+        use std::io::Write;
+        count += 1;
+        assert!(
+            count <= movement_progress::MAX_PHASES,
+            "finite version phase bound"
+        );
+        let mut progress = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(directory.join("progress"))
+            .unwrap();
+        writeln!(progress, "{count}").unwrap();
+        eprintln!("version-exit +{:?}: {name}", started.elapsed());
+    };
     phase("create directory");
     std::fs::create_dir(directory.join("data"))?;
     phase("open");
