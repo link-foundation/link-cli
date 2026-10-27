@@ -3696,3 +3696,57 @@ bound; repeated progress fails and is reaped. Only complete consecutive phases
 1..64 renew the unchanged 15-second idle bound. See csharp-phase-progress{,-before}.txt.
 Fresh Windows publication CI remains required; lower-level filesystem latency
 and every broader unmet R1-R12 criterion stay open.
+
+That C# publication requirement is now verified on exact head 8d2ecdf, committed
+05:38:18Z and tested by run 40456464654 created 05:38:28Z. Windows completes all
+2,421 tests at 05:48:48Z, Ubuntu at 05:40:50Z and macOS at 05:41:00Z. Both finite
+deadline controls and both actual current-before Windows movement cases pass.
+The complete downloaded log and exact line references are recorded in
+csharp-phase-progress-ci-after.txt. This verifies the supervision change without
+assigning a cause to filesystem latency; broader incomplete criteria remain open.
+
+All nine exact-head workflows on 8d2ecdf now conclude success. Rust Windows
+finishes 06:17:50Z within the existing 45-minute job budget, followed by the
+package build at 06:18:29Z. native-lsm-rust-ci-after.txt records all nine runs
+and timestamps. This verifies publication of the native Rust facade and finite
+C# phase correction; it does not verify subsequent unpublished chunk changes
+or complete the wider acceptance criteria.
+
+
+## Bounded append-only journal chunks, 2026-10-27
+
+Missing selected APIs and ignored JS selection fail first; the sparse-array
+admission control independently fails before dense copying. Shared independent
+vectors cover UTF-8 boundaries, BOM, supplementary characters, NUL and empty
+journals. Ten before/after publication cuts per language preserve complete old
+or new groups and following edits. Owned cache hits retain manifest count
+validation; staging compares actual complete contents rather than trusting cache.
+Unsupported epoch collectors reject these manifests before any deletion.
+
+Full sequential validation passes 1,146 native tests plus six doctests, 706
+actual-WASM tests and 2,429 C# tests in each configuration. The 21 native child
+entries remain parent-driven; one legacy doctest is ignored. All 626 Node tests
+include every production module at enforced 100% lines/branches/functions.
+Eight selected tests pass in Bun/Deno. All 221 repository checks, 645 source-size
+checks, strict native/WASM Clippy, whole-solution SDK10.0.403 format, TypeScript,
+workflow/ShellCheck and optional-SQL controls pass.
+
+Whole native LLVM: 16,853/17,756 lines, 3,262/3,752 branches, 2,179/2,346 functions,
+25,968/28,125 regions and 12,052/21,632 instantiations. Whole linked-WASM:
+13,041/15,465 lines, 2,644/3,155 branches, 1,627/2,024 functions, 20,081/24,379
+regions and 4,310/7,425 instantiations. C# Debug: 9,357/9,683 lines and
+5,653/6,102 branches; Release: 7,224/7,442 lines and 5,597/6,063 branches.
+Every denominator remains included; complete native/C#/WASM 100% stays unfinished.
+
+Four actual native/actual-WASM cluster compositions pass. All fifty whole and
+fifty chunked directed Rust/C#/Node/Bun/Deno complete-store handoffs pass in
+plain/mirrored modes with read-only physical hash preservation. The finite
+actual-WASM payload example produces byte-identical Node/Bun/Deno results:
+two-record chunks write 2,958 data payload bytes rather than 16,530 for whole
+journals, while catalog payload rises from 1,038 to 3,924 and uncached requests
+rise from 94 to 304. Separate caching reduces data-read bytes from 31,086 to
+19,232. These measure record payload at the provider seam, exclude physical I/O,
+and establish no durability, latency or throughput result. Full staging and
+engine replay remain linear. journal-chunks{,-before}.txt preserves exact scope,
+commands and logs; fresh publication CI remains required. Chunk reclamation and
+every wider unmet requirement remain active in this draft, unmerged PR.

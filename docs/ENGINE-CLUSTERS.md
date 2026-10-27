@@ -114,6 +114,15 @@ checks remain fresh. The zero-budget default retains no objects; payload
 accounting, ownership, outage behavior and persistent retention limits are
 documented separately. Append `--cache` to the partitioned examples to try it.
 
+An independently selected [bounded immutable chunk policy](protocol/chunked-journal.md)
+reuses unchanged complete journal prefixes across appends. Whole-journal writing
+remains the default, and upgraded readers accept both formats. Select explicit
+record/UTF-8-byte/chunk limits on the same partitioned store. Every update and
+route is admitted before staging, and one catalog CAS still checks the complete
+group. Fresh staging compares all object contents; full reads and replay remain
+linear and catalog metadata grows with chunk count. This policy does not supply
+automatic balancing, multi-catalog transactions or epoch-fenced chunk deletion.
+
 ## Configuration and ownership
 
 Rust enables HTTP/TLS dependencies only with Cargo feature `etcd`.

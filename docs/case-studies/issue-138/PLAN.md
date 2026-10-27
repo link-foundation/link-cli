@@ -734,3 +734,39 @@ acceptance criterion continue independently.
     below 100%. csharp-phase-progress{,-before}.txt preserve exact evidence.
     Publish this test-only correction with the locally verified native Rust port;
     inspect fresh exact-head Windows CI and continue every wider unmet criterion.
+
+    Exact published head 8d2ecdf now passes all 2,421 C# tests on Windows, Linux
+    and macOS in run 40456464654. The two finite deadline regression controls and
+    both current-before movement cases pass on Windows. Preserve their exact
+    log lines in csharp-phase-progress-ci-after.txt. This verifies the helper
+    correction; it does not establish the cause of filesystem latency.
+
+    All nine workflows on 8d2ecdf now pass, including Rust Windows within its
+    existing job budget. native-lsm-rust-ci-after.txt records every run and exact
+    completion time. This establishes publication verification for steps 53–54;
+    subsequent chunk work and every wider unmet requirement remain active.
+
+55. Select bounded immutable journal chunks independently of the existing
+    partitioned store's cache and engine settings. Preserve blob1 defaults,
+    reject malformed selected metadata before data access and admit all updates
+    before staging. Missing APIs fail first in Rust/C# and JS first publishes
+    blob1 instead of chunks1. Shared vectors, owned-cache and complete staging
+    checks pass. All 626 Node tests reach enforced 100% production coverage;
+    eight focused controls pass in Bun/Deno, with strict types. Seven chunk
+    controls per native language, actual native engines and fifty directed
+    plain/mirrored five-runtime chunk-store handoffs pass. Complete validation
+    passes 1,146 native tests plus six doctests, 706 actual-WASM and 2,429 C#
+    tests in each configuration. Full denominators remain included below 100%.
+    Both fifty-handoff layouts and actual-engine payload/cost checks pass.
+    Publication and fresh exact-head CI remain pending. SEGMENTED-JOURNAL-PLAN.md records selected costs and open chunk
+    reclamation work. Every wider unmet R1–R12 criterion remains active.
+
+56. Extend the separately selected epoch collector to the chunk reference graph.
+    Independent finite models first reproduce live chunk loss when old-epoch
+    keys are reused or epoch CAS is omitted. Current-epoch staging passes all
+    modeled interleavings, including two writers/two collectors, under finite
+    state and memory limits. A separate JS API control first reproduces ignored
+    chunk selection (blob2 instead of chunks2). Production changes and all
+    language/fault/actual-engine verification remain unfinished; see
+    CHUNK-RECLAMATION-PLAN.md. This next step must not be presented as completed
+    by the append-only chunks1 implementation or its safe collector refusal.

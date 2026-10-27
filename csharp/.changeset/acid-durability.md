@@ -299,3 +299,10 @@ Provide the C# native LSM directory facade with matching bounded read-only
 discovery, independent file mirrors, regular-file validation and cached
 uncertain-handle cleanup. Add finite file-operation failures, abrupt-exit
 recovery and actual direct, partitioned and reclaiming cluster examples.
+
+Select bounded immutable journal chunks independently of caching and engine
+policies. Reuse unchanged complete prefixes while retaining whole-journal
+defaults, atomic catalog generation checks, owned reads and fresh full-content
+staging comparisons. Validate every manifest before fetching data and every
+update before staging. Preserve native Rust/C#/JS file interchange; keep the
+epoch-reclamation format separate and reject unsupported roots before deletion.

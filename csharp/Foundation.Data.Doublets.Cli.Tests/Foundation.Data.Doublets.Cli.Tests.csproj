@@ -27,6 +27,7 @@
     <None Include="../../docs/protocol/engine-revision-vectors.json" Link="Protocol/engine-revision-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/engine-delta-vectors.json" Link="Protocol/engine-delta-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/partitioned-journal-vectors.json" Link="Protocol/partitioned-journal-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/chunked-journal-vectors.json" Link="Protocol/chunked-journal-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/version-metadata-vectors.json" Link="Protocol/version-metadata-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/version-publication-vectors.json" Link="Protocol/version-publication-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="coverlet.collector" Version="10.1.0" />

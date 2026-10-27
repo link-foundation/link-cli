@@ -19,13 +19,24 @@ RUNTIMES = {
 }
 if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
     RUNTIMES = {name: RUNTIMES[name] for name in selected.split(",")}
+LAYOUT = os.environ.get("NATIVE_LSM_LAYOUT", "whole")
+assert LAYOUT in ("whole", "chunks")
+if LAYOUT == "chunks":
+    for name, command in RUNTIMES.items():
+        if name == "rust":
+            command[-1] = "chunks"
+        elif name == "csharp":
+            command[-1] = "--native-lsm-chunks"
+        else:
+            command[-1] = "examples/native-lsm-js/chunks-interop.mjs"
 
 
 def snapshot(directory):
-    files = sorted(directory.iterdir())
-    assert all(path.is_file() and not path.is_symlink() for path in files)
+    entries = sorted(directory.rglob("*"))
+    assert all(not path.is_symlink() and (path.is_file() or path.is_dir()) for path in entries)
+    files = [path for path in entries if path.is_file()]
     assert all(path.name != ".lsm-writer" and not path.name.endswith(".writer") for path in files)
-    return {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
+    return {str(path.relative_to(directory)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
 
 
 def run(runtime, action, directory, mirrors):
@@ -49,5 +60,5 @@ with tempfile.TemporaryDirectory(prefix="clink-native-lsm-interop-") as temporar
                 advanced = snapshot(directory)
                 run(writer, "read-advanced", directory, mirrors)
                 assert snapshot(directory) == advanced, (writer, reader, "return read changed physical bytes")
-                print(f"PASS complete-store {mirrors} {writer} -> {reader} -> {writer}", flush=True)
-print(f"PASS {2 * len(RUNTIMES) ** 2} complete-store handoffs with physical hash preservation", flush=True)
+                print(f"PASS {LAYOUT} complete-store {mirrors} {writer} -> {reader} -> {writer}", flush=True)
+print(f"PASS {2 * len(RUNTIMES) ** 2} {LAYOUT} complete-store handoffs with physical hash preservation", flush=True)

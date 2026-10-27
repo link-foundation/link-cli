@@ -740,3 +740,22 @@ coverage remains 16,712/17,614 lines and 3,211/3,698 branches; whole-linked WASM
 is still required for this step. Legacy physical repair, power-loss certification,
 remaining distributed algorithms/composition, whole-project 100% coverage and
 remaining scaling/replay bounds stay unfinished; this PR remains draft/unmerged.
+
+
+Bounded append-only immutable journal chunks (R5/R6/R7/R8/R9/R10/R11/R12 partial)
+now reuse complete unchanged prefixes under independently selected cache and
+count/UTF-8-byte limits. Whole-journal defaults remain. Metadata admission,
+full staging comparisons, owned reads and one catalog CAS pass matching native,
+C# and actual-WASM controls; legacy epoch collectors refuse unsupported roots
+before deletion. All 1,146 native, 706 actual-WASM and 2,429 C# tests per full
+configuration pass. All 626 Node tests enforce full production coverage; strict
+types and selected Bun/Deno controls pass. Four actual consumers per language
+composition and 50 whole plus 50 chunked five-runtime complete-store handoffs
+pass. journal-chunks{,-before}.txt records full nonexcluded coverage denominators,
+finite failures and measured payload/cost tradeoffs. Complete native/C#/WASM
+100%, epoch-fenced chunk reclamation, full replay/transfer bounds, catalog
+throughput and multi-catalog/automatic balancing remain unfinished. Current-epoch
+restaging and coherent whole-group reader retry require separate verification;
+CHUNK-RECLAMATION-PLAN.md retains that next step. Fresh publication CI is required.
+Preceding native Rust publication 8d2ecdf now has all nine workflows green in
+native-lsm-rust-ci-after.txt. No wider acceptance criterion is inferred complete.

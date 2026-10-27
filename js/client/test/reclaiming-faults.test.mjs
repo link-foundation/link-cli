@@ -7,6 +7,16 @@ function providers() { return { catalog: new MemoryMaintenanceStore('catalog'), 
 const open = (p, options) => Reclaiming.open(p.catalog, { east: p.east, west: p.west }, (key) => key === 'a' ? 'east' : 'west', options);
 async function publish(store, text) { const before = await store.read(['a']); assert.ok(await store.compareExchange(['a'], before, [[text]])); return store.read(['a']); }
 const deletions = (p) => p.east.calls.filter((call) => call.operation === 'delete').length + p.west.calls.filter((call) => call.operation === 'delete').length;
+test('unsupported chunk manifests stop before any object deletion', { timeout: 10000 }, async () => {
+  for (const entries of [['chunks1', 'east', '0', '0'], ['chunks1', 'east', '1', '1', 'blob1-0000000000000000', '1', '1']]) {
+    const p = providers(); const store = await open(p);
+    await publish(store, 'old'); await publish(store, 'new');
+    const before = structuredClone([p.east.values, p.west.values]);
+    p.catalog.values.get('a').entries = entries;
+    await assert.rejects(store.collectGarbage(), /pointer/);
+    assert.equal(deletions(p), 0); assert.deepEqual([p.east.values, p.west.values], before);
+  }
+});
 for (const outcome of ['not-sent', 'failed']) for (const phase of ['initialization', 'staging', 'fence', 'deletion']) test(`composite ${phase} preserves earlier effects when a later request is ${outcome}`, { timeout: 10000 }, async () => {
   const p = providers(); const cause = new LinksError('later request failed', { outcome });
   const stop = () => { throw cause; }; let work;

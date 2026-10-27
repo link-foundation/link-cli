@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Foundation.Data.Doublets.Cli.Engine;
 
@@ -13,20 +12,27 @@ public sealed class PartitionedJournalStore : IAtomicJournalStore
     private readonly Dictionary<string, IAtomicJournalStore> _partitions;
     private readonly Func<string, string> _route;
     private readonly ImmutableObjectCache? _cache;
+    private readonly JournalChunkOptions? _chunks;
     public PartitionedJournalStore(IAtomicJournalStore catalog, IReadOnlyDictionary<string, IAtomicJournalStore> partitions, Func<string, string> route)
         : this(catalog, partitions, route, 0) { }
     /// <summary>Optional LRU payload budget: one byte per object
     /// and record plus record UTF-8 bytes; zero disables. Metadata and returned
     /// copies add memory. Catalog reads always stay fresh.</summary>
     public PartitionedJournalStore(IAtomicJournalStore catalog, IReadOnlyDictionary<string, IAtomicJournalStore> partitions, Func<string, string> route, long cacheBytes)
+        : this(catalog, partitions, route, cacheBytes, null) { }
+    /// <summary>Select bounded immutable chunks for new writes. Staging still
+    /// reads and compares complete contents, including cached objects.</summary>
+    public PartitionedJournalStore(IAtomicJournalStore catalog, IReadOnlyDictionary<string, IAtomicJournalStore> partitions, Func<string, string> route, long cacheBytes, JournalChunkOptions? chunks)
     {
         ArgumentNullException.ThrowIfNull(catalog); ArgumentNullException.ThrowIfNull(partitions); ArgumentNullException.ThrowIfNull(route);
         ArgumentOutOfRangeException.ThrowIfNegative(cacheBytes);
+        if (chunks is not null) JournalChunks.Validate(chunks);
         if (partitions.Count == 0) throw new ArgumentException("Provide named atomic data stores.", nameof(partitions));
         _partitions = new(StringComparer.Ordinal);
         foreach (var (name, store) in partitions) { ClusterEngine<uint>.ValidateKeys(new[] { name }); ArgumentNullException.ThrowIfNull(store); _partitions.Add(name, store); }
         _catalog = catalog; _route = route;
         _cache = cacheBytes > 0 ? new(cacheBytes) : null;
+        _chunks = chunks;
     }
     public bool SupportsDurableFlush => _catalog.SupportsDurableFlush && _partitions.Values.All(store => store.SupportsDurableFlush);
     // FNV indexes objects; full equality at creation rejects collisions safely.
@@ -42,28 +48,43 @@ public sealed class PartitionedJournalStore : IAtomicJournalStore
     private static JournalVersion ReadOne(IAtomicJournalStore store, string key)
     {
         var result = store.Read(new[] { key });
-        if (result.Count != 1) throw new InvalidDataException("Invalid immutable object snapshot.");
+        if (result.Count != 1 || result[0] is null || result[0].Entries is null || result[0].Entries.Any(value => value is null)) throw new InvalidDataException("Invalid immutable object snapshot.");
+        if (result[0].Generation == 0 && result[0].Entries.Count != 0) throw new InvalidDataException("Invalid absent immutable object.");
         return new(result[0].Generation, result[0].Entries.ToArray());
     }
-    private static bool Generation(string value, out ulong generation) => ulong.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out generation) && generation > 0 && generation.ToString(CultureInfo.InvariantCulture) == value;
+    private string[] ReadObject(string partition, JournalChunks.Reference reference)
+    {
+        if (_cache?.Get(partition, reference.Key, reference.Generation) is { } cached)
+        {
+            JournalChunks.ValidateChunk(cached, reference.Records); return cached;
+        }
+        var data = ReadOne(_partitions[partition], reference.Key);
+        if (data.Generation != reference.Generation || Address(data.Entries) != reference.Key) throw new InvalidDataException("Missing or modified immutable object.");
+        JournalChunks.ValidateChunk(data.Entries, reference.Records);
+        _cache?.Remember(partition, reference.Key, reference.Generation, data.Entries);
+        return data.Entries.ToArray();
+    }
     public IReadOnlyList<JournalVersion> Read(IReadOnlyList<string> keys)
     {
         ClusterEngine<uint>.ValidateKeys(keys);
         var pointers = _catalog.Read(keys);
         if (pointers.Count != keys.Count) throw new InvalidDataException("Incomplete catalog snapshot.");
-        pointers = pointers.Select(item => new JournalVersion(item.Generation, item.Entries.ToArray())).ToArray();
-        var result = new List<JournalVersion>();
-        foreach (var pointer in pointers)
+        // Complete all selected metadata validation before any data-store read.
+        var selected = pointers.Select(pointer =>
         {
-            if (pointer.Generation == 0 && pointer.Entries.Count == 0) { result.Add(pointer); continue; }
-            var parts = pointer.Entries;
-            if (pointer.Generation == 0 || parts.Count != 4 || parts[0] != "blob1" || !_partitions.TryGetValue(parts[1], out var store) || !Regex.IsMatch(parts[2], "\\Ablob1-[0-9a-f]{16}\\z", RegexOptions.CultureInvariant) || !Generation(parts[3], out var generation))
-                throw new InvalidDataException("Invalid catalog pointer.");
-            if (_cache?.Get(parts[1], parts[2], generation) is { } cached) { result.Add(new(pointer.Generation, cached)); continue; }
-            var data = ReadOne(store, parts[2]);
-            if (data.Generation != generation || Address(data.Entries) != parts[2]) throw new InvalidDataException("Missing or modified immutable object.");
-            _cache?.Remember(parts[1], parts[2], generation, data.Entries);
-            result.Add(new(pointer.Generation, data.Entries));
+            if (pointer is null || pointer.Entries is null) throw new InvalidDataException("Invalid catalog snapshot.");
+            if (pointer.Generation == 0 && pointer.Entries.Count == 0) return (Generation: 0UL, Manifest: (JournalChunks.Manifest?)null);
+            if (pointer.Generation == 0) throw new InvalidDataException("Invalid catalog generation.");
+            var manifest = JournalChunks.Decode(pointer.Entries.ToArray());
+            if (!_partitions.ContainsKey(manifest.Partition)) throw new InvalidDataException("Invalid catalog pointer partition.");
+            return (pointer.Generation, Manifest: (JournalChunks.Manifest?)manifest);
+        }).ToArray();
+        var result = new List<JournalVersion>();
+        foreach (var (generation, manifest) in selected)
+        {
+            var records = new List<string>();
+            if (manifest is not null) foreach (var reference in manifest.References) records.AddRange(ReadObject(manifest.Partition, reference));
+            result.Add(new(generation, records.ToArray()));
         }
         return result;
     }
@@ -75,24 +96,32 @@ public sealed class PartitionedJournalStore : IAtomicJournalStore
         // Validate routes and copy all updates before any external staging.
         var staged = keys.Select((key, index) =>
         {
-            if (updates[index] is not { } entries) return (Data: (string[]?)null, Partition: "");
+            if (updates[index] is not { } entries) return (Data: (string[]?)null, Partition: "", Objects: Array.Empty<IReadOnlyList<string>>());
+            var records = entries.ToArray();
+            if (records.Any(value => value is null)) throw new ArgumentException("Journal must contain strings.", nameof(updates));
             var partition = _route(key);
             if (!_partitions.ContainsKey(partition)) throw new ArgumentException("Route must select a configured partition.", nameof(keys));
-            return (Data: entries.ToArray(), Partition: partition);
+            return (Data: (string[]?)records, Partition: partition, Objects: _chunks is null ? new IReadOnlyList<string>[] { records } : JournalChunks.Split(records, _chunks));
         }).ToArray();
         var pointers = new List<IReadOnlyList<string>?>();
-        foreach (var (data, partition) in staged)
+        foreach (var (data, partition, objects) in staged)
         {
             if (data is null) { pointers.Add(null); continue; }
-            var key = Address(data); var store = _partitions[partition]; var item = ReadOne(store, key);
-            if (item.Generation == 0)
+            var manifest = _chunks is null ? new List<string> { "blob1", partition } : new List<string> { "chunks1", partition, data.Length.ToString(CultureInfo.InvariantCulture), objects.Length.ToString(CultureInfo.InvariantCulture) };
+            foreach (var chunk in objects)
             {
-                // An uncertain write leaves an orphan; mutations are never retried.
-                store.CompareExchange(new[] { key }, new[] { item }, new IReadOnlyList<string>?[] { data });
-                item = ReadOne(store, key);
+                var key = Address(chunk); var store = _partitions[partition]; var item = ReadOne(store, key);
+                if (item.Generation == 0)
+                {
+                    // An uncertain write leaves an orphan; mutations are never retried.
+                    store.CompareExchange(new[] { key }, new[] { item }, new IReadOnlyList<string>?[] { chunk });
+                    item = ReadOne(store, key);
+                }
+                if (item.Generation == 0 || !item.Entries.SequenceEqual(chunk)) throw new InvalidDataException("Immutable object collision or inconsistent data store.");
+                manifest.Add(key); manifest.Add(item.Generation.ToString(CultureInfo.InvariantCulture));
+                if (_chunks is not null) manifest.Add(chunk.Count.ToString(CultureInfo.InvariantCulture));
             }
-            if (item.Generation == 0 || !item.Entries.SequenceEqual(data)) throw new InvalidDataException("Immutable object collision or inconsistent data store.");
-            pointers.Add(new[] { "blob1", partition, key, item.Generation.ToString(CultureInfo.InvariantCulture) });
+            pointers.Add(manifest.ToArray());
         }
         return _catalog.CompareExchange(keys, versions, pointers);
     }

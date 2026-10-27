@@ -1,4 +1,32 @@
 use super::*;
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn unsupported_chunk_manifests_never_reach_deletion() {
+    for entries in [
+        vec!["chunks1", "east", "0", "0"],
+        vec![
+            "chunks1",
+            "east",
+            "1",
+            "1",
+            "blob1-0000000000000000",
+            "1",
+            "1",
+        ],
+    ] {
+        let (c, a, b, mut store) = fixture();
+        write(&mut store, "a0", "b0");
+        write(&mut store, "a1", "b1");
+        let before_a = a.0.lock().unwrap().values.clone();
+        let before_b = b.0.lock().unwrap().values.clone();
+        c.0.lock().unwrap().values.get_mut("a").unwrap().entries =
+            entries.into_iter().map(String::from).collect();
+        assert!(store.collect_garbage().is_err());
+        assert_eq!(a.count("delete") + b.count("delete"), 0);
+        assert_eq!(a.0.lock().unwrap().values, before_a);
+        assert_eq!(b.0.lock().unwrap().values, before_b);
+    }
+}
 fn version(generation: u64, records: &[&str]) -> JournalVersion {
     JournalVersion {
         generation,

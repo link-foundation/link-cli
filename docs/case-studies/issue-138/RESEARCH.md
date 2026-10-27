@@ -385,3 +385,26 @@ point reads need not materialize every payload. This is a storage building block
 WAL/memtable/manifest publication and compaction still require independent fault
 and restart verification. It neither copies RocksDB's code/format nor supplies
 its full feature set. See [execution plan](PHYSICAL-SORTED-TABLE-PLAN.md).
+
+## Bounded immutable journal chunks (2026-10-27)
+
+Re-read the [Iceberg specification at e5f8ab19](https://github.com/apache/iceberg/blob/e5f8ab19c82fcf24be430cc6c0cecf9a23f5afe4/format/spec.md),
+lines 90, 94–100, 130–135 and 1539: immutable files/manifests can be reused by
+later snapshots, while checked metadata publication determines the selected
+state. The locally retained source has SHA-256
+`b8c9607bad6ac2bd42289a41d44befc56db79e9faa534f59bd120b0d7c0c1b89`.
+RocksDB's [BlobDB design](https://github.com/facebook/rocksdb/wiki/BlobDB)
+separates values from sorted keys and documents the resulting write, space and
+garbage collection tradeoffs. Neither design removes the need to inventory
+references before deletion.
+
+Design inference for the existing journal seam: optionally split each update
+at deterministic record/UTF-8 byte boundaries and reuse complete immutable
+prefix chunks. Preserve the single checked catalog decision and fresh complete
+staging comparison, including cached references. This reduces new payload
+writes for unchanged complete prefixes; staging reads, full replay and catalog
+growth remain explicit costs. Record counts, bytes and manifest length need
+independent finite bounds. The existing epoch collector must reject the new
+format until it can follow its complete reference graph safely. No source or
+format is copied. See [protocol](../../protocol/chunked-journal.md) and
+[execution plan](SEGMENTED-JOURNAL-PLAN.md).

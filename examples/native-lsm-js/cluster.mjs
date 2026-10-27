@@ -11,7 +11,7 @@ const packagePath = resolve(process.env.CLINK_WASM ?? 'js/pkg');
 const binding = await import(pathToFileURL(join(packagePath, 'clink_wasm.js')).href);
 binding.initSync({ module: readFileSync(join(packagePath, 'clink_wasm_bg.wasm')) });
 const options = { maxKeys: 256, maxBytes: 1048576, bufferKeys: 64, bufferBytes: 262144, maxPages: 128 };
-for (const mode of ['direct', 'partitioned', 'reclaiming']) {
+for (const mode of ['direct', 'partitioned', 'chunks', 'reclaiming']) {
   const directory = mkdtempSync(join(tmpdir(), 'clink-lsm-consumer-'));
   let stores = [];
   async function open() {
@@ -22,7 +22,7 @@ for (const mode of ['direct', 'partitioned', 'reclaiming']) {
     });
     if (mode === 'direct') return stores[0];
     const args = [stores[0], { east: stores[1], west: stores[2] }, key => key === 'a' ? 'east' : 'west'];
-    return mode === 'partitioned' ? new PartitionedJournalStore(...args) : await ReclaimingPartitionedJournalStore.open(...args);
+    return mode === 'chunks' ? new PartitionedJournalStore(...args, { chunks: { maxRecords: 2 } }) : mode === 'partitioned' ? new PartitionedJournalStore(...args) : await ReclaimingPartitionedJournalStore.open(...args);
   }
   function close() { for (const store of stores) { store.compact(); store.close(); } stores = []; }
   try {

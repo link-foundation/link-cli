@@ -6,6 +6,7 @@ From the repository root, build the optional native facade without SQLite:
 cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
 rust/target/debug/examples/native_lsm cluster direct
 rust/target/debug/examples/native_lsm cluster partitioned
+rust/target/debug/examples/native_lsm cluster chunks
 rust/target/debug/examples/native_lsm cluster reclaiming
 ```
 

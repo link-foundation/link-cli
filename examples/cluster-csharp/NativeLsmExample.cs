@@ -15,8 +15,8 @@ internal static class NativeLsmExample
         using var catalog = Open(directory, "catalog");
         if (mode == "direct") { action(catalog, null); catalog.Compact(); return; }
         using var east = Open(directory, "east"); using var west = Open(directory, "west");
-        if (mode == "partitioned")
-            action(new PartitionedJournalStore(catalog, new Dictionary<string, IAtomicJournalStore> { ["east"] = east, ["west"] = west }, key => key == "a" ? "east" : "west"), null);
+        if (mode is "partitioned" or "chunks")
+            action(new PartitionedJournalStore(catalog, new Dictionary<string, IAtomicJournalStore> { ["east"] = east, ["west"] = west }, key => key == "a" ? "east" : "west", 0, mode == "chunks" ? new(2) : null), null);
         else
         {
             var reclaiming = ReclaimingPartitionedJournalStore.Open(catalog, new Dictionary<string, IJournalMaintenanceStore> { ["east"] = east, ["west"] = west }, key => key == "a" ? "east" : "west");
@@ -26,7 +26,7 @@ internal static class NativeLsmExample
     }
     internal static void Run(string mode)
     {
-        if (mode is not ("direct" or "partitioned" or "reclaiming")) throw new ArgumentException("Native LSM mode must be direct, partitioned or reclaiming.", nameof(mode));
+        if (mode is not ("direct" or "partitioned" or "chunks" or "reclaiming")) throw new ArgumentException("Native LSM mode must be direct, partitioned, chunks or reclaiming.", nameof(mode));
         string directory = Directory.CreateTempSubdirectory("native-lsm-consumer-").FullName;
         try
         {

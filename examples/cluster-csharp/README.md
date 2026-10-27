@@ -5,6 +5,7 @@ The native file example requires no server or SQL provider:
 ```sh
 dotnet run --project examples/cluster-csharp -- --native-lsm direct
 dotnet run --project examples/cluster-csharp -- --native-lsm partitioned
+dotnet run --project examples/cluster-csharp -- --native-lsm chunks
 dotnet run --project examples/cluster-csharp -- --native-lsm reclaiming
 ```
 
@@ -15,6 +16,12 @@ also verifies that retired objects are collected. Files are removed after every
 handle closes. POSIX supports synchronized namespace changes; Windows reports
 `SupportsDurableFlush = false`. A process-exit test does not certify physical
 power-loss durability. See the [native directory contract](../../docs/protocol/native-lsm-store.md).
+
+The `chunks` composition explicitly selects two-record immutable chunks on the
+ordinary partitioned journal store. Default whole-journal writes remain available.
+Its cache, staging reads, full replay and retention costs are described in the
+[chunk protocol](../../docs/protocol/chunked-journal.md); chunk reclamation is a
+separate unfinished combination.
 
 Start a durable etcd deployment with its v3 HTTP JSON gateway enabled. For a
 local disposable demonstration, `etcd --data-dir ./demo-etcd` listens on port

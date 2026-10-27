@@ -365,10 +365,19 @@ export class ClusterTransaction {
   close(): Promise<void>;
   [Symbol.asyncDispose](): Promise<void>;
 }
+/** Bounded immutable journal chunk write policy, independent of read caching. */
+export interface JournalChunkOptions {
+  /** Positive record limit, at most 65,536; default 64. */
+  maxRecords?: number;
+  /** UTF-8 payload bytes per chunk, at most 8,388,608; default 65,536. */
+  maxBytes?: number;
+  /** Positive manifest bound, at most 4,096; default 1,024. */
+  maxChunks?: number;
+}
 /** Immutable data objects in independent stores; atomic publication in a catalog. */
 export class PartitionedJournalStore implements AtomicJournalStore {
   /** Cache budget counts one byte per object/record plus record UTF-8 bytes; zero disables. Catalogs stay fresh. */
-  constructor(catalog: AtomicJournalStoreProvider, partitions: Record<string, AtomicJournalStoreProvider>, route: (shard: string) => string, options?: { cacheBytes?: number });
+  constructor(catalog: AtomicJournalStoreProvider, partitions: Record<string, AtomicJournalStoreProvider>, route: (shard: string) => string, options?: { cacheBytes?: number; chunks?: JournalChunkOptions | null });
   readonly supportsDurableFlush: boolean;
   read(keys: string[]): Promise<JournalVersion[]>;
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;

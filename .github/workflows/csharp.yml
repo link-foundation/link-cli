@@ -17,6 +17,7 @@ on:
       - 'docs/protocol/checkpoint*'
       - 'docs/protocol/journal-maintenance-v1.json'
       - 'docs/protocol/reclamation-v1.json'
+      - 'docs/protocol/chunked-journal*'
       - 'examples/cluster-csharp/**'
   workflow_dispatch:
     inputs:
@@ -291,6 +292,7 @@ jobs:
           dotnet build examples/cluster-csharp --configuration Release
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm direct
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm partitioned
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm chunks
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming
 
       - name: Setup Node.js for coverage

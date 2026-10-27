@@ -3,7 +3,7 @@ use link_cli::{
         cluster::{AtomicJournalStore, ClusterEngine, JournalVersion},
         lsm::{FileLsmJournalStore, FileLsmOptions, LsmOptions, LsmStoreOptions},
         maintenance::{JournalMaintenanceStore, JournalNamespaceEntry, JournalScanOptions},
-        partitioned::PartitionedJournalStore,
+        partitioned::{JournalChunkOptions, PartitionedJournalStore},
         reclaiming::{ReclaimingPartitionedJournalStore, ReclamationOptions},
         EngineOptions,
     },
@@ -14,17 +14,20 @@ use std::{
     path::Path,
     sync::{Arc, Mutex},
 };
-struct Shared<S>(Arc<Mutex<S>>);
+pub(super) struct Shared<S>(Arc<Mutex<S>>);
 impl<S> Clone for Shared<S> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 impl<S> Shared<S> {
-    fn new(value: S) -> Self {
+    pub(super) fn new(value: S) -> Self {
         Self(Arc::new(Mutex::new(value)))
     }
-    fn with<T>(&self, action: impl FnOnce(&mut S) -> Result<T, LinkError>) -> Result<T, LinkError> {
+    pub(super) fn with<T>(
+        &self,
+        action: impl FnOnce(&mut S) -> Result<T, LinkError>,
+    ) -> Result<T, LinkError> {
         action(
             &mut *self
                 .0
@@ -128,7 +131,10 @@ fn open(directory: &Path, name: &str) -> Result<Shared<FileLsmJournalStore>, Lin
     )?))
 }
 pub(super) fn run(mode: &str) -> Result<(), LinkError> {
-    assert!(matches!(mode, "direct" | "partitioned" | "reclaiming"));
+    assert!(matches!(
+        mode,
+        "direct" | "partitioned" | "chunks" | "reclaiming"
+    ));
     let directory = tempfile::tempdir()?;
     for write in [true, false] {
         let catalog = open(directory.path(), "catalog")?;
@@ -140,8 +146,17 @@ pub(super) fn run(mode: &str) -> Result<(), LinkError> {
             let west = open(directory.path(), "west")?;
             physical.extend([east.clone(), west.clone()]);
             let parts = BTreeMap::from([("east".into(), east), ("west".into(), west)]);
-            if mode == "partitioned" {
-                exercise(PartitionedJournalStore::new(catalog, parts, route)?, write)?;
+            if mode == "partitioned" || mode == "chunks" {
+                let store = PartitionedJournalStore::new(catalog, parts, route)?;
+                let store = if mode == "chunks" {
+                    store.with_chunks(JournalChunkOptions {
+                        max_records: 2,
+                        ..Default::default()
+                    })?
+                } else {
+                    store
+                };
+                exercise(store, write)?;
             } else {
                 let store = Shared::new(ReclaimingPartitionedJournalStore::open(
                     catalog,

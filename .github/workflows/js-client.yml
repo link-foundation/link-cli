@@ -23,6 +23,7 @@ on:
       - 'examples/journal-reclamation-csharp/**'
       - 'examples/sqlite-csharp/**'
       - 'examples/native-lsm-js/**'
+      - 'examples/journal-chunks/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
       - 'examples/sorted-tables/**'
@@ -43,6 +44,7 @@ on:
       - 'experiments/issue-138/verify-maintenance-lazy.mjs'
       - 'experiments/issue-138/*reclamation*'
       - 'experiments/issue-138/native-checkpoint-cut.mjs'
+      - 'experiments/issue-138/*chunk*'
   pull_request:
     branches:
       - main
@@ -59,6 +61,7 @@ on:
       - 'examples/journal-reclamation-csharp/**'
       - 'examples/sqlite-csharp/**'
       - 'examples/native-lsm-js/**'
+      - 'examples/journal-chunks/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
       - 'examples/sorted-tables/**'
@@ -79,6 +82,7 @@ on:
       - 'experiments/issue-138/verify-maintenance-lazy.mjs'
       - 'experiments/issue-138/*reclamation*'
       - 'experiments/issue-138/native-checkpoint-cut.mjs'
+      - 'experiments/issue-138/*chunk*'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -184,6 +188,11 @@ jobs:
           node ../../experiments/issue-138/verify-reclamation-memory.mjs
           python3 ../../experiments/issue-138/model-object-reclamation.py
           python3 ../../experiments/issue-138/model-reclamation-readers.py
+          python3 ../../experiments/issue-138/model-chunked-journal.py
+          python3 ../../experiments/issue-138/model-chunk-reclamation.py
+          python3 ../../experiments/issue-138/model-chunk-readers.py
+          python3 ../../experiments/issue-138/build-chunk-vectors.py ../../experiments/issue-138/chunks-regenerated.json
+          cmp ../../docs/protocol/chunked-journal-vectors.json ../../experiments/issue-138/chunks-regenerated.json
 
       - name: Verify finite physical LSM composition experiments
         run: |
@@ -256,6 +265,11 @@ jobs:
           bun test js/client/test/engine-file-lsm-*.test.mjs --timeout 30000
           deno test --allow-all js/client/test/engine-file-lsm-*.test.mjs
 
+      - name: Verify immutable journal chunks in Bun and Deno
+        run: |
+          bun test js/client/test/partitioned-chunks.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/partitioned-chunks.test.mjs
+
       - name: Cache cargo registry
         uses: actions/cache@v6
         with:
@@ -289,12 +303,21 @@ jobs:
           dotnet build examples/journal-maintenance-csharp --configuration Release
           dotnet build examples/journal-reclamation-csharp --configuration Release
 
+      - name: Verify bounded journal chunk payload costs with actual WASM
+        run: |
+          node --max-old-space-size=256 examples/journal-chunks/measure.mjs > experiments/issue-138/chunks-node-payloads.json
+          bun examples/journal-chunks/measure.mjs > experiments/issue-138/chunks-bun-payloads.json
+          deno run --allow-read --allow-env examples/journal-chunks/measure.mjs > experiments/issue-138/chunks-deno-payloads.json
+          cmp experiments/issue-138/chunks-node-payloads.json experiments/issue-138/chunks-bun-payloads.json
+          cmp experiments/issue-138/chunks-node-payloads.json experiments/issue-138/chunks-deno-payloads.json
+
       - name: Verify complete native LSM store handoffs
         env:
           RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
         run: |
           cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
           python3 examples/native-lsm-js/run-interop.py
+          NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
 
       - name: Verify actual consensus and language interoperability
         env:
@@ -346,6 +369,14 @@ jobs:
         with:
           name: issue-138-checkpoint-payloads
           path: experiments/issue-138/checkpoint-*.json
+          if-no-files-found: ignore
+
+      - name: Preserve journal chunk payload measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-journal-chunk-payloads
+          path: experiments/issue-138/chunks-*-payloads.json
           if-no-files-found: ignore
 
       - name: Preserve consensus member logs

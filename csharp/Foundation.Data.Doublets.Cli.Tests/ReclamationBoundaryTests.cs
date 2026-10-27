@@ -4,6 +4,19 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 public partial class ReclamationTests
 {
     [Fact(Timeout = 10000)]
+    public async Task UnsupportedChunkManifestsNeverReachDeletion()
+    {
+        await Task.Yield();
+        foreach (var entries in new[] { new[] { "chunks1", "east", "0", "0" }, new[] { "chunks1", "east", "1", "1", "blob1-0000000000000000", "1", "1" } })
+        {
+            var (c, a, b, store) = Fixture(); Write(store, "a0", "b0"); Write(store, "a1", "b1");
+            var beforeA = a.Values.ToArray(); var beforeB = b.Values.ToArray();
+            c.Values["a"] = c.Values["a"] with { Entries = entries };
+            Assert.Throws<InvalidDataException>(() => store.CollectGarbage());
+            Assert.Equal(0, Deletions(a, b)); Assert.Equal(beforeA, a.Values.ToArray()); Assert.Equal(beforeB, b.Values.ToArray());
+        }
+    }
+    [Fact(Timeout = 10000)]
     public async Task MalformedCompleteSnapshotsDeleteNothingInAnyPartition()
     {
         await Task.Yield();

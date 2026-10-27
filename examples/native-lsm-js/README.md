@@ -10,9 +10,9 @@ CLINK_WASM=js/pkg deno run --allow-all examples/native-lsm-js/cluster.mjs
 ```
 
 The example uses the actual WASM links engine and actual native files in temporary
-directories. It checks three finite compositions: a direct journal store, an
-atomic catalog over two data stores, and epoch-fenced reclamation over the same
-layout. Each runs three coordinated revisions with retained-history checkpoint
+directories. It checks four finite compositions: a direct journal store, an
+atomic catalog over two data stores, selected bounded journal chunks, and
+epoch-fenced reclamation. Each runs three coordinated revisions with retained-history checkpoint
 journals, rejects a stale group after a competing commit, compacts, closes and
 reopens the physical stores, then reads the original link names. The reclamation
 case also deletes obsolete immutable objects before reopening.
@@ -32,6 +32,7 @@ complete-store handoff matrix:
 dotnet build examples/cluster-csharp --configuration Release
 cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
 python3 examples/native-lsm-js/run-interop.py
+NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
 ```
 
 Rust, C#, Node, Bun and Deno each write plain and fully mirrored stores. Every runtime
@@ -48,3 +49,10 @@ The Rust executable defaults to `rust/target/debug/examples/native_lsm`; set
 selected runtime subset, set `NATIVE_LSM_RUNTIMES` to comma-separated names from
 `rust,csharp,node,bun,deno`. The default checks all five. Native Rust cluster
 consumers have their own [runnable instructions](../../rust/examples/native_lsm/README.md).
+
+The second matrix runs another 50 handoffs over chunk manifests and immutable
+objects in separate native catalog/data directories. Writers select two records
+per chunk; advancing readers select three, verifying read compatibility across
+write policies. Live empty journals, Unicode/BOM/NUL, stale groups, owned prior
+snapshots and byte-preserving read-only reopening remain checked. This matrix
+does not select deletion of chunk objects. See the [chunk contract and costs](../../docs/protocol/chunked-journal.md).

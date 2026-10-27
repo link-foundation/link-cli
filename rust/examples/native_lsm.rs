@@ -1,4 +1,6 @@
 //! Native directory facade: complete-store interoperability and real consumers.
+#[path = "native_lsm/chunks.rs"]
+mod chunks;
 #[path = "native_lsm/consumer.rs"]
 mod consumer;
 use link_cli::engine::{
@@ -129,8 +131,9 @@ fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
         ["files", action, directory, mirrors] => files(action, directory, mirrors)?,
+        ["chunks", action, directory, mirrors] => chunks::run(action, directory, mirrors)?,
         ["cluster", mode] => consumer::run(mode)?,
-        _ => anyhow::bail!("Use files write|read|mutate|read-advanced <directory> plain|mirrored or cluster direct|partitioned|reclaiming"),
+        _ => anyhow::bail!("Use files|chunks write|read|mutate|read-advanced <directory> plain|mirrored or cluster direct|partitioned|chunks|reclaiming"),
     }
     Ok(())
 }

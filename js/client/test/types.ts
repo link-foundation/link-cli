@@ -122,6 +122,10 @@ async function clusterTypes(binding: ConstructorParameters<typeof WasmEngine>[0]
   new ClusterEngine(binding, store, { journalCheckpointInterval: '64' });
   const partitioned: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east');
   const cached: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east', { cacheBytes: 65536 });
+  const chunked: AtomicJournalStore = new PartitionedJournalStore(store, { east: store }, () => 'east', { chunks: { maxRecords: 64, maxBytes: 65536, maxChunks: 1024 } });
+  void chunked;
+  // @ts-expect-error chunk byte limits are numbers
+  new PartitionedJournalStore(store, { east: store }, () => 'east', { chunks: { maxBytes: '65536' } });
   await cached.read(['a']);
   // @ts-expect-error Cache budgets are numeric UTF-8 payload budgets.
   new PartitionedJournalStore(store, { east: store }, () => 'east', { cacheBytes: '65536' });
