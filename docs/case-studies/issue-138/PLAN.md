@@ -607,4 +607,9 @@ acceptance criterion continue independently.
     40 movement/recovery scenarios remain. Three deterministic harness controls,
     focused execution, formatting, strict Clippy and 221 repository checks pass.
     A separate clean production archive verifies this test-only correction;
-    fresh exact-head Windows CI follows. Wider R1–R12 work remains active.
+    fresh exact-head Windows CI now passes on `f523b5c`, including all six
+    controls, both other native platforms, coverage and fresh merge.
+    movement-progress-ci-after.txt records job URLs and log line references.
+    Dependencies alone fails because rustix 1.1.6 supersedes three 1.1.5 locks;
+    update those locks, retain the downloaded log and verify fresh publication.
+    Wider R1–R12 work remains active.

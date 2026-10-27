@@ -3516,5 +3516,11 @@ or repeated progress. Every supervisor error kills and reaps its child. The
 three added controls and all 40 original movement/recovery scenarios pass in the
 focused six-test target; its two child entries run only through bounded parents.
 Formatting, strict Clippy and all 221 repository checks pass. The isolated clean
-production archive excludes pending physical-store implementation. Fresh Windows
-CI must pass before this correction is considered verified across platforms.
+production archive excludes pending physical-store implementation. Fresh exact-head `f523b5c` Rust CI now passes Windows, Ubuntu, macOS,
+coverage and the simulated fresh merge. Windows logs 44662–44693 show all six
+controls pass in 48.53 seconds, including the original crash parents.
+movement-progress-ci-after.txt preserves run/job URLs and the complete saved
+log path. Eight workflows pass; Dependencies alone reports rustix 1.1.5 behind
+1.1.6 in three locks (saved dependency log lines 209–212). The local latest
+version audit passes after those three version/checksum updates; subsequent
+publication requires fresh CI. All wider unfinished requirements remain active.

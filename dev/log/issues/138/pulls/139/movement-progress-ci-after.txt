@@ -1,0 +1,46 @@
+Movement supervision: fresh platform verification and dependency audit
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: f523b5cca6888db5e97d7bc0c3cd32cf90bf2bd1
+All nine workflows created at 2026-10-27T01:07:07Z.
+
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40430646299
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40430646158
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40430646147
+Dependencies: failure; https://github.com/link-foundation/link-cli/actions/runs/40430646152
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40430646213
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40430646159
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40430646148
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40430646248
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40430646180
+
+Rust native platform, coverage and merge jobs:
+Rust coverage: success; 2026-10-27T01:07:09Z through 2026-10-27T01:13:43Z; https://github.com/link-foundation/link-cli/actions/runs/40430646180/job/121947177127
+Simulate Fresh Merge: success; 2026-10-27T01:08:12Z through 2026-10-27T01:13:33Z; https://github.com/link-foundation/link-cli/actions/runs/40430646180/job/121947526305
+Test (macos-26): success; 2026-10-27T01:09:07Z through 2026-10-27T01:14:46Z; https://github.com/link-foundation/link-cli/actions/runs/40430646180/job/121947827458
+Test (ubuntu-24.04): success; 2026-10-27T01:09:06Z through 2026-10-27T01:13:53Z; https://github.com/link-foundation/link-cli/actions/runs/40430646180/job/121947827505
+Test (windows-2025): success; 2026-10-27T01:09:12Z through 2026-10-27T01:20:12Z; https://github.com/link-foundation/link-cli/actions/runs/40430646180/job/121947827576
+
+Downloaded full log: experiments/issue-138/ci-logs/rust-40430646180.log
+Windows lines 44662-44664: all three deterministic supervisor controls pass.
+Windows lines 44673-44674: both original movement crash parents pass.
+Windows line 44691: interrupted metadata recovery parent passes.
+Windows line 44693: 6 passed; 0 failed; 2 child entries ignored; 48.53s.
+The child entries run under bounded parents. Original 40 scenarios remain.
+Coverage, fresh merge, Ubuntu and macOS each also pass the six-test target.
+No underlying cause is established for the earlier Windows barrier latency.
+
+The only failing workflow is Dependencies, run 40430646152.
+Downloaded full log: experiments/issue-138/ci-logs/dependencies-40430646152.log
+Line 203: 125 declared versions and Cargo.lock files checked.
+Lines 209-211: rustix 1.1.5 is behind 1.1.6 in native, WASM and external
+range evidence locks. Line 212: exit code 1. This is fresh data on this head.
+Update only rustix version and checksum in those three locks.
+Local latest-version audit passes all 125 declarations after the updates;
+native locked resolution, strict all-target Clippy and focused store tests pass.
+The complete native Rust suite and doctests pass with these locks.
+Full portable C#/WASM validation continues before the store publication.
+Fresh exact-head CI is still required for the updated locks and portable store.
+
+The portable physical-store changes are independent pending work. Native
+directory ownership, physical store process/interchange, full 100% coverage
+and every wider unmet issue criterion remain open; PR139 stays draft/unmerged.
