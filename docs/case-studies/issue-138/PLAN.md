@@ -991,8 +991,11 @@ acceptance criterion continue independently.
     owned results and deterministic order. Focused native/C#/JS contracts,
     strict types, formatting, Clippy and the bare dependency boundary pass.
     The complete 649-test JS suite enforces 100% production coverage. Complete
-    C# Debug/Release, native LLVM and actual-WASM checks are running under the
-    sequential memory bound; record their actual results before claiming them.
-    Publish for fresh exact-head platform CI, retaining all three C# coverage
-    artifacts. Durable counter ownership/publication, bounded Merkle transfer,
+    C# Debug/Release each pass 2467; native LLVM passes 1202 plus six
+    doctests and actual WASM passes 728. Complete production denominators
+    remain included. All 221 repository checks pass. causal-version.txt records
+    the complete sequential run and its remaining coverage gaps. C# exact-head
+    platform CI passes and all three complete archives are independently verified;
+    Rust Windows CI is still running. Durable counter ownership/publication,
+    bounded Merkle transfer,
     ordinary links projection and all wider unmet criteria remain unfinished.

@@ -22,7 +22,9 @@ be presented as another acknowledgement threshold on the existing log.
 - [x] Add five test-first portable semantic contracts per implementation,
       including 46 codec, eleven merge and nine checked-counter vectors,
       24 delivery orders and 216 state triples. Native Rust, C# and JS pass
-      focused checks; actual WASM and complete suites are being verified.
+      focused checks. Full native (1202), actual WASM (728), C# Debug/Release
+      (2467 each) and JS (649) pass; causal-version.txt retains complete
+      coverage denominators and remaining gaps.
       The independent JS baseline fails with the new module absent. Select
       Rust's `causal` feature or import the separate JS/TS module; neither
       changes the bare engine's storage, metadata or dependency contract.
@@ -34,6 +36,8 @@ be presented as another acknowledgement threshold on the existing log.
       retaining the bare cache path's costs. Persist mutation and local causal
       counter at the same publication boundary. Prevent two active local owners
       from reusing one author counter; do not invent global serializability.
+      CAUSAL-LOCAL-PLAN.md tracks test-first local ownership and retry receipts;
+      the current bounded JS draft is experiment evidence, not production parity.
 - [ ] Implement bounded snapshot/Merkle comparison and differing-range transfer.
       Validate the snapshot identity throughout transfer, bound tree depth,
       range sizes, bytes and retries, verify received data, and preserve a retry

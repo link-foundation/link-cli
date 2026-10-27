@@ -4205,3 +4205,36 @@ run URLs and actual result lines in rust-40500064468.log, retaining native cfg
 differences and separate doctest accounting. Later logical initialization and
 causal semantics require fresh CI. All wider unmet requirements remain active;
 PR139 remains draft and unmerged.
+
+
+## Selected causal version semantics (2026-10-27T13:03Z)
+
+The complete sequential driver finishes 13:03:27Z. Native Rust passes 1,202
+tests plus six doctests; actual WASM passes 728, including the same five causal
+contracts. C# Debug/Release each pass 2,467; JS passes all 649 with 100%
+production lines/branches/functions. All 221 repository checks and strict native/
+WASM Clippy, formatting, TS, source/changeset, dependency freshness and workflow
+checks pass. No production source is removed from any coverage denominator.
+
+Complete native LLVM: 17,419/18,304 lines, 3,374/3,864 branches and
+2,254/2,417 functions. Complete linked WASM: 13,395/16,013 lines,
+2,743/3,253 branches and 1,672/2,095 functions. C# Debug measures
+9,517/9,826 lines and 5,832/6,282 branches; Release measures 7,344/7,545
+and 5,775/6,243. The causal Rust component measures 251/253 lines, 80/82
+branches and 36/37 functions in native and WASM. C# causal executable lines
+are all covered, while branches remain incomplete. causal-version.txt retains
+commands, counts, timestamps, full metrics and the absent-module baseline.
+
+Exact published 04c1860 C# CI 40505269266 passes all 2,467 tests on Linux,
+Windows and macOS. The verifier downloads each actual archive and checks its
+size, GitHub SHA256 and single complete report. Linux measures 7,344/7,545
+lines and 5,775/6,243 branches; Windows 7,330/7,545 and 5,755/6,243;
+macOS 7,339/7,545 and 5,769/6,243. causal-csharp-platform-coverage.txt retains
+all artifact identities and verified digests. Rust Windows exact-head CI is
+still running; the remaining completed workflows pass.
+
+The component is pure semantic reconciliation, not durable ownership or
+anti-entropy transport. Durable local publication/retry ownership, ordinary
+links projection, bounded snapshot/range transfer, reclamation, complete
+coverage and every other unmet R1-R12 requirement remain active. PR139 stays
+draft and unmerged.
