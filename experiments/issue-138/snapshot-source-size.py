@@ -2,6 +2,7 @@
 """Snapshot CI's Rust source inputs without ignored historical checkouts."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -30,6 +31,7 @@ for filename in sorted(set(files)):
     records.append({'path': filename, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
 assert 'rust/src/query_processor.rs' in {record['path'] for record in records}
 assert 'rust/src/engine/query_reservation.rs' in {record['path'] for record in records}
-(base / 'query-reservation-rust-source-snapshot.json').write_text(json.dumps(
+prefix = root / os.environ.get('VALIDATION_PREFIX', 'experiments/issue-138/query-reservation')
+Path(f'{prefix}-rust-source-snapshot.json').write_text(json.dumps(
     {'destination': str(destination), 'files': records}, indent=2) + '\n')
 print(destination)

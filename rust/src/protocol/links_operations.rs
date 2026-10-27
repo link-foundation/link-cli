@@ -32,9 +32,10 @@
 //! differ between the C# and the Rust stores.
 
 use super::error::{ProtocolError, ProtocolResult};
-use crate::changes_simplifier::simplify_changes;
-use crate::link::Link;
+use crate::changes_simplifier::simplify_generic_changes;
+use crate::link::{GenericLink, Link};
 use crate::named_type_links::NamedTypeLinks;
+use crate::query_address::QueryAddress;
 use links_notation::binary::{format_document, format_link, LinoDocument};
 use links_notation::LiNo;
 
@@ -42,40 +43,39 @@ use links_notation::LiNo;
 pub const ANY: &str = "*";
 
 /// One part of a restriction: `None` matches any value.
-pub type Part = Option<u32>;
+pub type Part<T = u32> = Option<T>;
 
 /// One call of the links interface.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum LinksOperation {
+pub enum GenericLinksOperation<T> {
     /// Number of links matching the restriction.
-    Count(Vec<Part>),
+    Count(Vec<Part<T>>),
     /// Every link matching the restriction, ordered by index.
-    Each(Vec<Part>),
+    Each(Vec<Part<T>>),
     /// Creates a link.
-    Create { source: u32, target: u32 },
+    Create { source: T, target: T },
     /// Points an existing link at a new source and target; an update that
     /// would duplicate an existing link merges into it instead.
-    Update {
-        index: u32,
-        source: u32,
-        target: u32,
-    },
+    Update { index: T, source: T, target: T },
     /// Deletes a link, and every link that still refers to it.
-    Delete(u32),
+    Delete(T),
     /// The name of a link.
-    GetName(u32),
+    GetName(T),
     /// Names a link.
-    SetName(u32, String),
+    SetName(T, String),
     /// The link with a name.
     GetByName(String),
     /// Removes the name of a link.
-    RemoveName(u32),
+    RemoveName(T),
 }
 
-/// A `(before, after)` change; a missing side is [`Link::null`].
-pub type Change = (Link, Link);
+/// A `(before, after)` change; a missing side is [`GenericLink::null`].
+pub type Change<T = u32> = (GenericLink<T>, GenericLink<T>);
 
-impl LinksOperation {
+/// The existing u32 links operation facade.
+pub type LinksOperation = GenericLinksOperation<u32>;
+
+impl<T: QueryAddress> GenericLinksOperation<T> {
     /// The request document for this operation.
     pub fn to_document(&self) -> LinoDocument {
         let (name, argument) = match self {
@@ -116,11 +116,11 @@ impl LinksOperation {
             "count" => Self::Count(parse_restriction(argument)?),
             "each" => Self::Each(parse_restriction(argument)?),
             "create" => {
-                let [source, target] = parse_numbers::<2>(argument)?;
+                let [source, target] = parse_numbers::<T, 2>(argument)?;
                 Self::Create { source, target }
             }
             "update" => {
-                let [index, source, target] = parse_numbers::<3>(argument)?;
+                let [index, source, target] = parse_numbers::<T, 3>(argument)?;
                 Self::Update {
                     index,
                     source,
@@ -144,24 +144,63 @@ impl LinksOperation {
     }
 
     /// Runs the operation against `storage` and returns the reply document.
-    pub fn execute<S: NamedTypeLinks + ?Sized>(
+    pub fn execute<S: NamedTypeLinks<T> + ?Sized>(
         &self,
         storage: &mut S,
     ) -> anyhow::Result<LinoDocument> {
+        if let Some(limits) = storage.query_limits() {
+            match self {
+                Self::Count(parts) | Self::Each(parts) => {
+                    anyhow::ensure!(parts.len() <= 3, "expected at most three restriction parts")
+                }
+                Self::SetName(_, name) | Self::GetByName(name) => anyhow::ensure!(
+                    name.len() <= limits.max_bytes,
+                    "protocol byte limit exceeded"
+                ),
+                _ => {}
+            }
+            let addresses: Vec<T> = match self {
+                Self::Count(parts) | Self::Each(parts) => parts.iter().flatten().copied().collect(),
+                Self::Create { source, target } => vec![*source, *target],
+                Self::Update {
+                    index,
+                    source,
+                    target,
+                } => vec![*index, *source, *target],
+                Self::Delete(index)
+                | Self::GetName(index)
+                | Self::SetName(index, _)
+                | Self::RemoveName(index) => vec![*index],
+                Self::GetByName(_) => Vec::new(),
+            };
+            anyhow::ensure!(
+                addresses.iter().all(|value| value
+                    .to_u128()
+                    .is_some_and(|value| value <= limits.max_address)),
+                "protocol address out of range"
+            );
+        }
         Ok(match self {
             Self::Count(restriction) => {
                 let count = matching(storage, restriction).len();
                 vec![named("count", vec![LiNo::Ref(count.to_string())])]
             }
-            Self::Each(restriction) => matching(storage, restriction)
-                .iter()
-                .map(link_lino)
-                .collect(),
+            Self::Each(restriction) => {
+                let links = matching(storage, restriction);
+                if let Some(limits) = storage.query_limits() {
+                    anyhow::ensure!(
+                        links.len() <= limits.max_results,
+                        "protocol result limit exceeded"
+                    );
+                }
+                links.iter().map(link_lino).collect()
+            }
             Self::Create { source, target } => {
                 // `create` makes exactly `(index: source target)`.
-                let created = Link::new(storage.try_create(*source, *target)?, *source, *target);
+                let created =
+                    GenericLink::new(storage.try_create(*source, *target)?, *source, *target);
                 storage.save()?;
-                changes_document(&[(Link::null(), created)])
+                changes_document_for(&[(GenericLink::null(), created)])
             }
             Self::Update {
                 index,
@@ -173,14 +212,14 @@ impl LinksOperation {
                     changes.push((before, after))
                 })?;
                 storage.save()?;
-                changes_document(&simplify_changes(changes))
+                changes_document_for(&simplify_generic_changes(changes))
             }
             Self::Delete(index) => {
                 let mut changes = Vec::new();
                 storage
                     .delete_observed(*index, &mut |before, after| changes.push((before, after)))?;
                 storage.save()?;
-                changes_document(&simplify_changes(changes))
+                changes_document_for(&simplify_generic_changes(changes))
             }
             Self::GetName(index) => match storage.get_name(*index)? {
                 Some(name) => vec![named("name", vec![LiNo::Ref(name)])],
@@ -203,8 +242,8 @@ impl LinksOperation {
 
 /// Whether `link` matches `restriction`, with the shapes of the raw links
 /// interface: see the [module documentation](self).
-pub fn matches(link: &Link, restriction: &[Part]) -> bool {
-    let is = |part: Part, value: u32| part.is_none_or(|part| part == value);
+pub fn matches<T: QueryAddress>(link: &GenericLink<T>, restriction: &[Part<T>]) -> bool {
+    let is = |part: Part<T>, value: T| part.is_none_or(|part| part == value);
     match *restriction {
         [] => true,
         [index] => is(index, link.index),
@@ -218,7 +257,10 @@ pub fn matches(link: &Link, restriction: &[Part]) -> bool {
     }
 }
 
-fn matching<S: NamedTypeLinks + ?Sized>(storage: &mut S, restriction: &[Part]) -> Vec<Link> {
+fn matching<T: QueryAddress, S: NamedTypeLinks<T> + ?Sized>(
+    storage: &mut S,
+    restriction: &[Part<T>],
+) -> Vec<GenericLink<T>> {
     let mut links = match restriction.first() {
         Some(Some(index)) => storage.get_link(*index).into_iter().collect(),
         _ => storage.all_links(),
@@ -243,12 +285,16 @@ pub fn parse_count(document: &[LiNo<String>]) -> ProtocolResult<u32> {
 }
 
 /// The links of an `each` reply.
-pub fn parse_links(document: &[LiNo<String>]) -> ProtocolResult<Vec<Link>> {
+pub fn parse_links_for<T: QueryAddress>(
+    document: &[LiNo<String>],
+) -> ProtocolResult<Vec<GenericLink<T>>> {
     document.iter().map(parse_link).collect()
 }
 
 /// The `(before) (after)` pairs of a `create`, `update` or `delete` reply.
-pub fn parse_changes(document: &[LiNo<String>]) -> ProtocolResult<Vec<Change>> {
+pub fn parse_changes_for<T: QueryAddress>(
+    document: &[LiNo<String>],
+) -> ProtocolResult<Vec<Change<T>>> {
     document
         .iter()
         .map(|change| match parts(change) {
@@ -274,7 +320,9 @@ pub fn parse_name(document: &[LiNo<String>]) -> ProtocolResult<Option<String>> {
 }
 
 /// The link of a `set-name` or `get-by-name` reply.
-pub fn parse_link_reply(document: &[LiNo<String>]) -> ProtocolResult<Option<u32>> {
+pub fn parse_link_reply_for<T: QueryAddress>(
+    document: &[LiNo<String>],
+) -> ProtocolResult<Option<T>> {
     match document {
         [] => Ok(None),
         [LiNo::Link {
@@ -289,7 +337,7 @@ pub fn parse_link_reply(document: &[LiNo<String>]) -> ProtocolResult<Option<u32>
 }
 
 /// A reply listing `changes`, one `(before) (after)` line each.
-pub fn changes_document(changes: &[Change]) -> LinoDocument {
+pub fn changes_document_for<T: QueryAddress>(changes: &[Change<T>]) -> LinoDocument {
     changes
         .iter()
         .map(|(before, after)| group(vec![change_side(before), change_side(after)]))
@@ -297,19 +345,19 @@ pub fn changes_document(changes: &[Change]) -> LinoDocument {
 }
 
 /// `(index: source target)` with plain numbers.
-pub fn link_lino(link: &Link) -> LiNo<String> {
+pub fn link_lino<T: QueryAddress>(link: &GenericLink<T>) -> LiNo<String> {
     named(
         &link.index.to_string(),
         vec![number(link.source), number(link.target)],
     )
 }
 
-fn link_reply(link: Option<u32>) -> LinoDocument {
+fn link_reply<T: QueryAddress>(link: Option<T>) -> LinoDocument {
     link.map(|link| vec![named("link", vec![number(link)])])
         .unwrap_or_default()
 }
 
-fn change_side(link: &Link) -> LiNo<String> {
+fn change_side<T: QueryAddress>(link: &GenericLink<T>) -> LiNo<String> {
     if link.is_null() {
         group(Vec::new())
     } else {
@@ -317,9 +365,9 @@ fn change_side(link: &Link) -> LiNo<String> {
     }
 }
 
-fn parse_change_side(side: &LiNo<String>) -> ProtocolResult<Link> {
+fn parse_change_side<T: QueryAddress>(side: &LiNo<String>) -> ProtocolResult<GenericLink<T>> {
     match side {
-        LiNo::Link { id: None, values } if values.is_empty() => Ok(Link::null()),
+        LiNo::Link { id: None, values } if values.is_empty() => Ok(GenericLink::null()),
         LiNo::Link { id: None, values } if values.len() == 1 => parse_link(&values[0]),
         // `((index: source target))` loses its wrapper when the side is the
         // single named link itself.
@@ -331,13 +379,13 @@ fn parse_change_side(side: &LiNo<String>) -> ProtocolResult<Link> {
     }
 }
 
-fn parse_link(link: &LiNo<String>) -> ProtocolResult<Link> {
+fn parse_link<T: QueryAddress>(link: &LiNo<String>) -> ProtocolResult<GenericLink<T>> {
     match link {
         LiNo::Link {
             id: Some(index),
             values,
         } => match values.as_slice() {
-            [source, target] => Ok(Link::new(
+            [source, target] => Ok(GenericLink::new(
                 parse_text_number(index)?,
                 parse_number(source)?,
                 parse_number(target)?,
@@ -354,7 +402,7 @@ fn parse_link(link: &LiNo<String>) -> ProtocolResult<Link> {
     }
 }
 
-fn restriction_lino(restriction: &[Part]) -> LiNo<String> {
+fn restriction_lino<T: QueryAddress>(restriction: &[Part<T>]) -> LiNo<String> {
     group(
         restriction
             .iter()
@@ -363,7 +411,7 @@ fn restriction_lino(restriction: &[Part]) -> LiNo<String> {
     )
 }
 
-fn parse_restriction(argument: &LiNo<String>) -> ProtocolResult<Vec<Part>> {
+fn parse_restriction<T: QueryAddress>(argument: &LiNo<String>) -> ProtocolResult<Vec<Part<T>>> {
     let parts = parts(argument);
     if parts.len() > 3 {
         return Err(malformed_argument("restriction", argument));
@@ -377,11 +425,13 @@ fn parse_restriction(argument: &LiNo<String>) -> ProtocolResult<Vec<Part>> {
         .collect()
 }
 
-fn numbers_lino(numbers: &[u32]) -> LiNo<String> {
+fn numbers_lino<T: QueryAddress>(numbers: &[T]) -> LiNo<String> {
     group(numbers.iter().copied().map(number).collect())
 }
 
-fn parse_numbers<const N: usize>(argument: &LiNo<String>) -> ProtocolResult<[u32; N]> {
+fn parse_numbers<T: QueryAddress, const N: usize>(
+    argument: &LiNo<String>,
+) -> ProtocolResult<[T; N]> {
     let numbers = parts(argument)
         .iter()
         .map(parse_number)
@@ -400,7 +450,7 @@ fn parts(argument: &LiNo<String>) -> &[LiNo<String>] {
     }
 }
 
-fn parse_number(value: &LiNo<String>) -> ProtocolResult<u32> {
+fn parse_number<T: QueryAddress>(value: &LiNo<String>) -> ProtocolResult<T> {
     match value {
         LiNo::Ref(text) => parse_text_number(text),
         _ => Err(ProtocolError::malformed(format!(
@@ -410,12 +460,12 @@ fn parse_number(value: &LiNo<String>) -> ProtocolResult<u32> {
     }
 }
 
-fn parse_text_number(text: &str) -> ProtocolResult<u32> {
+fn parse_text_number<T: QueryAddress>(text: &str) -> ProtocolResult<T> {
     text.parse()
         .map_err(|_| ProtocolError::malformed(format!("expected a number, found '{text}'")))
 }
 
-fn number(value: u32) -> LiNo<String> {
+fn number<T: QueryAddress>(value: T) -> LiNo<String> {
     LiNo::Ref(value.to_string())
 }
 
@@ -442,4 +492,24 @@ fn malformed_reply(expected: &str, document: &[LiNo<String>]) -> ProtocolError {
         "expected a {expected} reply, found {}",
         format_document(document)
     ))
+}
+
+/// The links of an `each` reply using the existing u32 facade.
+pub fn parse_links(document: &[LiNo<String>]) -> ProtocolResult<Vec<Link>> {
+    parse_links_for(document)
+}
+
+/// The changes of a mutation reply using the existing u32 facade.
+pub fn parse_changes(document: &[LiNo<String>]) -> ProtocolResult<Vec<Change>> {
+    parse_changes_for(document)
+}
+
+/// A named-link reply using the existing u32 facade.
+pub fn parse_link_reply(document: &[LiNo<String>]) -> ProtocolResult<Option<u32>> {
+    parse_link_reply_for(document)
+}
+
+/// A change document using the existing u32 facade.
+pub fn changes_document(changes: &[Change]) -> LinoDocument {
+    changes_document_for(changes)
 }

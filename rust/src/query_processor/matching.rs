@@ -34,7 +34,7 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
                 .into_iter()
                 .filter(|link| Self::is_any(resolved_index) || link.index == resolved_index)
             {
-                let variable = Self::is_variable(&pattern.index) && link.index != T::from_byte(0);
+                let variable = Self::is_variable(&pattern.index);
                 let count = usize::from(variable);
                 let size = if variable {
                     Self::binding_cost(&pattern.index)
@@ -118,8 +118,7 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
                 &source_solution,
             )?;
             for mut target_solution in target_matches {
-                let (count, size) =
-                    Self::extended_solution_cost(&target_solution, &pattern.index, link.index);
+                let (count, size) = Self::extended_solution_cost(&target_solution, &pattern.index);
                 Self::check_solution_capacity(
                     storage,
                     results.len() + 1,
@@ -151,8 +150,7 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
 
         if pattern.is_leaf() {
             if self.check_id_match(storage, &pattern.index, link_id, current_solution)? {
-                let (count, size) =
-                    Self::extended_solution_cost(current_solution, &pattern.index, link_id);
+                let (count, size) = Self::extended_solution_cost(current_solution, &pattern.index);
                 Self::check_solution_capacity(storage, 1, count, size)?;
                 let mut solution = current_solution.clone();
                 Self::assign_variable(&pattern.index, link_id, &mut solution);
@@ -168,9 +166,9 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
         self.match_link_against_pattern(storage, pattern, link, current_solution)
     }
 
-    fn extended_solution_cost(solution: &HashMap<String, T>, key: &str, id: T) -> (usize, usize) {
+    fn extended_solution_cost(solution: &HashMap<String, T>, key: &str) -> (usize, usize) {
         let (count, size) = Self::solution_cost(solution);
-        if Self::is_variable(key) && id != T::from_byte(0) && !solution.contains_key(key) {
+        if Self::is_variable(key) && !solution.contains_key(key) {
             (
                 count.saturating_add(1),
                 size.saturating_add(Self::binding_cost(key)),

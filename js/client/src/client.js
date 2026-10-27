@@ -115,7 +115,14 @@ export class LinksClient {
    */
   async query(text, options) {
     if (typeof text !== 'string' || text.trim() === '') throw new TypeError('a query is non-empty LiNo text');
-    return replies.namedChanges(await this.request(parseDocument(text), options));
+    return replies.namedChanges(await this.request(this.#queryDocument(text), options));
+  }
+
+  #queryDocument(text) {
+    // Preflight every batch member before sending any writes. Only peers that
+    // explicitly advertise this envelope receive the original reference kinds.
+    const document = parseDocument(text, this.capabilities.losslessQueries ? this.capabilities.limits : undefined);
+    return this.capabilities.losslessQueries ? [{ id: 'query', values: [text] }] : document;
   }
 
   /** Every link, names substituted for named references (the empty request). */
@@ -184,7 +191,7 @@ export class LinksClient {
       setName: ({ index, name }) => [requests.setName(index, name, max), replies.link],
       getByName: ({ name }) => [requests.getByName(name), replies.link],
       removeName: ({ index }) => [requests.removeName(index, max), replies.empty],
-      query: ({ text }) => [parseDocument(text), replies.namedChanges],
+      query: ({ text }) => [this.#queryDocument(text), replies.namedChanges],
     };
     const build = documentOf[operation?.op];
     if (!build) throw new TypeError(`operation ${position}: unknown op "${operation?.op}"`);

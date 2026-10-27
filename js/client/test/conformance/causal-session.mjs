@@ -1,3 +1,4 @@
+import { causalQueryConformance } from './causal-query.mjs';
 // Actual Rust u64 workspace, exercised by the existing Node/Bun/Deno runner.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -32,6 +33,7 @@ async function seeded() {
   return store;
 }
 export async function causalSessionConformance(binding) {
+  await causalQueryConformance(binding, { Store, batch, owner, bytes });
   const open = (store, first = '32', last = '33', options = {}) => CausalSession.open(binding, batch(store), first, last, 'max-dot', options);
   {
     const store = await seeded(), initial = bytes(store), calls = store.calls, tx = await open(store);

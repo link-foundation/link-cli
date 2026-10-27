@@ -31,8 +31,12 @@ explicit high definitions. Preserve the existing recycling-store fallback.
       strict lints/formats and repository/release checks sequentially.
 - [x] Record exact before/after evidence, costs and remaining language/protocol
       work, including complete coverage denominators and source/report hashes.
-- [ ] Review, commit and push only the prepared branch. Inspect fresh
+- [x] Review, commit and push only the prepared branch. Inspect fresh
       exact-head CI and retain complete coverage denominators in PR139.
+
+All nine workflows pass at published commit 25f18ce; the exact timestamps,
+SHA and run URLs are retained in query-reservation-head-ci.txt. Later protocol
+and C# work requires its own validation and current-head platform checks.
 
 Reservations may leave gaps on rejected or rolled-back transactions, as normal
 engine allocation already does. They never publish rows or authorize an

@@ -589,3 +589,88 @@ fn independent_finite_schedules_match_rows_differences_and_exact_retries() {
         }
     }
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn protocol_query_and_operations_publish_only_the_original_explicit_token_request() {
+    use link_cli::protocol::{
+        error_message, execute_request_for, links_operations::GenericLinksOperation, query_document,
+    };
+    let store = Store::default();
+    batch(store.clone())
+        .write(
+            &token(10),
+            0,
+            &[CausalBatchEdit {
+                address: u64::MAX,
+                observed: vec![],
+                payload: Some(CausalPayload {
+                    source: u64::MAX,
+                    target: u64::MAX,
+                    name: None,
+                }),
+            }],
+        )
+        .unwrap();
+    let original = stored(&store);
+    let calls = store.0.borrow().calls;
+    let mut tx = session(store.clone(), 1, 8);
+    let query = link_cli::GenericQueryProcessor::<u128>::new(false);
+    for document in [
+        GenericLinksOperation::<u128>::Create {
+            source: u128::from(u64::MAX),
+            target: 1,
+        }
+        .to_document(),
+        GenericLinksOperation::<u128>::SetName(1, "*".into()).to_document(),
+        query_document("(('*': $s $t)) (('*': $t $s))"),
+    ] {
+        let reply = execute_request_for(&mut tx.named_links(), &query, &document);
+        assert!(error_message(&reply).is_none(), "{reply:?}");
+    }
+    assert_eq!(tx.get_name(1).as_deref(), Some("*"));
+    assert_eq!(
+        tx.get_link(1),
+        Some(link_cli::GenericLink::new(1, 1, u64::MAX))
+    );
+    assert_eq!(stored(&store), original);
+    assert_eq!(store.0.borrow().calls, calls);
+    let request = tx.prepare(&token(999)).unwrap();
+    assert_eq!(request.edits.len(), 1);
+    let refused = execute_request_for(
+        &mut tx.named_links(),
+        &query,
+        &GenericLinksOperation::<u128>::Delete(1).to_document(),
+    );
+    assert!(error_message(&refused).is_some());
+    let retained = tx.prepared().unwrap();
+    assert_eq!(retained.token, request.token);
+    assert_eq!(retained.generation, request.generation);
+    assert_eq!(retained.edits.len(), request.edits.len());
+    for (actual, expected) in retained.edits.iter().zip(&request.edits) {
+        assert_eq!(actual.address, expected.address);
+        assert_eq!(actual.observed, expected.observed);
+        assert_eq!(actual.payload, expected.payload);
+    }
+    store.0.borrow_mut().failure = 2;
+    assert!(tx.commit(&token(999)).is_err());
+    let retained = tx.prepared().unwrap();
+    assert_eq!(retained.token, request.token);
+    assert_eq!(retained.generation, request.generation);
+    assert_eq!(retained.edits.len(), request.edits.len());
+    for (actual, expected) in retained.edits.iter().zip(&request.edits) {
+        assert_eq!(actual.address, expected.address);
+        assert_eq!(actual.observed, expected.observed);
+        assert_eq!(actual.payload, expected.payload);
+    }
+    let published = tx.commit(&token(999)).unwrap();
+    assert_eq!(published.len(), 1);
+    assert_eq!(published[0].address, 1);
+    assert_eq!(
+        published[0].payload.as_ref().unwrap().name.as_deref(),
+        Some("*")
+    );
+    assert_eq!(tx.commit(&token(999)).unwrap(), published);
+    assert_eq!(store.0.borrow().calls, calls + 1);
+    assert_eq!(owner(store).snapshot().unwrap().versions.len(), 2);
+}

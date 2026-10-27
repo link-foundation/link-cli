@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0
-prefix=experiments/issue-138/query-reservation
+prefix=${VALIDATION_PREFIX:-experiments/issue-138/query-reservation}
 repo_root="$PWD"
 tool_root="$PWD/experiments/issue-138/tools/rust-script"
 if [[ ! -x "$tool_root/bin/rust-script" ]]; then

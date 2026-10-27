@@ -274,6 +274,26 @@ pub fn read_any_document(
     reader: &mut dyn BufRead,
     limits: &ProtocolLimits,
 ) -> ProtocolResult<Option<(LinoDocument, MessageFormat)>> {
+    read_any_document_with_query_limits(reader, limits, None)
+}
+
+/// Checked workspaces bound framing and decoding before constructing the AST.
+/// The original public transport API retains its configured limits.
+pub(crate) fn read_any_document_with_query_limits(
+    reader: &mut dyn BufRead,
+    limits: &ProtocolLimits,
+    query_limits: Option<crate::query_options::QueryLimits>,
+) -> ProtocolResult<Option<(LinoDocument, MessageFormat)>> {
+    let mut limits = *limits;
+    if let Some(query) = query_limits {
+        limits.max_text_bytes = limits.max_text_bytes.min(query.max_bytes);
+        limits.binary.max_depth = limits.binary.max_depth.min(query.max_depth);
+        limits.binary.max_nodes = limits.binary.max_nodes.min(query.max_nodes);
+        limits.binary.max_string_bytes = limits.binary.max_string_bytes.min(query.max_bytes);
+        let max_nodes = u64::try_from(query.max_nodes).unwrap_or(u64::MAX);
+        limits.binary.max_links = limits.binary.max_links.min(max_nodes);
+        limits.binary.max_references = limits.binary.max_references.min(max_nodes);
+    }
     let Some(&first) = reader.fill_buf()?.first() else {
         return Ok(None);
     };
@@ -282,7 +302,12 @@ pub fn read_any_document(
             max_text_bytes: limits.max_text_bytes,
         };
         return Ok(text
-            .read_document(reader)?
+            .read_text(reader)?
+            .map(|text| match query_limits {
+                Some(query) => super::server::parse_document_with_limits(&text, query),
+                None => parse_document(&text).map_err(ProtocolError::from),
+            })
+            .transpose()?
             .map(|document| (document, MessageFormat::Text)));
     }
     LinksPacket::read_from(reader, &limits.binary)?

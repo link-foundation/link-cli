@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 export CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0
 export PATH="$PWD/experiments/issue-138/tools:$PWD/experiments/issue-138/tools/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl:$PATH"
-prefix=experiments/issue-138/query-reservation
+prefix=${VALIDATION_PREFIX:-experiments/issue-138/query-reservation}
 printf 'START %s\n' "$(date -u +%FT%TZ)"
 cargo fmt --manifest-path rust/Cargo.toml --check > "$prefix-format.log" 2>&1
 cargo fmt --manifest-path rust/wasm/Cargo.toml --check >> "$prefix-format.log" 2>&1

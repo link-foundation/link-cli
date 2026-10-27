@@ -1,6 +1,9 @@
 import { CausalSession, type CausalWorkspaceBinding, type CausalPreparedBatch } from '../types/engine-causal-session.js';
 async function causalSessionTypes(binding: CausalWorkspaceBinding, batch: CausalBatch) {
   const tx = await CausalSession.open(binding, batch, '32', '33', 'reject', { stateStructure: 'shared' });
+  const client = tx.client();
+  await client.create(18446744073709551615n, 0n);
+  await client.query("(('4294967312': $s $t)) ()");
   const address: string = await tx.createLink('0', '18446744073709551615');
   const prepared: CausalPreparedBatch = await tx.prepare('00000000000000000000000000000064');
   // @ts-expect-error Addresses preserve the full canonical u64 range.

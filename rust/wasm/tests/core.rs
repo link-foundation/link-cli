@@ -112,3 +112,11 @@ mod query_address_width;
 #[cfg(feature = "causal-sessions")]
 #[path = "../../tests/engine_causal_query_tests.rs"]
 mod causal_query;
+
+#[cfg(feature = "causal-sessions")]
+#[path = "../../tests/engine_causal_protocol_tests.rs"]
+mod causal_protocol;
+
+#[cfg(feature = "causal-sessions")]
+#[path = "../../tests/engine_causal_reply_bounds_tests.rs"]
+mod causal_reply_bounds;

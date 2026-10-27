@@ -147,3 +147,41 @@ test('close reaps a rejected accepted commit and malformed bindings release acqu
   assert.equal(freed, 1);
   await assert.rejects(CausalSession.open({ CausalLinksWorkspace: class {} }, fixture().batch, '1', '2', 'reject'));
 });
+
+test('ordinary client preserves original query text, full u64 operations and queued ownership', async () => {
+  const f = fixture(), session = await open(f), client = session.client();
+  assert.equal(client.capabilities.maxAddress, 18446744073709551615n);
+  assert.equal(client.capabilities.losslessQueries, true);
+  assert.equal(client.capabilities.atomicTransactions, true);
+  client.require('atomicTransactions', 'rollback');
+  f.state.reply = '() ((18446744073709551615: 0 0))';
+  assert.deepEqual(await client.create(0n, 0n), { index: 18446744073709551615n, source: 0n, target: 0n });
+  const text = "(('4294967312': $s $t)) (('4294967312': $t $s))";
+  f.state.reply = '';
+  assert.deepEqual(await client.query(text), []);
+  const { parseDocument } = await import('../src/lino.js');
+  assert.deepEqual(parseDocument(f.state.requests[1][1]), [{ id: 'query', values: [text] }]);
+  assert.equal(f.state.requests[0][0], 'lino');
+  const abort = new AbortController();
+  const pending = client.count([], { signal: abort.signal }); abort.abort();
+  await assert.rejects(pending, error => error.outcome === 'not-sent');
+  assert.equal(f.state.requests.length, 2);
+  const request = await session.prepare(token(100)); assert.equal(request.edits.length, 1);
+  await assert.rejects(client.create(0n, 0n), error => error.outcome === 'not-sent');
+  await client.close(); assert.equal(f.state.freed, 1);
+  await assert.rejects(client.count(), error => error.outcome === 'not-sent');
+});
+
+test('lossless causal batches preflight malformed and bounded queries before any write', async () => {
+  const f = fixture(), session = await open(f), client = session.client();
+  for (const text of ['(', '('.repeat(70) + 'x' + ')'.repeat(70), 'x '.repeat(4097), 'x'.repeat(1048577)]) {
+    await assert.rejects(client.batch([{ op: 'create', source: 0n, target: 0n }, { op: 'query', text }]));
+    assert.equal(f.state.requests.length, 0);
+  }
+  f.state.reply = '';
+  const text = "(('18446744073709551615': $s $t)) ()";
+  assert.equal((await client.batch([{ op: 'query', text }])).completed, true);
+  const { parseDocument } = await import('../src/lino.js');
+  assert.deepEqual(parseDocument(f.state.requests[0][1]), [{ id: 'query', values: [text] }]);
+  await session.close();
+});

@@ -35,8 +35,10 @@ under explicit conflict rejection or maximum-dot selection while retaining every
 causal sibling. See [visibility, bounds and costs](../../docs/ENGINE-CAUSAL-PROJECTION.md).
 The separate `./engine-causal-session` export stages ordinary links/names in
 the actual Rust WASM workspace and publishes one explicit-token local batch.
+Its `tx.client()` exposes the standard BigInt links/query API, preserving
+original query reference kinds until explicit preparation transfers ownership.
 See [reservations, lifecycle, physical examples and costs](../../docs/ENGINE-CAUSAL-SESSIONS.md).
-Full LiNo query parity and safe reclamation remain in progress.
+Matching C# query support and safe reclamation remain in progress.
 
 ## Use
 

@@ -91,7 +91,7 @@ fn assign_variable_from_pattern<T: QueryAddress>(
 }
 
 fn assign_variable<T: QueryAddress>(id: &str, value: T, assignments: &mut HashMap<String, T>) {
-    if is_variable(id) && value != T::from_byte(0) {
+    if is_variable(id) {
         assignments.insert(id.to_string(), value);
     }
 }

@@ -7,11 +7,14 @@
 //! same protocol, so text and binary clients can share one server.
 
 use super::error::ProtocolResult;
-use super::links_operations::LinksOperation;
-use super::protocols::{read_any_document, MessageFormat, ProtocolLimits};
-use crate::link::Link;
+use super::links_operations::GenericLinksOperation;
+use super::protocols::{read_any_document_with_query_limits, MessageFormat, ProtocolLimits};
+use crate::link::GenericLink;
 use crate::named_type_links::NamedTypeLinks;
-use crate::query_processor::QueryProcessor;
+use crate::query_address::QueryAddress;
+use crate::query_options::QueryLimits;
+use crate::query_processor::{GenericQueryProcessor, QueryProcessor};
+use crate::query_reply_budget::QueryReplyBudget;
 use links_notation::binary::{format_document, LinoDocument};
 use links_notation::LiNo;
 use std::io::{BufReader, BufWriter, Write};
@@ -123,6 +126,15 @@ impl LinksServer {
 
     /// Serves `storage` until a [`ShutdownHandle`] stops the server.
     pub fn serve<S: NamedTypeLinks>(self, storage: &mut S) -> ProtocolResult<()> {
+        self.serve_for(storage)
+    }
+
+    /// Serves the selected address type through the same request path.
+    /// Checked adapters may use a wider marker to retain their full stored range.
+    pub fn serve_for<T: QueryAddress, S: NamedTypeLinks<T>>(
+        self,
+        storage: &mut S,
+    ) -> ProtocolResult<()> {
         let LinksServer {
             listener,
             options,
@@ -130,23 +142,28 @@ impl LinksServer {
             queue,
             stopping,
         } = self;
+        let query_limits = storage.query_limits();
         let acceptor = {
             let stopping = Arc::clone(&stopping);
-            thread::spawn(move || accept_loop(listener, jobs, stopping, options))
+            thread::spawn(move || accept_loop(listener, jobs, stopping, options, query_limits))
         };
-        let processor = QueryProcessor::new(false)
+        let processor = GenericQueryProcessor::<T>::new(false)
             .with_auto_create_missing_references(options.auto_create_missing_references);
         while let Ok(job) = queue.recv() {
             match job {
                 Job::Shutdown => break,
                 Job::Request { document, reply } => {
-                    if options.trace {
+                    if options.trace
+                        && storage
+                            .query_limits()
+                            .is_none_or(|limits| admit_document(&document, limits).is_ok())
+                    {
                         crate::diagnostics::stderr!(
                             "[server] request: {}",
                             format_document(&document)
                         );
                     }
-                    let response = execute_request(storage, &processor, &document);
+                    let response = execute_request_for(storage, &processor, &document);
                     if options.trace {
                         crate::diagnostics::stderr!(
                             "[server] reply: {}",
@@ -169,6 +186,7 @@ fn accept_loop(
     jobs: Sender<Job>,
     stopping: Arc<AtomicBool>,
     options: ServerOptions,
+    query_limits: Option<QueryLimits>,
 ) {
     for stream in listener.incoming() {
         if stopping.load(Ordering::SeqCst) {
@@ -177,7 +195,7 @@ fn accept_loop(
         let Ok(stream) = stream else { continue };
         let jobs = jobs.clone();
         thread::spawn(move || {
-            if let Err(error) = handle_connection(stream, jobs, options) {
+            if let Err(error) = handle_connection(stream, jobs, options, query_limits) {
                 if options.trace {
                     crate::diagnostics::stderr!("[server] connection closed: {error}");
                 }
@@ -190,28 +208,30 @@ fn handle_connection(
     stream: TcpStream,
     jobs: Sender<Job>,
     options: ServerOptions,
+    query_limits: Option<QueryLimits>,
 ) -> ProtocolResult<()> {
     let _ = stream.set_nodelay(true);
     let mut writer = BufWriter::new(stream.try_clone()?);
     let mut reader = BufReader::new(stream);
     loop {
-        let (document, format) = match read_any_document(&mut reader, &options.limits) {
-            Ok(Some(message)) => message,
-            Ok(None) => {
-                if options.trace {
-                    crate::diagnostics::stderr!("[server] client hung up");
+        let (document, format) =
+            match read_any_document_with_query_limits(&mut reader, &options.limits, query_limits) {
+                Ok(Some(message)) => message,
+                Ok(None) => {
+                    if options.trace {
+                        crate::diagnostics::stderr!("[server] client hung up");
+                    }
+                    return Ok(());
                 }
-                return Ok(());
-            }
-            Err(error) => {
-                // The stream may be out of sync; answer in text and hang up.
-                let reply = error_document(&error.to_string());
-                let _ = MessageFormat::Text
-                    .protocol(options.limits)
-                    .write_document(&mut writer, &reply);
-                return Err(error);
-            }
-        };
+                Err(error) => {
+                    // The stream may be out of sync; answer in text and hang up.
+                    let reply = error_document(&error.to_string());
+                    let _ = MessageFormat::Text
+                        .protocol(options.limits)
+                        .write_document(&mut writer, &reply);
+                    return Err(error);
+                }
+            };
         let response = if options.accept.accepts(format) {
             let (reply, response) = mpsc::channel();
             // Once `serve` returns, no request may touch the store.
@@ -262,37 +282,85 @@ pub fn execute_request<S: NamedTypeLinks>(
     processor: &QueryProcessor,
     document: &[LiNo<String>],
 ) -> LinoDocument {
+    execute_request_for(storage, processor, document)
+}
+
+/// Executes an owned protocol document with the selected address type.
+/// Checked storage policies admit the document before recursive formatting.
+pub fn execute_request_for<T: QueryAddress, S: NamedTypeLinks<T>>(
+    storage: &mut S,
+    processor: &GenericQueryProcessor<T>,
+    document: &[LiNo<String>],
+) -> LinoDocument {
     match try_execute_request(storage, processor, document) {
         Ok(reply) => reply,
         Err(error) => error_document(&format!("{error:#}")),
     }
 }
 
-fn try_execute_request<S: NamedTypeLinks>(
+fn try_execute_request<T: QueryAddress, S: NamedTypeLinks<T>>(
     storage: &mut S,
-    processor: &QueryProcessor,
+    processor: &GenericQueryProcessor<T>,
     document: &[LiNo<String>],
 ) -> anyhow::Result<LinoDocument> {
-    if let Some(operation) = LinksOperation::from_document(document)? {
-        return operation.execute(storage);
+    if let Some(limits) = storage.query_limits() {
+        admit_document(document, limits)?;
     }
-    if document.is_empty() {
+    // A canonical document does not retain quoted-reference kinds. The envelope
+    // carries original query text as one value through both text and binary.
+    let original = match document {
+        [LiNo::Link {
+            id: Some(id),
+            values,
+        }] if id == "query" => {
+            let [LiNo::Ref(text)] = values.as_slice() else {
+                anyhow::bail!("expected (query: original-query-text)");
+            };
+            Some(text.as_str())
+        }
+        _ => None,
+    };
+    if original.is_none() {
+        if let Some(operation) = GenericLinksOperation::<T>::from_document(document)? {
+            return operation.execute(storage);
+        }
+    }
+    if document.is_empty() || original.is_some_and(|text| text.trim().is_empty()) {
+        let mut budget = QueryReplyBudget::new(storage.query_limits());
         let mut links = storage.all_links();
+        if let Some(limits) = storage.query_limits() {
+            anyhow::ensure!(
+                links.len() <= limits.max_results,
+                "protocol result limit exceeded"
+            );
+        }
         links.sort_by_key(|link| link.index);
-        return links.iter().map(|link| link_lino(storage, link)).collect();
+        return links
+            .iter()
+            .map(|link| link_lino(storage, link, &mut budget))
+            .collect();
     }
-    let changes = processor.process_query(storage, &format_document(document))?;
+    let legacy_text;
+    let text = match original {
+        Some(text) => text,
+        None => {
+            legacy_text = format_document(document);
+            &legacy_text
+        }
+    };
+    let changes = processor.process_query(storage, text)?;
     if !changes.is_empty() {
         storage.save()?;
     }
+    let mut budget = QueryReplyBudget::new(storage.query_limits());
     changes
         .iter()
         .map(|(before, after)| {
             Ok(LiNo::Link {
                 id: None,
                 values: vec![
-                    change_side(storage, before.as_ref())?,
-                    change_side(storage, after.as_ref())?,
+                    change_side(storage, before.as_ref(), &mut budget)?,
+                    change_side(storage, after.as_ref(), &mut budget)?,
                 ],
             })
         })
@@ -300,28 +368,87 @@ fn try_execute_request<S: NamedTypeLinks>(
 }
 
 /// `(index: source target)`, naming every reference that has a name.
-fn link_lino<S: NamedTypeLinks>(storage: &mut S, link: &Link) -> anyhow::Result<LiNo<String>> {
+fn link_lino<T: QueryAddress, S: NamedTypeLinks<T> + ?Sized>(
+    storage: &mut S,
+    link: &GenericLink<T>,
+    budget: &mut QueryReplyBudget,
+) -> anyhow::Result<LiNo<String>> {
     Ok(LiNo::Link {
-        id: Some(reference_name(storage, link.index)?),
+        id: Some(budget.reference(storage, link.index)?),
         values: vec![
-            LiNo::Ref(reference_name(storage, link.source)?),
-            LiNo::Ref(reference_name(storage, link.target)?),
+            LiNo::Ref(budget.reference(storage, link.source)?),
+            LiNo::Ref(budget.reference(storage, link.target)?),
         ],
     })
 }
 
 /// `()` for a missing side of a change, `((index: source target))` otherwise.
-fn change_side<S: NamedTypeLinks>(
+fn change_side<T: QueryAddress, S: NamedTypeLinks<T> + ?Sized>(
     storage: &mut S,
-    link: Option<&Link>,
+    link: Option<&GenericLink<T>>,
+    budget: &mut QueryReplyBudget,
 ) -> anyhow::Result<LiNo<String>> {
     let values = match link {
-        Some(link) => vec![link_lino(storage, link)?],
+        Some(link) => vec![link_lino(storage, link, budget)?],
         None => Vec::new(),
     };
     Ok(LiNo::Link { id: None, values })
 }
 
-fn reference_name<S: NamedTypeLinks>(storage: &mut S, id: u32) -> anyhow::Result<String> {
-    Ok(storage.get_name(id)?.unwrap_or_else(|| id.to_string()))
+/// Carries the exact original query text, including quoted-reference kinds.
+/// Older peers must explicitly support this envelope before a client uses it.
+pub fn query_document(text: &str) -> LinoDocument {
+    vec![LiNo::Link {
+        id: Some("query".into()),
+        values: vec![LiNo::Ref(text.into())],
+    }]
+}
+
+fn admit_document(document: &[LiNo<String>], limits: QueryLimits) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        document.len() <= limits.max_nodes,
+        "protocol node limit exceeded"
+    );
+    let mut pending: Vec<_> = document.iter().map(|node| (node, 0usize)).collect();
+    let mut admitted = document.len();
+    let mut bytes = 0usize;
+    while let Some((node, depth)) = pending.pop() {
+        anyhow::ensure!(depth <= limits.max_depth, "protocol depth limit exceeded");
+        match node {
+            LiNo::Ref(value) => bytes = bytes.saturating_add(value.len()),
+            LiNo::Link { id, values } => {
+                bytes = bytes.saturating_add(id.as_ref().map_or(0, String::len));
+                admitted = admitted.saturating_add(values.len());
+                anyhow::ensure!(admitted <= limits.max_nodes, "protocol node limit exceeded");
+                pending.extend(values.iter().map(|node| (node, depth + 1)));
+            }
+        }
+        anyhow::ensure!(bytes <= limits.max_bytes, "protocol byte limit exceeded");
+    }
+    Ok(())
+}
+
+/// Parses bounded transport text before converting or formatting its document.
+/// The upstream grammar enforces depth before building its recursive model.
+pub fn parse_document_with_limits(text: &str, limits: QueryLimits) -> ProtocolResult<LinoDocument> {
+    use links_notation::{parse_lino_to_links_with_config, ParserConfig};
+    if text.len() > limits.max_bytes {
+        return Err(super::error::ProtocolError::LimitExceeded(
+            "protocol byte limit exceeded".into(),
+        ));
+    }
+    if text.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    let document = parse_lino_to_links_with_config(
+        text,
+        &ParserConfig::new().with_max_depth(limits.max_depth),
+    )
+    .map_err(|error| super::error::ProtocolError::InvalidLino(error.to_string()))?;
+    admit_document(&document, limits)
+        .map_err(|error| super::error::ProtocolError::LimitExceeded(error.to_string()))?;
+    Ok(document
+        .into_iter()
+        .map(links_notation::binary::canonical)
+        .collect())
 }

@@ -1,0 +1,354 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-protocol.sh
+START 2026-10-27T22:46:06Z
+STRICT LINT PASS 2026-10-27T22:47:02Z
+COMPLETE NATIVE PASS 2026-10-27T23:04:40Z
+COMPLETE ACTUAL WASM PASS 2026-10-27T23:10:44Z
+ALL PASS 2026-10-27T23:10:51Z
+RELEASE PASS 2026-10-27T23:11:05Z
+CLIENTS PASS 2026-10-27T23:15:47Z
+Before: causal-protocol-before-api.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-tcp-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-js-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-wasm-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-comments-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-wire-limit-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-reply-bound-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-zero-binding-before.log: expected missing API or finite regression reproduced.
+Before: causal-protocol-encoding-bound-before.log: expected missing API or finite regression reproduced.
+C# baseline: anonymous point still produces dangling (2: 1 1); explicit point and pair-reuse controls pass. This separate production failure remains unfinished.
+Complete native: 1271 passed, zero failed, 22 helper entries ignored by the top-level harness; native parents invoke their finite children.
+Complete native production source set retained: 125 previous files, 126 current files.
+Complete native lines: 19821/20796 (95.31160%).
+Complete native branches: 3818/4342 (87.93183%).
+Complete native functions: 2532/2726 (92.88335%).
+Complete native regions: 30405/32826 (92.62475%).
+Complete native instantiations: 14145/25934 (54.54230%).
+native /rust/src/query_reply_budget.rs lines: 17/18 (94.44444%).
+native /rust/src/query_reply_budget.rs branches: 1/2 (50.00000%).
+native /rust/src/query_reply_budget.rs functions: 4/4 (100.00000%).
+native /rust/src/query_reply_budget.rs regions: 23/25 (92.00000%).
+native /rust/src/query_reply_budget.rs instantiations: 20/92 (21.73913%).
+native /rust/src/query_processor.rs lines: 669/723 (92.53112%).
+native /rust/src/query_processor.rs branches: 123/154 (79.87013%).
+native /rust/src/query_processor.rs functions: 47/52 (90.38462%).
+native /rust/src/query_processor.rs regions: 939/1072 (87.59328%).
+native /rust/src/query_processor.rs instantiations: 711/1740 (40.86207%).
+native /rust/src/protocol/links_operations.rs lines: 337/343 (98.25073%).
+native /rust/src/protocol/links_operations.rs branches: 28/32 (87.50000%).
+native /rust/src/protocol/links_operations.rs functions: 46/47 (97.87234%).
+native /rust/src/protocol/links_operations.rs regions: 576/596 (96.64430%).
+native /rust/src/protocol/links_operations.rs instantiations: 165/478 (34.51883%).
+native /rust/src/protocol/server.rs lines: 282/289 (97.57785%).
+native /rust/src/protocol/server.rs branches: 37/46 (80.43478%).
+native /rust/src/protocol/server.rs functions: 31/31 (100.00000%).
+native /rust/src/protocol/server.rs regions: 416/443 (93.90519%).
+native /rust/src/protocol/server.rs instantiations: 111/299 (37.12375%).
+native /rust/src/protocol/protocols.rs lines: 224/224 (100.00000%).
+native /rust/src/protocol/protocols.rs branches: 24/24 (100.00000%).
+native /rust/src/protocol/protocols.rs functions: 33/33 (100.00000%).
+native /rust/src/protocol/protocols.rs regions: 293/307 (95.43974%).
+native /rust/src/protocol/protocols.rs instantiations: 46/83 (55.42169%).
+native /rust/src/protocol/client.rs lines: 26/26 (100.00000%).
+native /rust/src/protocol/client.rs branches: 2/2 (100.00000%).
+native /rust/src/protocol/client.rs functions: 5/5 (100.00000%).
+native /rust/src/protocol/client.rs regions: 39/41 (95.12195%).
+native /rust/src/protocol/client.rs instantiations: 12/18 (66.66667%).
+Complete wasm: 798 passed, zero failed, 0 helper entries ignored by the top-level harness; native parents invoke their finite children.
+Complete wasm production source set retained: 116 previous files, 117 current files.
+Complete wasm lines: 16066/18682 (85.99722%).
+Complete wasm branches: 3228/3761 (85.82824%).
+Complete wasm functions: 1991/2434 (81.79951%).
+Complete wasm regions: 24777/29443 (84.15243%).
+Complete wasm instantiations: 5472/9355 (58.49278%).
+wasm /rust/src/query_reply_budget.rs lines: 17/18 (94.44444%).
+wasm /rust/src/query_reply_budget.rs branches: 1/2 (50.00000%).
+wasm /rust/src/query_reply_budget.rs functions: 4/4 (100.00000%).
+wasm /rust/src/query_reply_budget.rs regions: 23/25 (92.00000%).
+wasm /rust/src/query_reply_budget.rs instantiations: 11/43 (25.58140%).
+wasm /rust/src/query_processor.rs lines: 670/723 (92.66943%).
+wasm /rust/src/query_processor.rs branches: 123/154 (79.87013%).
+wasm /rust/src/query_processor.rs functions: 47/52 (90.38462%).
+wasm /rust/src/query_processor.rs regions: 939/1072 (87.59328%).
+wasm /rust/src/query_processor.rs instantiations: 347/625 (55.52000%).
+wasm /rust/src/protocol/links_operations.rs lines: 276/343 (80.46647%).
+wasm /rust/src/protocol/links_operations.rs branches: 17/32 (53.12500%).
+wasm /rust/src/protocol/links_operations.rs functions: 39/47 (82.97872%).
+wasm /rust/src/protocol/links_operations.rs regions: 474/596 (79.53020%).
+wasm /rust/src/protocol/links_operations.rs instantiations: 107/241 (44.39834%).
+wasm /rust/src/protocol/server.rs lines: 150/289 (51.90311%).
+wasm /rust/src/protocol/server.rs branches: 23/29 (79.31034%).
+wasm /rust/src/protocol/server.rs functions: 17/31 (54.83871%).
+wasm /rust/src/protocol/server.rs regions: 238/443 (53.72460%).
+wasm /rust/src/protocol/server.rs instantiations: 42/99 (42.42424%).
+wasm /rust/src/protocol/protocols.rs lines: 189/224 (84.37500%).
+wasm /rust/src/protocol/protocols.rs branches: 22/24 (91.66667%).
+wasm /rust/src/protocol/protocols.rs functions: 28/33 (84.84848%).
+wasm /rust/src/protocol/protocols.rs regions: 239/307 (77.85016%).
+wasm /rust/src/protocol/protocols.rs instantiations: 28/40 (70.00000%).
+wasm /rust/src/protocol/client.rs lines: 0/26 (0.00000%).
+wasm /rust/src/protocol/client.rs branches: 0/2 (0.00000%).
+wasm /rust/src/protocol/client.rs functions: 0/5 (0.00000%).
+wasm /rust/src/protocol/client.rs regions: 0/41 (0.00000%).
+wasm /rust/src/protocol/client.rs instantiations: 0/5 (0.00000%).
+wasm /rust/wasm/src/causal_session.rs lines: 176/177 (99.43503%).
+wasm /rust/wasm/src/causal_session.rs branches: 32/32 (100.00000%).
+wasm /rust/wasm/src/causal_session.rs functions: 29/30 (96.66667%).
+wasm /rust/wasm/src/causal_session.rs regions: 350/363 (96.41873%).
+wasm /rust/wasm/src/causal_session.rs instantiations: 29/60 (48.33333%).
+All Git-visible Rust source bytes match the release-check snapshot, including the new reply budget.
+JavaScript: all 699 tests pass; complete production line/branch/function coverage is enforced at 100%. TypeScript declarations pass.
+Actual node: standard full-u64 protocol/query API, 16 shared query vectors, three new bounded groups and nine existing causal-session contract groups pass, including 1,029 finite schedules and 686 before/after-reply retries.
+Actual bun: standard full-u64 protocol/query API, 16 shared query vectors, three new bounded groups and nine existing causal-session contract groups pass, including 1,029 finite schedules and 686 before/after-reply retries.
+Actual deno: standard full-u64 protocol/query API, 16 shared query vectors, three new bounded groups and nine existing causal-session contract groups pass, including 1,029 finite schedules and 686 before/after-reply retries.
+Strict native/actual-WASM/host all-target Clippy, formats, rustdoc, six doctests, release helper tests, 221 repository checks, locked metadata, optional-provider/source/workflow/whitespace checks pass.
+Original query text preserves numeric/name/wildcard/variable kinds; existing u32 raw-document facades remain available.
+Finite comments/depth/nodes/bytes/result admission precedes checked execution; decoded reply reference bytes are admitted during the owned preview before real edits.
+Staging stays private until an explicit publication token; frozen clients refuse later operations. Lost replies retry the exact prepared request after later publications.
+Preview copies rows/names and executes the shared query path again; matching/export materialize bounded rows. Reply limits count decoded UTF-8 reference bytes; framing/escaping adds finite overhead.
+C# query parity, physical query recipes, whole-project native/C#/linked-WASM 100% and all wider unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged.
+Production source js/client/src/capabilities.js: 2883 bytes; SHA256 55cd481be6bdd8271274537131d02308d291169d9c2a998731b5fdd3b7da7ffc.
+Production source js/client/src/client.js: 12012 bytes; SHA256 913f3766fde069be01ac9baf800bb2fdcdfa7f3ef9d24ce209f3ddfff8b09ea7.
+Production source js/client/src/cluster-maintenance.js: 5234 bytes; SHA256 f5697797570857f860536da5f7f8a1e34b55024889c03cc4c3997d2c0807b064.
+Production source js/client/src/cluster.js: 13698 bytes; SHA256 733067f2765bb106942c57fd8096991fb6546ce0d47d026fbe23edcfebe14628.
+Production source js/client/src/deadline.js: 2914 bytes; SHA256 53ca50812d61ef8713b27a3d341da5491c878df20c5f1b56c1306dc811b0876d.
+Production source js/client/src/engine-causal-batch.js: 9812 bytes; SHA256 1b043a5cc400bb0d34f6de0e6f4a94fabaeaf824fca526c8b59367944a5656da.
+Production source js/client/src/engine-causal-merkle.js: 13418 bytes; SHA256 1328378ae7db4eb5842be98d0add9cecd985812748c574a0c67dd65185906365.
+Production source js/client/src/engine-causal-projection.js: 2161 bytes; SHA256 18fae34ad7f1db8771e0acd95ee83d3d37c0a01764aac3c9c37404af195c14ec.
+Production source js/client/src/engine-causal-replica.js: 9367 bytes; SHA256 e5fd7ae3dd6734bdc262196df4afa15c56f75625d7ce5b034b9c1903c31e3fe0.
+Production source js/client/src/engine-causal-session.js: 6213 bytes; SHA256 fc76803861522e4148e8c2591e4ef7394500f1b0adad2b0cc6fd3062703233ba.
+Production source js/client/src/engine-causal-version.js: 5763 bytes; SHA256 d064dc70c533f1a943d25b248c0da308abc54d185cd93a089b5f9a9749f7f9f0.
+Production source js/client/src/engine-checkpoint-inspection.js: 2704 bytes; SHA256 3389d0263fecdfdb496c0db242a563cc120f5416d057725e553b75338658b317.
+Production source js/client/src/engine-checkpoint-page-format.js: 2075 bytes; SHA256 1d829f30fdaf172dec9ffd42ead2eaae83804af0c0f9d1c96bbc1bc0701d67ff.
+Production source js/client/src/engine-checkpoint-pages.js: 6019 bytes; SHA256 c0d8d895fcd026ad1bb30fdc0ebf69af0d5a173746c576767202de69747072b9.
+Production source js/client/src/engine-checkpoint-root.js: 3844 bytes; SHA256 a177dd1afa41bd75aa3b16bb854e11e5504572cdfb46d6280a544778139c25f4.
+Production source js/client/src/engine-delta.js: 7177 bytes; SHA256 15ad3e346d7b6cc93d0ef6b4258a46f24e55808b12ac725332dc925db4d13047.
+Production source js/client/src/engine-file-checkpoint-pages.js: 2486 bytes; SHA256 ceff5b7e4ec7cca7235066526f910ca4dcfbe6a1da51549b684609731ff48695.
+Production source js/client/src/engine-file-log.js: 3993 bytes; SHA256 5dd26f9223a9eaf74032da914459d5fc937e2613e199130675e271516a1892c5.
+Production source js/client/src/engine-file-lsm-files.js: 7672 bytes; SHA256 a89895a0cacec0679a52f1ed9bca6e2a1cf8ef97b386e986238be6a3def35912.
+Production source js/client/src/engine-file-lsm-readonly.js: 3612 bytes; SHA256 26d357ba657ea050c476486a688526ea2db680822676471ea8ea60ba041e2fac.
+Production source js/client/src/engine-file-lsm-store.js: 3246 bytes; SHA256 289276167c40e19403508313c87d39fcebc194ec2839954bbe87255f8c0c50e7.
+Production source js/client/src/engine-file-mirrored-pages.js: 1440 bytes; SHA256 1028d683bfa19d7d1b3e1696c5ff4f43c7402f86cb68f78462b96723403be1c3.
+Production source js/client/src/engine-file-paged-log.js: 5351 bytes; SHA256 cae2dada54661ca97c106e25c70e427ddec9d88d075a23dbb7dfc0882074e520.
+Production source js/client/src/engine-logs.js: 2932 bytes; SHA256 8a256d16df1b075914555ea7457f7b306c52c3a5e5c2c4ad100c6148ccd47265.
+Production source js/client/src/engine-lsm-store.js: 16427 bytes; SHA256 f8000cd30e9bf553cdb4a03432138e40e5c63c6c43a496f0cab81dc71eff5c50.
+Production source js/client/src/engine-lsm-wal.js: 6386 bytes; SHA256 0e668ad7fe2fc199b3b7b87a9b8ecc0e7cda7e9abe7528d189373562c9538f86.
+Production source js/client/src/engine-mirrored-pages.js: 4533 bytes; SHA256 747b39d9ec8048b7c513ad06559d06668dbea78b090bd23b941313ab44f18537.
+Production source js/client/src/engine-page-format.js: 3060 bytes; SHA256 0494f06877d2a1678d5b2fe6c5e07727402669e11b4718062b38ca67fa0f25af.
+Production source js/client/src/engine-page-reader.js: 3599 bytes; SHA256 7cff8d1aacf4398fb873a27204ab63ec56331599fd4586e3f30c2f6b465821e3.
+Production source js/client/src/engine-paged-log.js: 5273 bytes; SHA256 7741a9686d352eb4dc96248e35c8c6b23436fb3d5961094ad68dc9b6d1760573.
+Production source js/client/src/engine-sorted-table.js: 6253 bytes; SHA256 921632b141745968ba63d756092cda11916cff8179d141d5fb318841f115bba9.
+Production source js/client/src/engine-sqlite-log.js: 7568 bytes; SHA256 2a951912e3588f4a2125e6cb5d55d1ffeb9e7c5da5cbf3a6f52873d94f10636d.
+Production source js/client/src/engine.js: 6453 bytes; SHA256 b9ae05f5ea3c9929788ed14356fd0db87d37fdcb88bd0512def68171c959c74d.
+Production source js/client/src/errors.js: 2227 bytes; SHA256 5bb3475ff29655c33fe7f7970825f5dd058177607fedd0aecbb07cbd02f87206.
+Production source js/client/src/framing.js: 3318 bytes; SHA256 e60b21e22fab92c523c6764fb75d0dd3e14cd942afcbd8b84821c101efa49538.
+Production source js/client/src/index.js: 1409 bytes; SHA256 3594b83d5bddb57af8755f3437643f59c2cdd1f99eaf9b74f6b8d919120f8c76.
+Production source js/client/src/journal-chunks.js: 2993 bytes; SHA256 7a54e603b1e21f6f5f0bc07e12e9d83098a1e1961e650074ec4104cc98df4dca.
+Production source js/client/src/lino.js: 11314 bytes; SHA256 bd0bbcb9ec7beeea6dae89b03819767ffe63cd510f9ce24a351a71eab8858bde.
+Production source js/client/src/operations.js: 8003 bytes; SHA256 88a8ae2a64615d676a1e5f6eee88ce6eec60d555d3970087580cad1087808156.
+Production source js/client/src/partitioned.js: 8783 bytes; SHA256 751659848c3f74a0a7fc6f69a7066ad41d89dda92788308f4ff842e9881af823.
+Production source js/client/src/process.js: 6414 bytes; SHA256 6abdfafbc8f9f7dca0fc3b3a4b60e8793b4d733d3c01bed02ff26c1aa7a80992.
+Production source js/client/src/reclaiming-codec.js: 6695 bytes; SHA256 644b4aeaddc00e56389a812703e979944fb897de7587eda3ca2c15747ed83a84.
+Production source js/client/src/reclaiming-collector.js: 2204 bytes; SHA256 f9163dff110e6d8f9350b3b3dc7d74ace519a865e71e0d0086355ddcb6d41bd6.
+Production source js/client/src/reclaiming-store.js: 7522 bytes; SHA256 7172d012862a378996e1e321a991c3856daed57d220a316edc69efcd8173d1e4.
+Production source js/client/src/reclaiming.js: 883 bytes; SHA256 e4e46522e7e36c0b8391aeae573bc34426bd58a177a73d67db5d892249240ee6.
+Production source js/client/src/tcp.js: 10692 bytes; SHA256 2b6947ec340f33910a180b0dbcd2bb6ace8dd8cc2c1d5c1d89c67c42c15a6788.
+Production source js/client/src/wasm.js: 5277 bytes; SHA256 70058c80673bb870919242dfe2e93667d1c02659b736fc010829170271f0f6d2.
+Production source js/client/types/engine-causal-batch.d.ts: 1231 bytes; SHA256 129217080ee4845f4b5d3302d91b22446e6a11d8380fbdddf91ed1f33a755ed9.
+Production source js/client/types/engine-causal-merkle.d.ts: 2685 bytes; SHA256 2310dc51630577c38419d2d95ee4736dec9ab242425498f250772285518d0ddd.
+Production source js/client/types/engine-causal-projection.d.ts: 906 bytes; SHA256 d676be13eac9bef30e1e13629c2cc425852210221cdd6c5a9e96c14500e2cb71.
+Production source js/client/types/engine-causal-replica.d.ts: 941 bytes; SHA256 1a0b6befc7ca454033b99fd3a288bfe41d370145a870661daa43540d8a88f26f.
+Production source js/client/types/engine-causal-session.d.ts: 2496 bytes; SHA256 55be8e3a415c34f7eed82ee55f8b356481d461a1a169532160ec2e1d4b8dbe95.
+Production source js/client/types/engine-causal-version.d.ts: 968 bytes; SHA256 d134eb151dfed89a31efc260de862eae10fdff4165126d593f5b3922c5c8eb99.
+Production source js/client/types/engine-checkpoint-pages.d.ts: 1500 bytes; SHA256 78c46e33d315266151603fa554174d043f54462231a7a46c7af99f2cccf51436.
+Production source js/client/types/engine-checkpoint-root.d.ts: 966 bytes; SHA256 8e356ce937e8a0a945e03ed822906901f69fed5fa7bcb791d4461040ecf70de6.
+Production source js/client/types/engine-file-checkpoint-pages.d.ts: 771 bytes; SHA256 17feb5aea07f2b0b72679f39dc721692684726cdf7e1cdb2cf9d7d686e525302.
+Production source js/client/types/engine-file-log.d.ts: 430 bytes; SHA256 8a9dcab8c5f5a63d0b3d3b106bad876149129519a9a5a58334c7f37a2671e411.
+Production source js/client/types/engine-file-lsm-store.d.ts: 1744 bytes; SHA256 74b8034ce7ccbd6dbebb49b6d8e6ff184d2e51f300e7f6360679c15680b4386f.
+Production source js/client/types/engine-file-mirrored-pages.d.ts: 438 bytes; SHA256 b2ef7fae922fe435891e9bbd3a0d7177e35735b677a5d57cca9310af0da25f68.
+Production source js/client/types/engine-file-paged-log.d.ts: 1198 bytes; SHA256 a12e03e36b78e5ae31e1ba0b909f5b3ba9604b0762dd18aa70ac9e0eb75e5395.
+Production source js/client/types/engine-lsm-store.d.ts: 2163 bytes; SHA256 74cbb83f171caa7ff6797317735d4c93e5d761fa519791588a3537f2480e4229.
+Production source js/client/types/engine-lsm-wal.d.ts: 1508 bytes; SHA256 8daa86add01c1ee59b894a6cacc7258ae0b7442e1b67c2022aa23b8dcc241ed7.
+Production source js/client/types/engine-mirrored-pages.d.ts: 956 bytes; SHA256 d6248867f4710c1ac309e11d8a085cebe4c106bd503634788cb978ad71d40fe7.
+Production source js/client/types/engine-paged-log.d.ts: 1886 bytes; SHA256 8f297913b7bc2cce7b15cfec43dee794621f90bc013f2ff1781002e6e4435d3c.
+Production source js/client/types/engine-sorted-table.d.ts: 1306 bytes; SHA256 54b9076606ae27ce47f630fa6d89ee192fb3fd1fbd4fe34e9da4c3a609dacdbe.
+Production source js/client/types/engine-sqlite-log.d.ts: 1115 bytes; SHA256 17737e0362f17f9d2d528d19cb28025c4c543f9145cf7f7271917aeabd250c72.
+Production source js/client/types/index.d.ts: 17191 bytes; SHA256 a32fd6f5e8f46c0be291be48650c14f4c1d87ec31c63e5d411db4ae2be7c5318.
+Production source js/client/types/lino.d.ts: 933 bytes; SHA256 03c8b493a367d7a6e9c15bd551c540765865cf0be3b8fa06699bc3631f80ccfd.
+Production source js/client/types/process.d.ts: 1379 bytes; SHA256 30586f2648c823edc434a8d49893a06d6c05d365f6960a457ed5ce2493250014.
+Production source js/client/types/tcp.d.ts: 1671 bytes; SHA256 4d097026307523d5485ee63faa90b16d288e88e3f80447663875d10d124d260d.
+Production source rust/src/changes_simplifier.rs: 2298 bytes; SHA256 bc3b265d95d8c6c2ad06a7387baa5e37a780937f800f0df34cb2fafdd2ec4558.
+Production source rust/src/cli.rs: 25980 bytes; SHA256 a9075cb4753760ecc75f5ae5ca2d4140426da50131a58f1abf84f5a343439192.
+Production source rust/src/engine/branch.rs: 5957 bytes; SHA256 2cb6dc56112137bd62da0cef346ea6f65e97519ca713afcc9d5a2aec3edc7791.
+Production source rust/src/engine/causal.rs: 8787 bytes; SHA256 31a6ac1520d95ebf5c8a640cffa7c649457771b2eac4f3aecfa630fa9ed7bfb7.
+Production source rust/src/engine/causal_batch.rs: 15275 bytes; SHA256 fd91b135531f2c631333beeae732c9dc4479555183b4cc55561bfbcbe1fd810b.
+Production source rust/src/engine/causal_merkle.rs: 19194 bytes; SHA256 7eadb5caee24647d074859bcf151ed44e3a03d255d3f9aa0f04499a1be439f6c.
+Production source rust/src/engine/causal_named.rs: 4306 bytes; SHA256 492bfc186f0601dd079d7b39377695b5b828a5f62f8c5ea57a20118529dfcf32.
+Production source rust/src/engine/causal_projection.rs: 3065 bytes; SHA256 07d213483ff9571b4f6b9f6e92489266cac47c2cdb5e525a073ed035e0726b72.
+Production source rust/src/engine/causal_replica.rs: 13690 bytes; SHA256 de919984ef496e108f635b89699236ac7db94e70c891511e7ae52243eb7630dc.
+Production source rust/src/engine/causal_session.rs: 15773 bytes; SHA256 52d3dfaa8f01fba58dfbff1d28c7d2b0d4a9417571781a37818a33d556dd5494.
+Production source rust/src/engine/changes.rs: 4650 bytes; SHA256 63449224060160199f8f839af24151358535b2ecd9ed5e756ed35b14bbd91b61.
+Production source rust/src/engine/checkpoint.rs: 2187 bytes; SHA256 c9c8ca7588e9a874561b16c4c5351192684102cd42d1e6300873568b3abf4f97.
+Production source rust/src/engine/cluster.rs: 8771 bytes; SHA256 c91c35390d0072c5f9e37eda6e764e046be0e8e3cec53ecf145ecd2eed47f68d.
+Production source rust/src/engine/commit.rs: 3010 bytes; SHA256 40c45df1a81a33fdb6255ac98f646283aee60a7b0a3908099865b151d49cb444.
+Production source rust/src/engine/constraint_index.rs: 5301 bytes; SHA256 73356f22f5c854f8e2d68b4f815d98ec5d0e041fdf81d4eb738cbf3f2102e2d2.
+Production source rust/src/engine/delta.rs: 10104 bytes; SHA256 d1fcd4cfee1b9d41ad0aee91d903bed9fb38eb1d233106e12ee0d056c2392166.
+Production source rust/src/engine/etcd/maintenance.rs: 8535 bytes; SHA256 a24be1be548707240a87ba87e74501772239f79c6f39961e814b490243dd9ab4.
+Production source rust/src/engine/etcd.rs: 8889 bytes; SHA256 707c5c4aa461b123ba2f494a00657f70c88ee9f494bff0df5ea0cd4064da12c3.
+Production source rust/src/engine/group.rs: 6991 bytes; SHA256 1543bea7c098fce0739648ee3c081a073b4bb7363b498c9edb5b19ec69152fc1.
+Production source rust/src/engine/journal.rs: 7514 bytes; SHA256 cb591d59d39ad25c4cb9f7c00111a4c6ff3510a42309ccae4c8401eff6517925.
+Production source rust/src/engine/lsm/lease.rs: 3197 bytes; SHA256 c22af8a65502cedca79b3a0028c52fa005924a3f6b746d11bea2da25fa23d5c5.
+Production source rust/src/engine/lsm/native/device.rs: 6057 bytes; SHA256 d375af3e95d84586ac8f14ecdda4340333e679047c8859789bdedf8af5b8b989.
+Production source rust/src/engine/lsm/native/directory.rs: 8486 bytes; SHA256 80617ff63687f04f90f41c156b082dc1dc07b8af4e2f9be2d5105ede58e829e9.
+Production source rust/src/engine/lsm/native/files.rs: 12510 bytes; SHA256 670e8ffd4ef06a264a95fb12ee5c7cddd85c88630e9fc2257b414a1f133b62df.
+Production source rust/src/engine/lsm/native/mod.rs: 7284 bytes; SHA256 32994db9f8b0f0b304af8e5d434742d3aa49554415e26b41b275ed99855d2409.
+Production source rust/src/engine/lsm/native/read_only.rs: 5858 bytes; SHA256 1294b53770edef89cae7e2b1f0723309730057b22947ff814de271e709028909.
+Production source rust/src/engine/lsm/native/test_support.rs: 4008 bytes; SHA256 931ed9ec30dc94e1a85b971cb518de43fd385ddd9680d2aeff92f68a084e689a.
+Production source rust/src/engine/lsm/store.rs: 23970 bytes; SHA256 f323337e7e9376821cd363e4b07f0338033836b235d004217052f3790ffa5df3.
+Production source rust/src/engine/lsm.rs: 11430 bytes; SHA256 7a6d46983d576c0b7559e472de67d9a02725d57b6d64009358f4fe7632c16293.
+Production source rust/src/engine/maintenance.rs: 1528 bytes; SHA256 9b741b7c828b35de15ec3c96b9ec40e83df43f6eb46ad53867813dfa4371972f.
+Production source rust/src/engine/mod.rs: 14140 bytes; SHA256 230158e061ad29085cb5a01bde4f3e285acb0e331f306253cd9a984126f1bcea.
+Production source rust/src/engine/named.rs: 5907 bytes; SHA256 d9173026122236de4350e2a5299b8ab76779aa70bf07afaddc6cf8020c7388a6.
+Production source rust/src/engine/object_cache.rs: 1578 bytes; SHA256 26c08f047d1cbfd58d5e5c7aabd0a66f74a9225d0932878dcf34ce99353807ec.
+Production source rust/src/engine/paged/checkpoint.rs: 10928 bytes; SHA256 4659c9a2f4186e9654eae8c0a6c0d92e7ae73fb57daa48cf1b92385e58e1919b.
+Production source rust/src/engine/paged/checkpoint_format.rs: 2730 bytes; SHA256 f2d4601e5ff57d3cb5cfc45b78ff2378c83a301ad7ca42d6fcd192b5ef7005e9.
+Production source rust/src/engine/paged/checkpoint_inspect.rs: 3397 bytes; SHA256 0440658ba08645bf8b4a370898715cf5552898bd8b0dbd0e1014294707cbf16d.
+Production source rust/src/engine/paged/checkpoint_root.rs: 6952 bytes; SHA256 15ccd8c0f1b141f416f4569368ab128de460cd49e056113b22ff0809ca6937d7.
+Production source rust/src/engine/paged/file.rs: 11228 bytes; SHA256 341acf0239ba1a9d3e8debb45b4c676df44c279d780759b67ffbcc9c4e530dfc.
+Production source rust/src/engine/paged/file_checkpoint.rs: 11734 bytes; SHA256 d0c38432d253a8ab9922a34b26b244a31c724745e2bfd370f635a7ef9215b50d.
+Production source rust/src/engine/paged/file_events.rs: 2502 bytes; SHA256 f00b798020de7062366aea392d063a3a651d4444feb2671080fe3c05e660cac4.
+Production source rust/src/engine/paged/format.rs: 4563 bytes; SHA256 7f9e82f53745005327095bab42724ea1f8eab46665b9e3771666a8e3528b3139.
+Production source rust/src/engine/paged/mirrored.rs: 9992 bytes; SHA256 7bb1db06c89c0ac1800cf0e07be48332ab55c3d26f9ef317e2996738ae63d9c5.
+Production source rust/src/engine/paged/mod.rs: 14426 bytes; SHA256 579ee914549d0dd17c4cefa912eaeeb50a5e711a9a692062a27d73e676f8eeff.
+Production source rust/src/engine/paged/sorted_table.rs: 11667 bytes; SHA256 7b95776f5d368ae3dad94406ed5514ff48b7346bdad7b274c305603391279da7.
+Production source rust/src/engine/partitioned/chunks.rs: 4584 bytes; SHA256 691dd60640b13f713fabece2f5ad6b5530cbc8937430e90d0d59c08bc71ad216.
+Production source rust/src/engine/partitioned.rs: 9264 bytes; SHA256 edc82cf4f10f3e831c5a9f84472301f0c3e3dc19dcfc5e026981013dd85f4180.
+Production source rust/src/engine/pessimistic.rs: 1422 bytes; SHA256 3c4f13ba923a9a6b183874c52bf55e13327ccfc4d4e7949742f4c8bebaac9957.
+Production source rust/src/engine/query_reservation.rs: 2232 bytes; SHA256 e79408bb8c4ecb16b587e1cf4f296071e90cceb27e1ba14c70d65164033d7971.
+Production source rust/src/engine/query_scratch.rs: 5694 bytes; SHA256 a8a317128e0aba0af924b40a2d09ecaebe6e59b45f14cc9ea8d56ae1ad376c1a.
+Production source rust/src/engine/reclaiming/codec.rs: 7153 bytes; SHA256 3746c1ce06d8b25dd92652433769db4ba35a500accc383739a943f0e3b680c0f.
+Production source rust/src/engine/reclaiming/collector.rs: 3022 bytes; SHA256 a1317d4c62d9f8064e4ea552a0247b6b766235fc0781947f4236a706b89878b5.
+Production source rust/src/engine/reclaiming/objects.rs: 2443 bytes; SHA256 147dd41c0ca1543b2bd1a7f29a89b36949771a48567bd93340a7af050b111f7f.
+Production source rust/src/engine/reclaiming.rs: 10160 bytes; SHA256 d4ff87b34d05824ded1477c6d23fe448322d305e75ee3f917ec06a55702030fa.
+Production source rust/src/engine/replication.rs: 4428 bytes; SHA256 1c25fe108b9b6ccfee793c25a6939284ecbde59c9008ec72fd179fb787d3a5c0.
+Production source rust/src/engine/rows.rs: 5702 bytes; SHA256 534d2efd64c35b6886ef6ab29f7d7703df2001e75fc451c001e1467819f80c55.
+Production source rust/src/engine/sorted_runs.rs: 3926 bytes; SHA256 1a3a4d03cc3b96d0bf0aa30ee1b935bc070c4152773dea050d686fd7c0088360.
+Production source rust/src/engine/sqlite.rs: 11599 bytes; SHA256 6e6cce74dc72246f2ae8b52a74a9efa55aecfaadcd743443a98cda083c87d8d2.
+Production source rust/src/engine/transaction.rs: 11265 bytes; SHA256 e151d130468e8f776a6f3c873315eecdfad6d3a695acd100b8ba47d1729ac32d.
+Production source rust/src/engine/validation.rs: 655 bytes; SHA256 bc8f00449776e2cce5303fc2958dfe5cff9f899acd3e1567b61ce0fc8ce9a31f.
+Production source rust/src/error.rs: 2720 bytes; SHA256 ad1ba0f34266a91061c1ec9e64567dd61c77685a32abaaeba12323b48c21d43a.
+Production source rust/src/hybrid_reference.rs: 1305 bytes; SHA256 d046eb9575fbc06bb50ad44676427ccc0f24c633d356d48e290420587723d7aa.
+Production source rust/src/indexed_links.rs: 4869 bytes; SHA256 1df3d4c132e3696def6cbc3850435faebc6cca71f3060999f087fb7d67d23f4c.
+Production source rust/src/link.rs: 2619 bytes; SHA256 1766522662e8372e29348b6d0b5f23f563c45c94763587a5122fefaa97fca858.
+Production source rust/src/link_reference_validator.rs: 15426 bytes; SHA256 62692d6dd0a5d1d5ad76b3e37d367d2c7f7f682a44bb163180b22d0a5f608665.
+Production source rust/src/link_storage.rs: 32663 bytes; SHA256 4eae71757aa6cb5525d1454d6840792ee56e85e3b4b214434faffc7d7afa153d.
+Production source rust/src/link_storage_doublets.rs: 11483 bytes; SHA256 d3feef533f2ff99eb4d594116b17a199e03fac39623aea6a038af04c9b55d53c.
+Production source rust/src/lino_database_input.rs: 5439 bytes; SHA256 5a5b9d79d3f666f571ff37c9f147b0ab5e55f8989329dd19e1caec8f08098a7b.
+Production source rust/src/lino_link.rs: 1840 bytes; SHA256 2405a06a9f9025735ea7bcf875e42ff2c0773ec03f1360eebb19cd331f541380.
+Production source rust/src/main.rs: 17625 bytes; SHA256 76e7d8291ee507aec7c0fa5aac5e4a27f7b9aaec713f11ba016bddaf94680526.
+Production source rust/src/named_links.rs: 1848 bytes; SHA256 34e83a70999963a2e2af843e4f58366d9f8d70193d8dd313a48951d06e566e0a.
+Production source rust/src/named_type_links.rs: 18455 bytes; SHA256 92a803453338294c9d55862fa342bbb3539273cd5768b22f8be4f52bb3597f0d.
+Production source rust/src/named_types.rs: 10414 bytes; SHA256 b7bdf487be5aa928e737d34d64c435071153a73b6c027fc5a704a8d95129cf6e.
+Production source rust/src/parser.rs: 1894 bytes; SHA256 7e59c9c502594dc06fee3f57be3316f47332c14e6dc22658a48fe16db5753c21.
+Production source rust/src/persistent_transformations.rs: 23851 bytes; SHA256 e2c260009d9fb599471fb0eb4fc9c59b70d7b84337ed6a14a613db45613997e9.
+Production source rust/src/pinned_types.rs: 4995 bytes; SHA256 f57fea7ce9916bbd801154dcaa9996b58f5fddfa761ef866c8a84b35a7efd6bb.
+Production source rust/src/protocol/archive.rs: 6019 bytes; SHA256 316777f12b1c85b50d30fc060591b0bd6d128d7740490de0bb8ea5e595273ba8.
+Production source rust/src/protocol/client.rs: 2240 bytes; SHA256 02d8c4c0a6b0b092d8072d87887f8458c3c90b136d8e754f8143d87992f2ff05.
+Production source rust/src/protocol/error.rs: 1831 bytes; SHA256 6c2ff55214fede31ed2d6df9b73a4cef3ded46fb544d0031852f3527666074cb.
+Production source rust/src/protocol/links_operations.rs: 19354 bytes; SHA256 2a413ff17a6d494264703c9e569459e57f3f6993b267b19fe724ffe3fa736390.
+Production source rust/src/protocol/protocols.rs: 12624 bytes; SHA256 0c781468a2e3bfd68009ffbe763069179c018a13d217d724fb721b12f7654282.
+Production source rust/src/protocol/remote_links.rs: 10751 bytes; SHA256 a5d75bfcff39c127bb9278cbd6fd54dd9a8c1b558896ca0051c43e1e200232b4.
+Production source rust/src/protocol/server.rs: 16031 bytes; SHA256 65356f9c8c82ece860ee34ec09a4d9b9da4e0358ab02ce067d5826777eefff52.
+Production source rust/src/query_options.rs: 1126 bytes; SHA256 bed349309149b0cad40b6bcd87386c8a863faa4f936318277b8b13afb1c14eb6.
+Production source rust/src/query_parser.rs: 5823 bytes; SHA256 f1a0662aa7053c0bc5fe841dc739480176d053260eaa8fc58c5decc428b3956f.
+Production source rust/src/query_processor/matching.rs: 10029 bytes; SHA256 2426c14617b15ce572eb09121a839e5561137e65c1bc4f14e5e8e0e33094e53e.
+Production source rust/src/query_processor/mutations.rs: 16367 bytes; SHA256 414935562a1244ca84d438e56dacee7d22f2ba427626e3adf8607af15bc34aec.
+Production source rust/src/query_processor.rs: 33932 bytes; SHA256 2e7e1c3741de60bacf9b619860dbed7b608fd647f58bc3062bb059b92c7c6add.
+Production source rust/src/query_processor_substitution.rs: 3594 bytes; SHA256 4b557f3f7c32fe7a3dca0af76ef08dc2db4c15b7850022918432854223e8ca15.
+Production source rust/src/query_reply_budget.rs: 908 bytes; SHA256 44796a62ee1ce28435d0eb8d26ea3f97c11f2b5669371e7a50b31d0dafd26ee3.
+Production source rust/src/query_types.rs: 1322 bytes; SHA256 2cb060c58a10a6f511efce20777522c66fb85989adc413b30994e258b4231049.
+Production source rust/src/sequences/address_to_raw_number_converter.rs: 305 bytes; SHA256 9e0bf099267ac5ec7a0a10e431501a101527287cad03b2418cca57c0ade51c34.
+Production source rust/src/sequences/balanced_variant_converter.rs: 1091 bytes; SHA256 49a2d0e3433eee582b5ba4dc8a9cf2a23bbf7004fe5213990987c4f5fdfc1293.
+Production source rust/src/sequences/caching_converter_decorator.rs: 1125 bytes; SHA256 003d496d1d5f4bb9609c80e50b7cfffe4a97945025e3f4b29395a22baa76a047.
+Production source rust/src/sequences/char_to_unicode_symbol_converter.rs: 796 bytes; SHA256 0c26ee305afa36640b6a1e8a06a8e9caf411dac81718db60df45291c6316eafe.
+Production source rust/src/sequences/default_stack.rs: 557 bytes; SHA256 cb53288c623bac5a537b77f17012a0998e6693b0d7929a2d4838db39fcdc8b88.
+Production source rust/src/sequences/raw_number_to_address_converter.rs: 345 bytes; SHA256 c4b42ebaecff3f091ac89172c31bee3822b59bac8bb5b903b14c183f86a04d71.
+Production source rust/src/sequences/right_sequence_walker.rs: 2115 bytes; SHA256 a2e18a8bc40150607d57d92de1a0579d653d8d8fe0f7c88ecbd801c0fc911abb.
+Production source rust/src/sequences/string_to_unicode_sequence_converter.rs: 1311 bytes; SHA256 e446d9b2a150bd189c0a2ff7319159d2867df720e08b056825c60d7adf1583e0.
+Production source rust/src/sequences/target_matcher.rs: 468 bytes; SHA256 50d1146d4fec5108c2187ede80c6f6dbf7f4fb34227467a9e7771102e1d7f7ce.
+Production source rust/src/sequences/unicode_sequence_to_string_converter.rs: 1757 bytes; SHA256 a65f9622c468906e5bb5c03ae998ca6e5ebc5a65638ab7d45ec74281a25d0b17.
+Production source rust/src/sequences/unicode_symbol_to_char_converter.rs: 1160 bytes; SHA256 1d360c96187bb2a37c3038eb9896ea074761e7567f37a07ab3bf936612b45f3c.
+Production source rust/src/storage/decorator_impls.rs: 8711 bytes; SHA256 ddd17fef862aaad918f77e221d4b38a51fc580b47ae90b459b8b8adf2a6df79e.
+Production source rust/src/storage/doublets_storage.rs: 18332 bytes; SHA256 1c4a65983b0934ac5dd6b3dee25e57b8ff135bcf2cf9cebde818483cb8ca97f5.
+Production source rust/src/storage/file_mem.rs: 11828 bytes; SHA256 37ed2be97281142b7428f400d89bc1aa97017bfa532743f7722fbbd29c407814.
+Production source rust/src/storage/file_mem_grow.rs: 4039 bytes; SHA256 104ecd107809ecf1d692f93d368720420ce8a5a92a58fa9eba83d4703e4e2a17.
+Production source rust/src/storage/lock.rs: 3910 bytes; SHA256 ac52ec4daf17a865cb6f49cac468cb85fcab5a07a8ec9e7e1ad6c00a786f6a7c.
+Production source rust/src/storage/mapped_flush.rs: 4998 bytes; SHA256 84006351300ac5f0c262555867090fc8911858eb7d12e3c1656e74368477511b.
+Production source rust/src/storage/traits.rs: 11339 bytes; SHA256 d51fbd4c9086b419348b553a6618c8364fda8d3047e4a900f09d32a23f1fc1cc.
+Production source rust/src/structure_format.rs: 1747 bytes; SHA256 b84519291b9cad88d2e7fcde96ca018706383947afc8ba43022268a268ba8b04.
+Production source rust/src/text_storage_format.rs: 2369 bytes; SHA256 fdd73824c226a6475f79ce7e573496a631cdf5f36ac72ec459a1ae0ee59bf710.
+Production source rust/src/transactions/commit.rs: 2621 bytes; SHA256 d959ef338104635a2eaba8fb57c74482c20f80d44b75930e5fc8bed4ecc50a7e.
+Production source rust/src/transactions/journal_validation.rs: 6103 bytes; SHA256 16fbcd2f36bbb6f3380c465587084f89b727610fc749a78a77675ab1fee6b6e5.
+Production source rust/src/transactions/log.rs: 10794 bytes; SHA256 595e15c9ac919a36139122f0759aabcdc1dfbdc6c0212532ead8c4dadfb5c696.
+Production source rust/src/transactions/mod.rs: 30720 bytes; SHA256 06e7177099d8ac4078ee576a36fc55a053eab12a4553660f02ef5e71437edf03.
+Production source rust/src/transactions/names.rs: 4132 bytes; SHA256 cdd3b97eee83021af834f8650a1c3e806ff2e3d04b8c4da86cc350babc3bafe6.
+Production source rust/src/transactions/record.rs: 6341 bytes; SHA256 f15177639714d3ad82d5383a6a0c192412ab6c01e82245c5e14b94a5f553cdc1.
+Production source rust/src/transactions/recording.rs: 10287 bytes; SHA256 7833f27038fcc6b4129b310f9910afdb9829d0651e1566c065709d75b72a99f7.
+Production source rust/src/transactions/recovery.rs: 21602 bytes; SHA256 21d540390f6e8fdea74bb553c126125957de106e3d585e9cea40e32bb4fa34fa.
+Production source rust/src/transactions/row_undo.rs: 8264 bytes; SHA256 28ed553914d65834ee4b5ed44e65a9f7db583727653c1d7ea6f60df957098150.
+Production source rust/src/transactions/types.rs: 9938 bytes; SHA256 aefb2383d2aa1fc4764f5a31fc1940e148fbafb445ca3e3b5f622486e5b0a540.
+Production source rust/src/transactions/undo_image.rs: 4223 bytes; SHA256 eac10bdda93e48343afa6d9614a35a4943bf94e24412235a66ad03f0401075ac.
+Production source rust/src/transactions/version_replay.rs: 2177 bytes; SHA256 c8420c015d49b4e93aa8546778a87318ce48b1f2dcbcc5602c68e78e6789518b.
+Production source rust/src/unicode_string_storage.rs: 16790 bytes; SHA256 ccc21b5caa3fed1a1d4a1b37471150624cf1e769f77ff69b3408a4b1ea4f131a.
+Production source rust/src/version_control/mod.rs: 32707 bytes; SHA256 446bd03052a455124913c4136c5b84b377319963d2c9c9d8a8217ef61f885a40.
+Production source rust/src/version_control/movement.rs: 13545 bytes; SHA256 ce9eb4e47774cc6a61b65859c52d7c5a499afe4567d915dd3f64fd123e24ef1d.
+Production source rust/src/version_control/publication.rs: 7478 bytes; SHA256 a285fbaf0216b63c888d48da2e6cd3e71f0d6b2aadfaba818aad0b474a5ccb45.
+Production source rust/wasm/src/causal_session.rs: 7907 bytes; SHA256 facebb5386bc40eba4f8e0d1088653afea7ef269948f5e472f47d5e3b46d1569.
+Production source rust/wasm/src/engine.rs: 14197 bytes; SHA256 885276b75b17b9aa37c66ead934d76974d1afd01bf245fba5386a5de65ba2b9e.
+Production source rust/wasm/src/engine_log.rs: 6402 bytes; SHA256 fb37c7867b6c550e5be063e8804466a9a52c6b7d962b884c8a3967cc61bd1e2d.
+Production source rust/wasm/src/lib.rs: 10934 bytes; SHA256 fca1b1c8fe2c386b5ae967f72e8a23e87570e4107e10fa6ab17faa653dbe553b.
+docs/protocol/causal-query-v1.json: 8936 bytes; SHA256 3407750f00ed0056396e10c8e28e91a6841a995cc0709fc4cac28d54dc127aa1.
+experiments/issue-138/causal-protocol-actual-bun.log: 302 bytes; SHA256 2533e8731a62db96e9a654c5dc202c8531d8d5d8470c2b92da3d0f28146a02d2.
+experiments/issue-138/causal-protocol-actual-deno.log: 302 bytes; SHA256 2533e8731a62db96e9a654c5dc202c8531d8d5d8470c2b92da3d0f28146a02d2.
+experiments/issue-138/causal-protocol-actual-node.log: 302 bytes; SHA256 2533e8731a62db96e9a654c5dc202c8531d8d5d8470c2b92da3d0f28146a02d2.
+experiments/issue-138/causal-protocol-bare-dependencies.log: 3537 bytes; SHA256 9847ae68cfbd570f0347e10e502aceb8cd065f088aa050c5571ba0ff665798b1.
+experiments/issue-138/causal-protocol-before-api.log: 2613 bytes; SHA256 0a2af175b03888807724a701ef76f9a1db6e320fd32b32923c77ad811d9eeb29.
+experiments/issue-138/causal-protocol-binding-build.log: 248 bytes; SHA256 ba002fa74fbf795c99de948b44d73d02e3083a701086a72f9e2edf537aa4faec.
+experiments/issue-138/causal-protocol-changeset.log: 20479 bytes; SHA256 a593b0aed387cae821b92fcfe22ab9d633b7081252f802727b0f011574ae5e0d.
+experiments/issue-138/causal-protocol-clippy.log: 132 bytes; SHA256 05ac3edf159be2c89625c78ec001664713f19bdc239c5e18b0f8bd3de148a1e0.
+experiments/issue-138/causal-protocol-comments-before.log: 1801 bytes; SHA256 2ce4c7f2bb7dd8fb465ef1e8468fcfcaca83746658e7507c655c066c94c12aae.
+experiments/issue-138/causal-protocol-docs.log: 303 bytes; SHA256 359f8c7f417c726e1c8edbf287fd130dcad06122b54ab40e57557a501b7d8280.
+experiments/issue-138/causal-protocol-doctests.log: 904 bytes; SHA256 339cd47ba57b0a42fd3b2f7d988454e8f5674b5d3e5a770493f91b965363aef9.
+experiments/issue-138/causal-protocol-driver.log: 252 bytes; SHA256 f194cd463c31ec5eeeacd6926026647f3e9f1e7f7256331072ca91d20201c619.
+experiments/issue-138/causal-protocol-encoding-bound-before.log: 1921 bytes; SHA256 c705608d2f91d6d06f968382570069a71a7f61721ef0027eb93792e330e4e66e.
+experiments/issue-138/causal-protocol-format.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-protocol-js-before.log: 2252 bytes; SHA256 a77b391d5703fbaa42057aae1768c0b8c77f8183c96411bd01f4a7fb05e8c31a.
+experiments/issue-138/causal-protocol-js-final.log: 62520 bytes; SHA256 96ceaeb3861b3fc1af43af6d972b21df242e6a27069df640335a8bb619755a64.
+experiments/issue-138/causal-protocol-native-coverage.json: 24921017 bytes; SHA256 879222e4530e382d52aafcf52960f1c40f31c852fce473c4d53ba86299fdad04.
+experiments/issue-138/causal-protocol-native-full.log: 627023 bytes; SHA256 08a423abf79e14d6e34f488ddd2810d4a40fe29d86b46619b5886a1e1f6b3c4d.
+experiments/issue-138/causal-protocol-native-metadata.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-protocol-release-compile.log: 225134 bytes; SHA256 4136f0a1af77e5b6ae5da47d9d13ffdb2ba0edc7fd6ef76f5825e6edc23281a3.
+experiments/issue-138/causal-protocol-release-shellcheck.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-protocol-release-tests.log: 72200 bytes; SHA256 ececdc526964f33ee4eaa1a3d9b57dfe9490c82b10d67686f7998f86025e3007.
+experiments/issue-138/causal-protocol-reply-bound-before.log: 1548 bytes; SHA256 1a6f8f1bb24e21a3bb25255ee1220e40e0220bf16a11116d9f041aa4f12fe707.
+experiments/issue-138/causal-protocol-repository.log: 18486 bytes; SHA256 17fa2f9d4e4baaaa7a8f2c2596ac355ab46ec479cbe51ce1910aa8353e70eed5.
+experiments/issue-138/causal-protocol-rust-source-size.log: 15035 bytes; SHA256 6ce9cf5e14a011746c7e5cd4258c68126dcd347f6e7cc91eb58de75e659f3fe3.
+experiments/issue-138/causal-protocol-rust-source-snapshot.json: 73725 bytes; SHA256 7b9699742d8cf1a6e44cc6d2b00866ce1b2587299b3bc4310c66a3228bd9f370.
+experiments/issue-138/causal-protocol-selected-dependencies.log: 3691 bytes; SHA256 1a9c9195cd8fa1e3356101a069b1878267f3610652d9cca0d5cf2ba486e2c124.
+experiments/issue-138/causal-protocol-source-size.log: 205 bytes; SHA256 97cdedfda6ee49c4a743ad005ad6863041099c7d3569d34a6ab6affeab713129.
+experiments/issue-138/causal-protocol-sqlite-optional.log: 445 bytes; SHA256 5592678d0bb36f770c5f905477684a4aba00c6fae2db721df8449b5ac66daf1c.
+experiments/issue-138/causal-protocol-tcp-before.log: 1397 bytes; SHA256 4be4c4455e400a5f5f57d70c656873af38302c4c41812aaaa71c58dc19137710.
+experiments/issue-138/causal-protocol-types.log: 155 bytes; SHA256 3554b7d6a856e07299c8d63ae39972733b00bb563bb11df6511cb11dc2fb9a1a.
+experiments/issue-138/causal-protocol-wasm-before.log: 5765163 bytes; SHA256 727800a8a26d65af5e71995888bf3c46011b9b2f7ba9f8066ebc72b494af68e4.
+experiments/issue-138/causal-protocol-wasm-clippy.log: 210 bytes; SHA256 042b711decfd0b0a7fdc69acc9e394493ca3ffd320ebe8003681ebc9f9965800.
+experiments/issue-138/causal-protocol-wasm-coverage.json: 27110162 bytes; SHA256 080002cc0fac4ec0acb439ae8ed7e4b0bed9b57f1b362c9af274b9a309a2aa6a.
+experiments/issue-138/causal-protocol-wasm-full.log: 71731 bytes; SHA256 7722f612048ea6967c028e6713df62f7ce42a8b547f8f79f5ef7d0a9181c739e.
+experiments/issue-138/causal-protocol-wasm-host-clippy.log: 209 bytes; SHA256 f8639942edc8f6888c77297fc32ab5dac6f75b3f6414ad9b2e1d0b3a81a43d09.
+experiments/issue-138/causal-protocol-wasm-metadata.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-protocol-whitespace.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-protocol-wire-limit-before.log: 953 bytes; SHA256 9a3e47d2d2b538e96caefc96525ab2dee2e79f51d4363384ed212ffddffa2751.
+experiments/issue-138/causal-protocol-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-protocol-zero-binding-before.log: 39485 bytes; SHA256 99c49e1f2001fe04725f7927af5fc254e6c969b0a684fd2934cf7adef08da841.
+experiments/issue-138/csharp-query-allocation-before.log: 619 bytes; SHA256 104207ac18b704e86325b13b783743554ad560a6ce4582df09b1b71c71c83e94.
+experiments/issue-138/query-reservation-native-coverage.json: 23741252 bytes; SHA256 3126cc6b09011849ae270e5b06989784f6f93c903e8f58067ebfdd27f53fbc04.
+experiments/issue-138/query-reservation-wasm-coverage.json: 26612291 bytes; SHA256 841a9ae5a8e1123717b0812676786068d0f25c9380b39852bba53579c198f9d0.

@@ -99,8 +99,8 @@ impl CausalLinksWorkspace {
             .map_err(|e| e.to_string())?,
         })
     }
-    /// Raw links/names transport with decimal addresses. LiNo query parity is
-    /// separately tracked; the existing query processor uses u32 addresses.
+    /// Raw links/names and ordinary LiNo transport over the same u64 workspace.
+    /// LiNo uses the checked wider query marker; publication remains explicit.
     pub fn request(&mut self, text: &str) -> Result<String, String> {
         if text.len() > 1_048_576 {
             return Err("causal workspace request exceeds its byte bound".into());
@@ -108,6 +108,25 @@ impl CausalLinksWorkspace {
         let request: Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
         let parts = request.as_array().ok_or("expected an operation array")?;
         let result = match parts.as_slice() {
+            [operation, text] if operation == "lino" => {
+                use link_cli::protocol::{
+                    error_document, execute_request_for, format_document,
+                    parse_document_with_limits,
+                };
+                let text = text.as_str().ok_or("expected LiNo text")?;
+                let reply = match parse_document_with_limits(
+                    text,
+                    link_cli::query_options::QueryLimits::causal(),
+                ) {
+                    Ok(document) => execute_request_for(
+                        &mut self.inner.named_links(),
+                        &link_cli::GenericQueryProcessor::<u128>::new(false),
+                        &document,
+                    ),
+                    Err(error) => error_document(&error.to_string()),
+                };
+                json!(format_document(&reply))
+            }
             [operation] if operation == "rows" => Value::Array(
                 self.inner
                     .rows()

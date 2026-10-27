@@ -177,6 +177,8 @@ export interface Capabilities {
   readonly transport: 'tcp' | 'in-process' | string;
   readonly protocol: 'links-text/1' | string;
   readonly operations: readonly string[];
+  /** Original query-text envelopes are understood by this peer. */
+  readonly losslessQueries?: boolean;
   readonly addressBits: number;
   readonly maxAddress: bigint;
   readonly atomicTransactions: boolean;

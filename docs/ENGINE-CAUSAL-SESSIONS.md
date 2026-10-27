@@ -5,9 +5,10 @@ memory engine, then publishes its complete final difference with one local
 `CausalBatch`. Rust selects `causal-sessions`; C# exposes `CausalSession` over
 `INamedTypesLinks<ulong>`; JS separately imports `./engine-causal-session` and
 uses the actual Rust WASM workspace. The raw JS methods preserve the entire
-u64 range as canonical decimal strings. Rust also supplies the standard query
-processor through a checked named-store borrow. C#/JS query and protocol
-transport parity remains unfinished and is tracked in the
+u64 range as canonical decimal strings. `tx.client()` supplies the ordinary
+JS/TS links and query API with BigInt addresses over that same workspace. Rust
+supplies the standard query processor and protocol through a checked named-store
+borrow. C# query and protocol parity remains unfinished and is tracked in the
 [session plan](case-studies/issue-138/CAUSAL-MUTABLE-SESSION-PLAN.md).
 
 Choose an explicit conflict policy and a fresh inclusive address reservation.
@@ -58,6 +59,30 @@ query.process_query(&mut tx.named_links(), "() ((1 1) (draft: 1 1))")?;
 let versions = tx.commit("00000000000000000000000000000100")?;
 ```
 
+For JS/TS, obtain `const links = tx.client()` before preparation. Ordinary
+`create`, `each`, `count`, update/delete and name operations use full-width
+BigInts; `await links.query('() ((100: 100 100))')` stages an ordinary query in
+the reserved range. Requests through every client share the same owned queue.
+Preparation synchronously ends admission, drains accepted requests and frees the
+native handle. Afterwards the standard clients reject reads and writes; the
+session's owned `rows`/name diagnostics remain available. Closing any client
+closes the session. Client `batch` still sends sequential requests: a later
+server rejection can leave earlier edits staged. Explicit session publication
+is the atomic batch boundary, and rollback discards the whole private session.
+
+Rust's `GenericLinksOperation<T>`, `execute_request_for` and
+`LinksServer::serve_for` reuse the existing operations and server owner thread;
+the established u32 names remain available. `LinksClient::query_lossless` and
+the selected JS session client carry original query text in a `(query: text)`
+envelope, preserving quoted numeric, wildcard and variable names through text
+and binary transports. Use this only with a peer that explicitly supports it;
+there is no fallback resend after an unknown outcome. Legacy direct document
+queries remain available. Their string-only canonical model, and named reply
+documents, do not retain reference kinds for later query replay. LiNo comments
+follow the upstream token-boundary rules; quoted hashes stay content.
+The [query protocol contract](protocol/causal-query-v1.md) describes the
+envelope and shared finite vectors, including concrete zero-valued bindings.
+
 Reference planning runs the same query path on owned private rows, then reserves
 its actual allocation sequence without creating probe rows. The ordinary engine
 holds its allocator mutex throughout that preview. Each session owns a pending
@@ -75,6 +100,17 @@ storage. Counts and key bytes are checked before Cartesian map/key cloning.
 Bare negative or overflowing numeric addresses reject before staging; quoted
 numeric names remain names. Named output uses lossless notation literals,
 including empty/control names and numeric names outside the stored range.
+Checked TCP workers apply these text byte/depth bounds before canonical model
+conversion and clamp binary link/reference/node/string/depth admission before
+decoding. JS preflights bounded query syntax before sending any batch member;
+its node count also includes identifiers, so admission can be stricter than the
+native AST count. The actual WASM entry point additionally limits the complete
+outer JSON request to 1 MiB, including envelopes and escaping. A query that fits
+the raw-text bound can exceed this encoded request bound and be refused without
+reaching the workspace. Named query/export replies admit at most 1 MiB of
+decoded identifier/reference bytes before accumulating the complete document;
+notation and JSON escaping add encoding overhead. The owned query preview
+checks the same named-change budget before real private edits are applied.
 
 Preparation freezes the original owner generation, retry token and complete
 ordered final edits. Each changed identity observes every retained sibling,
@@ -115,8 +151,11 @@ bound. Name lookups scan the private/final rows. Each returned row collection
 owns O(F) rows and their name bytes. Preparing and publishing also pay the
 existing complete retained-journal replay/copy costs described for
 [batches](ENGINE-CAUSAL-BATCHES.md); no incremental replay or throughput claim
-is inferred. The JS native boundary sends only explicit operation JSON and
-canonical decimal strings. Final edits reuse batch encoding without another
+is inferred. The JS native boundary sends explicit operation JSON with canonical
+decimal strings or bounded LiNo text. Parsing, canonical formatting and the JSON
+wrapper add owned copies proportional to the encoded request. `each` materializes
+and sorts matching rows, and named query replies perform existing name lookups.
+Final edits reuse batch encoding without another
 durable wire format, and the shared vectors are
 [`causal-session-v1.json`](protocol/causal-session-v1.json).
 

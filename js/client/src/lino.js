@@ -2,12 +2,12 @@
 // `clink --serve` and the WebAssembly `Clink.request` entry point.
 //
 // This is a port of `links_notation::binary::{format_document, parse_document}`
-// (links-notation 0.26.0, the version both link-cli ports pin), restricted to
+// (links-notation 0.27.1, the version both link-cli ports pin), restricted to
 // what the links protocol exchanges: one top-level link per line, nested
 // groups in parentheses, `id:` names and references. A reference is a JS
 // string, a link is `{ id: string | null, values: (string | link)[] }`.
 
-import { MalformedMessageError } from './errors.js';
+import { LimitExceededError, MalformedMessageError } from './errors.js';
 
 const QUOTES = ["'", '"', '`'];
 // Rust's `char::is_whitespace` (Unicode White_Space) plus the characters the
@@ -186,7 +186,10 @@ function readQuoted(text, start) {
 }
 
 class Reader {
-  constructor(text) {
+  constructor(text, { maxDepth = Infinity, maxNodes = Infinity }) {
+    this.maxDepth = maxDepth;
+    this.maxNodes = maxNodes;
+    this.nodes = 0;
     this.text = text;
     this.at = 0;
     this.depth = 0;
@@ -197,16 +200,24 @@ class Reader {
     throw new MalformedMessageError(`invalid LiNo at offset ${this.at}: expected ${expected}, found ${found}`);
   }
 
-  /** Skips blanks; inside parentheses line breaks are blanks too. */
+  /** Skips blanks and token-boundary comments; quoted content stays in reference(). */
   skipSpace() {
     for (;;) {
       const c = this.text[this.at];
       if (isSpace(c) || (this.depth > 0 && isLineBreak(c))) this.at += 1;
+      else if (c === '#' && (this.at === 0 || isSpace(this.text[this.at - 1]) || isLineBreak(this.text[this.at - 1]))) {
+        while (this.at < this.text.length && !isLineBreak(this.text[this.at])) this.at += 1;
+      }
       else return;
     }
   }
 
+  admitNode() {
+    if (++this.nodes > this.maxNodes) throw new LimitExceededError('LiNo node limit exceeded', { outcome: 'not-sent' });
+  }
+
   reference() {
+    this.admitNode();
     const { text } = this;
     const c = text[this.at];
     if (LITERAL_PREFIX.test(text.slice(this.at, this.at + 24))) {
@@ -229,6 +240,8 @@ class Reader {
 
   /** `(id: values)` or `(values)`; the reader stands on `(`. */
   parenthesized() {
+    this.admitNode();
+    if (this.depth >= this.maxDepth) throw new LimitExceededError('LiNo depth limit exceeded', { outcome: 'not-sent' });
     this.at += 1;
     this.depth += 1;
     this.skipSpace();
@@ -277,6 +290,7 @@ class Reader {
       values.push(this.value());
     }
     if (id === null && values.length === 1) return values[0];
+    this.admitNode();
     return { id, values };
   }
 }
@@ -285,9 +299,15 @@ class Reader {
  * Parses LiNo text into a canonical document. Blank input is the empty
  * document, as in `links_notation::binary::parse_document`.
  */
-export function parseDocument(text) {
+export function parseDocument(text, limits = {}) {
   if (typeof text !== 'string') throw new TypeError('LiNo text must be a string');
-  const reader = new Reader(text);
+  for (const limit of [limits.maxBytes, limits.maxDepth, limits.maxNodes]) {
+    if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 0)) throw new TypeError('LiNo limits must be non-negative safe integers');
+  }
+  if (limits.maxBytes !== undefined && (text.length > limits.maxBytes || encoder.encode(text).length > limits.maxBytes)) {
+    throw new LimitExceededError('LiNo byte limit exceeded', { outcome: 'not-sent' });
+  }
+  const reader = new Reader(text, limits);
   const document = [];
   while (reader.at < text.length) {
     reader.skipSpace();

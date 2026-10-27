@@ -131,6 +131,47 @@ fn existing_pairs_do_not_reserve_extra_addresses_and_syntax_failure_does_not_all
     );
 }
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn zero_references_remain_bound_during_swaps_equality_and_joins() {
+    for (query, seed, expected) in [
+        (
+            "((1: $s $t)) ((1: $t $s))",
+            vec![(1, 1, 0)],
+            vec![(1, 0, 1)],
+        ),
+        (
+            "(($i: $x $x)) ()",
+            vec![(1, 0, 1), (2, 2, 2)],
+            vec![(1, 0, 1)],
+        ),
+        (
+            "((1: $x *) (2: $x *)) ((1: $x 1))",
+            vec![(1, 0, 1), (2, 1, 1)],
+            vec![(1, 0, 1), (2, 1, 1)],
+        ),
+    ] {
+        let engine =
+            Engine::<u32, _>::open(MemoryLog::default(), EngineOptions::default()).unwrap();
+        let mut tx = engine.begin().unwrap();
+        for (id, source, target) in seed {
+            tx.ensure_link_created(id).unwrap();
+            tx.update_link(id, source, target).unwrap();
+        }
+        QueryProcessor::new(false)
+            .process_query(&mut tx, query)
+            .unwrap();
+        let expected: Vec<_> = expected
+            .into_iter()
+            .map(|(id, s, t)| GenericLink::new(id, s, t))
+            .collect();
+        assert_eq!(LinksStorage::all_links(&tx), expected, "{query}");
+        assert!(engine.snapshot().unwrap().links().is_empty());
+        tx.commit().unwrap();
+        assert_eq!(engine.snapshot().unwrap().links(), expected, "{query}");
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn concurrent_query_owners_reserve_disjoint_addresses() {

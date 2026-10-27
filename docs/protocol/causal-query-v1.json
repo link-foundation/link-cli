@@ -1,0 +1,452 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "anonymous-point",
+      "first": "1",
+      "last": "8",
+      "seed": [],
+      "queries": [
+        {
+          "text": "(() ((1 1)))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "1",
+          "source": "1",
+          "target": "1",
+          "name": null
+        }
+      ],
+      "next": "2",
+      "edits": 1
+    },
+    {
+      "name": "anonymous-forward-reference",
+      "first": "1",
+      "last": "8",
+      "seed": [],
+      "queries": [
+        {
+          "text": "(() ((1 2) (2 2)))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "1",
+          "source": "1",
+          "target": "2",
+          "name": null
+        },
+        {
+          "index": "2",
+          "source": "2",
+          "target": "2",
+          "name": null
+        }
+      ],
+      "next": "3",
+      "edits": 2
+    },
+    {
+      "name": "explicit-high-pair-reuse",
+      "first": "1",
+      "last": "8",
+      "seed": [],
+      "queries": [
+        {
+          "text": "() ((4: 4 4) (4 4))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "4",
+          "source": "4",
+          "target": "4",
+          "name": null
+        }
+      ],
+      "next": "5",
+      "edits": 1
+    },
+    {
+      "name": "maximum-retained-identity",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "18446744073709551615",
+          "source": "18446744073709551615",
+          "target": "18446744073709551615",
+          "name": null
+        }
+      ],
+      "queries": [
+        {
+          "text": "((18446744073709551615: $s $t)) ((18446744073709551615: $t $s))",
+          "error": false
+        },
+        {
+          "text": "() ((1: 18446744073709551615 1))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "1",
+          "source": "18446744073709551615",
+          "target": "1",
+          "name": null
+        },
+        {
+          "index": "18446744073709551615",
+          "source": "18446744073709551615",
+          "target": "18446744073709551615",
+          "name": null
+        }
+      ],
+      "next": "2",
+      "edits": 1
+    },
+    {
+      "name": "wildcard-bindings",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "100",
+          "name": null
+        },
+        {
+          "index": "101",
+          "source": "100",
+          "target": "0",
+          "name": null
+        }
+      ],
+      "queries": [
+        {
+          "text": "(($i: $s $t)) (($i: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "100",
+          "name": null
+        },
+        {
+          "index": "101",
+          "source": "0",
+          "target": "100",
+          "name": null
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "zero-binding-equality",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "100",
+          "name": null
+        },
+        {
+          "index": "101",
+          "source": "0",
+          "target": "100",
+          "name": null
+        }
+      ],
+      "queries": [
+        {
+          "text": "(($i: $x $x)) ()",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "101",
+          "source": "0",
+          "target": "100",
+          "name": null
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "zero-binding-join",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": null
+        },
+        {
+          "index": "101",
+          "source": "100",
+          "target": "100",
+          "name": null
+        }
+      ],
+      "queries": [
+        {
+          "text": "((100: $x *) (101: $x *)) ((100: $x 100))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": null
+        },
+        {
+          "index": "101",
+          "source": "100",
+          "target": "100",
+          "name": null
+        }
+      ],
+      "next": "1",
+      "edits": 0
+    },
+    {
+      "name": "negative",
+      "first": "1",
+      "last": "8",
+      "seed": [],
+      "queries": [
+        {
+          "text": "() ((1: 1 1) (-1: 0 0))",
+          "error": true
+        }
+      ],
+      "rows": [],
+      "next": "1",
+      "edits": 0
+    },
+    {
+      "name": "overflow",
+      "first": "1",
+      "last": "8",
+      "seed": [],
+      "queries": [
+        {
+          "text": "() ((1: 1 1) (18446744073709551616: 0 0))",
+          "error": true
+        }
+      ],
+      "rows": [],
+      "next": "1",
+      "edits": 0
+    },
+    {
+      "name": "outside-reservation",
+      "first": "1",
+      "last": "8",
+      "seed": [],
+      "queries": [
+        {
+          "text": "() ((1: 1 1) (100: 0 0))",
+          "error": true
+        }
+      ],
+      "rows": [],
+      "next": "1",
+      "edits": 0
+    },
+    {
+      "name": "literal-name-'4294967312'",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "0",
+          "name": "4294967312"
+        }
+      ],
+      "queries": [
+        {
+          "text": "# ignored )\n((~1{34323934393637333132}: $s $t)) ((~1{34323934393637333132}: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": "4294967312"
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "literal-name-'18446744073709551615'",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "0",
+          "name": "18446744073709551615"
+        }
+      ],
+      "queries": [
+        {
+          "text": "# ignored )\n((~1{3138343436373434303733373039353531363135}: $s $t)) ((~1{3138343436373434303733373039353531363135}: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": "18446744073709551615"
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "literal-name-'*'",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "0",
+          "name": "*"
+        }
+      ],
+      "queries": [
+        {
+          "text": "# ignored )\n((~1{2a}: $s $t)) ((~1{2a}: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": "*"
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "literal-name-'$x'",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "0",
+          "name": "$x"
+        }
+      ],
+      "queries": [
+        {
+          "text": "# ignored )\n((~1{2478}: $s $t)) ((~1{2478}: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": "$x"
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "literal-name-''",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "0",
+          "name": ""
+        }
+      ],
+      "queries": [
+        {
+          "text": "# ignored )\n((~1{}: $s $t)) ((~1{}: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": ""
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    },
+    {
+      "name": "literal-name-'\\'\"雪\\x00\\n'",
+      "first": "1",
+      "last": "8",
+      "seed": [
+        {
+          "index": "100",
+          "source": "100",
+          "target": "0",
+          "name": "'\"雪\u0000\n"
+        }
+      ],
+      "queries": [
+        {
+          "text": "# ignored )\n((~1{2722e99baa000a}: $s $t)) ((~1{2722e99baa000a}: $t $s))",
+          "error": false
+        }
+      ],
+      "rows": [
+        {
+          "index": "100",
+          "source": "0",
+          "target": "100",
+          "name": "'\"雪\u0000\n"
+        }
+      ],
+      "next": "1",
+      "edits": 1
+    }
+  ]
+}

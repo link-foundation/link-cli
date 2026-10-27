@@ -41,6 +41,14 @@ impl LinksClient {
         self.request(&parse_document(query)?)
     }
 
+    /// Sends original query text without losing quoted-reference kinds.
+    /// The peer must support [`super::query_document`]; legacy query behavior
+    /// remains available through [`Self::query`]. No mutation is retried using
+    /// a different wire representation after an error or unknown reply.
+    pub fn query_lossless(&mut self, query: &str) -> ProtocolResult<LinoDocument> {
+        self.request(&super::server::query_document(query))
+    }
+
     /// Like [`query`](Self::query), returning the reply as canonical text.
     pub fn query_text(&mut self, query: &str) -> ProtocolResult<String> {
         Ok(format_document(&self.query(query)?))

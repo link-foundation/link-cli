@@ -2,6 +2,8 @@
 // uses one explicit-token coherent batch; per-row exchange is not group atomic.
 import { normalizeCausalBatchEdits, validateCausalBatchToken } from './engine-causal-batch.js';
 import { CausalVersion } from './engine-causal-version.js';
+import { LinksClient } from './client.js';
+import { wasmCapabilities } from './capabilities.js';
 import { ConnectionClosedError } from './errors.js';
 import { WasmTransport, transferHandle } from './wasm.js';
 
@@ -21,12 +23,25 @@ export class CausalSession {
     catch (error) { native.free?.(); throw error; }
   }
   constructor(native, batch, generation) {
-    this.#transport = new WasmTransport(native, { owned: true });
+    this.#transport = new WasmTransport(native, { owned: true, maxRequestBytes: 1048576 });
     this.#batch = batch; this.#generation = generation;
   }
-  #send(operation) {
+  /** A standard links/query client over the same owned private workspace.
+   * Preparation drains accepted requests and ends this client; close rolls back. */
+  client() {
+    return new LinksClient({
+      capabilities: wasmCapabilities({ backend: 'clink-wasm-causal-session',
+        addressBits: 64, maxAddress: 18446744073709551615n, losslessQueries: true,
+        atomicTransactions: true, rollback: true,
+        limits: { maxBytes: 1048576, maxDepth: 64, maxNodes: 4096 },
+      }),
+      send: (text, scope) => this.#send(['lino', text], scope),
+      close: () => this.close(),
+    });
+  }
+  #send(operation, scope) {
     if (this.#closed) return Promise.reject(closed());
-    return this.#transport.send(JSON.stringify(operation)).then(JSON.parse);
+    return this.#transport.send(JSON.stringify(operation), scope).then(JSON.parse);
   }
   createLink(source, target) { return this.#send(['create', source, target]); }
   ensureCreated(id) { return this.#send(['ensure', id]); }

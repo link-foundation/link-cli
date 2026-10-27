@@ -150,3 +150,66 @@ fn malformed_transport_and_configuration_cannot_mutate_rows() {
     assert!(CausalLinksWorkspace::new(&" ".repeat(16_785_411), "1", "2", "reject", "{}").is_err());
     assert_eq!(ws.finish().unwrap(), "[]");
 }
+
+#[wasm_bindgen_test]
+fn ordinary_lino_transport_preserves_full_width_queries_and_admits_before_mutation() {
+    let maximum = u64::MAX.to_string();
+    let retained = CausalVersion::advance(
+        u64::MAX,
+        "00000000000000000000000000000001",
+        0,
+        &[],
+        Some(CausalPayload {
+            source: u64::MAX,
+            target: u64::MAX,
+            name: None,
+        }),
+    )
+    .unwrap()
+    .encode()
+    .unwrap();
+    let mut ws =
+        CausalLinksWorkspace::new(&json!([retained]).to_string(), "1", "8", "reject", "{}")
+            .unwrap();
+    let mut invoke = |text: &str| -> String {
+        serde_json::from_str(&ws.request(&json!(["lino", text]).to_string()).unwrap()).unwrap()
+    };
+    assert_eq!(
+        invoke(&format!("(create: ({maximum} 1))")),
+        format!("() ((1: {maximum} 1))")
+    );
+    assert_eq!(invoke("(set-name: (1 '*'))"), "(link: 1)");
+    let query = link_cli::protocol::query_document("(('*': $s $t)) (('*': $t $s))");
+    let reply = invoke(&link_cli::protocol::format_document(&query));
+    assert!(link_cli::protocol::error_message(
+        &link_cli::protocol::parse_document(&reply).unwrap()
+    )
+    .is_none());
+    for request in [
+        "(create: (18446744073709551616 1))".to_string(),
+        "(".repeat(70) + "x" + &")".repeat(70),
+        "(each: (".to_string() + &"x ".repeat(4097) + "))",
+        "(create:".to_string(),
+    ] {
+        let reply = invoke(&request);
+        assert!(link_cli::protocol::error_message(
+            &link_cli::protocol::parse_document(&reply).unwrap()
+        )
+        .is_some());
+    }
+    let rows: Value = serde_json::from_str(&ws.request("[\"rows\"]").unwrap()).unwrap();
+    assert_eq!(
+        rows[0],
+        json!({"index":"1", "source":"1", "target":maximum, "name":"*"})
+    );
+    assert_eq!(ws.request(r#"["create","0","0"]"#).unwrap(), r#""2""#);
+    let edits: Value = serde_json::from_str(&ws.finish().unwrap()).unwrap();
+    assert_eq!(edits.as_array().unwrap().len(), 2);
+    assert!(ws.request(r#"["lino",false]"#).is_err());
+    let refused: String =
+        serde_json::from_str(&ws.request(r#"["lino","(delete: 1)"]"#).unwrap()).unwrap();
+    assert!(link_cli::protocol::error_message(
+        &link_cli::protocol::parse_document(&refused).unwrap()
+    )
+    .is_some());
+}

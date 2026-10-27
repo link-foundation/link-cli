@@ -3,12 +3,14 @@
 Continue the ordinary mutable session work under R6/R7/R8/R9. The raw session
 preserves every u64 address. The Rust query processor, named-store trait and
 reference validator now select an address type while retaining their u32
-facades; its protocol operations still specialize their addresses to u32.
+facades. Its protocol operations now select the same address type; original
+query-text envelopes preserve reference kinds, and the actual WASM/JS session
+client uses that shared path. CAUSAL-PROTOCOL-PLAN.md tracks fresh validation
+and the remaining cross-language/physical recipe work.
 C#'s advanced mixed-query processor also specializes its options,
 matching and mutation paths to uint despite the generic links interface.
-Supplying an ordinary u64 workspace therefore needs a real address-width
-extension in both native implementations. The raw API alone does not complete
-this criterion.
+The C# standard API still needs the matching address-width extension and
+allocation correction. The raw API alone does not complete this criterion.
 
 - [x] Trace the existing named-store adapters, query parsing, matching,
       substitution, reference validation, change simplification, structure
@@ -103,7 +105,9 @@ preserved in `query-allocation-before.log` and
 workspace now preview the shared execution path and reserve its actual
 allocations. Focused contracts verify the reproduced anonymous/forward,
 named/pair-reuse and explicit-high cases. The recycling-store fallback and
-C# planner still require their separate corrections.
+C# planner still require their separate corrections. CSHARP-QUERY-PARITY-PLAN.md
+records the independently reproduced C# anonymous-point failure and passing
+explicit-address controls.
 
 ## Canonical protocol reference kinds
 

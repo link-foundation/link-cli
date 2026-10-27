@@ -7,6 +7,8 @@ export const MAX_U32_ADDRESS = 2n ** 32n - 1n;
 
 const common = {
   protocol: 'links-text/1',
+  // Explicit negotiation retains legacy servers' query documents.
+  losslessQueries: false,
   operations: ['count', 'each', 'create', 'update', 'delete', 'getName', 'setName', 'getByName', 'removeName', 'query', 'exportLinks'],
   // No request carries several writes; a batch is many requests, each applied
   // on its own, so a failure in the middle leaves the earlier ones in place.

@@ -74,3 +74,35 @@ test('malformed text is refused', () => {
   assert.throws(() => parseDocument('(a'), { name: 'MalformedMessageError' });
   assert.throws(() => parseDocument("'unterminated"), { name: 'MalformedMessageError' });
 });
+
+test('comments follow the upstream token boundaries and preserve quoted content', () => {
+  assert.deepEqual(parseDocument('# unmatched ) and quote "\r\n'), []);
+  assert.deepEqual(parseDocument('a b # ignored )\nc d#kept\r# end'), [group(['a', 'b']), group(['c', 'd#kept'])]);
+  assert.deepEqual(parseDocument('(a # ignored (\n b)\n(x:#literal)\n(#literal)'), [group(['a', 'b']), named('x', ['#literal']), '#literal']);
+  assert.deepEqual(parseDocument("'#kept'\n(a: '# kept )') # ignored\n"), ['#kept', named('a', ['# kept )'])]);
+  assert.deepEqual(parseDocument('\t# comment at EOF'), []);
+});
+
+test('optional LiNo limits admit bytes, grammar depth and syntax nodes before recursive work', () => {
+  // UTF-8 cannot be shorter than the UTF-16 code-unit count. Reject this
+  // finite oversized input before allocating a second encoded copy.
+  const encode = TextEncoder.prototype.encode;
+  TextEncoder.prototype.encode = () => { throw new Error('encoded an already oversized request'); };
+  try {
+    assert.throws(() => parseDocument('x'.repeat(9), { maxBytes: 8 }), { name: 'LimitExceededError' });
+  } finally { TextEncoder.prototype.encode = encode; }
+  assert.deepEqual(parseDocument('', { maxBytes: 0, maxDepth: 0, maxNodes: 0 }), []);
+  assert.deepEqual(parseDocument('(x: y)', { maxBytes: 8, maxDepth: 1, maxNodes: 3 }), [named('x', ['y'])]);
+  assert.deepEqual(parseDocument('a b', { maxBytes: 3, maxNodes: 3 }), [group(['a', 'b'])]);
+  for (const limits of [{ maxBytes: -1 }, { maxDepth: NaN }, { maxNodes: Infinity }, { maxDepth: 0.5 }]) {
+    assert.throws(() => parseDocument('', limits), TypeError);
+  }
+  for (const [text, limits] of [
+    ['雪', { maxBytes: 2 }], ['(x)', { maxDepth: 0 }], ['a b', { maxNodes: 2 }],
+    ['(x: y)', { maxNodes: 2 }], ['('.repeat(70) + 'x' + ')'.repeat(70), { maxDepth: 64 }],
+  ]) {
+    assert.throws(() => parseDocument(text, limits), error => error.name === 'LimitExceededError' && error.outcome === 'not-sent');
+  }
+  // Parentheses and colons inside quoted references do not change grammar depth.
+  assert.deepEqual(parseDocument("'(((:)))'", { maxDepth: 0, maxNodes: 1 }), ['(((:)))']);
+});

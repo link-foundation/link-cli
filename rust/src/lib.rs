@@ -59,6 +59,7 @@ pub mod query_options;
 mod query_parser;
 pub mod query_processor;
 pub mod query_processor_substitution;
+mod query_reply_budget;
 pub mod query_types;
 pub mod sequences;
 pub mod storage;

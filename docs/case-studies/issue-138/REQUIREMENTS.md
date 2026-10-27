@@ -1191,3 +1191,48 @@ and all eight optional SQLite configurations. The unchanged source-size
 checker passes a byte-verified snapshot of every Git-visible Rust input,
 including new files. Ignored historical experiment checkouts are preserved
 and excluded from that snapshot, as they are from a clean CI checkout.
+
+
+All nine workflows pass at query reservation commit 25f18ce, each created at
+2026-10-27T22:06:56Z after that exact commit's 22:06:46Z timestamp. Native
+Linux/macOS/Windows, actual WASM and C#/JS workflows complete successfully.
+query-reservation-head-ci.txt retains each exact SHA, timestamp and run URL.
+These runs precede the next staged-protocol change and cannot verify its bytes.
+Whole-project coverage and every wider unfinished criterion remain active.
+
+
+The full-width staged protocol driver passes at 2026-10-27T23:15:47Z. Standard
+selected-address Rust operations preserve all stored u64 identities and a
+separate wildcard. An explicit original-query envelope preserves quoted names
+through text and binary without changing the old u32 raw-document facades.
+The actual-WASM adapter uses these same operations; the JS/TS LinksClient queues
+owned private requests and freezes on preparation. Publication still requires
+an explicit token; exact lost-reply retries survive a following publication.
+
+Nine independent missing-API/finite regression controls precede implementation:
+generic operations, lossless TCP, standard JS and WASM calls, token-boundary
+comments, raw framing size, expanded named replies, zero bindings and early JS
+UTF-8 admission. Zero remains a concrete bound reference during substitution,
+equality and joins. Checked named reply budgets are tested in the owned preview
+before real edits. Sixteen shared independent query vectors pass in native
+Rust, actual WASM and actual Node/Bun/Deno. Each actual runtime additionally
+passes three new bounded groups and the previous nine session groups, including
+1,029 schedules and 686 lost-reply retries. C# has not consumed query vectors.
+
+Complete suites pass 1271 native Rust tests, six doctests, 798 actual-WASM,
+699 JavaScript and 221 repository checks. JavaScript retains enforced 100%
+production lines/branches/functions. Complete native LLVM totals remain
+19821/20796 lines, 3818/4342 branches, 2532/2726 functions, 30405/32826 regions
+and 14145/25934 instantiations. Complete linked WASM totals are 16066/18682
+lines, 3228/3761 branches, 1991/2434 functions, 24777/29443 regions and
+5472/9355 instantiations. Every previous production source remains included.
+Strict formats/native/WASM/host Clippy, TypeScript, release helper/dependency/
+optional-provider/source/workflow/ShellCheck gates pass sequentially.
+causal-protocol.txt retains the reproducible driver and source/report hashes.
+
+The existing C# processor still reproduces dangling (2: 1 1) for anonymous
+forward allocation, with two independent explicit/pair-reuse controls passing.
+CSHARP-QUERY-PARITY-PLAN.md and CAUSAL-PHYSICAL-QUERY-PLAN.md inventory the
+remaining selected-address implementation and physical query matrix. These,
+whole-project coverage, fresh current-head CI and every wider unmet R1–R12
+criterion remain unfinished. PR139 stays draft and unmerged.

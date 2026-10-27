@@ -134,7 +134,20 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
             auto_create_missing_references: self.auto_create_missing_references,
             validate_references: false,
         };
-        preview.process_lino_raw(storage, restriction_link, substitution_link)?;
+        let changes = preview.process_lino_raw(storage, restriction_link, substitution_link)?;
+        if storage.query_limits().is_some() {
+            // The protocol names references from the final staged state. Check
+            // that same output while only owned preview rows have changed.
+            let mut budget =
+                crate::query_reply_budget::QueryReplyBudget::new(storage.query_limits());
+            for (before, after) in preview.simplify_changes_list(&changes) {
+                for link in [before, after].into_iter().flatten() {
+                    for id in [link.index, link.source, link.target] {
+                        budget.reference(storage, id)?;
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
@@ -824,7 +837,9 @@ impl<T: QueryAddress> GenericQueryProcessor<T> {
     }
 
     fn assign_variable(id: &str, value: T, assignments: &mut HashMap<String, T>) {
-        if Self::is_variable(id) && value != T::from_byte(0) {
+        // Null is a concrete stored reference. Only a missing map entry means
+        // that a variable is unbound; dropping zero loses swaps and equality.
+        if Self::is_variable(id) {
             assignments.insert(id.to_string(), value);
         }
     }

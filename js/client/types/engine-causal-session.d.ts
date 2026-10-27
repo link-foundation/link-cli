@@ -1,3 +1,4 @@
+import type { LinksClient } from './index.js';
 import type { CausalBatch, CausalBatchEdit } from './engine-causal-batch.js';
 import type { CausalValue } from './engine-causal-version.js';
 import type { CausalConflictPolicy, CausalProjectedRow, CausalProjectionOptions } from './engine-causal-projection.js';
@@ -24,11 +25,13 @@ export interface CausalWorkspaceBinding {
  * are canonical decimal strings. Callers reserve a fresh inclusive address
  * range and a fenced author lineage. Preparation freezes queued mutations;
  * commit publishes one local batch with an explicit original retry token.
- * Ordinary LiNo query parity remains separately tracked. */
+ * client() exposes the ordinary BigInt links/query API until preparation. */
 export declare class CausalSession {
   private constructor();
   static open(binding: CausalWorkspaceBinding, batch: Pick<CausalBatch, 'snapshot' | 'write'>,
     first: string, last: string, policy: CausalConflictPolicy, options?: CausalWorkspaceOptions): Promise<CausalSession>;
+  /** Shares the workspace; preparation ends requests and close rolls back. */
+  client(): LinksClient;
   createLink(source: string, target: string): Promise<string>;
   ensureCreated(id: string): Promise<string>;
   getLink(id: string): Promise<Omit<CausalProjectedRow, 'name'> | null>;
