@@ -946,7 +946,8 @@ acceptance criterion continue independently.
     Remove the Linux-only gates from summary/retention, preserve the stable
     Linux artifact name and Codecov behavior, and give each other platform a
     distinct artifact. All 221 repository and strict workflow checks pass
-    locally. After publication, inspect fresh exact-head tests and download
-    each real archive, verifying its size, SHA256 and complete metrics under
-    CSHARP-PLATFORM-COVERAGE-PLAN.md. This does not complete the 100% requirement
-    or infer a coverage gain from retaining additional evidence.
+    locally. Fresh exact-head 3cd89e9 C# run 40500064469 passes 2,462 tests per
+    platform. All three actual archives download, verify their sizes/SHA256
+    against GitHub and report complete metrics in csharp-platform-coverage.txt.
+    CSHARP-PLATFORM-COVERAGE-PLAN.md retains platform differences. This does not
+    complete the 100% requirement or infer a gain from retaining evidence.

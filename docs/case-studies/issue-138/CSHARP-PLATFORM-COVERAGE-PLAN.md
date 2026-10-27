@@ -14,7 +14,7 @@ review of the available coverage evidence.
       platform artifacts must have distinct names. Remove no source or
       instrumentation denominator and do not sum percentages across reports.
 - [x] Run repository checks, actionlint/ShellCheck and whitespace checks.
-- [ ] Inspect fresh exact-head three-platform CI and download actual artifacts;
+- [x] Inspect fresh exact-head three-platform CI and download actual artifacts;
       retain their complete platform metrics and any failed-test logs.
 
 This is evidence retention, not newly achieved 100% coverage. Native/C#/
@@ -29,5 +29,10 @@ See csharp-platform-coverage-before.txt for actual baseline evidence.
 
 The complete local validation ending 2026-10-27T11:50:17Z includes this workflow
 change: all 221 repository checks, dependency freshness, actionlint/ShellCheck
-and whitespace checks pass. Fresh CI must still verify the actual additional
-platform artifacts; no coverage improvement is inferred from a YAML edit.
+and whitespace checks pass. Fresh run 40500064469 succeeds on exact published
+3cd89e9, passing all 2,462 tests on each platform. The verifier downloads all
+three real artifacts, verifies each archive's size and SHA256 against GitHub,
+and preserves complete metrics in csharp-platform-coverage.txt. Linux measures
+7,270/7,471 lines and 5,643/6,105 branches; Windows 7,256/7,471 and 5,623/6,105;
+macOS 7,265/7,471 and 5,638/6,105. The platform differences remain visible.
+No coverage improvement is inferred from retaining these existing reports.

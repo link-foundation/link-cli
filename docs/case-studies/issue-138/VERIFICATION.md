@@ -4131,3 +4131,20 @@ timestamps and exact lines from csharp-40495781030.log. Subsequent generic
 growth admission/initialization and platform-report retention require their own
 fresh CI. Complete coverage and all wider R1-R12 gaps remain unfinished;
 PR139 stays draft and unmerged.
+
+## Actual three-platform C# coverage artifacts (2026-10-27T12:13Z)
+
+Exact published 3cd89e9 run 40500064469 completes successfully after its
+11:57:46Z creation. Every platform passes all 2,462 tests and publishes its
+summary and actual complete Cobertura archive. The reusable verifier downloads
+each archive, checks its compressed/uncompressed bounds, exact byte size,
+GitHub SHA256 digest and single complete XML report. csharp-platform-coverage.txt
+preserves artifact identities, actual digests, run/head and complete totals.
+
+Linux reports 7,270/7,471 lines and 5,643/6,105 branches; Windows reports
+7,256/7,471 and 5,623/6,105; macOS reports 7,265/7,471 and 5,638/6,105.
+Percentages are neither summed nor presented as new coverage from retention.
+The immutable baseline independently rejects the absent Windows/macOS reports.
+This completes evidence retention only: native/C#/linked-WASM 100%, later
+changes' fresh CI and every other unmet criterion remain unfinished. PR139
+remains draft and unmerged.
