@@ -8,6 +8,7 @@ updates:
       - /rust
       - /rust/wasm
       - /experiments/issue-138/lsm-store-before-rust
+      - /experiments/issue-138/mapped-grow-failure
       - /docs/case-studies/issue-100/evidence/external-range/rust
     schedule:
       interval: daily
