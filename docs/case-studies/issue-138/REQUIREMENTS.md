@@ -1060,3 +1060,24 @@ Fresh exact-head platform CI, ordinary mutable session APIs and their physical
 matrix, global allocation, safe membership/history reclamation, generic mapped
 failures, full project 100% and every wider unmet criterion remain unfinished.
 PR139 stays draft and unmerged.
+
+
+Compiled-method coverage audit completes local validation at
+2026-10-27T19:24:52Z. A failing raw-record assertion identifies the Release
+ParseEdits lambda edge for a scalar individual receipt edit: source line 61,
+IL offset 8, path 1, zero hits, with no method source lines in Cobertura.
+An independent 54th vector covers that rejection without production changes.
+All compiled branches in all five causal components now pass in complete
+Debug/Release runs (2496 tests each), including batch 190/190 and 188/188.
+Whole-project denominators remain Debug 10063/10372 lines, 6497/6942 branches;
+Release 7769/7970 lines, 6439/6901 branches. Whole-project 100% is unfinished.
+
+Seven focused shared-vector contracts pass native Rust and actual WASM;
+15 pass Bun and Deno. Complete Node passes 686 tests with enforced 100%
+production lines/branches/functions; 221 repository checks and workflow lint
+pass. The preceding full Rust/WASM projection runs remain separate historical
+evidence. CI now retains raw JSON alongside Cobertura on all three platforms,
+after a failing workflow-policy control. causal-raw-coverage.txt records exact
+before/after report bytes and SHA256, full counts and reproduction commands.
+Fresh exact-head platform reports and every wider unmet requirement remain
+unfinished. PR139 stays draft and unmerged.

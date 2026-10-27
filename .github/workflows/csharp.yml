@@ -286,7 +286,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage;Format=json,cobertura"
 
       - name: Native file LSM cluster consumers
         working-directory: .
@@ -309,12 +309,14 @@ jobs:
         working-directory: .
         run: node .github/scripts/coverage.mjs summary csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
 
-      - name: Retain Cobertura reports
+      - name: Retain raw and Cobertura reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os == 'ubuntu-24.04' && 'csharp-coverage' || format('csharp-coverage-{0}', matrix.os) }}
-          path: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml
+          path: |
+            csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml
+            csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.json
           if-no-files-found: error
 
       # Only an explicitly inactive/missing Codecov repository relaxes upload

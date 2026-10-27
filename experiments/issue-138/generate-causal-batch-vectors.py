@@ -95,6 +95,8 @@ for field, value, name in [(0, "0", "zero-address"), (0, "01", "noncanonical-add
                            (2, ["0", "2", "00"], "changed-request-payload")]:
     changed = copy.deepcopy(receipt); changed[4][0][field] = value
     case(name, receipt_entries=[receipt_header, changed])
+changed = copy.deepcopy(receipt); changed[4] = [None]
+case("non-array-edit", receipt_entries=[receipt_header, changed])
 changed = copy.deepcopy(receipt); changed[4][0].append(None)
 case("extra-edit-field", receipt_entries=[receipt_header, changed])
 changed = copy.deepcopy(receipt); changed[1] = token(2 ** 128 - 1)

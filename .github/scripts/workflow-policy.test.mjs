@@ -443,6 +443,12 @@ test('coverage uploads use OIDC and retain reports without requiring Codecov', (
         assert.match(job.body, /node .github\/scripts\/coverage\.mjs summary/);
         assert.match(job.body, /uses: actions\/upload-artifact@/);
         assert.match(job.body, /if-no-files-found: error/);
+        if (name === 'csharp.yml') {
+          // Release lambdas can have compiled branches without source lines;
+          // Cobertura omits those methods from its source listing.
+          assert.match(job.body, /XPlat Code Coverage;Format=json,cobertura/);
+          assert.match(job.body, /TestResults\/\*\*\/coverage\.json/);
+        }
       }
     }
   }
