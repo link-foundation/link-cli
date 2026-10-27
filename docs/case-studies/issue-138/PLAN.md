@@ -889,3 +889,15 @@ acceptance criterion continue independently.
     mapped-grow-manifest-policy.txt and DISCOVERY-GUARDS-PLAN.md preserve the
     evidence. Publish this independent step and inspect fresh exact-head CI.
     R8 complete coverage and every wider unmet requirement remain unfinished.
+
+63. Match the fresh 950bcb3 C# failure to its actual Windows log. All eight
+    other workflows pass; Linux/macOS each pass 2,451 C# tests. The original
+    finite-progress and occupied-worker controls also pass Windows. Its one
+    failure is name-exit/success/True, phase6/version-open, killed after the
+    unchanged 15-second idle bound. The following compound CreateAndUpdate
+    combines two automatic version transactions with no intermediate progress.
+    Preserve phase-pool-ci-after.txt, add an actual operation-boundary regression
+    before correction, split those setup calls without changing ownership or
+    persistence, run full sequential verification and inspect fresh platform CI.
+    VERSION-SETUP-PROGRESS-PLAN.md records the limits: the log alone does not
+    identify which inner flush was slow or establish a physical storage hang.

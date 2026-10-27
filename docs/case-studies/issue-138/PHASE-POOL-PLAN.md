@@ -41,3 +41,10 @@ skips. All 221 repository checks, formatting, declarations, dependency freshness
 and workflow checks pass. The complete production coverage denominators remain
 visible in dev/log/issues/138/pulls/139/phase-pool.txt; they remain below the
 requested 100 percent. Fresh published-head CI is still required.
+
+Published 950bcb3 passes eight workflows. Linux/macOS pass all 2,451 C# tests;
+the actual Windows log also passes the original finite-progress case and all
+three occupied-worker controls. Its one failure is a different compound setup
+operation in VersionProcessExitTests. phase-pool-ci-after.txt preserves the
+full SHA, timestamps, every workflow and actual error lines. Continue under
+VERSION-SETUP-PROGRESS-PLAN.md without widening any idle/suite bound.
