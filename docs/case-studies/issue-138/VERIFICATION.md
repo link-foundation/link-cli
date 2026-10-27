@@ -4177,3 +4177,19 @@ preserves commands, component metrics and limits. Generic real resize/partial
 shrink failures, nonzero callback/destructor panic, arbitrary persisted
 representations and physical power-loss repair remain unfinished. Fresh
 platform CI and every wider R1-R12 gap remain active; PR139 stays draft/unmerged.
+
+## Independent causal reconciliation model and wire vectors
+
+anti-entropy-causality-model.txt preserves the actual independent model command,
+120 finite event orders, 216 state triples, retained concurrent update/deletion,
+observed resolution, duplicate delivery and the resurrection negative control
+after forgetting deletion evidence. Contradictory equal causal identities
+reject before pruning. Pinned Cassandra source hashes and inspected seams
+support the separate bounded-transfer plan; no competitor code is copied.
+
+The independent generator defines 46 causal codec cases and eleven merge
+cases, including maximum integers, names/Unicode, author and sibling limits,
+malformed canonical bytes and dominated identity contradictions. These are
+contract inputs and expected outputs, not proof of durable production parity.
+Actual runtime, ownership, transfer, restart and broader R1-R12 verification
+remain unfinished under ANTI-ENTROPY-PLAN.md. PR139 stays draft and unmerged.

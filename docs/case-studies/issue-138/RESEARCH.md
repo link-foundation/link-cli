@@ -480,3 +480,15 @@ Complete shrink remains separately controlled: memmap2 0.9.12 already supports
 empty maps on both platform paths. A purported zero-length Windows syscall
 failure must not be inferred without tracing that inner layer. Actual failed
 partial truncation and destructor-bearing growth remain distinct open hazards.
+
+## Causal reconciliation and bounded anti-entropy source seams
+
+[ANTI-ENTROPY-RESEARCH.md](ANTI-ENTROPY-RESEARCH.md) records the original
+Dynamo causal-version/Merkle design, current Cassandra repair/tombstone
+documentation and pinned Cassandra MerkleTree, RepairJob and LocalSyncTask
+source. An independent finite model checks retained siblings, observed
+resolution, deletion resurrection and merge laws. Canonical causal-version1
+vectors specify an initial semantic boundary independently of runtime code.
+Durable ownership, production anti-entropy and full parity remain active under
+[ANTI-ENTROPY-PLAN.md](ANTI-ENTROPY-PLAN.md); this is not a completed repair
+protocol or a replacement for globally linearizable coordinated publication.

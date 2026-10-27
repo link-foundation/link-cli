@@ -966,3 +966,16 @@ acceptance criterion continue independently.
     under RUST-GENERIC-INITIALIZATION-PLAN.md. Genuine generic resize/partial
     shrink failures, callback/destructor panic, representation safety and all
     wider unmet criteria remain unfinished.
+
+68. Continue independent-writer causal reconciliation and bounded anti-entropy
+    under ANTI-ENTROPY-PLAN.md. Inspect Dynamo's version/Merkle design and pinned
+    Cassandra MerkleTree/RepairJob/LocalSyncTask seams; retain source hashes
+    and explicit differences from fixed-primary prefix copying. The independent
+    finite model passes 120 event orders and 216 state triples, retains
+    concurrent update/deletion, resolves observed siblings and rejects equal
+    identities with contradictory data before pruning. Define 46 canonical
+    codec and eleven merge vectors independently of runtime implementations.
+    Production parity, durable atomic author ownership, retained tombstones,
+    bounded snapshot/range transfer, process fault verification and all wider
+    requirements remain active. An eventual multiwriter backend must not claim
+    the global linearizable AtomicJournalStore contract without coordination.
