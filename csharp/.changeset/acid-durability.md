@@ -290,3 +290,7 @@ Add borrowed read-only checkpoint inspection in Rust, C# and JavaScript. Return
 owned selected-prefix records with finite page admission, preserving suffixes and
 staged mirror repairs until higher-level semantics validate; allocate no identity,
 initialize no bank and leave ordinary constructor recovery behavior intact.
+
+Provide a separately imported JavaScript native LSM facade with exclusive
+bounded directory discovery, read-only validation before recovery effects,
+independent file mirrors, and explicit uncertain-handle cleanup fencing.

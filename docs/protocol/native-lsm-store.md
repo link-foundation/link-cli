@@ -81,6 +81,66 @@ The portable API starts with an already constructed WAL. A native directory
 facade must validate physical WAL discovery and selected tables before calling
 a constructor that repairs or truncates that WAL. The current generic store
 cannot retroactively prevent effects performed by its caller before Open.
-Native exclusive directory ownership, physical process-exit composition and
-cross-language whole-store file interchange remain required work in
+JavaScript supplies native exclusive directory ownership and physical process-exit
+composition below. Rust/C# parity and cross-language whole-store file interchange
+remain required work in
 [the issue plan](../case-studies/issue-138/PHYSICAL-LSM-PLAN.md).
+
+## JavaScript native directory selection
+
+`FileLsmJournalStore` from `@link-foundation/link-cli-client/engine-file-lsm-store`
+composes the portable store with actual native checkpoint and table files. Use
+an existing dedicated directory. This explicit entry adds native filesystem
+imports; ordinary root imports still omit the physical LSM and SQLite.
+
+The constructor validates semantic limits and finite physical bounds before
+acquiring `.lsm-writer` with exclusive creation. It then streams the directory
+within a finite entry bound, accepting only `wal`, `wal.bank0`, `wal.bank1`,
+canonical `table-<positive-u64>` names and their `.meta0`/`.meta1` companions.
+`mirroredRoot`, `mirroredBanks` and `mirroredTables` independently admit the
+corresponding `.mirror` copies; all default to false. Keep the selected mode
+fixed for that directory. Foreign names, symlinks, stale child owners and table
+identities beyond the WAL reservation fail without removing evidence. An
+incomplete orphan still occupies its table identity.
+
+Discovery reads existing regular files without creating missing companions,
+allocating identities, completing repairs, truncating suffixes or retiring
+orphans. The complete selected checkpoint prefix and semantic WAL, every
+historical selected table binding, the latest generation and combined capacity
+must validate first. A surviving valid metadata slot or complete mirror may
+justify missing redundant files. A wholly uninitialized WAL requires an empty
+table namespace. Only after closing temporary discovery handles does the
+constructor acquire writable devices under the same outer owner and perform
+ordinary recovery. This bounded second read trades opening work for validation
+before recovery effects. It assumes all writers obey the ownership contract.
+
+`maxPages` bounds checkpoint-bank discovery and publication to 1..65536 pages,
+default 16384. `maxNamespaceEntries` bounds table identities to 2..65536, default
+256. Semantic limits retain the portable defaults. Physical page admission also
+includes padding at every acknowledged flush: a semantic record may fit the
+byte limit while exceeding the independently selected physical page limit.
+Such an unsuccessful write is unacknowledged and may fence the current owner;
+reopen to establish its outcome. A single-page WAL can initialize the empty
+checkpoint but cannot acknowledge a following group.
+
+Creation synchronizes file contents and, on Unix, the parent directory. Table
+retirement synchronizes the directory on Unix. Windows file-content flushing
+alone does not establish durable namespace changes, so
+`supportsDurableFlush` is false there. Process exits and injected syscall replies
+are tested; these do not certify physical power-loss behavior on every device.
+
+Close the engine and sessions before closing this store. Closing attempts all
+known discovery/table/WAL handles before releasing the outer owner. A failed
+acquisition or cleanup that may leave a handle live retains `.lsm-writer`;
+uncertain raw closes are cached and never retried. A marker-removal error occurs
+only after every known child and owner handle has closed; an error reported after
+that removal can leave the marker absent, with the old facade already closed. Production opening never steals a fence. After a
+crash, an external recovery authority must fence or reap the previous process
+and establish that its handles are closed before explicitly removing recognized
+owner markers. File hashes and corrupt images remain available for diagnosis.
+Native Rust/C# facade parity and whole-store cross-language interchange remain
+required follow-up work in issue #138.
+
+The [runnable actual-WASM example](../../examples/native-lsm-js/README.md) verifies
+direct, partitioned and epoch-reclaiming cluster consumers over these files in
+Node, Bun and Deno, including coordinated checkpoints, stale conflicts and reopen.

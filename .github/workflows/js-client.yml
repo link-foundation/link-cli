@@ -22,6 +22,7 @@ on:
       - 'examples/journal-maintenance-csharp/**'
       - 'examples/journal-reclamation-csharp/**'
       - 'examples/sqlite-csharp/**'
+      - 'examples/native-lsm-js/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
       - 'examples/sorted-tables/**'
@@ -57,6 +58,7 @@ on:
       - 'examples/journal-maintenance-csharp/**'
       - 'examples/journal-reclamation-csharp/**'
       - 'examples/sqlite-csharp/**'
+      - 'examples/native-lsm-js/**'
       - 'examples/native-pages/**'
       - 'examples/native-pages-csharp/**'
       - 'examples/sorted-tables/**'
@@ -249,6 +251,11 @@ jobs:
           bun test js/client/test/cluster-maintenance.test.mjs js/client/test/reclaiming*.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
           deno test --allow-all js/client/test/cluster-maintenance.test.mjs js/client/test/reclaiming*.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs
 
+      - name: Native LSM files, ownership, process exits and finite syscall cuts
+        run: |
+          bun test js/client/test/engine-file-lsm-*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-file-lsm-*.test.mjs
+
       - name: Cache cargo registry
         uses: actions/cache@v6
         with:
@@ -269,6 +276,12 @@ jobs:
 
       - name: Build the WebAssembly store
         run: wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
+
+      - name: Verify actual WASM cluster consumers over native LSM files
+        run: |
+          node --max-old-space-size=256 examples/native-lsm-js/cluster.mjs
+          bun examples/native-lsm-js/cluster.mjs
+          deno run --allow-all examples/native-lsm-js/cluster.mjs
 
       - name: Build native coordinated example
         run: |

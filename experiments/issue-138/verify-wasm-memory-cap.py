@@ -1,5 +1,6 @@
 """Verify the actual coverage modules retain the configured linear-memory cap."""
 from pathlib import Path
+import sys
 
 root = Path(__file__).resolve().parents[2]
 modules = root / 'rust/wasm/target/llvm-cov-target/wasm32-unknown-unknown/debug/deps'
@@ -16,8 +17,11 @@ def uleb(stream):
         shift += 7
     raise AssertionError('invalid WebAssembly integer')
 
-for name in ['clink_wasm', 'web', 'engine', 'engine_compaction', 'group_commit', 'core', 'protocol', 'storage']:
-    module = max(modules.glob(name + '-*.wasm'), key=lambda p: p.stat().st_mtime)
+names = ['clink_wasm', 'web', 'engine', 'engine_compaction', 'group_commit', 'core', 'protocol', 'storage']
+selected = [Path(value) for value in sys.argv[1:]] if len(sys.argv) > 1 else [
+    max(modules.glob(name + '-*.wasm'), key=lambda p: p.stat().st_mtime) for name in names]
+for module in selected:
+    name = module.stem
     checked = False
     with module.open('rb') as stream:
         assert stream.read(8) == b'\0asm\x01\0\0\0', module

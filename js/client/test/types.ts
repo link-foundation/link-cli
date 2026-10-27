@@ -237,6 +237,19 @@ void lsmWalTypes;
 
 
 import { PhysicalLsmJournalStore, type LsmTableNamespace } from '../types/engine-lsm-store.js';
+import { FileLsmJournalStore, type FileLsmOptions } from '../types/engine-file-lsm-store.js';
+function nativeLsmTypes(path: string) {
+  const options: FileLsmOptions = { maxPages:128, mirroredRoot:true, mirroredBanks:true, mirroredTables:true, bufferKeys:4 };
+  using store = new FileLsmJournalStore(path, options);
+  const current: JournalVersion[] = store.read(['a']);
+  const changed: boolean = store.compareExchange(['a'], current, [['owned']]);
+  store.flush(); store.compact();
+  const deleted: boolean = store.compareDelete('a', current[0].generation);
+  // @ts-expect-error native modes are explicit booleans
+  new FileLsmJournalStore(path, { mirroredTables:1 });
+  // @ts-expect-error page admission uses finite portable numbers
+  new FileLsmJournalStore(path, { maxPages:1n });
+}
 import type { SynchronousJournalMaintenanceStore } from '../types/index.js';
 async function physicalLsmTypes(wal: ReplaceableCommitLog, namespace: LsmTableNamespace, binding: ConstructorParameters<typeof WasmEngine>[0]) {
   using store = PhysicalLsmJournalStore.open(wal, namespace, { bufferKeys: 16, maxNamespaceEntries: 256 });

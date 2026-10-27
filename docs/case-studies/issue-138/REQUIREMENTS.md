@@ -703,3 +703,13 @@ and VERIFICATION.md retain them. NATIVE-LSM-DISCOVERY-PLAN.md continues native
 exclusive directory ownership, semantic validation before WAL constructor effects,
 whole-store file/process interchange and all wider unmet acceptance criteria.
 Inspection alone does not complete those requirements. PR139 remains draft.
+
+Selected JavaScript native LSM composition (R1/R5/R6/R7/R8/R9/R10/R11/R12 partial)
+now validates bounded exclusive file discovery and all selected historical state
+before WAL recovery effects. All 41 controls pass in Node/Bun/Deno, including
+134 finite syscall cuts and ten actual reaped abrupt children per runtime. All
+617 Node tests enforce 100% production coverage; actual-WASM direct/partitioned/
+reclaiming consumers pass in each runtime. Native Rust/C# facade parity, complete
+whole-store interchange and all wider unmet criteria remain required. These
+results do not replace full native/C#/linked-WASM coverage or certify power loss.
+native-lsm-js{,-before}.txt preserve scope and evidence; PR139 remains draft.

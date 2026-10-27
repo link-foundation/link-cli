@@ -648,5 +648,22 @@ acceptance criterion continue independently.
     Fresh c501b2a workflow policy rejects two historical baseline manifests as
     unwatched maintained packages. Preserve those manifest contents with .fixture
     suffixes and keep the dependency policy unchanged. The staged correction
+    passes the workflow assertion; move downloaded CI logs under the existing
+    experiment tree to satisfy the root-layout check. The complete local rerun
     passes all 221 repository checks. checkpoint-inspect-ci-before.txt preserves
     the exact failure, log line and cause; inspect fresh correction-head CI.
+
+49. Implement the JavaScript native LSM directory facade before porting the same
+    contract to Rust/C#. Missing native APIs first fail on archived bc364d2 in all
+    three languages. Exclusive bounded discovery validates the complete selected
+    semantic state read-only before any constructor recovery effects. Independent
+    mirrors, exact-once uncertain raw cleanup and actual file persistence pass
+    41 controls each in Node/Bun/Deno, including 134 finite compaction syscall cuts
+    and ten reaped abrupt children per runtime. All 617 Node tests enforce 100%
+    production coverage; strict types, optional SQL and lazy imports pass. A fresh
+    256MiB-capped WASM binding passes direct/partition/reclamation consumers in all
+    three runtimes. native-lsm-js{,-before}.txt retain measured evidence. Publish
+    this atomic step after repository/workflow gates; inspect fresh exact-head CI.
+    Rust/C# native facades, whole-store interchange and all wider unmet R1–R12
+    criteria remain active. Inspection prerequisite 7baafed now has all nine green
+    exact-head workflows, recorded in checkpoint-inspect-ci.txt.

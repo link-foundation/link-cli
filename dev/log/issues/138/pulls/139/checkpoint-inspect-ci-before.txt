@@ -1,9 +1,9 @@
 Checkpoint inspection fixture packaging correction
 https://github.com/link-foundation/link-cli/pull/139
 Exact head: c501b2a (production inspection 2f92c0b plus log whitespace).
-Workflows run 40439791302, created 2026-10-27T02:40:29Z:
+Workflows run 40439791302, created 2026-10-27T02:40:26Z:
 https://github.com/link-foundation/link-cli/actions/runs/40439791302
-Original complete log: ci-logs/workflows-40439791302.log (841 lines).
+Original complete log: experiments/issue-138/ci-logs/workflows-40439791302.log (841 lines).
 
 The fresh workflow-policy job fails at log lines 808-825. Line 810 names:
 AssertionError: cargo manifest in /experiments/issue-138/checkpoint-inspect-before-rust
@@ -17,7 +17,16 @@ Retain their complete contents under Cargo.toml.fixture/Before.csproj.fixture.
 Materialize their ordinary filenames only for replaying the original recordings;
 the existing isolated-baseline driver instead compiles repository test fixtures.
 No maintained package or policy assertion is removed, and no dependency-update
-root is exempted. The unchanged 221 repository tests pass against the staged
-fixture names, including the original failing workflow-policy assertion.
-Fresh CI must validate the correction. Native directory/store APIs, whole-store
+root is exempted. The original workflow-policy assertion passes against the staged fixture names.
+The first complete local rerun passes 220/221: saving CI logs at the root also
+violates the existing repository-layout test. Relocate that directory under
+experiments/issue-138/ci-logs; the complete rerun then passes 221/221 with no
+policy changes (checkpoint-inspect-policy-after-clean-layout.log).
+Fresh 7baafed Workflows run 40440002039 also passes the original CI assertion.
+All nine fresh 7baafed workflows now pass; checkpoint-inspect-ci.txt retains jobs and timestamps. Native directory/store APIs, whole-store
 process/file interchange, full coverage and all broader unmet criteria remain open.
+
+The C# workflow repeats the same policy assertion at csharp-40439791319.log
+line 3083 and exits at line 3098. Its superseded native tests were canceled;
+7baafed completes all three native platforms successfully. The complete original
+24,411-line log remains saved under experiments/issue-138/ci-logs.

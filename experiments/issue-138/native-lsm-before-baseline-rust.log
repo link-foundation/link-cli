@@ -1,0 +1,20 @@
+    Updating crates.io index
+     Locking 82 packages to highest compatible versions
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-baseline/rust)
+   Compiling native-lsm-before v0.0.0 (/tmp/gh-issue-solver-1792987800525/experiments/issue-138/native-lsm-before-baseline-rust)
+error[E0432]: unresolved imports `link_cli::engine::lsm::FileLsmJournalStore`, `link_cli::engine::lsm::FileLsmOptions`
+ --> ../native-lsm-before.rs:1:59
+  |
+1 | use link_cli::engine::{cluster::AtomicJournalStore, lsm::{FileLsmJournalStore, FileLsmOptions}};
+  |                                                           ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^ no `FileLsmOptions` in `engine::lsm`
+  |                                                           |
+  |                                                           no `FileLsmJournalStore` in `engine::lsm`
+  |
+help: a similar name exists in the module
+  |
+1 - use link_cli::engine::{cluster::AtomicJournalStore, lsm::{FileLsmJournalStore, FileLsmOptions}};
+1 + use link_cli::engine::{cluster::AtomicJournalStore, lsm::{FileLsmJournalStore, LsmOptions}};
+  |
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `native-lsm-before` (test "native_lsm_before") due to 1 previous error

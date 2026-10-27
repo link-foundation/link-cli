@@ -334,5 +334,11 @@ foreground compaction and generation-preserving maintenance deletion. Its
 methods can also be awaited by the existing cluster, partition and reclamation
 consumers. Close the store before releasing the caller-owned WAL and namespace.
 See the [provider contract, capacities, recovery ordering and costs](../../docs/protocol/native-lsm-store.md).
-The native directory provider and whole-store physical file interchange remain
-unfinished; this portable API does not supply those ownership guarantees.
+The explicit `./engine-file-lsm-store` entry exports `FileLsmJournalStore` for
+an existing dedicated native directory, with independent root, bank and table
+mirrors. It validates existing selected state read-only before recovery effects
+and holds an exclusive outer owner until all child handles close. Its finite
+physical bounds, stale-fence recovery and platform durability limits are in the
+[native directory contract](../../docs/protocol/native-lsm-store.md#javascript-native-directory-selection).
+Native Rust/C# facade parity and whole-store physical file interchange remain
+unfinished.

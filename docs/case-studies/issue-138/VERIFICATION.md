@@ -3610,3 +3610,35 @@ Reproduce with experiments/issue-138/validate-checkpoint-inspect.sh; the measure
 report is checkpoint-inspect.txt. The native facade, exclusive directory discovery,
 whole-store file/process interchange and every wider unmet R1–R12 requirement
 remain active. Publication requires fresh exact-head CI. PR139 stays draft.
+
+
+## Native JavaScript LSM directory facade, 2026-10-27
+
+Actual missing native APIs first fail on immutable archived bc364d2 in JS/Rust/C#.
+The JS implementation now acquires one outer owner, bounds directory enumeration,
+validates existing physical and semantic state read-only, closes temporary leases
+and only then allows writable WAL/table recovery under that same owner. Each
+mirror mode is independent. Uncertain live-handle cleanup retains the fence;
+marker removal is attempted only after every known handle closes.
+
+All 617 Node tests pass with every production module included at enforced 100%
+lines, branches and functions, followed by strict TypeScript. The 41 new controls
+also pass in Bun and Deno: each runtime executes all 134 before/after cuts of one
+finite 67-operation native compaction trace, ten abrupt child exits reaped before
+external marker recovery, all eight mirror combinations, read-only evidence
+preservation and uncertain cleanup controls. The mutation probes initially could
+not interpose captured named fs exports in Bun/Deno; selecting the shared fs object
+corrects the instrumentation, after which every control actually triggers there.
+This instrumentation correction is not claimed as a storage bug fix.
+
+A stale generated WASM package first lacks exportCheckpoint. Fresh current source
+builds sequentially at measured maximum child RSS 388,720KiB with a verified
+256MiB linear-memory cap. Its actual links engine passes direct, partitioned and
+epoch-reclaiming native-file consumers in Node/Bun/Deno, including checkpoints,
+Unicode names, stale group rejection, actual reclamation, compact/close/reopen.
+The example is examples/native-lsm-js/cluster.mjs. No external coordinator or SQL
+is involved. Optional-import and root-laziness guards pass. Full native/C#/WASM
+coverage remains below 100% as recorded above; no new denominator is excluded.
+Native Rust/C# facade parity, complete whole-store interchange and all wider
+unmet R1–R12 requirements remain active. native-lsm-js{,-before}.txt preserve the
+commands and logs. Publication requires fresh exact-head CI; PR139 stays draft.

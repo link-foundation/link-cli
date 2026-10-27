@@ -64,6 +64,7 @@ if (mode === 'rust') {
     const { LsmWal } = await import('../../js/client/src/engine-lsm-wal.js');
     const { PhysicalLsmJournalStore } = await import('../../js/client/src/engine-lsm-store.js');
     assert.equal(typeof PhysicalLsmJournalStore.open, 'function');
+    const { FileLsmJournalStore } = await import('../../js/client/src/engine-file-lsm-store.js');
     const { FileMirroredPagedCommitLog } = await import('../../js/client/src/engine-file-mirrored-pages.js');
     const { FileCheckpointPagedCommitLog } = await import('../../js/client/src/engine-file-checkpoint-pages.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);
@@ -90,6 +91,12 @@ if (mode === 'rust') {
     assert.deepEqual(SortedJournalTable.open(tableDevice).entries(), tableRows);
     const lsmCheckpoint = '["native-lsm1","0","0","0",[],[]]';
     assert.equal(LsmWal.encode(LsmWal.recover([lsmCheckpoint])), lsmCheckpoint);
+    const lsmDirectory = mkdtempSync(join(directory, 'physical-lsm-'));
+    using lsm = new FileLsmJournalStore(lsmDirectory);
+    assert.equal(lsm.compareExchange(['a'], lsm.read(['a']), [['native LSM 雪']]), true);
+    lsm.flush(); lsm.close();
+    using reopenedLsm = new FileLsmJournalStore(lsmDirectory);
+    assert.deepEqual(reopenedLsm.read(['a'])[0].entries, ['native LSM 雪']);
     const mirroredPath = join(directory, 'mirrored-pages');
     using mirrored = new FileMirroredPagedCommitLog(mirroredPath);
     mirrored.append('mirrored 雪'); mirrored.flush(); mirrored.close();

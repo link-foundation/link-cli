@@ -54,3 +54,24 @@ The inspection prerequisite passes complete local validation on 2026-10-27 at
 full native/C#/actual-WASM/runtime results and every coverage denominator. The
 remaining native facade work is active; no native production API follows from
 this prerequisite alone.
+
+## JavaScript native facade checkpoint
+
+The seven directory/validation/ownership/mutation steps above now pass for the
+JavaScript native facade. Their unchecked state continues to track the required
+Rust/C# ports. The 41 selected controls pass on Node, Bun and Deno, with every
+production JavaScript module at enforced 100% coverage in the 617-test full suite.
+A fresh actual-WASM engine verifies direct, partitioned and reclaiming physical
+consumers in all three runtimes. Reproductions and exact scope are preserved in
+native-lsm-js{,-before}.txt. The inspection prerequisite has all nine green
+exact-head workflows on 7baafed, recorded in checkpoint-inspect-ci.txt.
+
+- [x] Implement and verify the JavaScript native facade and actual consumers.
+- [ ] Publish the verified JavaScript step and inspect fresh exact-head CI.
+- [ ] Port native discovery, ownership, cleanup and process controls to Rust/C#.
+- [ ] Verify complete whole-store interchange across all five native runtimes.
+
+Marker-removal uncertainty is separate from a possibly live handle: removal is
+attempted only after all known handles close. An error after removal can leave
+the marker absent while the old facade is closed. Live-handle uncertainty keeps
+the fence and never retries an unsafe raw descriptor close.

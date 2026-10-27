@@ -89,6 +89,10 @@
     "./engine-lsm-store": {
       "types": "./types/engine-lsm-store.d.ts",
       "default": "./src/engine-lsm-store.js"
+    },
+    "./engine-file-lsm-store": {
+      "types": "./types/engine-file-lsm-store.d.ts",
+      "default": "./src/engine-file-lsm-store.js"
     }
   },
   "files": [
