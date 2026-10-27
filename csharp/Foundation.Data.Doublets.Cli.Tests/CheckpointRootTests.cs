@@ -72,11 +72,11 @@ public partial class CheckpointPagesTests
         {
             var start = RootSetup(flags: flags); start.Log.Append("old"); start.Log.Flush(); start.Log.Replace(new[] { "acknowledged" }); var source = Durable(start.Devices);
             foreach (int side in new[] { 0, 5 }) for (int position = 0; position < 128; position++)
-                {
-                    var image = source.Select(i => i.Copy()).ToArray(); image[side].Metadata[1]![position] ^= 1;
-                    var recovered = RootSetup(image, flags); Assert.Equal(1UL, recovered.Log.Epoch); Assert.Equal(new[] { "acknowledged" }, recovered.Log.Read());
-                    var repaired = Durable(recovered.Devices); Assert.Equal(repaired[0].Metadata, repaired[5].Metadata);
-                }
+            {
+                var image = source.Select(i => i.Copy()).ToArray(); image[side].Metadata[1]![position] ^= 1;
+                var recovered = RootSetup(image, flags); Assert.Equal(1UL, recovered.Log.Epoch); Assert.Equal(new[] { "acknowledged" }, recovered.Log.Read());
+                var repaired = Durable(recovered.Devices); Assert.Equal(repaired[0].Metadata, repaired[5].Metadata);
+            }
             for (int epoch = 2; epoch <= 4; epoch++)
             {
                 start.Log.Replace(new[] { "acknowledged" + epoch }); var image = Durable(start.Devices); image[epoch % 2 == 1 ? 0 : 5].Metadata[epoch % 2] = null;
@@ -101,7 +101,7 @@ public partial class CheckpointPagesTests
             Add(i => { i[0].Metadata[0] = RootVector(data, 4, flags); });
             Add(i => { i[0].Metadata[0] = RootVector(data, 4, flags); i[5].Metadata[0] = RootVector(data, 4, flags); });
             if (flags == 0) foreach (string key in new[] { "foreign", "wrongMode", "unknownMode", "unknownVersion", "nonzeroPadding" })
-                    Add(i => { i[0].Metadata[1] = Convert.FromHexString(data.GetProperty(key).GetString()!); });
+                Add(i => { i[0].Metadata[1] = Convert.FromHexString(data.GetProperty(key).GetString()!); });
             Add(i => { i[0].Metadata[1]![120] ^= 1; i[2].Pages[0][56] ^= 1; if (flags == 1) i[4].Pages[0][56] ^= 1; });
             Add(i => { i[0].Metadata[1]![120] ^= 1; i[2].Metadata = new byte[]?[2]; if (flags == 1) i[4].Metadata = new byte[]?[2]; });
             foreach (var image in invalid)
@@ -134,20 +134,20 @@ public partial class CheckpointPagesTests
             int operations = success.Trace.Calls.Count; Assert.InRange(operations, 18, 80);
             Assert.Equal(new[] { "device0.writeMetadata1", "device5.writeMetadata1", "device0.syncMetadata1", "device5.syncMetadata1" }, success.Trace.Calls.TakeLast(4));
             for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
+            {
+                var current = RootSetup(images, flags); current.Trace.Calls.Clear(); current.Trace.Fault = (at, after); bool acknowledged = false;
+                try { acknowledged = current.Log.Replace(replacement); }
+                catch (IOException error)
                 {
-                    var current = RootSetup(images, flags); current.Trace.Calls.Clear(); current.Trace.Fault = (at, after); bool acknowledged = false;
-                    try { acknowledged = current.Log.Replace(replacement); }
-                    catch (IOException error)
-                    {
-                        Assert.Contains("injected", error.Message); int count = current.Trace.Calls.Count;
-                        Assert.Throws<IOException>(() => current.Log.Read()); Assert.Throws<IOException>(() => current.Log.Append("bad")); Assert.Throws<IOException>(() => current.Log.Flush()); Assert.Throws<IOException>(() => current.Log.Replace(new[] { "bad" }));
-                        Assert.Equal(count, current.Trace.Calls.Count);
-                    }
-                    var recovered = RootSetup(Durable(current.Devices), flags); var found = recovered.Log.Read().ToArray();
-                    if (acknowledged) Assert.Equal(replacement, found); else Assert.True(found.SequenceEqual(new[] { "old" }) || found.SequenceEqual(replacement));
-                    recovered.Log.Append("following"); recovered.Log.Flush(); var following = found.Concat(new[] { "following", "compacted" }).ToArray(); recovered.Log.Replace(following);
-                    Assert.Equal(following, RootSetup(Durable(recovered.Devices), flags).Log.Read());
+                    Assert.Contains("injected", error.Message); int count = current.Trace.Calls.Count;
+                    Assert.Throws<IOException>(() => current.Log.Read()); Assert.Throws<IOException>(() => current.Log.Append("bad")); Assert.Throws<IOException>(() => current.Log.Flush()); Assert.Throws<IOException>(() => current.Log.Replace(new[] { "bad" }));
+                    Assert.Equal(count, current.Trace.Calls.Count);
                 }
+                var recovered = RootSetup(Durable(current.Devices), flags); var found = recovered.Log.Read().ToArray();
+                if (acknowledged) Assert.Equal(replacement, found); else Assert.True(found.SequenceEqual(new[] { "old" }) || found.SequenceEqual(replacement));
+                recovered.Log.Append("following"); recovered.Log.Flush(); var following = found.Concat(new[] { "following", "compacted" }).ToArray(); recovered.Log.Replace(following);
+                Assert.Equal(following, RootSetup(Durable(recovered.Devices), flags).Log.Read());
+            }
         }
     }
 
@@ -155,20 +155,20 @@ public partial class CheckpointPagesTests
     public void EveryRootRepairCutPreservesAcknowledgedEpochAndBankReuse()
     {
         foreach (uint flags in new uint[] { 0, 1 }) foreach (int side in new[] { 0, 5 })
+        {
+            var start = RootSetup(flags: flags); start.Log.Append("old"); start.Log.Flush(); start.Log.Replace(new[] { "acknowledged" });
+            var images = Durable(start.Devices); images[side].Metadata[1]![120] ^= 1;
+            var success = RootSetup(images, flags); int operations = success.Trace.Calls.Count; Assert.InRange(operations, 12, 80);
+            for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
             {
-                var start = RootSetup(flags: flags); start.Log.Append("old"); start.Log.Flush(); start.Log.Replace(new[] { "acknowledged" });
-                var images = Durable(start.Devices); images[side].Metadata[1]![120] ^= 1;
-                var success = RootSetup(images, flags); int operations = success.Trace.Calls.Count; Assert.InRange(operations, 12, 80);
-                for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
-                    {
-                        var attempt = Devices(images); attempt.Trace.Fault = (at, after);
-                        try { Assert.Equal(new[] { "acknowledged" }, RootOpen(attempt.Devices, flags).Read()); }
-                        catch (IOException error) { Assert.True(error.Message.Contains("injected", StringComparison.Ordinal) || error.Message.Contains("unreadable", StringComparison.Ordinal)); }
-                        var recovered = RootSetup(Durable(attempt.Devices), flags); Assert.Equal(1UL, recovered.Log.Epoch); Assert.Equal(new[] { "acknowledged" }, recovered.Log.Read());
-                        recovered.Log.Append("following"); recovered.Log.Flush(); recovered.Log.Replace(new[] { "reused", "following" });
-                        Assert.Equal(new[] { "reused", "following" }, RootSetup(Durable(recovered.Devices), flags).Log.Read());
-                    }
+                var attempt = Devices(images); attempt.Trace.Fault = (at, after);
+                try { Assert.Equal(new[] { "acknowledged" }, RootOpen(attempt.Devices, flags).Read()); }
+                catch (IOException error) { Assert.True(error.Message.Contains("injected", StringComparison.Ordinal) || error.Message.Contains("unreadable", StringComparison.Ordinal)); }
+                var recovered = RootSetup(Durable(attempt.Devices), flags); Assert.Equal(1UL, recovered.Log.Epoch); Assert.Equal(new[] { "acknowledged" }, recovered.Log.Read());
+                recovered.Log.Append("following"); recovered.Log.Flush(); recovered.Log.Replace(new[] { "reused", "following" });
+                Assert.Equal(new[] { "reused", "following" }, RootSetup(Durable(recovered.Devices), flags).Log.Read());
             }
+        }
     }
 
     [Fact]
@@ -218,11 +218,11 @@ public partial class CheckpointPagesTests
     {
         using var vectors = RootVectors(); byte[] bytes = RootVector(vectors.RootElement, 0, 0);
         for (int method = 0; method < 4; method++) foreach (bool after in new[] { false, true })
-            {
-                var (devices, trace) = Devices(new[] { new Image(), new Image() }); var root = new MirroredCheckpointRoot(devices[0], devices[1], 0); trace.Fault = (1, after);
-                Action action = method switch { 0 => root.SyncData, 1 => () => root.TruncateData(0), 2 => () => root.SyncMetadata(0), _ => () => root.WriteMetadata(0, bytes) };
-                Assert.Contains("injected", Assert.Throws<IOException>(action).Message); RootFenced(root, trace);
-            }
+        {
+            var (devices, trace) = Devices(new[] { new Image(), new Image() }); var root = new MirroredCheckpointRoot(devices[0], devices[1], 0); trace.Fault = (1, after);
+            Action action = method switch { 0 => root.SyncData, 1 => () => root.TruncateData(0), 2 => () => root.SyncMetadata(0), _ => () => root.WriteMetadata(0, bytes) };
+            Assert.Contains("injected", Assert.Throws<IOException>(action).Message); RootFenced(root, trace);
+        }
         var empty = Devices(new[] { new Image(), new Image() }); var cleared = new MirroredCheckpointRoot(empty.Devices[0], empty.Devices[1], 0);
         empty.Devices[0].Live.Metadata[0] = bytes.ToArray(); Assert.Equal(bytes, cleared.ReadMetadata(0));
         foreach (var device in empty.Devices) device.Live.Metadata[0] = Array.Empty<byte>();

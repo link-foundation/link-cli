@@ -171,19 +171,19 @@ public class EngineCompactContracts
     public void CompactedParentAndBranchResumeExactRetainedDescriptorAndMergeAllocator()
     {
         foreach (int? history in new int?[] { null, 2 }) foreach (bool delta in new[] { false, true })
-            {
-                var parent = new LinksEngine<uint>(new ReplacingLog());
-                using (var seed = parent.Begin()) { seed.CreateLink(0, 0); seed.Commit(); }
-                var options = new EngineOptions { HistoryLimit = history };
-                IReplaceableCommitLog log = delta ? new DeltaCommitLog(new ReplacingLog()) : new ReplacingLog();
-                var branch = parent.Fork(log, options); string descriptor = branch.MergeBaseRecord;
-                using (var edit = branch.Engine.Begin()) { edit.EnsureCreated(7); edit.DeleteLink(7); edit.SetName(1, "compacted branch 雪"); edit.Commit(); }
-                branch.Engine.CompactJournal(); parent.CompactJournal(); Assert.Equal(descriptor, branch.MergeBaseRecord);
-                var resumed = parent.ResumeBranch(log, descriptor, options); Assert.Equal(2ul, resumed.Merge());
-                Assert.Equal("compacted branch 雪", parent.Snapshot().Rows[1].Name);
-                using (var following = parent.Begin()) { Assert.Equal(8u, following.CreateLink(0, 0)); following.Commit(); }
-                parent.CompactJournal(); Assert.False(parent.CompactJournal());
-            }
+        {
+            var parent = new LinksEngine<uint>(new ReplacingLog());
+            using (var seed = parent.Begin()) { seed.CreateLink(0, 0); seed.Commit(); }
+            var options = new EngineOptions { HistoryLimit = history };
+            IReplaceableCommitLog log = delta ? new DeltaCommitLog(new ReplacingLog()) : new ReplacingLog();
+            var branch = parent.Fork(log, options); string descriptor = branch.MergeBaseRecord;
+            using (var edit = branch.Engine.Begin()) { edit.EnsureCreated(7); edit.DeleteLink(7); edit.SetName(1, "compacted branch 雪"); edit.Commit(); }
+            branch.Engine.CompactJournal(); parent.CompactJournal(); Assert.Equal(descriptor, branch.MergeBaseRecord);
+            var resumed = parent.ResumeBranch(log, descriptor, options); Assert.Equal(2ul, resumed.Merge());
+            Assert.Equal("compacted branch 雪", parent.Snapshot().Rows[1].Name);
+            using (var following = parent.Begin()) { Assert.Equal(8u, following.CreateLink(0, 0)); following.Commit(); }
+            parent.CompactJournal(); Assert.False(parent.CompactJournal());
+        }
     }
 
 }

@@ -12,18 +12,7 @@ public class VersionProcessExitTests
         var info = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true };
         info.ArgumentList.Add(typeof(VersionProcessExitTests).Assembly.Location);
         foreach (var argument in new[] { probe, directory, mode, automatic.ToString() }) info.ArgumentList.Add(argument);
-        using var process = Process.Start(info)!;
-        var stdout = process.StandardOutput.ReadToEndAsync();
-        var stderr = process.StandardError.ReadToEndAsync();
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-        try { await process.WaitForExitAsync(deadline.Token); }
-        catch (OperationCanceledException)
-        {
-            process.Kill(entireProcessTree: true);
-            await process.WaitForExitAsync();
-            throw new TimeoutException("Finite version-exit child failed to stop.");
-        }
-        Assert.True(process.ExitCode == 0, $"Child exited {process.ExitCode}:\n{await stdout}\n{await stderr}");
+        await FiniteExitChild.Run(info, 0, $"{probe}/{mode}/{automatic}");
         var fields = File.ReadAllText(Path.Combine(directory, "manifest")).Split(',');
         return (uint.Parse(fields[0], CultureInfo.InvariantCulture),
             long.Parse(fields[1], CultureInfo.InvariantCulture), long.Parse(fields[2], CultureInfo.InvariantCulture));
@@ -44,8 +33,7 @@ public class VersionProcessExitTests
     [InlineData("rollback", false, true)]
     public async Task AbruptExitRecoversExactBranchAttribution(string mode, bool automatic, bool names)
     {
-        var directory = Directory.CreateTempSubdirectory("version-process-exit-").FullName;
-        try
+        await FiniteExitChild.WithDirectory("version-process-exit-", async directory =>
         {
             var (id, original, attempted) = await ExitChild(directory, mode, automatic, names ? "name-exit" : "version-exit");
             var committed = mode is "success" or "checkpoint";
@@ -80,7 +68,6 @@ public class VersionProcessExitTests
                 }
                 data.Flush(); log.Flush(); branches.Flush();
             }
-        }
-        finally { Directory.Delete(directory, recursive: true); }
+        });
     }
 }

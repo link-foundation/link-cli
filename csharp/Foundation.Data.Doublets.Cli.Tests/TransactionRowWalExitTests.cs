@@ -29,7 +29,9 @@ public class TransactionRowWalExitTests
             {
                 // Persist real mapped data/names before the transaction wrapper
                 // receives even the first observation of this operation.
+                FiniteExitChild.Phase("row-observed-before-flush");
                 Flush();
+                FiniteExitChild.Phase("row-flushed");
                 Environment.Exit(71);
             }
             return handler is null ? Constants.Continue : handler(before, after);
@@ -44,17 +46,27 @@ public class TransactionRowWalExitTests
 
     internal static int Child(string directory, string operation, bool explicitOwner)
     {
+        FiniteExitChild.Phase("start");
         using var data = new ExitStore(Path.Combine(directory, "data.links"));
+        FiniteExitChild.Phase("data-open");
         using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
+        FiniteExitChild.Phase("log-open");
         using var tx = new TransactionsDecorator(data, log, rowUndoPolicy: RowUndoPolicy.WriteAheadImage);
+        FiniteExitChild.Phase("transactions-open");
         var first = tx.CreateAndUpdate(11u, 12u);
+        FiniteExitChild.Phase("row-created");
         tx.SetName(first, "original 雪");
+        FiniteExitChild.Phase("first-named");
         var dependent = tx.CreateAndUpdate(first, first);
+        FiniteExitChild.Phase("dependent-created");
         tx.SetName(dependent, "dependent");
         tx.SetName(0, "zero"); tx.SetName(77, "absent");
+        FiniteExitChild.Phase("names-written");
         File.WriteAllText(Path.Combine(directory, "expected.json"), JsonSerializer.Serialize(Capture(tx)));
         using var owner = explicitOwner ? tx.BeginTransaction() : null;
+        FiniteExitChild.Phase("manifest-written");
         data.Armed = true;
+        FiniteExitChild.Phase("cut-armed");
         switch (operation)
         {
             case "create": tx.Create(null, null); break;
@@ -77,24 +89,13 @@ public class TransactionRowWalExitTests
     [InlineData("cascade", true)]
     public async Task RowEffectsBeforeTheFirstObservationAreUndoneAfterExit(string operation, bool explicitOwner)
     {
-        var directory = Directory.CreateTempSubdirectory("row-wal-exit-").FullName;
-        try
+        await FiniteExitChild.WithDirectory("row-wal-exit-", async directory =>
         {
             var info = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true };
             info.Environment["DOTNET_GCHeapHardLimit"] = "0x10000000";
             foreach (var argument in new[] { typeof(TransactionRowWalExitTests).Assembly.Location,
                 "row-wal-exit", directory, operation, explicitOwner.ToString() }) info.ArgumentList.Add(argument);
-            using var child = Process.Start(info)!;
-            var stdout = child.StandardOutput.ReadToEndAsync(); var stderr = child.StandardError.ReadToEndAsync();
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-            try { await child.WaitForExitAsync(deadline.Token); }
-            catch (OperationCanceledException)
-            {
-                child.Kill(entireProcessTree: true); await child.WaitForExitAsync();
-                await Task.WhenAll(stdout, stderr);
-                throw new TimeoutException("Finite row-WAL child expired.");
-            }
-            Assert.True(child.ExitCode == 71, $"{operation}/{explicitOwner}: {await stdout}\n{await stderr}");
+            await FiniteExitChild.Run(info, 71, $"row-wal-exit/{operation}/{explicitOwner}");
             var expected = JsonSerializer.Deserialize<Image>(File.ReadAllText(Path.Combine(directory, "expected.json")))!;
             for (var reopen = 0; reopen < 3; reopen++)
             {
@@ -110,7 +111,6 @@ public class TransactionRowWalExitTests
                     expected = Capture(tx);
                 }
             }
-        }
-        finally { Directory.Delete(directory, recursive: true); }
+        });
     }
 }

@@ -58,7 +58,7 @@ public sealed partial class CheckpointPagedCommitLog : IReplaceableCommitLog
             {
                 if (bank.DataLength != 0) throw Invalid("unrooted checkpoint bank contains data");
                 for (int slot = 0; slot < 2; slot++) if (Metadata.Decode(bank.ReadMetadata(slot), flags) is { Pages: > 0 })
-                        throw Invalid("unrooted checkpoint bank contains committed metadata");
+                    throw Invalid("unrooted checkpoint bank contains committed metadata");
             }
             byte[] identity = root.NewDatabaseId(); if (identity.Length != 16) throw Invalid("checkpoint root identity length");
             decision = new CheckpointDecision(identity.ToArray(), 0, rootFlags | flags);

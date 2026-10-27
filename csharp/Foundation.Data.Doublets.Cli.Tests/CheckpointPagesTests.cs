@@ -83,17 +83,17 @@ public partial class CheckpointPagesTests
         var success = Setup(images); success.Trace.Calls.Clear(); success.Log.Replace(replacement);
         int operations = success.Trace.Calls.Count; Assert.InRange(operations, 12, 40);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
-            {
-                var (log, devices, trace) = Setup(images); trace.Calls.Clear(); trace.Fault = (at, after);
-                Assert.Contains("injected", Assert.Throws<IOException>(() => log.Replace(replacement)).Message);
-                int count = trace.Calls.Count;
-                Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Append("rejected"));
-                Assert.Throws<IOException>(() => log.Flush()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" }));
-                Assert.Equal(count, trace.Calls.Count);
-                var reopened = Setup(Durable(devices)); var found = reopened.Log.Read().ToArray();
-                Assert.True(found.SequenceEqual(new[] { "acknowledged" }) || found.SequenceEqual(replacement));
-                reopened.Log.Append("next"); reopened.Log.Flush(); Assert.Equal(found.Append("next"), Setup(Durable(reopened.Devices)).Log.Read());
-            }
+        {
+            var (log, devices, trace) = Setup(images); trace.Calls.Clear(); trace.Fault = (at, after);
+            Assert.Contains("injected", Assert.Throws<IOException>(() => log.Replace(replacement)).Message);
+            int count = trace.Calls.Count;
+            Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Append("rejected"));
+            Assert.Throws<IOException>(() => log.Flush()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" }));
+            Assert.Equal(count, trace.Calls.Count);
+            var reopened = Setup(Durable(devices)); var found = reopened.Log.Read().ToArray();
+            Assert.True(found.SequenceEqual(new[] { "acknowledged" }) || found.SequenceEqual(replacement));
+            reopened.Log.Append("next"); reopened.Log.Flush(); Assert.Equal(found.Append("next"), Setup(Durable(reopened.Devices)).Log.Read());
+        }
     }
 
     [Fact]
@@ -193,11 +193,11 @@ public partial class CheckpointPagesTests
     {
         int operations = Setup().Trace.Calls.Count; Assert.InRange(operations, 20, 40);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
-            {
-                var (devices, trace) = Devices(); trace.Fault = (at, after); Assert.Throws<IOException>(() => Open(devices));
-                var recovered = Setup(Durable(devices)); Assert.Empty(recovered.Log.Read());
-                recovered.Log.Append("following"); recovered.Log.Flush(); Assert.Equal(new[] { "following" }, Setup(Durable(recovered.Devices)).Log.Read());
-            }
+        {
+            var (devices, trace) = Devices(); trace.Fault = (at, after); Assert.Throws<IOException>(() => Open(devices));
+            var recovered = Setup(Durable(devices)); Assert.Empty(recovered.Log.Read());
+            recovered.Log.Append("following"); recovered.Log.Flush(); Assert.Equal(new[] { "following" }, Setup(Durable(recovered.Devices)).Log.Read());
+        }
     }
 
     [Fact]
@@ -234,52 +234,52 @@ public partial class CheckpointPagesTests
         var probe = Devices(images); var success = Mirrored(probe.Devices); probe.Trace.Calls.Clear(); success.Replace(replacement);
         int operations = probe.Trace.Calls.Count; Assert.InRange(operations, 30, 90);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
+        {
+            var (devices, trace) = Devices(images); var log = Mirrored(devices); trace.Calls.Clear(); trace.Fault = (at, after);
+            try { log.Replace(replacement); }
+            catch (IOException error)
             {
-                var (devices, trace) = Devices(images); var log = Mirrored(devices); trace.Calls.Clear(); trace.Fault = (at, after);
-                try { log.Replace(replacement); }
-                catch (IOException error)
-                {
-                    Assert.Contains("injected", error.Message); int count = trace.Calls.Count;
-                    Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" })); Assert.Equal(count, trace.Calls.Count);
-                }
-                var recovered = Devices(Durable(devices)); var reopened = Mirrored(recovered.Devices); var found = reopened.Read().ToArray();
-                Assert.True(found.SequenceEqual(new[] { "old" }) || found.SequenceEqual(replacement));
-                reopened.Replace(new[] { "after recovery" }); Assert.Equal(new[] { "after recovery" }, Mirrored(Devices(Durable(recovered.Devices)).Devices).Read());
+                Assert.Contains("injected", error.Message); int count = trace.Calls.Count;
+                Assert.Throws<IOException>(() => log.Read()); Assert.Throws<IOException>(() => log.Replace(new[] { "rejected" })); Assert.Equal(count, trace.Calls.Count);
             }
+            var recovered = Devices(Durable(devices)); var reopened = Mirrored(recovered.Devices); var found = reopened.Read().ToArray();
+            Assert.True(found.SequenceEqual(new[] { "old" }) || found.SequenceEqual(replacement));
+            reopened.Replace(new[] { "after recovery" }); Assert.Equal(new[] { "after recovery" }, Mirrored(Devices(Durable(recovered.Devices)).Devices).Read());
+        }
     }
     [Fact]
     public void EngineCompactionComposesWithBankModesDeltaStateHistoryAndEncoding()
     {
         foreach (var structure in Enum.GetValues<StateStructure>()) foreach (var encoding in Enum.GetValues<RevisionEncoding>())
-                foreach (int? history in new int?[] { 0, 2, null }) foreach (bool delta in new[] { false, true }) foreach (bool mirrored in new[] { false, true })
-                        {
-                            var options = new EngineOptions { StateStructure = structure, RevisionEncoding = encoding, HistoryLimit = history, RequireDurableFlush = true };
-                            IReplaceableCommitLog OpenEngineLog(Device[] source)
-                            {
-                                IPageDevice[] banks = mirrored ? new IPageDevice[] { new MirroredPageDevice(source[1], source[2]), new MirroredPageDevice(source[3], source[4]) } : new IPageDevice[] { source[1], source[2] };
-                                var raw = new CheckpointPagedCommitLog(source[0], banks[0], banks[1], maxPages: 64);
-                                return delta ? new DeltaCommitLog(raw) : raw;
-                            }
-                            var (source, _) = Devices(Enumerable.Range(0, mirrored ? 5 : 3).Select(_ => new Image()).ToArray());
-                            var log = OpenEngineLog(source); var engine = new LinksEngine<uint>(log, options); Assert.True(engine.CompactJournal());
-                            EngineSnapshot<uint>? pin = null;
-                            for (int revision = 1; revision <= 6; revision++)
-                            {
-                                using var tx = engine.Begin(); if (revision == 1) { tx.CreateLink(0, 0); tx.EnsureCreated(7); tx.DeleteLink(7); }
-                                tx.SetName(1, $"雪 {new string('x', 256)} {revision}"); tx.Commit(); if (revision == 1) pin = engine.Snapshot();
-                            }
-                            using (var pending = engine.Begin())
-                            {
-                                Assert.Equal(8u, pending.CreateLink(0, 0)); var expected = engine.ExportCheckpoint();
-                                Assert.Equal(!log.Read().SequenceEqual(expected), engine.CompactJournal()); Assert.False(engine.CompactJournal()); Assert.Equal(expected, log.Read());
-                                Assert.False(engine.Snapshot().Rows.ContainsKey(8)); pending.Commit();
-                            }
-                            Assert.EndsWith(" 1", pin!.Rows[1].Name); engine.CompactJournal(); Assert.False(engine.CompactJournal());
-                            var (recovered, _) = Devices(Durable(source)); var restored = new LinksEngine<uint>(OpenEngineLog(recovered), options);
-                            Assert.Equal(7ul, restored.Snapshot().Revision); Assert.Equal(engine.Snapshot().Rows.ToArray(), restored.Snapshot().Rows.ToArray()); Assert.False(restored.CompactJournal());
-                            using (var following = restored.Begin()) { Assert.Equal(9u, following.CreateLink(0, 0)); following.Commit(); }
-                            restored.CompactJournal(); Assert.False(restored.CompactJournal());
-                        }
+            foreach (int? history in new int?[] { 0, 2, null }) foreach (bool delta in new[] { false, true }) foreach (bool mirrored in new[] { false, true })
+            {
+                var options = new EngineOptions { StateStructure = structure, RevisionEncoding = encoding, HistoryLimit = history, RequireDurableFlush = true };
+                IReplaceableCommitLog OpenEngineLog(Device[] source)
+                {
+                    IPageDevice[] banks = mirrored ? new IPageDevice[] { new MirroredPageDevice(source[1], source[2]), new MirroredPageDevice(source[3], source[4]) } : new IPageDevice[] { source[1], source[2] };
+                    var raw = new CheckpointPagedCommitLog(source[0], banks[0], banks[1], maxPages: 64);
+                    return delta ? new DeltaCommitLog(raw) : raw;
+                }
+                var (source, _) = Devices(Enumerable.Range(0, mirrored ? 5 : 3).Select(_ => new Image()).ToArray());
+                var log = OpenEngineLog(source); var engine = new LinksEngine<uint>(log, options); Assert.True(engine.CompactJournal());
+                EngineSnapshot<uint>? pin = null;
+                for (int revision = 1; revision <= 6; revision++)
+                {
+                    using var tx = engine.Begin(); if (revision == 1) { tx.CreateLink(0, 0); tx.EnsureCreated(7); tx.DeleteLink(7); }
+                    tx.SetName(1, $"雪 {new string('x', 256)} {revision}"); tx.Commit(); if (revision == 1) pin = engine.Snapshot();
+                }
+                using (var pending = engine.Begin())
+                {
+                    Assert.Equal(8u, pending.CreateLink(0, 0)); var expected = engine.ExportCheckpoint();
+                    Assert.Equal(!log.Read().SequenceEqual(expected), engine.CompactJournal()); Assert.False(engine.CompactJournal()); Assert.Equal(expected, log.Read());
+                    Assert.False(engine.Snapshot().Rows.ContainsKey(8)); pending.Commit();
+                }
+                Assert.EndsWith(" 1", pin!.Rows[1].Name); engine.CompactJournal(); Assert.False(engine.CompactJournal());
+                var (recovered, _) = Devices(Durable(source)); var restored = new LinksEngine<uint>(OpenEngineLog(recovered), options);
+                Assert.Equal(7ul, restored.Snapshot().Revision); Assert.Equal(engine.Snapshot().Rows.ToArray(), restored.Snapshot().Rows.ToArray()); Assert.False(restored.CompactJournal());
+                using (var following = restored.Begin()) { Assert.Equal(9u, following.CreateLink(0, 0)); following.Commit(); }
+                restored.CompactJournal(); Assert.False(restored.CompactJournal());
+            }
     }
 
 }

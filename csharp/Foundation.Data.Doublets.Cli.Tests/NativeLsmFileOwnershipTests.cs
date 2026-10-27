@@ -19,24 +19,24 @@ public class NativeLsmFileOwnershipTests
         string[] trace = io.Trace.ToArray(); io.Active = false;
         int[] points = new[] { 1, Array.FindIndex(trace, value => value == "close:wal.meta0") + 1, Array.FindIndex(trace, value => value == "close:.lsm-writer") + 1, trace.Length };
         foreach (int at in points.Distinct()) foreach (bool after in new[] { false, true })
+        {
+            Assert.InRange(at, 1, trace.Length);
+            try
             {
-                Assert.InRange(at, 1, trace.Length);
-                try
+                // The holder retains cleanup without masking an earlier assertion.
+                using (var owner = new NativeLsmFileHarness.Owner(directory, Options, io))
                 {
-                    // The holder retains cleanup without masking an earlier assertion.
-                    using (var owner = new NativeLsmFileHarness.Owner(directory, Options, io))
-                    {
-                        var store = owner.Store; io.Reset((at, after)); var first = Assert.ThrowsAny<Exception>(store.Dispose); Assert.Contains(Causes(first), error => error.Message.Contains("native LSM operation cut", StringComparison.Ordinal));
-                        Assert.True(io.Hit); int calls = io.Trace.Count; io.Active = false;
-                        Assert.Throws<InvalidOperationException>(store.Dispose); Assert.Equal(calls, io.Trace.Count);
-                        Assert.Throws<ObjectDisposedException>(() => store.Read(new[] { "a" }));
-                        Assert.Equal(!after && trace[at - 1].StartsWith("close:", StringComparison.Ordinal) ? 1 : 0, io.Live.Count);
-                        if (at < trace.Length || !after) Assert.True(File.Exists(Path.Combine(directory, ".lsm-writer")));
-                    }
+                    var store = owner.Store; io.Reset((at, after)); var first = Assert.ThrowsAny<Exception>(store.Dispose); Assert.Contains(Causes(first), error => error.Message.Contains("native LSM operation cut", StringComparison.Ordinal));
+                    Assert.True(io.Hit); int calls = io.Trace.Count; io.Active = false;
+                    Assert.Throws<InvalidOperationException>(store.Dispose); Assert.Equal(calls, io.Trace.Count);
+                    Assert.Throws<ObjectDisposedException>(() => store.Read(new[] { "a" }));
+                    Assert.Equal(!after && trace[at - 1].StartsWith("close:", StringComparison.Ordinal) ? 1 : 0, io.Live.Count);
+                    if (at < trace.Length || !after) Assert.True(File.Exists(Path.Combine(directory, ".lsm-writer")));
                 }
-                finally { io.Recover(directory); }
-                using var reopened = FileLsmJournalStore.Open(directory, Options); Assert.Equal("saved", reopened.Read(new[] { "a" })[0].Entries[0]);
             }
+            finally { io.Recover(directory); }
+            using var reopened = FileLsmJournalStore.Open(directory, Options); Assert.Equal("saved", reopened.Read(new[] { "a" })[0].Entries[0]);
+        }
     }));
     private sealed class BrokenEnumeration(bool duplicate, bool closeFailure) : FileLsmIo
     {

@@ -26,13 +26,17 @@ public class VersionMovementExitTests
 
     internal static int Child(string directory, string point, bool branchSwitch)
     {
+        FiniteExitChild.Phase("movement-start");
         var topic = ExitTopic(point);
         if (point.StartsWith("unpaired-high-", StringComparison.Ordinal)) point = point["unpaired-high-".Length..];
         if (point.StartsWith("unpaired-low-", StringComparison.Ordinal)) point = point["unpaired-low-".Length..];
         using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
+        FiniteExitChild.Phase("data-open");
         using var log = new NamedTypesDecorator<uint>(Path.Combine(directory, "log.links"));
+        FiniteExitChild.Phase("log-open");
         var fault = new Fault();
         using var branches = new Metadata(Path.Combine(directory, "branches.links"), fault);
+        FiniteExitChild.Phase("branches-open");
         using var checkpointFailed = new ManualResetEventSlim();
         var failCheckpoint = 0;
         void FlushData()
@@ -47,20 +51,29 @@ public class VersionMovementExitTests
         var asynchronous = point.StartsWith("async-", StringComparison.Ordinal);
         if (asynchronous) point = point[6..];
         using var tx = new TransactionsDecorator(data, log, flushData: FlushData, flushLog: log.Flush);
+        FiniteExitChild.Phase("transactions-open");
         using var vc = new VersionControlDecorator(tx, branches);
+        FiniteExitChild.Phase("version-open");
         var id = vc.CreateAndUpdate(11u, 12u);
+        FiniteExitChild.Phase("row-created");
         vc.SetName(id, "original 雪|\0\n");
+        FiniteExitChild.Phase("original-named");
         var original = vc.CurrentSequence;
         vc.Branch(topic);
+        FiniteExitChild.Phase("branch-created");
         vc.SetName(id, "changed 雪|\0\n");
+        FiniteExitChild.Phase("changed-named");
         if (asynchronous) { tx.CommitMode = CommitMode.Async; failCheckpoint = 1; }
         vc.Update(new[] { id }, new[] { id, 21u, 22u }, null);
+        FiniteExitChild.Phase("row-updated");
         if (asynchronous) Assert.True(checkpointFailed.Wait(TimeSpan.FromSeconds(3)));
         var attempted = vc.CurrentSequence;
         data.Flush(); log.Flush(); branches.Flush();
         File.WriteAllText(Path.Combine(directory, "manifest"), $"{id},{original},{attempted}");
+        FiniteExitChild.Phase("manifest-written");
         fault.Flushes = 0;
-        fault.OnCheck = actual => { if (actual == point) Environment.Exit(0); };
+        fault.OnCheck = actual => { FiniteExitChild.Phase(actual); if (actual == point) Environment.Exit(0); };
+        FiniteExitChild.Phase("cut-armed");
         if (branchSwitch) vc.SwitchBranch(topic);
         else vc.Checkout(original);
         throw new InvalidOperationException("Movement did not reach its requested exit point.");
@@ -70,8 +83,7 @@ public class VersionMovementExitTests
     [MemberData(nameof(Cases))]
     public async Task ExitAtEveryPersistedPhaseRecoversExactPosition(string point, bool branchSwitch)
     {
-        var directory = Directory.CreateTempSubdirectory("version-movement-exit-").FullName;
-        try
+        await FiniteExitChild.WithDirectory("version-movement-exit-", async directory =>
         {
             var (id, original, attempted) = await VersionProcessExitTests.ExitChild(directory, point, branchSwitch, "movement-exit");
             var selected = branchSwitch ? ExitTopic(point) : "main";
@@ -101,7 +113,6 @@ public class VersionMovementExitTests
                 }
                 data.Flush(); log.Flush(); branches.Flush();
             }
-        }
-        finally { Directory.Delete(directory, recursive: true); }
+        });
     }
 }

@@ -120,11 +120,11 @@ public sealed partial class PhysicalLsmJournalStore : IJournalMaintenanceStore, 
         options ??= new(); if (options.MaxKeys <= 0 || options.MaxBytes <= 0 || options.PageKeys is < 1 or > 256) throw new ArgumentOutOfRangeException(nameof(options));
         var result = new List<JournalNamespaceEntry>(); long bytes = 0;
         foreach (var (key, item) in _index) if (!item.Tombstone)
-            {
-                var value = options.KeysOnly ? new JournalVersion(item.Generation, Array.Empty<string>()) : Version(key);
-                bytes += key.Length + 8L + value.Entries.Sum(entry => (long)Utf8.GetByteCount(entry) + 1);
-                if (result.Count == options.MaxKeys || bytes > options.MaxBytes) throw Invalid("namespace scan admission"); result.Add(new(key, value));
-            }
+        {
+            var value = options.KeysOnly ? new JournalVersion(item.Generation, Array.Empty<string>()) : Version(key);
+            bytes += key.Length + 8L + value.Entries.Sum(entry => (long)Utf8.GetByteCount(entry) + 1);
+            if (result.Count == options.MaxKeys || bytes > options.MaxBytes) throw Invalid("namespace scan admission"); result.Add(new(key, value));
+        }
         return result.ToArray();
     });
     private List<Exception> Release()

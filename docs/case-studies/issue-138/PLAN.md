@@ -678,3 +678,13 @@ acceptance criterion continue independently.
     inspect its exact-head CI and continue the Rust port, five-runtime interchange
     and every wider unmet R1-R12 requirement. Preceding JS head 39a551d now has
     all nine workflows green, preserved in native-lsm-js-ci.txt.
+
+51. Investigate exact-head native C# publication CI. Preserve the failure log
+    and separate formatter mismatch from Windows process failures. Match the
+    pinned SDK in local validation; reproduce missing finite supervision APIs,
+    then verify child-stream retention, actual kill/reap and primary-plus-cleanup
+    aggregation. Keep the existing child deadline while collecting coarse phase
+    diagnostics. Both full configurations pass 2,412 tests; three actual native
+    consumers, 32 handoffs and repository gates pass with the exact pinned SDK.
+    Publish this atomic correction. Fresh Windows CI must establish the remaining timeout
+    cause; a passing Linux suite does not complete that criterion.

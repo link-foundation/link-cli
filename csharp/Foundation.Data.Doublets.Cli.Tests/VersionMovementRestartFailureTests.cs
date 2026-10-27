@@ -21,8 +21,7 @@ public class VersionMovementRestartFailureTests
     [MemberData(nameof(Cases))]
     public async Task FailedConstructorKeepsRecoveryOwnerReachable(string point)
     {
-        var directory = Directory.CreateTempSubdirectory("movement-restart-failure-").FullName;
-        try
+        await FiniteExitChild.WithDirectory("movement-restart-failure-", async directory =>
         {
             var (id, original, attempted) = await VersionProcessExitTests.ExitChild(directory, "intent-flush-after", true, "movement-exit");
             using var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links"));
@@ -55,7 +54,6 @@ public class VersionMovementRestartFailureTests
                 // lease makes the assertions fail. No following writes occur.
                 tx.FinishVersionReplay();
             }
-        }
-        finally { Directory.Delete(directory, recursive: true); }
+        });
     }
 }

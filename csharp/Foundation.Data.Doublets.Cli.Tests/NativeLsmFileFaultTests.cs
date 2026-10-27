@@ -31,21 +31,21 @@ public class NativeLsmFileFaultTests
             foreach (string prefix in new[] { "create:", "write:", "truncate:", "sync:", "close:", "delete:" }) Assert.Contains(trace, entry => entry.StartsWith(prefix, StringComparison.Ordinal));
             if (!OperatingSystem.IsWindows()) Assert.Contains(trace, entry => entry.StartsWith("directory-sync:", StringComparison.Ordinal));
             for (int at = group + 1; at <= trace.Length; at += 8) foreach (bool after in new[] { false, true })
+            {
+                foreach (string file in Directory.GetFiles(directory)) File.Delete(file); Seed(directory);
+                string[] expected = Array.Empty<string>(); ulong[] attempted = Array.Empty<ulong>();
+                try
                 {
-                    foreach (string file in Directory.GetFiles(directory)) File.Delete(file); Seed(directory);
-                    string[] expected = Array.Empty<string>(); ulong[] attempted = Array.Empty<ulong>();
-                    try
-                    {
-                        using var owner = new NativeLsmFileHarness.Owner(directory, Options, io); var store = owner.Store;
-                        expected = Values(store); io.Reset((at, after));
-                        var error = Assert.ThrowsAny<Exception>(store.Compact); Assert.Contains(Causes(error), cause => cause.Message.Contains("native LSM operation cut", StringComparison.Ordinal)); Assert.True(io.Hit);
-                        attempted = CreatedIds(io.Trace);
-                        int count = io.Trace.Count; Assert.ThrowsAny<Exception>(() => store.Read(new[] { "a" })); Assert.Equal(count, io.Trace.Count); io.Active = false;
-                    }
-                    finally { io.Recover(directory); }
-                    using var reopened = FileLsmJournalStore.Open(directory, Options, io); Assert.Equal(expected, Values(reopened)); io.Reset(); Put(reopened, "d", "following"); reopened.Flush();
-                    foreach (ulong next in CreatedIds(io.Trace)) foreach (ulong previous in attempted) Assert.True(next > previous, "Reserved table identities are never reused."); io.Active = false;
+                    using var owner = new NativeLsmFileHarness.Owner(directory, Options, io); var store = owner.Store;
+                    expected = Values(store); io.Reset((at, after));
+                    var error = Assert.ThrowsAny<Exception>(store.Compact); Assert.Contains(Causes(error), cause => cause.Message.Contains("native LSM operation cut", StringComparison.Ordinal)); Assert.True(io.Hit);
+                    attempted = CreatedIds(io.Trace);
+                    int count = io.Trace.Count; Assert.ThrowsAny<Exception>(() => store.Read(new[] { "a" })); Assert.Equal(count, io.Trace.Count); io.Active = false;
                 }
+                finally { io.Recover(directory); }
+                using var reopened = FileLsmJournalStore.Open(directory, Options, io); Assert.Equal(expected, Values(reopened)); io.Reset(); Put(reopened, "d", "following"); reopened.Flush();
+                foreach (ulong next in CreatedIds(io.Trace)) foreach (ulong previous in attempted) Assert.True(next > previous, "Reserved table identities are never reused."); io.Active = false;
+            }
             Console.WriteLine($"native C# compaction group {group + 1}/8: {trace.Length} operation boundaries, both sides, finite cuts");
         }
         finally { io.Recover(directory); Directory.Delete(directory, true); }

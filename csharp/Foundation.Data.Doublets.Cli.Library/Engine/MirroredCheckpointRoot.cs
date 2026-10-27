@@ -57,7 +57,7 @@ public sealed class MirroredCheckpointRoot : IPageDevice
             if (current is null || !current.AsSpan().SequenceEqual(repair.Bytes)) throw Invalid("checkpoint root repair source changed");
         }
         foreach (var (slot, repair) in _repairs) foreach (int side in repair.Destinations)
-            { _devices[side].WriteMetadata(slot, repair.Bytes); _devices[side].SyncMetadata(slot); }
+        { _devices[side].WriteMetadata(slot, repair.Bytes); _devices[side].SyncMetadata(slot); }
         _repairs.Clear();
     });
     public void WriteMetadata(int slot, ReadOnlySpan<byte> bytes)

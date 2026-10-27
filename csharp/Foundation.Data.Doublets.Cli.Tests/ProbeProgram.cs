@@ -11,6 +11,7 @@ internal static class ProbeProgram
     {
         try
         {
+            if (args is ["finite-exit-control", var finiteDirectory, var finiteMode]) return FiniteExitChildTests.Child(finiteDirectory, finiteMode);
             if (args is ["async-worker-pool"]) return AsyncWorkerPool();
             if (args is ["async-worker-pool", "blocking-control"]) return AsyncWorkerPool(blockingControl: true, schedulingControl: true);
             if (args is ["async-worker-pool", "scheduling-control"]) return AsyncWorkerPool(schedulingControl: true);

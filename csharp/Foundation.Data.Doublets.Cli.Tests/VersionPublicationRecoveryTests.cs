@@ -21,8 +21,7 @@ public class VersionPublicationRecoveryTests
     [MemberData(nameof(Cases))]
     public async Task RestartRetriesEveryInterruptedRecoveryPhase(string point)
     {
-        var directory = Directory.CreateTempSubdirectory("version-recovery-fault-").FullName;
-        try
+        await FiniteExitChild.WithDirectory("version-recovery-fault-", async directory =>
         {
             var (id, original, attempted) = await VersionProcessExitTests.ExitChild(directory, "checkpoint", false);
             using (var data = new NamedTypesDecorator<uint>(Path.Combine(directory, "data.links")))
@@ -58,7 +57,6 @@ public class VersionPublicationRecoveryTests
                     row is not null && branches.GetName(row[0])?.StartsWith("__vc:pending:", StringComparison.Ordinal) == true);
                 data.Flush(); log.Flush(); branches.Flush();
             }
-        }
-        finally { Directory.Delete(directory, recursive: true); }
+        });
     }
 }
