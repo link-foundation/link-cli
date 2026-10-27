@@ -226,3 +226,27 @@ function lsmWalTypes(records: readonly string[]) {
   return { generation, encoded, options: lsmOptions() };
 }
 void lsmWalTypes;
+
+
+import { PhysicalLsmJournalStore, type LsmTableNamespace } from '../types/engine-lsm-store.js';
+import type { SynchronousJournalMaintenanceStore } from '../types/index.js';
+async function physicalLsmTypes(wal: ReplaceableCommitLog, namespace: LsmTableNamespace, binding: ConstructorParameters<typeof WasmEngine>[0]) {
+  using store = PhysicalLsmJournalStore.open(wal, namespace, { bufferKeys: 16, maxNamespaceEntries: 256 });
+  const maintenance: SynchronousJournalMaintenanceStore = store;
+  const before: JournalVersion[] = maintenance.read(['a']);
+  const changed: boolean = maintenance.compareExchange(['a'], before, [['record']]);
+  const engine = new ClusterEngine(binding, store);
+  const partitioned = new PartitionedJournalStore(store, { east: store }, () => 'east');
+  const reclaiming = await ReclaimingPartitionedJournalStore.open(store, { east: store }, () => 'east');
+  // @ts-expect-error A synchronous store does not advertise Promise-only methods.
+  const asyncOnly: AtomicJournalStore = store;
+  // @ts-expect-error Table namespace admission is numeric.
+  PhysicalLsmJournalStore.open(wal, namespace, { maxNamespaceEntries: '256' });
+  // @ts-expect-error Use the validating factory.
+  new PhysicalLsmJournalStore();
+  // @ts-expect-error Every guard preserves the complete decimal generation.
+  store.compareDelete('a', 1);
+  store.flush(); store.compact();
+  return { changed, engine, partitioned, reclaiming, asyncOnly };
+}
+void physicalLsmTypes;

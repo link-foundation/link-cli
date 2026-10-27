@@ -39,8 +39,26 @@ Local latest-version audit passes all 125 declarations after the updates;
 native locked resolution, strict all-target Clippy and focused store tests pass.
 The complete native Rust suite and doctests pass with these locks.
 Full portable C#/WASM validation continues before the store publication.
-Fresh exact-head CI is still required for the updated locks and portable store.
+Fresh CI for the lock update passes as recorded below; portable store publication
+will require its own exact-head CI.
 
 The portable physical-store changes are independent pending work. Native
 directory ownership, physical store process/interchange, full 100% coverage
 and every wider unmet issue criterion remain open; PR139 stays draft/unmerged.
+
+Dependency-only update: 070fb0882803ff432e00e65db94126bd30862aeb
+All nine workflows created at 2026-10-27T01:35:18Z complete successfully.
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40433455189
+Dependencies: success; https://github.com/link-foundation/link-cli/actions/runs/40433455102
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40433455194
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40433455091
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40433454947
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40433455097
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40433455165
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40433455118
+Rust CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40433455014
+Rust coverage: 2026-10-27T01:35:21Z through 2026-10-27T01:41:47Z; https://github.com/link-foundation/link-cli/actions/runs/40433455014/job/121956423736
+Simulate Fresh Merge: 2026-10-27T01:36:09Z through 2026-10-27T01:42:33Z; https://github.com/link-foundation/link-cli/actions/runs/40433455014/job/121956687329
+Test (windows-2025): 2026-10-27T01:36:09Z through 2026-10-27T01:49:17Z; https://github.com/link-foundation/link-cli/actions/runs/40433455014/job/121956687560
+Test (ubuntu-24.04): 2026-10-27T01:36:09Z through 2026-10-27T01:41:58Z; https://github.com/link-foundation/link-cli/actions/runs/40433455014/job/121956687612
+Test (macos-26): 2026-10-27T01:36:10Z through 2026-10-27T01:42:15Z; https://github.com/link-foundation/link-cli/actions/runs/40433455014/job/121956687647

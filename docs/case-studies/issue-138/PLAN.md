@@ -613,3 +613,19 @@ acceptance criterion continue independently.
     Dependencies alone fails because rustix 1.1.6 supersedes three 1.1.5 locks;
     update those locks, retain the downloaded log and verify fresh publication.
     Wider R1–R12 work remains active.
+
+47. Promote the finite physical composition into selected production Rust,
+    C# and JavaScript APIs under `PORTABLE-LSM-PLAN.md`. Preserve the missing-API
+    baseline and reproduce early repair completion and lost close retry before
+    correcting them. Verify all historical bindings before repair/retirement,
+    preflight publication and following-group bounds, retain metadata-only disk
+    indexes, and exercise real cluster, partition and reclamation consumers.
+    Native Rust and C# each pass the expanded 18-control target; JavaScript has
+    33 controls, with its cluster binding explicitly mocked. Complete sequential local validation finishes 2026-10-27T01:52:07Z: 1,096
+    distinct native Rust tests plus six doctests, 692 actual WASM, 2,369 C# per
+    configuration, 568 JS, 209 selected Bun/Deno each, 25 existing native table
+    handoffs and 221 repository checks pass. Full coverage denominators remain
+    below 100% outside JS. lsm-store.txt retains measured evidence. Publish this
+    verified step and inspect its own fresh exact-head CI. `NATIVE-LSM-DISCOVERY-PLAN.md` tracks the following read-only
+    checkpoint inspection, exclusive directory ownership and actual file/process
+    composition. Every broader unmet R1–R12 criterion remains active.

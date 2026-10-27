@@ -278,3 +278,10 @@ Add optional native-lsm1 semantic WAL replay and revalidated checkpoint encoding
 with shared independent vectors, canonical u64 descriptors and finite admission.
 Keep physical table validation, publication and native ownership composition as
 separate required work; this codec performs no storage I/O.
+
+Compose an explicitly selected bounded physical journal store from an atomic
+replaceable WAL and exclusive immutable-table namespace. Preserve group CAS,
+tombstone generations, bounded buffering, foreground compaction and maintenance
+consumers; fence uncertain publication and defer table repairs until complete
+selected-state validation. Native directory ownership remains separately selected
+and requires its own read-only discovery before constructing a repairing WAL.

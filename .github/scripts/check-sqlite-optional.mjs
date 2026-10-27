@@ -62,6 +62,8 @@ if (mode === 'rust') {
     const { FilePagedCommitLog, FilePageDevice } = await import('../../js/client/src/engine-file-paged-log.js');
     const { SortedJournalTable } = await import('../../js/client/src/engine-sorted-table.js');
     const { LsmWal } = await import('../../js/client/src/engine-lsm-wal.js');
+    const { PhysicalLsmJournalStore } = await import('../../js/client/src/engine-lsm-store.js');
+    assert.equal(typeof PhysicalLsmJournalStore.open, 'function');
     const { FileMirroredPagedCommitLog } = await import('../../js/client/src/engine-file-mirrored-pages.js');
     const { FileCheckpointPagedCommitLog } = await import('../../js/client/src/engine-file-checkpoint-pages.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);

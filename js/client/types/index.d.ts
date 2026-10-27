@@ -317,6 +317,13 @@ export interface AtomicJournalStore {
   read(keys: string[]): Promise<JournalVersion[]>;
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
 }
+/** Synchronous providers may be selected by consumers that await I/O results. */
+export interface SynchronousAtomicJournalStore {
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): JournalVersion[];
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): boolean;
+}
+export type AtomicJournalStoreProvider = AtomicJournalStore | SynchronousAtomicJournalStore;
 export interface EtcdJournalStoreOptions {
   prefix?: string;
   fetch?: typeof globalThis.fetch;
@@ -333,6 +340,11 @@ export interface JournalMaintenanceStore extends AtomicJournalStore {
   scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
   compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
 }
+export interface SynchronousJournalMaintenanceStore extends SynchronousAtomicJournalStore {
+  scanNamespace(options?: JournalScanOptions): JournalNamespaceEntry[];
+  compareDelete(key: string, expectedGeneration: string): boolean;
+}
+export type JournalMaintenanceProvider = JournalMaintenanceStore | SynchronousJournalMaintenanceStore;
 export class EtcdJournalStore implements JournalMaintenanceStore {
   constructor(endpoints: string[], options?: EtcdJournalStoreOptions);
   scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
@@ -342,7 +354,7 @@ export class EtcdJournalStore implements JournalMaintenanceStore {
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
 }
 export class ClusterEngine {
-  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStore, options?: EngineOptions & { journalCheckpointInterval?: number });
+  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStoreProvider, options?: EngineOptions & { journalCheckpointInterval?: number });
   begin(keys: string[]): Promise<ClusterTransaction>;
 }
 export class ClusterTransaction {
@@ -356,7 +368,7 @@ export class ClusterTransaction {
 /** Immutable data objects in independent stores; atomic publication in a catalog. */
 export class PartitionedJournalStore implements AtomicJournalStore {
   /** Cache budget counts one byte per object/record plus record UTF-8 bytes; zero disables. Catalogs stay fresh. */
-  constructor(catalog: AtomicJournalStore, partitions: Record<string, AtomicJournalStore>, route: (shard: string) => string, options?: { cacheBytes?: number });
+  constructor(catalog: AtomicJournalStoreProvider, partitions: Record<string, AtomicJournalStoreProvider>, route: (shard: string) => string, options?: { cacheBytes?: number });
   readonly supportsDurableFlush: boolean;
   read(keys: string[]): Promise<JournalVersion[]>;
   compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
@@ -367,7 +379,7 @@ export interface ReclamationOptions { maxKeys?: number; maxBytes?: number; pageK
 export interface ReclamationResult { epoch: string; examined: number; deleted: number }
 export class ReclaimingPartitionedJournalStore implements AtomicJournalStore {
   private constructor();
-  static open(catalog: JournalMaintenanceStore, partitions: Record<string, JournalMaintenanceStore>, route: (shard: string) => string, options?: ReclamationOptions): Promise<ReclaimingPartitionedJournalStore>;
+  static open(catalog: JournalMaintenanceProvider, partitions: Record<string, JournalMaintenanceProvider>, route: (shard: string) => string, options?: ReclamationOptions): Promise<ReclaimingPartitionedJournalStore>;
   readonly supportsDurableFlush: boolean;
   /** 1..31 distinct nonreserved shards; returned groups are owned. */
   read(keys: string[]): Promise<JournalVersion[]>;

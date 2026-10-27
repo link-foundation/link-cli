@@ -68,6 +68,8 @@ mod changes_fault;
 #[path = "../../tests/engine_constraint_index_tests.rs"]
 mod constraint_index;
 
+#[path = "../../tests/engine_lsm_store_tests.rs"]
+mod engine_lsm_store_tests;
 #[path = "../../tests/engine_lsm_wal_tests.rs"]
 mod engine_lsm_wal_tests;
 #[path = "../../tests/engine_paged_tests.rs"]

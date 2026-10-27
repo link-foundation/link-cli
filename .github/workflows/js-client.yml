@@ -164,6 +164,7 @@ jobs:
           python3 ../../experiments/issue-138/make-lsm-wal-vectors.py ../../experiments/issue-138/lsm-wal-regenerated.json
           cmp ../../docs/protocol/native-lsm-wal-v1.json ../../experiments/issue-138/lsm-wal-regenerated.json
           node ../../experiments/issue-138/verify-lsm-wal-lazy.mjs
+          node ../../experiments/issue-138/verify-lsm-store-lazy.mjs
           python3 ../../experiments/issue-138/make-mirrored-page-vectors.py ../../experiments/issue-138/mirrored-pages-regenerated.json
           cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
           python3 ../../experiments/issue-138/generate-checkpoint-vectors.py ../../experiments/issue-138/engine-checkpoint-regenerated.json

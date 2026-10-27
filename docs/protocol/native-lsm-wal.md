@@ -5,7 +5,8 @@ composition. It performs no I/O and does not open, create, publish or retire
 tables. A semantic replay result alone is insufficient to expose a database:
 the physical store must validate every selected table, its binding below, the
 combined retained rows and the complete provider namespace first. The physical
-LSM store and native directory facade remain unfinished.
+store composition is described in [native-lsm-store.md](native-lsm-store.md);
+the native directory facade remains unfinished.
 
 Rust selects `physical-lsm` and `engine::lsm::LsmWalState`; C# selects `LsmWal`;
 JavaScript explicitly imports `@link-foundation/link-cli-client/engine-lsm-wal`.

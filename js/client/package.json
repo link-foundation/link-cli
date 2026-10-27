@@ -85,6 +85,10 @@
     "./engine-lsm-wal": {
       "types": "./types/engine-lsm-wal.d.ts",
       "default": "./src/engine-lsm-wal.js"
+    },
+    "./engine-lsm-store": {
+      "types": "./types/engine-lsm-store.d.ts",
+      "default": "./src/engine-lsm-store.js"
     }
   },
   "files": [

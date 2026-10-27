@@ -10,15 +10,15 @@ R1/R5/R6/R7/R8/R9/R11/R12; the table primitive alone does not satisfy it.
 - [x] Specify a versioned WAL/manifest protocol and independent finite oracle.
       Before production implementation, run missing-API controls in each
       language. Preserve source fixtures and actual failures.
-- [ ] Implement matching portable Rust/C#/JS engines, with Rust controls running
+- [x] Implement matching portable Rust/C#/JS engines, with Rust controls running
       in actual WASM. WAL and table storage are independently selected and
       caller-owned. Require atomic complete-journal replacement for bounded WAL.
 - [ ] Implement native exclusive directory ownership and synchronized table
       creation/retirement without SQLite. Never steal stale ownership or reuse
       a table name after an uncertain publication.
-- [ ] Verify group CAS, absent/live-empty/tombstone generations, caller-owned
+- [x] Verify group CAS, absent/live-empty/tombstone generations, caller-owned
       values, conflict/no-op behavior, admission before I/O and finite limits.
-- [ ] Verify every mutation failure before and after its effect, recovery of
+- [x] Verify every mutation failure before and after its effect, recovery of
       acknowledged groups, uncertain-outcome fencing, orphan handling, repeated
       compaction/checkpointing and following edits.
 - [ ] Exercise actual process exits and shared physical files across native
@@ -70,8 +70,10 @@ certification is a separate unfinished criterion.
 Implementation notes remain in `experiments/issue-138/lsm-protocol-design.md`;
 `dev/log/issues/138/pulls/139/lsm-publication-model.txt` preserves the finite
 oracle outcome. The selected semantic codec is tracked in `LSM-WAL-PLAN.md`;
-it does not implement the physical store. No production LSM store verification
-is claimed by this plan.
+it supplies the semantic codec. The portable production store now composes
+actual immutable pages and the checkpoint WAL over finite durable images;
+lsm-store.txt records its complete local validation. Native file ownership and
+whole-store process/interchange verification remain required below.
 A separate bounded V8 probe, `probe-json-key-ownership.mjs`, observes both a
 JSON-decoded 64-character key and its UTF-8 copy as sequential strings with a
 64 KiB payload. The suspected retained payload backing was not reproduced in
@@ -85,3 +87,14 @@ process exits and cross-language composition remain required work. Prepared
 Rust/C# store fixtures fail against the missing APIs on codec-only baseline
 `d12760f` before those ports are implemented; lsm-store-before.txt preserves
 the actual controls, separately from completed codec tests.
+
+Portable production composition and its verification are tracked in
+`PORTABLE-LSM-PLAN.md`. Native directory ownership and read-only discovery stay
+unchecked until the production facade and actual file/process tests pass.
+
+The portable Rust/C#/JS batch verifies CAS, admission, bounded replay,
+compaction, selected-binding validation, deferred mirror repair, retriable
+cleanup and 152 before/after mutation cuts per language. Actual Rust/C# cluster
+consumers and all three partition/reclamation consumers pass. The combined
+cluster/example/native-file requirement above stays unchecked until the native
+facade and its file/process examples are verified.

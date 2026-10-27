@@ -4,6 +4,9 @@ use super::paged::SortedJournalEntry;
 use crate::LinkError;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
+mod lease;
+mod store;
+pub use store::{LsmStoreOptions, LsmTableNamespace, PhysicalLsmJournalStore};
 
 #[derive(Clone, Copy, Debug)]
 pub struct LsmOptions {

@@ -3524,3 +3524,50 @@ log path. Eight workflows pass; Dependencies alone reports rustix 1.1.5 behind
 1.1.6 in three locks (saved dependency log lines 209–212). The local latest
 version audit passes after those three version/checksum updates; subsequent
 publication requires fresh CI. All wider unfinished requirements remain active.
+
+
+## Portable physical LSM store
+
+Complete sequential validation finishes 2026-10-27T01:52:07Z. The new selected
+Rust, C# and JavaScript stores compose the real checkpoint WAL, immutable
+doublets tables, bounded payload buffer and metadata-only disk index. Each
+language verifies 72 compaction and 80 group-publication before/after effects,
+uncertain fencing and following edits. Missing-API fixtures precede production
+implementation. Two JavaScript regressions first demonstrate early repair
+completion and lost explicit close retry; every port now defers completion until
+all bindings/history/admission validate and preserves retriable cleanup.
+
+Native Rust verifies 1,096 distinct tests: the complete 1,091-test run followed
+by five added mirror/admission controls in the expanded 18-test target. Its
+coverage run merges that target without cleaning, with production code unchanged.
+Six doctests pass; one legacy documentation entry remains ignored. Actual WASM
+executes all 692 controls, including the same 18 store controls. Debug and Release
+C# each pass 2,369 tests. Node passes all 568 tests with 100% production lines,
+branches and functions; strict TypeScript passes. Bun/Deno each pass all 209
+selected tests. Native Rust/C# cluster/name consumers use actual engines; the JS
+cluster binding is mocked. Partition/reclamation consumers use physical stores
+in every port.
+
+Complete coverage denominators remain intact: native Rust 15,655/16,527 lines,
+3,004/3,484 branches and 2,011/2,167 functions; actual WASM 12,839/15,257 lines,
+2,561/3,067 branches and 1,612/2,007 functions; C# Debug 9,038/9,341 lines and
+5,343/5,778 branches; Release 6,967/7,161 lines and 5,294/5,741 branches. These
+results leave whole-project 100% coverage unfinished.
+
+All 25 existing native immutable-table writer/reader pairs preserve the three
+file hashes and release ownership. This is table interchange, not whole-store
+interchange. Independent page/table fixtures and all 111 semantic-WAL vectors
+regenerate identically. Formatting, strict native/WASM Clippy, SQL optionality,
+lazy imports, source-size/release checks, 221 repository checks, actionlint and
+ShellCheck pass. The first C# formatting gate rejects whitespace; formatting
+correction precedes successful focused and full runs. Sequential compilers use
+jobs1/reduced debug, .NET640MiB and verified linked-WASM256MiB maxima.
+
+Reproduce with experiments/issue-138/validate-lsm-store.sh. lsm-store.txt
+contains the complete measured report and original failure references.
+PORTABLE-LSM-PLAN.md and native-lsm-store.md describe ownership, finite capacities,
+startup ordering and costs. An already-constructed WAL can have performed
+recovery effects; the portable API cannot retroactively prevent them. Exclusive
+native namespace discovery, full semantic validation before WAL recovery effects,
+physical store process/interchange and every wider unmet R1–R12 criterion remain
+required. PR139 remains draft and unmerged; this step requires its own fresh CI.

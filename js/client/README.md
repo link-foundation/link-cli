@@ -316,7 +316,8 @@ point lookup. Tombstones preserve exact decimal u64 generations; an empty array
 is a live empty journal. Close the selected device yourself. See the
 [format and costs](../../docs/protocol/native-sorted-table.md) and
 [25 native writer/reader combinations](../../examples/sorted-tables/README.md).
-WAL/manifest publication and compaction require further LSM composition.
+The separate physical LSM component composes WAL/manifest publication and
+compaction over these tables.
 
 The separate `./engine-lsm-wal` entry exports `LsmWal.recover(records, options)`
 and `LsmWal.encode(state, options)` for bounded semantic replay and revalidated
@@ -324,4 +325,14 @@ checkpoint encoding. Counters, IDs and digests retain all u64 bits as decimal
 strings. Replay owns returned payload arrays and preserves tombstones and live
 empty journals. See the [wire protocol, admission bounds and physical validation
 requirements](../../docs/protocol/native-lsm-wal.md). This pure codec performs
-no storage I/O; the physical LSM store remains unfinished.
+no storage I/O.
+
+The separate `./engine-lsm-store` entry exports `PhysicalLsmJournalStore`.
+`PhysicalLsmJournalStore.open(replaceableWal, exclusiveTableNamespace, options)`
+selects synchronous group CAS, bounded buffering, immutable table publication,
+foreground compaction and generation-preserving maintenance deletion. Its
+methods can also be awaited by the existing cluster, partition and reclamation
+consumers. Close the store before releasing the caller-owned WAL and namespace.
+See the [provider contract, capacities, recovery ordering and costs](../../docs/protocol/native-lsm-store.md).
+The native directory provider and whole-store physical file interchange remain
+unfinished; this portable API does not supply those ownership guarantees.
