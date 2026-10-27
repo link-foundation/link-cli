@@ -4060,3 +4060,36 @@ C# log csharp-40491222901.log has Linux totals at 19043–19045, Windows at
 corrections require fresh exact-head CI. Complete native/C#/linked-WASM 100%,
 physical repair/power-loss and every wider unmet criterion remain unfinished.
 PR139 remains draft and unmerged.
+
+## Generic Rust growth admission (2026-10-27T11:50Z)
+
+Three finite public regressions first fail against immutable 9bb985f:
+arithmetic overflow, layout overflow and a zero-growth callback panic leave
+the still-valid checked barrier invalid. A successful zero-growth control
+already passes. Capacity/layout validation now precedes invalidation, and
+zero growth invokes its callback against the existing prefix without I/O,
+allocation, remapping or locking. Deliberate prefix edits survive a callback
+panic. No impossible-capacity allocation is attempted.
+
+Both feature configurations pass all four admission controls, six checked
+flush cases, six growth cases and six empty/shrink cases. Nine ownership units,
+finite EFBIG rejection and the owned-flush example pass. Each new control
+retains pointer, physical length, contents and flush, then verifies following
+growth and exactly forty destructor retirements. Complete sequential checks
+finish 2026-10-27T11:50:17Z: 1,194 native tests, six doctests, 723 actual-WASM
+tests and 221 repository tests pass. Formatting, strict native/WASM Clippy,
+source limits, changeset, dependency freshness, workflow/ShellCheck and
+whitespace checks pass. Twenty-two native child entries are parent-driven;
+one legacy doctest remains ignored.
+
+Complete native LLVM reports 17,163/18,045 lines, 3,294/3,782 branches,
+2,217/2,379 functions, 26,406/28,558 regions and 12,362/22,050 instantiations.
+Complete linked WASM reports 13,144/15,754 lines, 2,663/3,171 branches,
+1,636/2,057 functions, 20,244/24,812 regions and 4,342/7,495 instantiations.
+All production denominators remain included; native mapped code still reports
+zero in linked WASM. mapped-growth-admission{,-before}.txt preserves commands,
+actual baseline lines, full/component metrics and limits. Generic real resize
+failures, nonzero callback panic, failed partial shrink, representation safety,
+physical repair and hardware power-loss verification remain unfinished.
+Fresh platform CI and every wider unmet R1-R12 criterion remain required.
+PR139 stays draft and unmerged.

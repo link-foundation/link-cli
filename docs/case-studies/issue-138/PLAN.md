@@ -925,3 +925,17 @@ acceptance criterion continue independently.
     RUST-EMPTY-MAPPING-PLAN.md. Genuine failed partial shrink, failed generic
     destructor growth, physical repair and every wider unmet criterion remain
     unfinished.
+
+65. Preserve generic mapped growth admission without retiring a valid owner.
+    Three finite regressions first fail against immutable 9bb985f: arithmetic
+    overflow, layout overflow and zero-growth callback panic invalidate a
+    still-valid flush barrier. Ordinary zero growth already passes. Preflight
+    capacity/layout and invoke zero-growth callbacks directly against the old
+    prefix. Both feature configurations verify all four controls, following
+    growth and forty exact destructor retirements. Complete sequential checks
+    finish 11:50:17Z with 1,194 native tests, six doctests, 723 actual-WASM tests
+    and 221 repository checks passing. Complete coverage denominators remain
+    included. Publish this atomic correction and inspect fresh platform CI
+    under RUST-GROW-ADMISSION-PLAN.md. Real resize I/O failure, nonzero callback
+    panic, failed shrink, representation safety and all wider unmet criteria
+    remain unfinished.

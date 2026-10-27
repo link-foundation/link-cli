@@ -216,8 +216,21 @@ impl<T> RawMem for PersistentFileMapped<T> {
             // of destructor values would drop those values twice.
             return unsafe { self.grow_retained(addition, fill) };
         }
-        self.flush.invalidate();
         let previous_len = self.inner.allocated().len();
+        // Empty growth has no new items to initialize and needs no remap. Keep
+        // the live descriptor valid even when this callback unwinds.
+        if addition == 0 {
+            fill(0, (self.inner.allocated_mut(), &mut []));
+            return Ok(&mut self.inner.allocated_mut()[previous_len..]);
+        }
+        // These errors leave the upstream view untouched. Reject them before
+        // invalidating its still-valid descriptor, including for Drop values.
+        let capacity = previous_len
+            .checked_add(addition)
+            .ok_or(doublets::mem::Error::CapacityOverflow)?;
+        std::alloc::Layout::array::<T>(capacity)
+            .map_err(|_| doublets::mem::Error::CapacityOverflow)?;
+        self.flush.invalidate();
         unsafe { self.inner.grow(addition, fill) }?;
         self.initialized_bytes = self
             .initialized_bytes
