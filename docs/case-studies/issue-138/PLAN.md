@@ -644,3 +644,9 @@ acceptance criterion continue independently.
     retain measured evidence. Publish this verified prerequisite and check fresh
     exact-head CI; continue the remaining NATIVE-LSM-DISCOVERY-PLAN.md steps and
     every wider unmet R1–R12 requirement in this draft PR.
+
+    Fresh c501b2a workflow policy rejects two historical baseline manifests as
+    unwatched maintained packages. Preserve those manifest contents with .fixture
+    suffixes and keep the dependency policy unchanged. The staged correction
+    passes all 221 repository checks. checkpoint-inspect-ci-before.txt preserves
+    the exact failure, log line and cause; inspect fresh correction-head CI.

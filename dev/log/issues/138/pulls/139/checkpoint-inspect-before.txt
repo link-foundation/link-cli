@@ -33,6 +33,9 @@ The retained fixtures and run-checkpoint-inspect-before.sh support repeating
 missing-API controls in a separate clean baseline checkout. That combined
 baseline script has not been used for the original recordings; its commands
 compile the retained controls as repository tests instead of dependent projects.
+The two original dependent-project manifests are retained with .fixture suffixes;
+materialize Cargo.toml/Before.csproj when repeating those original commands.
+They describe intentionally failing baselines rather than maintained packages.
 After implementation, the original JS fixtures pass all seven controls.
 Production tests extend these controls in Rust, C#, JS and actual WASM.
 The complete after report is checkpoint-inspect.txt; logs remain under

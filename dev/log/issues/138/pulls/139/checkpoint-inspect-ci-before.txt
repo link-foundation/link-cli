@@ -1,0 +1,23 @@
+Checkpoint inspection fixture packaging correction
+https://github.com/link-foundation/link-cli/pull/139
+Exact head: c501b2a (production inspection 2f92c0b plus log whitespace).
+Workflows run 40439791302, created 2026-10-27T02:40:29Z:
+https://github.com/link-foundation/link-cli/actions/runs/40439791302
+Original complete log: ci-logs/workflows-40439791302.log (841 lines).
+
+The fresh workflow-policy job fails at log lines 808-825. Line 810 names:
+AssertionError: cargo manifest in /experiments/issue-138/checkpoint-inspect-before-rust
+is not watched by Dependabot.
+The existing test enumerates tracked Cargo.toml and *.csproj packages and requires
+matching dependency-update configuration. The two isolated baseline manifests
+were ignored during the original pre-staging local checks, then explicitly
+tracked as evidence. They describe intentionally failing historical reproducers.
+
+Retain their complete contents under Cargo.toml.fixture/Before.csproj.fixture.
+Materialize their ordinary filenames only for replaying the original recordings;
+the existing isolated-baseline driver instead compiles repository test fixtures.
+No maintained package or policy assertion is removed, and no dependency-update
+root is exempted. The unchanged 221 repository tests pass against the staged
+fixture names, including the original failing workflow-policy assertion.
+Fresh CI must validate the correction. Native directory/store APIs, whole-store
+process/file interchange, full coverage and all broader unmet criteria remain open.
