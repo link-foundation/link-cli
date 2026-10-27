@@ -7,6 +7,10 @@ use std::collections::BTreeMap;
 mod lease;
 mod store;
 pub use store::{LsmStoreOptions, LsmTableNamespace, PhysicalLsmJournalStore};
+#[cfg(all(feature = "native-pages", any(unix, windows)))]
+mod native;
+#[cfg(all(feature = "native-pages", any(unix, windows)))]
+pub use native::{FileLsmJournalStore, FileLsmOptions};
 
 #[derive(Clone, Copy, Debug)]
 pub struct LsmOptions {

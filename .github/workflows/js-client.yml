@@ -290,7 +290,11 @@ jobs:
           dotnet build examples/journal-reclamation-csharp --configuration Release
 
       - name: Verify complete native LSM store handoffs
-        run: python3 examples/native-lsm-js/run-interop.py
+        env:
+          RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
+          python3 examples/native-lsm-js/run-interop.py
 
       - name: Verify actual consensus and language interoperability
         env:

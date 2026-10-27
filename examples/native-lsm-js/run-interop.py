@@ -15,7 +15,10 @@ RUNTIMES = {
     "bun": ["bun", "examples/native-lsm-js/interop.mjs"],
     "deno": ["deno", "run", "--allow-all", "examples/native-lsm-js/interop.mjs"],
     "csharp": ["dotnet", CSHARP, "--native-lsm-files"],
+    "rust": [os.environ.get("RUST_NATIVE_LSM_EXAMPLE", "rust/target/debug/examples/native_lsm"), "files"],
 }
+if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
+    RUNTIMES = {name: RUNTIMES[name] for name in selected.split(",")}
 
 
 def snapshot(directory):

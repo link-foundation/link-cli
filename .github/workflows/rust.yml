@@ -298,6 +298,14 @@ jobs:
       - name: Run doc tests
         run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
 
+      - name: Native LSM cluster consumers without SQL or a coordinator
+        shell: bash
+        run: |
+          cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster direct
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster partitioned
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming
+
   # === COVERAGE MEASUREMENT ===
   coverage:
     name: Rust coverage

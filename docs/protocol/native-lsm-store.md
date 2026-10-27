@@ -81,10 +81,9 @@ The portable API starts with an already constructed WAL. A native directory
 facade must validate physical WAL discovery and selected tables before calling
 a constructor that repairs or truncates that WAL. The current generic store
 cannot retroactively prevent effects performed by its caller before Open.
-JavaScript and C# supply native exclusive directory ownership and process-exit
-composition below. Rust parity and cross-language whole-store file interchange
-remain required work in
-[the issue plan](../case-studies/issue-138/PHYSICAL-LSM-PLAN.md).
+Rust, C# and JavaScript supply native exclusive directory ownership and
+process-exit composition below. Their complete directories share the same
+checkpoint, WAL, table and reservation formats.
 
 ## JavaScript native directory selection
 
@@ -138,8 +137,9 @@ that removal can leave the marker absent, with the old facade already closed. Pr
 crash, an external recovery authority must fence or reap the previous process
 and establish that its handles are closed before explicitly removing recognized
 owner markers. File hashes and corrupt images remain available for diagnosis.
-Native Rust facade parity and whole-store cross-language interchange remain
-required follow-up work in issue #138.
+The finite whole-store interchange example transfers ownership between Rust,
+C#, Node, Bun and Deno; every reader also verifies unchanged file hashes before
+publishing its own guarded following group.
 
 The [runnable actual-WASM example](../../examples/native-lsm-js/README.md) verifies
 direct, partitioned and epoch-reclaiming cluster consumers over these files in
@@ -170,3 +170,33 @@ SQL provider. It verifies checkpoint journals, stale group rejection, compaction
 and closed-store reopening. The C# tests inject finite before/after FileStream
 and namespace-operation failures and reap actual abrupt-exit children before
 external marker recovery. These checks do not certify physical power loss.
+
+
+## Rust native directory selection
+
+Select `native-pages,physical-lsm` with default features disabled, then open
+`engine::lsm::FileLsmJournalStore::open(directory, FileLsmOptions { .. })`.
+`store` accepts the portable `LsmStoreOptions`; `max_pages`, `mirrored_root`,
+`mirrored_banks` and `mirrored_tables` have the same defaults and admission
+bounds described above. The directory must already exist. The store implements
+`AtomicJournalStore` and `JournalMaintenanceStore`; call `close()` after closing
+its engine consumers. `Drop` only attempts best-effort cleanup.
+
+The outer owner precedes a bounded native directory stream and every child
+lease. Read-only discovery reads existing regular files, bounds metadata to
+128 bytes and pages to 4096 bytes, and defers mirror repair until all selected
+historical table bindings validate. Complete enumeration, including errors on
+iterator advance or close, is required before writable recovery starts. Unix
+uses `opendir/readdir/closedir`; Windows search handles use
+[FindClose](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-findclose).
+File and directory handles receive a single explicit raw close attempt; uncertain
+closes retain the outer owner and cache the error. Directory synchronization on
+Unix contributes to the advertised durable-flush capability. Windows advertises
+file-content synchronization without durable namespace support.
+
+The [native Rust example](../../rust/examples/native_lsm/README.md) composes real
+links engines with direct, partitioned and reclaiming stores. The shared
+[handoff driver](../../examples/native-lsm-js/README.md) exercises all five native
+runtimes without SQLite. These finite controls test process loss and injected
+operation failures; physical power-loss certification remains a separate,
+unfinished issue requirement.

@@ -703,3 +703,23 @@ acceptance criterion continue independently.
     all 221 repository checks pass. Publish this test-only correction and inspect
     fresh Windows CI. version-progress-ci-before.txt preserves the reproduction;
     lower-level Windows filesystem latency and wider issue criteria remain open.
+
+53. Complete the native Rust LSM directory facade using the existing SQL-free
+    native pages, checkpoint WAL, mirrors and immutable tables. Read-only bounded
+    discovery precedes constructor recovery effects; outer ownership survives
+    uncertain live cleanup. All 21 native unit controls, ten integration cases,
+    408 compaction cuts, 730 opening cuts and 408 actual reaped abrupt children
+    pass. Full sequential validation finishes 2026-10-27T05:18:14Z: 1,138 native
+    tests plus six doctests, 698 actual WASM, three real cluster consumers and
+    all 50 Rust/C#/Node/Bun/Deno complete-store handoffs. Preserve whole-project
+    coverage denominators below 100%. native-lsm-rust{,-before}.txt retain exact
+    scope and fixture corrections. Publish this verified atomic step and inspect
+    fresh exact-head CI. All broader unmet R1–R12 criteria remain active.
+
+    Preceding supervision head 3dfbc74 passes all Rust jobs, including Windows;
+    version-progress-ci-after.txt preserves its exact run. Eight workflows pass.
+    C# Windows alone preserves a progressing movement child killed by its total
+    15-second deadline; csharp-phase-progress-before.txt records actual log lines
+    and a separately failing finite local control. Keep its 15-second idle bound
+    while adding strict bounded consecutive phase supervision. Full local and
+    fresh Windows checks are required before claiming that correction verified.

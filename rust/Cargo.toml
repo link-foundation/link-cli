@@ -60,14 +60,15 @@ rusqlite = { version = "0.41.0", default-features = false, features = ["bundled"
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2.191", optional = true }
+errno = { version = "0.3.14", optional = true }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_Foundation"], optional = true }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem"], optional = true }
 
 [features]
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
 sqlite = ["dep:rusqlite"]
-native-pages = ["dep:getrandom", "dep:libc", "dep:windows-sys"]
+native-pages = ["dep:getrandom", "dep:libc", "dep:errno", "dep:windows-sys"]
 sorted-tables = ["dep:serde_json"]
 physical-lsm = ["sorted-tables"]
 
@@ -94,3 +95,7 @@ required-features = ["etcd"]
 [[example]]
 name = "sorted_table"
 required-features = ["native-pages", "sorted-tables"]
+
+[[example]]
+name = "native_lsm"
+required-features = ["native-pages", "physical-lsm"]

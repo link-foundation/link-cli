@@ -1,4 +1,4 @@
-# Native JavaScript LSM cluster consumers
+# Native LSM cluster consumers and file interchange
 
 Build the current WASM package with `wasm-pack build --target web --out-dir
 ../../js/pkg rust/wasm`, then run from the repository root:
@@ -25,21 +25,26 @@ coordinator or SQLite. See the [native ownership, finite bounds and platform
 contract](../../docs/protocol/native-lsm-store.md#javascript-native-directory-selection).
 
 C# supplies the matching [native facade and consumers](../cluster-csharp/README.md).
-Build its example before running the finite complete-store handoff matrix:
+Build its example and the matching Rust facade before running the finite
+complete-store handoff matrix:
 
 ```sh
 dotnet build examples/cluster-csharp --configuration Release
+cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
 python3 examples/native-lsm-js/run-interop.py
 ```
 
-Node, Bun, Deno and C# each write plain and fully mirrored stores. Every runtime
+Rust, C#, Node, Bun and Deno each write plain and fully mirrored stores. Every runtime
 reads every writer's complete directory without changing file hashes, publishes
 another guarded group, flushes and compacts, then returns ownership to the
-original writer for another byte-preserving read. All 32 handoffs check exact
+original writer for another byte-preserving read. All 50 handoffs check exact
 generations, tombstones, live empty journals and Unicode/NUL/BOM payloads.
 Each subprocess exits before its successor acquires ownership. The script uses
 temporary files and removes them after all processes exit. It does not load WASM
 or SQL for these journal-provider checks.
 
-Rust native facade parity and the full five-runtime matrix remain required work
-in issue #138.
+The Rust executable defaults to `rust/target/debug/examples/native_lsm`; set
+`RUST_NATIVE_LSM_EXAMPLE` when using another build profile. For a deliberately
+selected runtime subset, set `NATIVE_LSM_RUNTIMES` to comma-separated names from
+`rust,csharp,node,bun,deno`. The default checks all five. Native Rust cluster
+consumers have their own [runnable instructions](../../rust/examples/native_lsm/README.md).

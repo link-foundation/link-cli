@@ -23,7 +23,7 @@ impl<D> Lease<D> {
             deferred: false,
         }
     }
-    fn use_device<T>(
+    pub(super) fn use_device<T>(
         &self,
         action: impl FnOnce(&mut D) -> Result<T, LinkError>,
     ) -> Result<T, LinkError> {
@@ -33,6 +33,13 @@ impl<D> Lease<D> {
                 .lock()
                 .map_err(|_| invalid("table lease mutex poisoned"))?,
         )
+    }
+}
+impl<D: crate::engine::paged::RepairPageDevice> crate::engine::paged::RepairPageDevice
+    for Lease<D>
+{
+    fn repair_page(&mut self, index: u64, bytes: &[u8; 4096]) -> Result<(), LinkError> {
+        self.use_device(|device| device.repair_page(index, bytes))
     }
 }
 impl<D: PageDevice> PageDevice for Lease<D> {

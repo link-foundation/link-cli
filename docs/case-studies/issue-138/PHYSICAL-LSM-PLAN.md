@@ -13,7 +13,7 @@ R1/R5/R6/R7/R8/R9/R11/R12; the table primitive alone does not satisfy it.
 - [x] Implement matching portable Rust/C#/JS engines, with Rust controls running
       in actual WASM. WAL and table storage are independently selected and
       caller-owned. Require atomic complete-journal replacement for bounded WAL.
-- [ ] Implement native exclusive directory ownership and synchronized table
+- [x] Implement native exclusive directory ownership and synchronized table
       creation/retirement without SQLite. Never steal stale ownership or reuse
       a table name after an uncertain publication.
 - [x] Verify group CAS, absent/live-empty/tombstone generations, caller-owned
@@ -21,9 +21,9 @@ R1/R5/R6/R7/R8/R9/R11/R12; the table primitive alone does not satisfy it.
 - [x] Verify every mutation failure before and after its effect, recovery of
       acknowledged groups, uncertain-outcome fencing, orphan handling, repeated
       compaction/checkpointing and following edits.
-- [ ] Exercise actual process exits and shared physical files across native
+- [x] Exercise actual process exits and shared physical files across native
       Rust/C#/Node/Bun/Deno. Compare immutable file hashes on read-only reopen.
-- [ ] Demonstrate the existing cluster engine and named links API over this
+- [x] Demonstrate the existing cluster engine and named links API over this
       selected store. Document read/write amplification, buffering, replay,
       ownership, capacities and guarantees with runnable examples.
 - [ ] Run complete local checks/coverage within the container budget; preserve
@@ -98,3 +98,12 @@ cleanup and 152 before/after mutation cuts per language. Actual Rust/C# cluster
 consumers and all three partition/reclamation consumers pass. The combined
 cluster/example/native-file requirement above stays unchecked until the native
 facade and its file/process examples are verified.
+
+
+Native directory ownership, actual process exits, complete file interchange and
+real cluster consumers now pass locally in Rust/C#/Node/Bun/Deno. Rust's complete
+validation finishes at 2026-10-27T05:18:14Z, with all 50 directed mirrored/plain
+handoffs and three consumer compositions. native-lsm-rust.txt records the exact
+scope. Full coverage remains below 100%, physical power-loss certification stays
+unfinished and publication requires fresh exact-head CI. Earlier prerequisite
+notes above describe the evidence available at those checkpoints.

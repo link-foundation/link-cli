@@ -2,8 +2,19 @@
 //! revision and replication strategies. See docs/protocol/native-pages.md.
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 mod file;
+#[cfg(all(
+    test,
+    feature = "native-pages",
+    feature = "physical-lsm",
+    any(unix, windows)
+))]
+pub(crate) use file::events;
+#[cfg(all(feature = "native-pages", feature = "physical-lsm", unix))]
+pub(crate) use file::sync_directory;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 pub use file::FilePageDevice;
+#[cfg(all(feature = "native-pages", feature = "physical-lsm", any(unix, windows)))]
+pub(crate) use file::{close_named, open_file};
 #[cfg(all(feature = "native-pages", any(unix, windows)))]
 mod file_checkpoint;
 #[cfg(all(feature = "native-pages", any(unix, windows)))]

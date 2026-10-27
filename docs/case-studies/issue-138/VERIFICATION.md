@@ -3656,3 +3656,31 @@ included and below 100%. See native-lsm-csharp{,-before}.txt. Preceding native J
 head 39a551d has nine green workflows in native-lsm-js-ci.txt. New C# source needs
 fresh CI; Rust native discovery, five-runtime interchange and all wider unmet
 criteria remain active in this draft, unmerged PR.
+
+
+## Native Rust LSM directory facade, 2026-10-27
+
+Complete sequential validation finishes 05:18:14Z. All 1,138 native tests, six
+doctests (one legacy example ignored), 698 actual WASM tests, strict native/WASM
+Clippy, eight SQL-optional dependency graphs, three real native cluster consumers
+and 50 complete-store handoffs pass. The native focused controls include 408
+compaction syscall cuts, 730 opening cuts and 408 actual abrupt child exits; all
+are finite and reaped before fixture cleanup. No physical power-loss claim follows.
+A surviving-metadata integration fixture initially removes the committed slot;
+correcting it to keep the nonempty decision establishes the intended surviving
+copy case. This is a fixture correction, not a production repair claim.
+
+Whole native LLVM coverage: 16,712/17,614 lines, 3,211/3,698 branches,
+2,167/2,334 functions, 25,748/27,903 regions and 12,023/21,595 instantiations.
+Whole linked WASM: 12,900/15,323 lines, 2,593/3,101 branches, 1,615/2,012 functions,
+19,861/24,157 regions and 4,281/7,400 instantiations. All production denominators
+remain included; whole-project 100% coverage stays unfinished. The first-stage
+native test runner reports 21 ignored child entries, each driven by its parent.
+
+See native-lsm-rust{,-before}.txt for commands and logs. Rust opts into native-pages
+plus physical-lsm without SQL. Unix advertises synchronized namespace capability;
+Windows supports file-content sync and explicitly declines durable namespace.
+The complete native source still needs fresh publication CI. Existing head
+3dfbc74 has eight successful workflows; C# alone exposes an aggregate child
+supervision deadline while the child is progressing. The finite supervisor
+correction is a separate step. Every broader unmet R1–R12 criterion stays active.

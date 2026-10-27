@@ -31,7 +31,7 @@ impl FilePageDevice {
             use std::os::unix::fs::OpenOptionsExt;
             ownership.mode(0o600);
         }
-        let owner = ownership.open(&lock)?;
+        let owner = open_file(&lock, &ownership)?;
         let mut result = Self {
             files: Vec::new(),
             owner: Some(owner),
@@ -51,10 +51,10 @@ impl FilePageDevice {
                     use std::os::unix::fs::OpenOptionsExt;
                     options.mode(0o600);
                 }
-                result.files.push(options.open(file)?);
+                result.files.push(open_file(&file, &options)?);
             }
             #[cfg(unix)]
-            File::open(path.parent().expect("absolute file parent"))?.sync_all()?;
+            sync_directory(path.parent().expect("absolute file parent"))?;
             Ok(())
         })();
         if let Err(error) = initialize {
@@ -81,14 +81,20 @@ impl FilePageDevice {
         action: impl FnOnce(&mut File) -> io::Result<T>,
     ) -> Result<T, LinkError> {
         #[cfg(test)]
-        events::observe(&self.lock, index, _operation, false);
+        events::observe(&self.lock, index, _operation, false)?;
         let result = action(self.file(index)?)?;
         #[cfg(test)]
-        events::observe(&self.lock, index, _operation, true);
+        events::observe(&self.lock, index, _operation, true)?;
         Ok(result)
     }
     pub fn close(&mut self) -> Result<(), LinkError> {
-        self.close_with(close_file)
+        let name = self.lock.clone();
+        let mut index = 0;
+        self.close_with(|file| {
+            let result = close_named(&name, index, file);
+            index += 1;
+            result
+        })
     }
     pub(super) fn close_with(
         &mut self,
@@ -107,7 +113,15 @@ impl FilePageDevice {
         // Never retry close: a failed syscall may already have released and
         // allowed reuse of its raw handle. Retain the owner file instead.
         if failures.is_empty() {
+            #[cfg(test)]
+            if let Err(error) = events::boundary(&self.lock, 0, "delete", false) {
+                return Err(error.into());
+            }
             if let Err(error) = std::fs::remove_file(&self.lock) {
+                failures.push(error.to_string());
+            }
+            #[cfg(test)]
+            if let Err(error) = events::boundary(&self.lock, 0, "delete", true) {
                 failures.push(error.to_string());
             }
         }
@@ -226,9 +240,50 @@ impl RepairPageDevice for FilePageDevice {
 
 #[cfg(test)]
 #[path = "file_events.rs"]
-pub(super) mod events;
+pub(crate) mod events;
+pub(crate) fn open_file(path: &Path, options: &OpenOptions) -> io::Result<File> {
+    #[cfg(test)]
+    {
+        events::open_file(path, || options.open(path))
+    }
+    #[cfg(not(test))]
+    {
+        options.open(path)
+    }
+}
+pub(crate) fn close_named(_path: &Path, _index: usize, file: File) -> io::Result<()> {
+    #[cfg(test)]
+    {
+        events::close_file(_path, _index, file)
+    }
+    #[cfg(not(test))]
+    {
+        close_file(file)
+    }
+}
 #[cfg(unix)]
-fn close_file(file: File) -> io::Result<()> {
+pub(crate) fn sync_directory(path: &Path) -> Result<(), LinkError> {
+    let mut options = OpenOptions::new();
+    options.read(true);
+    let directory = open_file(path, &options)?;
+    let sync = (|| -> io::Result<()> {
+        #[cfg(test)]
+        events::boundary(path, 0, "directory-sync", false)?;
+        directory.sync_all()?;
+        #[cfg(test)]
+        events::boundary(path, 0, "directory-sync", true)?;
+        Ok(())
+    })();
+    let close = close_named(path, 0, directory);
+    if sync.is_err() || close.is_err() {
+        return Err(invalid(&format!(
+            "directory sync: {sync:?}; close: {close:?}"
+        )));
+    }
+    Ok(())
+}
+#[cfg(unix)]
+pub(crate) fn close_file(file: File) -> io::Result<()> {
     use std::os::fd::IntoRawFd;
     // SAFETY: consume the uniquely owned File exactly once; do not retry an
     // uncertain close, whose descriptor may already have been released.
@@ -239,7 +294,7 @@ fn close_file(file: File) -> io::Result<()> {
     }
 }
 #[cfg(windows)]
-fn close_file(file: File) -> io::Result<()> {
+pub(crate) fn close_file(file: File) -> io::Result<()> {
     use std::os::windows::io::IntoRawHandle;
     // SAFETY: transfer sole File ownership to one CloseHandle invocation.
     if unsafe { windows_sys::Win32::Foundation::CloseHandle(file.into_raw_handle()) } != 0 {

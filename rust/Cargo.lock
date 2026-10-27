@@ -574,6 +574,7 @@ dependencies = [
  "anyhow",
  "base64",
  "doublets",
+ "errno",
  "getrandom 0.4.3",
  "libc",
  "links-notation",
