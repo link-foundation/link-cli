@@ -24,6 +24,22 @@ and removes temporary directories on completion. It does not require an external
 coordinator or SQLite. See the [native ownership, finite bounds and platform
 contract](../../docs/protocol/native-lsm-store.md#javascript-native-directory-selection).
 
-Rust/C# native facade parity and whole-store physical interchange remain required
-work in issue #138. This example verifies real JavaScript cluster consumers with
-the linked WASM engine; it does not establish cross-language store parity.
+C# supplies the matching [native facade and consumers](../cluster-csharp/README.md).
+Build its example before running the finite complete-store handoff matrix:
+
+```sh
+dotnet build examples/cluster-csharp --configuration Release
+python3 examples/native-lsm-js/run-interop.py
+```
+
+Node, Bun, Deno and C# each write plain and fully mirrored stores. Every runtime
+reads every writer's complete directory without changing file hashes, publishes
+another guarded group, flushes and compacts, then returns ownership to the
+original writer for another byte-preserving read. All 32 handoffs check exact
+generations, tombstones, live empty journals and Unicode/NUL/BOM payloads.
+Each subprocess exits before its successor acquires ownership. The script uses
+temporary files and removes them after all processes exit. It does not load WASM
+or SQL for these journal-provider checks.
+
+Rust native facade parity and the full five-runtime matrix remain required work
+in issue #138.

@@ -25,7 +25,7 @@ gaps remain unfinished even when an optional SQLite configuration passes.
 | R8 | 100% test coverage, edge cases, unit + integration guarantees | Measure coverage by module/language; add deterministic faults, concurrent schedules, real process/filesystem checks; retain coverage artifacts and disclose uncovered branches. A test count is not coverage. | JS production modules measure 100% lines, branches and functions; CI enforces all three thresholds. Actual WASM wrapper source reaches 100% lines, functions and reported branches in 672 actual-WASM tests, including ten registered wrapper unit controls; complete linked LLVM regions/instantiations remain below 100%. Complete linked coverage measures 11,938/14,317 lines and 2,365/2,835 branches and remains below 100%. Native Rust/C# project coverage remains below the required scope; VERIFICATION.md retains complete denominators. |
 | R9 | Document each scenario | Runnable cache, durable store and replicated/sharded examples with failure semantics, ownership and persistence settings. | docs/ENGINE-STRATEGIES.md, docs/ENGINE-CLUSTERS.md and Rust/C#/JS examples cover implemented options, including consensus-backed shard groups. Further deployment strategies need their own recipes. |
 | R10 | Horizontal cluster, shared and shared-nothing options | TCP/advisory shared stores, independent shard namespaces, replicated logs and consensus-backed atomic shard groups. | Shared coordination and immutable journals on independently routed data groups implemented in all languages. Real leader failover, data-group outage, atomic pointer publication and native/WASM interoperability verified. Optional bounded immutable-object caching avoids repeated data downloads and supports previously verified reads during a data-group outage; catalog availability remains required. Selected epoch-fenced reclamation retires unprotected objects through complete bounded namespace listings and exact-generation deletion. Catalog throughput, whole-journal updates/replay and listing bounds still limit scale; automatic balancing and multi-catalog transactions are not supplied. |
-| R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus, cross-shard coordination and a selected SQLite pager/WAL component are implemented. Legacy physical repair, on-disk LSM storage and other listed algorithm gaps remain unfinished. |
+| R11 | Competitor comparisons/configuration parity | Map supported settings and list unsupported guarantees explicitly with primary references. | Comparison table, pinned SQLite/PostgreSQL/RocksDB/Redis/etcd/TiKV/FoundationDB/MySQL/MongoDB/Cassandra/Accord source studies and Iceberg atomic metadata analysis supplied. Consensus, cross-shard coordination and a selected SQLite pager/WAL component are implemented. Legacy physical repair, native Rust LSM directory discovery and other listed algorithm gaps remain unfinished. |
 | R12 | Deep case study / collect data / plan + execute one PR | This directory, preserved original issue, plan, requirements, source research and test evidence; PR 139 with positive closing reference. | In progress |
 
 The C# scheduling audit also reproduces starvation with four tiny owners and a
@@ -713,3 +713,17 @@ reclaiming consumers pass in each runtime. Native Rust/C# facade parity, complet
 whole-store interchange and all wider unmet criteria remain required. These
 results do not replace full native/C#/linked-WASM coverage or certify power loss.
 native-lsm-js{,-before}.txt preserve scope and evidence; PR139 remains draft.
+
+
+Native C# LSM discovery (R1/R6/R7/R8/R9/R11) now validates selected state read-only
+under one outer owner before writable recovery. Both complete configurations pass
+2,409 tests, including 34 new native cases, 124 before/after cuts at 62 operation
+boundaries and ten reaped abrupt children. Three actual cluster consumers and all
+32 C#/Node/Bun/Deno complete-store handoffs pass with physical hash preservation.
+The surviving-copy regression first fails and is corrected without early repair.
+Debug coverage is 9,280/9,606 lines and 5,559/6,004 branches; Release is
+7,167/7,385 lines and 5,505/5,965 branches. Every production denominator remains
+included and below 100%. See native-lsm-csharp{,-before}.txt. Preceding native JS
+head 39a551d has nine green workflows in native-lsm-js-ci.txt. New C# source needs
+fresh CI; Rust native discovery, five-runtime interchange and all wider unmet
+criteria remain active in this draft, unmerged PR.

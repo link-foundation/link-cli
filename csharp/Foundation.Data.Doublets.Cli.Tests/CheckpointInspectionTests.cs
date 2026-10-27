@@ -82,10 +82,10 @@ public partial class CheckpointPagesTests
     {
         var images = InspectionFixture(); var probe = Devices(images); Inspect(probe.Devices); int operations = probe.Trace.Calls.Count; Assert.InRange(operations, 6, 20);
         for (int at = 1; at <= operations; at++) foreach (bool after in new[] { false, true })
-        {
-            var (devices, trace) = Devices(images); trace.Fault = (at, after); Assert.Throws<IOException>(() => Inspect(devices)); InspectionUnchanged(devices, images, trace);
-            trace.Fault = null; Assert.Equal(new[] { "acknowledged\0\ufeff😀" }, Inspect(devices)); InspectionUnchanged(devices, images, trace);
-        }
+            {
+                var (devices, trace) = Devices(images); trace.Fault = (at, after); Assert.Throws<IOException>(() => Inspect(devices)); InspectionUnchanged(devices, images, trace);
+                trace.Fault = null; Assert.Equal(new[] { "acknowledged\0\ufeff😀" }, Inspect(devices)); InspectionUnchanged(devices, images, trace);
+            }
     }
     [Fact]
     public void InspectionActualMirroredRootAndBanksKeepRepairsStagedUntilValidatedOpen()

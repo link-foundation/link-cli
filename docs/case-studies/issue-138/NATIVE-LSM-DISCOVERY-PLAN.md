@@ -67,7 +67,7 @@ native-lsm-js{,-before}.txt. The inspection prerequisite has all nine green
 exact-head workflows on 7baafed, recorded in checkpoint-inspect-ci.txt.
 
 - [x] Implement and verify the JavaScript native facade and actual consumers.
-- [ ] Publish the verified JavaScript step and inspect fresh exact-head CI.
+- [x] Publish the verified JavaScript step and inspect fresh exact-head CI.
 - [ ] Port native discovery, ownership, cleanup and process controls to Rust/C#.
 - [ ] Verify complete whole-store interchange across all five native runtimes.
 
@@ -75,3 +75,13 @@ Marker-removal uncertainty is separate from a possibly live handle: removal is
 attempted only after all known handles close. An error after removal can leave
 the marker absent while the old facade is closed. Live-handle uncertainty keeps
 the fence and never retries an unsafe raw descriptor close.
+
+All nine workflows pass on native JavaScript publication commit 39a551d;
+native-lsm-js-ci.txt records the exact SHA and workflow URLs. The C# native
+facade now passes 34 native controls and both complete 2,409-test configurations.
+They include 124 finite cuts at 62 compaction operation boundaries, ten reaped
+abrupt-exit children and surviving-copy preservation before later validation.
+Three real C# consumers and all 32 complete-store handoffs among C#/Node/Bun/Deno
+pass. Full native C# coverage remains below 100%; native-lsm-csharp{,-before}.txt
+retain exact scope and denominators. Publish after final gates and inspect fresh
+exact-head CI. The Rust port and complete five-runtime matrix remain active.

@@ -667,3 +667,14 @@ acceptance criterion continue independently.
     Rust/C# native facades, whole-store interchange and all wider unmet R1–R12
     criteria remain active. Inspection prerequisite 7baafed now has all nine green
     exact-head workflows, recorded in checkpoint-inspect-ci.txt.
+
+50. Port native LSM discovery and ownership to C#. Missing APIs first fail on
+    archived bc364d2. A surviving-copy test also first exposes a new reader's
+    incorrect exception category; EndOfStreamException permits checked mirror
+    reads while all selected validation still precedes repair. Both complete
+    2,409-test configurations, 34 new native controls, three actual consumers and
+    32 C#/Node/Bun/Deno whole-store handoffs pass. Keep complete coverage below
+    100% explicit. Publish this verified atomic step after all repository gates,
+    inspect its exact-head CI and continue the Rust port, five-runtime interchange
+    and every wider unmet R1-R12 requirement. Preceding JS head 39a551d now has
+    all nine workflows green, preserved in native-lsm-js-ci.txt.

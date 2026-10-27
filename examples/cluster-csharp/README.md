@@ -1,5 +1,21 @@
 # Coordinated engines
 
+The native file example requires no server or SQL provider:
+
+```sh
+dotnet run --project examples/cluster-csharp -- --native-lsm direct
+dotnet run --project examples/cluster-csharp -- --native-lsm partitioned
+dotnet run --project examples/cluster-csharp -- --native-lsm reclaiming
+```
+
+Each finite example uses private temporary doublets directories, actual links
+and Unicode names, coordinated retained-history checkpoints, stale group
+rejection, compaction and closed-store reopening. The reclaiming composition
+also verifies that retired objects are collected. Files are removed after every
+handle closes. POSIX supports synchronized namespace changes; Windows reports
+`SupportsDurableFlush = false`. A process-exit test does not certify physical
+power-loss durability. See the [native directory contract](../../docs/protocol/native-lsm-store.md).
+
 Start a durable etcd deployment with its v3 HTTP JSON gateway enabled. For a
 local disposable demonstration, `etcd --data-dir ./demo-etcd` listens on port
 2379. Production deployments require TLS, access controls, independent durable

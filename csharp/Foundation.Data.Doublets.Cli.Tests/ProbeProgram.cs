@@ -25,6 +25,7 @@ internal static class ProbeProgram
             if (args is ["pages-exit", var pagesPath, var pagesPoint]) return PagedFileExitTests.Child(pagesPath, pagesPoint);
             if (args is ["checkpoint-pages-cut", var checkpointPath, var checkpointMirror, var checkpointPoint, var checkpointPhase, var checkpointRoot])
                 return NativeCheckpointExitTests.Child(checkpointPath, bool.Parse(checkpointMirror), int.Parse(checkpointPoint, System.Globalization.CultureInfo.InvariantCulture), checkpointPhase, bool.Parse(checkpointRoot));
+            if (args is ["native-lsm-exit", var lsmDirectory, var lsmPhase, var lsmMirrored]) return NativeLsmFileExitTests.Child(lsmDirectory, lsmPhase, bool.Parse(lsmMirrored));
             if (args is ["sqlite-exit", var sqlitePath, var sqlitePoint, var sqliteDelta, var sqliteEncoding, var sqliteStructure])
                 return EngineSqliteExitTests.Child(sqlitePath, sqlitePoint, bool.Parse(sqliteDelta),
                     Enum.Parse<Engine.RevisionEncoding>(sqliteEncoding), Enum.Parse<Engine.StateStructure>(sqliteStructure));

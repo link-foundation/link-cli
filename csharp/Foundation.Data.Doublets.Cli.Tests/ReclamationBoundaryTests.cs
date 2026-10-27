@@ -8,21 +8,21 @@ public partial class ReclamationTests
     {
         await Task.Yield();
         for (var phase = 0; phase < 3; phase++) foreach (var damage in new[] { "empty", "zero", "unordered", "duplicate", "name", "format", "entries" })
-        {
-            var (c, a, b, store) = Fixture(); Write(store, "a0", "b0"); Write(store, "a1", "b1"); var provider = new[] { c, a, b }[phase];
-            JournalNamespaceEntry Entry(string key, ulong generation, params string[] entries) => new(key, new(generation, entries));
-            provider.ScanOverride = damage switch
             {
-                "empty" => Array.Empty<JournalNamespaceEntry>(),
-                "zero" => new[] { Entry("a", 0) },
-                "unordered" => new[] { Entry("z", 1), Entry("a", 2) },
-                "duplicate" => new[] { Entry("a", 1), Entry("a", 1) },
-                "name" => new[] { Entry("../bad", 1) },
-                "format" => new[] { Entry("unrecognized", 1) },
-                _ => new[] { Entry(phase == 0 ? EpochKey : "a", 1, "extra") }
-            };
-            Assert.NotNull(Record.Exception(() => store.CollectGarbage())); Assert.Equal(0, Deletions(a, b));
-        }
+                var (c, a, b, store) = Fixture(); Write(store, "a0", "b0"); Write(store, "a1", "b1"); var provider = new[] { c, a, b }[phase];
+                JournalNamespaceEntry Entry(string key, ulong generation, params string[] entries) => new(key, new(generation, entries));
+                provider.ScanOverride = damage switch
+                {
+                    "empty" => Array.Empty<JournalNamespaceEntry>(),
+                    "zero" => new[] { Entry("a", 0) },
+                    "unordered" => new[] { Entry("z", 1), Entry("a", 2) },
+                    "duplicate" => new[] { Entry("a", 1), Entry("a", 1) },
+                    "name" => new[] { Entry("../bad", 1) },
+                    "format" => new[] { Entry("unrecognized", 1) },
+                    _ => new[] { Entry(phase == 0 ? EpochKey : "a", 1, "extra") }
+                };
+                Assert.NotNull(Record.Exception(() => store.CollectGarbage())); Assert.Equal(0, Deletions(a, b));
+            }
     }
     [Theory(Timeout = 10000)]
     [InlineData("contradictory")]

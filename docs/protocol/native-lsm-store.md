@@ -81,8 +81,8 @@ The portable API starts with an already constructed WAL. A native directory
 facade must validate physical WAL discovery and selected tables before calling
 a constructor that repairs or truncates that WAL. The current generic store
 cannot retroactively prevent effects performed by its caller before Open.
-JavaScript supplies native exclusive directory ownership and physical process-exit
-composition below. Rust/C# parity and cross-language whole-store file interchange
+JavaScript and C# supply native exclusive directory ownership and process-exit
+composition below. Rust parity and cross-language whole-store file interchange
 remain required work in
 [the issue plan](../case-studies/issue-138/PHYSICAL-LSM-PLAN.md).
 
@@ -138,9 +138,35 @@ that removal can leave the marker absent, with the old facade already closed. Pr
 crash, an external recovery authority must fence or reap the previous process
 and establish that its handles are closed before explicitly removing recognized
 owner markers. File hashes and corrupt images remain available for diagnosis.
-Native Rust/C# facade parity and whole-store cross-language interchange remain
+Native Rust facade parity and whole-store cross-language interchange remain
 required follow-up work in issue #138.
 
 The [runnable actual-WASM example](../../examples/native-lsm-js/README.md) verifies
 direct, partitioned and epoch-reclaiming cluster consumers over these files in
 Node, Bun and Deno, including coordinated checkpoints, stale conflicts and reopen.
+
+## C# native directory selection
+
+`FileLsmJournalStore.Open(directory, new FileLsmOptions(...))` selects the same
+dedicated-directory contract. `Store` accepts the existing `LsmStoreOptions`;
+`MaxPages`, `MirroredRoot`, `MirroredBanks` and `MirroredTables` correspond to the
+JavaScript options above, with the same defaults and finite bounds. The store
+implements `IJournalMaintenanceStore` and `IDisposable`. Dispose attempts every
+known child before releasing the outer owner, caches uncertain closes and never
+steals an existing fence. Caller-owned generic physical stores retain their
+existing ownership contract.
+
+Discovery reads fixed 128-byte metadata and 4096-byte pages. On Unix, regular
+file and directory checks use the .NET runtime's portable status ABI from
+[FileStatus](https://github.com/dotnet/runtime/blob/v10.0.0/src/native/libs/System.Native/pal_io.h)
+and [the managed declaration](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/Common/src/Interop/Unix/System.Native/Interop.Stat.cs),
+including handle checks after acquisition. Windows rejects reparse points,
+directories and device entries and reports `SupportsDurableFlush = false`.
+Applications must keep all writers within the exclusive ownership contract.
+
+The [runnable native C# example](../../examples/cluster-csharp/README.md) selects
+direct, partitioned and epoch-reclaiming actual link engines without a server or
+SQL provider. It verifies checkpoint journals, stale group rejection, compaction
+and closed-store reopening. The C# tests inject finite before/after FileStream
+and namespace-operation failures and reap actual abrupt-exit children before
+external marker recovery. These checks do not certify physical power loss.

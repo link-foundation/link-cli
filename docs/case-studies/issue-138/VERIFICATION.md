@@ -3642,3 +3642,17 @@ coverage remains below 100% as recorded above; no new denominator is excluded.
 Native Rust/C# facade parity, complete whole-store interchange and all wider
 unmet R1–R12 requirements remain active. native-lsm-js{,-before}.txt preserve the
 commands and logs. Publication requires fresh exact-head CI; PR139 stays draft.
+
+
+Native C# LSM discovery (R1/R6/R7/R8/R9/R11) now validates selected state read-only
+under one outer owner before writable recovery. Both complete configurations pass
+2,409 tests, including 34 new native cases, 124 before/after cuts at 62 operation
+boundaries and ten reaped abrupt children. Three actual cluster consumers and all
+32 C#/Node/Bun/Deno complete-store handoffs pass with physical hash preservation.
+The surviving-copy regression first fails and is corrected without early repair.
+Debug coverage is 9,280/9,606 lines and 5,559/6,004 branches; Release is
+7,167/7,385 lines and 5,505/5,965 branches. Every production denominator remains
+included and below 100%. See native-lsm-csharp{,-before}.txt. Preceding native JS
+head 39a551d has nine green workflows in native-lsm-js-ci.txt. New C# source needs
+fresh CI; Rust native discovery, five-runtime interchange and all wider unmet
+criteria remain active in this draft, unmerged PR.

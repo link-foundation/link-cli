@@ -289,6 +289,9 @@ jobs:
           dotnet build examples/journal-maintenance-csharp --configuration Release
           dotnet build examples/journal-reclamation-csharp --configuration Release
 
+      - name: Verify complete native LSM store handoffs
+        run: python3 examples/native-lsm-js/run-interop.py
+
       - name: Verify actual consensus and language interoperability
         env:
           ETCD_BIN: ${{ github.workspace }}/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd

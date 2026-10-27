@@ -23,7 +23,7 @@ public sealed partial class CheckpointPagedCommitLog
             {
                 if (bank.DataLength != 0) throw Invalid("unrooted checkpoint bank contains data");
                 for (int slot = 0; slot < 2; slot++) if (Metadata.Decode(bank.ReadMetadata(slot), flags) is { Pages: > 0 })
-                    throw Invalid("unrooted checkpoint bank contains committed metadata");
+                        throw Invalid("unrooted checkpoint bank contains committed metadata");
             }
             return Array.Empty<string>();
         }

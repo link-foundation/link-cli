@@ -108,7 +108,7 @@ public sealed class FilePageDevice : IRepairPageDevice, IDisposable
         }
         if (failures.Count > 0) throw new AggregateException("Native page cleanup failed; ownership remains fenced.", failures);
     }
-    private static void SyncDirectory(string path)
+    internal static void SyncDirectory(string path)
     {
         int descriptor = OpenDirectory(path, 0);
         if (descriptor < 0) throw new IOException("Cannot open native page parent directory.", new Win32Exception(Marshal.GetLastPInvokeError()));

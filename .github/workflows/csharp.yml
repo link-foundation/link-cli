@@ -17,6 +17,7 @@ on:
       - 'docs/protocol/checkpoint*'
       - 'docs/protocol/journal-maintenance-v1.json'
       - 'docs/protocol/reclamation-v1.json'
+      - 'examples/cluster-csharp/**'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -283,6 +284,14 @@ jobs:
 
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+
+      - name: Native file LSM cluster consumers
+        working-directory: .
+        run: |
+          dotnet build examples/cluster-csharp --configuration Release
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm direct
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm partitioned
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming
 
       - name: Setup Node.js for coverage
         if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}

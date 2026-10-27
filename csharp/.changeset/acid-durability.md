@@ -294,3 +294,8 @@ initialize no bank and leave ordinary constructor recovery behavior intact.
 Provide a separately imported JavaScript native LSM facade with exclusive
 bounded directory discovery, read-only validation before recovery effects,
 independent file mirrors, and explicit uncertain-handle cleanup fencing.
+
+Provide the C# native LSM directory facade with matching bounded read-only
+discovery, independent file mirrors, regular-file validation and cached
+uncertain-handle cleanup. Add finite file-operation failures, abrupt-exit
+recovery and actual direct, partitioned and reclaiming cluster examples.
