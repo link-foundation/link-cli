@@ -5,8 +5,9 @@ memory engine, then publishes its complete final difference with one local
 `CausalBatch`. Rust selects `causal-sessions`; C# exposes `CausalSession` over
 `INamedTypesLinks<ulong>`; JS separately imports `./engine-causal-session` and
 uses the actual Rust WASM workspace. The raw JS methods preserve the entire
-u64 range as canonical decimal strings. Full parity with the existing u32
-LiNo query transport remains unfinished and is tracked in the
+u64 range as canonical decimal strings. Rust also supplies the standard query
+processor through a checked named-store borrow. C#/JS query and protocol
+transport parity remains unfinished and is tracked in the
 [session plan](case-studies/issue-138/CAUSAL-MUTABLE-SESSION-PLAN.md).
 
 Choose an explicit conflict policy and a fresh inclusive address reservation.
@@ -43,6 +44,37 @@ validate the initial projected rows and the final private commit with the
 selected state representation and constraints. Raw deletion remains
 non-cascading, duplicate pairs remain distinct unless the selected constraint
 rejects them, and null, empty, Unicode, BOM and NUL names remain distinct.
+
+The Rust `GenericQueryProcessor<T>` reuses the ordinary matching, substitution,
+reference validation and change-reporting implementation; `QueryProcessor`
+remains the established u32 facade. `CausalSession::named_links()` and
+`CausalWorkspace::named_links()` supply `NamedTypeLinks<u128>` with checked u64
+writes, so the query wildcard `u128::MAX` cannot alias a stored identity.
+
+```rust,ignore
+let query = link_cli::GenericQueryProcessor::<u128>::new(false);
+query.process_query(&mut tx.named_links(), "() ((1 1) (draft: 1 1))")?;
+// Query saves only finish staging; explicit publication still requires a token.
+let versions = tx.commit("00000000000000000000000000000100")?;
+```
+
+Reference planning runs the same query path on owned private rows, then reserves
+its actual allocation sequence without creating probe rows. The ordinary engine
+holds its allocator mutex throughout that preview. Each session owns a pending
+prefix; later validation passes and actual creation consume the same identities.
+An explicit ensure retires its matching pending identity. Rejection or rollback
+can leave gaps, as ordinary engine allocation already does. A preview copies the
+visible rows and their names and repeats query execution; it is a correctness
+cost, not a throughput optimization. Final ordinary constraints and explicit
+publication remain authoritative. Existing recycling stores retain their old
+allocation-probe fallback, including the separately documented prediction gaps.
+
+The checked causal borrow admits at most 1 MiB of query text, depth 64, 4096
+syntax nodes, 4096 results, 16,384 bindings and 4 MiB of estimated owned binding
+storage. Counts and key bytes are checked before Cartesian map/key cloning.
+Bare negative or overflowing numeric addresses reject before staging; quoted
+numeric names remain names. Named output uses lossless notation literals,
+including empty/control names and numeric names outside the stored range.
 
 Preparation freezes the original owner generation, retry token and complete
 ordered final edits. Each changed identity observes every retained sibling,

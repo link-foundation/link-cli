@@ -3,15 +3,15 @@ use std::collections::HashSet;
 
 use anyhow::Result;
 
-use crate::{error::LinkError, link::Link};
+use crate::{error::LinkError, link::GenericLink};
 
-pub(crate) fn format_structure<T: ?Sized>(
-    context: &mut T,
-    mut id: u32,
-    visited: &mut HashSet<u32>,
-    mut get: impl FnMut(&mut T, u32) -> Option<Link>,
-    mut exists: impl FnMut(&mut T, u32) -> bool,
-    mut reference: impl FnMut(&mut T, u32) -> Result<String>,
+pub(crate) fn format_structure<C: ?Sized, T: doublets::data::LinkReference>(
+    context: &mut C,
+    mut id: T,
+    visited: &mut HashSet<T>,
+    mut get: impl FnMut(&mut C, T) -> Option<GenericLink<T>>,
+    mut exists: impl FnMut(&mut C, T) -> bool,
+    mut reference: impl FnMut(&mut C, T) -> Result<String>,
 ) -> Result<String> {
     let mut frames = Vec::new();
     let terminal = loop {

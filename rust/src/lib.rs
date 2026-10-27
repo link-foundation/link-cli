@@ -54,6 +54,7 @@ pub mod parser;
 pub mod persistent_transformations;
 pub mod pinned_types;
 pub mod protocol;
+pub mod query_address;
 pub mod query_options;
 mod query_parser;
 pub mod query_processor;
@@ -96,8 +97,9 @@ pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use protocol::{
     BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer, LinoProtocol, TextLinoProtocol,
 };
+pub use query_address::QueryAddress;
 pub use query_options::QueryOptions;
-pub use query_processor::{Changes, QueryProcessor};
+pub use query_processor::{Changes, GenericQueryProcessor, QueryProcessor};
 pub use storage::{
     decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
     LinksStorage, LinksStorageRef, LockMode, MappedFlush, PersistentFileMapped,

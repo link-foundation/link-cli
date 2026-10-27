@@ -26,7 +26,8 @@ use crate::text_storage_format::{
 /// only stay in sync if they can see all of them. This is the equivalent of the
 /// `WriteHandler` the C# implementation threads through every decorator. A
 /// change whose `after` [`is null`](Link::is_null) is a deletion.
-pub type ChangeObserver<'a> = &'a mut dyn FnMut(Link, Link);
+pub type ChangeObserver<'a, T = u32> =
+    &'a mut dyn FnMut(crate::GenericLink<T>, crate::GenericLink<T>);
 
 /// Adapts a [`ChangeObserver`] to the `doublets` write handler signature.
 fn observe(

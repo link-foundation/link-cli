@@ -9,7 +9,7 @@ use super::{
 };
 use crate::{GenericLink, LinkError, LinksStorage};
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::{BTreeMap, BTreeSet, VecDeque},
     sync::Arc,
 };
 
@@ -32,12 +32,72 @@ pub struct CausalWorkspace {
     first: u64,
     last: u64,
     next: u128,
+    reserved: VecDeque<u64>,
     final_rows: Vec<Row<u64>>,
 }
 fn invalid() -> LinkError {
     super::error("invalid or frozen causal workspace")
 }
 impl CausalWorkspace {
+    /// Borrow the standard query/named-store interface with checked u64 writes
+    /// and a u128 wildcard outside the complete stored address domain.
+    pub fn named_links(&mut self) -> super::causal_named::CausalNamedLinks<'_> {
+        super::causal_named::CausalNamedLinks { workspace: self }
+    }
+
+    pub(super) fn query_save(&mut self) -> Result<(), LinkError> {
+        self.active().map(|_| ())
+    }
+
+    pub(super) fn reserve_query(
+        &mut self,
+        processor: &crate::GenericQueryProcessor<u128>,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> anyhow::Result<Option<std::collections::HashSet<u128>>> {
+        self.active()?;
+        let rows = self
+            .rows()
+            .into_iter()
+            .map(|row| {
+                let link = row.link;
+                (
+                    u128::from(link.index),
+                    Row {
+                        link: GenericLink::new(
+                            link.index.into(),
+                            link.source.into(),
+                            link.target.into(),
+                        ),
+                        name: row.name,
+                    },
+                )
+            })
+            .collect();
+        let mut scratch = super::query_scratch::QueryScratch {
+            rows,
+            next: self.next,
+            last: self.last.into(),
+            reserved: self.reserved.iter().copied().map(u128::from).collect(),
+            allocated: Vec::new(),
+            fresh_range: Some((
+                self.first.into(),
+                self.last.into(),
+                self.retained.keys().copied().map(u128::from).collect(),
+            )),
+            limits: Some(crate::query_options::QueryLimits::causal()),
+        };
+        processor.preview(&mut scratch, restriction, substitution)?;
+        self.next = self.next.max(scratch.next);
+        for id in scratch.allocated {
+            let id = u64::try_from(id).map_err(|_| invalid())?;
+            if !self.reserved.contains(&id) {
+                self.reserved.push_back(id);
+            }
+        }
+        Ok(Some(scratch.rows.into_keys().collect()))
+    }
+
     pub fn new(
         versions: &[CausalVersion],
         first: u64,
@@ -105,6 +165,7 @@ impl CausalWorkspace {
             first,
             last,
             next: u128::from(first),
+            reserved: VecDeque::new(),
             final_rows: Vec::new(),
         })
     }
@@ -193,6 +254,7 @@ impl CausalWorkspace {
             .collect();
         self.original.clear();
         self.retained.clear();
+        self.reserved.clear();
         if edits.len() > 64 {
             return Err(invalid());
         }
@@ -204,19 +266,29 @@ impl CausalWorkspace {
         self.engine.take();
         self.original.clear();
         self.retained.clear();
+        self.reserved.clear();
         self.final_rows.clear();
     }
 }
 impl LinksStorage<u64> for CausalWorkspace {
     fn create_link(&mut self, source: u64, target: u64) -> Result<u64, LinkError> {
-        if self.next > u128::from(self.last) {
-            return Err(invalid());
-        }
-        let id = self.next as u64;
+        self.active()?;
+        let id = if let Some(id) = self.reserved.front().copied() {
+            id
+        } else {
+            if self.next > u128::from(self.last) {
+                return Err(invalid());
+            }
+            self.next as u64
+        };
         let tx = self.active()?;
         tx.ensure_link_created(id)?;
         tx.update_link(id, source, target)?;
-        self.next += 1;
+        if self.reserved.front() == Some(&id) {
+            self.reserved.pop_front();
+        } else {
+            self.next += 1;
+        }
         Ok(id)
     }
     fn ensure_link_created(&mut self, id: u64) -> Result<u64, LinkError> {
@@ -228,6 +300,7 @@ impl LinksStorage<u64> for CausalWorkspace {
         if (self.first..=self.last).contains(&id) {
             self.next = self.next.max(u128::from(id) + 1);
         }
+        self.reserved.retain(|pending| *pending != id);
         Ok(id)
     }
     fn get_link(&self, id: u64) -> Option<GenericLink<u64>> {
@@ -280,6 +353,11 @@ pub struct CausalSession<S: AtomicJournalStore> {
     disposed: bool,
 }
 impl<S: AtomicJournalStore> CausalSession<S> {
+    /// Standard named/query staging; preparation freezes the borrowed workspace.
+    pub fn named_links(&mut self) -> super::causal_named::CausalNamedLinks<'_> {
+        self.workspace.named_links()
+    }
+
     pub fn new(
         mut batch: CausalBatch<S>,
         first: u64,

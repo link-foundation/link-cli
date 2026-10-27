@@ -5,7 +5,7 @@
 
 use crate::error::LinkError;
 use crate::lino_link::LinoLink;
-use links_notation::{parse_lino_to_links, LiNo};
+use links_notation::{parse_lino_to_links, parse_lino_to_links_with_config, LiNo, ParserConfig};
 
 /// Parser for LiNo notation
 /// Corresponds to Link.Foundation.Links.Notation.Parser in C#
@@ -20,6 +20,17 @@ impl Parser {
     /// Parses a LiNo query string into a list of LinoLinks
     pub fn parse(&self, query: &str) -> Result<Vec<LinoLink>, LinkError> {
         parse_lino_to_links(query)
+            .map(|links| links.into_iter().map(Self::convert_link).collect())
+            .map_err(|error| LinkError::ParseError(error.to_string()))
+    }
+
+    /// Admit nesting with the notation grammar before converting its document.
+    pub fn parse_with_max_depth(
+        &self,
+        query: &str,
+        depth: usize,
+    ) -> Result<Vec<LinoLink>, LinkError> {
+        parse_lino_to_links_with_config(query, &ParserConfig::new().with_max_depth(depth))
             .map(|links| links.into_iter().map(Self::convert_link).collect())
             .map_err(|error| LinkError::ParseError(error.to_string()))
     }

@@ -1,9 +1,10 @@
 # Causal session query and protocol parity
 
 Continue the ordinary mutable session work under R6/R7/R8/R9. The raw session
-preserves every u64 address, but the existing Rust query processor, named-store
-trait, reference validator and protocol operations specialize their addresses
-to u32. C#'s advanced mixed-query processor also specializes its options,
+preserves every u64 address. The Rust query processor, named-store trait and
+reference validator now select an address type while retaining their u32
+facades; its protocol operations still specialize their addresses to u32.
+C#'s advanced mixed-query processor also specializes its options,
 matching and mutation paths to uint despite the generic links interface.
 Supplying an ordinary u64 workspace therefore needs a real address-width
 extension in both native implementations. The raw API alone does not complete
@@ -27,12 +28,12 @@ this criterion.
       additional transport. Bound deliberate deep-input probes by finite
       input and process stack/memory limits. Preserve existing request-size
       admission and reject unsupported input before any real publication.
-- [ ] Reuse the existing query implementation with an explicit address type,
+- [x] Reuse the existing Rust query implementation with an explicit address type,
       retaining the existing public u32 behavior by default. Evaluate a wider
       checked intermediate for the u64 adapter so its wildcard marker lies
       outside the complete stored address range. Do not truncate, remap real
       identities to temporary u32 slots, or fork the query algorithms.
-- [ ] Replace the reference planner's create/delete allocation probe with an
+- [x] Replace the Rust query reference planner's create/delete allocation probe with an
       optional checked reservation for monotonic staged allocators. Its
       existing assumption that deletion returns the last allocated address
       does not hold for engine transactions or caller-reserved causal ranges.
@@ -98,4 +99,22 @@ The reservation work must model the actual creation path and validate these
 cases. Reserving the current overestimate and claiming every reserved identity
 will be created would retain the dangling-reference bug. These failures are
 preserved in `query-allocation-before.log` and
-`query-allocation-matrix-before.log`; their fixes remain unfinished.
+`query-allocation-matrix-before.log`. The ordinary Rust engine and causal
+workspace now preview the shared execution path and reserve its actual
+allocations. Focused contracts verify the reproduced anonymous/forward,
+named/pair-reuse and explicit-high cases. The recycling-store fallback and
+C# planner still require their separate corrections.
+
+## Canonical protocol reference kinds
+
+`node --max-old-space-size=64 --stack-size=1024
+experiments/issue-138/query-document-kinds.mjs` proves that the existing
+canonical string document model maps quoted or encoded numeric names, quoted
+`*` and quoted `$x` to the same documents as bare addresses, wildcards and
+variables. Formatting those documents cannot recover their original kinds.
+`query-document-kinds.log` preserves the five finite controls. This is a
+separate protocol-boundary requirement; the direct Rust query parser preserves
+those distinctions. Extending only the operation address width would leave
+this loss unresolved. Query transport needs an explicit lossless query-text
+envelope, or another specified representation that retains reference kinds,
+with matching native and actual-WASM/client tests before claiming parity.

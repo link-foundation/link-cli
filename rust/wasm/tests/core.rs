@@ -102,3 +102,13 @@ mod causal_projection;
 #[cfg(feature = "causal-sessions")]
 #[path = "../../tests/engine_causal_session_tests.rs"]
 mod causal_session;
+
+#[path = "../../tests/engine_query_allocation_tests.rs"]
+mod engine_query_allocation;
+
+#[path = "../../tests/query_address_width_tests.rs"]
+mod query_address_width;
+
+#[cfg(feature = "causal-sessions")]
+#[path = "../../tests/engine_causal_query_tests.rs"]
+mod causal_query;

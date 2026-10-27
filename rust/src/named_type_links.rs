@@ -12,12 +12,13 @@ use std::io::{BufWriter, Write};
 use std::path::Path;
 
 use crate::error::LinkError;
-use crate::link::Link;
+use crate::link::{GenericLink, Link};
 use crate::link_storage::{ChangeObserver, LinkStorage};
 use crate::named_types::{NamedTypes, NamedTypesDecorator};
+use crate::query_address::QueryAddress;
 
-fn validate_ensure_address(id: u32) -> Result<()> {
-    if id == 0 || id == u32::MAX {
+fn validate_ensure_address<T: QueryAddress>(id: T) -> Result<()> {
+    if id == T::from_byte(0) || id == T::MAX {
         return Err(LinkError::InvalidFormat(format!(
             "Cannot ensure unsupported link address {id}"
         ))
@@ -26,20 +27,34 @@ fn validate_ensure_address(id: u32) -> Result<()> {
     Ok(())
 }
 
-pub trait NamedTypeLinks {
-    fn create(&mut self, source: u32, target: u32) -> u32;
+pub trait NamedTypeLinks<T: QueryAddress = u32> {
+    /// A checked transport may restrict numeric input and query expansion.
+    fn query_limits(&self) -> Option<crate::query_options::QueryLimits> {
+        None
+    }
+    /// Reserve the actual allocation sequence without staging observable rows.
+    /// Backends with a recycling allocator may retain the legacy probe path.
+    fn reserve_query_allocations(
+        &mut self,
+        _processor: &crate::query_processor::GenericQueryProcessor<T>,
+        _restriction: &crate::lino_link::LinoLink,
+        _substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<HashSet<T>>> {
+        Ok(None)
+    }
+    fn create(&mut self, source: T, target: T) -> T;
     /// Fallible allocation for backends that can report transaction/address errors.
-    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+    fn try_create(&mut self, source: T, target: T) -> Result<T> {
         Ok(self.create(source, target))
     }
-    fn ensure_created(&mut self, id: u32) -> u32;
-    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+    fn ensure_created(&mut self, id: T) -> T;
+    fn try_ensure_created(&mut self, id: T) -> Result<T> {
         validate_ensure_address(id)?;
         Ok(self.ensure_created(id))
     }
-    fn get_link(&mut self, id: u32) -> Option<Link>;
-    fn exists(&mut self, id: u32) -> bool;
-    fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
+    fn get_link(&mut self, id: T) -> Option<GenericLink<T>>;
+    fn exists(&mut self, id: T) -> bool;
+    fn update(&mut self, id: T, source: T, target: T) -> Result<GenericLink<T>> {
         self.update_observed(id, source, target, &mut |_, _| {})
     }
     /// [`Self::update`], reporting every change the update caused.
@@ -55,12 +70,12 @@ pub trait NamedTypeLinks {
     /// ```
     fn update_observed(
         &mut self,
-        id: u32,
-        source: u32,
-        target: u32,
-        observer: ChangeObserver<'_>,
-    ) -> Result<Link>;
-    fn delete(&mut self, id: u32) -> Result<Link> {
+        id: T,
+        source: T,
+        target: T,
+        observer: ChangeObserver<'_, T>,
+    ) -> Result<GenericLink<T>>;
+    fn delete(&mut self, id: T) -> Result<GenericLink<T>> {
         self.delete_observed(id, &mut |_, _| {})
     }
     /// [`Self::delete`], reporting every change the deletion caused.
@@ -73,42 +88,49 @@ pub trait NamedTypeLinks {
     /// links.Delete(link, (before, after) =>
     ///     options.ChangesHandler?.Invoke(before, after) ?? links.Constants.Continue);
     /// ```
-    fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link>;
-    fn all_links(&mut self) -> Vec<Link>;
-    fn search(&mut self, source: u32, target: u32) -> Option<u32>;
-    fn get_or_create(&mut self, source: u32, target: u32) -> u32;
+    fn delete_observed(&mut self, id: T, observer: ChangeObserver<'_, T>)
+        -> Result<GenericLink<T>>;
+    fn all_links(&mut self) -> Vec<GenericLink<T>>;
+    fn search(&mut self, source: T, target: T) -> Option<T>;
+    fn get_or_create(&mut self, source: T, target: T) -> T;
     /// Fallible pair lookup/allocation for composable query and decorator writes.
-    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+    fn try_get_or_create(&mut self, source: T, target: T) -> Result<T> {
         if let Some(id) = self.search(source, target) {
             return Ok(id);
         }
         self.try_create(source, target)
     }
-    fn get_name(&mut self, id: u32) -> Result<Option<String>>;
-    fn set_name(&mut self, id: u32, name: &str) -> Result<u32>;
-    fn get_by_name(&mut self, name: &str) -> Result<Option<u32>>;
-    fn remove_name(&mut self, id: u32) -> Result<()>;
+    fn get_name(&mut self, id: T) -> Result<Option<String>>;
+    fn set_name(&mut self, id: T, name: &str) -> Result<T>;
+    fn get_by_name(&mut self, name: &str) -> Result<Option<T>>;
+    fn remove_name(&mut self, id: T) -> Result<()>;
     fn save(&mut self) -> Result<()>;
 
-    fn get_or_create_named(&mut self, name: &str) -> Result<u32> {
+    fn get_or_create_named(&mut self, name: &str) -> Result<T> {
         if let Some(id) = self.get_by_name(name)? {
             return Ok(id);
         }
 
-        let id = self.try_create(0, 0)?;
+        let id = self.try_create(T::from_byte(0), T::from_byte(0))?;
         self.set_name(id, name)?;
         self.update(id, id, id)?;
         Ok(id)
     }
 
-    fn format_reference(&mut self, id: u32) -> Result<String> {
+    fn format_reference(&mut self, id: T) -> Result<String> {
         Ok(self
             .get_name(id)?
-            .map(|name| escape_lino_reference(&name))
+            .map(|name| {
+                if name.parse::<T>().is_ok() && name.parse::<u32>().is_err() {
+                    links_notation::encode_reference_literal(&name)
+                } else {
+                    escape_lino_reference(&name)
+                }
+            })
             .unwrap_or_else(|| id.to_string()))
     }
 
-    fn format_lino(&mut self, link: &Link) -> Result<String> {
+    fn format_lino(&mut self, link: &GenericLink<T>) -> Result<String> {
         Ok(format!(
             "({}: {} {})",
             self.format_reference(link.index)?,
@@ -151,7 +173,11 @@ pub trait NamedTypeLinks {
         Ok(())
     }
 
-    fn print_change_lino(&mut self, before: &Option<Link>, after: &Option<Link>) -> Result<()> {
+    fn print_change_lino(
+        &mut self,
+        before: &Option<GenericLink<T>>,
+        after: &Option<GenericLink<T>>,
+    ) -> Result<()> {
         let before_text = before
             .map(|link| self.format_lino(&link))
             .transpose()?
@@ -164,16 +190,12 @@ pub trait NamedTypeLinks {
         Ok(())
     }
 
-    fn format_structure(&mut self, id: u32) -> Result<String> {
+    fn format_structure(&mut self, id: T) -> Result<String> {
         let mut visited = HashSet::new();
         self.format_structure_recursive(id, &mut visited)
     }
 
-    fn format_structure_recursive(
-        &mut self,
-        id: u32,
-        visited: &mut HashSet<u32>,
-    ) -> Result<String> {
+    fn format_structure_recursive(&mut self, id: T, visited: &mut HashSet<T>) -> Result<String> {
         crate::structure_format::format_structure(
             self,
             id,

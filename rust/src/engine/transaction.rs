@@ -12,6 +12,7 @@ pub struct EngineTransaction<T: LinkReference, L: TransitionLogStore> {
     pub(super) engine: Engine<T, L>,
     pub(super) base: Snapshot<T>,
     pub(super) writes: BTreeMap<T, Option<Row<T>>>,
+    pub(super) reserved: std::collections::VecDeque<T>,
     pub(super) closed: bool,
     pub(super) isolation: IsolationLevel,
     pub(super) reads: Option<Mutex<ReadSet<T>>>,
@@ -121,6 +122,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
             }
             self.closed = true;
             self.writes.clear();
+            self.reserved.clear();
             self.reads.take();
         }
     }
@@ -147,6 +149,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         // Every commit attempt ends this session, including conflicts/failures.
         state.active -= 1;
         self.closed = true;
+        self.reserved.clear();
         // Publication holds this mutex until completion, so no writer can
         // acquire released addresses yet. Release before fallible callbacks
         // also avoids retaining ownership if a custom log panics.
@@ -223,18 +226,26 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
         self.check_open()?;
         let id = {
             let mut state = self.engine.lock()?;
-            let id =
-                T::try_from(state.next).map_err(|_| LinkError::AddressOutOfRange(state.next))?;
-            let next = state
-                .next
-                .checked_add(1)
-                .ok_or_else(|| error("address space exhausted"))?;
+            let (id, next) = if let Some(id) = self.reserved.front().copied() {
+                (id, state.next)
+            } else {
+                let id = T::try_from(state.next)
+                    .map_err(|_| LinkError::AddressOutOfRange(state.next))?;
+                let next = state
+                    .next
+                    .checked_add(1)
+                    .ok_or_else(|| error("address space exhausted"))?;
+                (id, next)
+            };
             if let Some(locks) = &mut self.locks {
                 locks.acquire(&mut state, id, self.base.revision)?;
             }
             state.next = next;
             id
         };
+        if self.reserved.front() == Some(&id) {
+            self.reserved.pop_front();
+        }
         self.writes.insert(
             id,
             Some(Row {
@@ -271,6 +282,7 @@ impl<T: LinkReference, L: TransitionLogStore> LinksStorage<T> for EngineTransact
                 }),
             );
         }
+        self.reserved.retain(|pending| *pending != id);
         Ok(id)
     }
     fn get_link(&self, id: T) -> Option<GenericLink<T>> {

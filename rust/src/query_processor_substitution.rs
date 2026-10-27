@@ -1,24 +1,25 @@
-//! The substitution half of [`QueryProcessor`]: turning a matched restriction
+//! The substitution half of [`GenericQueryProcessor`]: turning a matched restriction
 //! plus a substitution pattern into the links to write.
 
 use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 
 use crate::error::LinkError;
-use crate::link::Link;
+use crate::link::GenericLink as Link;
 use crate::named_type_links::NamedTypeLinks;
-use crate::query_processor::QueryProcessor;
+use crate::query_address::QueryAddress;
+use crate::query_processor::GenericQueryProcessor;
 use crate::query_types::Pattern;
 
-impl QueryProcessor {
+impl<T: QueryAddress> GenericQueryProcessor<T> {
     pub fn preserve_existing_substitution_parts(
-        storage: &mut impl NamedTypeLinks,
+        storage: &mut impl NamedTypeLinks<T>,
         pattern: &Pattern,
-        solution: &mut HashMap<String, u32>,
-        index: u32,
-        source: &mut u32,
-        target: &mut u32,
-        visited_indexes: &mut HashSet<u32>,
+        solution: &mut HashMap<String, T>,
+        index: T,
+        source: &mut T,
+        target: &mut T,
+        visited_indexes: &mut HashSet<T>,
     ) -> Result<()> {
         if !is_normal_index(index) || !storage.exists(index) {
             return Ok(());
@@ -57,19 +58,19 @@ impl QueryProcessor {
     }
 }
 
-fn should_preserve_existing_part(
+fn should_preserve_existing_part<T: QueryAddress>(
     pattern: Option<&Pattern>,
-    solution: &HashMap<String, u32>,
+    solution: &HashMap<String, T>,
 ) -> bool {
     pattern.is_some_and(|pattern| {
         pattern.is_leaf() && is_variable(&pattern.index) && !solution.contains_key(&pattern.index)
     })
 }
 
-fn resolved_variable_part(
+fn resolved_variable_part<T: QueryAddress>(
     pattern: Option<&Pattern>,
-    solution: &HashMap<String, u32>,
-) -> Option<u32> {
+    solution: &HashMap<String, T>,
+) -> Option<T> {
     pattern.and_then(|pattern| {
         if pattern.is_leaf() && is_variable(&pattern.index) {
             solution.get(&pattern.index).copied()
@@ -79,26 +80,26 @@ fn resolved_variable_part(
     })
 }
 
-fn assign_variable_from_pattern(
+fn assign_variable_from_pattern<T: QueryAddress>(
     pattern: Option<&Pattern>,
-    value: u32,
-    solution: &mut HashMap<String, u32>,
+    value: T,
+    solution: &mut HashMap<String, T>,
 ) {
     if let Some(pattern) = pattern {
         assign_variable(&pattern.index, value, solution);
     }
 }
 
-fn assign_variable(id: &str, value: u32, assignments: &mut HashMap<String, u32>) {
-    if is_variable(id) && value != 0 {
+fn assign_variable<T: QueryAddress>(id: &str, value: T, assignments: &mut HashMap<String, T>) {
+    if is_variable(id) && value != T::from_byte(0) {
         assignments.insert(id.to_string(), value);
     }
 }
 
-fn can_preserve_existing_part(
-    existing_link: Link,
-    part: u32,
-    visited_indexes: &HashSet<u32>,
+fn can_preserve_existing_part<T: QueryAddress>(
+    existing_link: Link<T>,
+    part: T,
+    visited_indexes: &HashSet<T>,
 ) -> bool {
     existing_link.is_full_point()
         || existing_link.is_partial_point()
@@ -109,6 +110,6 @@ fn is_variable(identifier: &str) -> bool {
     !identifier.is_empty() && identifier.starts_with('$')
 }
 
-fn is_normal_index(value: u32) -> bool {
-    value != 0 && value != u32::MAX
+fn is_normal_index<T: QueryAddress>(value: T) -> bool {
+    value != T::from_byte(0) && value != T::MAX
 }

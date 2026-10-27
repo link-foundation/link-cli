@@ -123,6 +123,31 @@ fn stored(store: &Store) -> BTreeMap<String, JournalVersion> {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn ordinary_query_path_stays_private_until_explicit_token_publication() {
+    let store = Store::default();
+    let mut tx = session(store.clone(), 1, 8);
+    let query = link_cli::GenericQueryProcessor::<u128>::new(false);
+    query
+        .process_query(&mut tx.named_links(), "() ((1 1) (wide: 1 1))")
+        .unwrap();
+    assert_eq!(tx.get_name(1).as_deref(), Some("wide"));
+    assert!(stored(&store).is_empty());
+    assert_eq!(store.0.borrow().calls, 0);
+    let request = tx.prepare(&token(999)).unwrap();
+    assert_eq!(request.edits.len(), 1);
+    assert!(query
+        .process_query(&mut tx.named_links(), "() ((2: 2 2))")
+        .is_err());
+    let committed = tx.commit(&token(999)).unwrap();
+    assert_eq!(committed.len(), 1);
+    assert_eq!(store.0.borrow().calls, 1);
+    assert_eq!(tx.commit(&token(999)).unwrap(), committed);
+    assert_eq!(store.0.borrow().calls, 1);
+    assert_eq!(owner(store).snapshot().unwrap().versions, committed);
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn ordinary_links_names_and_observers_publish_one_owned_batch() {
     let store = seeded();
     let before = stored(&store);

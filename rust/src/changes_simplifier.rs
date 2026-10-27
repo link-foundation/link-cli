@@ -2,7 +2,8 @@
 //!
 //! Corresponds to `ChangesSimplifier.cs` in C#.
 
-use crate::link::Link;
+use crate::link::{GenericLink, Link};
+use doublets::data::LinkReference;
 use std::collections::HashMap;
 
 /// Reduces the raw `(before, after)` steps a store reports to one change per
@@ -21,15 +22,22 @@ use std::collections::HashMap;
 /// The changes are ordered by their `after` state, so deletions come first;
 /// changes with equal `after` states keep the order of their first step.
 pub fn simplify_changes(changes: Vec<(Link, Link)>) -> Vec<(Link, Link)> {
-    let mut net_changes: Vec<(Link, Link)> = Vec::new();
-    let mut position_of_address: HashMap<u32, usize> = HashMap::new();
+    simplify_generic_changes(changes)
+}
+
+/// Net changes without narrowing the caller's chosen address type.
+pub fn simplify_generic_changes<T: LinkReference>(
+    changes: Vec<(GenericLink<T>, GenericLink<T>)>,
+) -> Vec<(GenericLink<T>, GenericLink<T>)> {
+    let mut net_changes: Vec<(GenericLink<T>, GenericLink<T>)> = Vec::new();
+    let mut position_of_address: HashMap<T, usize> = HashMap::new();
     for (before, after) in changes {
-        let address = if before.index != 0 {
+        let address = if before.index != T::from_byte(0) {
             before.index
         } else {
             after.index
         };
-        if address == 0 {
+        if address == T::from_byte(0) {
             continue;
         }
         match position_of_address.get(&address) {

@@ -13,6 +13,8 @@ pub mod causal;
 pub mod causal_batch;
 #[cfg(feature = "causal-merkle")]
 pub mod causal_merkle;
+#[cfg(feature = "causal-sessions")]
+pub mod causal_named;
 #[cfg(feature = "causal-projection")]
 pub mod causal_projection;
 #[cfg(feature = "causal")]
@@ -41,6 +43,8 @@ mod object_cache;
 pub mod paged;
 pub mod partitioned;
 mod pessimistic;
+mod query_reservation;
+mod query_scratch;
 pub mod reclaiming;
 pub mod replication;
 mod rows;
@@ -318,6 +322,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             engine: self.clone(),
             base: state.current.clone(),
             writes: BTreeMap::new(),
+            reserved: std::collections::VecDeque::new(),
             closed: false,
             isolation: state.options.isolation,
             reads: (state.options.serializable_validation == SerializableValidation::ReadSet

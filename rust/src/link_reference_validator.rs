@@ -9,20 +9,25 @@ use anyhow::Result;
 use std::collections::HashSet;
 
 use crate::error::LinkError;
-use crate::link::Link;
+use crate::link::GenericLink as Link;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
+use crate::query_address::QueryAddress;
 use crate::query_processor::Changes;
 
-pub struct LinkReferenceValidator {
+/// The existing u32 CLI facade.
+pub type LinkReferenceValidator = GenericLinkReferenceValidator<u32>;
+
+pub struct GenericLinkReferenceValidator<T: QueryAddress> {
+    address: std::marker::PhantomData<T>,
     trace: bool,
     auto_create_missing_references: bool,
     enveloped_names: bool,
 }
 
 #[derive(Debug, Default)]
-struct LinkReferencePlan {
-    numeric_ids_to_be_created: HashSet<u32>,
+struct LinkReferencePlan<T> {
+    numeric_ids_to_be_created: HashSet<T>,
     names_to_be_created: HashSet<String>,
     /// `(source, target)` pairs the substitution itself defines.
     ///
@@ -30,13 +35,13 @@ struct LinkReferencePlan {
     /// here is left as a `(id: 0 0)` placeholder instead of being turned into
     /// a point link, so that the substitution which is about to write that
     /// exact pair does not collide with it under uniqueness resolution.
-    composite_pairs_to_be_created: HashSet<(u32, u32)>,
-    missing_references: Vec<MissingLinkReference>,
+    composite_pairs_to_be_created: HashSet<(T, T)>,
+    missing_references: Vec<MissingLinkReference<T>>,
     missing_reference_keys: HashSet<String>,
 }
 
-impl LinkReferencePlan {
-    fn add_missing_reference(&mut self, reference: MissingLinkReference) {
+impl<T: QueryAddress> LinkReferencePlan<T> {
+    fn add_missing_reference(&mut self, reference: MissingLinkReference<T>) {
         let key = reference.key();
         if self.missing_reference_keys.insert(key) {
             self.missing_references.push(reference);
@@ -45,13 +50,13 @@ impl LinkReferencePlan {
 }
 
 #[derive(Debug, Clone)]
-struct MissingLinkReference {
+struct MissingLinkReference<T> {
     identifier: String,
     pattern_type: &'static str,
-    numeric_id: Option<u32>,
+    numeric_id: Option<T>,
 }
 
-impl MissingLinkReference {
+impl<T: QueryAddress> MissingLinkReference<T> {
     fn key(&self) -> String {
         self.numeric_id
             .map(|id| format!("id:{id}"))
@@ -59,9 +64,10 @@ impl MissingLinkReference {
     }
 }
 
-impl LinkReferenceValidator {
+impl<T: QueryAddress> GenericLinkReferenceValidator<T> {
     pub fn new(trace: bool, auto_create_missing_references: bool) -> Self {
         Self {
+            address: std::marker::PhantomData,
             trace,
             auto_create_missing_references,
             enveloped_names: false,
@@ -86,16 +92,33 @@ impl LinkReferenceValidator {
     /// Validate already-decoded identifiers supplied by a custom front end.
     pub fn validate_links_exist_or_will_be_created(
         &self,
-        storage: &mut impl NamedTypeLinks,
+        storage: &mut impl NamedTypeLinks<T>,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<Changes> {
+    ) -> Result<Changes<T>> {
+        self.validate_with_plan(storage, restriction_patterns, substitution_patterns, |_| {
+            Ok(None)
+        })
+    }
+
+    pub(crate) fn validate_with_plan<S: NamedTypeLinks<T>>(
+        &self,
+        storage: &mut S,
+        restriction_patterns: &[LinoLink],
+        substitution_patterns: &[LinoLink],
+        mut reserve: impl FnMut(&mut S) -> Result<Option<HashSet<T>>>,
+    ) -> Result<Changes<T>> {
         self.trace_msg("[ValidateLinksExistOrWillBeCreated] Starting validation");
 
         let mut created = Vec::new();
         loop {
-            let plan =
-                self.plan_references(storage, restriction_patterns, substitution_patterns)?;
+            let reserved = reserve(storage)?;
+            let plan = self.plan_references(
+                storage,
+                restriction_patterns,
+                substitution_patterns,
+                reserved,
+            )?;
             if plan.missing_references.is_empty() {
                 self.trace_msg("[ValidateLinksExistOrWillBeCreated] Validation completed");
                 return Ok(created);
@@ -110,20 +133,20 @@ impl LinkReferenceValidator {
                 .into());
             }
 
-            // Creating a reference frees addresses on the way, which changes
-            // the ones the query's new links get, so the plan is made again
-            // until every reference is accounted for.
+            // An explicit ensure or named reference can change subsequent
+            // allocations. Replan while retaining this session's owned prefix.
             created.extend(self.auto_create_missing_references(storage, &plan)?);
         }
     }
 
     fn plan_references(
         &self,
-        storage: &mut impl NamedTypeLinks,
+        storage: &mut impl NamedTypeLinks<T>,
         restriction_patterns: &[LinoLink],
         substitution_patterns: &[LinoLink],
-    ) -> Result<LinkReferencePlan> {
-        let mut plan = self.build_link_reference_plan(storage, substitution_patterns)?;
+        reserved: Option<HashSet<T>>,
+    ) -> Result<LinkReferencePlan<T>> {
+        let mut plan = self.build_link_reference_plan(storage, substitution_patterns, reserved)?;
         self.trace_msg(&format!(
             "[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {:?}",
             plan.numeric_ids_to_be_created
@@ -152,16 +175,21 @@ impl LinkReferenceValidator {
 
     fn build_link_reference_plan(
         &self,
-        storage: &mut impl NamedTypeLinks,
+        storage: &mut impl NamedTypeLinks<T>,
         substitution_patterns: &[LinoLink],
-    ) -> Result<LinkReferencePlan> {
+        reserved: Option<HashSet<T>>,
+    ) -> Result<LinkReferencePlan<T>> {
         let mut plan = LinkReferencePlan::default();
         let mut anonymous_links = 0;
         for pattern in substitution_patterns {
             Self::collect_definitions(pattern, &mut plan, &mut anonymous_links);
         }
-        plan.numeric_ids_to_be_created
-            .extend(Self::next_created_addresses(storage, anonymous_links)?);
+        if let Some(ids) = reserved {
+            plan.numeric_ids_to_be_created.extend(ids);
+        } else {
+            plan.numeric_ids_to_be_created
+                .extend(Self::next_created_addresses(storage, anonymous_links)?);
+        }
         Ok(plan)
     }
 
@@ -170,7 +198,7 @@ impl LinkReferenceValidator {
     /// without an id.
     fn collect_definitions(
         pattern: &LinoLink,
-        plan: &mut LinkReferencePlan,
+        plan: &mut LinkReferencePlan<T>,
         anonymous_links: &mut usize,
     ) {
         if let Some(values) = &pattern.values {
@@ -185,7 +213,7 @@ impl LinkReferenceValidator {
             *anonymous_links += 1;
             return;
         };
-        match identifier.parse::<u32>() {
+        match identifier.parse::<T>() {
             Ok(link_id) => plan.numeric_ids_to_be_created.insert(link_id),
             Err(_) => plan.names_to_be_created.insert(identifier),
         };
@@ -204,9 +232,12 @@ impl LinkReferenceValidator {
     /// not necessarily next. Creating the links and deleting them again in
     /// reverse leaves the store exactly as it was, and is the one way to ask
     /// any store, a remote one included.
-    fn next_created_addresses(storage: &mut impl NamedTypeLinks, count: usize) -> Result<Vec<u32>> {
-        let addresses: Vec<u32> = (0..count)
-            .map(|_| storage.try_create(0, 0))
+    fn next_created_addresses(
+        storage: &mut impl NamedTypeLinks<T>,
+        count: usize,
+    ) -> Result<Vec<T>> {
+        let addresses: Vec<T> = (0..count)
+            .map(|_| storage.try_create(T::from_byte(0), T::from_byte(0)))
             .collect::<Result<_>>()?;
         for &address in addresses.iter().rev() {
             storage.delete(address)?;
@@ -216,8 +247,8 @@ impl LinkReferenceValidator {
 
     fn collect_missing_references(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        plan: &mut LinkReferencePlan,
+        storage: &mut impl NamedTypeLinks<T>,
+        plan: &mut LinkReferencePlan<T>,
         patterns: &[LinoLink],
         is_substitution: bool,
         pattern_type: &'static str,
@@ -236,8 +267,8 @@ impl LinkReferenceValidator {
 
     fn collect_missing_references_in_pattern(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        plan: &mut LinkReferencePlan,
+        storage: &mut impl NamedTypeLinks<T>,
+        plan: &mut LinkReferencePlan<T>,
         pattern: &LinoLink,
         is_substitution: bool,
         pattern_type: &'static str,
@@ -268,12 +299,12 @@ impl LinkReferenceValidator {
 
     fn validate_reference_identifier(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        plan: &mut LinkReferencePlan,
+        storage: &mut impl NamedTypeLinks<T>,
+        plan: &mut LinkReferencePlan<T>,
         identifier: &str,
         pattern_type: &'static str,
     ) -> Result<()> {
-        if let Ok(link_id) = identifier.parse::<u32>() {
+        if let Ok(link_id) = identifier.parse::<T>() {
             if !storage.exists(link_id) && !plan.numeric_ids_to_be_created.contains(&link_id) {
                 plan.add_missing_reference(MissingLinkReference {
                     identifier: identifier.to_string(),
@@ -315,9 +346,9 @@ impl LinkReferenceValidator {
     /// is only filled in: the query writes the point link.
     fn auto_create_missing_references(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        plan: &LinkReferencePlan,
-    ) -> Result<Changes> {
+        storage: &mut impl NamedTypeLinks<T>,
+        plan: &LinkReferencePlan<T>,
+    ) -> Result<Changes<T>> {
         let missing_references = &plan.missing_references;
         let mut created = Vec::new();
         let mut numeric_references = missing_references
@@ -336,7 +367,7 @@ impl LinkReferenceValidator {
                 "[ValidateLinksExistOrWillBeCreated] Auto-creating missing numeric reference {link_id}."
             ));
             storage.try_ensure_created(link_id)?;
-            let placeholder = Link::new(link_id, 0, 0);
+            let placeholder = Link::new(link_id, T::from_byte(0), T::from_byte(0));
             created.push((None, Some(placeholder)));
             if plan
                 .composite_pairs_to_be_created
@@ -378,8 +409,8 @@ impl LinkReferenceValidator {
         lino_link.values_count() == 2
     }
 
-    fn concrete_numeric_identifier(id: Option<&str>) -> Option<u32> {
-        Self::concrete_identifier(id).and_then(|identifier| identifier.parse::<u32>().ok())
+    fn concrete_numeric_identifier(id: Option<&str>) -> Option<T> {
+        Self::concrete_identifier(id).and_then(|identifier| identifier.parse::<T>().ok())
     }
 
     fn concrete_identifier(id: Option<&str>) -> Option<String> {

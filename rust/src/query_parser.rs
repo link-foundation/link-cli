@@ -48,9 +48,33 @@ pub(crate) fn format_identifier(identifier: &str) -> String {
 }
 
 pub(crate) fn parse(query: &str) -> Result<Vec<LinoLink>, LinkError> {
+    parse_for::<u32>(query, None)
+}
+
+pub(crate) fn parse_for<T: crate::query_address::QueryAddress>(
+    query: &str,
+    limits: Option<crate::query_options::QueryLimits>,
+) -> Result<Vec<LinoLink>, LinkError> {
     let parser = Parser::new();
+    let parse = |text: &str| match limits {
+        Some(limits) => parser.parse_with_max_depth(text, limits.max_depth),
+        None => parser.parse(text),
+    };
     // Preserve diagnostics from the original source, before introducing envelopes.
-    let original = parser.parse(query)?;
+    let original = parse(query)?;
+    if let Some(limits) = limits {
+        let mut pending: Vec<_> = original.iter().collect();
+        let mut nodes = 0;
+        while let Some(link) = pending.pop() {
+            nodes += 1;
+            if nodes > limits.max_nodes {
+                return Err(LinkError::QueryError("query node limit exceeded".into()));
+            }
+            if let Some(values) = &link.values {
+                pending.extend(values);
+            }
+        }
+    }
     if original.is_empty() {
         return Ok(original);
     }
@@ -85,9 +109,26 @@ pub(crate) fn parse(query: &str) -> Result<Vec<LinoLink>, LinkError> {
             let digits = rest.bytes().take_while(u8::is_ascii_digit).count();
             digits > 0 && rest.as_bytes().get(digits) == Some(&b'{')
         });
+        if let Some(limits) = limits {
+            let digits = token.strip_prefix(['+', '-']).unwrap_or(token);
+            if !quoted
+                && !literal
+                && !digits.is_empty()
+                && digits.bytes().all(|byte| byte.is_ascii_digit())
+                && (token.parse::<u128>().is_err()
+                    || token
+                        .parse::<u128>()
+                        .is_ok_and(|value| value > limits.max_address)
+                    || token.parse::<T>().is_err())
+            {
+                return Err(LinkError::QueryError(format!(
+                    "query address out of range: {token}"
+                )));
+            }
+        }
         let is_syntax = !quoted
             && !literal
-            && (token.parse::<u32>().is_ok() || token == "*" || token.starts_with('$'));
+            && (token.parse::<T>().is_ok() || token == "*" || token.starts_with('$'));
         if is_syntax {
             rewritten.push_str(token);
         } else {
@@ -101,7 +142,7 @@ pub(crate) fn parse(query: &str) -> Result<Vec<LinoLink>, LinkError> {
             rewritten.push_str(&encode_reference_literal(&format!("\"{value}\"")));
         }
     }
-    parser.parse(&rewritten)
+    parse(&rewritten)
 }
 
 fn single_reference(link: &LiNo<String>) -> &str {
