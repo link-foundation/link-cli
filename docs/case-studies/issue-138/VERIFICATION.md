@@ -4093,3 +4093,28 @@ failures, nonzero callback panic, failed partial shrink, representation safety,
 physical repair and hardware power-loss verification remain unfinished.
 Fresh platform CI and every wider unmet R1-R12 criterion remain required.
 PR139 stays draft and unmerged.
+
+## C# native platform coverage retention (2026-10-27T11:52Z)
+
+Successful immutable dec6cb7 run 40491222901 passes 2,460 tests on each
+platform, but its artifact API retains only the complete Linux report. The
+125,920-byte archive is a valid ZIP and its actual SHA256 matches GitHub's
+digest. Its complete Release totals are 7,270/7,471 lines and 5,643/6,105
+branches. The reusable artifact verifier fails against that baseline because
+both additional platform reports are absent, before changing the workflow.
+csharp-platform-coverage-before.txt preserves actual commands and evidence.
+
+The workflow now writes summaries and retains each platform's already
+collected report. Linux keeps csharp-coverage and its existing Codecov
+behavior; Windows/macOS use distinct names. No source, test, instrumentation
+denominator or threshold is removed. The full local check ending 11:50:17Z
+includes this workflow change: all 221 repository tests, dependency freshness,
+actionlint/ShellCheck and whitespace checks pass. C# production behavior is
+unchanged; its existing full local Debug/Release validation remains applicable.
+
+Fresh exact-head CI and downloading all three actual archives remain required.
+The verifier checks run SHA/conclusion, full-suite counts, platform summaries,
+artifact size/digest and complete XML metrics; platform percentages must not
+be summed. No new coverage percentage is claimed from retaining evidence.
+Complete native/C#/linked-WASM 100% and every wider unmet criterion remain
+unfinished. PR139 remains draft and unmerged.

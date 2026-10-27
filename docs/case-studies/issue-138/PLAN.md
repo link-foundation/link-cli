@@ -939,3 +939,14 @@ acceptance criterion continue independently.
     under RUST-GROW-ADMISSION-PLAN.md. Real resize I/O failure, nonzero callback
     panic, failed shrink, representation safety and all wider unmet criteria
     remain unfinished.
+
+66. Retain each C# platform's existing complete coverage evidence. Successful
+    dec6cb7 collects three reports but publishes only Linux. The real artifact
+    verifier rejects the missing Windows/macOS reports before correction.
+    Remove the Linux-only gates from summary/retention, preserve the stable
+    Linux artifact name and Codecov behavior, and give each other platform a
+    distinct artifact. All 221 repository and strict workflow checks pass
+    locally. After publication, inspect fresh exact-head tests and download
+    each real archive, verifying its size, SHA256 and complete metrics under
+    CSHARP-PLATFORM-COVERAGE-PLAN.md. This does not complete the 100% requirement
+    or infer a coverage gain from retaining additional evidence.

@@ -298,21 +298,21 @@ jobs:
           dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming-chunks
 
       - name: Setup Node.js for coverage
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        if: ${{ !cancelled() }}
         uses: actions/setup-node@v7
         with:
           node-version: '24.x'
 
       - name: Write coverage summary
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        if: ${{ !cancelled() }}
         working-directory: .
         run: node .github/scripts/coverage.mjs summary csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
 
       - name: Retain Cobertura reports
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: csharp-coverage
+          name: ${{ matrix.os == 'ubuntu-24.04' && 'csharp-coverage' || format('csharp-coverage-{0}', matrix.os) }}
           path: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml
           if-no-files-found: error
 

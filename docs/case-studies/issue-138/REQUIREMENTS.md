@@ -1,5 +1,14 @@
 # Acceptance inventory
 
+C# coverage retention (R8) now publishes the existing complete Windows and
+macOS reports as distinct artifacts alongside the established Linux artifact.
+The immutable successful dec6cb7 run has only the Linux report; the artifact
+verifier independently rejects that missing evidence. All 221 repository
+checks and strict workflow checks pass locally. Fresh CI and actual downloads
+must still verify the added artifacts; this changes evidence retention without
+claiming higher measured coverage. Complete project 100% remains unfinished.
+See CSHARP-PLATFORM-COVERAGE-PLAN.md and csharp-platform-coverage-before.txt.
+
 Generic Rust growth admission (R1/R6/R7/R8) now rejects arithmetic/layout
 overflow before invalidating the live descriptor and handles zero growth
 directly against its existing prefix. Three finite regressions first fail
