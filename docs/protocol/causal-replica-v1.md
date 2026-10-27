@@ -16,9 +16,11 @@ The selected key contains an ordered list of records:
 
 1. `["causal-replica1",AUTHOR]` binds the complete lineage to one author.
 2. `["causal-write1",TOKEN,OBSERVED,V]` records one local mutation and its retry
-   receipt. OBSERVED is the sorted, nonduplicated, undominated result of merging
-   the caller's explicitly observed versions. All observations address V's row.
-   Recompute V by joining OBSERVED, then advancing the durable global local
+   receipt. OBSERVED retains all explicitly observed versions, sorted and
+   deduplicated by dot, including dominated observations. Validate every
+   observation against history before pruning; retain those identities through
+   replay. All observations address V's row. Recompute V by joining OBSERVED,
+   then advancing the durable global local
    counter by one. The counter is global to this local lineage, across rows;
    it is reconstructed from writes in record order. Mutation, counter and token
    become visible at the same local CAS boundary.
@@ -42,7 +44,10 @@ clock beyond its durable local counter also rejects. Equal known operations are
 idempotent. Concurrent updates and deletion markers remain siblings; explicit
 observations are required to resolve them. Deletions are retained indefinitely.
 
-A token identifies the normalized request `(address, observed, payload)`.
+A token identifies the normalized request `(address, merged observed, payload)`.
+Every supplied observation is checked against history even when it would be
+pruned by normalization, including on a receipt retry. New writes durably retain
+the full admitted evidence. A successful receipt retry adds no journal record.
 Repeating the same request returns its original owned version without a CAS,
 including after reopening and intervening edits. Reusing the token for a changed
 request rejects. A CAS false result is a conflict; a thrown or malformed result
@@ -53,7 +58,12 @@ that request already committed.
 Each operation rereads and validates the whole selected journal. Defaults and
 hard maxima are 4096 entries, including the header, and 8 MiB of ASCII record
 bytes; callers may select smaller positive byte bounds and entry bounds of at
-least two. Capacity exhaustion rejects before CAS. The underlying store's own
+least two. Each record additionally admits at most 1 MiB, five nested array
+levels and 32768 unquoted separators before JSON parsing. Non-ASCII bytes,
+escapes, object delimiters and unmatched quotes/brackets reject before parsing. These bounds admit
+the maximum 64-version batch, including 64-author clocks and 4096-byte names,
+while bounding the parser's allocation shape. Capacity exhaustion rejects
+before CAS. The underlying store's own
 limits may reject a smaller journal. At most 64 visible siblings per row and 64
 authors per version are inherited semantic bounds. Public snapshots own their
 nested data. Callers retain ownership of the physical store and close it through

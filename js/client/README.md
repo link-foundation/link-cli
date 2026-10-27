@@ -21,7 +21,10 @@ from `node:`, and nothing here needs React or a browser.
 The separately imported `./engine-causal-version` component supplies bounded
 causal row encoding, retained-sibling reconciliation and checked counter
 construction. See [configuration, costs and limits](../../docs/ENGINE-CAUSAL-VERSIONS.md).
-It performs no I/O; durable causal storage and anti-entropy remain in progress.
+The separately selected `./engine-causal-replica` composes a coherent local
+atomic provider with causal mutations and durable retry receipts. See
+[ownership, finite replay costs and physical examples](../../docs/ENGINE-CAUSAL-REPLICAS.md).
+Merkle transport, ordinary links projection and safe reclamation remain in progress.
 
 ## Use
 

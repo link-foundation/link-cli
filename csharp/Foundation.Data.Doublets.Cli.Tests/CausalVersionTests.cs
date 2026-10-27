@@ -112,10 +112,15 @@ public class CausalVersionTests
         var value = new CausalVersion(1, new(author, 1), [new(author, 1)], new(0, 0, null));
         foreach (var invalid in new[] { value with { Address = 0 }, value with { Dot = null! },
             value with { Clock = null! }, value with { Clock = [] },
+            value with { Dot = new(null!, 1) }, value with { Clock = [null!] },
+            value with { Clock = [new(author, 0)] },
             value with { Payload = new(0, 0, "\ud800") },
+            value with { Payload = new(0, 0, new string('x', 4097)) },
             value with { Payload = new(0, 0, new string('雪', 1366)) } })
             Assert.ThrowsAny<Exception>(() => invalid.Encode());
         Assert.Throws<ArgumentNullException>(() => CausalVersion.Merge(null!, []));
+        Assert.Throws<InvalidDataException>(() => CausalVersion.Merge([null!], []));
+        Assert.Throws<InvalidDataException>(() => CausalVersion.Advance(0, author, 0, [], null));
         Assert.Throws<InvalidDataException>(() => CausalVersion.Merge(Enumerable.Repeat(value, 65).ToArray(), []));
         var siblings = Enumerable.Range(1, 65).Select(n =>
         {

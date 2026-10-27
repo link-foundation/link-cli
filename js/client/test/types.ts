@@ -2,6 +2,18 @@ import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links } from '
 import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';
 import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
+import { CausalReplica, type CausalSnapshot } from '../types/engine-causal-replica.js';
+async function causalReplicaTypes(store: import('../types/index.js').AtomicJournalStoreProvider) {
+  const owner = new CausalReplica(store, 'replica', '00000000000000000000000000000001', { requireDurableFlush: true });
+  const snapshot: CausalSnapshot = await owner.snapshot();
+  const changed: boolean = await owner.receive(snapshot.versions);
+  await owner.write('00000000000000000000000000000001', '1', await owner.read('1'), null);
+  // @ts-expect-error Addresses must preserve the complete canonical u64 range.
+  await owner.read(1);
+  // @ts-expect-error A coherent atomic provider is required.
+  new CausalReplica({}, 'replica', snapshot.author);
+  return changed;
+}
 function causalTypes(wire: string) {
   const value: CausalValue = CausalVersion.decode(wire);
   const merged: CausalValue[] = CausalVersion.merge([value], []);

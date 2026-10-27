@@ -996,6 +996,25 @@ acceptance criterion continue independently.
     remain included. All 221 repository checks pass. causal-version.txt records
     the complete sequential run and its remaining coverage gaps. C# exact-head
     platform CI passes and all three complete archives are independently verified;
-    Rust Windows CI is still running. Durable counter ownership/publication,
-    bounded Merkle transfer,
+    All nine exact-head workflows pass; causal-version-ci.txt retains the receipt.
+    Bounded Merkle transfer,
     ordinary links projection and all wider unmet criteria remain unfinished.
+
+70. Publish the separately selected local causal owner over AtomicJournalStore
+    in native Rust, C#, JS/TS and actual WASM. Missing-API regressions precede
+    implementation. Eight portable contracts and 29 independently generated
+    canonical journal cases verify author/counter ownership, lost-reply tokens,
+    concurrent deletion and historical contradictions. Test-first controls also
+    expose malformed framing reaching JSON.parse and dominated observations
+    disappearing before historical validation; preparse shape admission and
+    complete retained evidence correct both. All 657 JS tests enforce 100%
+    production coverage. Focused native/C#/actual-WASM contracts, formatting,
+    strict Clippy, types and bare dependency checks pass. SQL-free physical
+    composition passes 50 plain/mirrored five-runtime handoffs, 20 reaped process
+    exits, 100 unchanged-byte stale-owner refusals and 100 recovered retry/
+    reopen/following-edit checks. Full Debug/Release/native/WASM coverage is
+    running separately; fresh exact-head platform CI remains required. Full
+    replay, finite retained history/receipts, unique independent authors and
+    operator-authorized stale-marker recovery are explicit. Ordinary links
+    projection, Merkle transfer, safe compaction and every wider unmet criterion
+    remain unfinished under CAUSAL-LOCAL-PLAN.md.

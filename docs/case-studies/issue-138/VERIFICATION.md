@@ -4230,8 +4230,9 @@ Windows and macOS. The verifier downloads each actual archive and checks its
 size, GitHub SHA256 and single complete report. Linux measures 7,344/7,545
 lines and 5,775/6,243 branches; Windows 7,330/7,545 and 5,755/6,243;
 macOS 7,339/7,545 and 5,769/6,243. causal-csharp-platform-coverage.txt retains
-all artifact identities and verified digests. Rust Windows exact-head CI is
-still running; the remaining completed workflows pass.
+all artifact identities and verified digests. Rust Windows exact-head CI
+passes too; all nine exact-head workflows pass. The final receipt is
+retained in causal-version-ci.txt.
 
 The component is pure semantic reconciliation, not durable ownership or
 anti-entropy transport. Durable local publication/retry ownership, ordinary

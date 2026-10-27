@@ -1,5 +1,6 @@
 using Foundation.Data.Doublets.Cli.Engine;
 
+if (args is ["--native-lsm-causal", var causalAction, var causalDirectory, var causalMirrors]) { CausalReplicaInterop.Run(causalAction, causalDirectory, causalMirrors); return; }
 if (args is ["--native-lsm", var mode]) { NativeLsmExample.Run(mode); return; }
 if (args is ["--native-lsm-files", var action, var directory, var mirrors]) { NativeLsmInterop.Run(action, directory, mirrors); return; }
 if (args is ["--native-lsm-chunks", var chunkAction, var chunkDirectory, var chunkMirrors]) { ChunkInterop.Run(chunkAction, chunkDirectory, chunkMirrors); return; }

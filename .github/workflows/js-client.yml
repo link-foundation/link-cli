@@ -267,6 +267,11 @@ jobs:
           bun test js/client/test/engine-file-lsm-*.test.mjs --timeout 30000
           deno test --allow-all js/client/test/engine-file-lsm-*.test.mjs
 
+      - name: Portable causal versions and local ownership on Bun and Deno
+        run: |
+          bun test js/client/test/engine-causal-*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-causal-*.test.mjs
+
       - name: Verify immutable journal chunks in Bun and Deno
         run: |
           bun test js/client/test/partitioned-chunks.test.mjs --timeout 30000
@@ -322,10 +327,12 @@ jobs:
         env:
           RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
         run: |
-          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal --example native_lsm
           python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=reclaiming-chunks python3 examples/native-lsm-js/run-interop.py
+          NATIVE_LSM_LAYOUT=causal python3 examples/native-lsm-js/run-interop.py
+          python3 examples/native-lsm-js/run-causal-faults.py
 
       - name: Verify actual consensus and language interoperability
         env:

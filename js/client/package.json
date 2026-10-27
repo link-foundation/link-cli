@@ -97,6 +97,10 @@
     "./engine-file-lsm-store": {
       "types": "./types/engine-file-lsm-store.d.ts",
       "default": "./src/engine-file-lsm-store.js"
+    },
+    "./engine-causal-replica": {
+      "types": "./types/engine-causal-replica.d.ts",
+      "default": "./src/engine-causal-replica.js"
     }
   },
   "files": [

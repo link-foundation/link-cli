@@ -1,4 +1,7 @@
 //! Native directory facade: complete-store interoperability and real consumers.
+#[cfg(feature = "causal")]
+#[path = "native_lsm/causal.rs"]
+mod causal;
 #[path = "native_lsm/chunks.rs"]
 mod chunks;
 #[path = "native_lsm/consumer.rs"]
@@ -130,6 +133,8 @@ fn files(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError> 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+        #[cfg(feature = "causal")]
+        ["causal", action, directory, mirrors] => causal::run(action, directory, mirrors)?,
         ["files", action, directory, mirrors] => files(action, directory, mirrors)?,
         ["chunks", action, directory, mirrors] => chunks::run(action, directory, mirrors, false)?,
         ["reclaiming-chunks", action, directory, mirrors] => chunks::run(action, directory, mirrors, true)?,

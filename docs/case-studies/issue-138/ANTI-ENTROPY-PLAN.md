@@ -28,16 +28,19 @@ be presented as another acknowledgement threshold on the existing log.
       The independent JS baseline fails with the new module absent. Select
       Rust's `causal` feature or import the separate JS/TS module; neither
       changes the bare engine's storage, metadata or dependency contract.
-- [ ] Add failing durable replica conformance tests before local storage.
+- [x] Add failing durable replica conformance tests before local storage.
       Include concurrent update/delete, stale reads and retries, duplicate
       deliveries, lost replies, restart, independently writable replicas,
       counter exhaustion, contradictory author histories and following edits.
-- [ ] Implement selected local causal storage using native links/journals,
+- [x] Implement selected local causal storage using native links/journals,
       retaining the bare cache path's costs. Persist mutation and local causal
       counter at the same publication boundary. Prevent two active local owners
       from reusing one author counter; do not invent global serializability.
-      CAUSAL-LOCAL-PLAN.md tracks test-first local ownership and retry receipts;
-      the current bounded JS draft is experiment evidence, not production parity.
+      CAUSAL-LOCAL-PLAN.md tracks test-first local ownership and retry receipts.
+      Eight contracts and 29 shared cases pass native Rust, C#, JS and actual
+      WASM; 50 physical handoffs and 20 real process exits pass all five
+      runtime readers/writers. Full coverage and fresh platform CI remain
+      separate verification steps. Finite capacity and full replay are explicit.
 - [ ] Implement bounded snapshot/Merkle comparison and differing-range transfer.
       Validate the snapshot identity throughout transfer, bound tree depth,
       range sizes, bytes and retries, verify received data, and preserve a retry
@@ -63,7 +66,7 @@ serializability, cross-replica uniqueness, cascade constraints and consensus.
 Applications selecting those guarantees must retain their coordinated strategy.
 
 The finite model is design evidence; the selected production codec/merge/counter
-component has separate conformance evidence. Production anti-entropy, durable
-causal state, bounded transfer and all wider unmet criteria remain unfinished;
+component and local owner have separate conformance evidence. Production
+anti-entropy, bounded transfer and all wider unmet criteria remain unfinished;
 PR139 stays draft and unmerged. See anti-entropy-causality-model.txt and
 ../../ENGINE-CAUSAL-VERSIONS.md.

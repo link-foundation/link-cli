@@ -9,6 +9,8 @@ mod boundary_tests;
 mod branch;
 #[cfg(feature = "causal")]
 pub mod causal;
+#[cfg(feature = "causal")]
+pub mod causal_replica;
 mod changes;
 mod checkpoint;
 pub mod cluster;
