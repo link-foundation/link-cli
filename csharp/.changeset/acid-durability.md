@@ -20,6 +20,12 @@ Select owned causal row/name projection with explicit conflict rejection or
 maximum-dot selection. Preserve complete retained siblings including deletions,
 validate complete input before pruning, and bound version count and wire bytes.
 
+Stage ordinary causal links and names through the existing private engine,
+with a fresh caller-reserved address range and selected constraints. Freeze
+one complete final difference before explicit-token batch publication; preserve
+exact retries after unknown replies and following writes. Expose the standard
+ulong links/name surface and owned prepared requests for process recovery.
+
 Preserve the current mapped view and owned file handle when capacity growth is
 rejected. Construct a replacement before publishing its pointer, retaining
 flush, retry, following edits and exact used-length disposal after an I/O error.

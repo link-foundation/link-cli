@@ -110,6 +110,10 @@
       "types": "./types/engine-causal-projection.d.ts",
       "default": "./src/engine-causal-projection.js"
     },
+    "./engine-causal-session": {
+      "types": "./types/engine-causal-session.d.ts",
+      "default": "./src/engine-causal-session.js"
+    },
     "./engine-causal-batch": {
       "types": "./types/engine-causal-batch.d.ts",
       "default": "./src/engine-causal-batch.js"

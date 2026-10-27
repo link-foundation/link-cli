@@ -17,6 +17,8 @@ pub mod causal_merkle;
 pub mod causal_projection;
 #[cfg(feature = "causal")]
 pub mod causal_replica;
+#[cfg(feature = "causal-sessions")]
+pub mod causal_session;
 mod changes;
 mod checkpoint;
 pub mod cluster;

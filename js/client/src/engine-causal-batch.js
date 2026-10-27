@@ -34,6 +34,13 @@ const range = (token, count) => {
   if (token + BigInt(Math.max(count - 1, 0)) > tokenMaximum) invalid();
 };
 
+// Shared preflight for the separately selected mutable-session adapter.
+export const validateCausalBatchToken = (token, count) => {
+  const base = identity(token); range(base, count); return base;
+};
+export const normalizeCausalBatchEdits = edits => normalized(edits).map(edit =>
+  ({ address: edit.encoded[0], observed: edit.observed, payload: edit.payload }));
+
 class StagingStore {
   supportsDurableFlush = true;
   constructor(key, value) {
@@ -132,7 +139,7 @@ export class CausalBatch {
     return { generation: expected[0].generation, ...snapshot };
   }
   async write(token, generation, edits) {
-    const base = identity(token); number(generation);
+    const base = validateCausalBatchToken(token, 0); number(generation);
     const admitted = normalized(edits); range(base, admitted.length);
     const encoded = admitted.map(edit => edit.encoded), request = JSON.stringify([generation, encoded]);
     const { expected, staging, owner, snapshot, receipts } = await this.#load();

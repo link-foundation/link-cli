@@ -24,7 +24,7 @@ struct Options {
     trace: bool,
     require_durable_flush: bool,
 }
-fn options(text: &str) -> Result<EngineOptions, String> {
+pub(crate) fn options(text: &str) -> Result<EngineOptions, String> {
     // Serde structs also accept positional arrays. The public binding accepts
     // a JSON options object, matching the JS client rather than silently
     // treating [] (or a positional policy array) as configuration.

@@ -1,4 +1,5 @@
 using Foundation.Data.Doublets.Cli.Engine;
+if (args is ["--native-lsm-session", var sessionAction, var sessionDirectory, var sessionMirrors]) { CausalSessionInterop.Run(sessionAction, sessionDirectory, sessionMirrors); return; }
 
 if (args is ["--native-lsm-batch", var batchAction, var batchDirectory, var batchMirrors]) { CausalBatchInterop.Run(batchAction, batchDirectory, batchMirrors); return; }
 if (args is ["--native-lsm-merkle", var merkleAction, var merkleDirectory, var merkleMirrors, var merkleMessages]) { CausalMerkleInterop.Run(merkleAction, merkleDirectory, merkleMirrors, merkleMessages); return; }

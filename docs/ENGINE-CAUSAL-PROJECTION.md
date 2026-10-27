@@ -10,7 +10,8 @@ The projection covers all 69 Rust lines, 16 branches and nine functions on
 native/WASM, and all C# source lines and 42 branches in both configurations.
 Complete project coverage remains below 100%; raw regions, instantiations and
 every denominator are retained in the [receipt](../dev/log/issues/138/pulls/139/causal-projection.txt).
-Ordinary mutable sessions remain unfinished; fresh platform CI is required.
+The separately selected [mutable session](ENGINE-CAUSAL-SESSIONS.md) now stages
+ordinary links/names; its full query parity and fresh platform CI remain active.
 
 The projection consumes causal versions from an owned snapshot and requires an
 explicit conflict policy. `reject` refuses a row with multiple retained
@@ -62,8 +63,8 @@ These constructors share the semantic vectors in
 [`protocol/causal-projection-v1.json`](protocol/causal-projection-v1.json).
 The returned rows are a snapshot: obtain a new owner snapshot and construct a
 new projection to see later local or replicated writes. Editing a returned row
-does not write it back. Use the selected replica/batch publication API for
-explicit observed writes until ordinary mutable sessions are available.
+does not write it back. Use a selected mutable session or the replica/batch
+publication API for explicit observed writes.
 
 The runnable [SQL-free cache example](../examples/native-lsm-js/projection-cache.mjs)
 creates and removes its own temporary physical directory. Run it with Node or
@@ -88,8 +89,8 @@ incremental index or history reclamation in this component. The separate Rust
 adding JSON/SHA/SQL to a bare import;
 projection requires the selected causal codec but no SQL or SHA implementation.
 
-Ordinary mutable links/name sessions still need a private standard engine,
-explicit address reservations and one causal batch publication. Local batch
+Mutable links/name sessions use a private standard engine, explicit address
+reservations and one causal batch publication; full query parity remains active. Local batch
 atomicity does not make independently transferred remote rows atomic as a group.
 Global uniqueness, membership, safe reclamation and distributed serializability
 remain separate guarantees requiring their own selected coordination.

@@ -1,9 +1,12 @@
 # Ordinary links over selected causal ownership
 
 Continue R4/R6/R7/R8/R9/R10 after local ownership and bounded Merkle transfer.
-Those components preserve versions and publish individual writes, but they do
-not yet implement an ordinary mutable links session. This is an unfinished
-implementation criterion rather than an external dependency.
+The separately selected mutable links/names implementation now stages changes
+in the ordinary private engine and prepares one complete causal batch. Its
+full validation is tracked in CAUSAL-MUTABLE-SESSION-PLAN.md. Query/protocol
+parity still needs the address-width and allocation work described in
+CAUSAL-QUERY-PARITY-PLAN.md; that is implementation work, not an external
+dependency.
 
 - [x] Establish an independent finite model before production changes. Model
       one local atomic batch, counter assignment, retry receipts, replay,
@@ -38,11 +41,11 @@ implementation criterion rather than an external dependency.
       Five matching native/C#/Node/Bun/Deno/actual-WASM contracts and all 132
       independent vectors pass; complete 19:07:39Z validation is recorded in
       causal-projection.txt and CAUSAL-PROJECTION-PLAN.md.
-- [ ] Implement the standard links and names session APIs over a private
+- [x] Implement the standard links and names session APIs over a private
       write set and one local batch publication. Keep conflict policy and
       reserved address allocation explicit; independent writers require
       disjoint caller-assigned ranges or an external allocator.
-- [ ] Verify multiple-row atomicity, read/name behavior, duplicate pairs,
+- [x] Verify multiple-row atomicity, read/name behavior, duplicate pairs,
       non-cascading deletion, no-op commits, conflicts and cleanup/retries.
       Cover owned snapshot lifetime, disposed sessions, counter/address limits,
       constraints actually selected, and unchanged bytes on rejected requests.
@@ -50,8 +53,9 @@ implementation criterion rather than an external dependency.
       exact reopen/retry/following edits and finite reaped process exits.
       Fifty complete-store handoffs and 100 recovery sequences pass after
       twenty reaped exit-73 children. One hundred stale-marker opens preserve
-      every file hash before explicit operator recovery. Ordinary mutable
-      links sessions need their own corresponding physical verification.
+      every file hash before explicit operator recovery. Mutable links/names
+      sessions have a separate corresponding physical verification matrix in
+      CAUSAL-MUTABLE-SESSION-PLAN.md.
 - [x] Document batch costs and guarantees and run full unfiltered suites and
       coverage sequentially. Complete local validation finishes 18:15:46Z:
       1226 native tests plus six doctests, 752 actual WASM, 2491 C# per

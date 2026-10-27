@@ -37,8 +37,10 @@ public sealed class CausalBatch
     }
     private static void Range(UInt128 token, int count)
     { if (UInt128.MaxValue - token < (UInt128)Math.Max(count - 1, 0)) throw Invalid(); }
+    internal static UInt128 ValidateToken(string value, int count)
+    { var token = Identity(value); Range(token, count); return token; }
     private static string Child(UInt128 token, int index) => (token + (UInt128)index).ToString("x32", CultureInfo.InvariantCulture);
-    private static (CausalBatchEdit[] Edits, JsonElement Encoded) Normalize(IReadOnlyList<CausalBatchEdit> edits)
+    internal static (CausalBatchEdit[] Edits, JsonElement Encoded) Normalize(IReadOnlyList<CausalBatchEdit> edits)
     {
         if (edits is null || edits.Count > 64) throw Invalid(); ulong previous = 0;
         var owned = new List<CausalBatchEdit>(); var encoded = new List<object[]>();
@@ -134,7 +136,7 @@ public sealed class CausalBatch
                 var entry = Parsed(text);
                 if (Wire(entry) != text || entry.ValueKind != JsonValueKind.Array || entry.GetArrayLength() != 5 ||
                     entry[0].ValueKind != JsonValueKind.String || entry[0].GetString() != "causal-batch1" || entry[1].ValueKind != JsonValueKind.String) throw Invalid();
-                string token = entry[1].GetString()!; var baseToken = Identity(token); ulong generation = Number(entry[2]), start = Number(entry[3]);
+                string token = entry[1].GetString()!; var baseToken = ValidateToken(token, 0); ulong generation = Number(entry[2]), start = Number(entry[3]);
                 if (receipts.ContainsKey(token) || start > snapshot.LastCounter) throw Invalid();
                 var edits = ParseEdits(entry[4]); var normalized = Normalize(edits).Encoded; Range(baseToken, edits.Length);
                 if (Wire(normalized) != Wire(entry[4])) throw Invalid();
@@ -155,7 +157,7 @@ public sealed class CausalBatch
     { var loaded = Load(); return new(loaded.Expected[0].Generation, _author, loaded.Snapshot.LastCounter, loaded.Snapshot.Versions); }
     public CausalVersion[] Write(string token, ulong generation, IReadOnlyList<CausalBatchEdit> edits)
     {
-        var baseToken = Identity(token); var (admitted, encoded) = Normalize(edits); Range(baseToken, admitted.Length);
+        var baseToken = ValidateToken(token, 0); var (admitted, encoded) = Normalize(edits); Range(baseToken, admitted.Length);
         string request = Wire(new object[] { Number(generation), encoded }); var loaded = Load();
         loaded.Receipts.TryGetValue(token, out var receipt);
         if (receipt is not null) { if (receipt.Request != request) throw Invalid(); }

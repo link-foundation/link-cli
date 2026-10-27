@@ -33,7 +33,10 @@ and publishes the owner and batch receipts with one local two-key CAS. See
 The separate `./engine-causal-projection` export supplies owned rows and names
 under explicit conflict rejection or maximum-dot selection while retaining every
 causal sibling. See [visibility, bounds and costs](../../docs/ENGINE-CAUSAL-PROJECTION.md).
-Ordinary links projection and safe reclamation remain in progress.
+The separate `./engine-causal-session` export stages ordinary links/names in
+the actual Rust WASM workspace and publishes one explicit-token local batch.
+See [reservations, lifecycle, physical examples and costs](../../docs/ENGINE-CAUSAL-SESSIONS.md).
+Full LiNo query parity and safe reclamation remain in progress.
 
 ## Use
 

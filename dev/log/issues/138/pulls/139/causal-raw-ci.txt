@@ -1,0 +1,16 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published pre-session head: 86378e89854498ee20f309f8cff599e54d9749a1
+All nine exact-head workflows succeed. Their creation follows the 19:25 UTC publication.
+These results verify the published raw-coverage controls and projection; later mutable session changes require fresh exact-head CI.
+Broken Link Checker: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997000
+C# CI/CD Pipeline: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997232
+Dependencies: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997240
+Docs: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997039
+JS client CI: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568996993
+Rust CI/CD Pipeline: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997086
+Security: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997008
+WebAssembly CI: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997027
+Workflows: success; created 2026-10-27T19:25:39Z; https://github.com/link-foundation/link-cli/actions/runs/40568997007
+All three C# archives retain raw JSON and Cobertura XML; causal-raw-platform-coverage.txt separately verifies artifact sizes, SHA256 digests, job timestamps and all five compiled causal components.
+Whole-project coverage and the other unmet R1-R12 criteria remain unfinished; PR139 remains draft and unmerged.
+experiments/issue-138/causal-raw-ci-runs.json: 2177 bytes; SHA256 44b98401bb87fcabb0f8bfc4757049913a459b0568890f39799a23fd03122844.

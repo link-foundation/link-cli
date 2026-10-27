@@ -1,3 +1,4 @@
+import { causalSessionConformance } from './causal-session.mjs';
 import { nativePageConformance } from './native-pages.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,6 +10,7 @@ import { constraintIndexConformance } from './constraint-index.mjs';
 
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
+  await causalSessionConformance(binding);
   await nativePageConformance(binding);
   await sharedStateConformance(binding);
   await constraintIndexConformance(binding);

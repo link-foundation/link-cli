@@ -5,6 +5,9 @@ mod batch;
 #[cfg(feature = "causal")]
 #[path = "native_lsm/causal.rs"]
 mod causal;
+#[cfg(feature = "causal-sessions")]
+#[path = "native_lsm/session.rs"]
+mod causal_session;
 #[path = "native_lsm/chunks.rs"]
 mod chunks;
 #[path = "native_lsm/consumer.rs"]
@@ -141,6 +144,8 @@ fn main() -> anyhow::Result<()> {
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
         #[cfg(feature = "causal-batches")]
         ["batch", action, directory, mirrors] => batch::run(action, directory, mirrors)?,
+        #[cfg(feature = "causal-sessions")]
+        ["session", action, directory, mirrors] => causal_session::run(action, directory, mirrors)?,
         #[cfg(feature = "causal-merkle")]
         ["merkle", action, directory, mirrors, messages] => merkle::run(action, directory, mirrors, messages)?,
         #[cfg(feature = "causal")]

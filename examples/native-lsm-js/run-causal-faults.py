@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 os.chdir(ROOT)
 CSHARP = os.environ.get("CLUSTER_CSHARP_EXAMPLE", "examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll")
 LAYOUT = os.environ.get("NATIVE_CAUSAL_LAYOUT", "causal")
-assert LAYOUT in ("causal", "batch")
+assert LAYOUT in ("causal", "batch", "session")
 RUNTIMES = {
     "node": ["node", "--max-old-space-size=128", "examples/native-lsm-js/causal-interop.mjs"],
     "bun": ["bun", "examples/native-lsm-js/causal-interop.mjs"],
@@ -20,9 +20,9 @@ RUNTIMES = {
     "csharp": ["dotnet", CSHARP, "--native-lsm-causal"],
     "rust": [os.environ.get("RUST_NATIVE_LSM_EXAMPLE", "rust/target/debug/examples/native_lsm"), "causal"],
 }
-if LAYOUT == "batch":
+if LAYOUT in ("batch", "session"):
     for name, command in RUNTIMES.items():
-        command[-1] = "batch" if name == "rust" else "--native-lsm-batch" if name == "csharp" else "examples/native-lsm-js/batch-interop.mjs"
+        command[-1] = LAYOUT if name == "rust" else "--native-lsm-" + LAYOUT if name == "csharp" else f"examples/native-lsm-js/{LAYOUT}-interop.mjs"
 if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
     RUNTIMES = {name: RUNTIMES[name] for name in selected.split(",")}
 

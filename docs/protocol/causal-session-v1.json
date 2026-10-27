@@ -1,0 +1,12071 @@
+{
+  "format": "link-cli-causal-session-v1",
+  "cases": [
+    {
+      "operations": [
+        "create",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "create",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "create",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "create",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "rename",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "update",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        true,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        true,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "delete",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "restore",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "cancel-create",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "33",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32",
+        "33"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "rename",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "update",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1",
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        true
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "delete",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "restore",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "cancel-create",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ],
+        [
+          "32",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "32"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "rename"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "new﻿\u0000🙂"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "update"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "0",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "delete"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": [
+        "1"
+      ]
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "restore"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "cancel-create"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    },
+    {
+      "operations": [
+        "noop",
+        "noop",
+        "noop"
+      ],
+      "errors": [
+        false,
+        false,
+        false
+      ],
+      "rows": [
+        [
+          "1",
+          "0",
+          "2",
+          "old"
+        ],
+        [
+          "3",
+          "1",
+          "1",
+          null
+        ],
+        [
+          "4",
+          "0",
+          "2",
+          null
+        ]
+      ],
+      "changed": []
+    }
+  ]
+}

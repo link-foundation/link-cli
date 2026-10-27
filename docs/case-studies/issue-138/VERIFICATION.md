@@ -4478,3 +4478,40 @@ after a failing workflow-policy control. causal-raw-coverage.txt records exact
 before/after report bytes and SHA256, full counts and reproduction commands.
 Fresh exact-head platform reports and every wider unmet requirement remain
 unfinished. PR139 stays draft and unmerged.
+
+
+Ordinary mutable causal sessions complete local validation at
+2026-10-27T20:47:53Z. Rust/C#/actual-WASM reuse the ordinary private engine;
+JS separately exports the explicit-token publication adapter. Missing public
+APIs fail before implementation. The independent bounded model checks 1029
+finite schedules and 686 exact lost-reply retries; 343 shared vectors exercise
+those paths in production Rust/C# and actual Node/Bun/Deno. Two failing JS
+controls reproduce invalid commit admission poisoning a following valid retry;
+preflight now precedes pending-slot ownership.
+
+Complete suites pass 1241 native tests plus six doctests, 770 actual WASM,
+2506 C# per Debug/Release configuration, 695 Node and 221 repository checks.
+Node enforces 100% production lines/branches/functions. Every source line and
+raw compiled branch in all six C# causal components is covered, including
+methods without source lines. Complete project coverage remains native
+19027/19918 lines and 3728/4224 branches; linked WASM 15158/17792 and
+3121/3643; C# Debug 10188/10497 and 6605/7050; Release 7868/8069 and
+6545/7007. The new Rust session has 313/315 lines and 29/30 branches; the
+WASM binding has 163/165 and 27/30. Uncovered regions/instantiations remain
+included. causal-session.txt preserves every complete denominator and SHA256.
+
+All fifty SQL-free session handoffs pass across Rust/C#/Node/Bun/Deno in
+plain/mirrored stores. Twenty finite reaped process exits precede one hundred
+exact recovered retry/reopen/following-edit checks and one hundred unchanged
+physical-hash blocked opens. Stale-session refusals additionally compare every
+physical file before following publication. Process exits do not certify
+hardware power loss. Formats, strict native/WASM Clippy, types, source/release
+checks, workflow/ShellCheck and 127 dependency declarations/locks pass.
+
+ENGINE-CAUSAL-SESSIONS.md and CAUSAL-MUTABLE-SESSION-PLAN.md document the
+reservation, freezing/retry, ownership, callback, constraint and cost contracts.
+The separate CAUSAL-QUERY-PARITY-PLAN.md tracks unfinished full-width query and
+protocol work and reproduced reference-allocation failures. Global allocation,
+membership/history reclamation, generic mapped failures, whole-project 100%,
+fresh platform CI and every wider unmet requirement remain unfinished.
+PR139 stays draft and unmerged.

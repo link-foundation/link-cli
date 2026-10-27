@@ -40,6 +40,11 @@ fn range(token: u128, count: usize) -> Result<(), LinkError> {
         .ok_or_else(invalid)?;
     Ok(())
 }
+pub(super) fn validate_token(value: &str, count: usize) -> Result<u128, LinkError> {
+    let token = identity(value)?;
+    range(token, count)?;
+    Ok(token)
+}
 #[derive(Clone, Debug)]
 pub struct CausalBatchEdit {
     pub address: u64,
@@ -53,7 +58,7 @@ pub struct CausalBatchSnapshot {
     pub last_counter: u64,
     pub versions: Vec<CausalVersion>,
 }
-fn normalize(edits: &[CausalBatchEdit]) -> Result<Vec<Value>, LinkError> {
+pub(super) fn normalize(edits: &[CausalBatchEdit]) -> Result<Vec<Value>, LinkError> {
     if edits.len() > 64 {
         return Err(invalid());
     }
@@ -299,7 +304,7 @@ impl<S: AtomicJournalStore> CausalBatch<S> {
                     .filter(|v| v.len() == 5 && v[0] == "causal-batch1")
                     .ok_or_else(invalid)?;
                 let token = entry[1].as_str().ok_or_else(invalid)?;
-                let base = identity(token)?;
+                let base = validate_token(token, 0)?;
                 let generation = number(&entry[2])?;
                 let start = number(&entry[3])?;
                 if receipts.contains_key(token) || start > snapshot.last_counter {
@@ -358,7 +363,7 @@ impl<S: AtomicJournalStore> CausalBatch<S> {
         generation: u64,
         edits: &[CausalBatchEdit],
     ) -> Result<Vec<CausalVersion>, LinkError> {
-        let base = identity(token)?;
+        let base = validate_token(token, 0)?;
         let encoded = normalize(edits)?;
         range(base, edits.len())?;
         let request = json!([generation.to_string(), encoded]);

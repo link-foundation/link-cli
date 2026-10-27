@@ -98,3 +98,7 @@ mod compaction;
 
 #[path = "../../tests/engine_causal_projection_tests.rs"]
 mod causal_projection;
+
+#[cfg(feature = "causal-sessions")]
+#[path = "../../tests/engine_causal_session_tests.rs"]
+mod causal_session;

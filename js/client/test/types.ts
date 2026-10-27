@@ -1,3 +1,16 @@
+import { CausalSession, type CausalWorkspaceBinding, type CausalPreparedBatch } from '../types/engine-causal-session.js';
+async function causalSessionTypes(binding: CausalWorkspaceBinding, batch: CausalBatch) {
+  const tx = await CausalSession.open(binding, batch, '32', '33', 'reject', { stateStructure: 'shared' });
+  const address: string = await tx.createLink('0', '18446744073709551615');
+  const prepared: CausalPreparedBatch = await tx.prepare('00000000000000000000000000000064');
+  // @ts-expect-error Addresses preserve the full canonical u64 range.
+  await tx.ensureCreated(32);
+  // @ts-expect-error A causal publication requires an explicit token.
+  await tx.commit();
+  // @ts-expect-error Private staging does not configure distributed isolation.
+  await CausalSession.open(binding, batch, '32', '33', 'reject', { isolation: 'serializable' });
+  await tx.close(); return [address, prepared];
+}
 import { CausalProjection, type CausalProjectedRow } from '../types/engine-causal-projection.js';
 function causalProjectionTypes(values: readonly CausalValue[]) {
   const projection = new CausalProjection(values, 'max-dot', { maxVersions: 64 });

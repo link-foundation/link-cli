@@ -9,6 +9,11 @@ use wasm_bindgen::prelude::*;
 #[cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))]
 extern crate minicov;
 
+#[cfg(feature = "causal-sessions")]
+mod causal_session;
+#[cfg(feature = "causal-sessions")]
+pub use causal_session::CausalLinksWorkspace;
+
 mod engine;
 mod engine_log;
 pub use engine::{StagedCommitGroup, StagedEngine, StagedSession};
