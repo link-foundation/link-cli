@@ -585,3 +585,15 @@ acceptance criterion continue independently.
     process work. Complete local suites pass; `lsm-wal.txt` retains measured
     scope and complete denominators. Atomic publication and fresh exact-head
     CI follow. All broader unmet criteria remain active.
+
+45. Physical-store behavioral fixtures fail on the named missing APIs in all
+    three languages on codec-only baseline `d12760f`. An isolated JS prototype
+    composes the real checkpoint WAL, sorted tables and semantic codec; thirteen
+    controls pass in Node/Bun/Deno, including 152 before/after publication cuts
+    per runtime. Two additional before-failing controls correct hidden historical
+    conflicts and a returned device's durability mismatch in the experiment.
+    Six separate read-only selected-prefix controls pass in all three runtimes.
+    The exact Node CI commands pass locally and now run in the JS workflow.
+    `LSM-PROTOTYPE-PLAN.md` and lsm-store-{before,prototype}.txt retain evidence.
+    Portable production stores, native ownership/discovery, process/interchange
+    tests and all wider acceptance criteria remain active.

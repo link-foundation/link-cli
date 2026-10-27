@@ -33,6 +33,8 @@ on:
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/*sorted-table*'
       - 'experiments/issue-138/*lsm-wal*'
+      - 'experiments/issue-138/*lsm-store*'
+      - 'experiments/issue-138/run-lsm-readonly-inspection.sh'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
@@ -66,6 +68,8 @@ on:
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/*sorted-table*'
       - 'experiments/issue-138/*lsm-wal*'
+      - 'experiments/issue-138/*lsm-store*'
+      - 'experiments/issue-138/run-lsm-readonly-inspection.sh'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
@@ -177,6 +181,11 @@ jobs:
           node ../../experiments/issue-138/verify-reclamation-memory.mjs
           python3 ../../experiments/issue-138/model-object-reclamation.py
           python3 ../../experiments/issue-138/model-reclamation-readers.py
+
+      - name: Verify finite physical LSM composition experiments
+        run: |
+          bash ../../experiments/issue-138/run-lsm-store-prototype.sh node
+          node --max-old-space-size=128 --stack-size=512 --test --test-concurrency=1 --test-timeout=30000 ../../experiments/issue-138/inspect-lsm-wal-pages.test.mjs
 
       - name: Unit tests and complete production coverage
         run: >-

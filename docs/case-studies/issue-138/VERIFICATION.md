@@ -3476,3 +3476,27 @@ optionality checks pass. Compilers run sequentially with jobs1/reduced debug,
 Physical LSM store/provider/process composition and all broader unmet R1–R12
 criteria remain active. Publication requires fresh exact-head CI; PR139 stays
 draft and unmerged.
+
+## Physical store composition experiment and missing-API baseline
+
+Codec-only baseline `d12760f` fails the actual JS, Rust and C# store fixtures
+with ERR_MODULE_NOT_FOUND, E0432 and CS0246 respectively. The sequential controls
+finish at 00:45:26Z, 00:45:34Z and 00:45:53Z on 2026-10-27; lsm-store-before.txt
+records exact log locations and the isolated-baseline reproduction driver.
+
+An isolated experiment uses the production checkpoint WAL, sorted tables and
+semantic codec over finite durable images. Thirteen controls pass in each of
+Node/Bun/Deno, including 72 compaction and 80 group-publication before/after
+mutation cuts per runtime. Every cut fences the uncertain old owner, recovers
+whole acknowledged groups and permits following use. The live disk index retains
+metadata rather than a journal payload map. Historical conflicts beneath a newer
+version and a provider/device durability mismatch first fail separate controls,
+then pass with corrected experiment logic. Six read-only selected-prefix controls
+also pass in each runtime, preserving ignored suffixes until semantic validation.
+
+The exact Node CI commands pass locally and are included in the JS workflow;
+ShellCheck, actionlint and repository checks validate that workflow change.
+`LSM-PROTOTYPE-PLAN.md` and lsm-store-prototype.txt delimit this evidence. These
+results supply neither production store APIs nor native directory guarantees,
+actual-WASM store results, process exits or cross-language store interchange.
+Those requirements and every wider unmet acceptance criterion remain active.

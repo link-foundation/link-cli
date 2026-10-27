@@ -7,7 +7,7 @@ R1/R5/R6/R7/R8/R9/R11/R12; the table primitive alone does not satisfy it.
 
 - [x] Inventory existing atomic journal, replacement-log, maintenance and native
       ownership contracts; retain all existing implementations and defaults.
-- [ ] Specify a versioned WAL/manifest protocol and independent finite oracle.
+- [x] Specify a versioned WAL/manifest protocol and independent finite oracle.
       Before production implementation, run missing-API controls in each
       language. Preserve source fixtures and actual failures.
 - [ ] Implement matching portable Rust/C#/JS engines, with Rust controls running
@@ -69,9 +69,19 @@ certification is a separate unfinished criterion.
 
 Implementation notes remain in `experiments/issue-138/lsm-protocol-design.md`;
 `dev/log/issues/138/pulls/139/lsm-publication-model.txt` preserves the finite
-oracle outcome. No production LSM code or verification is claimed by this plan.
+oracle outcome. The selected semantic codec is tracked in `LSM-WAL-PLAN.md`;
+it does not implement the physical store. No production LSM store verification
+is claimed by this plan.
 A separate bounded V8 probe, `probe-json-key-ownership.mjs`, observes both a
 JSON-decoded 64-character key and its UTF-8 copy as sequential strings with a
 64 KiB payload. The suspected retained payload backing was not reproduced in
 this V8 build; no production fix or universal runtime-memory guarantee follows.
 Run it only with the heap/stack limits documented in the script.
+
+The isolated JavaScript composition prototype is tracked in
+`LSM-PROTOTYPE-PLAN.md`. Its finite page-image fault tests are preparation for
+the portable production stores; native namespace ownership, physical files,
+process exits and cross-language composition remain required work. Prepared
+Rust/C# store fixtures fail against the missing APIs on codec-only baseline
+`d12760f` before those ports are implemented; lsm-store-before.txt preserves
+the actual controls, separately from completed codec tests.
