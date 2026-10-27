@@ -574,3 +574,14 @@ acceptance criterion continue independently.
     All nine preceding production workflows pass on `419f7c7` across native
     platforms. RECLAMATION-CONTRACT-PLAN.md tracks the new test publication and
     exact-head CI; every wider unmet acceptance criterion remains active.
+
+44. The immutable physical-table batch and checkpoint process slices now pass
+    all nine workflows on exact head `523888a`, including all six native
+    platform jobs. `sorted-table-ci.txt` preserves run/job URLs and timestamps.
+    The semantic LSM checkpoint/manifest/group codec follows as a selected
+    pure component in Rust/C#/JS, with a shared independent 111-case oracle.
+    `LSM-WAL-PLAN.md` tracks its full validation and atomic publication.
+    `PHYSICAL-LSM-PLAN.md` retains the production store/provider and native
+    process work. Complete local suites pass; `lsm-wal.txt` retains measured
+    scope and complete denominators. Atomic publication and fresh exact-head
+    CI follow. All broader unmet criteria remain active.

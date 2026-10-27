@@ -13,6 +13,7 @@ on:
       - 'js/**'
       - 'rust/**'
       - 'docs/protocol/native-pages*'
+      - 'docs/protocol/native-lsm-wal*'
       - 'docs/protocol/reclamation-v1.json'
   pull_request:
     branches:
@@ -23,6 +24,7 @@ on:
       - 'js/**'
       - 'rust/**'
       - 'docs/protocol/native-pages*'
+      - 'docs/protocol/native-lsm-wal*'
       - 'docs/protocol/reclamation-v1.json'
   workflow_dispatch:
 

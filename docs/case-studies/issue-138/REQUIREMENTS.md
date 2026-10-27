@@ -665,3 +665,21 @@ sorted-table{,-before}.txt and checkpoint-slices.txt reports. Fresh exact-head
 CI is required after publication. WAL/memtable/manifest recovery, compaction
 and retirement remain unfinished under PHYSICAL-LSM-PLAN.md. A physical table
 alone does not complete on-disk LSM or any wider unmet acceptance criterion.
+
+All nine workflows and six native platform jobs now pass on physical-table/model
+head `523888a`; sorted-table-ci.txt records exact timestamps and URLs. This
+includes Windows checkpoint slices retaining every original process cut.
+
+Selected semantic LSM WAL replay (R1/R5/R6/R7/R8/R9/R11/R12) now supplies matching
+Rust/C#/JS checkpoint/manifest/group codecs without storage I/O. Actual missing
+APIs fail before implementation; 111 independent shared vectors, owned values,
+invalid public-state admission, exact u64 boundaries, actual-WASM execution,
+lazy import controls and SQL-denial checks verify the component. Complete local
+suites pass 1,075 native plus six doctests, 674 actual WASM, 2,351 C# per
+configuration, 535 JS, 176 selected Bun/Deno each and all 221 repository checks.
+The 25 native physical-table writer/reader pairs continue to pass. JS production
+coverage remains enforced at 100%; complete native/C#/linked-WASM denominators
+remain below target and are preserved in VERIFICATION.md and lsm-wal.txt.
+LSM-WAL-PLAN.md tracks publication and fresh exact-head CI. Physical selected-file
+validation, buffering/store APIs, publication, ownership, compaction, retirement,
+native process tests and all wider unmet criteria remain unfinished.

@@ -273,3 +273,8 @@ Provide explicitly selected immutable physical sorted journal tables over native
 doublets pages, with exact tombstone generations, bounded full validation and
 indexed physical point reads. Verify portable vectors and native cross-language
 file interchange; keep WAL/manifest/compaction composition separate.
+
+Add optional native-lsm1 semantic WAL replay and revalidated checkpoint encoding
+with shared independent vectors, canonical u64 descriptors and finite admission.
+Keep physical table validation, publication and native ownership composition as
+separate required work; this codec performs no storage I/O.

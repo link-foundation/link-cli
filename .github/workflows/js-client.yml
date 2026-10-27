@@ -32,6 +32,7 @@ on:
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/*sorted-table*'
+      - 'experiments/issue-138/*lsm-wal*'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
@@ -64,6 +65,7 @@ on:
       - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
       - 'experiments/issue-138/make-native-page-vectors.py'
       - 'experiments/issue-138/*sorted-table*'
+      - 'experiments/issue-138/*lsm-wal*'
       - 'experiments/issue-138/make-mirrored-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-page-vectors.py'
       - 'experiments/issue-138/make-checkpoint-root-vectors.py'
@@ -155,6 +157,9 @@ jobs:
           python3 ../../experiments/issue-138/make-sorted-table-vectors.py ../../experiments/issue-138/sorted-table-regenerated.json
           cmp ../../docs/protocol/native-sorted-table-v1.json ../../experiments/issue-138/sorted-table-regenerated.json
           node ../../experiments/issue-138/verify-sorted-table-lazy.mjs
+          python3 ../../experiments/issue-138/make-lsm-wal-vectors.py ../../experiments/issue-138/lsm-wal-regenerated.json
+          cmp ../../docs/protocol/native-lsm-wal-v1.json ../../experiments/issue-138/lsm-wal-regenerated.json
+          node ../../experiments/issue-138/verify-lsm-wal-lazy.mjs
           python3 ../../experiments/issue-138/make-mirrored-page-vectors.py ../../experiments/issue-138/mirrored-pages-regenerated.json
           cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
           python3 ../../experiments/issue-138/generate-checkpoint-vectors.py ../../experiments/issue-138/engine-checkpoint-regenerated.json

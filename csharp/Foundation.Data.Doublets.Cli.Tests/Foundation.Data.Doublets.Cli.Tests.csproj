@@ -16,6 +16,7 @@
     <None Include="../../docs/protocol/checkpoint-root-mirror-v1.json" Link="Protocol/checkpoint-root-mirror-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/checkpoint-pages-v1.json" Link="Protocol/checkpoint-pages-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/native-sorted-table-v1.json" Link="Protocol/native-sorted-table-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/native-lsm-wal-v1.json" Link="Protocol/native-lsm-wal-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/native-pages-v1.json" Link="Protocol/native-pages-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/native-pages-mirrored-v1.json" Link="Protocol/native-pages-mirrored-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/sqlite-log-vectors.json" Link="Protocol/sqlite-log-vectors.json" CopyToOutputDirectory="PreserveNewest" />

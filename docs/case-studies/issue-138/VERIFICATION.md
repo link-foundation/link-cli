@@ -3420,3 +3420,59 @@ implement LSM WAL/memtable/manifest recovery, compaction or retirement. The
 separate PHYSICAL-LSM-PLAN.md keeps that required composition active. Physical
 power-loss certification, complete coverage and every wider gap remain open;
 PR139 remains draft and unmerged.
+
+All nine workflows now pass on exact physical-table/model head
+`523888a302c49d8b148ab28d69acc9ad34bdf87d`, created at
+2026-10-26T23:52:43Z. Both native Linux/macOS/Windows matrices pass, including
+the retained checkpoint process-exit boundaries. `sorted-table-ci.txt` records
+every workflow and native platform job URL. The earlier unsliced Windows
+timeout remains preserved; its underlying source is not established by the
+passing sliced cases. Subsequent semantic-WAL and store work needs fresh CI.
+
+## Selected semantic LSM WAL component
+
+Rust/C#/JS now explicitly select bounded `native-lsm1` checkpoint, manifest and
+group replay. Canonical u64 strings, sorted unique keys/IDs, positive tombstone
+generations, live empty journals, reservation floors, consecutive group numbers
+and owned payloads match across ports. Encoding revalidates public state.
+This is a pure codec: every selected physical table, combined retained capacity,
+publication, namespace ownership and retirement still require store validation.
+
+Missing APIs fail in all three languages before implementation on baseline
+`523888a`; `lsm-wal-before.txt` preserves exact compiler/runtime errors and an
+isolated-baseline reproduction driver. The independent oracle initially has
+97 cases before production; 14 later controls bring it to 111 cases, 11 valid.
+It regenerates identically without production imports. Strict optionality and
+fresh-loader positive/negative guards verify SQL-free selection and lazy roots.
+
+The complete sequential driver starts 2026-10-27T00:05:40Z and finishes all
+checks at 00:43:23Z. Its first C# Debug run rejects the two new synchronous Facts
+with Timeout, while all 2,349 existing tests pass. Both new declarations become
+async Task-returning tests; the focused two tests and both complete C# suites
+then pass. Original setup output remains preserved, and passed native checks
+are retained because Rust source is unchanged. Reproduce the complete pass with
+`bash experiments/issue-138/validate-lsm-wal.sh`.
+
+| Complete measured scope | Passing tests | Lines | Branches | Functions |
+| --- | ---: | ---: | ---: | ---: |
+| Native Rust, all features | 1,075 plus six doctests | 15,025 / 15,863 | 2,887 / 3,332 | 1,926 / 2,074 |
+| Actual WASM, linked source | 674 | 12,209 / 14,593 | 2,444 / 2,915 | 1,527 / 1,914 |
+| C# Debug | 2,351 | 8,843 / 9,137 | 5,141 / 5,536 | not reported |
+| C# Release | 2,351 | 6,796 / 6,982 | 5,088 / 5,499 | not reported |
+| JS production modules | 535 | 100% | 100% | 100% |
+
+The new Rust codec measures 271/276 lines, 79/80 branches and 28/33 functions
+in native and actual WASM. All denominators retain uncovered production source;
+whole-project native/C#/linked-WASM coverage is below the required 100%.
+Eighteen native child entries run through bounded parents; one legacy doctest
+remains ignored. Bun/Deno each pass 176 selected tests; every one of the 25
+native table writer/reader pairs preserves physical hashes and releases owners.
+All 221 repository tests, formatting, strict native/WASM Clippy, TypeScript,
+vector regeneration, source limits, changesets, ShellCheck, actionlint and SQL
+optionality checks pass. Compilers run sequentially with jobs1/reduced debug,
+.NET640MiB and verified actual-WASM256MiB caps; OOM/kill counters stay zero.
+
+`LSM-WAL-PLAN.md`, `lsm-wal.txt` and `lsm-wal-before.txt` preserve evidence.
+Physical LSM store/provider/process composition and all broader unmet R1–R12
+criteria remain active. Publication requires fresh exact-head CI; PR139 stays
+draft and unmerged.

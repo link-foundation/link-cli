@@ -211,3 +211,18 @@ function sortedTableTypes(device: PageDevice) {
   return { entry, digest, values: table.entries() };
 }
 void sortedTableTypes;
+
+import { LsmWal, lsmOptions } from '../types/engine-lsm-wal.js';
+function lsmWalTypes(records: readonly string[]) {
+  const state = LsmWal.recover(records, { bufferKeys: 32 });
+  const generation: string = state.generation;
+  const encoded: string = LsmWal.encode(state);
+  // @ts-expect-error Counters preserve every u64 bit as decimal strings.
+  state.generation = 1;
+  // @ts-expect-error WAL entries are strings.
+  LsmWal.recover([1]);
+  // @ts-expect-error Admission bounds are numeric.
+  lsmOptions({ maxRuns: '4' });
+  return { generation, encoded, options: lsmOptions() };
+}
+void lsmWalTypes;

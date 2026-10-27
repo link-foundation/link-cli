@@ -9,6 +9,7 @@ on:
     paths:
       - 'rust/**'
       - 'docs/protocol/native-pages*'
+      - 'docs/protocol/native-lsm-wal*'
       - 'docs/protocol/checkpoint*'
       - 'docs/protocol/journal-maintenance-v1.json'
       - 'docs/protocol/reclamation-v1.json'

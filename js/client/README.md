@@ -317,3 +317,11 @@ is a live empty journal. Close the selected device yourself. See the
 [format and costs](../../docs/protocol/native-sorted-table.md) and
 [25 native writer/reader combinations](../../examples/sorted-tables/README.md).
 WAL/manifest publication and compaction require further LSM composition.
+
+The separate `./engine-lsm-wal` entry exports `LsmWal.recover(records, options)`
+and `LsmWal.encode(state, options)` for bounded semantic replay and revalidated
+checkpoint encoding. Counters, IDs and digests retain all u64 bits as decimal
+strings. Replay owns returned payload arrays and preserves tombstones and live
+empty journals. See the [wire protocol, admission bounds and physical validation
+requirements](../../docs/protocol/native-lsm-wal.md). This pure codec performs
+no storage I/O; the physical LSM store remains unfinished.

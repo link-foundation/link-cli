@@ -21,6 +21,8 @@ mod delta;
 pub mod etcd;
 mod group;
 mod journal;
+#[cfg(feature = "physical-lsm")]
+pub mod lsm;
 pub mod maintenance;
 mod named;
 mod object_cache;

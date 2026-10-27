@@ -40,8 +40,9 @@ features = [
 ]
 
 [features]
-default = ["console_error_panic_hook", "sorted-tables"]
+default = ["console_error_panic_hook", "sorted-tables", "physical-lsm"]
 sorted-tables = ["link-cli/sorted-tables"]
+physical-lsm = ["link-cli/physical-lsm"]
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

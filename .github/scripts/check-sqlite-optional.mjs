@@ -23,6 +23,7 @@ if (mode === 'rust') {
     ['bare native', 'rust/Cargo.toml', ['--no-default-features']],
     ['native pages', 'rust/Cargo.toml', ['--no-default-features', '--features', 'native-pages']],
     ['sorted tables', 'rust/Cargo.toml', ['--no-default-features', '--features', 'native-pages,sorted-tables']],
+    ['physical LSM components', 'rust/Cargo.toml', ['--no-default-features', '--features', 'physical-lsm']],
     ['default WASM', 'rust/wasm/Cargo.toml', ['--target', 'wasm32-unknown-unknown']],
     ['WASM with native-only feature', 'rust/Cargo.toml', ['--target', 'wasm32-unknown-unknown', '--features', 'sqlite,native-pages']],
   ];
@@ -60,6 +61,7 @@ if (mode === 'rust') {
     const { FileCommitLog } = await import('../../js/client/src/engine-file-log.js');
     const { FilePagedCommitLog, FilePageDevice } = await import('../../js/client/src/engine-file-paged-log.js');
     const { SortedJournalTable } = await import('../../js/client/src/engine-sorted-table.js');
+    const { LsmWal } = await import('../../js/client/src/engine-lsm-wal.js');
     const { FileMirroredPagedCommitLog } = await import('../../js/client/src/engine-file-mirrored-pages.js');
     const { FileCheckpointPagedCommitLog } = await import('../../js/client/src/engine-file-checkpoint-pages.js');
     await assert.rejects(import('../../js/client/src/engine-sqlite-log.js'), /unexpected SQLite module load/);
@@ -84,6 +86,8 @@ if (mode === 'rust') {
     const tableRows = [{ key: 'a', generation: '18446744073709551615', entries: null }];
     assert.deepEqual(SortedJournalTable.create(tableDevice, tableRows).entries(), tableRows);
     assert.deepEqual(SortedJournalTable.open(tableDevice).entries(), tableRows);
+    const lsmCheckpoint = '["native-lsm1","0","0","0",[],[]]';
+    assert.equal(LsmWal.encode(LsmWal.recover([lsmCheckpoint])), lsmCheckpoint);
     const mirroredPath = join(directory, 'mirrored-pages');
     using mirrored = new FileMirroredPagedCommitLog(mirroredPath);
     mirrored.append('mirrored 雪'); mirrored.flush(); mirrored.close();
