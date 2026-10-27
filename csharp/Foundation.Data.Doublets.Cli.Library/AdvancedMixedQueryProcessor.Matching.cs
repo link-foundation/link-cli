@@ -1,24 +1,24 @@
+using System.Numerics;
 // Part of the partial AdvancedMixedQueryProcessor class.
 // Pattern matching: turning restriction patterns into concrete variable solutions.
 using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Link.Foundation.Links.Notation;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
-using DoubletLink = Platform.Data.Doublets.Link<uint>;
 namespace Foundation.Data.Doublets.Cli
 {
-    public static partial class AdvancedMixedQueryProcessor
+    public static partial class AdvancedMixedQueryProcessor<T>
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
-        private static List<Dictionary<string, uint>> FindAllSolutions(INamedTypesLinks<uint> links, List<Pattern> patterns)
+        private static List<Dictionary<string, T>> FindAllSolutions(INamedTypesLinks<T> links, List<Pattern> patterns)
         {
-            var partialSolutions = new List<Dictionary<string, uint>> { new Dictionary<string, uint>() };
+            var partialSolutions = new List<Dictionary<string, T>> { new Dictionary<string, T>() };
 
             for (int i = 0; i < patterns.Count; i++)
             {
                 var pattern = patterns[i];
-                var newSolutions = new List<Dictionary<string, uint>>();
+                var newSolutions = new List<Dictionary<string, T>>();
                 foreach (var solution in partialSolutions)
                 {
                     var matches = MatchPattern(links, pattern, solution).ToList();
@@ -26,7 +26,7 @@ namespace Foundation.Data.Doublets.Cli
                     {
                         if (AreSolutionsCompatible(solution, match))
                         {
-                            var combinedSolution = new Dictionary<string, uint>(solution);
+                            var combinedSolution = new Dictionary<string, T>(solution);
                             foreach (var assignment in match)
                             {
                                 combinedSolution[assignment.Key] = assignment.Value;
@@ -43,8 +43,8 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static bool AreSolutionsCompatible(
-            Dictionary<string, uint> existingSolution,
-            Dictionary<string, uint> newAssignments)
+            Dictionary<string, T> existingSolution,
+            Dictionary<string, T> newAssignments)
         {
             foreach (var assignment in newAssignments)
             {
@@ -59,20 +59,20 @@ namespace Foundation.Data.Doublets.Cli
             return true;
         }
 
-        private static IEnumerable<Dictionary<string, uint>> MatchPattern(
-            INamedTypesLinks<uint> links,
+        private static IEnumerable<Dictionary<string, T>> MatchPattern(
+            INamedTypesLinks<T> links,
             Pattern pattern,
-            Dictionary<string, uint> currentSolution)
+            Dictionary<string, T> currentSolution)
         {
             var anyConstant = links.Constants.Any;
             if (pattern.IsLeaf)
             {
-                uint leafIndex = ResolveId(links, pattern.Index, currentSolution);
-                var candidates = links.All(new DoubletLink(leafIndex, anyConstant, anyConstant));
+                T leafIndex = ResolveId(links, pattern.Index, currentSolution);
+                var candidates = links.All(new LinkParts<T>(leafIndex, anyConstant, anyConstant));
                 foreach (var link in candidates)
                 {
-                    var candidateLink = new DoubletLink(link);
-                    var assignments = new Dictionary<string, uint>();
+                    var candidateLink = new LinkParts<T>(link);
+                    var assignments = new Dictionary<string, T>();
                     AssignVariableIfNeeded(pattern.Index, candidateLink.Index, assignments);
                     yield return assignments;
                 }
@@ -81,19 +81,19 @@ namespace Foundation.Data.Doublets.Cli
 
             bool indexIsVariable = IsVariable(pattern.Index);
             bool indexIsAny = pattern.Index == "*";
-            uint resolvedIndex = ResolveId(links, pattern.Index, currentSolution);
+            T resolvedIndex = ResolveId(links, pattern.Index, currentSolution);
 
             // If idxResolved is a known link => skip enumerating everything
-            if (!indexIsVariable && !indexIsAny && resolvedIndex != anyConstant && resolvedIndex != 0 && links.Exists(resolvedIndex))
+            if (!indexIsVariable && !indexIsAny && resolvedIndex != anyConstant && resolvedIndex != T.Zero && links.Exists(resolvedIndex))
             {
-                var link = new DoubletLink(links.GetLink(resolvedIndex));
+                var link = new LinkParts<T>(links.GetLink(resolvedIndex));
                 var sourceMatches = RecursiveMatchSubPattern(links, pattern.Source, link.Source, currentSolution);
                 foreach (var sourceSolution in sourceMatches)
                 {
                     var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSolution);
                     foreach (var targetSolution in targetMatches)
                     {
-                        var combined = new Dictionary<string, uint>(targetSolution);
+                        var combined = new Dictionary<string, T>(targetSolution);
                         AssignVariableIfNeeded(pattern.Index, resolvedIndex, combined);
                         yield return combined;
                     }
@@ -102,10 +102,10 @@ namespace Foundation.Data.Doublets.Cli
             else
             {
                 // Otherwise we iterate over all links
-                var allLinks = links.All(new DoubletLink(anyConstant, anyConstant, anyConstant));
+                var allLinks = links.All(new LinkParts<T>(anyConstant, anyConstant, anyConstant));
                 foreach (var raw in allLinks)
                 {
-                    var candidateLink = new DoubletLink(raw);
+                    var candidateLink = new LinkParts<T>(raw);
                     if (!CheckIdMatch(links, pattern.Index, candidateLink.Index, currentSolution))
                         continue;
 
@@ -115,7 +115,7 @@ namespace Foundation.Data.Doublets.Cli
                         var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, candidateLink.Target, sourceSolution);
                         foreach (var targetSolution in targetMatches)
                         {
-                            var combined = new Dictionary<string, uint>(targetSolution);
+                            var combined = new Dictionary<string, T>(targetSolution);
                             AssignVariableIfNeeded(pattern.Index, candidateLink.Index, combined);
                             yield return combined;
                         }
@@ -124,11 +124,11 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static IEnumerable<Dictionary<string, uint>> RecursiveMatchSubPattern(
-            INamedTypesLinks<uint> links,
+        private static IEnumerable<Dictionary<string, T>> RecursiveMatchSubPattern(
+            INamedTypesLinks<T> links,
             Pattern? pattern,
-            uint linkId,
-            Dictionary<string, uint> currentSolution)
+            T linkId,
+            Dictionary<string, T> currentSolution)
         {
             if (pattern == null)
             {
@@ -140,7 +140,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 if (CheckIdMatch(links, pattern.Index, linkId, currentSolution))
                 {
-                    var newSolution = new Dictionary<string, uint>(currentSolution);
+                    var newSolution = new Dictionary<string, T>(currentSolution);
                     AssignVariableIfNeeded(pattern.Index, linkId, newSolution);
                     yield return newSolution;
                 }
@@ -149,7 +149,7 @@ namespace Foundation.Data.Doublets.Cli
 
             if (!links.Exists(linkId)) yield break;
 
-            var link = new DoubletLink(links.GetLink(linkId));
+            var link = new LinkParts<T>(links.GetLink(linkId));
             if (!CheckIdMatch(links, pattern.Index, link.Index, currentSolution))
             {
                 yield break;
@@ -161,7 +161,7 @@ namespace Foundation.Data.Doublets.Cli
                 var targetMatches = RecursiveMatchSubPattern(links, pattern.Target, link.Target, sourceSolution);
                 foreach (var targetSolution in targetMatches)
                 {
-                    var combined = new Dictionary<string, uint>(targetSolution);
+                    var combined = new Dictionary<string, T>(targetSolution);
                     AssignVariableIfNeeded(pattern.Index, link.Index, combined);
                     yield return combined;
                 }
@@ -169,10 +169,10 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static bool CheckIdMatch(
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             string patternId,
-            uint candidateId,
-            Dictionary<string, uint> currentSolution)
+            T candidateId,
+            Dictionary<string, T> currentSolution)
         {
             if (string.IsNullOrEmpty(patternId)) return true;
             if (patternId == "*") return true;
@@ -186,7 +186,7 @@ namespace Foundation.Data.Doublets.Cli
                 return true;
             }
 
-            uint parsed = links.Constants.Any;
+            T parsed = links.Constants.Any;
             if (TryParseLinkId(patternId, links, ref parsed))
             {
                 if (parsed == links.Constants.Any) return true;
@@ -195,7 +195,7 @@ namespace Foundation.Data.Doublets.Cli
             return true;
         }
 
-        private static void AssignVariableIfNeeded(string id, uint value, Dictionary<string, uint> assignments)
+        private static void AssignVariableIfNeeded(string id, T value, Dictionary<string, T> assignments)
         {
             if (IsVariable(id))
             {
@@ -208,10 +208,10 @@ namespace Foundation.Data.Doublets.Cli
             return !string.IsNullOrEmpty(identifier) && identifier.StartsWith("$");
         }
 
-        private static uint ResolveId(
-            INamedTypesLinks<uint> links,
+        private static T ResolveId(
+            INamedTypesLinks<T> links,
             string identifier,
-            Dictionary<string, uint> currentSolution)
+            Dictionary<string, T> currentSolution)
         {
             var anyConstant = links.Constants.Any;
             if (string.IsNullOrEmpty(identifier)) return anyConstant;
@@ -223,7 +223,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 return anyConstant;
             }
-            uint parsedValue = anyConstant;
+            T parsedValue = anyConstant;
             if (TryParseLinkId(identifier, links, ref parsedValue))
             {
                 return parsedValue;
@@ -232,15 +232,15 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static bool DetermineIfSolutionIsNoOperation(
-            Dictionary<string, uint> solution,
+            Dictionary<string, T> solution,
             List<Pattern> restrictions,
             List<Pattern> substitutions,
-            INamedTypesLinks<uint> links)
+            INamedTypesLinks<T> links)
         {
             var substitutedRestrictions = restrictions
                 .Select(r => ApplySolutionToPattern(links, solution, r, isSubstitution: false))
                 .Where(link => link != null)
-                .Select(link => new DoubletLink(link!))
+                .Select(link => new LinkParts<T>(link!))
                 .ToList();
 
             var substitutedSubstitutions = ApplySolutionToPatterns(links, solution, substitutions, isSubstitution: true);
@@ -259,12 +259,12 @@ namespace Foundation.Data.Doublets.Cli
             return true;
         }
 
-        private static List<DoubletLink> ExtractMatchedLinks(
-            INamedTypesLinks<uint> links,
-            Dictionary<string, uint> solution,
+        private static List<LinkParts<T>> ExtractMatchedLinks(
+            INamedTypesLinks<T> links,
+            Dictionary<string, T> solution,
             List<Pattern> patterns)
         {
-            var matchedLinks = new List<DoubletLink>();
+            var matchedLinks = new List<LinkParts<T>>();
             foreach (var pattern in patterns)
             {
                 var applied = ApplySolutionToPattern(links, solution, pattern);
@@ -273,53 +273,53 @@ namespace Foundation.Data.Doublets.Cli
                     var matches = links.All(applied);
                     foreach (var match in matches)
                     {
-                        matchedLinks.Add(new DoubletLink(match));
+                        matchedLinks.Add(new LinkParts<T>(match));
                     }
                 }
             }
             return matchedLinks.Distinct().ToList();
         }
 
-        private static DoubletLink? ApplySolutionToPattern(
-            INamedTypesLinks<uint> links,
-            Dictionary<string, uint> solution,
+        private static LinkParts<T>? ApplySolutionToPattern(
+            INamedTypesLinks<T> links,
+            Dictionary<string, T> solution,
             Pattern? pattern,
             bool isSubstitution = false,
-            HashSet<uint>? visitedIndexes = null)
+            HashSet<T>? visitedIndexes = null)
         {
             if (pattern == null) return null;
-            visitedIndexes ??= new HashSet<uint>();
+            visitedIndexes ??= new HashSet<T>();
 
             // Retrieve the ANY constant once for both leaf and composite cases
             var anyConstant = links.Constants.Any;
 
             if (pattern.IsLeaf)
             {
-                uint resolvedIndex = ResolveId(links, pattern.Index, solution);
-                return new DoubletLink(resolvedIndex, anyConstant, anyConstant);
+                T resolvedIndex = ResolveId(links, pattern.Index, solution);
+                return new LinkParts<T>(resolvedIndex, anyConstant, anyConstant);
             }
             else
             {
-                uint resolvedIndex = ResolvePatternIndex(links, pattern.Index, solution, isSubstitution);
+                T resolvedIndex = ResolvePatternIndex(links, pattern.Index, solution, isSubstitution);
                 var sourceLink = ApplySolutionToPattern(links, solution, pattern.Source, isSubstitution, visitedIndexes);
                 var targetLink = ApplySolutionToPattern(links, solution, pattern.Target, isSubstitution, visitedIndexes);
 
-                uint resolvedSource = sourceLink?.Index ?? anyConstant;
-                uint resolvedTarget = targetLink?.Index ?? anyConstant;
+                T resolvedSource = sourceLink?.Index ?? anyConstant;
+                T resolvedTarget = targetLink?.Index ?? anyConstant;
 
                 PreserveExistingSubstitutionParts(links, solution, pattern, resolvedIndex, ref resolvedSource, ref resolvedTarget, isSubstitution, visitedIndexes);
 
-                if (resolvedSource == 0) resolvedSource = anyConstant;
-                if (resolvedTarget == 0) resolvedTarget = anyConstant;
+                // Zero is a concrete bound reference. ResolveId already uses
+                // Any for a missing variable; keep actual zero values intact.
 
-                return new DoubletLink(resolvedIndex, resolvedSource, resolvedTarget);
+                return new LinkParts<T>(resolvedIndex, resolvedSource, resolvedTarget);
             }
         }
 
-        private static uint ResolvePatternIndex(
-            INamedTypesLinks<uint> links,
+        private static T ResolvePatternIndex(
+            INamedTypesLinks<T> links,
             string identifier,
-            Dictionary<string, uint> solution,
+            Dictionary<string, T> solution,
             bool isSubstitution)
         {
             if (isSubstitution && string.IsNullOrEmpty(identifier))
@@ -335,29 +335,29 @@ namespace Foundation.Data.Doublets.Cli
             return ResolveId(links, identifier, solution);
         }
 
-        private static List<DoubletLink> ApplySolutionToPatterns(
-            INamedTypesLinks<uint> links,
-            Dictionary<string, uint> solution,
+        private static List<LinkParts<T>> ApplySolutionToPatterns(
+            INamedTypesLinks<T> links,
+            Dictionary<string, T> solution,
             List<Pattern> patterns,
             bool isSubstitution)
         {
-            var workingSolution = isSubstitution ? new Dictionary<string, uint>(solution) : solution;
+            var workingSolution = isSubstitution ? new Dictionary<string, T>(solution) : solution;
             return patterns
                 .Select(pattern => ApplySolutionToPattern(links, workingSolution, pattern, isSubstitution))
                 .Where(link => link != null)
-                .Select(link => new DoubletLink(link!))
+                .Select(link => new LinkParts<T>(link!))
                 .ToList();
         }
 
         private static void PreserveExistingSubstitutionParts(
-            INamedTypesLinks<uint> links,
-            Dictionary<string, uint> solution,
+            INamedTypesLinks<T> links,
+            Dictionary<string, T> solution,
             Pattern pattern,
-            uint resolvedIndex,
-            ref uint resolvedSource,
-            ref uint resolvedTarget,
+            T resolvedIndex,
+            ref T resolvedSource,
+            ref T resolvedTarget,
             bool isSubstitution,
-            HashSet<uint> visitedIndexes)
+            HashSet<T> visitedIndexes)
         {
             if (!isSubstitution || resolvedIndex == links.Constants.Null || resolvedIndex == links.Constants.Any || !links.Exists(resolvedIndex))
             {
@@ -371,7 +371,7 @@ namespace Foundation.Data.Doublets.Cli
 
             try
             {
-                var existingLink = new DoubletLink(links.GetLink(resolvedIndex));
+                var existingLink = new LinkParts<T>(links.GetLink(resolvedIndex));
 
                 if (ShouldPreserveExistingPart(pattern.Source, solution) && CanPreserveExistingPart(existingLink, existingLink.Source, visitedIndexes))
                 {
@@ -399,14 +399,14 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static bool ShouldPreserveExistingPart(Pattern? partPattern, Dictionary<string, uint> solution)
+        private static bool ShouldPreserveExistingPart(Pattern? partPattern, Dictionary<string, T> solution)
         {
             return partPattern?.IsLeaf == true
                 && IsVariable(partPattern.Index)
                 && !solution.ContainsKey(partPattern.Index);
         }
 
-        private static bool TryResolveVariablePart(Pattern? partPattern, Dictionary<string, uint> solution, out uint value)
+        private static bool TryResolveVariablePart(Pattern? partPattern, Dictionary<string, T> solution, out T value)
         {
             value = default;
             return partPattern?.IsLeaf == true
@@ -414,10 +414,10 @@ namespace Foundation.Data.Doublets.Cli
                 && solution.TryGetValue(partPattern.Index, out value);
         }
 
-        private static bool CanPreserveExistingPart(DoubletLink existingLink, uint part, HashSet<uint> visitedIndexes)
+        private static bool CanPreserveExistingPart(LinkParts<T> existingLink, T part, HashSet<T> visitedIndexes)
         {
-            return existingLink.IsFullPoint()
-                || existingLink.IsPartialPoint()
+            return existingLink.Index == existingLink.Source
+                || existingLink.Index == existingLink.Target
                 || !visitedIndexes.Contains(part);
         }
     }

@@ -1,10 +1,11 @@
 # C# standard query path over private sessions
 
-Continue CAUSAL-PROTOCOL-PLAN.md. The existing C# processor, options, pattern
-matching and mutation helpers use uint. CausalSession implements the ordinary
-ulong links interface, whose wildcard aliases ulong.MaxValue. A checked wider
-adapter is required to preserve that real stored identity. The raw session
-contracts and passing Rust/actual-WASM/JS protocol tests do not verify this work.
+Continue CAUSAL-PROTOCOL-PLAN.md. The C# processor now shares selected-address
+matching and mutation helpers while retaining its uint facade. CausalSession
+still implements the ordinary ulong links interface, whose wildcard is inside
+the full stored u64 range. A checked wider adapter is required to separate it
+from every real stored identity. The raw session contracts and passing
+Rust/actual-WASM/JS protocol tests do not verify that remaining work.
 
 - [x] First reproduce the existing monotonic allocation failure through
       AdvancedMixedQueryProcessor and EngineSession<uint>. Keep the smallest
@@ -14,7 +15,7 @@ contracts and passing Rust/actual-WASM/JS protocol tests do not verify this work
       production changes. Cover all u64 identities, wildcard separation,
       lower caller reservations, quoted/encoded numeric and special names,
       owned observations and explicit-token publication with exact retries.
-- [ ] Select an unsigned generic-math address in the existing partial query
+- [x] Select an unsigned generic-math address in the existing partial query
       implementation, retaining its public uint Options and Pattern facade,
       implicit string conversion and existing query semantics. Reuse the
       matching/mutation algorithms rather than copying them for causal use.
@@ -64,3 +65,33 @@ controls pass. `csharp-query-allocation-before.log` preserves the three finite
 results; the failure remains unfixed. Each case creates at most four rows.
 
 All other unmet R1–R12 criteria remain active. PR139 stays draft and unmerged.
+
+Verified selected-address step: the same partial processor now accepts ushort, uint,
+ulong and UInt128. The old uint Options and Pattern facade and implicit query
+strings remain available. Existing rows at each selected maximum minus one,
+and at ulong.MaxValue under UInt128, pass the finite focused contracts.
+QueryParser classifies numbers with the selected type; checked malformed or
+out-of-range admission remains unfinished.
+
+The first generic build fails before implementation because the generic API is
+missing. The first wide-row execution then exposes the pinned upstream
+Link<UInt128> static initializer: NumericType uses field reflection for MinValue
+and MaxValue, but UInt128 supplies properties. Store-selected constants already
+use generic-math bounds. An owned internal three-part list now carries standard
+callbacks and query rows without invoking those upstream list helpers. It costs
+a small boxed read-only row per callback; it preserves observations across later
+edits. The upstream consumer-side helper limitation is documented rather than
+altering global constants or dependencies.
+
+The independent dangling-zero swap fails before the substitution correction;
+equality and join controls already pass. Removing the zero-to-wildcard rewrite
+makes the eight focused contracts pass. Both complete Debug/Release suites pass
+2,514 tests with zero failures or skips. All six causal components retain 100%
+source lines and raw compiled branches. Complete production totals remain
+10,220/10,531 lines and 6,629/7,080 branches in Debug; 7,900/8,103 lines and
+6,569/7,037 branches in Release. Every previous production source file remains
+included. Strict formatting, 221 repository tests and source/changeset/release/
+ShellCheck gates pass. csharp-generic-query.txt preserves commands, before/after
+failures, costs and source/report hashes. The anonymous allocation failure
+above remains reproducible; checked causal and physical query parity remain
+unfinished.

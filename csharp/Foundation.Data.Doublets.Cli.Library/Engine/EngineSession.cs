@@ -204,25 +204,25 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     public T Each(IList<T>? restriction, ReadHandler<T>? handler)
     {
         foreach (var link in Matching(restriction))
-            if (handler?.Invoke((IList<T>)link) == Constants.Break) return Constants.Break;
+            if (handler?.Invoke(new LinkParts<T>(link.Index, link.Source, link.Target)) == Constants.Break) return Constants.Break;
         return Constants.Continue;
     }
     public T Create(IList<T>? substitution, WriteHandler<T>? handler)
     {
         T id = CreateLink(T.Zero, T.Zero);
-        return handler?.Invoke(null, (IList<T>)GetLink(id)!.Value) ?? Constants.Continue;
+        return handler?.Invoke(null, new LinkParts<T>(id, T.Zero, T.Zero)) ?? Constants.Continue;
     }
     public T Update(IList<T>? restriction, IList<T>? substitution, WriteHandler<T>? handler)
     {
         if (restriction is not [var id, ..] || substitution is not [_, var source, var target])
             throw new ArgumentException("An update needs an index and a triple.");
         var before = UpdateLink(id, source, target);
-        return handler?.Invoke((IList<T>)before, (IList<T>)new Link<T>(id, source, target)) ?? Constants.Continue;
+        return handler?.Invoke(new LinkParts<T>(before.Index, before.Source, before.Target), new LinkParts<T>(id, source, target)) ?? Constants.Continue;
     }
     public T Delete(IList<T>? restriction, WriteHandler<T>? handler)
     {
         if (restriction is not [var id, ..]) throw new ArgumentException("A delete needs an index.");
         var before = DeleteLink(id);
-        return handler?.Invoke((IList<T>)before, null) ?? Constants.Continue;
+        return handler?.Invoke(new LinkParts<T>(before.Index, before.Source, before.Target), null) ?? Constants.Continue;
     }
 }

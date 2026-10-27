@@ -26,7 +26,7 @@ public sealed record LinksServerOptions
     /// <summary>Print every request and reply to stderr.</summary>
     public bool Trace { get; init; }
 
-    /// <summary>Passed to <see cref="AdvancedMixedQueryProcessor.Options.AutoCreateMissingReferences"/>.</summary>
+    /// <summary>Passed to <c>AdvancedMixedQueryProcessor.Options.AutoCreateMissingReferences</c>.</summary>
     public bool AutoCreateMissingReferences { get; init; }
 
     /// <summary>Protocols the server answers.</summary>

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Numerics;
 using System.Text;
 using Link.Foundation.Links.Notation;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
@@ -33,7 +35,10 @@ internal static class QueryParser
         return LinoDatabaseOutput.EscapeReference(name);
     }
 
-    internal static IList<LinoLink> Parse(string query)
+    internal static IList<LinoLink> Parse(string query) => Parse<uint>(query);
+
+    internal static IList<LinoLink> Parse<T>(string query)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         var parser = new Parser();
         // Validate the original first so diagnostics retain the user's line/column.
@@ -67,7 +72,7 @@ internal static class QueryParser
                 }
             }
 
-            var isSyntax = !quoted && (uint.TryParse(value, out var ignoredNumber) || value == "*" || value.StartsWith('$'));
+            var isSyntax = !quoted && (T.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ignoredNumber) || value == "*" || value.StartsWith('$'));
             rewritten.Append(isSyntax ? value : ReferenceLiteral.Encode("\"" + value + "\""));
         }
         return parser.Parse(rewritten.ToString());

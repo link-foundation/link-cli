@@ -1,18 +1,22 @@
+using System.Globalization;
+using System.Numerics;
 using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Link.Foundation.Links.Notation;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
-using DoubletLink = Platform.Data.Doublets.Link<uint>;
 namespace Foundation.Data.Doublets.Cli
 {
-    public static partial class AdvancedMixedQueryProcessor
+    public static partial class AdvancedMixedQueryProcessor<T>
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
+        private static bool TryParseAddress(string? value, out T address) =>
+            T.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out address);
+
         public class Options
         {
             public string? Query { get; set; }
-            public WriteHandler<uint>? ChangesHandler { get; set; }
+            public WriteHandler<T>? ChangesHandler { get; set; }
 
             /// <summary>
             /// Enables extra console tracing of internal steps if true.
@@ -27,7 +31,7 @@ namespace Foundation.Data.Doublets.Cli
             public static implicit operator Options(string query) => new Options { Query = query };
         }
 
-        public static void ProcessQuery(INamedTypesLinks<uint> links, Options options)
+        public static void ProcessQuery(INamedTypesLinks<T> links, Options options)
         {
             ArgumentNullException.ThrowIfNull(links);
             ArgumentNullException.ThrowIfNull(options);
@@ -41,7 +45,7 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            var parsedLinks = QueryParser.Parse(query);
+            var parsedLinks = QueryParser.Parse<T>(query);
 
             TraceIfEnabled(options, $"[ProcessQuery] Parser returned {parsedLinks.Count} top-level link(s).");
             if (parsedLinks.Count == 0)
@@ -193,7 +197,7 @@ namespace Foundation.Data.Doublets.Cli
 
             TraceIfEnabled(options, "[ProcessQuery] allSolutionsNoOperation=" + allSolutionsNoOperation);
 
-            var allPlannedOperations = new List<(DoubletLink before, DoubletLink after)>();
+            var allPlannedOperations = new List<(LinkParts<T> before, LinkParts<T> after)>();
             if (allSolutionsNoOperation)
             {
                 TraceIfEnabled(options, "[ProcessQuery] All solutions produce no differences => we'll track them as no-op changes.");
@@ -237,34 +241,34 @@ namespace Foundation.Data.Doublets.Cli
             }
             else
             {
-                var intendedFinalStates = new Dictionary<uint, DoubletLink>();
+                var intendedFinalStates = new Dictionary<T, LinkParts<T>>();
                 foreach (var (before, after) in allPlannedOperations)
                 {
-                    if (after.Index != 0)
+                    if (after.Index != T.Zero)
                     {
                         intendedFinalStates[after.Index] = after;
                     }
-                    else if (before.Index != 0 && after.Index == 0)
+                    else if (before.Index != T.Zero && after.Index == T.Zero)
                     {
-                        intendedFinalStates[before.Index] = default(DoubletLink);
+                        intendedFinalStates[before.Index] = default(LinkParts<T>);
                     }
                 }
 
-                var unexpectedDeletions = new List<DoubletLink>();
+                var unexpectedDeletions = new List<LinkParts<T>>();
                 var originalHandler = options.ChangesHandler;
 
                 try
                 {
                     options.ChangesHandler = (before, after) =>
                     {
-                        var beforeLink = new DoubletLink(before);
-                        var afterLink = new DoubletLink(after);
-                        if (beforeLink.Index != 0 && afterLink.Index == 0)
+                        var beforeLink = new LinkParts<T>(before);
+                        var afterLink = new LinkParts<T>(after);
+                        if (beforeLink.Index != T.Zero && afterLink.Index == T.Zero)
                         {
-                            bool isExpected = allPlannedOperations.Any(op => op.before.Index == beforeLink.Index && op.after.Index == 0);
+                            bool isExpected = allPlannedOperations.Any(op => op.before.Index == beforeLink.Index && op.after.Index == T.Zero);
                             if (!isExpected)
                             {
-                                unexpectedDeletions.Add(new DoubletLink(beforeLink));
+                                unexpectedDeletions.Add(new LinkParts<T>(beforeLink));
                                 TraceIfEnabled(options, $"[ProcessQuery] Detected unexpected deletion of link #{beforeLink.Index} => will restore later.");
                             }
                         }
@@ -290,7 +294,7 @@ namespace Foundation.Data.Doublets.Cli
         /// Recursively ensures that a LinoLink (potentially nested) is created. 
         /// Returns the numeric ID or ANY if leaf/unparseable.
         /// </summary>
-        private static uint EnsureNestedLinkCreatedRecursively(INamedTypesLinks<uint> links, LinoLink pattern, Options options)
+        private static T EnsureNestedLinkCreatedRecursively(INamedTypesLinks<T> links, LinoLink pattern, Options options)
         {
             var nullConstant = links.Constants.Null;
             var anyConstant = links.Constants.Any;
@@ -322,9 +326,9 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static void RestoreUnexpectedLinkDeletions(
-            INamedTypesLinks<uint> links,
-            List<DoubletLink> unexpectedDeletions,
-            Dictionary<uint, DoubletLink> finalIntendedStates,
+            INamedTypesLinks<T> links,
+            List<LinkParts<T>> unexpectedDeletions,
+            Dictionary<T, LinkParts<T>> finalIntendedStates,
             Options options)
         {
             if (unexpectedDeletions.Count > 0)
@@ -334,7 +338,7 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     if (finalIntendedStates.TryGetValue(deletedLink.Index, out var intendedLink))
                     {
-                        if (intendedLink.Index == 0)
+                        if (intendedLink.Index == T.Zero)
                         {
                             TraceIfEnabled(options, $"[RestoreUnexpectedLinkDeletions] Link #{deletedLink.Index} was intended-deletion => skip restore.");
                             continue;
@@ -353,12 +357,12 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        private static List<(DoubletLink before, DoubletLink after)> DetermineOperationsFromPatterns(
-            List<DoubletLink> restrictions,
-            List<DoubletLink> substitutions,
-            INamedTypesLinks<uint> links)
+        private static List<(LinkParts<T> before, LinkParts<T> after)> DetermineOperationsFromPatterns(
+            List<LinkParts<T>> restrictions,
+            List<LinkParts<T>> substitutions,
+            INamedTypesLinks<T> links)
         {
-            var anyOrZero = new HashSet<uint> { 0, links.Constants.Any };
+            var anyOrZero = new HashSet<T> { T.Zero, links.Constants.Any };
 
             var normalRestrictions = restrictions.Where(r => !anyOrZero.Contains(r.Index)).ToList();
             var wildcardRestrictions = restrictions.Where(r => anyOrZero.Contains(r.Index)).ToList();
@@ -369,7 +373,7 @@ namespace Foundation.Data.Doublets.Cli
             var restrictionByIndex = normalRestrictions.ToDictionary(r => r.Index, r => r);
             var substitutionByIndex = normalSubstitutions.ToDictionary(s => s.Index, s => s);
 
-            var operations = new List<(DoubletLink before, DoubletLink after)>();
+            var operations = new List<(LinkParts<T> before, LinkParts<T> after)>();
             var allIndices = restrictionByIndex.Keys.Union(substitutionByIndex.Keys).ToList();
 
             // Step 1) For each distinct index in normal restrictions & substitutions
@@ -392,59 +396,59 @@ namespace Foundation.Data.Doublets.Cli
                 else if (hasRestriction && !hasSubstitution)
                 {
                     // Deletion
-                    operations.Add((restrictionLink, default(DoubletLink)));
+                    operations.Add((restrictionLink, default(LinkParts<T>)));
                 }
                 else if (!hasRestriction && hasSubstitution)
                 {
                     // Creation
-                    operations.Add((default(DoubletLink), substitutionLink));
+                    operations.Add((default(LinkParts<T>), substitutionLink));
                 }
             }
 
             // Step 2) Wildcard restrictions => each is a separate "delete"
             foreach (var restrictionLink in wildcardRestrictions)
             {
-                operations.Add((restrictionLink, default(DoubletLink)));
+                operations.Add((restrictionLink, default(LinkParts<T>)));
             }
 
             // Step 3) Wildcard substitutions => each is a separate "create"
             foreach (var substitutionLink in wildcardSubstitutions)
             {
-                operations.Add((default(DoubletLink), substitutionLink));
+                operations.Add((default(LinkParts<T>), substitutionLink));
             }
 
             return operations;
         }
 
         private static void ApplyAllPlannedOperations(
-            INamedTypesLinks<uint> links,
-            List<(DoubletLink before, DoubletLink after)> operations,
+            INamedTypesLinks<T> links,
+            List<(LinkParts<T> before, LinkParts<T> after)> operations,
             Options options)
         {
             foreach (var (before, after) in operations)
             {
                 TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Operation: before=({before.Index}:{before.Source}->{before.Target}), after=({after.Index}:{after.Source}->{after.Target})");
-                if (before.Index != 0)
+                if (before.Index != T.Zero)
                 {
                     var beforeName = links.GetName(before.Index);
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Name for before.Index {before.Index} = '{beforeName}'");
                 }
-                if (after.Index != 0)
+                if (after.Index != T.Zero)
                 {
                     var afterNamePre = links.GetName(after.Index);
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Name for after.Index {after.Index} = '{afterNamePre}' (pre-op)");
                 }
-                if (before.Index != 0 && after.Index == 0)
+                if (before.Index != T.Zero && after.Index == T.Zero)
                 {
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Deleting link => ID={before.Index}, S={before.Source}, T={before.Target}");
                     RemoveLinks(links, before, options);
                 }
-                else if (before.Index == 0 && (after.Index != 0 || after.Source != 0 || after.Target != 0))
+                else if (before.Index == T.Zero && (after.Index != T.Zero || after.Source != T.Zero || after.Target != T.Zero))
                 {
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Creating link => ID={after.Index}, S={after.Source}, T={after.Target}");
                     CreateOrUpdateLink(links, after, options);
                 }
-                else if (before.Index != 0 && after.Index != 0)
+                else if (before.Index != T.Zero && after.Index != T.Zero)
                 {
                     if (before.Source != after.Source || before.Target != after.Target)
                     {
@@ -468,7 +472,7 @@ namespace Foundation.Data.Doublets.Cli
                         options.ChangesHandler?.Invoke(before, before);
                     }
                 }
-                if (after.Index != 0)
+                if (after.Index != T.Zero)
                 {
                     var afterNamePost = links.GetName(after.Index);
                     TraceIfEnabled(options, $"[ApplyAllPlannedOperations] Name for after.Index {after.Index} = '{afterNamePost}' (post-op)");

@@ -339,3 +339,12 @@ interchange and explicit process-exit recovery examples.
 Add selected immutable causal Merkle snapshots, canonical root-bound proof frames
 and bounded differing-range pulls with opaque continuations. Preserve concurrent
 destination evidence and validate physical cross-runtime/process-exit exchange.
+
+Share the established query matching and mutation algorithms across selected
+unsigned generic addresses while preserving the original uint facade, options,
+patterns and implicit query strings. Keep quoted numeric names distinct from
+full-width stored addresses. Preserve concrete zero bindings during swaps,
+equality and joins. Expose owned read-only callback parts without invoking the
+upstream default-constant reflection helpers that predate UInt128. The checked
+causal adapter, finite query admission and monotonic allocation preparation
+remain separate required work under CSHARP-QUERY-PARITY-PLAN.md.

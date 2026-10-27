@@ -56,6 +56,35 @@ while bare `1` is an address. This applies to definitions and restrictions as
 well as reference values. Use `--auto-create-missing-references` to create missing
 named points; strict queries require an existing name or a substitution definition.
 
+Embedded callers can select unsigned addresses through
+`AdvancedMixedQueryProcessor<T>`. The existing `AdvancedMixedQueryProcessor`
+API, including its `Options` and `Pattern` types, remains available for `uint`.
+The selected implementation shares the same matching and mutation algorithms.
+For example, an existing row at the largest stored u64 identity can be queried
+with `UInt128`, keeping the wildcard outside that range:
+
+```csharp
+using Foundation.Data.Doublets.Cli;
+using Foundation.Data.Doublets.Cli.Engine;
+
+var engine = new LinksEngine<UInt128>(new MemoryCommitLog());
+using var session = engine.Begin();
+UInt128 id = ulong.MaxValue;
+session.EnsureCreated(id);
+session.UpdateLink(id, id, id);
+AdvancedMixedQueryProcessor<UInt128>.ProcessQuery(session,
+    $"(({id}: {id} {id})) (({id}: {id} {id}))");
+```
+
+Queries edit this private session; publication still requires its explicit
+commit. Standard callbacks expose owned, read-only three-part lists, so later
+edits do not change retained observations. Read their parts through the list
+interface: the pinned upstream `Link<UInt128>` list helpers initialize default
+constants through reflection that does not support `UInt128`.
+The checked causal query adapter, bounded admission and monotonic anonymous
+allocation are tracked in
+[the C# query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).
+
 LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
 `LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before
 writing. Invalid input leaves existing links and names unchanged, without
