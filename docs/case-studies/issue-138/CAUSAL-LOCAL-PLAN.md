@@ -2,9 +2,9 @@
 
 This continues the [anti-entropy plan](ANTI-ENTROPY-PLAN.md). The separately
 selected version codec and local-owner ports are in production source. Portable
-contracts and native filesystem composition pass; full coverage verification
-is in progress. Do not
-describe the local owner as a complete anti-entropy transport.
+contracts, native filesystem composition and complete suite/coverage checks
+pass. All nine published d00e022 workflows pass. The local owner is one
+component of anti-entropy; snapshot transfer is tracked separately.
 
 - [x] Create eight JS contracts before the new production API; the absent
       module fails independently. Exercise coherent local CAS, two handles,
@@ -53,10 +53,11 @@ describe the local owner as a complete anti-entropy transport.
       at enforced 100% production coverage and 221 repository checks pass.
       causal-replica.txt retains complete metrics, including uncovered native,
       linked-WASM and C# branches. No denominator was removed.
-- [ ] Finish fresh exact-head platform CI. Published d00e022 passes all three
+- [x] Finish fresh exact-head platform CI. Published d00e022 passes all three
       C# platforms at 2475 tests each; actual archives verify size and SHA256 in
-      causal-replica-csharp-platform-coverage.txt. Eight workflows pass; Rust's
-      Windows job is pending when the local receipt is recorded.
+      causal-replica-csharp-platform-coverage.txt. All nine workflows pass;
+      causal-replica-ci.txt retains exact SHA, timestamps and all three Rust
+      platform jobs. Later Merkle changes require their own fresh CI.
 
 The selected implementation retains an append-only local journal: an author header, local writes
 with caller-supplied retry identifiers and observed versions, and canonical
@@ -80,8 +81,10 @@ contexts beyond its durable counter, reject. Reusing an author after restoring
 an older backup is unsafe without an external fence or a new identity. External
 deletion/replacement of the reserved key is outside the store contract.
 
-Bounded Merkle snapshots/range transfer, automatic safe reclamation, global
-constraints, unbounded replay/throughput and all wider unmet criteria remain
-unfinished. Application-crash probes establish the tested native SQL-free
+Bounded Merkle snapshots/range transfer are implemented under
+CAUSAL-MERKLE-PLAN.md, with complete local verification passing at
+2026-10-27T15:59:59Z and fresh platform CI still required.
+Ordinary-links projection, automatic safe reclamation, global constraints,
+unbounded replay/throughput and all wider unmet criteria remain unfinished. Application-crash probes establish the tested native SQL-free
 composition, without certifying hardware power loss. PR139 remains draft and
 unmerged.

@@ -3,6 +3,23 @@ import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';
 import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
 import { CausalReplica, type CausalSnapshot } from '../types/engine-causal-replica.js';
+import { CausalMerkleSnapshot, pullCausal, CausalPullCursor, type CausalPullProgress } from '../types/engine-causal-merkle.js';
+async function causalMerkleTypes(owner: CausalReplica) {
+  const source = await CausalMerkleSnapshot.create((await owner.snapshot()).versions, { maxVersions: 64 });
+  const leaf = await CausalMerkleSnapshot.decodeLeaf(source.root,
+    await CausalMerkleSnapshot.encodeLeaf(source.leaf('18446744073709551615')));
+  const result: CausalPullProgress = await pullCausal(source, owner, { maxLeafRequests: 1 });
+  await pullCausal(source, owner, { continuation: result.continuation });
+  // @ts-expect-error Continuations have an opaque owned frontier.
+  new CausalPullCursor();
+  // @ts-expect-error A frontier cannot be fabricated as a plain object.
+  await pullCausal(source, owner, { continuation: { root: source.root } });
+  // @ts-expect-error A snapshot root is immutable.
+  source.root = leaf.root;
+  // @ts-expect-error Addresses preserve the entire canonical u64 range.
+  source.leaf(1);
+  return result;
+}
 async function causalReplicaTypes(store: import('../types/index.js').AtomicJournalStoreProvider) {
   const owner = new CausalReplica(store, 'replica', '00000000000000000000000000000001', { requireDurableFlush: true });
   const snapshot: CausalSnapshot = await owner.snapshot();

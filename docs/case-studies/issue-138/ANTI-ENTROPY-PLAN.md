@@ -39,20 +39,32 @@ be presented as another acknowledgement threshold on the existing log.
       CAUSAL-LOCAL-PLAN.md tracks test-first local ownership and retry receipts.
       Eight contracts and 29 shared cases pass native Rust, C#, JS and actual
       WASM; 50 physical handoffs and 20 real process exits pass all five
-      runtime readers/writers. Full coverage and fresh platform CI remain
-      separate verification steps. Finite capacity and full replay are explicit.
-- [ ] Implement bounded snapshot/Merkle comparison and differing-range transfer.
+      runtime readers/writers. Complete validation passes 1210 native tests,
+      736 actual-WASM tests, 2475 C# tests per configuration and 657 JS tests.
+      All nine exact-head workflows pass on d00e022; all three actual C#
+      coverage archives verify size and SHA256. Finite capacity and full replay
+      are explicit; complete project coverage gaps remain.
+- [x] Implement bounded snapshot/Merkle comparison and differing-range transfer.
       Validate the snapshot identity throughout transfer, bound tree depth,
       range sizes, bytes and retries, verify received data, and preserve a retry
       path after uncertain publication. Transfer deletions and causal context.
       CAUSAL-MERKLE-PLAN.md tracks the independent 64-pair/48-proof model,
       canonical roots/proofs, production ports and bounded publication controls.
-- [ ] Supply native Rust, C# and actual WASM/JS parity with shared vectors,
+      Nine portable contracts and the 50-handoff/20-reaped-exit physical matrix
+      pass. Root/author-bound continuations retain the unprocessed frontier
+      when node, leaf or accepted-byte budgets stop an attempt.
+- [x] Supply native Rust, C# and actual WASM/JS parity with shared vectors,
       independent finite schedule oracles, physical restart/process probes,
       directory interoperability and unchanged optional-SQLite boundaries.
-- [ ] Add scenarios, complexity/space limits and primary-source comparisons;
-      run complete local suites and coverage without removing source, then
-      inspect exact-head Windows/Linux/macOS and portable CI.
+      Focused contracts run on all six execution surfaces; the native physical
+      matrix exercises five runtimes in plain/mirrored modes with SQL disabled.
+      Complete current-source suites/coverage finish 2026-10-27T15:59:59Z.
+      causal-merkle.txt retains complete denominators and all remaining gaps.
+- [x] Add scenarios, complexity/space limits and primary-source comparisons;
+      run complete local suites and coverage without removing source.
+- [ ] Inspect fresh exact-head Windows/Linux/macOS and portable CI for the
+      Merkle composition. Ordinary-links projection and safe reclamation remain
+      separate unfinished requirements.
 
 The initial retention design must keep tombstones and causal evidence until a
 separately verified membership/reclamation protocol establishes safe removal.
@@ -69,6 +81,8 @@ Applications selecting those guarantees must retain their coordinated strategy.
 
 The finite model is design evidence; the selected production codec/merge/counter
 component and local owner have separate conformance evidence. Production
-anti-entropy, bounded transfer and all wider unmet criteria remain unfinished;
+snapshot comparison and bounded transfer pass complete local suites, with fresh
+platform verification in progress. Ordinary-links projection, global allocation,
+safe membership/history reclamation and every wider unmet criterion remain unfinished;
 PR139 stays draft and unmerged. See anti-entropy-causality-model.txt and
 ../../ENGINE-CAUSAL-VERSIONS.md.

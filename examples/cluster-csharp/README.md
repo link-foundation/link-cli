@@ -60,3 +60,10 @@ Add `--checkpoint` to publish retained-history checkpoints after every changed
 revision using the same atomic store. Defaults remain append-only. Upgrade every
 reader before enabling engine3 journals. See
 [configuration and costs](../../docs/ENGINE-CHECKPOINTS.md).
+
+The separately selected [causal Merkle example](../../docs/ENGINE-CAUSAL-MERKLE.md)
+exchanges bounded proof messages between independently owned physical stores.
+Build Rust with `native-pages,physical-lsm,causal-merkle`, build the C# cluster
+example, then run `python3 examples/native-lsm-js/run-merkle-interop.py` from
+the repository root. It includes finite before/after publication process exits,
+explicit reaped-owner recovery, read/retry hash preservation and following edits.

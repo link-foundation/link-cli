@@ -47,8 +47,12 @@ Implementation decisions to verify in [ANTI-ENTROPY-PLAN.md](ANTI-ENTROPY-PLAN.m
 - Keep constraints requiring global coordination on their coordinated path;
   disclose selected metadata, hashing, retained-history and network costs.
 
-These are source observations, a finite semantic model and an active plan.
-Production causal storage, Merkle transfer, three-language parity and crash
-verification remain unfinished. No availability/latency equivalence with
-Dynamo, Cassandra or Accord is claimed, and all wider unmet criteria remain
-active in PR139.
+These source observations and independent models now have separately selected
+production version/local-owner and Merkle components in Rust, C# and JS/TS,
+with shared actual-WASM contracts. CAUSAL-LOCAL-PLAN.md records complete local
+and platform verification; CAUSAL-MERKLE-PLAN.md records current-source full
+validation and physical wire/process evidence. Ordinary-links projection,
+independent-author deployment fencing and safe membership/history reclamation
+remain separate requirements. No availability/latency equivalence with Dynamo,
+Cassandra or Accord is claimed, and all wider unmet criteria remain active in
+PR139.

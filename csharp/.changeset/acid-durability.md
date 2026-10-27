@@ -319,3 +319,7 @@ writing by default and interoperable native file/consensus consumers.
 Add selected local causal ownership over atomic journals, durable retry receipts,
 retained historical identities and bounded replay, with SQL-free native LSM
 interchange and explicit process-exit recovery examples.
+
+Add selected immutable causal Merkle snapshots, canonical root-bound proof frames
+and bounded differing-range pulls with opaque continuations. Preserve concurrent
+destination evidence and validate physical cross-runtime/process-exit exchange.

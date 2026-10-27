@@ -1,8 +1,9 @@
 # Bounded causal Merkle snapshots, version 1
 
-This protocol is under implementation. The independent model and shared
-vectors establish design evidence; production ports and transfer verification
-remain unchecked in [the plan](../case-studies/issue-138/CAUSAL-MERKLE-PLAN.md).
+The independent model and shared vectors establish design evidence. Selected
+native Rust/C#/JS ports, actual-WASM contracts and finite five-runtime physical
+exchange verify the boundary; complete validation and current CI are tracked
+in [the plan](../case-studies/issue-138/CAUSAL-MERKLE-PLAN.md).
 
 A snapshot owns the selected visible causal versions. Group by positive u64
 address, reject contradictory dot identities across all groups, and merge each
@@ -76,7 +77,7 @@ after parsing. These bounds apply to each response, including responses that
 are ultimately rejected. A transport adapter must impose the raw frame limit
 while receiving, before constructing an unbounded string in memory.
 
-The planned pull operation freezes one source root, compares root-bound nodes
+The pull operation freezes one source root, compares root-bound nodes
 with a frozen destination snapshot and descends only through mismatching,
 nonempty source ranges. It validates each leaf before passing its versions to
 the fresh local destination owner's receive operation. A concurrent destination
@@ -88,9 +89,21 @@ it. Node/leaf request limits and per-frame limits bound the total response
 traffic, including rejected data. Defaults are 4096 node requests, 64 leaf
 requests and 8 MiB of version bytes. Selected positive maxima are 65536 node
 requests, 4096 leaf requests and 8 MiB of version bytes. Partial
-progress can remain after an error. A new attempt takes fresh roots and skips
-already reconciled content. A changed source requires a new snapshot, rather
-than mixing roots. Bidirectional exchange may be required for convergence.
+progress can remain after an error; restart from fresh snapshots on error.
+A budget-limited attempt returns an opaque owned continuation containing the
+frozen source root, destination author and pending traversal paths. It has at
+most 241 paths of at most sixteen digits. Resume it only on the same monotone
+destination journal: its unique-author/no-rollback requirements still apply.
+A changed source root rejects before reading the destination; a different
+destination author rejects before publication. Public APIs cannot fabricate a
+frontier. On a budget stop, the current unprocessed path stays pending,
+including a leaf fetched but rejected for the byte budget. A byte budget must
+fit a complete leaf to make progress. Completion returns no continuation.
+Fresh destination snapshots are used on every resumed attempt. Carrying the
+frontier avoids revisiting concurrent/dominating destination leaves forever
+under small budgets; restarting without it remains safe but may starve later
+ranges. A changed source requires a new snapshot and traversal rather than
+mixing roots. Bidirectional exchange may be required for convergence.
 
 Retries do not discard retained tombstones. This transport does not copy the
 source's local request receipts, prove contradictions hidden in every pruned

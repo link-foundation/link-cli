@@ -101,6 +101,10 @@
     "./engine-causal-replica": {
       "types": "./types/engine-causal-replica.d.ts",
       "default": "./src/engine-causal-replica.js"
+    },
+    "./engine-causal-merkle": {
+      "types": "./types/engine-causal-merkle.d.ts",
+      "default": "./src/engine-causal-merkle.js"
     }
   },
   "files": [

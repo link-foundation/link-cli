@@ -26,3 +26,10 @@ directory and close all engines/sessions before their file stores. See the
 
 The same executable also supplies finite `write`, `read`, `mutate` and
 `read-advanced` commands to the [five-runtime file handoff driver](../../../examples/native-lsm-js/README.md).
+
+The separately selected [causal Merkle example](../../../docs/ENGINE-CAUSAL-MERKLE.md)
+exchanges bounded proof messages between independently owned physical stores.
+Build Rust with `native-pages,physical-lsm,causal-merkle`, build the C# cluster
+example, then run `python3 examples/native-lsm-js/run-merkle-interop.py` from
+the repository root. It includes finite before/after publication process exits,
+explicit reaped-owner recovery, read/retry hash preservation and following edits.

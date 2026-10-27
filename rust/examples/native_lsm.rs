@@ -6,6 +6,9 @@ mod causal;
 mod chunks;
 #[path = "native_lsm/consumer.rs"]
 mod consumer;
+#[cfg(feature = "causal-merkle")]
+#[path = "native_lsm/merkle.rs"]
+mod merkle;
 use link_cli::engine::{
     cluster::{AtomicJournalStore, JournalVersion},
     lsm::{FileLsmJournalStore, FileLsmOptions, LsmOptions, LsmStoreOptions},
@@ -133,6 +136,8 @@ fn files(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError> 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+        #[cfg(feature = "causal-merkle")]
+        ["merkle", action, directory, mirrors, messages] => merkle::run(action, directory, mirrors, messages)?,
         #[cfg(feature = "causal")]
         ["causal", action, directory, mirrors] => causal::run(action, directory, mirrors)?,
         ["files", action, directory, mirrors] => files(action, directory, mirrors)?,

@@ -77,5 +77,5 @@ scripts' actual validation status is recorded in the issue's verification log.
 
 Local atomic publication and causal reconciliation are separate guarantees.
 Global uniqueness, cascades, serializability and consensus require their
-coordinated strategies. Merkle snapshots/range transfer, automatic repair and
-safe evidence reclamation remain under the [anti-entropy plan](case-studies/issue-138/ANTI-ENTROPY-PLAN.md).
+coordinated strategies. [Merkle snapshots/range transfer](ENGINE-CAUSAL-MERKLE.md) is a separate selected
+component. Automatic repair and safe evidence reclamation remain under the [anti-entropy plan](case-studies/issue-138/ANTI-ENTROPY-PLAN.md).

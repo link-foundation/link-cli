@@ -4263,3 +4263,65 @@ causal-replica-ci.txt separates full all-feature suites, repeated doctests and
 focused bare-provider tests, with complete log hashes and run/job links.
 All three actual C# coverage archives verify size and SHA256. Later Merkle
 changes need their own full validation and fresh CI; wider gaps remain open.
+
+
+## Bounded causal Merkle exchange (2026-10-27T15:59:59Z)
+
+`causal-merkle{,-before}.txt` retains test-first missing-API diagnostics,
+finite before-failing node/leaf starvation controls, exact raw-report SHA256s,
+commands and full metrics. The independent model checks 64 snapshot pairs and
+48 proof groups; eight roots and seven complete canonical node/leaf frames are
+produced without production imports. Nine shared contracts pass native Rust,
+C#, Node, Bun, Deno and actual WASM, including all 64 direct causal unions.
+Root/author-bound owned continuations retain the unprocessed path at every
+budget stop; concurrent destination siblings cannot pin later attempts to the
+first unequal leaf. A frozen eight-attempt leaf control fails; the current
+public API completes after six attempts with seven retained versions.
+
+The SQL-free physical composition passes 50 plain/mirrored message handoffs,
+20 reaped exit-73 children, 100 unchanged-byte stale-owner refusals and 100
+recovered cross-runtime retry/reopen/following handoffs. Actual native pulls
+carry four-node/one-leaf continuations, capped at forty attempts. Ownership
+markers are explicitly quarantined only after reaping. Reads and duplicate
+pulls leave file hashes unchanged. These checks establish process-exit behavior
+on the tested native composition and do not certify hardware power loss.
+
+Complete suites pass 1219 native tests, six doctests, 745 actual-WASM tests,
+2484 C# tests per configuration, 666 Node tests and 221 repository checks.
+Twenty-two native entries are driven by parent process tests; one existing
+doctest remains ignored. Bun/Deno each pass all 22 selected causal contracts.
+JS retains enforced 100% production lines/branches/functions. Native LLVM
+reports 18268/19163 lines, 3590/4090 branches, 2346/2515 functions,
+28154/30381 regions and 12537/22433 instantiations. Complete linked WASM
+reports 14244/16872 lines, 2959/3479 branches, 1764/2193 functions,
+21985/26635 regions and 4482/7664 instantiations. The Rust Merkle component
+covers 511/516 lines, 112/116 branches and 63/67 functions on both surfaces.
+Every production denominator remains included.
+
+C# Debug reports 9871/10180 lines and 6265/6710 branches; Release reports
+7612/7813 and 6209/6671. CausalVersion, CausalReplica and CausalMerkle cover
+all executable lines and all 138, 180 and 246 branch edges respectively in
+both configurations. The retained admission-before receipts identify actual
+missing conditions; added malformed provider/journal, allowed key/limit,
+proof/frame/address/remote-response and cursor-ownership controls close those
+component test gaps without altering production code or denominators. This
+component evidence does not establish complete project coverage.
+
+Formatting, strict native/WASM Clippy, types, source/changeset checks, all 127
+fresh dependency declarations/locks, workflow/ShellCheck and whitespace pass.
+The complete repository suite initially reports one layout failure at retained
+`causal-merkle-repository-before.log:250`: root `ci-logs/` is misplaced.
+Moving its three raw logs into `experiments/issue-138/ci-logs/` and correcting
+the old receipt paths resolves it; all 221 checks pass without changing tests.
+The final C# Debug/Release reruns finish 15:59:59Z. Cgroup memory events record
+zero OOM events/kills; compilers run sequentially with one Cargo build job.
+
+Selecting no Rust features retains no JSON/SQLite/SHA normal dependencies.
+The Merkle component bounds admission, canonical preparse allocation, response
+proofs and cursor paths, while preserving complete local replay/publication
+costs. ENGINE-CAUSAL-MERKLE.md specifies CPU, retained space and wire budgets;
+accepted version bytes do not bound all proof/rejected-frame traffic. Fresh
+exact-head Windows/Linux/macOS and portable CI remain required. Ordinary links
+projection, safe membership/history reclamation, generic mapped failures,
+legacy physical repair, full project 100% and all wider unmet R1-R12 criteria
+remain unfinished; PR139 stays draft and unmerged.

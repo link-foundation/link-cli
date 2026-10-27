@@ -489,6 +489,23 @@ documentation and pinned Cassandra MerkleTree, RepairJob and LocalSyncTask
 source. An independent finite model checks retained siblings, observed
 resolution, deletion resurrection and merge laws. Canonical causal-version1
 vectors specify an initial semantic boundary independently of runtime code.
-Durable ownership, production anti-entropy and full parity remain active under
-[ANTI-ENTROPY-PLAN.md](ANTI-ENTROPY-PLAN.md); this is not a completed repair
-protocol or a replacement for globally linearizable coordinated publication.
+Selected durable local ownership and bounded visible-content Merkle transfer
+now have production Rust/C#/JS ports and shared actual-WASM contracts under
+[ANTI-ENTROPY-PLAN.md](ANTI-ENTROPY-PLAN.md). Complete current-source validation
+passes at 2026-10-27T15:59:59Z; fresh platform CI remains active. Ordinary-links projection, membership-aware
+history reclamation and a complete repair protocol remain unfinished; causal
+convergence does not replace globally linearizable coordinated publication.
+
+## Refreshed mapped-owner dependency audit (2026-10-27)
+
+The generic mapped-owner audit was refreshed on 2026-10-27 while those suites
+ran. The [crates.io index](https://index.crates.io/pl/at/platform-mem) still lists
+0.3.0 as the newest published version. Upstream main remains
+`c373135da4dec66c946b504bb455af4aec732816`; its
+[FileMapped source](https://github.com/linksplatform/mem-rs/blob/c373135da4dec66c946b504bb455af4aec732816/src/file_mapped.rs)
+has the same SHA256 recorded above, and the open-PR list is empty. It still
+unmaps before fallible remapping while retaining the private typed buffer.
+There is no newer ownership API in that source to adopt. This read-only audit
+does not fix genuine generic resize/partial-shrink or destructor failures;
+they remain open implementation criteria. The downloaded index, source and
+paginated commit/PR evidence are retained under experiments/issue-138.

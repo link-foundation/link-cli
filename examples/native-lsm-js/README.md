@@ -64,3 +64,14 @@ epoch, rejects its old owned generation, then collects exactly the three retired
 seed chunks. Read-only reopening preserves every physical file hash. The actual
 WASM cluster consumer separately verifies retained checkpoint history. See the
 [reclamation contract and restaging costs](../../docs/protocol/reclaiming-chunks.md).
+
+The separately selected [causal Merkle example](../../docs/ENGINE-CAUSAL-MERKLE.md)
+exchanges bounded proof messages between independently owned physical stores.
+Build Rust with `native-pages,physical-lsm,causal-merkle`, build the C# cluster
+example, then run `python3 examples/native-lsm-js/run-merkle-interop.py` from
+the repository root. It includes finite before/after publication process exits,
+explicit reaped-owner recovery, read/retry hash preservation and following edits.
+
+The physical pull example also carries continuations with four-node/one-leaf
+budgets and at most forty attempts, so the concurrent first leaf cannot starve
+the second address during actual wire/file exchange.

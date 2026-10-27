@@ -24,7 +24,10 @@ construction. See [configuration, costs and limits](../../docs/ENGINE-CAUSAL-VER
 The separately selected `./engine-causal-replica` composes a coherent local
 atomic provider with causal mutations and durable retry receipts. See
 [ownership, finite replay costs and physical examples](../../docs/ENGINE-CAUSAL-REPLICAS.md).
-Merkle transport, ordinary links projection and safe reclamation remain in progress.
+The independent `./engine-causal-merkle` export adds bounded immutable content
+snapshots, canonical proof frames and resumable differing-range pulls. See
+[configuration, budgets and physical exchange](../../docs/ENGINE-CAUSAL-MERKLE.md).
+Ordinary links projection and safe reclamation remain in progress.
 
 ## Use
 

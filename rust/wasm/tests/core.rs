@@ -2,6 +2,9 @@
 //! Native filesystem, threads and panic-unwind probes retain their native tests.
 #![cfg(target_arch = "wasm32")]
 
+#[path = "../../tests/engine_causal_merkle_tests.rs"]
+mod causal_merkle;
+
 #[path = "../../tests/engine_causal_replica_tests.rs"]
 mod causal_replica;
 

@@ -18,7 +18,9 @@ that should be initialized. Establish the failure before changing that path.
       following growth, checked flush and exact destructor retirement.
 - [x] Run both feature configurations, complete native and actual-WASM suites,
       strict local checks and complete production coverage reports sequentially.
-- [ ] Commit and push only the prepared branch, then inspect exact-head CI.
+- [x] Commit and push only the prepared branch, then inspect exact-head CI.
+      All nine published d00e022 workflows include the initialization controls
+      and pass; causal-replica-ci.txt retains actual native platform totals.
 
 Complete sequential validation finishes 2026-10-27T12:19:05Z: 1,197 native
 tests, six doctests, 723 actual-WASM tests and all 221 repository checks pass.

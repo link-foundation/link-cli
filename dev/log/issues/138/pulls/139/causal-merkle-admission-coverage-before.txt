@@ -1,0 +1,12 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+C# Merkle admission/continuation coverage audit before additional controls.
+The complete Debug suite passes 2484 tests and covers every executable Merkle line; eight branch conditions across six lines remain. No production defect is asserted by this audit.
+Complete report SHA256: f183473d2438902c17e56221716f207083759257ad8f1d1399b41fb77e0bc467.
+84: 50% (2/4): if (level is null || level.Count != 15) throw Invalid(); return level.Select(Hash).ToArray();
+154: 75% (3/4): if (wire is null || wire.Length > maxBytes) throw Invalid();
+203: 83.33% (10/12): if (key.Length is 0 or > 20 || !ulong.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out ulong address) ||
+225: 75% (3/4): if (root != Root || author != destinationAuthor) throw new InvalidDataException("Mismatched causal continuation.");
+254: 75% (3/4): if (response is null || response.Address != address) throw new InvalidDataException("Mismatched causal leaf path.");
+262: 75% (3/4): if (response is null || response.Prefix != path) throw new InvalidDataException("Mismatched causal node path.");
+Add bounded null/short proof levels, null frames, empty/overlong address text and null remote responses through the public API. Independently test the internal continuation root guard and returned frontier ownership through the existing friend-test assembly. Release also reports the closing-object delimiter condition at line 161; include an isolated closing brace. Signed/whitespace/nondecimal address controls retain strict canonical spelling. No production source or denominator changes.
+Full Debug/Release suites and retained reports supply the after evidence.

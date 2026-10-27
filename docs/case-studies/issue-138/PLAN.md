@@ -1017,7 +1017,7 @@ acceptance criterion continue independently.
     2475 C# tests in each configuration and all 221 repository checks pass.
     causal-replica.txt retains every complete coverage denominator and gaps.
     All three published d00e022 C# platform archives verify size and SHA256;
-    eight workflows pass while Rust's Windows job remains pending. Full
+    all nine workflows pass, including Rust's three platform jobs. Full
     replay, finite retained history/receipts, unique independent authors and
     operator-authorized stale-marker recovery are explicit. Ordinary links
     projection, Merkle transfer, safe compaction and every wider unmet criterion
@@ -1028,9 +1028,15 @@ acceptance criterion continue independently.
     The independent resource-bounded model passes 64 snapshot pairs and 48
     proof groups; eight roots and seven complete canonical proof/wire vectors
     are generated without production imports. JS test-first controls reproduce
-    missing snapshot, pull and wire APIs. Eight finite JS draft contracts pass
-    at 100% measured draft coverage, including 64 direct causal unions,
-    concurrent writes, bounded continuation and before/after lost publication
-    replies. Native/C#/actual-WASM production ports, physical wire/process
-    composition, complete validation and fresh CI remain unfinished. Retain
+    missing snapshot, pull and wire APIs. Nine portable production contracts
+    cover 64 direct causal unions, concurrent writes, proof admission and
+    before/after lost publication replies. Independent finite controls expose
+    node-budget restarts and concurrent-leaf starvation; owned root/author-bound
+    continuations retain the unprocessed frontier. Native/C#/JS production ports
+    and actual physical wire/process composition pass complete local validation
+    at 2026-10-27T15:59:59Z: 1219 native tests plus six doctests, 745 actual-WASM,
+    2484 C# per configuration, 666 Node and 221 repository checks. C# causal
+    components cover all executable lines/branches; JS enforces 100% production
+    lines/branches/functions. causal-merkle.txt retains complete native/C#/linked-
+    WASM denominators and remaining gaps. Fresh exact-head CI is required. Retain
     concurrent versions and deletions; absence never authorizes deletion.
