@@ -27,7 +27,7 @@ for mode in Debug Release; do
   dotnet test csharp --configuration "$mode" --disable-build-servers -m:1 \
     --collect:'XPlat Code Coverage;Format=json,cobertura' --results-directory "$PWD/$prefix-$mode-results" > "$prefix-csharp-$mode-full.log" 2>&1
   report=$(find "$prefix-$mode-results" -name coverage.json -type f)
-  python3 experiments/issue-138/check-causal-raw-coverage.py "$report" > "$prefix-$mode-records.log" 2>&1
+  python3 experiments/issue-138/check-causal-raw-coverage.py "$report" --require-session > "$prefix-$mode-records.log" 2>&1
 done
 printf 'CSHARP PASS %s\n' "$(date -u +%FT%TZ)"
 dotnet build-server shutdown --vbcscompiler > "$prefix-build-server-shutdown.log" 2>&1

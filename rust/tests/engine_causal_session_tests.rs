@@ -190,6 +190,9 @@ fn reservation_cursor_is_independent_of_private_journal_allocator() {
         .unwrap();
     let mut tx = session(store.clone(), 32, 33);
     assert_eq!(tx.create_link(0, 0).unwrap(), 32);
+    let rows = tx.rows();
+    assert!(tx.ensure_link_created(0).is_err());
+    assert_eq!(tx.rows(), rows);
     assert!(tx.ensure_link_created(31).is_err());
     assert!(tx.ensure_link_created(34).is_err());
     assert_eq!(tx.ensure_link_created(33).unwrap(), 33);

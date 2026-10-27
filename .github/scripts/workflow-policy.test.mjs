@@ -448,7 +448,7 @@ test('coverage uploads use OIDC and retain reports without requiring Codecov', (
           // Cobertura omits those methods from its source listing.
           assert.match(job.body, /XPlat Code Coverage;Format=json,cobertura/);
           assert.match(job.body, /TestResults\/\*\*\/coverage\.json/);
-          assert.match(job.body, /python3 experiments\/issue-138\/check-causal-raw-coverage\.py/);
+          assert.match(job.body, /python3 experiments\/issue-138\/check-causal-raw-coverage\.py[^\n]* --require-session/);
         }
       }
     }

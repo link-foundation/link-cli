@@ -43,8 +43,14 @@ criterion represented as complete without implementation and verification.
 - [x] Add runnable use cases and exact CPU/space/wire/durability costs. Run
       complete unfiltered suites/coverage, formats/lint/types and release checks
       sequentially; preserve every denominator and immutable report identity.
-- [ ] Review, commit useful steps, push only issue-138-adc2aa56c4cb, inspect all
-      fresh exact-head workflows/platform artifacts and update PR139.
+- [x] Review and commit the ordinary sessions with complete local evidence.
+      Add focused zero-address, retained-observation, option-overflow and
+      operation-guard controls. All 30 LLVM branches in native session core,
+      WASM session core and WASM binding are visited without changing any
+      complete-suite source set or denominator. Require all six C# causal
+      components in platform CI, after a failing report-omission control.
+- [ ] Push only issue-138-adc2aa56c4cb, inspect all fresh exact-head
+      workflows/platform artifacts and update PR139.
 
 Preparation freezes the original owner generation, token and complete final
 edits before publication. One coherent local batch is the only real write.

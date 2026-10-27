@@ -12,7 +12,7 @@ NAMES = ['CausalBatch', 'CausalMerkle', 'CausalProjection', 'CausalReplica', 'Ca
 
 
 class RawCoverageTests(unittest.TestCase):
-    def check_report(self, windows=False, missing=False, session=False):
+    def check_report(self, windows=False, missing=False, session=False, require_session=False):
         files = {}
         for name in NAMES + (['CausalSession'] if session else []):
             filename = f'C:\\repo\\Engine\\{name}.cs' if windows else f'/repo/Engine/{name}.cs'
@@ -22,7 +22,8 @@ class RawCoverageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='causal-raw-', dir=CHECKER.parent) as temporary:
             path = Path(temporary) / 'coverage.json'
             path.write_text(json.dumps({'Library.dll': files}))
-            return subprocess.run([sys.executable, str(CHECKER), str(path)],
+            return subprocess.run([sys.executable, str(CHECKER), str(path)] +
+                                  (['--require-session'] if require_session else []),
                                   text=True, capture_output=True, check=False)
 
     def test_posix_paths_include_methods_without_source_lines(self):
@@ -54,6 +55,14 @@ class RawCoverageTests(unittest.TestCase):
         missing = self.check_report(session=True, missing=True)
         self.assertNotEqual(missing.returncode, 0)
         self.assertIn('UNCOVERED CausalSession.cs', missing.stdout)
+
+    def test_required_session_cannot_be_omitted_from_the_report(self):
+        complete = self.check_report(session=True, require_session=True)
+        self.assertEqual(complete.returncode, 0, complete.stdout + complete.stderr)
+        missing = self.check_report(require_session=True)
+        self.assertNotEqual(missing.returncode, 0)
+        self.assertIn('missing required components', missing.stderr)
+        self.assertIn('CausalSession.cs', missing.stderr)
 
 
 if __name__ == '__main__':

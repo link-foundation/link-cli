@@ -1,5 +1,6 @@
 #![cfg(all(target_arch = "wasm32", feature = "causal-sessions"))]
 use clink_wasm::CausalLinksWorkspace;
+use link_cli::engine::causal::{CausalPayload, CausalVersion};
 use serde_json::{json, Value};
 use wasm_bindgen_test::wasm_bindgen_test;
 
@@ -65,6 +66,30 @@ fn ordinary_transport_reads_updates_deletes_and_selected_options() {
         ws.request(r#"["get","1"]"#).unwrap(),
         r#"{"index":"1","source":"2","target":"0"}"#
     );
+
+    // Preparation must encode every retained observation, including its full
+    // clock and name, rather than only covering fresh rows without observers.
+    let retained = CausalVersion::advance(
+        1,
+        "00000000000000000000000000000001",
+        0,
+        &[],
+        Some(CausalPayload {
+            source: 1,
+            target: 1,
+            name: Some("old\u{feff}雪😀\0".into()),
+        }),
+    )
+    .unwrap()
+    .encode()
+    .unwrap();
+    let mut seeded =
+        CausalLinksWorkspace::new(&json!([retained]).to_string(), "32", "33", "reject", "{}")
+            .unwrap();
+    seeded.request(r#"["set-name","1","new"]"#).unwrap();
+    let edits: Value = serde_json::from_str(&seeded.finish().unwrap()).unwrap();
+    assert_eq!(edits[0]["observed"], json!([retained]));
+    assert_eq!(edits[0]["payload"]["name"], "new");
 }
 
 #[wasm_bindgen_test]
@@ -76,6 +101,8 @@ fn malformed_transport_and_configuration_cannot_mutate_rows() {
         r#"{"isolation":"snapshot"}"#,
         r#"{"maxVersions":"1"}"#,
         r#"{"maxBytes":-1}"#,
+        r#"{"maxVersions":4294967296}"#,
+        r#"{"maxBytes":4294967296}"#,
         r#"{"maxVersions":0}"#,
         r#"{"stateStructure":"unknown"}"#,
         r#"{"constraintValidation":"unknown"}"#,
@@ -102,6 +129,9 @@ fn malformed_transport_and_configuration_cannot_mutate_rows() {
         "{}",
         "[]",
         r#"["unknown"]"#,
+        r#"["unknown","1"]"#,
+        r#"["unknown","1","name"]"#,
+        r#"["unknown","1","0","0"]"#,
         r#"["create",1,"2"]"#,
         r#"["create","01","2"]"#,
         r#"["create","18446744073709551616","2"]"#,
@@ -109,6 +139,7 @@ fn malformed_transport_and_configuration_cannot_mutate_rows() {
         r#"["set-name","1",false]"#,
         r#"["set-name","1","missing"]"#,
         r#"["ensure","3"]"#,
+        r#"["ensure","0"]"#,
         r#"["update","1","0","0"]"#,
         r#"["delete","1"]"#,
     ] {

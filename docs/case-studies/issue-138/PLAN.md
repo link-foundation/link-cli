@@ -1150,3 +1150,25 @@ protocol work and reproduced reference-allocation failures. Global allocation,
 membership/history reclamation, generic mapped failures, whole-project 100%,
 fresh platform CI and every wider unmet requirement remain unfinished.
 PR139 stays draft and unmerged.
+
+
+The focused session coverage supplement passes at 2026-10-27T20:59:01Z.
+Ten native session tests, ten actual-WASM core tests and all three WASM binding
+tests exercise zero-address refusal, retained-observation encoding, 32-bit
+option overflow and unknown operation guards. All 30 compiled LLVM branches
+in each session component are visited. This supplements the complete run;
+it does not claim another full-suite execution or complete project coverage.
+Native totals are 19027/19918 lines and 3729/4224 branches; linked WASM totals
+are 15159/17792 and 3125/3643. Every original source file and denominator is
+retained. The core retains 313/315 source lines; the binding retains 164/165
+lines and 29/30 functions. All remaining regions/instantiations stay visible.
+
+A sixth raw-coverage verifier contract first fails before the new required
+session flag exists. Complete six-component fixtures now pass, and omitting
+the session refuses the report. Every C# platform CI job requires the flag;
+complete local Debug/Release raw reports pass it. Strict native/WASM Clippy,
+formats, 221 repository checks, actionlint and ShellCheck pass. Production
+session source bytes are unchanged from commit 082213b and its complete run.
+causal-session-coverage.txt records source/report hashes and reproduction.
+Fresh exact-head CI, full-width query/protocol work and every wider unmet
+R1–R12 criterion remain active. PR139 stays draft and unmerged.

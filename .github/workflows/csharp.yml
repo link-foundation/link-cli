@@ -295,7 +295,7 @@ jobs:
           reports=(csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/*/coverage.json)
           test "${#reports[@]}" -eq 1
           test -f "${reports[0]}"
-          python3 experiments/issue-138/check-causal-raw-coverage.py "${reports[0]}"
+          python3 experiments/issue-138/check-causal-raw-coverage.py "${reports[0]}" --require-session
 
       - name: Native file LSM cluster consumers
         working-directory: .
