@@ -52,9 +52,9 @@ test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:41:1
 test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:53:1
 ✖ selected page damage and a lower page bound fail without cleanup (7.719254ms)
   AssertionError [ERR_ASSERTION]: The input did not match the regular expression /checksum/. Input:
-  
+
   'TypeError: CheckpointPagedCommitLog.inspect is not a function'
-  
+
       at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:57:10)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
@@ -83,9 +83,9 @@ test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:53:1
 test at experiments/issue-138/checkpoint-inspect-behavior.test.mjs:66:1
 ✖ unrooted committed banks and selected identity changes fail without writes (6.604414ms)
   AssertionError [ERR_ASSERTION]: The input did not match the regular expression /unrooted/. Input:
-  
+
   'TypeError: CheckpointPagedCommitLog.inspect is not a function'
-  
+
       at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-behavior.test.mjs:70:10)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
