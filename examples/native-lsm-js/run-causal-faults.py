@@ -11,6 +11,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 os.chdir(ROOT)
 CSHARP = os.environ.get("CLUSTER_CSHARP_EXAMPLE", "examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll")
+LAYOUT = os.environ.get("NATIVE_CAUSAL_LAYOUT", "causal")
+assert LAYOUT in ("causal", "batch")
 RUNTIMES = {
     "node": ["node", "--max-old-space-size=128", "examples/native-lsm-js/causal-interop.mjs"],
     "bun": ["bun", "examples/native-lsm-js/causal-interop.mjs"],
@@ -18,6 +20,9 @@ RUNTIMES = {
     "csharp": ["dotnet", CSHARP, "--native-lsm-causal"],
     "rust": [os.environ.get("RUST_NATIVE_LSM_EXAMPLE", "rust/target/debug/examples/native_lsm"), "causal"],
 }
+if LAYOUT == "batch":
+    for name, command in RUNTIMES.items():
+        command[-1] = "batch" if name == "rust" else "--native-lsm-batch" if name == "csharp" else "examples/native-lsm-js/batch-interop.mjs"
 if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
     RUNTIMES = {name: RUNTIMES[name] for name in selected.split(",")}
 
@@ -83,6 +88,6 @@ with tempfile.TemporaryDirectory(prefix="clink-causal-process-") as temporary:
                     run(writer, "read-following", target, mirrors)
                     assert snapshot(target) == advanced, "return read changed following bytes"
                     assert not any(name == ".lsm-writer" or name.endswith(".writer") for name in advanced)
-                    print(f"PASS causal {mirrors} {writer} exit-{phase} -> {reader} retry/following -> {writer}", flush=True)
+                    print(f"PASS {LAYOUT} {mirrors} {writer} exit-{phase} -> {reader} retry/following -> {writer}", flush=True)
 print(f"PASS {4 * len(RUNTIMES)} reaped process exits; {4 * len(RUNTIMES) ** 2} cross-runtime retry/reopen/following checks", flush=True)
 print("Process exits establish application-crash recovery after explicit operator marker recovery, not hardware power-loss certification.")

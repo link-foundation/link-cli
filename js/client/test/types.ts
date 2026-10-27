@@ -3,7 +3,19 @@ import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';
 import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
 import { CausalReplica, type CausalSnapshot } from '../types/engine-causal-replica.js';
+import { CausalBatch, type CausalBatchSnapshot } from '../types/engine-causal-batch.js';
 import { CausalMerkleSnapshot, pullCausal, CausalPullCursor, type CausalPullProgress } from '../types/engine-causal-merkle.js';
+async function causalBatchTypes(store: import('../types/index.js').AtomicJournalStoreProvider) {
+  const batch = new CausalBatch(store, 'replica', 'batches', '00000000000000000000000000000001');
+  const state: CausalBatchSnapshot = await batch.snapshot();
+  const result: CausalValue[] = await batch.write('00000000000000000000000000000064', state.generation,
+    [{ address: '1', observed: state.versions, payload: null }]);
+  // @ts-expect-error Base generations preserve the canonical u64 range.
+  await batch.write('00000000000000000000000000000064', 0, []);
+  // @ts-expect-error Edit addresses preserve the canonical u64 range.
+  await batch.write('00000000000000000000000000000064', '0', [{ address: 1, observed: [], payload: null }]);
+  return result;
+}
 async function causalMerkleTypes(owner: CausalReplica) {
   const source = await CausalMerkleSnapshot.create((await owner.snapshot()).versions, { maxVersions: 64 });
   const leaf = await CausalMerkleSnapshot.decodeLeaf(source.root,

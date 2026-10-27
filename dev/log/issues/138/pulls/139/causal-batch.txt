@@ -1,0 +1,132 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-causal-batch.sh
+The driver runs the unchanged complete-production-coverage Node command from .github/workflows/js-client.yml.
+Test-first missing APIs: Node ERR_MODULE_NOT_FOUND, native E0432, C# CS0246.
+JS payload mutation across the first await reproduced before admission owned it.
+The physical exit matrix first exposed an incorrect example generation assertion.
+Physical LSM changes only changed keys: the empty receipt advances metadata, not the owner.
+All three examples now use that actual contract; a portable real-WAL/table unit control also passes.
+Independent finite model: 30 bounded scenarios; 53 independently generated shared journal-admission vectors.
+node-focused: {'tests': 15, 'pass': 15, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+Seven focused native/C#/actual-WASM contracts and fifteen Node/Bun/Deno contracts pass.
+SQL-free plain/mirrored files: 50 complete-store handoffs across Rust, C#, Node, Bun and Deno.
+Twenty exit-73 children are reaped before explicit marker quarantine; 100 blocked opens preserve evidence.
+All 100 cross-runtime recovered retries, following writes, empty receipts and return reads pass with file-hash guards.
+Application process exits do not certify hardware power loss.
+START 2026-10-27T17:05:04Z
+JAVASCRIPT PASS 2026-10-27T17:09:39Z
+START 2026-10-27T17:13:44Z
+experiments/issue-138/validate-causal-batch.sh: line 65: unexpected EOF while looking for matching `"'
+START 2026-10-27T17:17:21Z
+START 2026-10-27T17:17:54Z
+START 2026-10-27T17:19:09Z
+CSHARP PASS 2026-10-27T17:27:58Z
+NATIVE PASS 2026-10-27T17:46:51Z
+ACTUAL WASM PASS 2026-10-27T17:52:39Z
+ADMISSION START 2026-10-27T17:53:21Z
+CSHARP NULL-TOKEN START 2026-10-27T17:53:21Z
+ALL PASS 2026-10-27T17:53:54+00:00
+ADMISSION START 2026-10-27T18:06:13Z
+CSHARP NULL-TOKEN START 2026-10-27T18:06:13Z
+CSHARP NULL-TOKEN PASS 2026-10-27T18:09:34Z
+NATIVE ADMISSION PASS 2026-10-27T18:09:54Z
+ADMISSION PASS 2026-10-27T18:15:46Z
+Driver interruptions from editing active Bash scripts are retained. The completed format/focused and Debug evidence is preserved; overwritten Release output is rerun from an in-memory script snapshot before completing compiler/WASM validation.
+C# format/build/test use SDK 10.0.403, matching CI. The ambient 10.0.112 formatter's whitespace-only diagnostic is retained separately.
+Initial Release coverage exposed one untested null retry-token path (7/8 outcomes). The existing admission contract now includes it; complete C# validation is repeated without changing production code.
+Native full-suite profiles are supplemented with seven focused contracts using --no-clean after adding the 65-observation control. All complete production denominators and recorded production source hashes are unchanged.
+The actual-WASM full suite is repeated after the same portable test addition.
+C# Debug: 2491 passed, zero failed/skipped.
+Complete lines: 10024/10333 (97.00958%).
+Complete branches: 6455/6900 (93.55072%).
+CausalVersion.cs lines: 100/100; branches: 138/138.
+CausalReplica.cs lines: 136/136; branches: 180/180.
+CausalMerkle.cs lines: 218/218; branches: 246/246.
+CausalBatch.cs lines: 153/153; branches: 180/180.
+C# Release: 2491 passed, zero failed/skipped.
+Complete lines: 7735/7936 (97.46724%).
+Complete branches: 6396/6859 (93.24974%).
+CausalVersion.cs lines: 74/74; branches: 138/138.
+CausalReplica.cs lines: 108/108; branches: 180/180.
+CausalMerkle.cs lines: 160/160; branches: 246/246.
+CausalBatch.cs lines: 123/123; branches: 178/178.
+Native Rust: 1226 passed, zero failed; 22 existing parent-driven entries ignored by normal harness.
+Complete lines: 18631/19529 (95.40171%).
+Complete branches: 3680/4178 (88.08042%).
+Complete functions: 2375/2547 (93.24696%).
+Complete regions: 28695/30948 (92.72005%).
+Complete instantiations: 12582/22527 (55.85298%).
+causal_batch.rs lines: 362/366 (98.90710%).
+causal_batch.rs branches: 88/88 (100.00000%).
+causal_batch.rs functions: 29/32 (90.62500%).
+causal_batch.rs regions: 540/567 (95.23810%).
+causal_batch.rs instantiations: 29/76 (38.15789%).
+Actual WASM: 752 passed, zero failed; 0 existing parent-driven entries ignored by normal harness.
+Complete lines: 14607/17238 (84.73721%).
+Complete branches: 3049/3567 (85.47799%).
+Complete functions: 1793/2225 (80.58427%).
+Complete regions: 22526/27202 (82.81009%).
+Complete instantiations: 4527/7726 (58.59436%).
+causal_batch.rs lines: 362/366 (98.90710%).
+causal_batch.rs branches: 88/88 (100.00000%).
+causal_batch.rs functions: 29/32 (90.62500%).
+causal_batch.rs regions: 540/567 (95.23810%).
+causal_batch.rs instantiations: 29/44 (65.90909%).
+Separate doctests: six passed, one existing ignored example.
+js-full: {'tests': 681, 'pass': 681, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+100% production lines, branches and functions; unchanged thresholds and complete denominators.
+repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0, 'cancelled': 0}.
+Strict native/WASM Clippy, formats, type declarations, workflow/ShellCheck, source sizes, one changeset and 127 fresh dependency declarations/locks pass.
+Bare Rust normal dependencies omit JSON, SQLite and SHA; selecting causal-batches adds no SQLite or SHA. JS uses a separate export.
+Both journals remain independently bounded at 4096 entries/8 MiB; records 1 MiB, 64 edits, 64 observations per edit, seven receipt array levels/32768 separators.
+One coherent caller-owned store publishes complete owner and receipt journals at one CAS. All mutations stage privately before it.
+Retry identity includes original owner generation and normalized edits; complete supplied historical evidence is still validated.
+Complete retained replay/copying costs O((E+1)H²W); this is not an incremental scalable index.
+Local batch atomicity does not survive independent per-row remote transfer as a global atomic group.
+Ordinary links/name projection and sessions, global allocation, safe membership/history reclamation, generic mapped failures, full project 100% and all wider unmet R1-R12 criteria remain unfinished.
+Fresh publication/platform CI remains required; PR139 stays draft and unmerged.
+experiments/issue-138/causal-batch-native-before-observation-limit.json: 22004593 bytes; SHA256 2feb608e42a2501c11eb014a45a3b82470544df3177b5164dc69248acb9caa43.
+experiments/issue-138/causal-batch-admission-production.json: 357 bytes; SHA256 366e5d0a5e167577be0e69b86944cefde173800186f3b69cbc84c3ddb8b04f55.
+experiments/issue-138/causal-batch-wasm-before-observation-limit.json: 25037928 bytes; SHA256 721620ee1ed104d72e4a5482fc2f132f5ad106c1d699ee26e53a71558cbdb71f.
+experiments/issue-138/causal-batch-Debug-results/23b78fb7-fc6d-480e-9612-e9b6bbe8832d/coverage.cobertura.xml: 2617105 bytes; SHA256 354afacb6d633ff90679aa0e27630ca93676fa10936dbdd1bb4f5512e6c8cf9f.
+experiments/issue-138/causal-batch-Release-results/3a8a88f5-1cd5-4644-84c4-187ed69228aa/coverage.cobertura.xml: 2316485 bytes; SHA256 e05e65ba14c7305d727c9e4263eea4c2729796df8dfd08a7f8eec7b292a63134.
+experiments/issue-138/causal-batch-native-coverage.json: 22005830 bytes; SHA256 4fc110b7e44e8807195dbcde323a88a3c08235d4a5c8b0225aee9e63ff0202e4.
+experiments/issue-138/causal-batch-wasm-coverage.json: 25038199 bytes; SHA256 ec53abe40791c1ccb0432a4f431dbe357a4a2ccbf307adced934384e5c54d8ec.
+experiments/issue-138/causal-batch-api-before.log: 1485 bytes; SHA256 c9928000d86d4bbb06f57e28c05fd60247917aaccf3c2718aa11539ff4dcd365.
+experiments/issue-138/causal-batch-native-before.log: 465 bytes; SHA256 ec87cba9909e3dba37909e5b3f3fa6bfdfa8eb4ddfc4228af961721140c966dd.
+experiments/issue-138/causal-batch-csharp-before.log: 1033 bytes; SHA256 20b0ca03608ce54c8d15bced990c2bb8360cca8bc85e153ce6df67faf8639351.
+experiments/issue-138/causal-batch-ownership-before.log: 1745 bytes; SHA256 2cec3e20b4e71cd90b8bb28f463674d4909689dcd192d7f5fdbb6f2dc42eb5bf.
+experiments/issue-138/causal-batch-physical-generation-before.log: 1453 bytes; SHA256 35b6d985522aa84090812fe5479be9abb8d2d9f4bfe6dddec22114f79b821852.
+experiments/issue-138/causal-batch-model.log: 513 bytes; SHA256 95bbf35ab9c034e586d6b12a0027529781cf2fb041b02aec9c11c2dd91867e1c.
+experiments/issue-138/causal-batch-validation.log: 701 bytes; SHA256 6350a4e5cf7fd9bcbe2a574073ba8b1c602befc621e01467d468a5c41ba393c2.
+experiments/issue-138/causal-batch-node-focused.log: 1475 bytes; SHA256 3b002643727984538ff91b386571cbd72d3d681791038a8e476960f0fba881ca.
+experiments/issue-138/causal-batch-js-full.log: 60607 bytes; SHA256 dd8de97f688395b67292aadff161cc3608500b685ed8531a56612580dda1cb63.
+experiments/issue-138/causal-batch-native-focused.log: 770 bytes; SHA256 dc0baf90441f9d43d124f1f7c1d7d6387dff9004691a275ca48c240fd91c0d65.
+experiments/issue-138/causal-batch-wasm-focused.log: 16636206 bytes; SHA256 ff00baf2cb13c5b22bef11e89343a3d6c2f4d7f469229282e854883914530a05.
+experiments/issue-138/causal-batch-csharp-focused.log: 1016 bytes; SHA256 bbe50011845499c4750a58ed9684f69682efc980e9300dc4799bc3a411ca17c0.
+experiments/issue-138/causal-batch-bun.log: 1473 bytes; SHA256 8e065d3aded8d9f3c0e96fc1881a99ae793762284a524cc0c8dd2d0e1dade220.
+experiments/issue-138/causal-batch-deno.log: 1402 bytes; SHA256 4bd42005a666f50c3962175637e8694b710992e62d7054c2a835eab6d925d8b8.
+experiments/issue-138/causal-batch-physical-handoffs.log: 10569 bytes; SHA256 0766d0f21ca59e397bd7d25f7389ac6d20742944d34d8e7668d09c942ab55246.
+experiments/issue-138/causal-batch-physical-faults.log: 32298 bytes; SHA256 3f0fdde81a6d4f27750728c9f3d982adc07ac385ce9b749d88f7b3e72739f4a9.
+experiments/issue-138/causal-batch-csharp-Debug-full.log: 1091 bytes; SHA256 9c1199088d0d1dab32151dfef071d09efac9ddf537d69469f42d4c9431d267d9.
+experiments/issue-138/causal-batch-csharp-Release-full.log: 1100 bytes; SHA256 37c65b78009cd971e74202e208e26ed9df111e4b6c71ee3423edc559e1f69068.
+experiments/issue-138/causal-batch-native-full.log: 594541 bytes; SHA256 84657163d7de9ee8ccfcc83238018d5642fceb7e32340f2dcc0ff25497bfeaba.
+experiments/issue-138/causal-batch-doctests.log: 975 bytes; SHA256 500ead071f5f705744bdf6e3d771f70be18024f27a537eabaefa0aa4f2e18e76.
+experiments/issue-138/causal-batch-wasm-full.log: 66961 bytes; SHA256 215a4102ab22955517fcf8769fcb93d2a4b4c68b5253d4d07ab69e577931eef0.
+experiments/issue-138/causal-batch-repository.log: 18490 bytes; SHA256 067d1eda9d481886d689f2cf796f9f9a371b43f0c322c9fda2a94ec9dbf5be73.
+experiments/issue-138/causal-batch-dependency-freshness.log: 56 bytes; SHA256 d507522804fdd2e8e757a643f09b2027ddf4e835b8a9856827a6600ffffb5844.
+experiments/issue-138/causal-batch-workflows.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-batch-dotnet-sdk.log: 9 bytes; SHA256 00922204861c9366b1259b84337ee228d58ec876604bb149e82c077108ce3be2.
+experiments/issue-138/causal-batch-csharp-format-sdk112-before.log: 81783 bytes; SHA256 ca0aaa1944bdecf678fc6c1c74a5ac6514283a5d3f526d1c35200b28c0da0b2c.
+experiments/issue-138/causal-batch-null-token-before.log: 415 bytes; SHA256 751b4d3139f01415c44927a07c0c3902e83e9f2803044de0487a80df0b20517f.
+experiments/issue-138/causal-batch-observation-limit-before.log: 443 bytes; SHA256 8c87599f47eff6c219171eb5978804c47bd5e01ac822ccf1151a86856d05e147.
+experiments/issue-138/causal-batch-native-admission.log: 1138 bytes; SHA256 f8bf9a9f95760340c4020da61990179333dec70c2a5bb205d352fdee09a0dc03.
+experiments/issue-138/causal-batch-admission-format.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/causal-batch-csharp-driver-before.log: 97 bytes; SHA256 37a7dfac3e41448b69005f6c66f9806bab22294768d4ecd31602ac408ff26f3a.
+js/client/src/engine-causal-batch.js: 9428 bytes; SHA256 9b080ca68c6abf5300c21a6732e3bf1f46ea7bb48b072e62382409ff12bb45d5.
+js/client/test/engine-causal-batch.test.mjs: 14163 bytes; SHA256 93e6df3d88b451eaaad0620eba9f35ec4b7ce771fd7fd8f666785baaa396b80b.
+rust/src/engine/causal_batch.rs: 15085 bytes; SHA256 06e789adef6be42b4bf8fcb572e3a89c993cb88ce16fcc471a764046e9380936.
+rust/tests/engine_causal_batch_tests.rs: 16264 bytes; SHA256 c64d0250ea2c0751ebf17664977079eea2cc7e93d886b68c65123fe09db19b23.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalBatch.cs: 12105 bytes; SHA256 44ab1bc5bf824a5145884fd78fe892bc170fc5c2c7a5f50edd6718e8ee47b5f6.
+csharp/Foundation.Data.Doublets.Cli.Tests/CausalBatchTests.cs: 12414 bytes; SHA256 6e64ca8f1f71d6644585bc7ae0386089855b49dc5c805fdc96d1d19eb16bfdc7.
+docs/protocol/causal-batch-v1.json: 88632 bytes; SHA256 cc2de6151438a5fc90be53a061520031623b32cb3c562e76532cbe8c3e0cf341.

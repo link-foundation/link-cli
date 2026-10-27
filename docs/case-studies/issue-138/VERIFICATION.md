@@ -4339,3 +4339,63 @@ true=4 and false=36/32. Complete 1219 native/six doctest/745 actual-WASM and
 commands and prior zero-true counts are in merkle-admission{,-before}.txt.
 This step precedes the new batch implementation work; full project 100% and
 all other unmet criteria remain unfinished, with fresh CI still required.
+
+
+## Selected local causal batches (2026-10-27T18:15:46Z)
+
+`causal-batch{,-before}.txt` records missing-API controls in all three languages,
+owned JS admission before its first await, 30 independent resource-bounded
+scenarios and 53 shared canonical/malformed journal vectors. Seven portable
+native/C#/actual-WASM contracts and fifteen Node/Bun/Deno contracts pass.
+Batch receipts bind the owner, author, original generation and normalized edits;
+their child writes are validated against retained owner history. Retry validates
+even dominated supplied evidence and returns the original versions after later
+writes. A failing later edit publishes neither earlier edits nor a receipt.
+
+SQL-free plain/mirrored stores pass fifty complete-store handoffs across Rust,
+C#, Node, Bun and Deno. Twenty exit-73 children are reaped before explicit
+marker quarantine; one hundred blocked opens preserve all file hashes and
+one hundred recovered retry/reopen/following sequences pass. The first physical
+run exposes an incorrect example assumption that empty publication advances
+the owner key. Corrected examples and a real-WAL/table contract preserve opaque
+unchanged/jumping provider generations. These are process-exit checks, not
+hardware power-loss certification.
+
+Complete suites pass 1226 native tests plus six doctests, 752 actual-WASM,
+2491 C# per Debug/Release configuration, 681 Node and 221 repository checks.
+Twenty-two native entries remain parent-driven; one existing doctest is ignored.
+JS enforces 100% production lines/branches/functions with unchanged denominators
+and thresholds. Native LLVM reports 18631/19529 lines, 3680/4178 branches,
+2375/2547 functions, 28695/30948 regions and 12582/22527 instantiations.
+Complete linked WASM reports 14607/17238 lines, 3049/3567 branches, 1793/2225
+functions, 22526/27202 regions and 4527/7726 instantiations. The batch component
+covers 362/366 lines, 88/88 branches, 29/32 functions and 540/567 regions on
+both surfaces; unused closure instantiations remain in the denominator.
+
+C# Debug covers 10024/10333 lines and 6455/6900 branches; Release covers
+7735/7936 and 6396/6859. All four causal components cover every executable
+line/branch in both configurations. Initial Release coverage exposes a null
+retry-token path (7/8 outcomes); the existing contract gains that control and
+both complete configurations rerun. Native coverage exposes the untested
+65-supplied-observation rejection (true=0,false=334). Seven focused contracts
+supplement retained full-suite profiles with --no-clean after adding that input;
+all production source hashes and complete denominators remain identical.
+Actual WASM repeats its entire suite after the same portable addition.
+
+Two driver interruptions caused by editing running Bash scripts are retained.
+Completed format/focused and Debug evidence is preserved; overwritten Release
+output is rerun from an in-memory script snapshot before compiler/WASM completion.
+SDK 10.0.403 matches CI; the ambient 10.0.112 formatter's unrelated whitespace
+diagnostic is retained. Strict native/WASM Clippy, formats, types, source size,
+one changeset, 127 fresh dependencies/locks, workflow/ShellCheck and whitespace
+pass. Quoting the literal 'batch' environment value resolves ShellCheck SC2209.
+Cgroup memory records zero OOM events/kills; heavy compilers run sequentially.
+
+Bare Rust excludes JSON/SQLite/SHA normal dependencies; selecting causal-batches
+adds neither SQLite nor SHA. Complete retained replay costs O((E+1)H²W), both
+journals are independently bounded at 4096 entries/8 MiB, and publication copies
+both complete journals. Local batch atomicity does not make independent remote
+leaf transfers atomic as a group. Fresh platform CI and actual coverage archives,
+ordinary links/name projection and sessions, global allocation, safe reclamation,
+generic mapped failures, full project 100% and all wider unmet criteria remain
+unfinished. PR139 stays draft and unmerged.

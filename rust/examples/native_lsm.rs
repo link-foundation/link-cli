@@ -1,4 +1,7 @@
 //! Native directory facade: complete-store interoperability and real consumers.
+#[cfg(feature = "causal-batches")]
+#[path = "native_lsm/batch.rs"]
+mod batch;
 #[cfg(feature = "causal")]
 #[path = "native_lsm/causal.rs"]
 mod causal;
@@ -136,6 +139,8 @@ fn files(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError> 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+        #[cfg(feature = "causal-batches")]
+        ["batch", action, directory, mirrors] => batch::run(action, directory, mirrors)?,
         #[cfg(feature = "causal-merkle")]
         ["merkle", action, directory, mirrors, messages] => merkle::run(action, directory, mirrors, messages)?,
         #[cfg(feature = "causal")]

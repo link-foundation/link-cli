@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../docs/protocol/causal-batch-v1.json" Link="Protocol/causal-batch-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/causal-merkle-v1.json" Link="Protocol/causal-merkle-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/causal-replica-v1.json" Link="Protocol/causal-replica-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/causal-version-v1.json" Link="Protocol/causal-version-v1.json" CopyToOutputDirectory="PreserveNewest" />

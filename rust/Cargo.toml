@@ -68,6 +68,7 @@ windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Stora
 
 [features]
 causal = ["dep:serde_json"]
+causal-batches = ["causal"]
 causal-merkle = ["causal", "dep:sha2"]
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
 sqlite = ["dep:rusqlite"]

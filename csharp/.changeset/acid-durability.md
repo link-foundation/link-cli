@@ -10,6 +10,12 @@ Add selected causal version encoding, retained-sibling merge and checked counter
 construction with shared Rust, actual-WASM and JS vectors. These semantic
 operations perform no storage I/O, durable author fencing or replication.
 
+Select bounded local causal batches over one coherent journal store. Publish
+the complete owner journal and separately bound retry receipts with one two-key
+compare-exchange. Reject stale bases, child-token collisions and invalid later
+edits before publication; discover exact retries after lost replies and later
+writes. Preserve standalone owner compatibility and caller-owned store lifetime.
+
 Preserve the current mapped view and owned file handle when capacity growth is
 rejected. Construct a replacement before publishing its pointer, retaining
 flush, retry, following edits and exact used-length disposal after an I/O error.

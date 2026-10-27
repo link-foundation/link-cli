@@ -75,3 +75,18 @@ explicit reaped-owner recovery, read/retry hash preservation and following edits
 The physical pull example also carries continuations with four-node/one-leaf
 budgets and at most forty attempts, so the concurrent first leaf cannot starve
 the second address during actual wire/file exchange.
+
+The [local batch example](../../docs/ENGINE-CAUSAL-BATCHES.md) publishes two row
+edits and their retry receipt through one coherent two-key CAS. Build Rust with
+`native-pages,physical-lsm,causal-batches` and the C# cluster example, then run:
+
+```sh
+NATIVE_LSM_LAYOUT=batch python3 examples/native-lsm-js/run-interop.py
+NATIVE_CAUSAL_LAYOUT=batch python3 examples/native-lsm-js/run-causal-faults.py
+```
+
+The matrices check both plain and mirrored directories, exact owned snapshots,
+Unicode names, retained deletions, whole-batch retry after later edits, an empty
+batch and process exits immediately before/after publication. Every child is
+reaped before explicit stale-marker quarantine. Local batch atomicity does not
+make independently transferred remote leaves atomic as a group.

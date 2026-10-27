@@ -90,5 +90,8 @@ mod engine_paged_tests;
 #[path = "../../tests/engine_mirrored_pages_tests.rs"]
 mod engine_mirrored_pages_tests;
 
+#[cfg(feature = "causal-batches")]
+#[path = "../../tests/engine_causal_batch_tests.rs"]
+mod causal_batch;
 #[path = "../../tests/engine_compaction_tests.rs"]
 mod compaction;

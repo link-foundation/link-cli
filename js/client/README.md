@@ -27,6 +27,9 @@ atomic provider with causal mutations and durable retry receipts. See
 The independent `./engine-causal-merkle` export adds bounded immutable content
 snapshots, canonical proof frames and resumable differing-range pulls. See
 [configuration, budgets and physical exchange](../../docs/ENGINE-CAUSAL-MERKLE.md).
+The selected `./engine-causal-batch` export stages up to 64 ordered row edits
+and publishes the owner and batch receipts with one local two-key CAS. See
+[request identity, complete-journal costs and limits](../../docs/ENGINE-CAUSAL-BATCHES.md).
 Ordinary links projection and safe reclamation remain in progress.
 
 ## Use

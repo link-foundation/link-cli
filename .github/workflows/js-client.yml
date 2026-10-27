@@ -208,6 +208,12 @@ jobs:
           --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100
           test/*.test.mjs
 
+      - name: Verify independent local batch models and vectors
+        run: |
+          python3 ../../experiments/issue-138/causal-batch-model.py
+          python3 ../../experiments/issue-138/generate-causal-batch-vectors.py ../../experiments/issue-138/causal-batch-regenerated.json
+          cmp ../../docs/protocol/causal-batch-v1.json ../../experiments/issue-138/causal-batch-regenerated.json
+
       - name: Type declarations
         run: npm run typecheck
 
@@ -327,12 +333,14 @@ jobs:
         env:
           RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
         run: |
-          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle --example native_lsm
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle,causal-batches --example native_lsm
           python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=reclaiming-chunks python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=causal python3 examples/native-lsm-js/run-interop.py
           python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_LSM_LAYOUT='batch' python3 examples/native-lsm-js/run-interop.py
+          NATIVE_CAUSAL_LAYOUT='batch' python3 examples/native-lsm-js/run-causal-faults.py
           python3 examples/native-lsm-js/run-merkle-interop.py
 
       - name: Verify actual consensus and language interoperability

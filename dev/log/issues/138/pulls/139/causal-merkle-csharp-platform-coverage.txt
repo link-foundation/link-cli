@@ -1,0 +1,15 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40537256191
+Exact head: 283b86dba44ca59797feb1557c8d59128c8b2c87; created 2026-10-27T16:04:15Z
+ubuntu-24.04: 2484 tests pass, platform summary present; artifact 12747479686, verified SHA256 9469d431cb7951e0628b4a8d1247e8710679158a9e6c7497930842fb03e2bfc1.
+Complete ubuntu-24.04 lines: 7612/7813 (97.42736%).
+Complete ubuntu-24.04 branches: 6209/6671 (93.07450%).
+windows-2025: 2484 tests pass, platform summary present; artifact 12751010236, verified SHA256 ebe2c43f44a12667066defac003b9d380f3d9b26a8415c140401d9c8135aa0de.
+Complete windows-2025 lines: 7598/7813 (97.24818%).
+Complete windows-2025 branches: 6189/6671 (92.77470%).
+macos-26: 2484 tests pass, platform summary present; artifact 12750120153, verified SHA256 340bd1bfec09abb54aa649f27806365f91e70d3fdc99a99e7578b551723ae0a7.
+Complete macos-26 lines: 7607/7813 (97.36337%).
+Complete macos-26 branches: 6204/6671 (92.99955%).
+All three existing full reports are retained; Linux artifact name and Codecov behavior are preserved.
+No platform percentages are added or treated as newly achieved 100% coverage.
+Complete native/C#/linked-WASM coverage and all other unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged.

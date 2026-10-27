@@ -9,6 +9,8 @@ mod boundary_tests;
 mod branch;
 #[cfg(feature = "causal")]
 pub mod causal;
+#[cfg(feature = "causal-batches")]
+pub mod causal_batch;
 #[cfg(feature = "causal-merkle")]
 pub mod causal_merkle;
 #[cfg(feature = "causal")]

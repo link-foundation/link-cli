@@ -1038,7 +1038,10 @@ acceptance criterion continue independently.
     2484 C# per configuration, 666 Node and 221 repository checks. C# causal
     components cover all executable lines/branches; JS enforces 100% production
     lines/branches/functions. causal-merkle.txt retains complete native/C#/linked-
-    WASM denominators and remaining gaps. Fresh exact-head CI is required. Retain
+    WASM denominators and remaining gaps. All nine workflows pass published
+    283b86d, with native Windows/Linux/macOS jobs and three verified C# coverage
+    archives. causal-merkle-ci.txt and causal-merkle-csharp-platform-coverage.txt
+    retain actual job logs, artifact byte counts, SHA256 and report totals. Retain
     concurrent versions and deletions; absence never authorizes deletion.
 
 72. Add missing empty/overlong address admission controls to independently
@@ -1050,3 +1053,25 @@ acceptance criterion continue independently.
     MERKLE-ADMISSION-PLAN.md tracks publication/fresh CI. Continue ordinary
     local batches and projection under CAUSAL-SESSIONS-PLAN.md; its models
     and drafts do not complete the remaining runtime/physical/API criteria.
+
+73. Add separately selected bounded local causal batches in Rust/C#/JS and
+    actual WASM under CAUSAL-SESSIONS-PLAN.md. Missing APIs fail first in all
+    three production languages; owned-input admission corrects a reproduced
+    JS mutation across its first await. Reuse the existing owner grammar and
+    private staging, then publish complete owner/receipt journals through one
+    coherent two-key CAS. Validate receipts against actual child-token owner
+    records, including dominated observations on retry. Thirty independent
+    finite scenarios, 53 shared admission vectors, seven native/C#/WASM and
+    fifteen Node/Bun/Deno contracts pass. Fifty physical handoffs and 100
+    recovered sequences after twenty reaped exits pass across all five
+    runtimes, with unchanged-byte ownership/retry/read guards. The physical
+    probe corrects an example's assumed generation increment; a real-WAL/table
+    test now retains the provider's opaque unchanged/jumping key generations.
+    Complete sequential validation finishes 18:15:46Z: 1226 native tests plus
+    six doctests, 752 actual WASM, 2491 C# per configuration, 681 Node and 221
+    repository checks pass. The causal-batch receipts retain every complete
+    denominator, missing null/65-observation admission controls, interrupted
+    driver evidence and final reruns. JS enforces 100%; all four C# causal
+    components cover every executable line/branch. Publication and exact-head
+    platform CI remain required. Ordinary links/name sessions and all wider
+    unmet criteria remain unfinished.

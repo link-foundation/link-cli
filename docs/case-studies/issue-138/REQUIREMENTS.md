@@ -980,3 +980,27 @@ true=4 and false=36/32. Complete 1219 native/six doctest/745 actual-WASM and
 commands and prior zero-true counts are in merkle-admission{,-before}.txt.
 This step precedes the new batch implementation work; full project 100% and
 all other unmet criteria remain unfinished, with fresh CI still required.
+
+Selected local causal batches (R1/R4/R6/R7/R8/R9/R10 partial) complete local
+validation at 2026-10-27T18:15:46Z. Test-first missing APIs and caller-mutation
+controls precede Rust/C#/JS/actual-WASM ports. Thirty independent scenarios,
+53 canonical/malformed vectors, seven native/C#/WASM and fifteen Node/Bun/Deno
+contracts pass. One coherent caller-owned store publishes the complete owner
+and receipt journals at one two-key CAS; a retry validates the original base,
+normalized edits and complete historical evidence before returning owned results.
+Fifty SQL-free physical handoffs, twenty reaped exits, one hundred unchanged-byte
+blocked opens and one hundred recovered sequences pass all five runtimes.
+
+Complete suites pass 1226 native tests plus six doctests, 752 actual WASM,
+2491 C# per configuration, 681 Node and 221 repository checks. JS enforces
+100% production coverage. All four C# causal components cover every executable
+line/branch, but complete project coverage remains below 100%. Native measures
+18631/19529 lines and 3680/4178 branches; linked WASM 14607/17238 and 3049/3567;
+C# Debug 10024/10333 and 6455/6900, Release 7735/7936 and 6396/6859.
+causal-batch{,-before}.txt retains raw hashes, admission-before controls and
+interrupted-driver reruns. Both journals remain bounded at 4096 entries/8 MiB;
+complete replay/copy costs O((E+1)H²W). Batch atomicity is local and does not
+transfer as an atomic group through per-leaf exchange. Fresh platform CI,
+ordinary links/name projection and mutable sessions, global allocation,
+safe membership/history reclamation, generic mapped failures, full coverage
+and every wider unmet criterion remain unfinished. PR139 stays draft/unmerged.
