@@ -3684,3 +3684,15 @@ The complete native source still needs fresh publication CI. Existing head
 3dfbc74 has eight successful workflows; C# alone exposes an aggregate child
 supervision deadline while the child is progressing. The finite supervisor
 correction is a separate step. Every broader unmet R1–R12 criterion stays active.
+
+C# finite phase supervision finishes local validation at 05:35:33Z. Both full
+configurations pass 2,421 tests, including nine new parser/process cases; all 50
+focused controls pass. Exact SDK 10.0.403 formatting, three actual native cluster
+consumers, 32 complete-store handoffs and optional-SQL controls pass. Production
+coverage remains Debug 9,280/9,606 lines and 5,559/6,004 branches; Release
+7,167/7,385 lines and 5,505/5,965 branches. The independently failing finite
+progress child now survives four completed operations over the former aggregate
+bound; repeated progress fails and is reaped. Only complete consecutive phases
+1..64 renew the unchanged 15-second idle bound. See csharp-phase-progress{,-before}.txt.
+Fresh Windows publication CI remains required; lower-level filesystem latency
+and every broader unmet R1-R12 criterion stay open.

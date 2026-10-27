@@ -7,13 +7,60 @@ public class FiniteExitChildTests
     internal static int Child(string directory, string mode)
     {
         using var file = new FileStream(Path.Combine(directory, "held"), FileMode.Create, FileAccess.Write, FileShare.None);
-        Console.Error.WriteLine("phase=ready");
+        FiniteExitChild.Phase("ready");
         Console.Out.WriteLine("finite stdout");
         File.WriteAllText(Path.Combine(directory, "ready"), "ready");
         if (mode == "fail") return 9;
+        if (mode == "progress")
+        {
+            // More total work than the parent's idle bound, but each distinct
+            // operation completes inside it. This is a finite control.
+            for (int phase = 0; phase < 4; phase++)
+            {
+                Thread.Sleep(200);
+                FiniteExitChild.Phase("operation-complete");
+            }
+            return 0;
+        }
+        if (mode == "repeat") Console.Error.WriteLine("@link-progress:1 phase=repeat");
         // Finite fallback also bounds the probe if its supervisor fails.
         Thread.Sleep(TimeSpan.FromSeconds(10));
         return 0;
+    }
+
+    [Fact(Timeout = 15000)]
+    public async Task DistinctFiniteProgressSurvivesAnAggregateDeadline()
+    {
+        await FiniteExitChild.WithDirectory("finite-exit-progress-", async directory =>
+        {
+            using var child = Start(directory, "progress");
+            try
+            {
+                using var readyDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                while (!File.Exists(Path.Combine(directory, "ready"))) await Task.Delay(10, readyDeadline.Token);
+                await FiniteExitChild.Wait(child, 0, "progress control", TimeSpan.FromMilliseconds(500));
+                Assert.True(child.HasExited);
+                File.Delete(Path.Combine(directory, "held"));
+            }
+            finally
+            {
+                if (!child.HasExited) { child.Kill(entireProcessTree: true); await child.WaitForExitAsync(); }
+            }
+        });
+    }
+
+    [Fact(Timeout = 15000)]
+    public async Task RepeatedProgressFailsAndReapsBeforeDirectoryCleanup()
+    {
+        await FiniteExitChild.WithDirectory("finite-exit-repeat-", async directory =>
+        {
+            using var child = Start(directory, "repeat");
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => FiniteExitChild.Wait(child, 0, "repeat control"));
+            Assert.Contains("invalid finite progress", error.Message);
+            Assert.Contains("finite stdout", error.Message);
+            Assert.True(child.HasExited);
+            File.Delete(Path.Combine(directory, "held"));
+        });
     }
 
     private static Process Start(string directory, string mode)

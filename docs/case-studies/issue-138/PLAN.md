@@ -723,3 +723,14 @@ acceptance criterion continue independently.
     and a separately failing finite local control. Keep its 15-second idle bound
     while adding strict bounded consecutive phase supervision. Full local and
     fresh Windows checks are required before claiming that correction verified.
+
+54. Replace the C# child's aggregate deadline with strict finite phase admission.
+    The actual progress control first fails under the previous helper. Keep the
+    same 15-second idle bound, accept only complete consecutive phases 1..64,
+    reject malformed/repeated progress and retain bounded streams and kill/reap.
+    All 50 focused controls and both complete 2,421-test configurations pass with
+    SDK 10.0.403. Three actual native consumers, 32 complete-store handoffs and
+    optional-SQL controls pass; full production coverage remains unchanged and
+    below 100%. csharp-phase-progress{,-before}.txt preserve exact evidence.
+    Publish this test-only correction with the locally verified native Rust port;
+    inspect fresh exact-head Windows CI and continue every wider unmet criterion.
