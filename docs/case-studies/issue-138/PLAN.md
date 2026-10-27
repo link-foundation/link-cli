@@ -901,3 +901,18 @@ acceptance criterion continue independently.
     persistence, run full sequential verification and inspect fresh platform CI.
     VERSION-SETUP-PROGRESS-PLAN.md records the limits: the log alone does not
     identify which inner flush was slow or establish a physical storage hang.
+
+64. Preserve zero-removal and rejected-shrink ownership boundaries in Rust.
+    Six finite tests against immutable 2478d59 first reproduce four failures:
+    zero removal truncates fresh/live files, erases unadopted persisted items,
+    and excessive removal invalidates a still-valid flush descriptor. Complete
+    shrink, empty reopening and destructor retirement already pass. Return
+    immediately for zero removal and validate excessive removal before retiring
+    the descriptor. Both focused feature configurations pass all six cases;
+    complete validation finishes 11:01:26Z with 1,190 native tests, six doctests,
+    723 actual-WASM tests and all 221 repository checks passing. Full production
+    coverage denominators remain included. Publish the atomic correction and
+    inspect fresh exact-head platform CI under
+    RUST-EMPTY-MAPPING-PLAN.md. Genuine failed partial shrink, failed generic
+    destructor growth, physical repair and every wider unmet criterion remain
+    unfinished.

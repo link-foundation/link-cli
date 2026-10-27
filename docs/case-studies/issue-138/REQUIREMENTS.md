@@ -1,5 +1,19 @@
 # Acceptance inventory
 
+Zero-removal and rejected-shrink boundaries (R1/R6/R7/R8) now preserve Rust's
+live mapped owner. Four finite regressions fail against immutable 2478d59;
+complete shrink and destructor controls already pass. Returning for zero
+removal preserves persisted items before adoption, physical length, pointer
+and checked flush admission. Excessive removal retains the existing panic
+before invalidating the descriptor. Both feature configurations pass all six
+controls; full validation finishes 2026-10-27T11:01:26Z with 1,190 native tests,
+six doctests, 723 actual-WASM tests and 221 repository checks passing. See
+RUST-EMPTY-MAPPING-PLAN.md and mapped-empty{,-before}.txt for actual coverage,
+commands and limits. Genuine failed partial shrink, destructor-bearing growth,
+physical repair, full native/C#/linked-WASM 100% and every other wider unmet
+criterion remain unfinished. Fresh platform CI is required; PR139 stays draft
+and unmerged.
+
 No required sub-issues were returned by GitHub's sub-issue API. Initial issue
 comments and all three PR comment/review endpoints were empty.
 

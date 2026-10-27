@@ -3991,3 +3991,39 @@ Dependabot correction are preserved in mapped-grow-manifest-policy.txt.
 See discovery-guards.txt and DISCOVERY-GUARDS-PLAN.md. No production behavior
 change or completion of wider R1-R12 gaps is claimed. Fresh platform CI remains
 required and PR139 remains draft/unmerged.
+
+## Empty and rejected Rust shrink boundaries (2026-10-27T11:01Z)
+
+Four regressions first fail against immutable 2478d59: zero removal truncates
+fresh/live files and erases sixteen unadopted persisted values; excessive
+removal leaves the retained barrier invalid. Two complete-shrink/destructor
+controls already pass. The wrapper now returns immediately for zero removal
+and validates excessive removal before invalidating the live descriptor. Both
+default/all-feature runs pass all six empty/shrink cases, six retained-growth
+cases and six flush cases. Empty reopening, following growth and forty exact
+destructor retirements preserve the existing genuine-shrink behavior.
+
+Complete sequential verification finishes 2026-10-27T11:01:26Z: 1,190 native
+tests, six doctests, 723 actual-WASM tests and all 221 repository checks pass.
+Nine ownership unit controls, finite quota rejection and the owned-flush
+example pass. Formatting, strict native/WASM Clippy, source limits, release
+changeset validation, all 126 dependency declarations, workflow/ShellCheck and
+whitespace checks pass. Twenty-two native child entries remain parent-driven;
+one legacy doctest remains ignored. mapped-empty{,-before}.txt preserves the
+commands, failures and complete metrics without filtering production source.
+
+Current complete native LLVM: 17,156/18,036 lines, 3,293/3,780 branches,
+2,217/2,379 functions, 26,395/28,542 regions and 12,351/22,019 instantiations.
+Current complete linked WASM: 13,144/15,745 lines, 2,663/3,171 branches,
+1,636/2,057 functions, 20,244/24,796 regions and 4,342/7,495 instantiations.
+These are the current emitted report denominators, not a claim of a fixed
+denominator or a percentage gain over an earlier build. Native-only mapped
+source remains in linked WASM at zero coverage. Complete native/C#/linked-WASM
+100% remains unfinished.
+
+Zero removal adds no I/O, allocation, remap or lock. Excessive removal keeps
+the upstream panic without retiring a valid owner. Genuine failed partial
+shrink and destructor-bearing growth remain separate open safety hazards;
+physical torn-page repair and hardware power-loss verification remain open.
+Fresh exact-head platform CI is still required. Every wider unmet requirement
+remains active, and PR139 stays draft and unmerged.

@@ -1,0 +1,14 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-mapped-empty-before.sh
+Immutable baseline: 2478d59ef43f7766748317be53ca928164d43274.
+Only the new durable integration test is copied into archived baseline source.
+Serial compiler, debug information disabled; no deliberate stack/memory stress.
+Six bounded tests allocate at most 32 items each. Actual result: two passed, four failed.
+mapped-empty-baseline.n36zJ7/tests.log:80–108 preserves the assertion failures:
+- fresh zero removal truncates the physical file from 4,096 bytes to zero;
+- live zero removal truncates the physical file from 4,096 bytes to 256;
+- zero removal before adoption erases all sixteen persisted values, replacing 1..16 with 91;
+- excessive removal panics with upstream's existing message, then the retained barrier fails with "mapped flush owner has an unfinished remap".
+Complete shrink/reopen/regrow and exact-once generic destructor retirement already pass unchanged.
+The correction must preserve those controls and genuine resize behavior.
+These results do not establish general failed partial-shrink safety or hardware power-loss persistence.

@@ -229,6 +229,17 @@ impl<T> RawMem for PersistentFileMapped<T> {
     }
 
     fn shrink(&mut self, cap: usize) -> MemResult<()> {
+        // Upstream still unmaps and truncates for zero removal. In particular,
+        // a not-yet-adopted owner can have persisted items but zero live items.
+        if cap == 0 {
+            return Ok(());
+        }
+        // Reject before retiring the descriptor of the still-valid live view.
+        self.inner
+            .allocated()
+            .len()
+            .checked_sub(cap)
+            .expect("Tried to shrink to a larger capacity");
         self.flush.invalidate();
         self.inner.shrink(cap)?;
         self.initialized_bytes = mem::size_of_val(self.inner.allocated()) as u64;

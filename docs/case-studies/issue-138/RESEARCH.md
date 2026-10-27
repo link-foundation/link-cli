@@ -467,3 +467,16 @@ A failed preparation can leave extra physical bytes; logical capacity and the
 known initialization bound remain unchanged. Overlapping views, a temporary
 file handle and, on Windows, a temporary mapping handle are explicit transient
 costs. None of these controls certify hardware power loss or page atomicity.
+
+## Empty and rejected shrink boundaries (2026-10-27)
+
+The same pinned platform-mem 0.3.0 source does not special-case zero removal:
+it still retires the mapping and truncates to its logical capacity. Before
+adoption that capacity can be zero even though the file contains initialized
+items. Four failing finite regressions establish actual data loss and premature
+flush invalidation. Returning before zero removal and checking excessive
+removal before invalidation preserves the owner without allocation or I/O.
+Complete shrink remains separately controlled: memmap2 0.9.12 already supports
+empty maps on both platform paths. A purported zero-length Windows syscall
+failure must not be inferred without tracing that inner layer. Actual failed
+partial truncation and destructor-bearing growth remain distinct open hazards.
