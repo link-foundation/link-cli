@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SupervisorSourceRoot Condition="'$(SupervisorSourceRoot)' == ''">$(MSBuildThisFileDirectory)../../../csharp/Foundation.Data.Doublets.Cli.Tests</SupervisorSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(SupervisorSourceRoot)/FiniteExitChild.cs" Link="FiniteExitChild.cs" />
+    <Compile Include="$(SupervisorSourceRoot)/FinitePhaseWatch.cs" Link="FinitePhaseWatch.cs" />
+  </ItemGroup>
+</Project>

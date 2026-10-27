@@ -12,15 +12,33 @@ internal sealed class FinitePhaseWatch : IDisposable
     private readonly object gate = new();
     private readonly CancellationTokenSource deadline;
     private readonly TimeSpan idle;
+    private readonly TimeProvider clock;
+    private long lastProgress;
     private readonly StringBuilder line = new();
     private bool oversized;
     private int lastPhase;
     private string? failure;
 
-    internal FinitePhaseWatch(TimeSpan idle)
+    internal FinitePhaseWatch(TimeSpan idle, TimeProvider? clock = null)
     {
         this.idle = idle;
-        deadline = new CancellationTokenSource(idle);
+        this.clock = clock ?? TimeProvider.System;
+        lastProgress = this.clock.GetTimestamp();
+        deadline = new CancellationTokenSource();
+    }
+    // Dedicated supervision polls this clock; cancellation must not depend on
+    // a timer callback being admitted to the pool whose liveness is under test.
+    internal int WaitMilliseconds
+    {
+        get
+        {
+            lock (gate)
+            {
+                double remaining = (idle - clock.GetElapsedTime(lastProgress)).TotalMilliseconds;
+                if (remaining <= 0) deadline.Cancel();
+                return deadline.IsCancellationRequested ? 0 : (int)Math.Min(50, Math.Ceiling(remaining));
+            }
+        }
     }
     internal CancellationToken Token => deadline.Token;
     internal int LastPhase { get { lock (gate) return lastPhase; } }
@@ -64,7 +82,7 @@ internal sealed class FinitePhaseWatch : IDisposable
             Reject(); return;
         }
         lastPhase = phase;
-        deadline.CancelAfter(idle);
+        lastProgress = clock.GetTimestamp();
     }
     internal void Complete()
     {

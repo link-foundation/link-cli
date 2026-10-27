@@ -42,3 +42,9 @@ and killed-process tests cannot reproduce hardware power loss. Generic foreign
 stores do not expose their mapped views; their adoption requires an explicit
 matching flush owner. Existing upstream failed-resize safety and legacy physical
 repair remain separate concerns and must not be inferred fixed by this barrier.
+
+Exact published 89fbfad passes all Rust platforms and actual Windows owned-view
+controls. Eight workflows pass; C# Linux fails its finite-progress supervisor
+with phase 5 / exit 0. `mapped-flush-ci-after.txt` records timestamps, run links
+and log lines. The separate PHASE-POOL-PLAN.md tracks that proven helper
+dependency. This head is not described as globally green.

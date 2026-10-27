@@ -14,16 +14,15 @@ internal static class FiniteExitChild
         lock (phaseGate) Console.Error.WriteLine($"@link-progress:{++phaseNumber} phase={phase} elapsed={phaseElapsed.ElapsedMilliseconds}ms");
     }
 
-    private static async Task<string> Capture(StreamReader reader, FinitePhaseWatch? progress = null)
+    private static string Capture(StreamReader reader, FinitePhaseWatch? progress = null)
     {
         const int limit = 65536;
         var text = new StringBuilder();
         var buffer = new char[1024];
         int read;
         bool truncated = false;
-        // The caller may defer its context while other tests run. Progress
-        // must reset the idle timer when read, independently of that context.
-        while ((read = await reader.ReadAsync(buffer).ConfigureAwait(false)) != 0)
+        // This dedicated reader must not queue behind test-runner workers.
+        while ((read = reader.Read(buffer, 0, buffer.Length)) != 0)
         {
             progress?.Observe(buffer.AsSpan(0, read));
             int keep = Math.Min(read, limit - text.Length);
@@ -42,32 +41,45 @@ internal static class FiniteExitChild
         await Wait(child, expectedExit, description).ConfigureAwait(false);
     }
 
-    internal static async Task Wait(Process child, int expectedExit, string description, TimeSpan? limit = null)
+    internal static Task Wait(Process child, int expectedExit, string description, TimeSpan? limit = null)
+        => Dedicated(() => WaitCore(child, expectedExit, description, limit));
+
+    private static Task<T> Dedicated<T>(Func<T> action)
+        => Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+    private static bool WaitCore(Process child, int expectedExit, string description, TimeSpan? limit)
     {
         using var progress = new FinitePhaseWatch(limit ?? TimeSpan.FromSeconds(15));
-        var stdout = Capture(child.StandardOutput);
-        var stderr = Capture(child.StandardError, progress);
+        var stdout = Dedicated(() => Capture(child.StandardOutput));
+        var stderr = Dedicated(() => Capture(child.StandardError, progress));
         var elapsed = Stopwatch.StartNew();
         Exception? failure = null;
-        try { await child.WaitForExitAsync(progress.Token).ConfigureAwait(false); }
+        try
+        {
+            // Both pipe readers and process observation run independently of
+            // the shared pool. A monotonic poll enforces the same idle bound
+            // even when timer and process-exit callbacks cannot be admitted.
+            while (!child.WaitForExit(progress.WaitMilliseconds)) progress.Token.ThrowIfCancellationRequested();
+        }
         catch (Exception error) { failure = error; }
         // Reap before either returning or allowing fixture cleanup, including
         // exceptions other than deadline cancellation. Never abandon a child.
         try
         {
             if (!child.HasExited) child.Kill(entireProcessTree: true);
-            await child.WaitForExitAsync().ConfigureAwait(false);
+            child.WaitForExit();
         }
         catch (Exception cleanup)
         {
             throw failure is null ? cleanup : new AggregateException(failure, cleanup);
         }
-        string output = await stdout.ConfigureAwait(false), errors = await stderr.ConfigureAwait(false);
+        string output = stdout.GetAwaiter().GetResult(), errors = stderr.GetAwaiter().GetResult();
         string detail = $"{description}; pid={child.Id}; elapsed={elapsed.Elapsed}; phase={progress.LastPhase}; exited {child.ExitCode}\nstdout:\n{output}\nstderr:\n{errors}";
         if (progress.Failure is not null) throw new InvalidOperationException($"{progress.Failure}; {detail}", failure);
         if (failure is OperationCanceledException) throw new TimeoutException(detail, failure);
         if (failure is not null) throw new InvalidOperationException(detail, failure);
         Assert.True(child.ExitCode == expectedExit, detail);
+        return true;
     }
 
     internal static async Task WithDirectory(string prefix, Func<string, Task> action, Action<string>? cleanup = null)

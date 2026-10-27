@@ -5,6 +5,34 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 public class FinitePhaseWatchTests
 {
     [Fact]
+    public void MonotonicIdleAdmissionNeedsNoTimerCallbackAndOnlyDistinctPhasesRenewIt()
+    {
+        var clock = new ManualClock();
+        using var watch = new FinitePhaseWatch(TimeSpan.FromMilliseconds(500), clock);
+        Assert.Equal(50, watch.WaitMilliseconds);
+        clock.Advance(499);
+        Assert.Equal(1, watch.WaitMilliseconds);
+        watch.Observe("@link-progress:1 phase=ready\n");
+        Assert.Equal(50, watch.WaitMilliseconds);
+        clock.Advance(499);
+        watch.Observe("ordinary diagnostics\n");
+        Assert.Equal(1, watch.WaitMilliseconds);
+        clock.Advance(1);
+        Assert.Equal(0, watch.WaitMilliseconds);
+        Assert.True(watch.Token.IsCancellationRequested);
+        watch.Observe("@link-progress:2 phase=too-late\n");
+        Assert.Equal(0, watch.WaitMilliseconds);
+    }
+
+    private sealed class ManualClock : TimeProvider
+    {
+        private long ticks;
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+        public override long GetTimestamp() => ticks;
+        internal void Advance(int milliseconds) => ticks += TimeSpan.FromMilliseconds(milliseconds).Ticks;
+    }
+
+    [Fact]
     public void OnlyCompleteConsecutiveBoundedPhasesExtendIdleAdmission()
     {
         using var watch = new FinitePhaseWatch(TimeSpan.FromSeconds(1));

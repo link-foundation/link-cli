@@ -1,0 +1,43 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Baseline: 89fbfadf145dab8e5671838f47752d2e047ed7c9
+CI: https://github.com/link-foundation/link-cli/actions/runs/40479397432
+
+The baseline was committed 2026-10-27T09:15:15+00:00. This run was created
+2026-10-27T09:15:25Z and its head SHA matches. C# Windows/macOS pass; Linux
+fails. The complete preserved log is
+experiments/issue-138/ci-logs/csharp-40479397432.log. Lines 26217–26283 report
+DistinctFiniteProgressSurvivesAnAggregateDeadline: TimeoutException at the
+helper's cancellation wait, elapsed 1.1331166s, phase 5, actual child exit 0.
+Actual child phases complete at 6/207/407/607/807ms. ConfigureAwait(false)
+is already present. No exact CI scheduler or filesystem-latency cause is assumed.
+
+Finite standalone reproduction, created before modifying the helper:
+DOTNET_GCHeapHardLimit=0x20000000 dotnet build experiments/issue-138/phase-pool-probe/PhasePoolProbe.csproj --disable-build-servers -m:1
+DOTNET_GCHeapHardLimit=0x10000000 dotnet experiments/issue-138/phase-pool-probe/bin/Debug/net10.0/PhasePoolProbe.dll
+
+phase-pool-before.log: exit 1, TimeoutException, elapsed 0.9449489s,
+phase 5, actual exit 0; finite child phases at 25/302/503/703/904ms.
+The isolated parent caps its shared pool at one occupied worker. Actual child
+work is four 200ms phases; startup and worker guards are finite, both heaps
+are capped, capture is bounded, and child/task cleanup is unconditional.
+The control initially used synchronous WaitForExit on its main thread; that
+raises the exit event there and hides the queued cancellation/exit race.
+Waiting for a finite completion marker reproduces it without changing the
+helper. A direct timer-reset probe alone did not establish a separate timer bug.
+
+Durable regressions, also run before changing the helper:
+DOTNET_GCHeapHardLimit=0x30000000 dotnet test csharp/Foundation.Data.Doublets.Cli.Tests -c Debug --filter FullyQualifiedName~FiniteExitPoolTests --disable-build-servers -m:1
+
+phase-pool-regression-before.log: all 3 fail, zero pass/skipped. Progress,
+stall and repeated-progress supervision cannot finish before the occupied
+worker is released. Each isolated control has a 3-second completion guard,
+5-second worker fallback and a 15-second outer test bound. The actual runner's
+pool is untouched. All children and supervision tasks are joined before cleanup.
+
+Immutable replay after the correction:
+bash experiments/issue-138/run-phase-pool-before.sh
+phase-pool-baseline-reproduction.log: PASS on unchanged 89fbfad source;
+full build/run logs retained at the printed isolated source/artifact directory.
+No production coverage denominator, persistence contract or existing timeout
+was changed to obtain this reproduction. It establishes a helper dependency,
+not direct observation of the CI runner's exact scheduling.
