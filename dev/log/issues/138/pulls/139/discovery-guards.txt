@@ -1,0 +1,22 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-discovery-guards.sh
+START 2026-10-27T10:23:34Z
+FOCUSED PASS 2026-10-27T10:25:31Z
+CSHARP Debug PASS 2026-10-27T10:28:53Z
+CSHARP Release PASS 2026-10-27T10:33:29Z
+ALL PASS 2026-10-27T10:37:00Z
+Nine read-only discovery contracts pass; no production behavior changes.
+Actual files retain exact bytes after denied initialization/repair/truncation and owned reads.
+Missing/malformed parts, bounds, closed reads, nonregular handles and invalid parents retain their admission boundaries.
+Acquisition/cleanup failures retain both causes; all handles close exactly once and repeated disposal returns the same cached failure.
+Deferred tables retain capabilities and forward reads only; borrowed WAL reads are owned and all writes reject.
+C# Debug: 2460 passed; zero failed/skipped.
+Complete lines: 9417/9726 (96.82295%), previously 9400/9726.
+Complete branches: 5699/6144 (92.75716%), previously 5695/6144.
+C# Release: 2460 passed; zero failed/skipped.
+Complete lines: 7270/7471 (97.30960%), previously 7253/7471.
+Complete branches: 5643/6105 (92.43243%), previously 5639/6105.
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, TS declarations, source-size, changeset, dependency freshness and workflow/ShellCheck checks pass.
+No production coverage denominator is removed. Complete native/C#/linked-WASM 100% and all other unmet R1-R12 requirements remain unfinished.
+Fresh exact-head platform CI remains required; the PR stays draft and unmerged.

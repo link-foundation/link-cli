@@ -3976,3 +3976,18 @@ reopening alone cannot establish safe owner cleanup. Physical torn-page repair
 and hardware power-loss verification remain unfinished. Fresh exact-head
 platform CI is required, and every other unmet R1-R12 criterion remains open.
 PR139 remains draft and unmerged.
+
+### Native read-only discovery audit (2026-10-27T10:37Z)
+
+Nine new contracts pass, followed by 2,460/2,460 tests in each full C# Debug and
+Release suite. Exact physical bytes, owned reads, denied effects, acquisition
+and cleanup failures, nonregular admission, deferred capabilities and borrowed
+WAL ownership are independently checked. Debug covers 9,417/9,726 lines and
+5,699/6,144 branches; Release covers 7,270/7,471 lines and 5,643/6,105 branches.
+Both gain 17 covered lines/four branches without removing any denominator.
+All 221 repository checks and strict local checks pass. The initial policy
+failure after tracking the new growth probe manifest and its exact-directory
+Dependabot correction are preserved in mapped-grow-manifest-policy.txt.
+See discovery-guards.txt and DISCOVERY-GUARDS-PLAN.md. No production behavior
+change or completion of wider R1-R12 gaps is claimed. Fresh platform CI remains
+required and PR139 remains draft/unmerged.

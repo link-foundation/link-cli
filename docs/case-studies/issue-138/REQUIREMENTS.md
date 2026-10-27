@@ -838,3 +838,13 @@ failures and complete metrics. Fresh exact-head platform CI remains required.
 Failed shrink, arbitrary destructor-growth errors, physical repair/power-loss
 verification, complete project coverage and all other unmet requirements stay
 unfinished. PR139 remains draft/unmerged.
+
+R1/R7/R8 read-only discovery contracts now add nine independent C# controls.
+All 2,460 tests pass in each complete Debug/Release suite; ownership, denied
+effects and exact-once cleanup are exercised without production changes.
+Debug covers 9,417/9,726 lines and 5,699/6,144 branches; Release covers
+7,270/7,471 lines and 5,643/6,105 branches. Both retain the same denominators.
+See DISCOVERY-GUARDS-PLAN.md and discovery-guards.txt. All 221 repository checks
+pass after the tracked growth probe is added to Dependabot's Cargo directories.
+Fresh exact-head CI, complete coverage and every wider unmet criterion remain
+required; these audit controls do not certify hardware persistence.

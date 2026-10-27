@@ -877,3 +877,15 @@ acceptance criterion continue independently.
     950bcb3 is published; fresh exact-head CI remains active under
     PHASE-POOL-PLAN.md. Record both the successful Rust Windows
     view-flush checks and the independent C# failure in mapped-flush-ci-after.txt.
+
+62. Audit C# native read-only discovery without production behavior changes.
+    Nine new contracts exercise owned reads, every denied mutation, malformed
+    parts, bounds, nonregular handles, exact-once cleanup, acquisition plus
+    cleanup failures, deferred capability forwarding and borrowed WAL ownership.
+    All 2,460 tests pass in both configurations; full production denominators
+    remain unchanged and each gains 17 covered lines/four branches. All 221
+    repository checks and strict local checks pass at 10:37:00Z after correcting
+    the newly tracked probe manifest's Dependabot watch. discovery-guards.txt,
+    mapped-grow-manifest-policy.txt and DISCOVERY-GUARDS-PLAN.md preserve the
+    evidence. Publish this independent step and inspect fresh exact-head CI.
+    R8 complete coverage and every wider unmet requirement remain unfinished.
