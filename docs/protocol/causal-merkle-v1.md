@@ -50,14 +50,44 @@ shape before hashing, then verify through all sixteen levels to the expected
 root. An empty leaf is an absence proof; absence never authorizes deletion.
 Raw sibling bytes occupy exactly 7680 bytes for a leaf, and at most 7200 for
 a node. Canonical version byte limits and fixed proof dimensions bound each
-message's retained data. Callers also bound raw transport framing before parsing.
+message's retained data.
+
+The shared wire forms are canonical compact ASCII JSON arrays, with no spaces,
+escapes or object values:
+
+`["causal-node1",ROOT,PREFIX,CHILDREN,PROOF]`
+
+`["causal-leaf1",ROOT,DECIMAL_ADDRESS,VERSION_ARRAYS,PROOF]`
+
+Root, prefix, child/proof hashes and decimal address are JSON strings. Version
+arrays are the actual nested canonical causal-version1 arrays, rather than
+JSON strings containing escaped wire text. The independently generated vectors
+include complete wire bytes. Decoding requires exact canonical re-encoding and
+then verifies the complete proof against the separately supplied expected root.
+Encoding also verifies the complete proof; asynchronous implementations own
+every input field before their first await.
+
+Before invoking a JSON parser, node frames admit at most 32768 ASCII bytes and
+leaf frames at most 1081344 bytes (1 MiB version data plus 32768 bytes of framing
+and proof allowance). Reject escapes, object delimiters, controls, non-ASCII,
+unbalanced arrays/strings, nesting beyond five array levels and more than
+32768 unquoted commas. Exact typed dimensions and canonical checks still apply
+after parsing. These bounds apply to each response, including responses that
+are ultimately rejected. A transport adapter must impose the raw frame limit
+while receiving, before constructing an unbounded string in memory.
 
 The planned pull operation freezes one source root, compares root-bound nodes
 with a frozen destination snapshot and descends only through mismatching,
 nonempty source ranges. It validates each leaf before passing its versions to
 the fresh local destination owner's receive operation. A concurrent destination
 edit is reconciled rather than overwritten. Finite node, leaf and byte budgets
-bound each attempt; no automatic network or mutation retry is implied. Partial
+bound each attempt; no automatic network or mutation retry is implied. The
+version-byte budget counts accepted canonical version bytes, not all network
+traffic: one additional bounded leaf may be fetched before that budget rejects
+it. Node/leaf request limits and per-frame limits bound the total response
+traffic, including rejected data. Defaults are 4096 node requests, 64 leaf
+requests and 8 MiB of version bytes. Selected positive maxima are 65536 node
+requests, 4096 leaf requests and 8 MiB of version bytes. Partial
 progress can remain after an error. A new attempt takes fresh roots and skips
 already reconciled content. A changed source requires a new snapshot, rather
 than mixing roots. Bidirectional exchange may be required for convergence.

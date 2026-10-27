@@ -24,6 +24,10 @@ for index, prefix in [(0, ""), (5, "000000000000000"), (6, "f")]:
     result["nodes"].append({"snapshot": index, "root": snapshot.root.hex(), "prefix": prefix,
                             "children": [value.hex() for value in snapshot.children(depth, int(prefix or "0", 16))],
                             "proof": [[item.hex() for item in level] for level in path[:depth]]})
+for item in result["leaves"]:
+    item["wire"] = json.dumps(["causal-leaf1", item["root"], item["address"], item["versions"], item["proof"]], separators=(",", ":"))
+for item in result["nodes"]:
+    item["wire"] = json.dumps(["causal-node1", item["root"], item["prefix"], item["children"], item["proof"]], separators=(",", ":"))
 destination = BASE.parents[1] / "docs/protocol/causal-merkle-v1.json"
 destination.write_text(json.dumps(result, indent=2) + "\n")
 print(f"PASS generated {len(result['snapshots'])} roots, {len(result['leaves'])} leaf proofs and {len(result['nodes'])} node proofs without importing production code.")
