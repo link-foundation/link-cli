@@ -926,3 +926,17 @@ See DISCOVERY-GUARDS-PLAN.md and discovery-guards.txt. All 221 repository checks
 pass after the tracked growth probe is added to Dependabot's Cargo directories.
 Fresh exact-head CI, complete coverage and every wider unmet criterion remain
 required; these audit controls do not certify hardware persistence.
+
+Local causal ownership (R1/R4/R6/R7/R8/R9/R10) completes its local sequential
+validation at 2026-10-27T14:21:34Z. All 1210 native tests plus six doctests,
+736 actual-WASM tests, 2475 C# tests per configuration, 657 JS tests and 221
+repository checks pass. Fifty actual SQL-free physical handoffs and twenty
+reaped process exits verify ownership, retry, reopen and following edits across
+all five runtimes. causal-replica.txt retains the complete production coverage
+denominators and their remaining gaps; JS alone continues to enforce 100%.
+All three published d00e022 C# platform archives verify their actual sizes and
+SHA256 digests, with 2475 tests per platform. Eight workflows pass while the
+Rust Windows job remains pending. The new independently modeled Merkle
+snapshot/proof/wire boundary is still under implementation. Ordinary links
+projection, retained-history scaling, safe reclamation, complete project 100%
+and every wider unmet criterion remain unfinished; PR139 stays draft/unmerged.

@@ -1012,9 +1012,25 @@ acceptance criterion continue independently.
     strict Clippy, types and bare dependency checks pass. SQL-free physical
     composition passes 50 plain/mirrored five-runtime handoffs, 20 reaped process
     exits, 100 unchanged-byte stale-owner refusals and 100 recovered retry/
-    reopen/following-edit checks. Full Debug/Release/native/WASM coverage is
-    running separately; fresh exact-head platform CI remains required. Full
+    reopen/following-edit checks. Complete sequential validation finishes
+    14:21:34Z: 1210 native tests plus six doctests, 736 actual-WASM tests,
+    2475 C# tests in each configuration and all 221 repository checks pass.
+    causal-replica.txt retains every complete coverage denominator and gaps.
+    All three published d00e022 C# platform archives verify size and SHA256;
+    eight workflows pass while Rust's Windows job remains pending. Full
     replay, finite retained history/receipts, unique independent authors and
     operator-authorized stale-marker recovery are explicit. Ordinary links
     projection, Merkle transfer, safe compaction and every wider unmet criterion
     remain unfinished under CAUSAL-LOCAL-PLAN.md.
+
+71. Continue bounded anti-entropy with separately selected immutable content
+    snapshots and root-bound node/leaf proofs under CAUSAL-MERKLE-PLAN.md.
+    The independent resource-bounded model passes 64 snapshot pairs and 48
+    proof groups; eight roots and seven complete canonical proof/wire vectors
+    are generated without production imports. JS test-first controls reproduce
+    missing snapshot, pull and wire APIs. Eight finite JS draft contracts pass
+    at 100% measured draft coverage, including 64 direct causal unions,
+    concurrent writes, bounded continuation and before/after lost publication
+    replies. Native/C#/actual-WASM production ports, physical wire/process
+    composition, complete validation and fresh CI remain unfinished. Retain
+    concurrent versions and deletions; absence never authorizes deletion.

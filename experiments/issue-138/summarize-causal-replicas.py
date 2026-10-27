@@ -84,4 +84,8 @@ print("Admission: 4096 entries/8 MiB total; 1 MiB/five array levels/32768 unquot
 print("Every operation replays the full bounded journal; historical comparisons cost O(H²W), retained state O(HW+R), journal publication copy O(RW). No safe receipt/history compaction is supplied.")
 print("Author uniqueness across independent stores and backup rollback fencing remain deployment requirements. The caller owns and closes the provider.")
 print("Ordinary links projection/session facade, bounded Merkle/range transport, reclamation, full project/linked-WASM 100% and every other unmet R1-R12 criterion remain unfinished.")
-print("Fresh exact-head Windows/Linux/macOS CI and actual C# archive verification remain required. The PR stays draft and unmerged.")
+platforms = (BASE / "causal-replica-csharp-platform-coverage.txt").read_text()
+assert platforms.count("2475 tests pass, platform summary present;") == 3
+assert "d00e02232812346ace3525efb3525fc42fd6d17e" in platforms
+print("Published d00e022 C# CI passes 2475 tests on each platform; all three real archives verify size and SHA256. See causal-replica-csharp-platform-coverage.txt for complete platform denominators.")
+print("The remaining exact-head Rust platform run is still pending at this receipt. The PR stays draft and unmerged.")

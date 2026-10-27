@@ -45,9 +45,18 @@ describe the local owner as a complete anti-entropy transport.
 - [ ] Add the separately selected ordinary-links projection/session facade.
       Retain concurrent versions beneath explicit rejection or deterministic
       projection; do not imply global uniqueness, cascades or serializability.
-- [ ] Run complete suites/coverage and fresh exact-head platform CI, preserving
+- [x] Run complete local suites/coverage, preserving
       every production denominator and actual coverage archives. Record full
-      replay/publication cost and each finite admission bound.
+      replay/publication cost and each finite admission bound. The sequential
+      run finishes 2026-10-27T14:21:34Z: 1210 native tests plus six doctests,
+      736 actual-WASM tests, 2475 C# tests in each configuration, 657 JS tests
+      at enforced 100% production coverage and 221 repository checks pass.
+      causal-replica.txt retains complete metrics, including uncovered native,
+      linked-WASM and C# branches. No denominator was removed.
+- [ ] Finish fresh exact-head platform CI. Published d00e022 passes all three
+      C# platforms at 2475 tests each; actual archives verify size and SHA256 in
+      causal-replica-csharp-platform-coverage.txt. Eight workflows pass; Rust's
+      Windows job is pending when the local receipt is recorded.
 
 The selected implementation retains an append-only local journal: an author header, local writes
 with caller-supplied retry identifiers and observed versions, and canonical

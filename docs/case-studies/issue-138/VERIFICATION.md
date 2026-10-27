@@ -4239,3 +4239,20 @@ anti-entropy transport. Durable local publication/retry ownership, ordinary
 links projection, bounded snapshot/range transfer, reclamation, complete
 coverage and every other unmet R1-R12 requirement remain active. PR139 stays
 draft and unmerged.
+
+Local causal ownership complete validation finishes 2026-10-27T14:21:34Z.
+`causal-replica.txt` preserves the test-first diagnostics, 29 independent
+journal vectors, 50 physical handoffs and 20 reaped process exits with 100
+stale-owner refusals and 100 recovered retry/following handoffs. All 1210
+native tests, six doctests, 736 actual-WASM tests, 2475 C# tests in both
+configurations, 657 JS tests and 221 repository checks pass. JS production
+coverage remains 100% lines/branches/functions. Complete native lines/branches
+are 17757/18647 and 3477/3974; complete linked WASM 13733/16356 and 2846/3363.
+C# Debug reports 9653/9962 and 6019/6464; Release 7452/7653 and 5957/6425.
+The local owner itself covers all executable C# lines, but six optimized
+Release branches remain uncovered; native/WASM component coverage is also
+below 100%. Every production denominator remains retained. Published d00e022
+C# CI passes 2475 tests on Windows/Linux/macOS; all three actual archives
+verify their size and SHA256 in causal-replica-csharp-platform-coverage.txt.
+Eight workflows pass, with Rust's Windows job pending at this receipt. No
+full-project 100% claim or issue completion follows from these passing suites.
