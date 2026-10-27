@@ -4118,3 +4118,16 @@ artifact size/digest and complete XML metrics; platform percentages must not
 be summed. No new coverage percentage is claimed from retaining evidence.
 Complete native/C#/linked-WASM 100% and every wider unmet criterion remain
 unfinished. PR139 remains draft and unmerged.
+
+## Fresh shrink/setup platform CI (2026-10-27T11:57Z)
+
+All nine workflows complete successfully on exact published 9bb985f, created
+11:23:26–27Z after its 11:23:14Z commit. Rust Windows/Linux/macOS, complete
+coverage, merge simulation, lint and packaging pass. C# Windows/Linux/macOS
+each pass all 2,462 tests, including both setup boundary controls and the
+original intermittent version-exit case. The earlier host scheduling/I/O cause
+remains unestablished. version-setup-ci-after.txt preserves full SHA, run URLs,
+timestamps and exact lines from csharp-40495781030.log. Subsequent generic
+growth admission/initialization and platform-report retention require their own
+fresh CI. Complete coverage and all wider R1-R12 gaps remain unfinished;
+PR139 stays draft and unmerged.

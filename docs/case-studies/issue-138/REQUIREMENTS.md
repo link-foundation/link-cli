@@ -1,5 +1,13 @@
 # Acceptance inventory
 
+All nine workflows pass on published 9bb985f, including native Rust on
+Windows/Linux/macOS and 2,462 C# tests on each platform. This verifies the
+empty/rejected-shrink and returned-creation progress corrections; it does not
+identify the earlier intermittent Windows timeout's host cause.
+version-setup-ci-after.txt preserves exact head, timestamps, run URLs and
+actual C# log lines. Later growth admission/initialization and coverage
+retention changes require their own fresh CI. Every wider gap remains open.
+
 C# coverage retention (R8) now publishes the existing complete Windows and
 macOS reports as distinct artifacts alongside the established Linux artifact.
 The immutable successful dec6cb7 run has only the Linux report; the artifact
