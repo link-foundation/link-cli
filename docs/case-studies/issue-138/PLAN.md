@@ -805,3 +805,19 @@ acceptance criterion continue independently.
     Preserve phase-context.txt, publish an atomic correction and
     inspect fresh exact-head CI under PHASE-CONTEXT-PLAN.md. This test helper
     change supplies no new production persistence guarantee.
+
+58. Exercise public reclaiming-store admission and provider-failure paths in
+    both whole-object and chunked layouts. Short/long arrays reject before I/O;
+    generation-zero payloads, uppercase epoch/hash keys and otherwise eligible
+    orphans fail without publication/deletion. A generation-only catalog change
+    cannot hide a missing unchanged object behind a second data retry. Following
+    reads/writes and all three language surfaces preserve the existing contract.
+    Full native/actual-WASM suites pass 1,163/723; both C# configurations pass
+    2,447; all 644 Node tests enforce full production coverage. Four new controls
+    also pass in Bun/Deno. After strengthening the eligible-orphan fixture, all
+    50 native maintenance controls, all actual WASM and all C# Debug tests rerun
+    successfully, finishing 08:23:27Z. Complete coverage retains every production
+    denominator; native and linked-WASM each gain four covered branches. All
+    repository checks pass. Preserve reclamation-admission.txt, publish the
+    atomic tests/docs step and inspect fresh exact-head CI. These controls add
+    no production protocol and do not complete the wider R1-R12 inventory.

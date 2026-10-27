@@ -3830,3 +3830,39 @@ the case-study tree; type checks, source limits, changeset validation, 126
 dependency declarations and workflow lint also pass. See phase-context.txt.
 This is local verification of the proven helper dependency; fresh Windows CI
 must still establish the published-head result.
+
+## Reclaiming admission/provider controls (2026-10-27)
+
+Matching Rust/C#/JS public controls now exercise malformed expected/update
+array lengths, generation-zero shard/epoch/object payloads, uppercase epoch
+and hash digits in both live and scanned keys, and a missing object after the
+catalog advances without changing its pointer. Both layouts reject before the
+relevant I/O/publication/deletion; malformed scans retain otherwise eligible
+orphans. Restoring the provider preserves owned reads and following writes.
+These are controls for existing behavior, not a new production correction.
+
+Full suites pass 1,163 native plus six doctests, 723 actual-WASM, 2,447 C# per
+configuration and 644 Node tests with enforced 100% production lines/branches/
+functions. The four controls also pass separately in Bun/Deno. The final orphan
+fixture is reverified in all 50 native maintenance controls, the complete actual
+WASM suite and complete C# Debug suite, finishing 08:23:27Z; Release and JS run
+after that fixture change in the initial driver. All 221 repository tests,
+658 source-size checks, format/strict Clippy/types, existing minor changeset,
+126 dependency declarations and workflow/ShellCheck/whitespace checks pass.
+
+Complete native LLVM remains 16,956/17,858 lines, 3,281/3,766 branches,
+2,188/2,355 functions, 26,131/28,286 regions and 12,084/21,687 instantiations.
+Complete linked WASM remains 13,144/15,567 lines, 2,663/3,169 branches,
+1,636/2,033 functions, 20,244/24,540 regions and 4,342/7,471 instantiations.
+Each gains four covered branches over c1abe42; generic functions/instantiations
+remain included. C# Debug is 9,400/9,726 lines and 5,695/6,144 branches;
+Release is 7,253/7,471 lines and 5,639/6,105 branches. Complete native/C#/linked
+WASM 100% remains unfinished. No denominator is filtered. The native final
+focused rerun retains complete accumulated profiles rather than replacing the
+report with maintenance-only scope. reclamation-admission.txt records all
+commands, final-fixture checks, official totals and the helper's failing baseline.
+
+Five-runtime file handoffs and both real three-member etcd layouts remain
+verified at c1abe42 under reclaiming-chunks.txt; this step changes no production
+source. Fresh exact-head CI remains required. All wider unmet criteria remain
+active; PR139 stays draft and unmerged.

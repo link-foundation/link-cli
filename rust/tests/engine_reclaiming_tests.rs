@@ -163,6 +163,9 @@ mod concurrent;
 #[path = "engine_reclaiming/contracts.rs"]
 mod contracts;
 
+#[path = "engine_reclaiming/admission.rs"]
+mod admission;
+
 #[path = "engine_reclaiming/chunk_faults.rs"]
 mod chunk_faults;
 #[path = "engine_reclaiming/chunk_races.rs"]

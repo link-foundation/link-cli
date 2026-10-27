@@ -1,0 +1,65 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-reclamation-admission.sh
+START 2026-10-27T07:40:58Z
+STRICT RUST CHECKS PASS 2026-10-27T07:41:06Z
+NATIVE PASS 2026-10-27T07:56:20Z
+ACTUAL WASM PASS 2026-10-27T08:00:47Z
+CSHARP Debug PASS 2026-10-27T08:05:29Z
+CSHARP Release PASS 2026-10-27T08:09:08Z
+REPOSITORY CHECKS 2026-10-27T08:13:30Z
+ALL PASS 2026-10-27T08:13:50Z
+START 2026-10-27T08:14:07Z
+NATIVE FINAL FIXTURE PASS 2026-10-27T08:14:22Z
+ACTUAL WASM FINAL FIXTURE PASS 2026-10-27T08:18:41Z
+CSHARP DEBUG FINAL FIXTURE PASS 2026-10-27T08:23:27Z
+ALL PASS 2026-10-27T08:23:27Z
+Final eligible-orphan fixture: all 50 native maintenance controls, all 723 actual-WASM and all 2,447 C# Debug tests rebuilt/rerun; initial driver runs Release and JS after the change.
+Native Rust: 1163 passed; 21 ignored child entries.
+Complete lines: 16956/17858 (94.94904%)
+Complete branches: 3281/3766 (87.12161%)
+Complete functions: 2188/2355 (92.90870%)
+Complete regions: 26131/28286 (92.38139%)
+Complete instantiations: 12084/21687 (55.72002%)
+/rust/src/engine/reclaiming.rs lines: 199/203 (98.02956%)
+/rust/src/engine/reclaiming.rs branches: 31/36 (86.11111%)
+/rust/src/engine/reclaiming.rs functions: 15/15 (100.00000%)
+/rust/src/engine/reclaiming/codec.rs lines: 212/214 (99.06542%)
+/rust/src/engine/reclaiming/codec.rs branches: 58/58 (100.00000%)
+/rust/src/engine/reclaiming/codec.rs functions: 27/29 (93.10345%)
+/rust/src/engine/reclaiming/collector.rs lines: 57/58 (98.27586%)
+/rust/src/engine/reclaiming/collector.rs branches: 14/14 (100.00000%)
+/rust/src/engine/reclaiming/collector.rs functions: 3/4 (75.00000%)
+/rust/src/engine/reclaiming/objects.rs lines: 58/58 (100.00000%)
+/rust/src/engine/reclaiming/objects.rs branches: 16/16 (100.00000%)
+/rust/src/engine/reclaiming/objects.rs functions: 3/3 (100.00000%)
+Actual WASM: 723 passed; 0 ignored child entries.
+Complete lines: 13144/15567 (84.43502%)
+Complete branches: 2663/3169 (84.03282%)
+Complete functions: 1636/2033 (80.47221%)
+Complete regions: 20244/24540 (82.49389%)
+Complete instantiations: 4342/7471 (58.11806%)
+/rust/src/engine/reclaiming.rs lines: 199/203 (98.02956%)
+/rust/src/engine/reclaiming.rs branches: 31/36 (86.11111%)
+/rust/src/engine/reclaiming.rs functions: 15/15 (100.00000%)
+/rust/src/engine/reclaiming/codec.rs lines: 212/214 (99.06542%)
+/rust/src/engine/reclaiming/codec.rs branches: 58/58 (100.00000%)
+/rust/src/engine/reclaiming/codec.rs functions: 27/29 (93.10345%)
+/rust/src/engine/reclaiming/collector.rs lines: 57/58 (98.27586%)
+/rust/src/engine/reclaiming/collector.rs branches: 14/14 (100.00000%)
+/rust/src/engine/reclaiming/collector.rs functions: 3/4 (75.00000%)
+/rust/src/engine/reclaiming/objects.rs lines: 58/58 (100.00000%)
+/rust/src/engine/reclaiming/objects.rs branches: 16/16 (100.00000%)
+/rust/src/engine/reclaiming/objects.rs functions: 3/3 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.85s
+C# Debug: 2447 passed; zero failed/skipped.
+Complete lines: 9400/9726 (96.64816%)
+Complete branches: 5695/6144 (92.69206%)
+C# Release: 2447 passed; zero failed/skipped.
+Complete lines: 7253/7471 (97.08205%)
+Complete branches: 5639/6105 (92.36691%)
+Node: {'tests': 644, 'pass': 644, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+All four admission controls pass separately in Node/Bun/Deno.
+Finite deferred-context regression first times out at phase5/exit0; corrected standalone child passes without caller callbacks.
+No production source or persistence contract changes. No production coverage denominator is excluded.
+Complete native/C#/linked-WASM 100% and the wider unmet R1-R12 criteria remain unfinished.
