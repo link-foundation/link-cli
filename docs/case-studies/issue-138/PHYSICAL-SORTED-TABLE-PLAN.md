@@ -21,8 +21,10 @@ atomic journal API. Every wider unmet criterion remains active in PR139.
 - [x] Run complete suites/coverage and relevant local CI checks; review the
       source, keep complete denominators and preserve the initial layout failure.
 - [x] Commit the physical table feature as a useful atomic step.
-- [ ] Push only the prepared branch.
-- [ ] Verify fresh exact-head CI, including every native platform.
+- [x] Push only the prepared branch.
+- [x] Verify fresh exact-head CI on `523888a`, including every native platform:
+      all nine workflows and six Rust/C# platform jobs pass. Evidence:
+      `dev/log/issues/138/pulls/139/sorted-table-ci.txt`.
 - [ ] Compose physical tables with independently selected WAL, bounded memtable,
       manifest publication, recovery, compaction and obsolete-file retirement.
       A table alone does not complete the on-disk LSM requirement.

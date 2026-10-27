@@ -22,8 +22,10 @@ its deadlines or omitting any native durability cut point.
       The combined workspace includes the separately implemented table feature:
       2,349 tests per configuration and all 221 repository checks pass.
 - [x] Commit this useful test correction independently.
-- [ ] Push only the prepared branch.
-- [ ] Verify fresh exact-head native Windows/macOS/Linux CI.
+- [x] Push only the prepared branch.
+- [x] Verify fresh exact-head native Windows/macOS/Linux CI on `523888a`;
+      all nine workflows and all six Rust/C# platform jobs pass. Evidence:
+      `dev/log/issues/138/pulls/139/sorted-table-ci.txt`.
 
 Preserved full log: `experiments/issue-138/ci-logs/csharp-40416245668.log`. A public concise extract
 and validation report will accompany the test correction. This source change
