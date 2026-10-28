@@ -74,3 +74,24 @@ still has 22/38, despite complete source counters. Those entries stay in the
 report and remain an unfinished acceptance criterion. Actual-WASM CI uses the
 same gate against its existing complete LLVM JSON artifact. A passing source
 counter gate does not establish complete instantiation coverage.
+
+## Library placeholder control
+
+`coverage-aggregation/library-instantiations/run.sh` separately tests a tiny
+library and two consumers. Every source line, branch, function and region in
+the library executes. With one concrete generic type, instantiations are 2/3;
+with two concrete types taking both branches, they are 3/4. Both reports retain
+the zero-count `select::<_>` placeholder. The test asserts returned values,
+all source counters and the exact placeholder record independently.
+
+The [pinned Rust 1.99 compiler source](https://github.com/rust-lang/rust/blob/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/compiler/rustc_codegen_llvm/src/coverageinfo/mapgen/unused.rs#L79)
+documents that unused generic mappings from a library can survive even when a
+downstream crate uses the function. The
+[v0 symbol specification](https://doc.rust-lang.org/rustc/symbol-mangling/v0.html#type)
+defines the `p` type code as a placeholder. All sixteen zero-count entries in
+the final focused author-guard report use placeholder provider types; every
+executed entry covers its regions. This matches the independently reproduced
+compiler behavior. The [receipt](../../../dev/log/issues/138/pulls/139/library-instantiations.txt)
+retains versions, report/source digests and every zero-count name. The raw
+22/38 counter stays reported. This evidence neither excludes production code
+nor resolves the separate uncovered source counters elsewhere in the project.

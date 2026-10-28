@@ -44,6 +44,13 @@ functions and regions. Instantiations remain reported without exclusions.
 The independent model now supplies 25 fixtures, consumed by all three ports.
 Fresh native/actual-WASM coverage is still required.
 
+A separate [library placeholder control](COVERAGE-METHOD.md#library-placeholder-control)
+reproduces an unexecuted generic placeholder even when every source counter
+executes for every concrete type tested. All sixteen zero-count author-guard
+entries have placeholder provider types, matching the pinned compiler's
+documented library/downstream behavior. Their raw count remains retained;
+other uncovered production source counters remain unfinished.
+
 Focused local checks pass seven Rust contracts, eight C# cases and nine tests
 on each of Node, Bun and Deno. Node's new
 production module covers every measured line, branch and function. The shared
