@@ -11,5 +11,8 @@ still reach the JSON parser. Its eventual refusal does not verify early admissio
       canonical accepted record and the existing byte/entry budgets.
 - [x] Regenerate independent shared rejection vectors; run focused native and
       C# contracts plus strict Node coverage and Bun/Deno parity.
-- [ ] Retain evidence, commit the correction, publish only the prepared branch
+- [x] Retain evidence, commit the correction, publish only the prepared branch
       and inspect complete exact-head CI without claiming wider completion.
+
+All nine workflows pass on `9ece2d1`; `author-fence-followup-ci.txt` retains
+the complete runtime results and independent artifact verification.

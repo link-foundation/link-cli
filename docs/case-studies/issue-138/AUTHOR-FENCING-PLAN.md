@@ -17,10 +17,14 @@ A separate checked ownership key must participate in the same coherent data CAS.
       provider mutation after malformed input or a known fence failure.
 - [x] Compose ordinary causal batches and permanent address reservations in
       focused portable tests; retain a real-etcd/actual-WASM session recipe.
-- [ ] Verify the new recipe and linked portable tests in fresh full CI.
+- [x] Verify the new recipe and linked portable tests in fresh full CI.
 - [x] Add reproducible recipes, cost/compatibility limits and release fragments.
-- [ ] Run focused checks locally, complete suites in CI, commit and push only the
+- [x] Run focused checks locally, complete suites in CI, commit and push only the
       issue branch; inspect fresh exact-head CI before claiming verification.
+
+All nine workflows pass on `9ece2d1`, including both real-etcd native/WASM
+compositions and all fifty physical handoffs. Later process and native source
+coverage audits have separate plans and still require fresh CI.
 
 This is explicit application-authorized takeover, without TTL, leader election,
 permissions, membership or automatic failure detection. All mutations of guarded

@@ -11,5 +11,10 @@ source lines. A complete report is retained even when a component gate passes.
       owned arguments through public contracts without changing production code.
 - [x] Rerun focused C# contracts with complete production instrumentation;
       require every author-guard source line and raw compiled branch to execute.
-- [ ] Keep whole-project deficits explicit, inspect actual platform artifacts
+- [x] Keep whole-project deficits explicit, inspect actual platform artifacts
       in fresh CI and continue the wider acceptance inventory.
+
+On `9ece2d1`, all 2,637 tests pass on each platform and the strict component
+gate independently verifies 63/63 lines and 124/124 raw branches on all three.
+`author-fence-followup-ci.txt` retains raw lines, verified artifact digests
+and complete production denominators. Whole-project 100% remains unfinished.

@@ -3,8 +3,9 @@ address reservations and causal batches in Rust/C#/JS. A bound claim is
 validated at reads and compared in the same data CAS; superseded token retries
 cannot retake ownership. Focused checks and explicit provider/authority/cost
 limits are tracked in AUTHOR-FENCING-VERIFICATION.md. Actual-WASM/real-etcd and
-all three C# platform suites pass on aae1422; later admission, physical handoff
-and component coverage changes require fresh exact-head CI. Fifteen focused C#
+all three C# platform suites pass on `9ece2d1`, along with all nine workflows,
+all fifty physical handoffs and strict C# component gates. Later process and
+Rust coverage changes require fresh exact-head CI. Fifteen focused C#
 contracts now execute every author-guard source line and raw branch in both
 Debug and Release, with complete production instrumentation retained. Whole-
 project coverage remains below target. Twelve focused takeover process exits

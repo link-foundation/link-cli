@@ -1,0 +1,123 @@
+Author fencing: exact-head follow-up CI, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 9ece2d163b0ad254c62093ad42be0b1ce579d872
+All nine workflows pass. This head verifies ASCII admission, physical
+handoffs and strict C# coverage. Later process exits, portable Rust
+contracts and native/WASM source coverage gates need fresh CI.
+
+Broken Link Checker: success; created 2026-10-28T14:15:41Z; https://github.com/link-foundation/link-cli/actions/runs/40704187901
+C# CI/CD Pipeline: success; created 2026-10-28T14:15:41Z; https://github.com/link-foundation/link-cli/actions/runs/40704187916
+Dependencies: success; created 2026-10-28T14:15:42Z; https://github.com/link-foundation/link-cli/actions/runs/40704188062
+Docs: success; created 2026-10-28T14:15:42Z; https://github.com/link-foundation/link-cli/actions/runs/40704188465
+JS client CI: success; created 2026-10-28T14:15:41Z; https://github.com/link-foundation/link-cli/actions/runs/40704187896
+Rust CI/CD Pipeline: success; created 2026-10-28T14:15:42Z; https://github.com/link-foundation/link-cli/actions/runs/40704188148
+Security: success; created 2026-10-28T14:15:42Z; https://github.com/link-foundation/link-cli/actions/runs/40704188166
+WebAssembly CI: success; created 2026-10-28T14:15:41Z; https://github.com/link-foundation/link-cli/actions/runs/40704187898
+Workflows: success; created 2026-10-28T14:15:42Z; https://github.com/link-foundation/link-cli/actions/runs/40704187974
+
+js-40704187896.log; SHA256 8a02d09505a9c099629a312592cb44053b9eeb97694432a468d73f6d795895d1; one-based raw lines follow:
+1109: Unit tests and types	Unit tests and complete production coverage	2026-10-28T14:17:47.0865421Z ℹ tests 718
+1128: Unit tests and types	Unit tests and complete production coverage	2026-10-28T14:17:47.0887594Z ℹ  engine-author-fence.js           | 100.00 |   100.00 |  100.00 |
+6583: Conformance on Node.js, Bun and Deno	Verify complete native LSM store handoffs	2026-10-28T14:25:04.6360491Z PASS 50 fence complete-store handoffs with physical hash preservation
+8594: Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-10-28T14:27:41.9375420Z PASS real etcd author fencing: 2 native claim ports, actual WASM staging, stale preparation refusal, burned suffix, continuing counter and unchanged fence generation
+8611: Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-10-28T14:27:47.0519686Z PASS real etcd author fencing: 2 native claim ports, actual WASM staging, stale preparation refusal, burned suffix, continuing counter and unchanged fence generation
+
+csharp-40704187916.log; SHA256 4b22ecb67cbb38ea5736ae5fca324665bc7c162f8cca980b2caad36c3ffbdfaf; one-based raw lines follow:
+20955: Test (ubuntu-24.04)	Run tests	2026-10-28T14:21:33.2761589Z Total tests: 2637
+20956: Test (ubuntu-24.04)	Run tests	2026-10-28T14:21:33.2762095Z      Passed: 2637
+20996: Test (ubuntu-24.04)	Verify every compiled causal branch	2026-10-28T14:21:33.7366423Z AuthorFence.cs: 63/63 lines, 124/124 raw compiled branches
+20998: Test (ubuntu-24.04)	Verify every compiled causal branch	2026-10-28T14:21:33.7367819Z PASS all author guard lines and raw branches; complete project coverage is separate
+27545: Test (macos-26)	Run tests	2026-10-28T14:21:34.4771860Z Total tests: 2637
+27546: Test (macos-26)	Run tests	2026-10-28T14:21:34.4772740Z      Passed: 2637
+27586: Test (macos-26)	Verify every compiled causal branch	2026-10-28T14:21:35.9243950Z AuthorFence.cs: 63/63 lines, 124/124 raw compiled branches
+27588: Test (macos-26)	Verify every compiled causal branch	2026-10-28T14:21:35.9247030Z PASS all author guard lines and raw branches; complete project coverage is separate
+33776: Test (windows-2025)	Run tests	2026-10-28T14:28:38.4341507Z Total tests: 2637
+33777: Test (windows-2025)	Run tests	2026-10-28T14:28:38.4341958Z      Passed: 2637
+33817: Test (windows-2025)	Verify every compiled causal branch	2026-10-28T14:28:40.8116807Z AuthorFence.cs: 63/63 lines, 124/124 raw compiled branches
+33819: Test (windows-2025)	Verify every compiled causal branch	2026-10-28T14:28:40.8117867Z PASS all author guard lines and raw branches; complete project coverage is separate
+
+wasm-40704187898.log; SHA256 b702f9628dbe73b78046bae216e39b6731175167b3eb455cedc98e5f13096b47; one-based raw lines follow:
+801: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:07.9514159Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.08s
+811: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:09.8332649Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.16s
+1164: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:31.2687134Z test result: ok. 347 passed; 0 failed; 0 ignored; 0 filtered out; finished in 18.08s
+1180: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:33.1420462Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.08s
+1190: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:34.9132795Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.06s
+1199: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:36.6970357Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.06s
+1278: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:20:39.1641648Z test result: ok. 73 passed; 0 failed; 0 ignored; 0 filtered out; finished in 1.20s
+1644: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:21:36.2192518Z test result: ok. 360 passed; 0 failed; 0 ignored; 0 filtered out; finished in 54.63s
+1658: WASM coverage	Measure actual WebAssembly tests	2026-10-28T14:21:38.0658127Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.06s
+
+rust-40704188148.log; SHA256 2d5f0780dd938a43a523cc181c86b75e1ec38936120da1a1b04d372c4e71dee1; one-based raw lines follow:
+35780: Test (windows-2025)	Run tests	2026-10-28T14:53:43.6084097Z test explicit_takeover_fences_old_reads_writes_and_receipts ... ok
+37250: Test (windows-2025)	Run tests	2026-10-28T14:54:56.2671207Z test a_stopped_server_executes_nothing ... ok
+
+Artifact downloads below preceded Windows completion; the final workflow states are verified above.
+
+author-fence-platform-coverage-9ece2d1.log; SHA256 1d4c537ecddfe4b74d8bd515256955b846fffce2665571022f1a1bef2ffe3ad3
+PR: https://github.com/link-foundation/link-cli/pull/139
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40704187916
+Exact head: 9ece2d163b0ad254c62093ad42be0b1ce579d872; created 2026-10-28T14:15:41Z
+ubuntu-24.04: 2637 tests pass, platform summary present; artifact 12823307340, verified SHA256 132986e1a3732ec68c6cf4417bb1c991d07b684988ce3d35423100eb9dec9c13.
+Complete ubuntu-24.04 lines: 8471/8685 (97.53598%).
+Complete ubuntu-24.04 branches: 7222/7711 (93.65841%).
+windows-2025: 2637 tests pass, platform summary present; artifact 12824381208, verified SHA256 c0f0c842c23de1baa40e582377a3adcb9d946022cb5ee99170f3b20db1decc35.
+Complete windows-2025 lines: 8457/8685 (97.37478%).
+Complete windows-2025 branches: 7202/7711 (93.39904%).
+macos-26: 2637 tests pass, platform summary present; artifact 12822559376, verified SHA256 0625d56d1f319ac51e887ee4bf774808cb231b3847015444940b4fc7c38e7622.
+Complete macos-26 lines: 8466/8685 (97.47841%).
+Complete macos-26 branches: 7216/7711 (93.58060%).
+All three existing full reports are retained; Linux artifact name and Codecov behavior are preserved.
+No platform percentages are added or treated as newly achieved 100% coverage.
+Complete native/C#/linked-WASM coverage and all other unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged.
+
+author-fence-native-artifact-9ece2d1.log; SHA256 6e953f466830b2d67afc2983c578af59b7c5f4da00108bc58bbd2d7506129da5
+Run 40704188148; head 9ece2d163b0ad254c62093ad42be0b1ce579d872; created 2026-10-28T14:15:42Z; in_progress/
+Verified artifact 12823556797; 531204 bytes; SHA256 74bad3bd207c52bd463064e6167e3839ba2075e46095a31f50d5b1c19f13a683
+Preserved /tmp/gh-issue-solver-1793187246880/experiments/issue-138/coverage-40704188148-rust-coverage/coverage.lcov; 9743343 bytes; SHA256 35e7b4957df55398774b90566bfd28ad9f9209b083059a7b70b47210a8569e9c
+A retained artifact does not establish that an in-progress workflow has passed
+
+author-fence-native-coverage-9ece2d1.log; SHA256 f61fb01fd68e1f44f3590196bc32acb46e37e5db23a716571a730117dda812da
+Report: experiments/issue-138/coverage-40704188148-rust-coverage/coverage.lcov; bytes 9743343; SHA256 35e7b4957df55398774b90566bfd28ad9f9209b083059a7b70b47210a8569e9c
+Report scope is retained unchanged; focused execution is not a full-suite coverage claim
+Complete LCOV export totals: {"branches": {"count": 4500, "covered": 3971}, "functions": {"count": 2774, "covered": 2580}, "lines": {"count": 21277, "covered": 20305}}
+LCOV omits official LLVM regions/instantiations; selected counts are export evidence only
+Author guard lines: 216/217
+Author guard branches: 64/70
+Author guard functions: 22/22
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/check-author-fence-rust-coverage.py", line 61, in <module>
+    assert not missing, f'Uncovered author guard counters: {missing}'
+           ^^^^^^^^^^^
+AssertionError: Uncovered author guard counters: ['lines', 'branches']
+
+author-fence-wasm-artifact-9ece2d1.log; SHA256 8dc003a8a43027ac2df8cd079eb56d8aa40d9a7b011308131bf68b1bec5cbc0a
+Run 40704187898; head 9ece2d163b0ad254c62093ad42be0b1ce579d872; created 2026-10-28T14:15:41Z; completed/success
+Verified artifact 12823416646; 2641618 bytes; SHA256 9af8a0afe440ed903c1517429c4914b71a4ec27e5149ada6a850aff0df71edba
+Preserved /tmp/gh-issue-solver-1793187246880/experiments/issue-138/coverage-40704187898-wasm-coverage/wasm-coverage.json; 27493798 bytes; SHA256 0bb34a9eb79a12d1a047e6b8fe4e9f60d069cbb1780e71394802aed91d1ca4ef
+A retained artifact does not establish that an in-progress workflow has passed
+
+author-fence-wasm-coverage-9ece2d1.log; SHA256 8c09498173997b148d13d7e92015d4fbc3a96485ceac9d43edef27345dc69156
+Report: experiments/issue-138/coverage-40704187898-wasm-coverage/wasm-coverage.json; bytes 27493798; SHA256 0bb34a9eb79a12d1a047e6b8fe4e9f60d069cbb1780e71394802aed91d1ca4ef
+Report scope is retained unchanged; focused execution is not a full-suite coverage claim
+Complete instrumented production totals: {"branches": {"count": 3919, "covered": 3380, "notcovered": 539, "percent": 86.246491451901}, "functions": {"count": 2482, "covered": 2056, "percent": 82.83642224012893}, "instantiations": {"count": 9306, "covered": 5362, "percent": 57.618740597464}, "lines": {"count": 19163, "covered": 16619, "percent": 86.72441684496165}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 30098, "covered": 25531, "notcovered": 4567, "percent": 84.82623430128248}}
+Author guard lines: 216/217
+Author guard branches: 64/70
+Author guard functions: 22/22
+Author guard regions: 308/313
+Author guard instantiations: 22/38
+UNFINISHED: unexecuted LLVM instantiation entries remain in the report and acceptance inventory
+Traceback (most recent call last):
+  File "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/check-author-fence-rust-coverage.py", line 61, in <module>
+    assert not missing, f'Uncovered author guard counters: {missing}'
+           ^^^^^^^^^^^
+AssertionError: Uncovered author guard counters: ['lines', 'branches', 'regions']
+
+author-fence-followup-dependencies.log; SHA256 d507522804fdd2e8e757a643f09b2027ddf4e835b8a9856827a6600ffffb5844
+Checked 127 declared versions and the Cargo.lock files.
+
+Complete native LCOV and actual-WASM official JSON still show uncovered
+production sources. The new component checker independently rejects
+these pre-audit reports; those rejections are expected evidence, not
+failures of this older workflow. No denominator is removed.
+Later local source-counter improvements do not complete whole-project
+coverage or wider R1-R12 criteria. PR139 remains draft and unmerged.

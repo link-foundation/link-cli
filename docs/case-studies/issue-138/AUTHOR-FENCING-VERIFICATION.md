@@ -82,7 +82,7 @@ head also passes 819 actual-WASM tests, 717 JS tests and 2,630 C# tests per
 platform. Complete C# artifacts retain their digest-verified denominators:
 Linux 8,470/8,685 lines and 7,202/7,709 branches; Windows 8,456/8,685 and
 7,182/7,709; macOS 8,465/8,685 and 7,197/7,709. Later admission, physical
-handoff and coverage changes still require fresh exact-head CI. The
+handoff and coverage changes are verified by the later `9ece2d1` receipt below. The
 [initial CI receipt](../../../dev/log/issues/138/pulls/139/author-fence-ci.txt)
 retains raw log line references, artifact digests, the passing Rust Windows
 control and the separate dependency freshness failure.
@@ -94,9 +94,15 @@ handoffs now pass for plain and fully mirrored stores. They check complete
 retained claim snapshots, active-token retries, superseded reads/publications/
 retries, two-key updates and unchanged fence generations during data CAS.
 Every physical file hash is preserved by read-only reopening, including refused
-operations and read-only CAS. The fifty-handoff five-runtime matrix is wired to
-CI and remains pending. These clean-close controls are separate from abrupt
-exit and hardware power-loss verification.
+operations and read-only CAS. The fifty-handoff five-runtime matrix passes on
+`9ece2d1` in [JS CI](https://github.com/link-foundation/link-cli/actions/runs/40704187896).
+All nine workflows pass on that head, including 819 actual-WASM tests,
+718 JS tests and 2,637 C# tests on each platform. Every C# platform passes
+the strict 63/63-line, 124/124-branch author-guard gate. The
+[follow-up receipt](../../../dev/log/issues/138/pulls/139/author-fence-followup-ci.txt)
+retains raw line references, independently verified artifacts and complete
+production counters. Later process/Rust coverage changes require fresh CI.
+These clean-close controls are separate from abrupt exit and hardware power loss.
 
 The subsequent [process-exit plan](AUTHOR-FENCE-PROCESS-PLAN.md) extends the
 same recipes without production changes. Twelve focused exits pass across
