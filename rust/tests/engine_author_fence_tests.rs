@@ -238,6 +238,14 @@ fn malformed_admission_and_provider_snapshots_cannot_publish() {
             max_bytes: 0,
             ..Default::default()
         },
+        AuthorFenceOptions {
+            max_entries: 4097,
+            ..Default::default()
+        },
+        AuthorFenceOptions {
+            max_bytes: 1_048_577,
+            ..Default::default()
+        },
     ] {
         assert!(AuthorFence::new(s.clone(), "fence", A, options).is_err());
     }
@@ -289,6 +297,182 @@ fn malformed_admission_and_provider_snapshots_cannot_publish() {
     assert_eq!(stored(&s), before);
     assert_eq!(s.0.borrow().calls, calls);
     assert_eq!(fence(s.clone()).into_store().0.borrow().calls, calls);
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn finite_byte_budget_retains_the_current_owner_and_exact_retry() {
+    use link_cli::engine::author_fence::AuthorFenceOptions;
+    let s = Store::default();
+    let mut small = AuthorFence::new(
+        s.clone(),
+        "fence",
+        A,
+        AuthorFenceOptions {
+            max_bytes: 1,
+            require_durable_flush: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(small.claim(0, &token(10)).is_err());
+    assert!(stored(&s).is_empty());
+    assert_eq!(s.0.borrow().calls, 0);
+    let mut bounded = AuthorFence::new(
+        s.clone(),
+        "fence",
+        A,
+        AuthorFenceOptions {
+            max_bytes: 160,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let first = bounded.claim(0, &token(10)).unwrap();
+    let before = stored(&s);
+    assert!(bounded.claim(1, &token(20)).is_err());
+    assert_eq!(bounded.claim(0, &token(10)).unwrap(), first);
+    assert_eq!(bounded.snapshot().unwrap().claims, vec![first]);
+    assert_eq!(stored(&s), before);
+    assert_eq!(s.0.borrow().calls, 1);
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn unknown_claim_record_tag_cannot_publish_or_rewrite_provider_state() {
+    let s = Store::default();
+    s.0.borrow_mut().values.insert(
+        "fence".into(),
+        JournalVersion {
+            generation: 1,
+            entries: vec![
+                serde_json::to_string(&["author-fence1", A]).unwrap(),
+                serde_json::to_string(&["unknown-author1", &token(10), "1"]).unwrap(),
+            ],
+        },
+    );
+    let before = stored(&s);
+    assert!(matches!(
+        fence(s.clone()).snapshot(),
+        Err(LinkError::InvalidFormat(_))
+    ));
+    assert!(matches!(
+        fence(s.clone()).claim(0, &token(20)),
+        Err(LinkError::InvalidFormat(_))
+    ));
+    assert_eq!(stored(&s), before);
+    assert_eq!(s.0.borrow().calls, 0);
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn retained_active_claim_requires_its_original_full_width_predecessor() {
+    let s = Store::default();
+    let mut f = fence(s.clone());
+    let first = f.claim(0, &token(10)).unwrap();
+    let before = stored(&s);
+    for predecessor in [1, u64::MAX] {
+        assert!(f
+            .claim(predecessor, &token(10))
+            .unwrap_err()
+            .to_string()
+            .contains("fenced"));
+    }
+    assert_eq!(f.claim(0, &token(10)).unwrap(), first);
+    assert_eq!(stored(&s), before);
+    assert_eq!(s.0.borrow().calls, 1);
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn forged_and_absent_owners_have_no_publication_authority() {
+    use link_cli::engine::author_fence::AuthorClaim;
+    let s = Store::default();
+    assert!(fence(s.clone())
+        .bind(AuthorClaim {
+            author: token(99),
+            token: token(10),
+            epoch: 1
+        })
+        .is_err());
+    let mut absent = fence(s.clone())
+        .bind(AuthorClaim {
+            author: A.into(),
+            token: token(10),
+            epoch: 1,
+        })
+        .unwrap();
+    let keys = vec!["data".into()];
+    assert!(absent
+        .read(&keys)
+        .unwrap_err()
+        .to_string()
+        .contains("fenced"));
+    assert!(absent
+        .compare_exchange(
+            &keys,
+            &[JournalVersion::default()],
+            &[Some(vec!["bad".into()])]
+        )
+        .unwrap_err()
+        .to_string()
+        .contains("fenced"));
+    assert!(stored(&s).is_empty());
+    assert_eq!(s.0.borrow().calls, 0);
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn mismatched_expected_and_update_groups_never_reach_publication() {
+    let s = Store::default();
+    let first = fence(s.clone()).claim(0, &token(10)).unwrap();
+    let mut guarded = fence(s.clone()).bind(first).unwrap();
+    let keys = vec!["data".into()];
+    let before = stored(&s);
+    assert!(guarded
+        .compare_exchange(&keys, &[], &[Some(vec!["bad".into()])])
+        .is_err());
+    assert!(guarded
+        .compare_exchange(&keys, &[JournalVersion::default()], &[])
+        .is_err());
+    assert_eq!(stored(&s), before);
+    assert_eq!(s.0.borrow().calls, 1);
+}
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn provider_and_argument_failures_preserve_guarded_publication_state() {
+    use link_cli::engine::author_fence::AuthorClaim;
+    let s = Store::default();
+    assert!(fence(s.clone())
+        .bind(AuthorClaim {
+            author: A.into(),
+            token: "bad".into(),
+            epoch: 1,
+        })
+        .is_err());
+    let first = fence(s.clone()).claim(0, &token(10)).unwrap();
+    let mut guarded = fence(s.clone()).bind(first).unwrap();
+    let before = stored(&s);
+    for keys in [
+        vec![],
+        vec!["fence".into()],
+        vec!["x".into(), "x".into()],
+        (0..32).map(|i| format!("x{i}")).collect(),
+    ] {
+        assert!(guarded.compare_exchange(&keys, &[], &[]).is_err());
+    }
+    s.0.borrow_mut().read_error = true;
+    let keys = vec!["data".into()];
+    assert!(matches!(
+        guarded.read(&keys),
+        Err(LinkError::StorageError(_))
+    ));
+    assert!(matches!(
+        guarded.compare_exchange(&keys, &[JournalVersion::default()], &[None]),
+        Err(LinkError::StorageError(_))
+    ));
+    s.0.borrow_mut().read_error = false;
+    assert_eq!(
+        guarded.read(&keys).unwrap(),
+        vec![JournalVersion::default()]
+    );
+    assert_eq!(stored(&s), before);
+    assert_eq!(s.0.borrow().calls, 1);
 }
 #[cfg(all(feature = "causal-batches", feature = "address-reservations"))]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]

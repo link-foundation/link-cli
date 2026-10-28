@@ -55,6 +55,7 @@ for name, generation, entries in [
     ('wrong-author', 1, [wire(['author-fence1', T[0]])]),
     ('spaced-header', 1, [' ' + header]), ('missing-header', 1, [record(1)]),
     ('epoch-gap', 1, [header, record(2)]),
+    ('unknown-claim-tag', 1, [header, wire(['unknown-author1', T[0], '1'])]),
     ('duplicate-token', 2, [header, record(1), wire(['claim-author1', T[0], '2'])]),
     ('noncanonical-epoch', 1, [header, wire(['claim-author1', T[0], '01'])]),
     ('zero-token', 1, [header, wire(['claim-author1', '0'*32, '1'])]),

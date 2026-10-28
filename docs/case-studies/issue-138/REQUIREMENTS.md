@@ -13,6 +13,14 @@ to CI. AUTHOR-FENCE-PROCESS-PLAN.md records retained retries, preserved crash
 evidence and the separate ownership/data decisions. Bypass admission, membership/history
 reclamation and every wider unmet criterion remain unfinished.
 
+The selected Rust author guard now has thirteen portable contract tests and
+25 shared fixtures. The unchanged production source covers every official
+focused LLVM line, branch, function and region, while 22/38 instantiations
+remain an explicit gap. Native CI now preserves official JSON summaries with
+full LCOV, and both native/actual-WASM gates retain complete report totals.
+AUTHOR-FENCE-RUST-COVERAGE-PLAN.md records baseline rejection, error-path
+controls and the still-required fresh native/WASM evidence.
+
 # Acceptance inventory
 
 A selected permanent fresh-address allocator now supplies disjoint unsigned

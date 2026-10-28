@@ -30,6 +30,20 @@ strict component gate to the complete platform reports. The retained
 includes the initial rejection and complete focused-report denominators.
 Whole-project coverage remains below the acceptance target.
 
+The [Rust coverage audit](AUTHOR-FENCE-RUST-COVERAGE-PLAN.md) adds six portable
+public-contract cases and a shared unknown-tag fixture, without production
+changes. All thirteen native cases pass. After cleaning previous workspace
+coverage artifacts, the official focused LLVM file summary covers 217/217
+lines, 70/70 branches, 22/22 functions and 313/313 regions. Its 22/38
+instantiations remain an explicit acceptance gap. Complete focused report
+totals and initial rejections are retained in
+[native coverage evidence](../../../dev/log/issues/138/pulls/139/author-fence-rust-coverage.txt).
+Native CI now preserves official per-file/global JSON summaries alongside
+LCOV; both native and actual-WASM CI check the component's lines, branches,
+functions and regions. Instantiations remain reported without exclusions.
+The independent model now supplies 25 fixtures, consumed by all three ports.
+Fresh native/actual-WASM coverage is still required.
+
 Focused local checks pass seven Rust contracts, eight C# cases and nine tests
 on each of Node, Bun and Deno. Node's new
 production module covers every measured line, branch and function. The shared

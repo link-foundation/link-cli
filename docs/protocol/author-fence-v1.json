@@ -158,6 +158,19 @@
       "claims": []
     },
     {
+      "name": "unknown-claim-tag",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"unknown-author1\",\"00000000000000000000000000000002\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
       "name": "duplicate-token",
       "journal": {
         "generation": "2",

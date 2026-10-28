@@ -65,3 +65,12 @@ assembly; their whole-project denominators and report hashes are retained in
 [author-fence-coverage.txt](../../../dev/log/issues/138/pulls/139/author-fence-coverage.txt).
 CI checks the component against each complete platform test report. This
 component result does not complete the whole-project 100% criterion.
+
+Native CI now retains official LLVM per-file/global JSON summaries alongside
+its complete LCOV export. `check-author-fence-rust-coverage.py` prints their
+complete totals and checks the author guard's source lines, branches, functions
+and regions. It reports instantiations separately: the final focused audit
+still has 22/38, despite complete source counters. Those entries stay in the
+report and remain an unfinished acceptance criterion. Actual-WASM CI uses the
+same gate against its existing complete LLVM JSON artifact. A passing source
+counter gate does not establish complete instantiation coverage.

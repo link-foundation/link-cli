@@ -147,7 +147,11 @@ jobs:
       - name: Measure actual WebAssembly tests
         run: bash experiments/issue-138/wasm-coverage.sh
 
+      - name: Check linked author guard coverage
+        run: python3 experiments/issue-138/check-author-fence-rust-coverage.py experiments/issue-138/wasm-coverage.json
+
       - name: Preserve WASM coverage report
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: wasm-coverage

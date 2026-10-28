@@ -336,13 +336,21 @@ jobs:
         # option to this measurement; normal builds still use stable Rust.
         env:
           RUSTC_BOOTSTRAP: '1'
-        run: cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --branch --lcov --output-path rust/coverage.lcov
+        run: |
+          cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --branch --lcov --output-path rust/coverage.lcov
+          cargo llvm-cov report --manifest-path rust/Cargo.toml --branch --json --summary-only --output-path rust/coverage-summary.json
+
+      - name: Check author guard coverage
+        run: python3 experiments/issue-138/check-author-fence-rust-coverage.py rust/coverage-summary.json
 
       - name: Preserve coverage report
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: rust-coverage
-          path: rust/coverage.lcov
+          path: |
+            rust/coverage.lcov
+            rust/coverage-summary.json
           if-no-files-found: error
 
   # === SEMANTIC MERGE CONFLICT CHECK ===
