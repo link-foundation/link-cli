@@ -25,6 +25,10 @@
   "main": "./src/index.js",
   "types": "./types/index.d.ts",
   "exports": {
+    "./engine-address-allocator": {
+      "types": "./types/engine-address-allocator.d.ts",
+      "default": "./src/engine-address-allocator.js"
+    },
     ".": {
       "types": "./types/index.d.ts",
       "default": "./src/index.js"

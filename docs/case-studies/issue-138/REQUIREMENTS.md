@@ -1,5 +1,17 @@
 # Acceptance inventory
 
+A selected permanent fresh-address allocator now supplies disjoint unsigned
+64-bit blocks through one immutable domain and linearizable coordinator key.
+Exact author/token/count retries retain their original grant after lost replies,
+following writers and exhaustion; abandoned blocks are never recycled. Shared
+53-fixture replay/admission checks and the independent 5,832-schedule model pass
+in Rust, C# and Node/Bun/Deno. Two focused physical handoffs and four reaped Node
+exit/retry sequences pass locally. ADDRESS-ALLOCATION-VERIFICATION.md maps the
+R4/R6/R7/R9/R11 component to tests and costs. Full actual-WASM, five-runtime and
+real-etcd CI remain required. Author lineage fencing, foreign writes, safe
+membership/history reclamation, receipt pruning and multi-catalog atomicity
+remain unfinished; this service does not complete the broader global criteria.
+
 Legacy query allocation previews now reproduce the actual Rust recycling
 allocator instead of probing before explicit/named allocations and merges.
 Four baseline regressions fail before the fix; nine focused native cases now

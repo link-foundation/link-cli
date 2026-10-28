@@ -1,4 +1,8 @@
 using Foundation.Data.Doublets.Cli.Engine;
+if (args is ["--reserve-addresses", var allocationEndpoints, var allocationPrefix, var allocationAuthor, var allocationToken, var allocationCount])
+{ AddressAllocationInterop.Etcd(allocationEndpoints, allocationPrefix, allocationAuthor, allocationToken, allocationCount); return; }
+if (args is ["--native-lsm-allocation", var allocationAction, var allocationDirectory, var allocationMirrors])
+{ AddressAllocationInterop.Run(allocationAction, allocationDirectory, allocationMirrors); return; }
 if (args is ["--native-lsm-session", var sessionAction, var sessionDirectory, var sessionMirrors]) { CausalSessionInterop.Run(sessionAction, sessionDirectory, sessionMirrors); return; }
 
 if (args is ["--native-lsm-batch", var batchAction, var batchDirectory, var batchMirrors]) { CausalBatchInterop.Run(batchAction, batchDirectory, batchMirrors); return; }

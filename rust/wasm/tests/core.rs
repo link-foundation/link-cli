@@ -2,6 +2,10 @@
 //! Native filesystem, threads and panic-unwind probes retain their native tests.
 #![cfg(target_arch = "wasm32")]
 
+#[cfg(feature = "address-reservations")]
+#[path = "../../tests/engine_address_allocator_tests.rs"]
+mod address_allocator;
+
 #[path = "../../tests/engine_causal_merkle_tests.rs"]
 mod causal_merkle;
 

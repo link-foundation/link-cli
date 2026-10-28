@@ -38,7 +38,12 @@ the actual Rust WASM workspace and publishes one explicit-token local batch.
 Its `tx.client()` exposes the standard BigInt links/query API, preserving
 original query reference kinds until explicit preparation transfers ownership.
 See [reservations, lifecycle, physical examples and costs](../../docs/ENGINE-CAUSAL-SESSIONS.md).
-Matching C# query support and safe reclamation remain in progress.
+Rust and C# expose matching selected query adapters; safe causal history
+reclamation remains in progress.
+The separately selected `./engine-address-allocator` reserves permanent fresh
+blocks through one coherent atomic coordinator key. Exact author/token/count
+retries retain their original range after lost replies and later grants. See
+[canonical journals, session selection, budgets and costs](../../docs/protocol/address-reservations-v1.md).
 
 ## Use
 
@@ -362,5 +367,5 @@ mirrors. It validates existing selected state read-only before recovery effects
 and holds an exclusive outer owner until all child handles close. Its finite
 physical bounds, stale-fence recovery and platform durability limits are in the
 [native directory contract](../../docs/protocol/native-lsm-store.md#javascript-native-directory-selection).
-Native Rust/C# facade parity and whole-store physical file interchange remain
-unfinished.
+The [native facade examples](../../examples/native-lsm-js/README.md) exercise
+Rust/C# and Node/Bun/Deno whole-store physical interchange in CI.

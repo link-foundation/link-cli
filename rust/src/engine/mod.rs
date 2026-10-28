@@ -4,6 +4,8 @@
 //! Unlike the legacy undo decorator, no underlying mapped data is modified
 //! while a transaction is open. A checksummed logical revision is flushed
 //! before it becomes visible. The log is the authoritative storage.
+#[cfg(feature = "address-reservations")]
+pub mod address_allocator;
 #[cfg(test)]
 mod boundary_tests;
 mod branch;

@@ -214,6 +214,11 @@ jobs:
           python3 ../../experiments/issue-138/generate-causal-batch-vectors.py ../../experiments/issue-138/causal-batch-regenerated.json
           cmp ../../docs/protocol/causal-batch-v1.json ../../experiments/issue-138/causal-batch-regenerated.json
 
+      - name: Verify independent permanent address allocation model and vectors
+        run: |
+          python3 ../../experiments/issue-138/address-allocation-model.py ../../experiments/issue-138/address-reservations-regenerated.json
+          cmp ../../docs/protocol/address-reservations-v1.json ../../experiments/issue-138/address-reservations-regenerated.json
+
       - name: Verify independent causal projection model and vectors
         run: |
           python3 ../../experiments/issue-138/causal-projection-model.py --vectors ../../experiments/issue-138/causal-projection-regenerated.json
@@ -288,8 +293,8 @@ jobs:
 
       - name: Portable causal versions, local ownership and Merkle proofs on Bun and Deno
         run: |
-          bun test js/client/test/engine-causal-*.test.mjs --timeout 30000
-          deno test --allow-all js/client/test/engine-causal-*.test.mjs
+          bun test js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs
 
       - name: Verify immutable journal chunks in Bun and Deno
         run: |
@@ -309,7 +314,7 @@ jobs:
             ${{ runner.os }}-js-client-cargo-
 
       - name: Build the Rust server
-        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd --bin clink --example cluster --example journal_maintenance --example journal_reclamation
+        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd,address-reservations --bin clink --example cluster --example address_allocation --example journal_maintenance --example journal_reclamation
 
       - name: Build the C# server
         run: dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
@@ -346,7 +351,7 @@ jobs:
         env:
           RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
         run: |
-          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle,causal-batches,causal-sessions --example native_lsm
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle,causal-batches,causal-sessions,address-reservations --example native_lsm
           python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=reclaiming-chunks python3 examples/native-lsm-js/run-interop.py
@@ -356,6 +361,8 @@ jobs:
           NATIVE_CAUSAL_LAYOUT='batch' python3 examples/native-lsm-js/run-causal-faults.py
           NATIVE_LSM_LAYOUT='session' python3 examples/native-lsm-js/run-interop.py
           NATIVE_CAUSAL_LAYOUT='session' python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_LSM_LAYOUT='allocation' python3 examples/native-lsm-js/run-interop.py
+          NATIVE_CAUSAL_LAYOUT='allocation' python3 examples/native-lsm-js/run-causal-faults.py
           python3 examples/native-lsm-js/run-merkle-interop.py
 
       - name: Verify actual consensus and language interoperability
@@ -366,6 +373,7 @@ jobs:
           RECLAMATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_reclamation
           RECLAMATION_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-reclamation-csharp/bin/Release/net10.0/JournalReclamationExample.dll
           CLUSTER_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/cluster
+          ALLOCATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/address_allocation
           CLUSTER_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
         run: |
           mkdir -p experiments/issue-138/etcd

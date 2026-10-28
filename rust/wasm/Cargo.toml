@@ -40,7 +40,8 @@ features = [
 ]
 
 [features]
-default = ["console_error_panic_hook", "sorted-tables", "physical-lsm", "causal", "causal-merkle", "causal-batches", "causal-projection", "causal-sessions"]
+default = ["console_error_panic_hook", "sorted-tables", "physical-lsm", "causal", "causal-merkle", "causal-batches", "causal-projection", "causal-sessions", "address-reservations"]
+address-reservations = ["link-cli/address-reservations"]
 causal = ["link-cli/causal"]
 causal-batches = ["causal", "link-cli/causal-batches"]
 causal-sessions = ["causal-batches", "causal-projection", "link-cli/causal-sessions"]

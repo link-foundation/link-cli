@@ -1,5 +1,11 @@
 # Ordinary mutable causal sessions
 
+The optional [permanent address allocator](protocol/address-reservations-v1.md)
+can supply fresh ranges through a shared atomic coordinator. Keep each grant
+under one allocating owner, retain exact retry requests after uncertain I/O,
+and fence author lineages separately. Existing caller-reserved ranges remain
+supported without selecting the service.
+
 The selected session stages ordinary links and names in the existing private
 memory engine, then publishes its complete final difference with one local
 `CausalBatch`. Rust selects `causal-sessions`; C# exposes `CausalSession` over

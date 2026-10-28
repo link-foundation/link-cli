@@ -1,0 +1,286 @@
+Selected permanent address allocations; base 5cc37328586f36fb4ea6adb7d842cfc8412e1681.
+Local focused checks, 2026-10-28 UTC. Complete suites remain in CI.
+Display trims trailing whitespace; digests identify original raw logs.
+Commands and limits: experiments/issue-138/run-address-allocation-checks.sh;
+experiments/issue-138/address-allocation-native.py; node-only run-causal-faults.py.
+JS missing-module baseline records the absent new API, not an allocator bug.
+Combined first checks contain seven JS cases; following JS logs add the
+reproduced malformed-reply regression and a canonical-terminator control;
+the final nine cases finish at 100% coverage.
+
+--- address-allocation-before.log SHA256 2a6d9c2162859e02782a7512fe653edffe7c189c43a9aa0265a510eb010e6d98 ---
+node:internal/modules/esm/resolve:241
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/gh-issue-solver-1793187246880/js/client/src/engine-address-allocator.js' imported from /tmp/gh-issue-solver-1793187246880/js/client/test/engine-address-allocator.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:241:11)
+    at moduleResolve (node:internal/modules/esm/resolve:846:10)
+    at defaultResolve (node:internal/modules/esm/resolve:973:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///tmp/gh-issue-solver-1793187246880/js/client/src/engine-address-allocator.js'
+}
+
+Node.js v26.12.1
+✖ js/client/test/engine-address-allocator.test.mjs (90.832184ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.856811
+
+✖ failing tests:
+
+test at js/client/test/engine-address-allocator.test.mjs:1:1
+✖ js/client/test/engine-address-allocator.test.mjs (90.832184ms)
+  'test failed'
+
+--- address-allocation-model.log SHA256 21ba13f917720c55d62fe8050b3f400b80a25dcfff66a8c787c5e341431c6cdb ---
+PASS 5832 independent finite schedules, 6 complete two-writer interleavings; 53 canonical/admission fixtures
+
+--- address-allocation-focused.log SHA256 0c8dba4ba8e0cc78744bf4dbf3ac244814daba30c99cc37cf990a0d3c0d45fb5 ---
+PASS 5832 independent finite schedules, 6 complete two-writer interleavings; 53 canonical/admission fixtures
+✔ independent canonical journal and admission vectors preserve provider bytes (16.593009ms)
+✔ exact author/token/count retries survive uncertain replies and following grants (3.433227ms)
+✔ same-base races grant one range and explicit retry grants a disjoint next range (1.866026ms)
+✔ full-width unsigned domains stop at their last value and never cycle (0.919714ms)
+✔ finite entry/byte budgets still permit retained retries without appending (0.991928ms)
+✔ bad domains, providers and options reject before provider access (1.349465ms)
+✔ bad requests and incoherent provider replies cannot publish (1.993294ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 211.400401
+ℹ start of coverage report
+ℹ -------------------------------------------------------------------------------
+ℹ file                           | line % | branch % | funcs % | uncovered lines
+ℹ -------------------------------------------------------------------------------
+ℹ js                             |        |          |         |
+ℹ  client                        |        |          |         |
+ℹ   src                          |        |          |         |
+ℹ    engine-address-allocator.js | 100.00 |   100.00 |  100.00 |
+ℹ -------------------------------------------------------------------------------
+ℹ all files                      | 100.00 |   100.00 |  100.00 |
+ℹ -------------------------------------------------------------------------------
+ℹ end of coverage report
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `test` profile [unoptimized] target(s) in 12.96s
+     Running tests/engine_address_allocator_tests.rs (rust/target/debug/deps/engine_address_allocator_tests-fea91cd4dd007b68)
+
+running 6 tests
+test bad_configuration_requests_and_provider_frames_cannot_publish ... ok
+test exact_retry_survives_uncertain_replies_and_following_grants ... ok
+test finite_admission_allows_old_retries_without_publishing ... ok
+test full_unsigned_width_exhaustion_does_not_cycle_or_recycle ... ok
+test independent_canonical_journal_and_admission_vectors_preserve_bytes ... ok
+test same_base_race_conflicts_then_explicit_retry_gets_disjoint_range ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 111 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+--- address-allocation-response-before.log SHA256 1e22972b0a491280dcddf12dc2e2e91948351dad39585a5e7c696c259787fa40 ---
+✖ only an explicit true publication reply can acknowledge a new grant (4.176999ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166.483006
+
+✖ failing tests:
+
+test at js/client/test/engine-address-allocator.test.mjs:75:1
+✖ only an explicit true publication reply can acknowledge a new grant (4.176999ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793187246880/js/client/test/engine-address-allocator.test.mjs:79:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+--- address-allocation-js.log SHA256 1ac668f4d01df4de671a3a7d3e4b5a28ea9a390c2cdac449f8b53273c5ea48b5 ---
+✔ independent canonical journal and admission vectors preserve provider bytes (13.501551ms)
+✔ exact author/token/count retries survive uncertain replies and following grants (2.658238ms)
+✔ same-base races grant one range and explicit retry grants a disjoint next range (1.782305ms)
+✔ only an explicit true publication reply can acknowledge a new grant (0.996578ms)
+✔ full-width unsigned domains stop at their last value and never cycle (0.752934ms)
+✔ finite entry/byte budgets still permit retained retries without appending (0.884019ms)
+✔ bad domains, providers and options reject before provider access (1.159803ms)
+✔ bad requests and incoherent provider replies cannot publish (1.717754ms)
+✔ canonical fields reject every trailing line terminator before publication (2.05906ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 222.028098
+ℹ start of coverage report
+ℹ -------------------------------------------------------------------------------
+ℹ file                           | line % | branch % | funcs % | uncovered lines
+ℹ -------------------------------------------------------------------------------
+ℹ js                             |        |          |         |
+ℹ  client                        |        |          |         |
+ℹ   src                          |        |          |         |
+ℹ    engine-address-allocator.js | 100.00 |   100.00 |  100.00 |
+ℹ -------------------------------------------------------------------------------
+ℹ all files                      | 100.00 |   100.00 |  100.00 |
+ℹ -------------------------------------------------------------------------------
+ℹ end of coverage report
+
+--- address-allocation-bun.log SHA256 f433b2aee4799baf150687860677a61989304be1dc1dd77da7c9d6711c95af57 ---
+bun test v1.4.4 (38afee6c8)
+
+js/client/test/engine-address-allocator.test.mjs:
+(pass) independent canonical journal and admission vectors preserve provider bytes [14.63ms]
+(pass) exact author/token/count retries survive uncertain replies and following grants [2.93ms]
+(pass) same-base races grant one range and explicit retry grants a disjoint next range [1.37ms]
+(pass) only an explicit true publication reply can acknowledge a new grant [0.73ms]
+(pass) full-width unsigned domains stop at their last value and never cycle [0.56ms]
+(pass) finite entry/byte budgets still permit retained retries without appending [0.66ms]
+(pass) bad domains, providers and options reject before provider access [0.76ms]
+(pass) bad requests and incoherent provider replies cannot publish [0.88ms]
+(pass) canonical fields reject every trailing line terminator before publication [1.77ms]
+
+ 9 pass
+ 0 fail
+Ran 9 tests across 1 file. [91.00ms]
+
+--- address-allocation-deno.log SHA256 483d646e703b05614be14f1924d23d93c6236c4410786f640bbcb903c3cabcea ---
+running 9 tests from ./js/client/test/engine-address-allocator.test.mjs
+independent canonical journal and admission vectors preserve provider bytes ... ok (8ms)
+exact author/token/count retries survive uncertain replies and following grants ... ok (3ms)
+same-base races grant one range and explicit retry grants a disjoint next range ... ok (1ms)
+only an explicit true publication reply can acknowledge a new grant ... ok (927µs)
+full-width unsigned domains stop at their last value and never cycle ... ok (654µs)
+finite entry/byte budgets still permit retained retries without appending ... ok (604µs)
+bad domains, providers and options reject before provider access ... ok (3ms)
+bad requests and incoherent provider replies cannot publish ... ok (1ms)
+canonical fields reject every trailing line terminator before publication ... ok (1ms)
+
+ok | 9 passed | 0 failed (44ms)
+
+
+--- address-allocation-types.log SHA256 3554b7d6a856e07299c8d63ae39972733b00bb563bb11df6511cb11dc2fb9a1a ---
+
+> @link-foundation/link-cli-client@0.2.0 typecheck
+> tsc --noEmit --strict --lib esnext,dom --target esnext --module nodenext types/*.d.ts test/types.ts
+
+
+--- address-allocation-native.log SHA256 3fa2b9c5742e946688bc78cde6dda9ab0f9bccc933933b9c30eeda6ca7036de7 ---
+PASS Rust address allocation native LSM write plain
+PASS C# address allocation native LSM read plain
+PASS JS address allocation native LSM mutate plain
+PASS Rust address allocation native LSM read-advanced plain
+PASS C# address allocation native LSM read-advanced plain
+PASS plain Rust -> C# -> Node -> Rust/C# with unchanged retained-retry hashes
+PASS Rust address allocation native LSM write mirrored
+PASS C# address allocation native LSM read mirrored
+PASS JS address allocation native LSM mutate mirrored
+PASS Rust address allocation native LSM read-advanced mirrored
+PASS C# address allocation native LSM read-advanced mirrored
+PASS mirrored Rust -> C# -> Node -> Rust/C# with unchanged retained-retry hashes
+PASS 2 focused complete-store allocation handoffs
+
+--- address-allocation-exits.log SHA256 e465f699094860f463c09210563fa8e21b88ca2fa4f83629234055638201c96c ---
+PASS JS address allocation native LSM write plain
+PASS JS address allocation native LSM blocked plain
+PASS JS address allocation native LSM read plain
+PASS JS address allocation native LSM retry-before plain
+PASS JS address allocation native LSM following plain
+PASS JS address allocation native LSM read-following plain
+PASS allocation plain node exit-before -> node retry/following -> node
+PASS JS address allocation native LSM blocked plain
+PASS JS address allocation native LSM read-advanced plain
+PASS JS address allocation native LSM retry-after plain
+PASS JS address allocation native LSM following plain
+PASS JS address allocation native LSM read-following plain
+PASS allocation plain node exit-after -> node retry/following -> node
+PASS JS address allocation native LSM write mirrored
+PASS JS address allocation native LSM blocked mirrored
+PASS JS address allocation native LSM read mirrored
+PASS JS address allocation native LSM retry-before mirrored
+PASS JS address allocation native LSM following mirrored
+PASS JS address allocation native LSM read-following mirrored
+PASS allocation mirrored node exit-before -> node retry/following -> node
+PASS JS address allocation native LSM blocked mirrored
+PASS JS address allocation native LSM read-advanced mirrored
+PASS JS address allocation native LSM retry-after mirrored
+PASS JS address allocation native LSM following mirrored
+PASS JS address allocation native LSM read-following mirrored
+PASS allocation mirrored node exit-after -> node retry/following -> node
+PASS 4 reaped process exits; 4 cross-runtime retry/reopen/following checks
+Process exits establish application-crash recovery after explicit operator marker recovery, not hardware power-loss certification.
+
+--- address-allocation-clippy.log SHA256 a28649c21503ae9eda405aa16a7c3663e4af7e7c0c93090b1fffd06ed10c7f90 ---
+    Checking zeroize v1.9.1
+    Checking rustls-pki-types v1.15.1
+    Checking getrandom v0.2.17
+    Checking untrusted v0.9.0
+    Checking ring v0.17.14
+    Checking bytes v1.12.1
+    Checking log v0.4.34
+    Checking simd-adler32 v0.3.10
+    Checking adler2 v2.0.1
+    Checking miniz_oxide v0.9.1
+    Checking http v1.5.0
+    Checking httparse v1.10.1
+    Checking rustls-webpki v0.103.16
+    Checking crc32fast v1.5.3
+    Checking base64 v0.23.1
+    Checking subtle v2.6.1
+    Checking rustls v0.23.46
+    Checking ureq-proto v0.6.5
+    Checking flate2 v1.1.10
+    Checking webpki-roots v1.0.11
+    Checking percent-encoding v2.3.2
+    Checking utf8-zero v0.8.1
+    Checking ureq v3.5.0
+    Checking errno v0.3.14
+    Checking link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `dev` profile [unoptimized] target(s) in 18.39s
+
+--- address-allocation-format-verified.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- address-allocation-gates.log SHA256 3a17581af2251416270859d0d1e8c5653f9d5e750d946fb583ec96256e0b3cf9 ---
+GATES PASS 2026-10-28T13:03:22Z
+
+Repository gate initially rejected the local root ci-logs directory (220/221 passed).
+Logs moved to experiments/issue-138/ci-logs; rerun passes 221/221, no policy changes.
+Rust run 40684594422 on cbddc13 was superseded after 5cc3732 triggered its successor.
+Its raw log is experiments/issue-138/ci-logs/rust-40684594422.log.
+Line 35392: Windows Run tests, 2026-10-28T12:37:34.9302211Z: The operation was canceled.
+Other completed Rust jobs passed; this cancellation is not a passing Windows result.

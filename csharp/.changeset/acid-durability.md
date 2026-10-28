@@ -2,6 +2,11 @@
 'Foundation.Data.Doublets.Cli': minor
 ---
 
+Select permanent fresh-address ranges through one linearizable atomic journal
+key. Retain exact author/token/count receipts across lost replies and following
+grants; refuse token collisions, exhausted domains and finite admission before
+publication. Preserve caller-owned providers and existing manual reservations.
+
 Select immutable sorted runs independently of concurrency, isolation, validation,
 retention and journal encoding. Share immutable run arrays between revisions,
 preserve tombstones through merges and retain the existing links/session API.

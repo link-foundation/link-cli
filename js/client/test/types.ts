@@ -34,6 +34,17 @@ import { connectProcess } from '../types/process.js';
 import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
 import { CausalReplica, type CausalSnapshot } from '../types/engine-causal-replica.js';
 import { CausalBatch, type CausalBatchSnapshot } from '../types/engine-causal-batch.js';
+import { AddressAllocator, type AddressAllocationSnapshot, type AddressReservation } from '../types/engine-address-allocator.js';
+async function addressAllocatorTypes(store: import('../types/index.js').AtomicJournalStoreProvider) {
+  const owner = new AddressAllocator(store, 'addresses', '1', '18446744073709551615', { requireDurableFlush: true });
+  const snapshot: AddressAllocationSnapshot = await owner.snapshot();
+  const grant: AddressReservation = await owner.reserve('00000000000000000000000000000001', '00000000000000000000000000000002', '64');
+  // @ts-expect-error Domain bounds preserve the full unsigned range.
+  new AddressAllocator(store, 'addresses', 1, 100);
+  // @ts-expect-error Reservation widths preserve the full unsigned range.
+  await owner.reserve(grant.author, grant.token, 64);
+  return [snapshot.next, grant];
+}
 import { CausalMerkleSnapshot, pullCausal, CausalPullCursor, type CausalPullProgress } from '../types/engine-causal-merkle.js';
 async function causalBatchTypes(store: import('../types/index.js').AtomicJournalStoreProvider) {
   const batch = new CausalBatch(store, 'replica', 'batches', '00000000000000000000000000000001');

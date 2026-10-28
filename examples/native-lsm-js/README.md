@@ -101,3 +101,21 @@ removes its own temporary directory. See the
 [projection guarantees and costs](../../docs/ENGINE-CAUSAL-PROJECTION.md).
 The example selects required durable flush and therefore needs a platform where
 the physical provider advertises that capability.
+
+The selected permanent address allocator uses the same physical stores without
+requiring a causal journal or an SQL layer. After building Rust's `native_lsm`
+with `native-pages,physical-lsm,address-reservations` and the C# cluster example,
+run `NATIVE_LSM_LAYOUT=allocation python3 examples/native-lsm-js/run-interop.py`
+for the full five-runtime matrix. The `allocation-interop.mjs` recipe retains
+exact author/token/count grants after following allocations and rejects changed
+domains or token collisions. `NATIVE_CAUSAL_LAYOUT=allocation python3
+examples/native-lsm-js/run-causal-faults.py` exercises finite process exits with
+explicit marker recovery after reaping. Local focused verification uses
+`python3 experiments/issue-138/address-allocation-native.py`.
+
+The [allocation protocol](../../docs/protocol/address-reservations-v1.md)
+explains immutable domain migration, ordinary causal workspace selection,
+permanent abandoned gaps, finite receipts and the shared coordinator cost.
+The real-etcd harness also runs `allocation-consensus.mjs` with actual WASM
+creates and native Rust/C# grants. Author lineage fencing and causal history
+reclamation remain separate requirements.

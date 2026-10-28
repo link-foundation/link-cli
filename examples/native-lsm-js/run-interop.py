@@ -20,7 +20,7 @@ RUNTIMES = {
 if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
     RUNTIMES = {name: RUNTIMES[name] for name in selected.split(",")}
 LAYOUT = os.environ.get("NATIVE_LSM_LAYOUT", "whole")
-assert LAYOUT in ("whole", "chunks", "reclaiming-chunks", "causal", "batch", "session")
+assert LAYOUT in ("whole", "chunks", "reclaiming-chunks", "causal", "batch", "session", "allocation")
 if LAYOUT != "whole":
     for name, command in RUNTIMES.items():
         if name == "rust":
@@ -28,7 +28,7 @@ if LAYOUT != "whole":
         elif name == "csharp":
             command[-1] = "--native-lsm-" + LAYOUT
         else:
-            command[-1] = f"examples/native-lsm-js/{LAYOUT if LAYOUT in ('causal', 'batch', 'session') else 'chunks'}-interop.mjs"
+            command[-1] = f"examples/native-lsm-js/{LAYOUT if LAYOUT in ('causal', 'batch', 'session', 'allocation') else 'chunks'}-interop.mjs"
 
 
 def snapshot(directory):
