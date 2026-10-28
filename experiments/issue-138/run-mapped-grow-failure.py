@@ -11,7 +11,8 @@ from pathlib import Path
 base = Path(__file__).resolve().parent
 binary = Path(os.environ.get("LINK_MAPPED_GROWTH_PROBE", str(base / "mapped-grow-failure/target/debug/mapped-grow-failure-probe")))
 expect_retained = sys.argv[1:] == ["--expect-retained"]
-assert not sys.argv[1:] or expect_retained
+generic = sys.argv[1:] == ["--generic-repro"]
+assert not sys.argv[1:] or expect_retained or generic
 if sys.platform != "linux":
     raise SystemExit("This experiment requires Linux RLIMIT_FSIZE semantics")
 
@@ -26,7 +27,9 @@ def limits():
 
 
 with tempfile.TemporaryDirectory(prefix="mapped-growth-", dir=base) as directory:
-    for mode in ("within-quota", "rejected-growth"):
+    modes = (("generic-within-quota", "generic-rejected-growth") if generic
+             else ("within-quota", "rejected-growth"))
+    for mode in modes:
         # This is a test-child deadline, not a compiler or tool-command timeout.
         child = subprocess.Popen(
             [str(binary), mode, str(Path(directory) / mode)],
@@ -41,8 +44,13 @@ with tempfile.TemporaryDirectory(prefix="mapped-growth-", dir=base) as directory
             raise
         print(f"{mode}: exit={child.returncode}\n{stdout}{stderr}", flush=True)
         assert len(stdout) + len(stderr) < 4096
-        if mode == "within-quota":
-            assert child.returncode == 0 and "PASS finite growth" in stdout
+        if mode.endswith("within-quota"):
+            expected = "PASS finite generic growth" if generic else "PASS finite growth"
+            assert child.returncode == 0 and expected in stdout
+        elif generic:
+            assert "REJECTED generic growth:" in stderr
+            assert "REJECTED stale generic flush descriptor" in stderr
+            assert child.returncode in (-signal.SIGSEGV, -signal.SIGBUS), child.returncode
         else:
             assert "REJECTED growth:" in stderr and "retained length=32" in stderr
             if expect_retained:
@@ -51,4 +59,7 @@ with tempfile.TemporaryDirectory(prefix="mapped-growth-", dir=base) as directory
             else:
                 assert "REJECTED stale flush descriptor" in stderr
                 assert child.returncode in (-signal.SIGSEGV, -signal.SIGBUS), child.returncode
-print(("PASS rejected growth preserves the retained allocation" if expect_retained else "REPRODUCED upstream rejected growth leaves the retained allocation unreadable") + "; all children reaped")
+result = ("REPRODUCED destructor-bearing rejected growth leaves the public allocation unreadable"
+          if generic else "PASS rejected growth preserves the retained allocation"
+          if expect_retained else "REPRODUCED upstream rejected growth leaves the retained allocation unreadable")
+print(result + "; all children reaped")

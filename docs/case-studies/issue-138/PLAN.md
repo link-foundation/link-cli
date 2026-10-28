@@ -1,5 +1,12 @@
 # Issue 138 work plan
 
+Current local validation follows the later maintainer instruction: targeted
+tests and bounded builds locally, complete suites in CI. The literal-query
+audit is committed as `9ebdcbf`: eleven native, twelve actual-WASM and 24
+related native contracts pass. DOUBLETS-PORTABLE-PLAN.md tracks its pending
+publication and fresh CI. Earlier plans and measurements below retain their
+historical scope; they do not verify later commits or complete R1–R12.
+
 The objective is every requirement of issue 138, in PR 139. No issue comments,
 PR comments/reviews, or required sub-issues existed at initial inventory.
 The issue asks for an open-ended set of competitor strategies; coverage and
@@ -25,7 +32,7 @@ finite test suite proves all failure modes or that all DBMS have been surveyed.
 - [ ] Document cache, durable store, and distributed deployment recipes, examples,
       competitor comparisons, component reuse, and exact guarantee limits.
 - [ ] Measure coverage, add missing edge cases, distinguish measured coverage from guarantees.
-- [ ] Run focused tests then all available local suites, formatting/lint/type checks.
+- [ ] Run focused local tests and formatting/lint/type checks, with complete suites in CI.
 - [ ] Add release fragments/changesets; commit independently useful steps after checks.
 - [ ] Fetch/merge latest main; push only issue-138-adc2aa56c4cb.
 - [ ] Update PR title/body with reproduction, tests, evidence, limits, and Fixes #138.
