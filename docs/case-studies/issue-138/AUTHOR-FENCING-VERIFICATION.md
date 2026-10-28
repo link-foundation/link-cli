@@ -39,6 +39,17 @@ using actual-WASM staging, public Rust/C# claim CLIs, stale prepared publication
 burned reservation suffixes and continued author counters. **That new real-etcd
 scenario, full actual-WASM execution and fresh platform CI remain pending.**
 
+The [physical handoff plan](AUTHOR-FENCE-PHYSICAL-PLAN.md) extends verification
+through actual SQL-free native stores. Its missing-recipe baseline fails before
+the optional Rust subcommand exists. Two focused Rust -> C# -> Node -> Rust/C#
+handoffs now pass for plain and fully mirrored stores. They check complete
+retained claim snapshots, active-token retries, superseded reads/publications/
+retries, two-key updates and unchanged fence generations during data CAS.
+Every physical file hash is preserved by read-only reopening, including refused
+operations and read-only CAS. The fifty-handoff five-runtime matrix is wired to
+CI and remains pending. These clean-close controls are separate from abrupt
+exit and hardware power-loss verification.
+
 The guard requires all writers for one author to share a reserved ownership
 key and uniquely owned active token. Its coherent provider includes the fence
 comparison in the same data CAS. It does not prevent bypass writes or multiple

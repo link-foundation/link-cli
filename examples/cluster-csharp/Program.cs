@@ -1,4 +1,6 @@
 using Foundation.Data.Doublets.Cli.Engine;
+if (args is ["--native-lsm-fence", var fenceAction, var fenceDirectory, var fenceMirrors])
+{ AuthorFencePhysical.Run(fenceAction, fenceDirectory, fenceMirrors); return; }
 if (args is ["--claim-author", .. var fenceArgs]) { AuthorFenceInterop.Etcd(fenceArgs); return; }
 if (args is ["--reserve-addresses", var allocationEndpoints, var allocationPrefix, var allocationAuthor, var allocationToken, var allocationCount])
 { AddressAllocationInterop.Etcd(allocationEndpoints, allocationPrefix, allocationAuthor, allocationToken, allocationCount); return; }

@@ -119,3 +119,22 @@ permanent abandoned gaps, finite receipts and the shared coordinator cost.
 The real-etcd harness also runs `allocation-consensus.mjs` with actual WASM
 creates and native Rust/C# grants. Author lineage fencing and causal history
 reclamation remain separate requirements.
+
+The optional [author fence](../../docs/protocol/author-fence-v1.md) binds a
+single author claim to coherent reads and the same atomic data CAS. Build Rust's
+`native_lsm` with `native-pages,physical-lsm,author-fencing` and the C# cluster
+example, then run:
+
+```sh
+python3 experiments/issue-138/author-fence-native.py
+NATIVE_LSM_LAYOUT=fence python3 examples/native-lsm-js/run-interop.py
+```
+
+The first command runs two focused native handoffs; the second runs all fifty
+Node/Bun/Deno/Rust/C# handoffs. The `fence-interop.mjs` recipe writes two keys,
+reopens the retained claim, takes over from another runtime and refuses old
+reads, publications and token retries. Active retries and read-only CAS preserve
+all physical file hashes; ordinary data publication preserves the ownership
+generation. Plain and fully mirrored directories are checked after each process
+exits. These clean-close checks require durable-flush support and do not certify
+hardware power loss or prevent a writer from bypassing the guard.

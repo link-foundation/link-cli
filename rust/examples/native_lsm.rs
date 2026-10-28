@@ -15,6 +15,9 @@ mod causal_session;
 mod chunks;
 #[path = "native_lsm/consumer.rs"]
 mod consumer;
+#[cfg(feature = "author-fencing")]
+#[path = "native_lsm/fence.rs"]
+mod fence;
 #[cfg(feature = "causal-merkle")]
 #[path = "native_lsm/merkle.rs"]
 mod merkle;
@@ -145,6 +148,8 @@ fn files(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError> 
 fn main() -> anyhow::Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+        #[cfg(feature = "author-fencing")]
+        ["fence", action, directory, mirrors] => fence::run(action, directory, mirrors)?,
         #[cfg(feature = "address-reservations")]
         ["allocation", action, directory, mirrors] => allocation::run(action, directory, mirrors)?,
         #[cfg(feature = "causal-batches")]

@@ -67,3 +67,12 @@ Build Rust with `native-pages,physical-lsm,causal-merkle`, build the C# cluster
 example, then run `python3 examples/native-lsm-js/run-merkle-interop.py` from
 the repository root. It includes finite before/after publication process exits,
 explicit reaped-owner recovery, read/retry hash preservation and following edits.
+
+For the optional author guard, build this example in Release and Rust's
+`native_lsm` with `native-pages,physical-lsm,author-fencing`, then run
+`NATIVE_LSM_LAYOUT=fence python3 examples/native-lsm-js/run-interop.py`.
+The [physical recipe](../native-lsm-js/README.md) checks retained active claims,
+explicit takeover, refused superseded reads/writes/retries and byte-preserving
+reopening across all five runtimes. Every subprocess closes before the next
+owner opens the directory. See the [ownership contract](../../docs/protocol/author-fence-v1.md)
+for the requirement that every writer use the same reserved fence key.

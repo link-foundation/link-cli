@@ -356,7 +356,7 @@ jobs:
         env:
           RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
         run: |
-          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle,causal-batches,causal-sessions,address-reservations --example native_lsm
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle,causal-batches,causal-sessions,address-reservations,author-fencing --example native_lsm
           python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT=reclaiming-chunks python3 examples/native-lsm-js/run-interop.py
@@ -366,6 +366,7 @@ jobs:
           NATIVE_CAUSAL_LAYOUT='batch' python3 examples/native-lsm-js/run-causal-faults.py
           NATIVE_LSM_LAYOUT='session' python3 examples/native-lsm-js/run-interop.py
           NATIVE_CAUSAL_LAYOUT='session' python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_LSM_LAYOUT='fence' python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT='allocation' python3 examples/native-lsm-js/run-interop.py
           NATIVE_CAUSAL_LAYOUT='allocation' python3 examples/native-lsm-js/run-causal-faults.py
           python3 examples/native-lsm-js/run-merkle-interop.py
