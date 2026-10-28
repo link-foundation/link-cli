@@ -1,0 +1,13 @@
+    Updating crates.io index
+     Locking 1 package to highest compatible version
+ Downgrading doublets v0.9.0 -> v0.8.0 (available: v0.9.0)
+   Compiling doublets-index-regression v0.0.0 (/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression)
+error: linking with `cc` failed: exit status: 1
+  |
+  = note:  "cc" "-m64" "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression/target/debug/deps/rustcsBbkNA/symbols.o" "<97 object files omitted>" "-Wl,--as-needed" "-Wl,-Bstatic" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libtest-*,libgetopts-*,librustc_std_workspace_std-*}.rlib" "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression/target/debug/deps/{libdoublets-0bc17c2b45cc882a,libleak_slice-ba1200e38907e0c9,libplatform_mem-505361c55c7d5963,libtempfile-69c916bcbf858810,libgetrandom-304a8a9e546d253d,libcfg_if-c5749788b74aba21,libfastrand-f83668ce313ec002,libonce_cell-7d77ec4c8c4efc6c,librustix-e3f84b3818c0fc8f,libbitflags-6b4dc355da4863ec,liblinux_raw_sys-571d788440bf14c4,libmemmap2-0e19d12117519cc9,liblibc-93fb5a58bba42712,liballocator_api2-5cb7977d9b69b4d4,libplatform_trees-770554865022e796,libplatform_data-586ca5ebadc6ed7a,libthiserror-cbf78c0662d09329,libbeef-c081ef97122482d4,libplatform_num-6e71f8f6c8cc3e88,libnum_traits-31715f7c1e61a644}.rlib" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-Wl,-Bdynamic" "-lgcc_s" "-lutil" "-lrt" "-lpthread" "-lm" "-ldl" "-lc" "-L" "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression/target/debug/deps/rustcsBbkNA/raw-dylibs" "-B<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld" "-fuse-ld=lld" "-Wl,--eh-frame-hdr" "-Wl,-z,noexecstack" "-L" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib" "-o" "/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression/target/debug/deps/doublets_index_regression-735ff9e3cec7823d" "-Wl,--gc-sections" "-pie" "-Wl,-z,relro,-z,now" "-Wl,--strip-debug" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: rust-lld: error: failed to open /tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression/target/debug/deps/doublets_index_regression-735ff9e3cec7823d: Cannot allocate memory
+          collect2: error: ld returned 1 exit status
+
+
+error: could not compile `doublets-index-regression` (lib test) due to 1 previous error

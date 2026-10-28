@@ -1,5 +1,12 @@
 # Acceptance inventory
 
+Registry releases after the earlier passing head caused Dependencies CI to
+reject doublets 0.8.0 and lucide-react 1.62.0. Both manifests and every affected
+lockfile now use the latest releases. Four finite split-index regressions fail
+on doublets 0.8.0 and pass on 0.9.0; the registry checker passes. See
+DEPENDENCY-REFRESH-VERIFICATION.md for exact failed runs and log line references.
+This fixes the registry gate without completing the wider acceptance inventory.
+
 The recovered C# selected-address protocol draft now passes 144 focused Release
 tests, covering all thirteen codecs, the established uint facade, bounded
 framing, original-text envelopes, owned callbacks and preparation freezes.
