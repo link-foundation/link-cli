@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 os.chdir(ROOT)
 CSHARP = os.environ.get("CLUSTER_CSHARP_EXAMPLE", "examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll")
 LAYOUT = os.environ.get("NATIVE_CAUSAL_LAYOUT", "causal")
-assert LAYOUT in ("causal", "batch", "session", "allocation")
+assert LAYOUT in ("causal", "batch", "session", "allocation", "fence")
 RUNTIMES = {
     "node": ["node", "--max-old-space-size=128", "examples/native-lsm-js/causal-interop.mjs"],
     "bun": ["bun", "examples/native-lsm-js/causal-interop.mjs"],
@@ -20,7 +20,7 @@ RUNTIMES = {
     "csharp": ["dotnet", CSHARP, "--native-lsm-causal"],
     "rust": [os.environ.get("RUST_NATIVE_LSM_EXAMPLE", "rust/target/debug/examples/native_lsm"), "causal"],
 }
-if LAYOUT in ("batch", "session", "allocation"):
+if LAYOUT in ("batch", "session", "allocation", "fence"):
     for name, command in RUNTIMES.items():
         command[-1] = LAYOUT if name == "rust" else "--native-lsm-" + LAYOUT if name == "csharp" else f"examples/native-lsm-js/{LAYOUT}-interop.mjs"
 if selected := os.environ.get("NATIVE_LSM_RUNTIMES"):
@@ -43,7 +43,7 @@ def run(runtime, action, directory, mirrors, expected=0):
         resource.setrlimit(resource.RLIMIT_STACK, (8 * 1024 * 1024,) * 2)
         if runtime == "rust":
             resource.setrlimit(resource.RLIMIT_AS, (512 * 1024 * 1024,) * 2)
-    environment = dict(os.environ, DOTNET_GCHeapHardLimit="0x28000000")
+    environment = dict(os.environ, DOTNET_GCHeapHardLimit="0x28000000", DOTNET_PROCESSOR_COUNT="2")
     result = subprocess.run([*RUNTIMES[runtime], action, str(directory), mirrors],
                             env=environment, preexec_fn=limits, check=False)
     assert result.returncode == expected, (runtime, action, result.returncode, expected)
@@ -78,7 +78,9 @@ with tempfile.TemporaryDirectory(prefix="clink-causal-process-") as temporary:
                 for reader in RUNTIMES:
                     target = root / f"{writer}-{reader}-{mirrors}-{phase}"
                     shutil.copytree(cut, target)
-                    run(reader, "read-advanced" if phase == "after" else "read", target, mirrors)
+                    # Takeover commits ownership separately from a guarded data write.
+                    after_action = "read-claimed" if LAYOUT == "fence" else "read-advanced"
+                    run(reader, after_action if phase == "after" else "read", target, mirrors)
                     assert snapshot(target) == recovered, "read changed recovered bytes"
                     run(reader, f"retry-{phase}", target, mirrors)
                     if phase == "after":

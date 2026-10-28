@@ -76,3 +76,9 @@ explicit takeover, refused superseded reads/writes/retries and byte-preserving
 reopening across all five runtimes. Every subprocess closes before the next
 owner opens the directory. See the [ownership contract](../../docs/protocol/author-fence-v1.md)
 for the requirement that every writer use the same reserved fence key.
+
+`NATIVE_CAUSAL_LAYOUT=fence python3 examples/native-lsm-js/run-causal-faults.py`
+also exercises actual process exits immediately before/after the takeover CAS,
+retained request identity and a third owner. Each crashed child is reaped before the
+experiment preserves its writer markers separately for explicit recovery.
+Ordinary blocked opens and retained durable retries must preserve every file.

@@ -138,3 +138,16 @@ all physical file hashes; ordinary data publication preserves the ownership
 generation. Plain and fully mirrored directories are checked after each process
 exits. These clean-close checks require durable-flush support and do not certify
 hardware power loss or prevent a writer from bypassing the guard.
+
+`NATIVE_CAUSAL_LAYOUT=fence python3 examples/native-lsm-js/run-causal-faults.py`
+runs 20 process exits and 100 recovery/retry/following checks across the five
+runtimes. The focused local command is
+`bash experiments/issue-138/run-author-fence-process.sh`; it checks Node, Rust
+and C# separately. Each child exits immediately before or after the takeover
+CAS without cleanup and is reaped before recovery. Ordinary opens must refuse
+its retained writer marker without changing files. The experiment preserves
+markers separately during explicit recovery, retries the original claim and
+publishes through a third owner. A committed takeover retains the prior data
+until a following guarded write. Durable retries and read-only reopening
+preserve every physical hash. These temporary-directory controls do not grant
+automatic authority to remove a live owner's marker or certify power loss.

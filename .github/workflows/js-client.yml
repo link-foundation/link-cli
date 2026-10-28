@@ -369,6 +369,7 @@ jobs:
           NATIVE_LSM_LAYOUT='fence' python3 examples/native-lsm-js/run-interop.py
           NATIVE_LSM_LAYOUT='allocation' python3 examples/native-lsm-js/run-interop.py
           NATIVE_CAUSAL_LAYOUT='allocation' python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_CAUSAL_LAYOUT='fence' python3 examples/native-lsm-js/run-causal-faults.py
           python3 examples/native-lsm-js/run-merkle-interop.py
 
       - name: Verify actual consensus and language interoperability

@@ -77,6 +77,19 @@ operations and read-only CAS. The fifty-handoff five-runtime matrix is wired to
 CI and remains pending. These clean-close controls are separate from abrupt
 exit and hardware power-loss verification.
 
+The subsequent [process-exit plan](AUTHOR-FENCE-PROCESS-PLAN.md) extends the
+same recipes without production changes. Twelve focused exits pass across
+Node, Rust and C#, checking each runtime separately in both mirror modes and
+at both takeover boundaries. The original predecessor/token resolves either
+outcome, a committed claim retains the prior data, and a third owner fences
+both predecessors before publishing. Retained durable retries, refused opens
+and read-only recovery preserve complete physical hashes. Every child is
+reaped before explicit marker quarantine. The
+[process evidence](../../../dev/log/issues/138/pulls/139/author-fence-process.txt)
+retains the missing-recipe baseline, focused output, native builds and gates.
+The full 20-exit/100-check five-runtime matrix is wired to CI and remains
+pending; these controls do not certify hardware power loss.
+
 The guard requires all writers for one author to share a reserved ownership
 key and uniquely owned active token. Its coherent provider includes the fence
 comparison in the same data CAS. It does not prevent bypass writes or multiple

@@ -7,7 +7,10 @@ all three C# platform suites pass on aae1422; later admission, physical handoff
 and component coverage changes require fresh exact-head CI. Fifteen focused C#
 contracts now execute every author-guard source line and raw branch in both
 Debug and Release, with complete production instrumentation retained. Whole-
-project coverage remains below target. Bypass admission, membership/history
+project coverage remains below target. Twelve focused takeover process exits
+now pass across Node, Rust and C#; the full five-runtime crash matrix is wired
+to CI. AUTHOR-FENCE-PROCESS-PLAN.md records retained retries, preserved crash
+evidence and the separate ownership/data decisions. Bypass admission, membership/history
 reclamation and every wider unmet criterion remain unfinished.
 
 # Acceptance inventory
