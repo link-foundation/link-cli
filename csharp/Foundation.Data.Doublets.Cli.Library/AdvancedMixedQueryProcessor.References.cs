@@ -22,11 +22,7 @@ namespace Foundation.Data.Doublets.Cli
 
             while (true)
             {
-                var finalIds = links.ReserveQueryAllocations(preview => ProcessQuery(preview, new Options
-                {
-                    Query = options.Query,
-                    SkipReferenceValidation = true,
-                }));
+                var finalIds = links.ReserveQueryAllocations(preview => PreviewQuery(preview, options.Query));
                 var plan = PlanReferences(links, restrictionPatterns, substitutionPatterns, options, finalIds);
                 if (plan.MissingReferences.Count == 0)
                 {

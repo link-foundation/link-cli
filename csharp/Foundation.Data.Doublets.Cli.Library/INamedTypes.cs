@@ -19,6 +19,9 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>Whether assigning a name removes its previous owner.</summary>
         bool ReassignsNames => true;
 
+        /// <summary>Optional admission limits for the ordinary query processor.</summary>
+        QueryLimits? QueryLimits => null;
+
         /// <summary>Preview a query over owned rows and reserve its allocation order.
         /// Returns final identities, or null when the store uses legacy prediction.</summary>
         IReadOnlySet<TLinkAddress>? ReserveQueryAllocations(Action<INamedTypesLinks<TLinkAddress>> preview) => null;

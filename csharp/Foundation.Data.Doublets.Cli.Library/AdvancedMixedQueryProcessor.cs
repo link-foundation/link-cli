@@ -39,6 +39,8 @@ namespace Foundation.Data.Doublets.Cli
             ArgumentNullException.ThrowIfNull(options);
 
             var query = options.Query;
+            var limits = links.QueryLimits;
+            limits?.Input(query);
             TraceIfEnabled(options, $"[ProcessQuery] Query: \"{query}\"");
 
             if (string.IsNullOrEmpty(query))
@@ -47,7 +49,7 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            var parsedLinks = QueryParser.Parse<T>(query);
+            var parsedLinks = QueryParser.Parse<T>(query, limits);
 
             TraceIfEnabled(options, $"[ProcessQuery] Parser returned {parsedLinks.Count} top-level link(s).");
             if (parsedLinks.Count == 0)
@@ -209,6 +211,7 @@ namespace Foundation.Data.Doublets.Cli
                     TraceIfEnabled(options, $"[ProcessQuery] One solution => matched {matchedLinks.Count} link(s).");
                     foreach (var link in matchedLinks)
                     {
+                        limits?.Results(allPlannedOperations.Count + 1);
                         allPlannedOperations.Add((link, link));
                     }
                 }
@@ -227,6 +230,7 @@ namespace Foundation.Data.Doublets.Cli
 
                     var operations = DetermineOperationsFromPatterns(restrictionLinks, substitutionLinks, links);
                     TraceIfEnabled(options, $"[ProcessQuery] => {operations.Count} operation(s) derived from these patterns.");
+                    limits?.Results(allPlannedOperations.Count + operations.Count);
                     allPlannedOperations.AddRange(operations);
                 }
             }

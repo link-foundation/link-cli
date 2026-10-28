@@ -8,7 +8,8 @@ uses the actual Rust WASM workspace. The raw JS methods preserve the entire
 u64 range as canonical decimal strings. `tx.client()` supplies the ordinary
 JS/TS links and query API with BigInt addresses over that same workspace. Rust
 supplies the standard query processor and protocol through a checked named-store
-borrow. C# query and protocol parity remains unfinished and is tracked in the
+borrow. C# supplies the ordinary processor through a checked `QueryLinks`
+adapter; its standard protocol parity remains unfinished and is tracked in the
 [session plan](case-studies/issue-138/CAUSAL-MUTABLE-SESSION-PLAN.md).
 
 Choose an explicit conflict policy and a fresh inclusive address reservation.
@@ -52,6 +53,15 @@ remains the established u32 facade. `CausalSession::named_links()` and
 `CausalWorkspace::named_links()` supply `NamedTypeLinks<u128>` with checked u64
 writes, so the query wildcard `u128::MAX` cannot alias a stored identity.
 
+C# uses `AdvancedMixedQueryProcessor<UInt128>.ProcessQuery(tx.QueryLinks, text)`.
+The cached adapter checks the live session on every operation and at query entry,
+so a retained adapter rejects empty/null queries after preparation or disposal.
+Its UInt128 wildcard stays outside the stored u64 range; every stored part uses
+checked conversion. The ordinary owned preview uses the caller's fresh cursor
+and retained identities, including tombstones. Recreating a retained maximum
+identity does not move a lower fresh cursor. Explicit ensures retire only their
+matching reservation. The adapter and pending queue are allocated lazily.
+
 ```rust,ignore
 let query = link_cli::GenericQueryProcessor::<u128>::new(false);
 query.process_query(&mut tx.named_links(), "() ((1 1) (draft: 1 1))")?;
@@ -94,13 +104,16 @@ cost, not a throughput optimization. Final ordinary constraints and explicit
 publication remain authoritative. Existing recycling stores retain their old
 allocation-probe fallback, including the separately documented prediction gaps.
 
-The checked causal borrow admits at most 1 MiB of query text, depth 64, 4096
+The Rust checked causal borrow and C# checked adapter admit at most 1 MiB of query text, depth 64, 4096
 syntax nodes, 4096 results, 16,384 bindings and 4 MiB of estimated owned binding
 storage. Counts and key bytes are checked before Cartesian map/key cloning.
+C# streams each pattern's candidate maps instead of first collecting an
+unbounded intermediate list. Preview and adapter matching share the same
+restriction implementation and check result counts before retaining each row.
 Bare negative or overflowing numeric addresses reject before staging; quoted
 numeric names remain names. Named output uses lossless notation literals,
 including empty/control names and numeric names outside the stored range.
-Checked TCP workers apply these text byte/depth bounds before canonical model
+Rust checked TCP workers apply these text byte/depth bounds before canonical model
 conversion and clamp binary link/reference/node/string/depth admission before
 decoding. JS preflights bounded query syntax before sending any batch member;
 its node count also includes identifiers, so admission can be stricter than the

@@ -91,8 +91,21 @@ The reservation queue is allocated only when a query first reserves an address.
 Preview copies visible rows and executes the query before its real execution,
 so it adds a row snapshot and a second matching pass for this guarantee.
 Other stores keep their existing prediction through compatible interface defaults.
-The checked causal query adapter and bounded admission are tracked in
-[the C# query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).
+Causal sessions expose `session.QueryLinks` as `INamedTypesLinks<UInt128>`.
+Pass that adapter to `AdvancedMixedQueryProcessor<UInt128>` to query the complete
+stored u64 range while staging in the caller's fresh address reservation. Even
+recreating a retained deletion at `ulong.MaxValue` preserves a lower fresh cursor.
+The adapter rejects reads and writes after preparation or disposal, including
+empty queries retained through an earlier adapter reference. Owned row callbacks
+and the session's finished diagnostics remain detached from subsequent edits.
+
+Checked queries admit at most 1 MiB of original UTF-8 input, depth 64, 4096 syntax
+nodes/results, 16,384 bindings, 4 MiB of estimated binding storage and 1 MiB of
+decoded named change references. Admission previews precede real private edits
+and external callbacks. Bare negative and overflowing numbers reject; quoted or
+encoded numeric names stay names. Publication still requires `session.Commit(token)`
+and its existing final constraints and 64-edit batch admission. Standard C# protocol
+parity remains tracked in [the query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).
 
 LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
 `LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before

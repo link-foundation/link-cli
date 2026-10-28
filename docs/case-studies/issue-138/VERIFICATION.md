@@ -4537,3 +4537,42 @@ session source bytes are unchanged from commit 082213b and its complete run.
 causal-session-coverage.txt records source/report hashes and reproduction.
 Fresh exact-head CI, full-width query/protocol work and every wider unmet
 R1–R12 criterion remain active. PR139 stays draft and unmerged.
+
+
+Checked C# causal queries finish complete local validation at
+2026-10-28T00:25:35Z. Missing QueryLinks APIs first fail in the standalone probe
+and permanent tests. The shared ordinary processor now runs against an owned
+UInt128 adapter over the existing private session, preserving every stored u64
+identity separately from its wildcard. All sixteen independent shared vectors
+pass, including quoted numeric/special names, zero bindings and lower fresh
+reservations. Thirty-six new cases additionally verify detached observations,
+frozen/disposed adapters, exact token retries after unknown publication,
+negative/overflow/range refusal, original UTF-8 bytes, depth/nodes, result and
+binding expansion, and decoded named reply refusal before real edits/callbacks.
+A retained deleted maximum can be resurrected without advancing a lower fresh
+cursor. Standard uint query behavior remains covered by the complete suites.
+
+Both full Debug and Release configurations pass 2571 tests with zero failures
+or skips. All six existing causal sources retain every source line and raw
+compiled branch. Complete production coverage includes all 109 preceding files
+and six additional files: Debug 10528/10828 lines and 6900/7360 branches;
+Release 8143/8341 and 6833/7309. New checked-query source branch gaps and the
+preview's uncovered range-refusal line remain listed in csharp-causal-query.txt;
+this is not whole-project 100%. Strict formatting, 221 repository tests and
+source-size/changeset/release-helper/ShellCheck/whitespace gates pass.
+
+The outer wrapper returns 127 after these successful subprocesses because its
+log-output name was edited while Bash was reading it. The stable corrected
+wrapper passes syntax and ShellCheck; the sixteen-vector probe is rerun into a
+distinct log. The receipt preserves that error and does not claim a second full
+suite for the naming-only correction. Rust/JS production bytes still match the
+preceding complete protocol validation. The prior generic C# head's Windows
+Rust job was cancelled after the allocation head started; the cancellation and
+raw log line 41256 remain in csharp-generic-query-head-ci.txt.
+
+Costs remain an O(N log N) detached sorted snapshot, repeated ordinary query
+execution, O(K) lazy FIFO reservations and finite matching/binding/change maps.
+Direct checked Count/Each own matched rows and may refuse broad reads. Standard
+selected-address C# protocols, the lossless query envelope, physical query
+interchange, complete native/C#/linked-WASM 100%, fresh exact-head CI and every
+wider unmet R1-R12 criterion remain unfinished. PR139 stays draft and unmerged.

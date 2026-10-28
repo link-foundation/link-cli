@@ -2,16 +2,16 @@
 
 Continue CAUSAL-PROTOCOL-PLAN.md. The C# processor now shares selected-address
 matching and mutation helpers while retaining its uint facade. CausalSession
-still implements the ordinary ulong links interface, whose wildcard is inside
-the full stored u64 range. A checked wider adapter is required to separate it
-from every real stored identity. The raw session contracts and passing
+also exposes checked QueryLinks through UInt128, separating its wildcard from
+every stored u64 identity. Standard C# protocol dispatch and physical query
+interchange remain unfinished. The raw session contracts and passing
 Rust/actual-WASM/JS protocol tests do not verify that remaining work.
 
 - [x] First reproduce the existing monotonic allocation failure through
       AdvancedMixedQueryProcessor and EngineSession<uint>. Keep the smallest
       anonymous forward-reference case and independent explicit/pair-reuse
       controls; assert private and published rows separately.
-- [ ] Add missing generic-query and checked-session API contracts before
+- [x] Add missing generic-query and checked-session API contracts before
       production changes. Cover all u64 identities, wildcard separation,
       lower caller reservations, quoted/encoded numeric and special names,
       owned observations and explicit-token publication with exact retries.
@@ -19,7 +19,7 @@ Rust/actual-WASM/JS protocol tests do not verify that remaining work.
       implementation, retaining its public uint Options and Pattern facade,
       implicit string conversion and existing query semantics. Reuse the
       matching/mutation algorithms rather than copying them for causal use.
-- [ ] Preserve reference kinds in QueryParser for the selected numeric type;
+- [x] Preserve reference kinds in QueryParser for the selected numeric type;
       reject malformed, negative and overflowing numeric input before checked
       private writes. Retain the established legacy uint interpretation.
 - [x] Add optional query preparation and direct explicit-address capabilities
@@ -33,9 +33,9 @@ Rust/actual-WASM/JS protocol tests do not verify that remaining work.
       retire only a matching explicit reservation. Input and preview admission
       failures preserve rows and the allocator cursor. A later missing-reference
       rejection or rollback may retain already reserved gaps, matching Rust.
-- [ ] Extend checked preview admission to decoded named reply budgets before
+- [x] Extend checked preview admission to decoded named reply budgets before
       real edits; the ordinary reservation capability alone does not bound replies.
-- [ ] Bound input bytes, parser depth, document nodes, result/binding expansion
+- [x] Bound input bytes, parser depth, document nodes, result/binding expansion
       and decoded named reply bytes before checked writes. Use finite bounded
       probes, ordinary positive controls and no host-exhaustion experiments.
 - [ ] Extend standard protocol operations and server dispatch with the same
@@ -72,8 +72,9 @@ Verified selected-address step: the same partial processor now accepts ushort, u
 ulong and UInt128. The old uint Options and Pattern facade and implicit query
 strings remain available. Existing rows at each selected maximum minus one,
 and at ulong.MaxValue under UInt128, pass the finite focused contracts.
-QueryParser classifies numbers with the selected type; checked malformed or
-out-of-range admission remains unfinished.
+QueryParser classifies numbers with the selected type. The checked adapter now
+rejects negative and out-of-u64 numeric tokens before private edits, while quoted
+and encoded references keep their name semantics.
 
 The first generic build fails before implementation because the generic API is
 missing. The first wide-row execution then exposes the pinned upstream
@@ -118,6 +119,46 @@ source hashes, successful full-suite logs and the initial draft failure.
 The guarantee costs a detached visible-row/name snapshot, O(N log N) sorted
 construction, a second query execution and O(K) reservation state. Queue
 consumption and exact explicit retirement have expected O(1) cost. Raw sessions
-allocate no reservation queue until needed. Checked causal admission, shared
-query/protocol vectors, physical interchange and every wider unmet criterion
-remain active; passing this step does not complete issue138.
+allocate no reservation queue until needed. The checked causal API now consumes
+the shared query vectors; standard protocol vectors, physical interchange and
+every wider unmet criterion remain active. Passing this step does not complete
+issue138.
+
+
+Checked C# causal queries finish complete local validation at
+2026-10-28T00:25:35Z. Missing QueryLinks APIs first fail in the standalone probe
+and permanent tests. The shared ordinary processor now runs against an owned
+UInt128 adapter over the existing private session, preserving every stored u64
+identity separately from its wildcard. All sixteen independent shared vectors
+pass, including quoted numeric/special names, zero bindings and lower fresh
+reservations. Thirty-six new cases additionally verify detached observations,
+frozen/disposed adapters, exact token retries after unknown publication,
+negative/overflow/range refusal, original UTF-8 bytes, depth/nodes, result and
+binding expansion, and decoded named reply refusal before real edits/callbacks.
+A retained deleted maximum can be resurrected without advancing a lower fresh
+cursor. Standard uint query behavior remains covered by the complete suites.
+
+Both full Debug and Release configurations pass 2571 tests with zero failures
+or skips. All six existing causal sources retain every source line and raw
+compiled branch. Complete production coverage includes all 109 preceding files
+and six additional files: Debug 10528/10828 lines and 6900/7360 branches;
+Release 8143/8341 and 6833/7309. New checked-query source branch gaps and the
+preview's uncovered range-refusal line remain listed in csharp-causal-query.txt;
+this is not whole-project 100%. Strict formatting, 221 repository tests and
+source-size/changeset/release-helper/ShellCheck/whitespace gates pass.
+
+The outer wrapper returns 127 after these successful subprocesses because its
+log-output name was edited while Bash was reading it. The stable corrected
+wrapper passes syntax and ShellCheck; the sixteen-vector probe is rerun into a
+distinct log. The receipt preserves that error and does not claim a second full
+suite for the naming-only correction. Rust/JS production bytes still match the
+preceding complete protocol validation. The prior generic C# head's Windows
+Rust job was cancelled after the allocation head started; the cancellation and
+raw log line 41256 remain in csharp-generic-query-head-ci.txt.
+
+Costs remain an O(N log N) detached sorted snapshot, repeated ordinary query
+execution, O(K) lazy FIFO reservations and finite matching/binding/change maps.
+Direct checked Count/Each own matched rows and may refuse broad reads. Standard
+selected-address C# protocols, the lossless query envelope, physical query
+interchange, complete native/C#/linked-WASM 100%, fresh exact-head CI and every
+wider unmet R1-R12 criterion remain unfinished. PR139 stays draft and unmerged.

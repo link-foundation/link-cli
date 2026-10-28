@@ -15,21 +15,26 @@ internal sealed class QueryPreview<T> : INamedTypesLinks<T>
     internal readonly List<T> Allocated = new();
     internal BigInteger Next;
     public LinksConstants<T> Constants { get; }
+    public QueryLimits? QueryLimits { get; }
+    private readonly QueryAddressScope<T>? _scope;
 
-    internal QueryPreview(IEnumerable<EngineRow<T>> rows, BigInteger next, IEnumerable<T> reserved, LinksConstants<T> constants)
+    internal QueryPreview(IEnumerable<EngineRow<T>> rows, BigInteger next, IEnumerable<T> reserved, LinksConstants<T> constants,
+        QueryAddressScope<T>? scope = null, QueryLimits? limits = null)
     {
         Rows = new(rows.ToDictionary(row => row.Link.Index));
         foreach (var id in reserved) _reserved.Add(id);
         Next = next;
         Constants = constants;
+        _scope = scope; QueryLimits = limits;
     }
 
     public bool TryEnsureCreated(T id)
     {
         if (!Constants.IsInternalReference(id)) throw new InvalidOperationException("Unsupported query address.");
+        _scope?.Ensure(id);
         if (!Rows.ContainsKey(id))
         {
-            Next = BigInteger.Max(Next, BigInteger.CreateChecked(id) + 1);
+            if (_scope is null || _scope.Fresh(id)) Next = BigInteger.Max(Next, BigInteger.CreateChecked(id) + 1);
             Rows[id] = new(new Link<T>(id, T.Zero, T.Zero), null);
         }
         _reserved.Remove(id);
@@ -41,6 +46,7 @@ internal sealed class QueryPreview<T> : INamedTypesLinks<T>
         var fromReservation = _reserved.TryPeek(out var reserved);
         var id = fromReservation ? reserved : T.CreateChecked(Next);
         if (!Constants.IsInternalReference(id)) throw new OverflowException("Query address space exhausted.");
+        _scope?.Allocate(id);
         if (Rows.ContainsKey(id)) throw new InvalidOperationException("Reserved query address already exists.");
         if (fromReservation) _reserved.Remove(id);
         else Next++;
@@ -54,6 +60,9 @@ internal sealed class QueryPreview<T> : INamedTypesLinks<T>
         if (restriction is not [var id, ..] || substitution is not [_, var source, var target])
             throw new ArgumentException("An update needs an index and a triple.");
         var before = Required(id);
+        if (QueryLimits is { } limits && (UInt128.CreateChecked(id) > limits.MaxAddress ||
+            UInt128.CreateChecked(source) > limits.MaxAddress || UInt128.CreateChecked(target) > limits.MaxAddress))
+            throw new InvalidOperationException("Unsupported stored query address.");
         Rows[id] = before with { Link = new(id, source, target) };
         return handler?.Invoke(Parts(before.Link), new LinkParts<T>(id, source, target)) ?? Constants.Continue;
     }
@@ -70,16 +79,7 @@ internal sealed class QueryPreview<T> : INamedTypesLinks<T>
         ? row : throw new KeyNotFoundException("Link not found.");
     private static LinkParts<T> Parts(Link<T> row) => new(row.Index, row.Source, row.Target);
 
-    private Link<T>[] Matching(IList<T>? restriction)
-    {
-        if (restriction?.Count > 3) throw new ArgumentException("A restriction has at most three parts.", nameof(restriction));
-        return Rows.Values.Select(row => row.Link).Where(link => restriction is null ||
-            (restriction.Count == 2 ?
-            (restriction[0] == Constants.Any || restriction[0] == link.Index) &&
-            (restriction[1] == Constants.Any || restriction[1] == link.Source || restriction[1] == link.Target) :
-            restriction.Select((part, position) => part == Constants.Any || part == (position switch
-            { 0 => link.Index, 1 => link.Source, _ => link.Target })).All(match => match))).ToArray();
-    }
+    private Link<T>[] Matching(IList<T>? restriction) => QueryMatching.Rows(Rows.Values.Select(row => row.Link), restriction, Constants.Any, QueryLimits);
     public T Count(IList<T>? restriction) => T.CreateChecked(Matching(restriction).Length);
     public T Each(IList<T>? restriction, ReadHandler<T>? handler)
     {

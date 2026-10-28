@@ -41,3 +41,17 @@ differ; add meaningful outcome tests within the appropriate instantiation.
 Do not exclude production sources or restructure equivalent code just to alter
 the measurement. Coverage also does not establish power-loss safety, exhaustive
 scheduling, or equivalence to another database's guarantees.
+
+## C# compiled branches
+
+Retain the complete Debug and Release Cobertura reports and the collector's raw
+JSON. Some generated methods have branch records but no source lines; an XML
+source-line summary can omit those methods. The causal coverage gate therefore
+checks every raw compiled branch, including methods with an empty line map.
+Do not replace this check with an aggregate source-line percentage.
+
+`summarize-csharp-causal-query.py` additionally reports each checked-query source
+and its uncovered raw branches. The six existing causal components retain their
+strict complete-branch gate. Passing that gate does not imply that new query
+sources or the complete project have reached 100%; their remaining lines and
+branches stay in the full report and the evidence receipt.

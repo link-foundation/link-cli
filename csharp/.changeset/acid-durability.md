@@ -358,3 +358,15 @@ is acquired. Allocate reservation state lazily. Add compatible optional named
 store capabilities and direct explicit ensure, preserving legacy recycling
 prediction and explicit custom creator delegates. Guard full-width ensure
 regressions with a finite allocation cap instead of walking the u64 domain.
+
+Expose the ordinary selected-address processor through CausalSession.QueryLinks.
+Use UInt128 controls with checked u64 stored parts and the caller's independent
+fresh range, including retained-identity resurrection. Freeze every retained
+adapter operation at preparation/disposal. Admit original bytes, parser depth,
+nodes, streamed result/binding expansion and decoded named change replies on
+owned preview state before real edits or callbacks. Share the existing matching,
+mutation, reservation and explicit-token batch implementations; retain the uint
+facade and opt-in limits for existing stores. Keep anonymous creation callbacks
+compatible with the pinned upstream helper while avoiding its UInt128 list
+initializer. Verify shared query vectors, bounded refusals and exact lost-reply
+retries; standard C# protocol and physical query interchange remain required work.

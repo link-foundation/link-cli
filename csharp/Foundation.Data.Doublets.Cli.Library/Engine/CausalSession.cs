@@ -17,7 +17,7 @@ public sealed record CausalPreparedBatch(string Token, ulong Generation, IReadOn
 
 /// <summary>A frozen causal snapshot, standard private links session and one
 /// explicit-token local batch. Caller-reserved addresses are not a global allocator.</summary>
-public sealed class CausalSession : INamedTypesLinks<ulong>, IDisposable
+public sealed partial class CausalSession : INamedTypesLinks<ulong>, IDisposable
 {
     private readonly CausalBatch _batch;
     private readonly ulong _generation, _first, _last;
@@ -80,13 +80,20 @@ public sealed class CausalSession : INamedTypesLinks<ulong>, IDisposable
     public void RemoveName(ulong id) => Active.RemoveName(id);
     public ulong CreateLink(ulong source, ulong target)
     {
-        if (_next > _last) throw Frozen(); ulong id = (ulong)_next;
-        var tx = Active; tx.EnsureCreated(id); tx.UpdateLink(id, source, target); _next++; return id;
+        var tx = Active;
+        ulong pending = 0;
+        var reserved = _queryReservations?.TryPeek(out pending) == true;
+        if (!reserved && _next > _last) throw Frozen();
+        var id = reserved ? pending : (ulong)_next;
+        tx.EnsureCreated(id); tx.UpdateLink(id, source, target);
+        if (reserved) _queryReservations!.Remove(id); else _next++;
+        return id;
     }
     public ulong EnsureCreated(ulong id)
     {
         if (id == 0 || (!(id >= _first && id <= _last) && !_retained.ContainsKey(id))) throw Frozen();
-        Active.EnsureCreated(id); if (id >= _first && id <= _last) _next = BigInteger.Max(_next, BigInteger.CreateChecked(id) + 1); return id;
+        Active.EnsureCreated(id); _queryReservations?.Remove(id);
+        if (id >= _first && id <= _last) _next = BigInteger.Max(_next, BigInteger.CreateChecked(id) + 1); return id;
     }
     public Link<ulong>? GetLink(ulong id) => _inner is { } tx ? tx.GetLink(id)
         : _finalRows.Where(row => row.Link.Index == id).Select(row => (Link<ulong>?)row.Link).FirstOrDefault();
@@ -105,7 +112,7 @@ public sealed class CausalSession : INamedTypesLinks<ulong>, IDisposable
                     ? new(row.Link.Source, row.Link.Target, row.Name) : null)).ToArray();
             return CausalBatch.Normalize(edits).Edits;
         }
-        finally { tx.Dispose(); _original.Clear(); _retained.Clear(); }
+        finally { tx.Dispose(); _original.Clear(); _retained.Clear(); _queryReservations = null; }
     }
     public CausalPreparedBatch? Prepared => _prepared is { } value ? Copy(value) : null;
     public CausalPreparedBatch Prepare(string token)
@@ -126,6 +133,7 @@ public sealed class CausalSession : INamedTypesLinks<ulong>, IDisposable
     {
         _inner?.Dispose(); _inner = null; _engine = null; _original.Clear(); _retained.Clear();
         _finalRows = []; _result = null; _disposed = true;
+        _queryReservations = null;
     }
     public void Dispose() => Rollback();
     private Link<ulong>[] Matching(IList<ulong>? restriction)

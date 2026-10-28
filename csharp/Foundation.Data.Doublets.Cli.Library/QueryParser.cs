@@ -37,12 +37,14 @@ internal static class QueryParser
 
     internal static IList<LinoLink> Parse(string query) => Parse<uint>(query);
 
-    internal static IList<LinoLink> Parse<T>(string query)
+    internal static IList<LinoLink> Parse<T>(string query, QueryLimits? limits = null)
         where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
-        var parser = new Parser();
+        limits?.Input(query);
+        var parser = limits is null ? new Parser() : new Parser(true, limits.MaxDepth);
         // Validate the original first so diagnostics retain the user's line/column.
         var original = parser.Parse(query);
+        limits?.Nodes(original);
         if (original.Count == 0) return original;
 
         var text = Comments.StripComments(query);
@@ -72,6 +74,7 @@ internal static class QueryParser
                 }
             }
 
+            if (!quoted) limits?.Numeric(value);
             var isSyntax = !quoted && (T.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ignoredNumber) || value == "*" || value.StartsWith('$'));
             rewritten.Append(isSyntax ? value : ReferenceLiteral.Encode("\"" + value + "\""));
         }

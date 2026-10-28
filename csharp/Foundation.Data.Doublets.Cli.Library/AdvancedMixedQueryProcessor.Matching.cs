@@ -19,13 +19,16 @@ namespace Foundation.Data.Doublets.Cli
             {
                 var pattern = patterns[i];
                 var newSolutions = new List<Dictionary<string, T>>();
+                var bindingCount = 0; long bindingBytes = 0;
                 foreach (var solution in partialSolutions)
                 {
-                    var matches = MatchPattern(links, pattern, solution).ToList();
+                    var matches = MatchPattern(links, pattern, solution);
                     foreach (var match in matches)
                     {
                         if (AreSolutionsCompatible(solution, match))
                         {
+                            links.QueryLimits?.Results(newSolutions.Count + 1);
+                            links.QueryLimits?.Bindings(solution, match, ref bindingCount, ref bindingBytes);
                             var combinedSolution = new Dictionary<string, T>(solution);
                             foreach (var assignment in match)
                             {
@@ -273,6 +276,7 @@ namespace Foundation.Data.Doublets.Cli
                     var matches = links.All(applied);
                     foreach (var match in matches)
                     {
+                        links.QueryLimits?.Results(matchedLinks.Count + 1);
                         matchedLinks.Add(new LinkParts<T>(match));
                     }
                 }

@@ -72,7 +72,7 @@ namespace Foundation.Data.Doublets.Cli
                     T newLinkIndex = T.Zero;
                     TraceIfEnabled(options,
                         $"[CreateOrUpdateLink] Creating new link => (S={linkDefinition.Source},T={linkDefinition.Target}).");
-                    links.CreateAndUpdate(linkDefinition.Source, linkDefinition.Target, (beforeState, afterState) =>
+                    CreateAndUpdate(links, linkDefinition.Source, linkDefinition.Target, (beforeState, afterState) =>
                     {
                         var afterLinkRecord = new LinkParts<T>(afterState);
                         if (newLinkIndex == T.Zero && afterLinkRecord.Index != T.Zero && afterLinkRecord.Index != anyConstant)
@@ -228,7 +228,7 @@ namespace Foundation.Data.Doublets.Cli
                 {
                     T createdIndex = T.Zero;
                     TraceIfEnabled(options, $"[EnsureLinkCreated] Creating link for (S={link.Source}, T={link.Target}).");
-                    links.CreateAndUpdate(link.Source, link.Target, (before, after) =>
+                    CreateAndUpdate(links, link.Source, link.Target, (before, after) =>
                     {
                         var afterLink = new LinkParts<T>(after);
                         if (createdIndex == T.Zero && afterLink.Index != T.Zero && afterLink.Index != anyConstant)
