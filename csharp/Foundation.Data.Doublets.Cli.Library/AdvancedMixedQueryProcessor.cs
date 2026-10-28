@@ -28,6 +28,8 @@ namespace Foundation.Data.Doublets.Cli
             /// </summary>
             public bool AutoCreateMissingReferences { get; set; } = false;
 
+            internal bool SkipReferenceValidation { get; set; }
+
             public static implicit operator Options(string query) => new Options { Query = query };
         }
 

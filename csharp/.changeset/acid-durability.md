@@ -348,3 +348,13 @@ equality and joins. Expose owned read-only callback parts without invoking the
 upstream default-constant reflection helpers that predate UInt128. The checked
 causal adapter, finite query admission and monotonic allocation preparation
 remain separate required work under CSHARP-QUERY-PARITY-PLAN.md.
+
+Prepare monotonic engine queries over detached rows and names using the shared
+processor. Reserve exact FIFO allocation identities under the owner gate,
+without creating/deleting probe rows or invoking real observers. Keep failed
+preview admission free of cursor changes, retain already reserved gaps after
+later reference rejection or rollback, and consume only after write ownership
+is acquired. Allocate reservation state lazily. Add compatible optional named
+store capabilities and direct explicit ensure, preserving legacy recycling
+prediction and explicit custom creator delegates. Guard full-width ensure
+regressions with a finite allocation cap instead of walking the u64 domain.

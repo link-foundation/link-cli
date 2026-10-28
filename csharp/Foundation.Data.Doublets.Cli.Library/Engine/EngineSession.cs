@@ -7,7 +7,7 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 
 /// <summary>A private write set implementing the standard links and names API.
 /// Raw deletion removes one row; add a usages decorator to select cascades.</summary>
-public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
+public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
 {
     private readonly LinksEngine<T> _engine;
@@ -17,6 +17,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     private HashSet<T>? _reads;
     private bool _scanned;
     private PessimisticWrites<T>? _locks;
+    private QueryReservations<T>? _reserved;
     // Platform.Data's default NumericType maximum predates UInt128. Supply
     // the generic-math bounds explicitly so all supported unsigned types work.
     public LinksConstants<T> Constants { get; } = new((T.One, T.MaxValue));
@@ -54,10 +55,14 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         lock (_engine.Gate)
         {
             CheckOpen();
-            T id = T.CreateChecked(_engine.Next);
+            T reserved = T.Zero;
+            var fromReservation = _reserved?.TryPeek(out reserved) == true;
+            T id = fromReservation ? reserved : T.CreateChecked(_engine.Next);
+            if (fromReservation && Row(id) is not null) throw new InvalidOperationException("Reserved query address already exists.");
             var next = _engine.NextAfter(BigInteger.CreateChecked(id));
             _locks?.Acquire(_engine, id, _base.Revision);
             _engine.Next = next;
+            _reserved?.Remove(id);
             _writes[id] = new(new Link<T>(id, source, target), null);
             return id;
         }
@@ -75,6 +80,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
                 _engine.Next = next;
                 _writes[id] = new(new Link<T>(id, T.Zero, T.Zero), null);
             }
+            _reserved?.Remove(id);
             return id;
         }
     }
@@ -169,6 +175,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             _locks?.Release(target);
             _locks = null;
             _writes.Clear();
+            _reserved = null;
             _reads = null;
             // Validate the last committer before reclaiming generations,
             // including delete/recreate changes that restore identical rows.
@@ -181,7 +188,7 @@ public sealed class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             if (!_closed)
             {
-                _closed = true; _engine.Active--; _writes.Clear(); _reads = null;
+                _closed = true; _engine.Active--; _writes.Clear(); _reserved = null; _reads = null;
                 _locks?.Release(_engine); _locks = null;
                 if (_engine.Active == 0) _engine.Changed = null;
             }

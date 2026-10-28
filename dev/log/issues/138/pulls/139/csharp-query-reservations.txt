@@ -1,0 +1,220 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-csharp-query-reservations.sh
+START 2026-10-27T23:51:40Z
+Debug PASS 2026-10-27T23:57:06Z
+Release PASS 2026-10-27T23:59:56Z
+GATES RETRY: preserve CI logs under experiments/issue-138/ci-logs to satisfy repository layout.
+GATES PASS 2026-10-28T00:00:56Z
+ALL PASS 2026-10-28T00:00:56Z
+Before: all ten permanent allocation cases fail; the independent three-case probe has two passing explicit/pair controls and one dangling anonymous point.
+Draft full-suite regression: checking every allocation for collisions introduced a point-read dependency into blind writes. The existing read-set conflict test fails before limiting the check to reserved addresses.
+After: ten reproductions, eleven additional ownership/concurrency/failure/wide-address/preview/compatibility contracts and the existing blind-write regression pass.
+{"name":"anonymous-point","query":"(() ((1 1)))","pass":true,"error":null,"rows":[{"Index":1,"Source":1,"Target":1}],"expected":[{"Index":1,"Source":1,"Target":1}],"published":0}
+{"name":"explicit-point-control","query":"() ((1: 1 1))","pass":true,"error":null,"rows":[{"Index":1,"Source":1,"Target":1}],"expected":[{"Index":1,"Source":1,"Target":1}],"published":0}
+{"name":"explicit-pair-reuse-control","query":"() ((4: 4 4) (4 4))","pass":true,"error":null,"rows":[{"Index":4,"Source":4,"Target":4}],"expected":[{"Index":4,"Source":4,"Target":4}],"published":0}
+Finite query allocation controls: 3 passed; 0 failed.
+Selected-address generic and all three zero-binding probes remain passing.
+Debug: 2535 passed; zero failed/skipped. Complete production Cobertura:
+  lines: 10348/10650 (97.16432%).
+  branches: 6739/7186 (93.77957%).
+  Every previous production file retained: 106 previous, 109 current.
+  EngineQueryReservations.cs: 12/12 source lines; 8/8 raw compiled branches.
+  QueryPreview.cs: 70/70 source lines; 70/70 raw compiled branches.
+  QueryReservations.cs: 14/14 source lines; 6/6 raw compiled branches.
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/csharp-query-reservations-Debug-results.7FAH6F/07ec51dd-5ec4-433c-957a-7c1a3c35f6cb/coverage.json: 2021080 bytes; SHA256 bfc45055e24113eb21aa304da24e73ace52ac68506ecb18066817af19e43ca8c
+CausalBatch.cs: 190/190 raw branches
+CausalMerkle.cs: 246/246 raw branches
+CausalProjection.cs: 42/42 raw branches
+CausalReplica.cs: 182/182 raw branches
+CausalSession.cs: 108/108 raw branches
+CausalVersion.cs: 138/138 raw branches
+PASS every compiled causal branch, including methods without source lines
+  CausalBatch.cs: all 154 source lines visited.
+  CausalMerkle.cs: all 218 source lines visited.
+  CausalProjection.cs: all 39 source lines visited.
+  CausalReplica.cs: all 136 source lines visited.
+  CausalSession.cs: all 124 source lines visited.
+  CausalVersion.cs: all 100 source lines visited.
+Release: 2535 passed; zero failed/skipped. Complete production Cobertura:
+  lines: 7998/8196 (97.58419%).
+  branches: 6675/7139 (93.50049%).
+  Every previous production file retained: 106 previous, 109 current.
+  EngineQueryReservations.cs: 10/10 source lines; 8/8 raw compiled branches.
+  QueryPreview.cs: 53/53 source lines; 66/66 raw compiled branches.
+  QueryReservations.cs: 10/10 source lines; 6/6 raw compiled branches.
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/csharp-query-reservations-Release-results.wnOdl5/34bcf002-32d0-45e0-86cb-ac04f858d5be/coverage.json: 1953185 bytes; SHA256 575611e7d39b40d35f98fc66d58d0e6f7163e7e0d112b46956b023db3633ab3a
+CausalBatch.cs: 188/188 raw branches
+CausalMerkle.cs: 246/246 raw branches
+CausalProjection.cs: 42/42 raw branches
+CausalReplica.cs: 182/182 raw branches
+CausalSession.cs: 106/106 raw branches
+CausalVersion.cs: 138/138 raw branches
+PASS every compiled causal branch, including methods without source lines
+  CausalBatch.cs: all 124 source lines visited.
+  CausalMerkle.cs: all 160 source lines visited.
+  CausalProjection.cs: all 34 source lines visited.
+  CausalReplica.cs: all 108 source lines visited.
+  CausalSession.cs: all 98 source lines visited.
+  CausalVersion.cs: all 74 source lines visited.
+Repository layout initially rejects downloaded root CI logs; preserved logs moved under experiments/issue-138/ci-logs before all 221 checks pass.
+Strict full C# format, 221 repository tests, C# source-size/changeset/release-helper, ShellCheck and whitespace gates pass.
+Rust and JS production bytes match the retained complete protocol validation; no unchanged compiler suites repeated.
+Allocator-gated owned preview uses the ordinary matching/mutation code without observer callbacks; no probe rows reach private or published storage.
+FIFO reservations consume only after write-lock admission; exact explicit ensures retire only their address. Rollback clears ownership but can retain globally reserved gaps.
+Cost: a detached visible-row/name snapshot, O(N log N) sorted construction, a second query execution and O(K) reservation state; expected O(1) reservation consumption/retirement. Raw sessions allocate no reservation queue until used.
+Compatible defaults retain recycling prediction and custom creator behavior. Direct ensure avoids walking intervening addresses; a four-create guard bounds the full-u64 regression.
+Checked causal query admission/adapters, C# shared query vectors, physical query interchange, whole-project 100% and every other unmet R1-R12 criterion remain unfinished. PR139 stays draft/unmerged.
+csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Legacy.cs: 913 bytes; SHA256 52c506c6fe0993a6be15131e3a8dbbf53720d36661007e0112f8d03ebbfc2907.
+csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Matching.cs: 16986 bytes; SHA256 016ec7e857a2372cb832e2939e780705435f3560e7a111134d84b02c3df2a3a1.
+csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Mutations.cs: 22397 bytes; SHA256 a9e3315de58deed7a179e50931334298830ee0cf965e3a17ae3872b70bb52328.
+csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs: 12922 bytes; SHA256 46303c74cf6bf4f8bc0a1040c181a07d4e9dd5fb75a5767ee465b470009f72de.
+csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs: 24007 bytes; SHA256 d74123e132ec791f6f12321d5662dadf09838cc53f3327382d9e147f6d84c2f1.
+csharp/Foundation.Data.Doublets.Cli.Library/BasicQueryProcessor.cs: 4315 bytes; SHA256 ba307012b81fc7c37e39ce9142199f764ee845e37a2aef82b1fcc398243515b2.
+csharp/Foundation.Data.Doublets.Cli.Library/ChangesSimplifier.cs: 2567 bytes; SHA256 d489abfaae1a7c8d836fd49df4a6ce82c82868d3b6bb46ed68a930a1c68e72d5.
+csharp/Foundation.Data.Doublets.Cli.Library/CheckedUnicodeSequenceWalker.cs: 1415 bytes; SHA256 ed15961b0f43a7993fb3f3d43d84b0d02fd49344a04dbc06f8593b433427954c.
+csharp/Foundation.Data.Doublets.Cli.Library/ChunkArchive.cs: 635 bytes; SHA256 290771d6a260d657ad2867d8401bbcefeb3c40b8c2dec94b5b655ef63640a8a7.
+csharp/Foundation.Data.Doublets.Cli.Library/DiagnosticOutput.cs: 455 bytes; SHA256 b9a3f81e259160d74ae471fea17f565e43919381edb1e43dd578a6e060da208b.
+csharp/Foundation.Data.Doublets.Cli.Library/DurableMappedMemory.cs: 3072 bytes; SHA256 e848c834ba39eb57edb055359949b36d03cb03123b7b5582ba330e4ef31f6848.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalBatch.cs: 12261 bytes; SHA256 f3732b011465d1e179324fbee8f3629aada38c9afe888fc7bf9965dfb2cb9ec3.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalMerkle.cs: 16141 bytes; SHA256 141f6f0c3976a7d648468cf78965260481947b44625bc8906eec1dcd28c1a62a.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalProjection.cs: 2814 bytes; SHA256 8682aee43a762a7b648dcf58b38fa9b04325002cd61f556b282d8736b5973738.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalReplica.cs: 10643 bytes; SHA256 db1e1ff7d760c778fbf3f31ab7d67ab62586e8d34b27fd58f924ad3e23a0499b.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalSession.cs: 9085 bytes; SHA256 29715d56f89272acbdb6d4e149c648980ef85b52a28dbf6c9f28cf872e95e1ee.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CausalVersion.cs: 7134 bytes; SHA256 29d258a320322552f0e8b51aa750848fd917bfc7bc471ef005ce54a6ab01f327.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ChangeRevisionJournal.cs: 4865 bytes; SHA256 a23e8630474f44c96cd0d9777e241898397a6ffdb2e87c4a8f067a5f9c3b083e.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CheckpointInspection.cs: 2998 bytes; SHA256 6b4b47f87716f50d6367a90a21fee0fca6ab8311e7f92cd6e735cbd9eb078b13.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CheckpointPageFormat.cs: 2201 bytes; SHA256 3424b1e35393dd505bc8b4d134c239b46edf0ce941d20870f17b48efebbdfe6b.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CheckpointPagedCommitLog.cs: 6189 bytes; SHA256 22c357b07db0729c02b05b8a80246f78c07e63e1d4f528271ef50287454d8c26.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ClusterEngine.cs: 7753 bytes; SHA256 f642728a0e27e49b6e071c529e59ee2efdf4bbe4e3d8927f4b226b80bd8f44c7.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/CommitLog.cs: 6667 bytes; SHA256 b517e0f399875c0e28e2907acf8603f2b4927b13bdc927d9d27d939e4ec43ee8.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ConstraintIndex.cs: 4405 bytes; SHA256 b529cc0b15e6b0b39caa00362c124eb0e4231aab2070f570023a0f4599ae7be8.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/DeltaCommitLog.cs: 8493 bytes; SHA256 52806897db4724c9420cac3364e5985072dd61da66582f21cb87f7652bced3be.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/EngineFork.cs: 5145 bytes; SHA256 a71aded4d0730f414fb9c74c562e53664d53c8a6ef624560040adf74ab6d93ff.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/EngineQueryReservations.cs: 1099 bytes; SHA256 8d839a6399b839e3b3a599b264583cfcdfd76b2ebf1b430803b4bfe84e384085.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/EngineRows.cs: 3696 bytes; SHA256 81e7f37e62b2ee124bed019eabaa18d8ae507544d9415e15608175a314f5a13a.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/EngineSession.cs: 10490 bytes; SHA256 111ecfb1d1cdbdf0c89f419e36cd53669e5b8fc51a5c1ab26bf670d8be15c6ab.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/EtcdJournalMaintenance.cs: 7327 bytes; SHA256 73e201ddf7ac0e6ac9f09fc4c758beb5f1a14d8ea84d88eb784d9d45442f8b74.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/EtcdJournalStore.cs: 8004 bytes; SHA256 a32519bfafec8f4b249686d5fd936bf3f35e995bfd966e58c89f1b0544c84c52.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileCheckpointPagedCommitLog.cs: 3571 bytes; SHA256 797a6a3fb4fa2b5e8b8d053dce13daf9db6064f20e29f51a6fd987daa5cc1e31.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileLsmFiles.cs: 8664 bytes; SHA256 599fd05a54c59b91905bc195c46e120128d1a88e4a9083eb53ec7d0c4b0b2f46.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileLsmIo.cs: 1083 bytes; SHA256 0ec986bf8a8de79ee796b55d2d11dddc6cc6e4e2a747f7405d5506cef5dd22ba.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileLsmJournalStore.cs: 4001 bytes; SHA256 f7661097eff7e0b4966af51bec3e9de14f47fcda09ebc7c7674320a2d9a91c88.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/FileMirroredPageDevice.cs: 1499 bytes; SHA256 4199a5124e0dbfc85960eec2c49f72c3dfca511d5b93d095f00f48d983e97669.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/FilePageDevice.cs: 6385 bytes; SHA256 339f59079cb932ebd72a7dd7a7348c2f737a07fa4a59c1eaf241d66c1765160d.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/GroupCommit.cs: 4603 bytes; SHA256 931c0c0edf34f0dc894185fc83bd0bb8bdac98f0c744a97e11372b921487bf8d.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ImmutableObjectCache.cs: 1782 bytes; SHA256 655e4fd364a7c3a5b8bbee52437af2fd80cd48051237196b3f75aecdb6a8a98d.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/JournalCheckpoint.cs: 1712 bytes; SHA256 424c70277e292e58eac59e0900f0c898fb0b85b9c9f0fe4736baaf58fa3df2ae.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/JournalChunks.cs: 4149 bytes; SHA256 d3f3781f8a5e5789e73f18cfd920080281cf0c914631c3658e1dee48d771526f.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/JournalMaintenance.cs: 985 bytes; SHA256 95b8dd19374ed0f4b6708264edb687309f063dd009502d1b4e1aad73c9d5cdd6.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/LinksEngine.cs: 10646 bytes; SHA256 bd9939ac3fc2664a85e99fd4c0a6e92c3ce53b924db202d5e2080ff62c6ff409.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/LsmWal.cs: 9053 bytes; SHA256 ce66ea6daf88f9fb2b1a3e4465585f9458c26fbcc540e5b67927a4c757f453d9.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/MirroredCheckpointRoot.cs: 4728 bytes; SHA256 fe1cb1ef40cd9a31dd0abfe8f73e2aa2ad3ea92337eb92f25f6ec525704ea081.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/MirroredPageDevice.cs: 5504 bytes; SHA256 e7eda86201fa1c8d9098f1e3e27e11178e7eeb453f88c35314170530c6edb0fa.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/NativeLsmFileType.cs: 2578 bytes; SHA256 55306d9f2224d1c2616b6d0ff1ce09092ca85d605f7560b9ebbec4e0690cfc19.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/NativeLsmReadOnly.cs: 4530 bytes; SHA256 a14dfc056d47ff7cee73f5c37a1c1ce8a44301b4a6b315c6b9d642312a5d50d3.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PageFormat.cs: 3639 bytes; SHA256 d5a1037fb2cf57c8206ac30e9609e5f382e99f8b1dd80036a93df2a7ffaf2fbb.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PagedCommitLog.cs: 10946 bytes; SHA256 07e33a0f8db195720a86d3f423f71af460f518c4c9fb09d98f10bd0299ddea8b.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PartitionedJournalStore.cs: 8865 bytes; SHA256 70a1736e8df6f359370d5d0317ee2002051b1ea6eef8fef82a5055b705c38916.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PessimisticWrites.cs: 1297 bytes; SHA256 dcfbc61d9434ba3fd936781bb2e8ec1f13280945b8933685ef5472a528b81b4c.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PhysicalLsmJournalStore.cs: 9292 bytes; SHA256 74daf257f161c81722096ab28eea79dd78ba3b4f1064ebfcc85da4b660d20d40.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PhysicalLsmPublication.cs: 5650 bytes; SHA256 5a3d576953c12dc975a3ab0f3ce9671b9f558f06872ab9af13a73b4f0b1c6b9f.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/PhysicalLsmRecovery.cs: 3908 bytes; SHA256 be48f9763db6bb75de0bd5587307671333674eb17b5012603e76824353ba8623.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/QueryPreview.cs: 4722 bytes; SHA256 61a687fca9183ce69a60321d493976e1a71cb160ca9c1279e780ca86b37f6e67.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/QueryReservations.cs: 802 bytes; SHA256 f87762252004c4ddf663cd67770335eb9150359cefa59467f7ae05226d6a4055.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ReclaimingCollector.cs: 2549 bytes; SHA256 39ee93d0d4802dc2cd9bf07e5f6814c450da9c2d1d41432cef9f07197c59f271.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ReclaimingPartitionedJournalStore.cs: 8126 bytes; SHA256 2487896f76315b7003eba77714cf772e8eeab066dff853445ee330505f006278.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ReclamationCodec.cs: 7571 bytes; SHA256 a94ac4af2bb60037e7f103af36673ba75b3305513ceeb91c644850a12fd1818a.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ReclamationObjects.cs: 1740 bytes; SHA256 4141161f27045c03b98a4e276f79dbf6ae949e03a64cd567f15bcffcaed22445.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/ReclamationOptions.cs: 438 bytes; SHA256 b4f511602e2ef4ea0d618819710113fb586c4e07a29790f9a3c07ff2fe4f279e.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/RevisionJournal.cs: 5119 bytes; SHA256 10f87d2c9036136ad5743e644f13cf09374ded46f03df33b4608cca5be3c3753.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/SortedJournalTable.cs: 9495 bytes; SHA256 3def8433704e12afded0220774ba963b6885d2d69d87519cd4153e97ead03378.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/SortedRunRows.cs: 4264 bytes; SHA256 c000c016407c8718f0763136a42c1d079d8cf6d8aefcc12a1fc4e21060e40cae.
+csharp/Foundation.Data.Doublets.Cli.Library/Engine/SqliteCommitLog.cs: 10343 bytes; SHA256 9b59e3dca1ca083ae65dada7593c47be4faf2edd7dec7c131d343ad59a0f3ca5.
+csharp/Foundation.Data.Doublets.Cli.Library/EnumerableExtensions.cs: 4549 bytes; SHA256 b2f645a805ad410ac6f3b97919c5e95aa05487c71ea2fbaa80064704ee8bec08.
+csharp/Foundation.Data.Doublets.Cli.Library/Exceptions.cs: 1378 bytes; SHA256 d140e4cd38643e98fa159cd0e66c040a188966c157c21101994b182ec9507544.
+csharp/Foundation.Data.Doublets.Cli.Library/IDurableLinks.cs: 382 bytes; SHA256 2b89150f9b1b23320d3925a25e67d6b099006202d27ed9def0144ff1cd662fed.
+csharp/Foundation.Data.Doublets.Cli.Library/INamedTypes.cs: 1902 bytes; SHA256 7e08ed846cd2ffb1f6048c371b20b3609c5d3af22d70dc18461373e2f3d564be.
+csharp/Foundation.Data.Doublets.Cli.Library/JournalRecord.cs: 5340 bytes; SHA256 8d21f2ae7f027791d104bcfde5dea994e44586cc27b596287fb6f19d062b5a58.
+csharp/Foundation.Data.Doublets.Cli.Library/LinkParts.cs: 2472 bytes; SHA256 06a5039a5dab67e385caaa62e5f17424d0e87ea909772ea6b46de460cf1ac2eb.
+csharp/Foundation.Data.Doublets.Cli.Library/LinksExtensions.cs: 4223 bytes; SHA256 8f9347c9f7575de7a6c5daee0ae6e2746f1b7c167a2fcaa1726810be32a7e633.
+csharp/Foundation.Data.Doublets.Cli.Library/LinksFacadeDisposer.cs: 3541 bytes; SHA256 f588e9b3e220e8969437f483ecb5b3f3553b463b045bad4346fda46785b918d3.
+csharp/Foundation.Data.Doublets.Cli.Library/LinksFileLock.cs: 5769 bytes; SHA256 009b83cbd16abfe1582f7e6364aa20f2d5d28e7630d6c21fdb1e5889e6a24c05.
+csharp/Foundation.Data.Doublets.Cli.Library/LinksUniquenessAndUsagesRepointingResolver.cs: 4157 bytes; SHA256 f3395dbf61c2a6a87b52fee368d68eb7a6c5187b78019bd353f7646f65b69b37.
+csharp/Foundation.Data.Doublets.Cli.Library/LinoDatabaseInput.cs: 10070 bytes; SHA256 ffb8e0ac4a670a6e3f47ae26252334999e13273c760a7a19e7f3caf07eafac9a.
+csharp/Foundation.Data.Doublets.Cli.Library/LinoDatabaseOutput.cs: 5161 bytes; SHA256 4ba6735ca1e82964f92dccd9834aacf430bca6f799767735d5aaf162e18b27a5.
+csharp/Foundation.Data.Doublets.Cli.Library/MixedQueryProcessor.cs: 15192 bytes; SHA256 4b71a26c8923571fdd2c13d05376f513a783ea6ca6b120b23aeb89acb69ebba9.
+csharp/Foundation.Data.Doublets.Cli.Library/NamedLinks.cs: 6058 bytes; SHA256 5b92c3f264f4b8ca6b081308aaaf22afe46f3bd37bba8e49ac70b6e42f71c4c7.
+csharp/Foundation.Data.Doublets.Cli.Library/NamedLinksDecorator.cs: 10169 bytes; SHA256 99b2de143a8986c7b270bec9dbb00037ad1016a62c0f4a84d42120a211f0382b.
+csharp/Foundation.Data.Doublets.Cli.Library/NamedTypesDecorator.cs: 11520 bytes; SHA256 1ead4945e83bd23150ad7978aa84872db875d9423dbc56e5f45f9f4b7db921a7.
+csharp/Foundation.Data.Doublets.Cli.Library/NamesDatabase.cs: 1755 bytes; SHA256 9b2be125fbaf65157aaa98a810e90ea23d25d21caa404ba87cb42a2f32630776.
+csharp/Foundation.Data.Doublets.Cli.Library/PersistentTransformationDecorator.cs: 13444 bytes; SHA256 641d4557417496adf357a8194f3db52b7f960949cfbb605a15ee3ab14ddcbe45.
+csharp/Foundation.Data.Doublets.Cli.Library/PinnedTypes.cs: 3969 bytes; SHA256 3f758e3376de6c10b86c3940c12db5397a0bf6e7a6f3ee744bc72f160cdf775c.
+csharp/Foundation.Data.Doublets.Cli.Library/PinnedTypesDecorator.cs: 1342 bytes; SHA256 26b8fc0efd3a614c8b502c0a68d5dee7e93da40ada641173501724cdb1f2e40a.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksClient.cs: 2728 bytes; SHA256 b1f0fc67d252990d5230205e18bf118082e8f93f5db35c3cb1555957a0640cb3.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksOperation.cs: 20738 bytes; SHA256 dde90b50e3414ea933d84ecdb9c4d981babaf9c533263ab6fe9d3284ba8f63c1.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinksServer.cs: 13445 bytes; SHA256 502f421950488950cd83a10441ed8aab0135c9151605506bba5be228ca282fbc.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinoProtocolException.cs: 4065 bytes; SHA256 769c77988698c10d13e7c8d16ab58b7d5a76a74968d02274c7759f97a89231c5.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/LinoProtocols.cs: 12188 bytes; SHA256 58d5e113250783ec3eb8501cdea9eaaead2d5cb1a68d10dcad5b6bdc8980d4e3.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/RemoteLinks.cs: 6345 bytes; SHA256 b00047c197e02ad8d2a624442c98c8cc54495f204578fcf4625e4ad3840305cb.
+csharp/Foundation.Data.Doublets.Cli.Library/Protocol/StoreArchive.cs: 6455 bytes; SHA256 2cbd6c9a89054a0fea701bb090e3292ab48bcbee70893f30e8ffbd101a3c146b.
+csharp/Foundation.Data.Doublets.Cli.Library/QueryConstants.cs: 701 bytes; SHA256 511a7f73d4922a5fa47f1f54e84be4e9143f093d1ac09dd558e2e77ec6b56712.
+csharp/Foundation.Data.Doublets.Cli.Library/QueryParser.cs: 5586 bytes; SHA256 49f5601f7010808d11244ab2c05a9f25d23de23d0931a699a986ca4562021ff6.
+csharp/Foundation.Data.Doublets.Cli.Library/SimpleLinksDecorator.cs: 4871 bytes; SHA256 b895e37f459fa8a61deb776a19c1e4f047f5d40779c76d7bfaabef2c475a58bb.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionUndoImage.cs: 3485 bytes; SHA256 917dac6bedf2fb5fae958d4d1a73d210f1b7d95c02d2442237d5cbe7a9fd1cd8.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Commit.cs: 4926 bytes; SHA256 e3f7d8ae96e482f9cb1e2de303647ff70ef352ce26a4ed5b1308230ce339a802.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.JournalValidation.cs: 5911 bytes; SHA256 844b8153bbf1ad45429d888fcbd7bad713b34a31497375bc79c29ad85fff797f.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Names.cs: 4702 bytes; SHA256 c849354e4a14541582a71c651889c6d09d39cb750f143e2df02b437acfa1f9a2.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Recording.cs: 4521 bytes; SHA256 f0de356ff929d59f9aa196b614962001d74b657ee776dca9e64fb6e9b3ae6ab1.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Recovery.cs: 5178 bytes; SHA256 37bc652a3596486bdd196c7c7760606fb971972f2c7bf9b9cfdf66e7e8a651e0.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.RowUndo.cs: 4173 bytes; SHA256 062db1926775f3eaf46cac655d0ea4d1b16ab77cb7331ba6089e61b2cdde17f0.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.VersionReplay.cs: 2587 bytes; SHA256 ad973846fb7da1aaa4ac9beeb3997193e18926f37d9e65c20e364c0e33a9a74d.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.Writes.cs: 4999 bytes; SHA256 74d9d88b0d1574395b237b84c8c0c36f6c38573c3a42d669005bdc9d27dc0a70.
+csharp/Foundation.Data.Doublets.Cli.Library/TransactionsDecorator.cs: 33661 bytes; SHA256 c0979128d5975d980f92f3a5b6e9bc3466f79eb73f8215ecac2b0faad14fa671.
+csharp/Foundation.Data.Doublets.Cli.Library/UnicodeStringStorage.cs: 5927 bytes; SHA256 ea174d7daf952f8a0ec6be06dacc4216c6bc118fffa598546cbd75c9d7d7a2ba.
+csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.Movement.cs: 10271 bytes; SHA256 ae3cb4fa6008a0bbb02ae7d4df81d1d4d2d37b2304cb8283b611c53c7e33a48d.
+csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.Publication.cs: 5536 bytes; SHA256 1c3bf45a0c1300b5c111dcda448e163478d610e31ae137110aa0bc37150683c6.
+csharp/Foundation.Data.Doublets.Cli.Library/VersionControlDecorator.cs: 33330 bytes; SHA256 2dfe57e7aeb03517b9b377e1b364b77dcaba559ff4d381ac174966fe9e7003ff.
+csharp/Foundation.Data.Doublets.Cli.Tests/EngineQueryReservationTests.cs: 8480 bytes; SHA256 d4bca240e27cd10aa155d90e9bf1e4be6070dda0ddce31ae6726ca15b46686a4.
+csharp/Foundation.Data.Doublets.Cli.Tests/QueryAllocationTests.cs: 4659 bytes; SHA256 830f7325cf34f90a7a8a4901a824332d5f20581cd463b0c545a0374313312f7a.
+csharp/Foundation.Data.Doublets.Cli.Tests/QueryPreviewContracts.cs: 4709 bytes; SHA256 5566a824f9911240f6b77e2b42dbd2617a75d535e57128e42bd5b016a8cfee1c.
+dev/log/issues/138/pulls/139/causal-protocol.txt: 42656 bytes; SHA256 661c44b0541608e910bde53a1e69fa71c875cf043a23a71e2585b9e5579f0c25.
+experiments/issue-138/causal-protocol-rust-source-snapshot.json: 73725 bytes; SHA256 7b9699742d8cf1a6e44cc6d2b00866ce1b2587299b3bc4310c66a3228bd9f370.
+experiments/issue-138/csharp-generic-query-Debug-results-path.txt: 99 bytes; SHA256 4827b8d499d6f515800e5b6746cc5fd64d7434b641c1515f91f63d3faceda310.
+experiments/issue-138/csharp-generic-query-Debug-results.aHKKPS/b0327391-4083-45a1-8f2a-04eaeacca290/coverage.cobertura.xml: 2681605 bytes; SHA256 670f1edea425519855302478648ba988ad84dcf8b70c26d746bec62b8c30d12b.
+experiments/issue-138/csharp-generic-query-Release-results-path.txt: 101 bytes; SHA256 3a4a6b6f286458443dcfa0927bb2b07eabd8b4159e477d44e14cca104ad0a4cc.
+experiments/issue-138/csharp-generic-query-Release-results.MXdpFu/4850ee15-8739-4174-baca-8b8d7b96c349/coverage.cobertura.xml: 2376723 bytes; SHA256 781062d85b6990ab4a87d237266a9c1fb3af4aa5ab3d036d99185fafd8dad804.
+experiments/issue-138/csharp-query-allocation/Probe.csproj: 499 bytes; SHA256 6253b75bd7effbb23501f0ca8cfb0c7bb4a71ab8293c2f1621ce92ecd06f9404.
+experiments/issue-138/csharp-query-allocation/Program.cs: 1513 bytes; SHA256 e208ebffc921d634900352059e3dce69c068fe13d5c465cb63b214558e7fbd15.
+experiments/issue-138/csharp-query-allocation-before.log: 619 bytes; SHA256 104207ac18b704e86325b13b783743554ad560a6ce4582df09b1b71c71c83e94.
+experiments/issue-138/csharp-query-allocation-unit-before.log: 17469 bytes; SHA256 ffe6c0532b359a5eb39773de7b1b52be9684268d5a060c5b2c441645d778ee00.
+experiments/issue-138/csharp-query-reservations-Debug-causal-coverage.log: 549 bytes; SHA256 063e5d76062690392e3caaa7224df0d22ef38210daea6c22ac8a9223fd27c6ec.
+experiments/issue-138/csharp-query-reservations-Debug-results-path.txt: 104 bytes; SHA256 424d05145da3a31ab54d9aac08b553ed59a58c8829d1cb0ce39053256f992c1c.
+experiments/issue-138/csharp-query-reservations-Debug-results.7FAH6F/07ec51dd-5ec4-433c-957a-7c1a3c35f6cb/coverage.cobertura.xml: 2717239 bytes; SHA256 fb39913c1df0edd6f052488eff9259345169682816492841a093ec38c8dd8acf.
+experiments/issue-138/csharp-query-reservations-Debug-results.7FAH6F/07ec51dd-5ec4-433c-957a-7c1a3c35f6cb/coverage.json: 2021080 bytes; SHA256 bfc45055e24113eb21aa304da24e73ace52ac68506ecb18066817af19e43ca8c.
+experiments/issue-138/csharp-query-reservations-Debug-tests.log: 1268 bytes; SHA256 0d35b9a48a48ca6f50d9f8564004a22f89242881c9006492173f86b8ec300c4d.
+experiments/issue-138/csharp-query-reservations-Release-causal-coverage.log: 551 bytes; SHA256 2b7e823cfea312fad900e152a01576c00a7234401ada5129a0758a73d54d11ee.
+experiments/issue-138/csharp-query-reservations-Release-results-path.txt: 106 bytes; SHA256 6685493335806023225519ae61931a88c1e96e8cca65d3db8b9e77e4692aba38.
+experiments/issue-138/csharp-query-reservations-Release-results.wnOdl5/34bcf002-32d0-45e0-86cb-ac04f858d5be/coverage.cobertura.xml: 2408891 bytes; SHA256 c1e00c21ed74e702a97ac4a26f9504e64a0d8f2742ff262c7e711e3f51292d08.
+experiments/issue-138/csharp-query-reservations-Release-results.wnOdl5/34bcf002-32d0-45e0-86cb-ac04f858d5be/coverage.json: 1953185 bytes; SHA256 575611e7d39b40d35f98fc66d58d0e6f7163e7e0d112b46956b023db3633ab3a.
+experiments/issue-138/csharp-query-reservations-Release-tests.log: 1280 bytes; SHA256 38b8707696c8303a745fc49a0aa0cf7eb1c04c924d0c77d678dfb0715ffedfbe.
+experiments/issue-138/csharp-query-reservations-after.log: 110 bytes; SHA256 a9f1c9fb5fee50f25db804a62ec62c1a36e407c61229243fec8c2e3edadbc041.
+experiments/issue-138/csharp-query-reservations-allocation-after.log: 618 bytes; SHA256 5ef461e1551efb65d996336202f25be9f7371a7501a9a0d5e84a17522af1d3a4.
+experiments/issue-138/csharp-query-reservations-changeset.log: 21776 bytes; SHA256 fa0c263dd45ec58073515fa3c879b25a80d1eedaf0dae7e82735505f31589318.
+experiments/issue-138/csharp-query-reservations-draft-Debug-tests.log: 2492 bytes; SHA256 13beb3675032c399492909de50d2cd1423ed2002256a883b6f2e17fa28ef380e.
+experiments/issue-138/csharp-query-reservations-focused.log: 937 bytes; SHA256 586ba7a01a080729608a2c9bbc6ea5ab82077697adb4d5d5a5ac81e7869e5008.
+experiments/issue-138/csharp-query-reservations-format.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/csharp-query-reservations-release-tests.log: 3873 bytes; SHA256 0190de339e48fcb50998d6ca3ef3199d6caf26c832e41c854ae1a49d4d38303d.
+experiments/issue-138/csharp-query-reservations-repository-before-relocation.log: 19312 bytes; SHA256 6472200bc56d7a4329a8ec6f7c7e582b9f488912ec48c44d57d119e777731e96.
+experiments/issue-138/csharp-query-reservations-repository.log: 18497 bytes; SHA256 746d6e775ab83069811e547f100ca5ef049c12d293d378d0d79a2a697c8bfb81.
+experiments/issue-138/csharp-query-reservations-shellcheck.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/csharp-query-reservations-source-size.log: 205 bytes; SHA256 4fdb928b92150cb35fc2a693a875b364a47b4320c3d5b31b1d992076d1b0f69d.
+experiments/issue-138/csharp-query-reservations-validation.log: 251 bytes; SHA256 5cdbf1ca1094e0fddc660647b2bafc763ee50edbd32d50b3bf0668fbbc9b017f.
+experiments/issue-138/csharp-query-reservations-whitespace.log: 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+experiments/issue-138/csharp-query-reservations-zero-after.log: 300 bytes; SHA256 b2ededf25e5c6c72072baca8437e7de1ff5525535e9bad2506bea392928308f4.
+experiments/issue-138/run-csharp-generic-query.sh: 512 bytes; SHA256 89a20f9fb0a08b313dcd5b58d48ca8e5543c4836292177f1b78abdcc0cc3dc9f.
+experiments/issue-138/run-csharp-query-allocation.sh: 516 bytes; SHA256 8ae36cfe26d9a71907d1632421dd6f0d1e8090aa4cba81448e803da6ebd00eb9.
+experiments/issue-138/run-csharp-query-zero.sh: 517 bytes; SHA256 410ff8252b362c93c234b1f37fde60768d3a0e8f995be353014f42271e67fa09.
+experiments/issue-138/summarize-csharp-query-reservations.py: 8398 bytes; SHA256 7e1fbc93f9711fe350628479d80d74d5fc5b6052e64bd518dbd174f6b84525b9.
+experiments/issue-138/validate-csharp-generic-query.sh: 1637 bytes; SHA256 c583b11b9ade4b23682dff50af977d695f0ba0493cbad770c34b2e2f415c0c88.
+experiments/issue-138/validate-csharp-query-gates.sh: 1036 bytes; SHA256 b61bb20af75bc6012b09f07301c7e5b28bd352a544badd498f0473467c900184.
+experiments/issue-138/validate-csharp-query-reservations.sh: 382 bytes; SHA256 da02442b8a7928dc061eb387d2d2ff14e3912efe2ee0d99d761aa9fffd890bad.

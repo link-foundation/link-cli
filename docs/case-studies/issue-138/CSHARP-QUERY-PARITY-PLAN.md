@@ -22,17 +22,19 @@ Rust/actual-WASM/JS protocol tests do not verify that remaining work.
 - [ ] Preserve reference kinds in QueryParser for the selected numeric type;
       reject malformed, negative and overflowing numeric input before checked
       private writes. Retain the established legacy uint interpretation.
-- [ ] Add optional query preparation and direct explicit-address capabilities
+- [x] Add optional query preparation and direct explicit-address capabilities
       to the ordinary named-store interface with compatible defaults. A
       monotonic session must not use the current create/delete prediction or
       walk every intervening address through LinksExtensions.EnsureCreated.
-- [ ] Under the allocator owner lock, execute the same query against owned
+- [x] Under the allocator owner lock, execute the same query against owned
       preview rows/names with validation disabled, record its exact allocation
-      order and validate final references and reply budgets. Reserve that
+      order and validate final references. Reserve that
       sequence without creating probe rows; consume it in real creation and
       retire only a matching explicit reservation. Input and preview admission
       failures preserve rows and the allocator cursor. A later missing-reference
       rejection or rollback may retain already reserved gaps, matching Rust.
+- [ ] Extend checked preview admission to decoded named reply budgets before
+      real edits; the ordinary reservation capability alone does not bound replies.
 - [ ] Bound input bytes, parser depth, document nodes, result/binding expansion
       and decoded named reply bytes before checked writes. Use finite bounded
       probes, ordinary positive controls and no host-exhaustion experiments.
@@ -52,17 +54,17 @@ Rust/actual-WASM/JS protocol tests do not verify that remaining work.
 Current source audit: AdvancedMixedQueryProcessor{,.Matching,.Mutations,
 .References}.cs, QueryParser.cs, INamedTypes.cs, LinksExtensions.cs,
 Engine/EngineSession.cs, Engine/CausalSession.cs and Protocol/LinksServer.cs.
-The standard extension currently loops Create until an explicit target and
-the query reference planner creates/deletes temporary links. Neither path
-provides a reservation for a monotonic allocator. EngineSession already has
-an owner gate and explicit EnsureCreated; preserve its lock ownership and
-existing concurrency policies when adding query preparation.
+The standard extension retains its allocator fallback for older stores and
+explicit custom creator delegates. EngineSession now supplies direct ensure
+and optional query reservations under its owner gate. Older named stores use
+compatible default capability methods; they must opt in if their allocation
+does not support the existing recycling prediction.
 
 `bash experiments/issue-138/run-csharp-query-allocation.sh` reproduces the
 anonymous point as `(2: 1 1)`, with an unpublished engine snapshot and missing
 identity 1. The independent explicit point and explicit-high/pair-reuse
 controls pass. `csharp-query-allocation-before.log` preserves the three finite
-results; the failure remains unfixed. Each case creates at most four rows.
+results before implementation. Each case creates at most four rows.
 
 All other unmet R1–R12 criteria remain active. PR139 stays draft and unmerged.
 
@@ -92,6 +94,30 @@ source lines and raw compiled branches. Complete production totals remain
 6,569/7,037 branches in Release. Every previous production source file remains
 included. Strict formatting, 221 repository tests and source/changeset/release/
 ShellCheck gates pass. csharp-generic-query.txt preserves commands, before/after
-failures, costs and source/report hashes. The anonymous allocation failure
-above remains reproducible; checked causal and physical query parity remain
+failures, costs and source/report hashes. The allocation step below addresses
+the separate anonymous failure; checked causal and physical query parity remain
 unfinished.
+
+Verified monotonic-allocation step: all ten permanent reproductions fail before
+the fix; the separate three-case probe has two positive controls and one dangling
+anonymous point. The corrected owned preview passes those ten cases plus eleven
+ownership, concurrency, failure, wide-address, compatibility and preview contracts.
+The first full draft exposes an existing blind-write validation regression:
+reading every fresh address changes its conflict classification. Restricting that
+collision read to reserved addresses restores the existing read-set contract.
+Both complete Debug/Release suites pass 2,535 tests, zero failures or skips.
+All source lines and raw compiled branches in the three new reservation sources
+and the six existing causal components are visited. Complete production coverage
+is 10,348/10,650 lines and 6,739/7,186 branches in Debug; 7,998/8,196 lines and
+6,675/7,139 branches in Release. Every prior production file stays included.
+The repository layout check also catches raw CI logs saved at the root; moving
+them into experiments/issue-138/ci-logs preserves them and satisfies that gate.
+csharp-query-reservations.txt retains reproduction commands, complete reports,
+source hashes, successful full-suite logs and the initial draft failure.
+
+The guarantee costs a detached visible-row/name snapshot, O(N log N) sorted
+construction, a second query execution and O(K) reservation state. Queue
+consumption and exact explicit retirement have expected O(1) cost. Raw sessions
+allocate no reservation queue until needed. Checked causal admission, shared
+query/protocol vectors, physical interchange and every wider unmet criterion
+remain active; passing this step does not complete issue138.

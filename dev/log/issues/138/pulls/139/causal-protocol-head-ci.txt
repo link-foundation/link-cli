@@ -1,0 +1,31 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Exact protocol head: 1274658b10a3c217da789bc5c76a70c31a262f21; commit 2026-10-27T23:16:24Z.
+WebAssembly CI: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995592
+C# CI/CD Pipeline: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995602
+Broken Link Checker: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995587
+Dependencies: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995688
+Workflows: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995784
+Docs: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995764
+Security: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995643
+JS client CI: success; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995700
+Rust CI/CD Pipeline: cancelled; created 2026-10-27T23:16:33Z; head 1274658b10a3c217da789bc5c76a70c31a262f21; https://github.com/link-foundation/link-cli/actions/runs/40600995576
+Eight workflows pass; Rust is cancelled, so this is not an all-passing head receipt.
+Rust job Detect Changes: success; 2026-10-27T23:16:36Z -> 2026-10-27T23:17:30Z
+Rust job Rust coverage: success; 2026-10-27T23:16:44Z -> 2026-10-27T23:24:19Z
+Rust job Create Changelog PR: skipped; 2026-10-27T23:16:34Z -> 2026-10-27T23:16:34Z
+Rust job Verify crates.io trusted publishing: skipped; 2026-10-27T23:16:34Z -> 2026-10-27T23:16:34Z
+Rust job Simulate Fresh Merge: success; 2026-10-27T23:17:33Z -> 2026-10-27T23:24:37Z
+Rust job Lint and Format Check: success; 2026-10-27T23:17:32Z -> 2026-10-27T23:19:49Z
+Rust job Changelog Fragment Check: success; 2026-10-27T23:17:33Z -> 2026-10-27T23:18:17Z
+Rust job Test (ubuntu-24.04): success; 2026-10-27T23:18:19Z -> 2026-10-27T23:24:29Z
+Rust job Test (macos-26): success; 2026-10-27T23:18:20Z -> 2026-10-27T23:30:17Z
+Rust job Test (windows-2025): cancelled; 2026-10-27T23:18:19Z -> 2026-10-27T23:40:55Z
+Rust job Auto Release: skipped; 2026-10-27T23:40:55Z -> 2026-10-27T23:40:55Z
+Rust job Manual Release: skipped; 2026-10-27T23:40:55Z -> 2026-10-27T23:40:55Z
+Rust job Build Package: skipped; 2026-10-27T23:40:55Z -> 2026-10-27T23:40:55Z
+Preserved experiments/issue-138/ci-logs/rust-40600995576.log:50897: The operation was canceled.
+Lines 50875-50896 show ongoing successful version movement before cancellation, not a test assertion failure. Linux, macOS, coverage, fresh merge and lint jobs completed successfully. The newer PR head triggers job concurrency with cancel-in-progress enabled; fresh exact-head CI remains required.
+experiments/issue-138/csharp-reservations-parent-ci.json: 3234 bytes; SHA256 6b2d58def94539edaaccd22c74ee70a3036d0296acf5c24cbcc0540924c37347.
+experiments/issue-138/protocol-head-rust-cancelled.json: 18045 bytes; SHA256 4bd90c69a03f2fb19b2573414faaff4a6565b4317b2f9d24fab0862f236d99de.
+experiments/issue-138/ci-logs/rust-40600995576.log: 8900356 bytes; SHA256 a0f41e44b9b82c4c6cd373d3c26427310df3dcb4fed6ee82720b5534c6743bf8.
+All wider unmet R1-R12 criteria remain unfinished. PR139 stays draft and unmerged.

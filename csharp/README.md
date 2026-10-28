@@ -81,8 +81,17 @@ commit. Standard callbacks expose owned, read-only three-part lists, so later
 edits do not change retained observations. Read their parts through the list
 interface: the pinned upstream `Link<UInt128>` list helpers initialize default
 constants through reflection that does not support `UInt128`.
-The checked causal query adapter, bounded admission and monotonic anonymous
-allocation are tracked in
+Monotonic engine sessions preview queries over detached rows and names before
+reserving their allocation order. This avoids temporary create/delete probes;
+`(() ((1 1)))` creates the private point `(1: 1 1)` in a fresh session. Only
+real edits reach change callbacks. Preview failures preserve the cursor; a later
+missing-reference rejection or rollback can leave reserved address gaps.
+Explicit addresses use direct ensure rather than walking intervening identities.
+The reservation queue is allocated only when a query first reserves an address.
+Preview copies visible rows and executes the query before its real execution,
+so it adds a row snapshot and a second matching pass for this guarantee.
+Other stores keep their existing prediction through compatible interface defaults.
+The checked causal query adapter and bounded admission are tracked in
 [the C# query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).
 
 LiNo imports (`--import`, `--in`, `--lino-input`, and the library's

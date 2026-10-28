@@ -17,11 +17,17 @@ namespace Foundation.Data.Doublets.Cli
             IList<LinoLink> substitutionPatterns,
             Options options)
         {
+            if (options.SkipReferenceValidation) return;
             TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Starting validation");
 
             while (true)
             {
-                var plan = PlanReferences(links, restrictionPatterns, substitutionPatterns, options);
+                var finalIds = links.ReserveQueryAllocations(preview => ProcessQuery(preview, new Options
+                {
+                    Query = options.Query,
+                    SkipReferenceValidation = true,
+                }));
+                var plan = PlanReferences(links, restrictionPatterns, substitutionPatterns, options, finalIds);
                 if (plan.MissingReferences.Count == 0)
                 {
                     TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
@@ -48,9 +54,10 @@ namespace Foundation.Data.Doublets.Cli
             INamedTypesLinks<T> links,
             IList<LinoLink> restrictionPatterns,
             IList<LinoLink> substitutionPatterns,
-            Options options)
+            Options options,
+            IReadOnlySet<T>? finalIds)
         {
-            var plan = BuildLinkReferencePlan(links, substitutionPatterns);
+            var plan = BuildLinkReferencePlan(links, substitutionPatterns, finalIds);
 
             TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {string.Join(", ", plan.NumericIdsToBeCreated.OrderBy(id => id))}");
             TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Named links to be created: {string.Join(", ", plan.NamesToBeCreated.OrderBy(name => name, StringComparer.Ordinal))}");
@@ -85,7 +92,7 @@ namespace Foundation.Data.Doublets.Cli
             public string Key => NumericId.HasValue ? $"id:{NumericId.Value}" : $"name:{Identifier}";
         }
 
-        private static LinkReferencePlan BuildLinkReferencePlan(INamedTypesLinks<T> links, IList<LinoLink> substitutionPatterns)
+        private static LinkReferencePlan BuildLinkReferencePlan(INamedTypesLinks<T> links, IList<LinoLink> substitutionPatterns, IReadOnlySet<T>? finalIds)
         {
             var plan = new LinkReferencePlan();
             var anonymousLinks = 0;
@@ -93,7 +100,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 CollectDefinitions(pattern, plan, ref anonymousLinks);
             }
-            plan.NumericIdsToBeCreated.UnionWith(NextCreatedAddresses(links, anonymousLinks));
+            plan.NumericIdsToBeCreated.UnionWith(finalIds ?? (IEnumerable<T>)NextCreatedAddresses(links, anonymousLinks));
             return plan;
         }
 
@@ -136,9 +143,9 @@ namespace Foundation.Data.Doublets.Cli
 
         /// <summary>The addresses the next <paramref name="count"/> links created in <paramref name="links"/> get.</summary>
         /// <remarks>
-        /// A store reuses the address freed last first, so the lowest free one is not necessarily next.
-        /// Creating the links and deleting them again in reverse leaves the store exactly as it was,
-        /// and is the one way to ask any store, a remote one included.
+        /// Compatibility fallback for stores without query reservations. A recycling store may
+        /// hand out its last freed address first. Creating and deleting in reverse preserves that
+        /// order; monotonic stores must provide ReserveQueryAllocations instead.
         /// </remarks>
         private static List<T> NextCreatedAddresses(INamedTypesLinks<T> links, int count)
         {
