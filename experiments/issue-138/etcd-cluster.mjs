@@ -9,6 +9,7 @@ import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ClusterEngine, EtcdJournalStore } from '../../js/client/src/cluster.js';
 import { waitForMembers } from './etcd-harness.mjs';
+import { verifyAuthorFence } from '../../examples/native-lsm-js/author-fence-consensus.mjs';
 import { verifyAddressAllocation } from '../../examples/native-lsm-js/allocation-consensus.mjs';
 import { PartitionedJournalStore } from '../../js/client/src/partitioned.js';
 
@@ -68,6 +69,7 @@ try {
   const options = { prefix: '/issue138/', timeoutMs: 700 };
   await waitForMembers(endpoints);
   await verifyAddressAllocation(endpoints, binding);
+  await verifyAuthorFence(endpoints, binding);
   const store = new EtcdJournalStore(endpoints, options);
   await ready(() => store.read(['a']));
   const engine = new ClusterEngine(binding, store, { requireDurableFlush: true, ...checkpointOptions });

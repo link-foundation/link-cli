@@ -1,0 +1,941 @@
+Selected author fencing; base c14beca86e01bafb8ca9ceda9bffd5820e0d90d9.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Focused local checks, 2026-10-28 UTC; complete suites remain in CI.
+Before logs demonstrate absent selected APIs, not existing-feature regressions.
+Final results: seven Rust functions; eight C# cases; nine each Node/Bun/Deno.
+Node enforces 100% lines, branches and functions of the new production module.
+Independent model: six complete read/CAS schedules, precheck-only negative
+control and 22 canonical/admission fixtures.
+Commands/limits: experiments/issue-138/run-author-fence-checks.sh.
+Clippy additionally builds the selected etcd CLI with warnings denied.
+The real-etcd/actual-WASM composition recipe is wired to CI, not yet executed.
+Display trims trailing whitespace; SHA256 identifies original raw logs.
+
+--- author-fence-before.log SHA256 a9870a6cfbcd669923aecad19a118bcec7f604d2a08176cdb0abdb805e5cace9 ---
+node:internal/modules/esm/resolve:241
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/gh-issue-solver-1793187246880/js/client/src/engine-author-fence.js' imported from /tmp/gh-issue-solver-1793187246880/js/client/test/engine-author-fence.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:241:11)
+    at moduleResolve (node:internal/modules/esm/resolve:846:10)
+    at defaultResolve (node:internal/modules/esm/resolve:973:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///tmp/gh-issue-solver-1793187246880/js/client/src/engine-author-fence.js'
+}
+
+Node.js v26.12.1
+✖ js/client/test/engine-author-fence.test.mjs (154.044267ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 171.878079
+
+✖ failing tests:
+
+test at js/client/test/engine-author-fence.test.mjs:1:1
+✖ js/client/test/engine-author-fence.test.mjs (154.044267ms)
+  'test failed'
+
+--- author-fence-rust-before.log SHA256 021c33c234b19206a6718d3a464569ba9db725dd0fd4b56edb228f42612a14c6 ---
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+error[E0432]: unresolved import `link_cli::engine::author_fence`
+ --> tests/engine_author_fence_tests.rs:3:5
+  |
+3 |     author_fence::AuthorFence,
+  |     ^^^^^^^^^^^^ could not find `author_fence` in `engine`
+
+error[E0433]: cannot find `author_fence` in `engine`
+   --> tests/engine_author_fence_tests.rs:119:101
+    |
+119 | ...one(), "fence", A, link_cli::engine::author_fence::AuthorFenceOptions { max_entries: 2, ..Default::default() }).unwrap();
+    |                                         ^^^^^^^^^^^^ could not find `author_fence` in `engine`
+
+warning: unused import: `json`
+ --> tests/engine_author_fence_tests.rs:7:18
+  |
+7 | use serde_json::{json, Value};
+  |                  ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+warning: `link-cli` (test "engine_author_fence_tests") generated 1 warning
+error: could not compile `link-cli` (test "engine_author_fence_tests") due to 2 previous errors; 1 warning emitted
+
+--- author-fence-csharp-before.log SHA256 ceed7419afa2fbf59947429936484f9d032da71a763a91c1a802a588748eb878 ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(34,25): error CS0246: The type or namespace name 'AuthorFence' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(40,18): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(47,42): error CS0246: The type or namespace name 'AuthorFence' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(50,9): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(51,9): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(52,9): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(58,42): error CS0246: The type or namespace name 'AuthorFence' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(62,9): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(68,62): error CS0246: The type or namespace name 'AuthorFence' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(69,9): error CS0619: 'Assert.Throws<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(71,36): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(76,42): error CS0246: The type or namespace name 'AuthorFence' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/AuthorFenceTests.cs(78,9): error CS0619: 'Assert.ThrowsAny<T>(Func<Task>)' is obsolete: 'You must call Assert.ThrowsAnyAsync<T> (and await the result) when testing async code.' [/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+--- author-fence-model.log SHA256 f0506367908781fa25808b07e689d3d78754d5dc7d6950bdb219ba7b54c5839e ---
+PASS independent author fencing: 6 complete takeover/publication schedules; 22 wire fixtures
+
+--- author-fence-js.log SHA256 524df3cf329216afc459bae453b0f48466ccf1502bb7ab8bfade6aed72190aaa ---
+✔ independent canonical claim journal fixtures are owned and read-only (9.337732ms)
+✔ explicit takeover fences old reads and publications without undoing earlier data (3.976439ms)
+✔ a takeover inside guarded CAS conflicts atomically and explicit retry is fenced (0.960743ms)
+✔ same-base claim races and uncertain replies never blindly retake ownership (1.632115ms)
+✔ finite budgets and maximum generation preserve retained active retries (1.067651ms)
+✔ guarded read-only CAS preserves the fence generation and provider ownership (0.608135ms)
+✔ invalid options, requests, snapshots and guard frames cannot publish (3.469394ms)
+✔ guard captures selected keys, expected frames and writes before its first await (0.545248ms)
+✔ new owner resolves a decided batch and burns the previous grant suffix (48.491863ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 258.582883
+ℹ start of coverage report
+ℹ --------------------------------------------------------------------------
+ℹ file                      | line % | branch % | funcs % | uncovered lines
+ℹ --------------------------------------------------------------------------
+ℹ js                        |        |          |         |
+ℹ  client                   |        |          |         |
+ℹ   src                     |        |          |         |
+ℹ    engine-author-fence.js | 100.00 |   100.00 |  100.00 |
+ℹ --------------------------------------------------------------------------
+ℹ all files                 | 100.00 |   100.00 |  100.00 |
+ℹ --------------------------------------------------------------------------
+ℹ end of coverage report
+
+--- author-fence-bun.log SHA256 dc47faf0496ebadc02e064214d70ab6b3053d9a3cac150ee2d885d058c22ba95 ---
+bun test v1.4.4 (38afee6c8)
+
+js/client/test/engine-author-fence.test.mjs:
+(pass) independent canonical claim journal fixtures are owned and read-only [49.10ms]
+(pass) explicit takeover fences old reads and publications without undoing earlier data [7.86ms]
+(pass) a takeover inside guarded CAS conflicts atomically and explicit retry is fenced [1.03ms]
+(pass) same-base claim races and uncertain replies never blindly retake ownership [1.55ms]
+(pass) finite budgets and maximum generation preserve retained active retries [0.80ms]
+(pass) guarded read-only CAS preserves the fence generation and provider ownership [0.48ms]
+(pass) invalid options, requests, snapshots and guard frames cannot publish [6.84ms]
+(pass) guard captures selected keys, expected frames and writes before its first await [0.50ms]
+(pass) new owner resolves a decided batch and burns the previous grant suffix [106.37ms]
+
+ 9 pass
+ 0 fail
+Ran 9 tests across 1 file. [237.00ms]
+
+--- author-fence-deno.log SHA256 6a7bf74a64ee8fc1c1891cde184c9baf2c53bdc6cc13f15c897906056a546d70 ---
+running 9 tests from ./js/client/test/engine-author-fence.test.mjs
+independent canonical claim journal fixtures are owned and read-only ... ok (13ms)
+explicit takeover fences old reads and publications without undoing earlier data ... ok (2ms)
+a takeover inside guarded CAS conflicts atomically and explicit retry is fenced ... ok (903µs)
+same-base claim races and uncertain replies never blindly retake ownership ... ok (1ms)
+finite budgets and maximum generation preserve retained active retries ... ok (1ms)
+guarded read-only CAS preserves the fence generation and provider ownership ... ok (544µs)
+invalid options, requests, snapshots and guard frames cannot publish ... ok (4ms)
+guard captures selected keys, expected frames and writes before its first await ... ok (800µs)
+new owner resolves a decided batch and burns the previous grant suffix ... ok (21ms)
+
+ok | 9 passed | 0 failed (74ms)
+
+
+--- author-fence-rust.log SHA256 37770cb6cb5be4ea3d3aa5be5d9269e757e1fc214ada2973aa34c7a695e7101d ---
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `test` profile [unoptimized] target(s) in 12.22s
+     Running tests/engine_author_fence_tests.rs (rust/target/debug/deps/engine_author_fence_tests-5f86051167aed22e)
+
+running 7 tests
+test canonical_claim_journal_fixtures_are_read_only ... ok
+test explicit_takeover_fences_old_reads_writes_and_receipts ... ok
+test finite_budgets_and_read_only_guards_preserve_active_retry ... ok
+test malformed_admission_and_provider_snapshots_cannot_publish ... ok
+test takeover_inside_guarded_data_cas_is_atomic ... ok
+test takeover_resolves_decided_batch_and_burns_old_reservation_suffix ... ok
+test uncertain_claims_and_competing_predecessors_preserve_original_identity ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+--- author-fence-csharp.log SHA256 ad68b44f8a43b84fcf264c998cb22580a1c9702d7422df1fa3b07d8405234862 ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 193 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+--- author-fence-clippy.log SHA256 ef5796c0229e9c166c286736b79b018749d5fe233aef09dea2011488894a2f64 ---
+    Checking link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+    Finished `dev` profile [unoptimized] target(s) in 6.38s
+
+--- author-fence-types.log SHA256 3554b7d6a856e07299c8d63ae39972733b00bb563bb11df6511cb11dc2fb9a1a ---
+
+> @link-foundation/link-cli-client@0.2.0 typecheck
+> tsc --noEmit --strict --lib esnext,dom --target esnext --module nodenext types/*.d.ts test/types.ts
+
+
+--- author-fence-rust-format.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-format-verified.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-csharp-example.log SHA256 08c1e653fb37fa03a051b005dc29f7993fa36eabebff695959b75d5085192af1 ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  ClusterExample -> /tmp/gh-issue-solver-1793187246880/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.78
+
+--- author-fence-gates.log SHA256 6fa37840e1ffd2bcc77c8108fffc260f33f5219bff3099fefd42b0435e7cdccd ---
+GATES PASS 2026-10-28T13:34:12Z
+
+--- author-fence-repository.log SHA256 95a81ea25de58699190f2aa3f5256ddb32cfad545ccf3a4798885af49c92d6e2 ---
+
+> link-cli-web@2.4.0 test:js
+> node --test test/*.test.mjs ../csharp/scripts/*.test.mjs ../.github/scripts/*.test.mjs
+
+✔ versions compare numerically, not as text (4.222077ms)
+✔ a declared version is compared only as far as it is written (0.606832ms)
+✔ pre-releases are never the latest version (0.5039ms)
+✔ every Cargo dependency form is found, path-only ones are skipped (2.370853ms)
+✔ NuGet package references are found (0.673156ms)
+✔ npm ranges lose their operator, and locked versions come from the lock file (1.096405ms)
+✔ actions pinned to a major tag are found once per repository (1.167918ms)
+✔ runtimes and installed tools are found (1.546135ms)
+✔ actions pinned to a commit, a digest or an exact tag are found (4.238508ms)
+✔ only real updates of cargo update --dry-run count (0.937479ms)
+✔ a manifest comment links the issue that holds a dependency back (0.243935ms)
+✔ Cargo comments hold back the dependency on their line only (2.902434ms)
+✔ csproj comments hold back the package reference on their line (0.278689ms)
+✔ workflow comments hold back actions, runtimes and tools (0.781087ms)
+✔ only an open issue holds an outdated dependency back (0.799702ms)
+✔ a dropped connection to a registry is retried instead of failing the check (23.039982ms)
+✔ a lookup that keeps failing reports the network cause and the attempts (4.214001ms)
+✔ an answer a retry cannot change fails at once (4.215745ms)
+✔ retries wait longer each time and stop after the last attempt (62.269876ms)
+  Retrying the Wayback API (attempt 2 of 3) after: fetch failed: ECONNRESET
+✔ the errors section stops at the next top-level heading (2.436455ms)
+✔ a report without an errors section yields nothing (0.359961ms)
+✔ redirected links are not reported as broken (1.085555ms)
+✔ every http error is extracted exactly once (1.20602ms)
+✔ errors that the Wayback Machine cannot answer are still reported (0.432577ms)
+✔ the parsed error count matches the count lychee reports (0.586183ms)
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 503
+  Retrying the Wayback API (attempt 2 of 2) after: fetch failed: ECONNRESET
+✔ transient Wayback failures are retried before a snapshot is reported (25.420202ms)
+✔ a Wayback lookup that keeps failing is reported as failed, not as unarchived (2.790817ms)
+✔ a definite Wayback answer is not retried (1.735848ms)
+✔ only inactive or missing Codecov repositories make uploading optional (64.373641ms)
+✔ Codecov lookup failures and malformed responses do not silently disable upload checks (8.466565ms)
+✔ Cobertura totals remain visible in the summary without Codecov (1.651611ms)
+✔ missing and invalid coverage reports fail instead of publishing misleading totals (1.642694ms)
+✔ summary command finds nested Cobertura files and appends the Actions summary (74.828274ms)
+✔ csharp.yml: use an exact SDK version to avoid the broken channel redirect (2.285774ms)
+✔ docs.yml: use an exact SDK version to avoid the broken channel redirect (0.60038ms)
+✔ js-client.yml: use an exact SDK version to avoid the broken channel redirect (0.505122ms)
+✔ security.yml: use an exact SDK version to avoid the broken channel redirect (0.263772ms)
+✔ npm release validation uses the actual registry lookup result (3.774712ms)
+✔ npm release validation succeeds when published=true (43.063436ms)
+✔ npm release validation succeeds when published=false (21.043938ms)
+✔ release helper check compiles every executable, denies warnings, and propagates failures (149.787102ms)
+✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (58.2834ms)
+✔ npm trust verification fails clearly when OIDC or the registry policy is missing (5.048828ms)
+✔ there is at least one workflow to inspect (6.336931ms)
+✔ no workflow reacts to both pull_request and non-main push branches (2.285793ms)
+✔ the JavaScript unit tests are executed by a workflow (0.589069ms)
+✔ csharp.yml: every job declares timeout-minutes (1.523132ms)
+✔ csharp.yml: declares a top-level permissions block (0.33782ms)
+✔ csharp.yml: every job is covered by a concurrency group (1.437261ms)
+✔ csharp.yml: writer jobs own a never-cancelled concurrency group (3.15191ms)
+✔ csharp.yml: does not mask failures with continue-on-error (3.813504ms)
+✔ csharp.yml: crates.io trusted publishing runs only when enabled (5.305959ms)
+✔ csharp.yml: single-line if expressions do not start with ! (2.148116ms)
+✔ csharp.yml: every release_mode option is handled by a job (0.761921ms)
+✔ csharp.yml: publish steps do not silently skip on missing credentials (2.13324ms)
+✔ csharp.yml: npm lookups tell "not published" apart from a failure (2.200586ms)
+✔ csharp.yml: required choice inputs declare a default (1.121593ms)
+✔ csharp.yml: hosted runners use pinned OS labels (1.72075ms)
+✔ csharp.yml: provides init.defaultBranch to actions/checkout (0.797147ms)
+✔ dependencies.yml: every job declares timeout-minutes (0.183123ms)
+✔ dependencies.yml: declares a top-level permissions block (0.10171ms)
+✔ dependencies.yml: every job is covered by a concurrency group (0.207387ms)
+✔ dependencies.yml: writer jobs own a never-cancelled concurrency group (0.165389ms)
+✔ dependencies.yml: does not mask failures with continue-on-error (0.183652ms)
+✔ dependencies.yml: crates.io trusted publishing runs only when enabled (1.826587ms)
+✔ dependencies.yml: single-line if expressions do not start with ! (0.200815ms)
+✔ dependencies.yml: every release_mode option is handled by a job (0.109424ms)
+✔ dependencies.yml: publish steps do not silently skip on missing credentials (0.106989ms)
+✔ dependencies.yml: npm lookups tell "not published" apart from a failure (0.117469ms)
+✔ dependencies.yml: required choice inputs declare a default (0.093044ms)
+✔ dependencies.yml: hosted runners use pinned OS labels (3.354768ms)
+✔ dependencies.yml: provides init.defaultBranch to actions/checkout (0.130654ms)
+✔ docs.yml: every job declares timeout-minutes (0.449179ms)
+✔ docs.yml: declares a top-level permissions block (0.135082ms)
+✔ docs.yml: every job is covered by a concurrency group (0.441524ms)
+✔ docs.yml: writer jobs own a never-cancelled concurrency group (0.426085ms)
+✔ docs.yml: does not mask failures with continue-on-error (0.208017ms)
+✔ docs.yml: crates.io trusted publishing runs only when enabled (0.443709ms)
+✔ docs.yml: single-line if expressions do not start with ! (0.198921ms)
+✔ docs.yml: every release_mode option is handled by a job (0.142536ms)
+✔ docs.yml: publish steps do not silently skip on missing credentials (0.276426ms)
+✔ docs.yml: npm lookups tell "not published" apart from a failure (0.313154ms)
+✔ docs.yml: required choice inputs declare a default (0.167463ms)
+✔ docs.yml: hosted runners use pinned OS labels (0.320338ms)
+✔ docs.yml: provides init.defaultBranch to actions/checkout (0.200995ms)
+✔ js-client.yml: every job declares timeout-minutes (0.246611ms)
+✔ js-client.yml: declares a top-level permissions block (0.106058ms)
+✔ js-client.yml: every job is covered by a concurrency group (0.24645ms)
+✔ js-client.yml: writer jobs own a never-cancelled concurrency group (0.393935ms)
+✔ js-client.yml: does not mask failures with continue-on-error (0.228397ms)
+✔ js-client.yml: crates.io trusted publishing runs only when enabled (0.522986ms)
+✔ js-client.yml: single-line if expressions do not start with ! (0.188492ms)
+✔ js-client.yml: every release_mode option is handled by a job (1.922586ms)
+✔ js-client.yml: publish steps do not silently skip on missing credentials (0.415044ms)
+✔ js-client.yml: npm lookups tell "not published" apart from a failure (0.760889ms)
+✔ js-client.yml: required choice inputs declare a default (0.201326ms)
+✔ js-client.yml: hosted runners use pinned OS labels (0.386301ms)
+✔ js-client.yml: provides init.defaultBranch to actions/checkout (0.098253ms)
+✔ links.yml: every job declares timeout-minutes (0.157324ms)
+✔ links.yml: declares a top-level permissions block (0.076372ms)
+✔ links.yml: every job is covered by a concurrency group (0.126125ms)
+✔ links.yml: writer jobs own a never-cancelled concurrency group (0.142135ms)
+✔ links.yml: does not mask failures with continue-on-error (0.108392ms)
+✔ links.yml: crates.io trusted publishing runs only when enabled (0.211735ms)
+✔ links.yml: single-line if expressions do not start with ! (0.113712ms)
+✔ links.yml: every release_mode option is handled by a job (0.09102ms)
+✔ links.yml: publish steps do not silently skip on missing credentials (1.758681ms)
+✔ links.yml: npm lookups tell "not published" apart from a failure (0.20884ms)
+✔ links.yml: required choice inputs declare a default (0.0965ms)
+✔ links.yml: hosted runners use pinned OS labels (0.196817ms)
+✔ links.yml: provides init.defaultBranch to actions/checkout (0.08591ms)
+✔ rust.yml: every job declares timeout-minutes (0.616811ms)
+✔ rust.yml: declares a top-level permissions block (0.109093ms)
+✔ rust.yml: every job is covered by a concurrency group (0.31097ms)
+✔ rust.yml: writer jobs own a never-cancelled concurrency group (0.376664ms)
+✔ rust.yml: does not mask failures with continue-on-error (0.273701ms)
+✔ rust.yml: crates.io trusted publishing runs only when enabled (3.861183ms)
+✔ rust.yml: single-line if expressions do not start with ! (0.313906ms)
+✔ rust.yml: every release_mode option is handled by a job (0.218938ms)
+✔ rust.yml: publish steps do not silently skip on missing credentials (0.412179ms)
+✔ rust.yml: npm lookups tell "not published" apart from a failure (0.501245ms)
+✔ rust.yml: required choice inputs declare a default (1.124408ms)
+✔ rust.yml: hosted runners use pinned OS labels (0.457744ms)
+✔ rust.yml: provides init.defaultBranch to actions/checkout (0.094556ms)
+✔ security.yml: every job declares timeout-minutes (0.167993ms)
+✔ security.yml: declares a top-level permissions block (0.068388ms)
+✔ security.yml: every job is covered by a concurrency group (0.165498ms)
+✔ security.yml: writer jobs own a never-cancelled concurrency group (0.154058ms)
+✔ security.yml: does not mask failures with continue-on-error (0.139821ms)
+✔ security.yml: crates.io trusted publishing runs only when enabled (0.232484ms)
+✔ security.yml: single-line if expressions do not start with ! (0.111798ms)
+✔ security.yml: every release_mode option is handled by a job (0.143769ms)
+✔ security.yml: publish steps do not silently skip on missing credentials (0.125384ms)
+✔ security.yml: npm lookups tell "not published" apart from a failure (0.154988ms)
+✔ security.yml: required choice inputs declare a default (0.104826ms)
+✔ security.yml: hosted runners use pinned OS labels (0.13987ms)
+✔ security.yml: provides init.defaultBranch to actions/checkout (0.079769ms)
+✔ wasm.yml: every job declares timeout-minutes (0.17126ms)
+✔ wasm.yml: declares a top-level permissions block (0.074999ms)
+✔ wasm.yml: every job is covered by a concurrency group (0.266749ms)
+✔ wasm.yml: writer jobs own a never-cancelled concurrency group (0.135933ms)
+✔ wasm.yml: does not mask failures with continue-on-error (3.262236ms)
+✔ wasm.yml: crates.io trusted publishing runs only when enabled (0.347799ms)
+✔ wasm.yml: single-line if expressions do not start with ! (0.138608ms)
+✔ wasm.yml: every release_mode option is handled by a job (0.10712ms)
+✔ wasm.yml: publish steps do not silently skip on missing credentials (0.276525ms)
+✔ wasm.yml: npm lookups tell "not published" apart from a failure (0.167192ms)
+✔ wasm.yml: required choice inputs declare a default (0.098824ms)
+✔ wasm.yml: hosted runners use pinned OS labels (0.115866ms)
+✔ wasm.yml: provides init.defaultBranch to actions/checkout (0.087774ms)
+✔ workflows.yml: every job declares timeout-minutes (0.100527ms)
+✔ workflows.yml: declares a top-level permissions block (0.120104ms)
+✔ workflows.yml: every job is covered by a concurrency group (0.107661ms)
+✔ workflows.yml: writer jobs own a never-cancelled concurrency group (0.116798ms)
+✔ workflows.yml: does not mask failures with continue-on-error (0.881496ms)
+✔ workflows.yml: crates.io trusted publishing runs only when enabled (0.178884ms)
+✔ workflows.yml: single-line if expressions do not start with ! (0.109785ms)
+✔ workflows.yml: every release_mode option is handled by a job (0.082123ms)
+✔ workflows.yml: publish steps do not silently skip on missing credentials (0.106018ms)
+✔ workflows.yml: npm lookups tell "not published" apart from a failure (0.148838ms)
+✔ workflows.yml: required choice inputs declare a default (0.087694ms)
+✔ workflows.yml: hosted runners use pinned OS labels (0.29487ms)
+✔ workflows.yml: provides init.defaultBranch to actions/checkout (0.084047ms)
+✔ exactly one workflow publishes GitHub Pages (0.817525ms)
+✔ only the Pages publisher uploads a Pages artifact (0.387604ms)
+✔ every clippy invocation denies warnings (2.336679ms)
+✔ the Rust and C# pipelines simulate a fresh merge on pull requests (0.708191ms)
+✔ every cargo audit invocation denies warnings (1.598874ms)
+✔ coverage uploads use OIDC and retain reports without requiring Codecov (6.425448ms)
+✔ Rust PR lint compiles release helpers without executing them (0.666704ms)
+✔ registry trust can be verified without versioning or publishing a release (3.032738ms)
+✔ Dependabot watches every directory the dependency check reads (42.455752ms)
+✔ exclusions match whole path components, not substrings (20.105057ms)
+✔ a trailing newline does not count as an extra line (2.273312ms)
+✔ CLI fails when a file exceeds the limit and passes otherwise (179.18794ms)
+✔ merge-changesets honors the requested directory and package name (105.237352ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (96.121096ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (454.272867ms)
+✔ create-github-release dry run uses tag prefix and component changelog (68.314983ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (63.144749ms)
+✔ buildNugetBadges links both badges to the exact version (0.982573ms)
+✔ buildNugetBadges URL-encodes the package id (1.304364ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (0.65926ms)
+✔ prependNugetBadges is a no-op without a package id (0.311701ms)
+✔ buildNugetBadges accepts multiple package ids (0.849434ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (2.47124ms)
+✔ buildReleasePayload places NuGet badges above the package footer (1.976006ms)
+✔ create-github-release dry run reports matching assets without uploading (71.276639ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (498.061716ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.767221ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.238304ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.237023ms)
+✔ classifyPushFailure separates repository rules from lost races (0.261287ms)
+✔ version-and-commit rebases and retries when another release pushed first (899.22703ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (487.098575ms)
+✔ check-release-needed decide(): changesets take the normal release path (0.439651ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.20932ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.141485ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.148417ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.12363ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (1.263968ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (181.320067ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (161.668166ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.812827ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.407109ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.663999ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.578961ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.379036ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (5.824375ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (2.915879ms)
+✔ answers a retry cannot change are not retried (2.16568ms)
+✔ buildGraph reflects create, delete, and recreate snapshots without stale nodes (2.920179ms)
+✔ language code package manifests and generated evidence stay out of the root folder (5.752271ms)
+✔ the browser-only WebAssembly wrapper opts out of crates.io publishing (1.290817ms)
+✔ JavaScript package scripts target the relocated WebAssembly crate and split script trees (0.859584ms)
+✔ WebAssembly workflow uses the JavaScript package lockfile from js (0.678104ms)
+✔ the documentation workflow deploys GitHub Pages automatically on push to main (2.337711ms)
+✔ CSharp release workflow attaches NuGet packages to GitHub Releases (0.603666ms)
+✔ CSharp release workflow includes self-healing release gates (0.532984ms)
+✔ CSharp and Rust release workflows are scheduled on every push to main (1.219936ms)
+✔ GitHub workflows avoid Node 20 action major versions that are being retired (2.502217ms)
+ℹ tests 221
+ℹ suites 0
+ℹ pass 221
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3633.372487
+
+--- author-fence-source-size.log SHA256 df6a25caad4a6a7e3f10bc8d1567c4a7d122a9f38b37a706ef1a724218a57cab ---
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 349 C# file(s)
+Checking Rust files in rust/...
+  Found 404 Rust file(s)
+
+Checked 753 file(s) - all within the line limit
+
+
+--- author-fence-changeset.log SHA256 e7ca63f421fb5323708c89e9895a90e2254e0399b58ab9c9300a5038e0c823ba ---
+Validating changesets added by this PR...
+Warning: Could not determine PR diff, checking all changesets in directory
+Found 1 changeset file(s) added by this PR
+Added changesets:
+  - acid-durability.md
+Validating changeset: csharp/.changeset/acid-durability.md
+Changeset validation passed
+   Type: minor
+   Description: Select permanent fresh-address ranges through one linearizable atomic journal
+key. Retain exact author/token/count receipts across lost replies and following
+grants; refuse token collisions, exhausted domains and finite admission before
+publication. Preserve caller-owned providers and existing manual reservations.
+
+Select immutable sorted runs independently of concurrency, isolation, validation,
+retention and journal encoding. Share immutable run arrays between revisions,
+preserve tombstones through merges and retain the existing links/session API.
+
+Add selected causal version encoding, retained-sibling merge and checked counter
+construction with shared Rust, actual-WASM and JS vectors. These semantic
+operations perform no storage I/O, durable author fencing or replication.
+
+Select bounded local causal batches over one coherent journal store. Publish
+the complete owner journal and separately bound retry receipts with one two-key
+compare-exchange. Reject stale bases, child-token collisions and invalid later
+edits before publication; discover exact retries after lost replies and later
+writes. Preserve standalone owner compatibility and caller-owned store lifetime.
+
+Select owned causal row/name projection with explicit conflict rejection or
+maximum-dot selection. Preserve complete retained siblings including deletions,
+validate complete input before pruning, and bound version count and wire bytes.
+
+Stage ordinary causal links and names through the existing private engine,
+with a fresh caller-reserved address range and selected constraints. Freeze
+one complete final difference before explicit-token batch publication; preserve
+exact retries after unknown replies and following writes. Expose the standard
+ulong links/name surface and owned prepared requests for process recovery.
+
+Preserve the current mapped view and owned file handle when capacity growth is
+rejected. Construct a replacement before publishing its pointer, retaining
+flush, retry, following edits and exact used-length disposal after an I/O error.
+
+Reject complete corrupt journal entries and report replay failures. Add explicit
+data/journal flush callbacks and checkpoint only after data reaches storage.
+
+Add an optional staged links engine with configurable concurrency, isolation,
+immutable revision retention, constraints and replaceable file/replicated logs.
+
+Support independent journal branches and atomic three-way merge, with saved
+merge bases for reopen/retry after uncertain I/O outcomes.
+
+Compose atomic multi-shard transactions with replaceable journal stores and an
+optional etcd HTTP adapter, with bounded I/O, linearizable snapshots, generation
+validation, unknown outcomes and actual three-member failover integration.
+
+Route immutable journals to independent data stores while atomically publishing
+small catalog pointers; preserve cross-shard validation and unknown-outcome
+discovery across independent consensus groups.
+
+Add optional portable delta journal decorators with bounded checkpoint chains,
+exact logical replay, corruption rejection and uncertain-write fencing.
+Avoid unnecessary recovered-row conflict metadata and skip per-row generation
+tracking for exclusive/whole-revision serializable strategies. Reclaim generations
+after the final session validates, preserving optimistic ABA/branch conflicts.
+
+Select serializable point-read validation independently of journal/history settings.
+Permit disjoint point edits while checking missing rows, ABA, branch changes and
+read/write cycles; scans retain conservative revision validation.
+
+Preserve storage outcomes when optional store, query, server, transaction,
+trigger or version console diagnostics fail. Retention no longer replays
+rolled-back writes or archives them as committed changes; background retention
+waits for pending transactions.
+
+Retain observed partial writes when storage or user callbacks throw, undo
+automatic operations and preserve explicit rollback state. Keep the original
+absent state across repeated allocation/update callbacks.
+
+Release owned data handles and partially initialized names mappings when a
+constructor fails; leave borrowed data usable after failed construction.
+
+Retain the complete observed undo batch before journal writes. Reject commit and
+further writes after an append failure, roll back automatic failures, and expose
+Rollback() on the decorator to retry cleanup when an implicit rollback fails.
+
+Make the transaction rollback-only before undo starts, preserving the abort
+decision when undo or rollback persistence fails until cleanup is retried.
+
+Release CLI-owned mapped data, journal, version and trigger stores before the
+entry point returns, including failure while constructing a later layer.
+
+Reject exhausted legacy transaction sequence space before mutation and retain
+complete pending undo when a cascade exceeds remaining sequence capacity.
+
+Wait for active asynchronous checkpoints before transaction shutdown returns,
+serialize concurrent shutdown callers and reject callback self-joins. Preserve
+borrowed-store ownership and journal recovery for cancelled/failed checkpoints.
+
+Select optional pessimistic point-write ownership with immediate busy errors,
+independent isolation/read-set validation, stale/ABA rejection, branch protection
+and cleanup on every session outcome. Keep engine-local locks out of cluster
+workspaces and preserve existing optimistic/exclusive defaults.
+
+Dispose complete facade graphs with borrowers before their dependencies, joining
+asynchronous checkpoints before mapped stores close. Share nested/cyclic traversal
+state, preserve detached references, and leave dependencies available when borrower
+cleanup fails and must be retried.
+
+Keep version-control admission and owner cleanup retry after failed transaction
+rollback. Release admission when the inner transaction reaches a terminal state,
+including a failure reported after rollback completes.
+
+Finish committed version publication after checkpoint or metadata errors through
+transaction/owner disposal and rollback. Keep write and metadata admission fenced
+until publication succeeds, and avoid duplicate transition markers on retry.
+
+Publish the final signed version sequence without wrapping. Initialize version
+history from retained journal records, avoiding phantom versions across gaps.
+
+Persist branch and parent names with an unambiguous versioned marker, retaining
+legacy reads. Recover tag names containing equals signs without truncation.
+
+Fence named writes while committed version publication is pending. Reject
+public journal or version recovery while an open transaction owns live state.
+
+Retain known committed synchronous checkpoints through failed persistence.
+Retry them through Commit, CommitAsync, Rollback or transaction disposal before
+releasing foreground admission or publishing version metadata. Fence row and
+named writes during incomplete commit/rollback cleanup; preserve queued async
+policy and borrowed-store shutdown semantics.
+
+Recover the ordered committed suffix after an applied-marker gap. Persist the
+complete redo and pending undo before closing that gap, so interrupted recovery
+cannot overwrite later committed updates, deletions or recreated rows.
+
+Checkpoint current inline effects when sized/chunked retention encounters an
+older failed async checkpoint; preserve newer updates, deletion and recreation.
+
+Retain uncertain commit attempts before marker append/flush, fence new writes
+and resolve the decision through cleanup without undoing a possibly durable
+commit. Avoid duplicate decision markers on retry and retain version publication
+ownership when cleanup resolves an uncertain inner commit.
+
+Exclude aborted and recovered pending records from initial version history and
+its branch head. Reject existing sidecars that attribute a known uncommitted
+record, and reject version construction/recovery over a live inner transaction.
+
+Retain an implicit version owner for automatic writes through failed commit and
+metadata publication. Retry committed work through cleanup, preserve ordinary
+pre-commit undo (including failed undo retry), and fence all new mutations until
+the original branch publication finishes. Preserve no-op and async policies.
+
+Wait asynchronously for background checkpoint work instead of occupying a
+ThreadPool thread for every idle transaction owner. Apply admitted batches in
+order without another pool dispatch, while preserving cancellation, actual
+worker joining and callback self-join rejection during shutdown.
+
+Persist a version-publication intent before journal commit and durably publish
+the exact branch/range before clearing it. Recover committed or aborted intents
+after abrupt process exit, retain admission through every metadata/flush failure,
+and reject malformed or contradictory intents without rewriting their sidecar.
+Expose the metadata flush callback and durable-publication capability.
+
+Resolve every changed undo and redo transition before checkout or branch
+switching. Reject missing retained history without changing rows or metadata,
+while preserving no-op and available-suffix moves over an unavailable shared
+prefix. Index the retained journal once instead of rescanning it per transition.
+
+Fence public unlogged transition apply/revert while a transaction or its failed
+commit/rollback cleanup still owns the data. Preserve retry of that owner and
+ordinary unlogged version replay after ownership is released.
+
+Repair partial file-journal writes before reusing the same writer for read,
+append or flush. Retain the repair requirement across repeated I/O failures,
+preserve complete records after uncertain writes and use bounded tail scanning.
+
+Persist resolved checkout/branch-switch replay intents before changing rows.
+Retain exclusive replay ownership through row, metadata and flush failures;
+finish exact positions on reopen, fence queued asynchronous checkpoints and
+preserve retry after failed startup construction. Reject contradictory movement
+metadata and retain sequence allocation floors after journal payload eviction.
+
+Claim chunk archive paths with exclusive creation, preserving existing archives
+and symlink targets. Keep rejected optional archives in the live journal for a
+later retention attempt, using a fresh random candidate.
+
+Validate recovery journals before replacing live history or replaying rows.
+Reject conflicting sequence records, contradictory decisions and invalid owners
+or sequences while preserving idempotent parsed duplicates and retained floors.
+Retain admission after failed recovery, including queued asynchronous checkpoints
+and retention, until retry completes recovery before following writes or replay.
+
+Construct branch paths iteratively without stack growth per ancestor, scanning
+transition attribution once. Preserve nested fork cutoffs, per-branch heads and
+root-to-leaf replay order, including empty histories and subsequent edits.
+
+Commit caller-selected groups of independent sessions with separate revisions
+and one shared durability flush. Preserve input-order validation, known aborts
+and indeterminate prefix recovery without publishing uncertain state. Avoid
+flushing the primary twice during synchronous replica acknowledgement.
+
+Record ordinary name changes and row-associated names in complete portable
+journal records. Restore unique-name owners and deleted/cascaded names during
+rollback; publish name-only versions and preserve names through recovery,
+movement intents and chunk archives. Retain the original row transition and
+v1 codec, add complete record snapshots/replay, preserve shared-name adapters
+and distinguish an existing name owner at address zero from an absent name.
+
+Select optional pre-effect logical row/name undo images for ordinary transactions.
+Retain preparation and cleanup ownership, validate mandatory metadata before
+mutation and reconcile unreported effects before committed history/publication.
+Preserve the default observer policy and original constructor signatures; recover
+unknown allocations and redo later committed checkpoints after image restoration.
+
+Select structurally shared immutable ordered engine state independently of
+isolation, history and journal settings. Preserve flat-map defaults and portable
+revision records; share unchanged nodes across live and recovered revisions,
+scans, group preparation and branches without copying complete row maps.
+
+Select canonical changed-row revision encoding independently of state structure
+and other engine policies. Preserve complete-snapshot defaults, mixed journal
+recovery, saved branch bases, shared group flush and physical delta composition.
+Apply selected change records against immutable predecessor roots and validate
+base, allocator, row/name operations and checksums before publication.
+
+Select an optional provider-neutral SQLite physical page-WAL journal. Preserve
+staged reads, atomic group flushes and uncertain outcomes; fence stale owners,
+validate schema/UTF-8/sequences, enforce WAL/FULL and expose bounded checkpoints.
+Keep the core free of a mandatory SQLite NuGet provider and bound explicit
+provider command retries.
+
+Select optional persistent constraint indexes independently of map, encoding and
+other engine policies. Allocate only selected pair/name/reference indexes, allow
+atomic swaps, count incoming references and publish roots only after flush.
+Preserve scan defaults, historical replay validation and uncertain group outcomes.
+
+Select a bounded immutable journal object cache for partitioned stores. Keep
+catalog reads and publication checks fresh, return owned arrays and retain no
+cache by default. Coordinate concurrent fills and payload accounting locally.
+
+Reject cyclic Unicode sequence graphs through a checked iterative walker while
+retaining the maintained package converter, repeated shared subtrees and existing
+UTF-16 behavior. Keep traversal state local after failed decoding and reject
+malformed persisted names on repeated reopening.
+
+Format deep link structures iteratively with one StringBuilder. Preserve
+source-only expansion, cycle references and deepest-first name lookups while
+avoiding call-stack exhaustion and repeated whole-subtree copying.
+
+Treat the .NET 10 listener socket-clear race as a clean accept-loop exit only
+after server shutdown starts. Preserve unexpected null-reference failures
+outside shutdown and join accepted connection workers before returning.
+
+Select a SQL-free native doublets page journal independently of logical engine
+and replication strategies. Validate canonical versioned pages and decisions,
+stage group writes, fence uncertain owners and reject committed corruption.
+Provide an exclusive native file device with bounded reads, durable flush,
+POSIX parent synchronization and explicit close-error ownership fencing.
+
+Select two-copy native page repair separately from revision, validation and
+replication policies. Synchronize both copies before acknowledgement and validate
+the entire expected prefix before repairing a damaged copy. Preserve the default
+single-copy format and costs, and retain uncertain native ownership fences.
+
+Accept equals signs in native command tag names while preserving aliases to
+complete existing tags, unknown-point diagnostics and following database edits.
+
+Select optional portable retained-history checkpoints and coordinated checkpoint
+publication through the existing generation CAS. Preserve append-only defaults,
+committed allocators, selected history and uncertain-outcome recovery.
+Compose initial checkpoints with physical delta journals and either replica
+decorator order while preserving exact replay and uncertain-operation fencing.
+
+Provide optional complete-journal replacement through two fixed page banks and
+an epoch-bound synchronized root. Keep devices caller-owned, reject pending
+physical records and fence uncertain operations until actual reopening.
+
+Compact retained committed journals under the engine commit lock through an
+optional replacement log. Preserve sessions, pins, history and allocator gaps;
+compose physical delta journals and fence unknown publication until reopening.
+
+Own the native checkpoint root and both single/mirrored banks through a selected
+factory. Acquire all fences before recovery, close every raw owner root last,
+preserve constructor and cleanup errors, and retain uncertain fences without
+flushing pending work during disposal.
+
+Select checkpoint root mirroring independently of bank copies. Retain the
+original constructor signature and single-root defaults. Validate root copies
+and their committed bank before repair, synchronize both decisions before
+acknowledgment and reject persisted mode conversion without changing existing
+bytes. Acquire and clean up every selected native root and bank owner.
+
+Add optional namespace maintenance with complete bounded revision-consistent
+etcd scans and generation-conditional single-key deletion. Preserve ordinary
+atomic-store costs and leave immutable-object reclamation independently selected.
+
+Select explicit epoch-fenced immutable journal reclamation with complete bounded
+root discovery, exact-generation deletion, coherent owned-reader refresh and
+zero-default optional caching. Keep append-only modes and expose native/WASM
+retained-history checkpoint handoffs and deterministic concurrency fault cases.
+
+Provide explicitly selected immutable physical sorted journal tables over native
+doublets pages, with exact tombstone generations, bounded full validation and
+indexed physical point reads. Verify portable vectors and native cross-language
+file interchange; keep WAL/manifest/compaction composition separate.
+
+Add optional native-lsm1 semantic WAL replay and revalidated checkpoint encoding
+with shared independent vectors, canonical u64 descriptors and finite admission.
+Keep physical table validation, publication and native ownership composition as
+separate required work; this codec performs no storage I/O.
+
+Compose an explicitly selected bounded physical journal store from an atomic
+replaceable WAL and exclusive immutable-table namespace. Preserve group CAS,
+tombstone generations, bounded buffering, foreground compaction and maintenance
+consumers; fence uncertain publication and defer table repairs until complete
+selected-state validation. Native directory ownership remains separately selected
+and requires its own read-only discovery before constructing a repairing WAL.
+
+Add borrowed read-only checkpoint inspection in Rust, C# and JavaScript. Return
+owned selected-prefix records with finite page admission, preserving suffixes and
+staged mirror repairs until higher-level semantics validate; allocate no identity,
+initialize no bank and leave ordinary constructor recovery behavior intact.
+
+Provide a separately imported JavaScript native LSM facade with exclusive
+bounded directory discovery, read-only validation before recovery effects,
+independent file mirrors, and explicit uncertain-handle cleanup fencing.
+
+Provide the C# native LSM directory facade with matching bounded read-only
+discovery, independent file mirrors, regular-file validation and cached
+uncertain-handle cleanup. Add finite file-operation failures, abrupt-exit
+recovery and actual direct, partitioned and reclaiming cluster examples.
+
+Select bounded immutable journal chunks independently of caching and engine
+policies. Reuse unchanged complete prefixes while retaining whole-journal
+defaults, atomic catalog generation checks, owned reads and fresh full-content
+staging comparisons. Validate every manifest before fetching data and every
+update before staging. Preserve native Rust/C#/JS file interchange; keep the
+epoch-reclamation format separate and reject unsupported roots before deletion.
+
+Select bounded journal chunks independently on the epoch-fenced reclaiming store.
+Protect every live reference during collection, restage complete objects after a
+fence, and refresh the complete reader group if a chunk retires. Preserve blob2
+writing by default and interoperable native file/consensus consumers.
+
+Add selected local causal ownership over atomic journals, durable retry receipts,
+retained historical identities and bounded replay, with SQL-free native LSM
+interchange and explicit process-exit recovery examples.
+
+Add selected immutable causal Merkle snapshots, canonical root-bound proof frames
+and bounded differing-range pulls with opaque continuations. Preserve concurrent
+destination evidence and validate physical cross-runtime/process-exit exchange.
+
+Share the established query matching and mutation algorithms across selected
+unsigned generic addresses while preserving the original uint facade, options,
+patterns and implicit query strings. Keep quoted numeric names distinct from
+full-width stored addresses. Preserve concrete zero bindings during swaps,
+equality and joins. Expose owned read-only callback parts without invoking the
+upstream default-constant reflection helpers that predate UInt128. The checked
+causal adapter, finite query admission and monotonic allocation preparation
+remain separate required work under CSHARP-QUERY-PARITY-PLAN.md.
+
+Prepare monotonic engine queries over detached rows and names using the shared
+processor. Reserve exact FIFO allocation identities under the owner gate,
+without creating/deleting probe rows or invoking real observers. Keep failed
+preview admission free of cursor changes, retain already reserved gaps after
+later reference rejection or rollback, and consume only after write ownership
+is acquired. Allocate reservation state lazily. Add compatible optional named
+store capabilities and direct explicit ensure, preserving legacy recycling
+prediction and explicit custom creator delegates. Guard full-width ensure
+regressions with a finite allocation cap instead of walking the u64 domain.
+
+Expose the ordinary selected-address processor through CausalSession.QueryLinks.
+Use UInt128 controls with checked u64 stored parts and the caller's independent
+fresh range, including retained-identity resurrection. Freeze every retained
+adapter operation at preparation/disposal. Admit original bytes, parser depth,
+nodes, streamed result/binding expansion and decoded named change replies on
+owned preview state before real edits or callbacks. Share the existing matching,
+mutation, reservation and explicit-token batch implementations; retain the uint
+facade and opt-in limits for existing stores. Keep anonymous creation callbacks
+compatible with the pinned upstream helper while avoiding its UInt128 list
+initializer. Verify shared query vectors, bounded refusals and exact lost-reply
+retries; physical query interchange remains required work.
+
+Select unsigned addresses in the existing operation/restriction, server and
+remote-store implementations, retaining public uint facades. Add an explicit
+original-query envelope and QueryLossless without mutation fallback retries.
+Admit decoded documents before recursive formatting/tracing and clamp checked
+text/binary decoding before canonicalization. Convert parser/admission failures
+to protocol errors; count the final decoded text byte. Keep callback rows owned
+and read-only, preserve private staging and preparation freezes, and verify
+shared query vectors across all codecs. Standard operation address checks
+precede edits; finite limits retain broad-read refusals.
+
+Validate legacy owned mapped queries on detached data/names allocator images,
+including explicit/named allocations and duplicate merges. Keep refused queries
+free of provider and journal writes, close retained preview interfaces safely,
+and forward through existing transaction/version write fences. Preserve caller
+and derived-store allocator fallbacks instead of replacing their behavior.
+
+Add separately selected author takeover fencing with permanent claim receipts
+and atomic fence comparisons alongside ordinary data publications. Retrying a
+superseded owner token cannot reclaim ownership; inner providers stay caller-owned.
+
+--- author-fence-release-tests.log SHA256 dacff623c175b66afd7127568e63996da179a8de3a406e64208c5a15c08c2d7f ---
+✔ merge-changesets honors the requested directory and package name (123.362466ms)
+✔ merge-changesets fails on a changeset it cannot parse and keeps every file (90.271223ms)
+✔ version-and-commit fails on a changeset it cannot parse instead of dropping it (475.386806ms)
+✔ create-github-release dry run uses tag prefix and component changelog (77.617647ms)
+✔ create-github-release dry run omits NuGet badges when no package id is provided (79.76322ms)
+✔ buildNugetBadges links both badges to the exact version (1.625633ms)
+✔ buildNugetBadges URL-encodes the package id (0.409895ms)
+✔ prependNugetBadges keeps existing shields.io NuGet badges intact (2.668337ms)
+✔ prependNugetBadges is a no-op without a package id (0.58408ms)
+✔ buildNugetBadges accepts multiple package ids (0.801786ms)
+✔ buildReleasePayload includes badges for both CLI and library packages (2.059362ms)
+✔ buildReleasePayload places NuGet badges above the package footer (1.334749ms)
+✔ create-github-release dry run reports matching assets without uploading (66.887831ms)
+✔ version-and-commit creates a C# release commit when the next tag is missing (538.416127ms)
+✔ insertChangelogEntry keeps exactly one blank line around entries (issue #134) (0.524508ms)
+✔ insertChangelogEntry collapses blank lines accumulated by earlier releases (0.83645ms)
+✔ insertChangelogEntry creates the header for a missing changelog (0.321129ms)
+✔ classifyPushFailure separates repository rules from lost races (0.299498ms)
+✔ version-and-commit rebases and retries when another release pushed first (949.529149ms)
+✔ version-and-commit fails fast without tagging when a repository rule declines the push (521.246007ms)
+✔ check-release-needed decide(): changesets take the normal release path (0.58964ms)
+✔ check-release-needed decide(): self-heals when csproj version is missing from NuGet (0.208008ms)
+✔ check-release-needed decide(): self-heals when package id is unknown to NuGet (0.164367ms)
+✔ check-release-needed decide(): self-heals GitHub release when NuGet already has the version (0.143358ms)
+✔ check-release-needed decide(): no-op when both NuGet and GitHub release exist (0.175037ms)
+✔ check-release-needed readCsprojInfo() extracts version and package id (1.986075ms)
+✔ check-release-needed CLI writes self-healing outputs when NuGet version is missing (232.649764ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 4)
+✔ check-release-needed CLI short-circuits when NuGet and GitHub already have the release (300.643237ms)
+✔ wait-for-nuget defaults to two-minute checks across the NuGet indexing window (0.802427ms)
+✔ wait-for-nuget builds the flat-container nuspec URL (0.331227ms)
+✔ wait-for-nuget reports the cause of a failed fetch (issue #134) (0.67592ms)
+✔ wait-for-nuget succeeds when indexing takes longer than the old 125 second loop (0.549716ms)
+✔ wait-for-nuget fails only after exhausting all attempts (0.341528ms)
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 3 of 4)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Retrying https://api.nuget.org/v3-flatcontainer/clink/index.json (attempt 2 of 2)
+✔ the release decision retries a dropped NuGet connection instead of failing (6.048183ms)
+Fetching https://api.nuget.org/v3-flatcontainer/clink/index.json
+Fetching https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0
+Retrying https://api.github.com/repos/owner/repo/releases/tags/csharp-v1.0.0 (attempt 2 of 4)
+✔ the release decision reports the network cause once retries run out (2.473213ms)
+✔ answers a retry cannot change are not retried (1.358484ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3695.203992
+
+--- author-fence-shellcheck.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- author-fence-whitespace.log SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---

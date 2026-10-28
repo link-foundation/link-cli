@@ -6,6 +6,8 @@
 //! before it becomes visible. The log is the authoritative storage.
 #[cfg(feature = "address-reservations")]
 pub mod address_allocator;
+#[cfg(feature = "author-fencing")]
+pub mod author_fence;
 #[cfg(test)]
 mod boundary_tests;
 mod branch;

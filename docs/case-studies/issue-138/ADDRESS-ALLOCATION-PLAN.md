@@ -19,11 +19,11 @@ selected reservation service over the existing atomic journal-store contract.
       oversized, exhausted or conflicting requests preserve provider bytes.
 - [x] Verify race schedules, exact retries after following grants, high u64
       ranges and finite admission with owned observations.
-- [ ] Link portable Rust contracts to actual WASM and run runtime parity in CI.
+- [x] Link portable Rust contracts to actual WASM and run runtime parity in CI.
       Add focused local scripts; reserve complete suites for CI.
 - [x] Supply usable physical/etcd examples and docs that disclose the single
       coordinator boundary, retained receipts, range gaps and migration costs.
-- [ ] Review compatibility and lazy imports, update release fragments, run
+- [x] Review compatibility and lazy imports, update release fragments, run
       focused checks, commit and push the prepared branch; inspect exact-head CI.
 
 A domain starts above every identity ever issued outside this allocator,
@@ -50,4 +50,4 @@ replay and writes per new grant. It amortizes coordination across ordinary local
 creates but has one shared allocation bottleneck and a finite receipt budget.
 Existing bare stores and caller-reserved sessions select no new work.
 
-Implementation and local evidence: [ADDRESS-ALLOCATION-VERIFICATION.md](ADDRESS-ALLOCATION-VERIFICATION.md). Actual WASM, full five-runtime physical/exit matrices and real-etcd execution remain CI checks.
+Implementation and local evidence: [ADDRESS-ALLOCATION-VERIFICATION.md](ADDRESS-ALLOCATION-VERIFICATION.md). Actual WASM, full five-runtime physical/exit matrices and real-etcd execution pass on c14beca; the verification records its separate Windows socket/resource and dependency-pin failures.

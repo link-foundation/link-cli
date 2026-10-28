@@ -68,6 +68,7 @@ windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Stora
 
 [features]
 address-reservations = ["dep:serde_json"]
+author-fencing = ["dep:serde_json"]
 causal = ["dep:serde_json"]
 causal-batches = ["causal"]
 causal-sessions = ["causal-batches", "causal-projection"]
@@ -110,3 +111,7 @@ required-features = ["native-pages", "sorted-tables"]
 [[example]]
 name = "native_lsm"
 required-features = ["native-pages", "physical-lsm"]
+
+[[example]]
+name = "author_fence"
+required-features = ["etcd", "author-fencing"]

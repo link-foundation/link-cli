@@ -3,7 +3,7 @@
 The optional [permanent address allocator](protocol/address-reservations-v1.md)
 can supply fresh ranges through a shared atomic coordinator. Keep each grant
 under one allocating owner, retain exact retry requests after uncertain I/O,
-and fence author lineages separately. Existing caller-reserved ranges remain
+and optionally select [author takeover fencing](protocol/author-fence-v1.md). Existing caller-reserved ranges remain
 supported without selecting the service.
 
 The selected session stages ordinary links and names in the existing private
@@ -24,8 +24,8 @@ deletion. The workspace's cursor is independent of the ordinary private
 journal allocator: a remote visible row at u64::MAX does not prevent creating
 a row in a lower reserved range. Explicit recreation of a known identity is
 allowed; fresh identities outside the reservation reject. Independent writers
-need disjoint reservations and uniquely fenced author lineages. This API does
-not supply a distributed allocator.
+need disjoint reservations and uniquely fenced author lineages. Select the separate address allocator to coordinate fresh blocks; abandon
+unused prior-owner blocks after takeover.
 
 ```js
 import { CausalSession } from '@link-foundation/link-cli-client/engine-causal-session';
@@ -214,5 +214,6 @@ Readers and durable retries preserve every file hash. Operator marker recovery
 happens only after the owner has exited and been reaped, preserving the markers
 as evidence. These are application-crash experiments; hardware power-loss
 certification remains unfinished. Complete project coverage, fresh query CI,
-global allocation, membership/history reclamation and every other unmet issue
+author admission outside the selected guard, membership/history reclamation
+and every other unmet issue
 requirement remain tracked in the plan; PR139 stays draft and unmerged.

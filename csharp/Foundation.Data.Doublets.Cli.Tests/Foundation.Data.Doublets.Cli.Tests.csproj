@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../docs/protocol/author-fence-v1.json" Link="author-fence-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/address-reservations-v1.json" Link="Protocol/address-reservations-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/causal-query-v1.json" Link="Protocol/causal-query-v1.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../docs/protocol/causal-session-v1.json" Link="Protocol/causal-session-v1.json" CopyToOutputDirectory="PreserveNewest" />

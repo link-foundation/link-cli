@@ -1,4 +1,5 @@
 using Foundation.Data.Doublets.Cli.Engine;
+if (args is ["--claim-author", .. var fenceArgs]) { AuthorFenceInterop.Etcd(fenceArgs); return; }
 if (args is ["--reserve-addresses", var allocationEndpoints, var allocationPrefix, var allocationAuthor, var allocationToken, var allocationCount])
 { AddressAllocationInterop.Etcd(allocationEndpoints, allocationPrefix, allocationAuthor, allocationToken, allocationCount); return; }
 if (args is ["--native-lsm-allocation", var allocationAction, var allocationDirectory, var allocationMirrors])

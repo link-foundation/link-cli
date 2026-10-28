@@ -1,3 +1,11 @@
+Selected author takeover fencing now composes ordinary atomic providers,
+address reservations and causal batches in Rust/C#/JS. A bound claim is
+validated at reads and compared in the same data CAS; superseded token retries
+cannot retake ownership. Focused checks and explicit provider/authority/cost
+limits are tracked in AUTHOR-FENCING-VERIFICATION.md. Actual-WASM/real-etcd and
+fresh complete platform CI remain pending. Bypass admission, membership/history
+reclamation and every wider unmet criterion remain unfinished.
+
 # Acceptance inventory
 
 A selected permanent fresh-address allocator now supplies disjoint unsigned
@@ -7,8 +15,9 @@ following writers and exhaustion; abandoned blocks are never recycled. Shared
 53-fixture replay/admission checks and the independent 5,832-schedule model pass
 in Rust, C# and Node/Bun/Deno. Two focused physical handoffs and four reaped Node
 exit/retry sequences pass locally. ADDRESS-ALLOCATION-VERIFICATION.md maps the
-R4/R6/R7/R9/R11 component to tests and costs. Full actual-WASM, five-runtime and
-real-etcd CI remain required. Author lineage fencing, foreign writes, safe
+R4/R6/R7/R9/R11 component to tests and costs. Actual-WASM, five-runtime and real-etcd CI pass on c14beca; its Windows TCP
+bind and dependency freshness failures remain recorded in address-allocation-ci.txt.
+The separately selected author fence is now under verification. Foreign writes, safe
 membership/history reclamation, receipt pruning and multi-catalog atomicity
 remain unfinished; this service does not complete the broader global criteria.
 

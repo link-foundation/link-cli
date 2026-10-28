@@ -121,6 +121,10 @@
     "./engine-causal-batch": {
       "types": "./types/engine-causal-batch.d.ts",
       "default": "./src/engine-causal-batch.js"
+    },
+    "./engine-author-fence": {
+      "types": "./types/engine-author-fence.d.ts",
+      "default": "./src/engine-author-fence.js"
     }
   },
   "files": [

@@ -391,3 +391,7 @@ including explicit/named allocations and duplicate merges. Keep refused queries
 free of provider and journal writes, close retained preview interfaces safely,
 and forward through existing transaction/version write fences. Preserve caller
 and derived-store allocator fallbacks instead of replacing their behavior.
+
+Add separately selected author takeover fencing with permanent claim receipts
+and atomic fence comparisons alongside ordinary data publications. Retrying a
+superseded owner token cannot reclaim ownership; inner providers stay caller-owned.

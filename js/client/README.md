@@ -369,3 +369,10 @@ physical bounds, stale-fence recovery and platform durability limits are in the
 [native directory contract](../../docs/protocol/native-lsm-store.md#javascript-native-directory-selection).
 The [native facade examples](../../examples/native-lsm-js/README.md) exercise
 Rust/C# and Node/Bun/Deno whole-store physical interchange in CI.
+
+Optional `./engine-author-fence` guards an author lineage with explicit takeover
+and permanent owner-token receipts. Pass its bound provider to existing causal
+batches, sessions or address reservations. Every data CAS compares the current
+fence atomically; takeover is application-controlled, without TTL or
+leader election. All writers must use the same ownership key and uniquely owned
+token. See [contract and O(retained claims) costs](../../docs/protocol/author-fence-v1.md).

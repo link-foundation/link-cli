@@ -57,8 +57,13 @@ Build the native Rust example with
 example before the focused handoffs. Complete suites remain in CI per the
 [latest maintainer feedback](https://github.com/link-foundation/link-cli/pull/139#issuecomment-6467849231).
 The linked actual-WASM Rust tests, complete five-runtime physical/exit matrices,
-strict whole-JS coverage and real three-member etcd scenario are wired into CI;
-**their new execution results are pending**. The real-etcd scenario also uses
+strict whole-JS coverage and real three-member etcd scenario pass on `c14beca`:
+812 actual-WASM tests, 708 JS tests, 2,622 C# tests per platform, 50 allocation
+handoffs, 20 reaped exits and 100 recovery/retry checks. The head is not fully
+green: Dependencies rejected a newly superseded action pin, and Rust Windows
+failed an unrelated TCP listener bind with Winsock 10055.
+[Exact runs and raw-log line references](../../../dev/log/issues/138/pulls/139/address-allocation-ci.txt)
+retain both successes and failures. The real-etcd scenario also uses
 ordinary actual-WASM creates from part of a grant, proves its unused suffix
 stays abandoned, drops a real allocation response, executes the public native
 reservation CLIs and verifies exact retries after later grants.

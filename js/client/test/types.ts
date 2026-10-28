@@ -1,3 +1,13 @@
+import { AuthorFence, type AuthorClaim, type GuardedJournalStore } from '../types/engine-author-fence.js';
+async function authorFenceTypes(store: import('../types/index.js').AtomicJournalStoreProvider) {
+  const f = new AuthorFence(store, 'fence', '00000000000000000000000000000001');
+  const claim: AuthorClaim = await f.claim('0', '00000000000000000000000000000002');
+  const guarded: GuardedJournalStore = f.bind(claim);
+  const allocated = new AddressAllocator(guarded, 'addresses', '1', '18446744073709551615');
+  // @ts-expect-error Epochs preserve canonical u64 values.
+  await f.claim(0, claim.token);
+  return [allocated, guarded.intoStore()];
+}
 import { CausalSession, type CausalWorkspaceBinding, type CausalPreparedBatch } from '../types/engine-causal-session.js';
 async function causalSessionTypes(binding: CausalWorkspaceBinding, batch: CausalBatch) {
   const tx = await CausalSession.open(binding, batch, '32', '33', 'reject', { stateStructure: 'shared' });

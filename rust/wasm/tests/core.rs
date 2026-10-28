@@ -124,3 +124,7 @@ mod causal_protocol;
 #[cfg(feature = "causal-sessions")]
 #[path = "../../tests/engine_causal_reply_bounds_tests.rs"]
 mod causal_reply_bounds;
+
+#[cfg(feature = "author-fencing")]
+#[path = "../../tests/engine_author_fence_tests.rs"]
+mod engine_author_fence_tests;

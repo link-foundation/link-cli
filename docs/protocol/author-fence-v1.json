@@ -1,0 +1,305 @@
+{
+  "author": "00000000000000000000000000000001",
+  "cases": [
+    {
+      "name": "absent",
+      "journal": {
+        "generation": "0",
+        "entries": []
+      },
+      "valid": true,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "header",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]"
+        ]
+      },
+      "valid": true,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "one",
+      "journal": {
+        "generation": "2",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"1\"]"
+        ]
+      },
+      "valid": true,
+      "epoch": "1",
+      "claims": [
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000002",
+          "epoch": "1"
+        }
+      ]
+    },
+    {
+      "name": "following",
+      "journal": {
+        "generation": "3",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"1\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000003\",\"2\"]"
+        ]
+      },
+      "valid": true,
+      "epoch": "2",
+      "claims": [
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000002",
+          "epoch": "1"
+        },
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000003",
+          "epoch": "2"
+        }
+      ]
+    },
+    {
+      "name": "maximum-generation",
+      "journal": {
+        "generation": "18446744073709551615",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"1\"]"
+        ]
+      },
+      "valid": true,
+      "epoch": "1",
+      "claims": [
+        {
+          "author": "00000000000000000000000000000001",
+          "token": "00000000000000000000000000000002",
+          "epoch": "1"
+        }
+      ]
+    },
+    {
+      "name": "absent-with-header",
+      "journal": {
+        "generation": "0",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "present-empty",
+      "journal": {
+        "generation": "1",
+        "entries": []
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "wrong-author",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000002\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "spaced-header",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          " [\"author-fence1\",\"00000000000000000000000000000001\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "missing-header",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "epoch-gap",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000003\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "duplicate-token",
+      "journal": {
+        "generation": "2",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"1\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"2\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "noncanonical-epoch",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"01\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "zero-token",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000000\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "uppercase-token",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "numeric-epoch",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",1]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "extra-field",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"00000000000000000000000000000002\",\"1\",\"extra\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "nested",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "oversized",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "object",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "{}"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "null",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "null"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "escaped-token",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"\\u00300000000000000000000000000000002\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    }
+  ]
+}

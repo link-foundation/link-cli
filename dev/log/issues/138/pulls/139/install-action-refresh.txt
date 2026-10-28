@@ -3,7 +3,7 @@ Run https://github.com/link-foundation/link-cli/actions/runs/40694371298
 Head c14beca86e (created 2026-10-28T13:12:47Z)
 Raw log SHA256: 1394166da30c7495c9b708c65990941f271d94210af0d6cd417b2c8eccbbee69
 198: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783204Z 1 dependencies are behind their latest release:
-199: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783605Z 
+199: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783605Z
 200: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783923Z | File | Dependency | Used | Latest |
 201: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1784483Z |---|---|---|---|
 202: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1785277Z | .github/workflows/security.yml | taiki-e/install-action | v2.87.32 | v2.87.33 |

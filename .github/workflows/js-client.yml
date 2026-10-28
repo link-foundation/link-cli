@@ -214,6 +214,11 @@ jobs:
           python3 ../../experiments/issue-138/generate-causal-batch-vectors.py ../../experiments/issue-138/causal-batch-regenerated.json
           cmp ../../docs/protocol/causal-batch-v1.json ../../experiments/issue-138/causal-batch-regenerated.json
 
+      - name: Verify independent author takeover and guarded publication model
+        run: |
+          python3 ../../experiments/issue-138/author-fence-model.py ../../experiments/issue-138/author-fence-regenerated.json
+          cmp ../../docs/protocol/author-fence-v1.json ../../experiments/issue-138/author-fence-regenerated.json
+
       - name: Verify independent permanent address allocation model and vectors
         run: |
           python3 ../../experiments/issue-138/address-allocation-model.py ../../experiments/issue-138/address-reservations-regenerated.json
@@ -293,8 +298,8 @@ jobs:
 
       - name: Portable causal versions, local ownership and Merkle proofs on Bun and Deno
         run: |
-          bun test js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs --timeout 30000
-          deno test --allow-all js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs
+          bun test js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs js/client/test/engine-author-fence.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs js/client/test/engine-author-fence.test.mjs
 
       - name: Verify immutable journal chunks in Bun and Deno
         run: |
@@ -314,7 +319,7 @@ jobs:
             ${{ runner.os }}-js-client-cargo-
 
       - name: Build the Rust server
-        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd,address-reservations --bin clink --example cluster --example address_allocation --example journal_maintenance --example journal_reclamation
+        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd,address-reservations,author-fencing --bin clink --example cluster --example address_allocation --example author_fence --example journal_maintenance --example journal_reclamation
 
       - name: Build the C# server
         run: dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
@@ -373,6 +378,7 @@ jobs:
           RECLAMATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_reclamation
           RECLAMATION_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-reclamation-csharp/bin/Release/net10.0/JournalReclamationExample.dll
           CLUSTER_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/cluster
+          FENCE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/author_fence
           ALLOCATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/address_allocation
           CLUSTER_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
         run: |
