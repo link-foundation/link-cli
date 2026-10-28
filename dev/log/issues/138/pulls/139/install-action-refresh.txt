@@ -1,0 +1,24 @@
+Dependency CI action refresh, 2026-10-28 UTC
+Run https://github.com/link-foundation/link-cli/actions/runs/40694371298
+Head c14beca86e (created 2026-10-28T13:12:47Z)
+Raw log SHA256: 1394166da30c7495c9b708c65990941f271d94210af0d6cd417b2c8eccbbee69
+198: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783204Z 1 dependencies are behind their latest release:
+199: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783605Z 
+200: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1783923Z | File | Dependency | Used | Latest |
+201: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1784483Z |---|---|---|---|
+202: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.1785277Z | .github/workflows/security.yml | taiki-e/install-action | v2.87.32 | v2.87.33 |
+203: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:13:10.2145050Z ##[error]Process completed with exit code 1.
+Latest release https://github.com/taiki-e/install-action/releases/tag/v2.87.33
+Published 2026-10-28T12:37:23Z; immutable commit 645d1ab48b3cb8591684a8b730b2ccf4cb3f9568.
+Release updates tool defaults; existing selected cargo-audit installation is retained.
+After update: Checked 127 declared versions.
+
+Repository gate:
+ℹ tests 221
+ℹ suites 0
+ℹ pass 221
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4377.417632
