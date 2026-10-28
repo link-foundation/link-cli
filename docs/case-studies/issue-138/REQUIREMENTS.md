@@ -5,7 +5,9 @@ allocator instead of probing before explicit/named allocations and merges.
 Four baseline regressions fail before the fix; nine focused native cases now
 pass, including unchanged provider bytes, free-list order, transaction rollback
 and version checkout. Eight portable cases are linked into actual-WASM CI.
-The same five C# cases fail before its fix; its port is under focused review.
+The same five C# cases fail before its fix; the owned heap-image port now
+passes 149 focused cases with finite preview lifetimes, checkpoint fences and
+uint/ulong allocation controls. Fresh exact-head platform CI remains required.
 RECYCLING-QUERY-VERIFICATION.md records costs and compatibility limits.
 
 Registry releases after the earlier passing head caused Dependencies CI to
@@ -22,7 +24,9 @@ PROTOCOL-RECOVERY-VERIFICATION.md records the restored commit and limits.
 The Rust/C#/actual-WASM JS physical recipes now stage standard operations and
 queries against unchanged independent versions and exact requests. Focused C#
 checks pass two plain/mirrored handoffs and four reaped exit/retry sequences;
-PHYSICAL-QUERY-VERIFICATION.md records the pending full five-runtime CI matrix.
+The full five-runtime CI matrix passes on cbddc13: 50 handoffs, 20 reaped exits
+and 100 recovery/retry sequences. PHYSICAL-QUERY-VERIFICATION.md records exact
+run and log references; those results precede the later allocator fixes.
 Complete suites remain in CI per the latest maintainer feedback. These steps
 advance R1/R7/R8/R9 without completing the wider open criteria below.
 

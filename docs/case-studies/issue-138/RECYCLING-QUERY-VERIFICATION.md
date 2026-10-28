@@ -40,7 +40,33 @@ storage operations do not select a preview. Custom/remote stores and trigger
 decorators without an exact preview implementation retain their compatibility
 fallback and need separate work; this fix does not assert their parity.
 
-C# heap-image preview and lifetime/transaction/history controls are under
-focused verification. Complete suites, linked WASM execution and platform
-coverage belong in CI under the latest maintainer instruction. Neither this
-fix nor passing CI completes the wider R1–R12 acceptance inventory.
+C# copies the complete used data and names allocator images into owned heap
+memory, including headers and free-list links, then reopens the same existing
+facade chains. It stages the copy through a temporary interface lease, which
+closes on success and failure before heap memory is freed. Retained preview
+interfaces reject every subsequent operation. Copying costs O(used data bytes
++ used names bytes), plus a managed staging buffer bounded to 64 KiB; query
+execution and final live-ID collection add their ordinary costs. No original
+file, allocator, journal or version sequence is mutated by the preview.
+
+All 149 focused C# Release cases pass, including the original query/allocation
+tests, both uint and ulong stores, exact following/free allocations, names and
+file-byte preservation, preview failure/lifetime, rollback and checkout. New
+transaction/history checks reject previews before their callbacks run while a
+known committed checkpoint is unfinished; retry then admits the preview.
+Caller-owned or inherited allocators/decorators without their own exact
+capability retain the existing fallback, including custom journal/history
+subclasses. Their mutation overrides cannot silently select the base preview.
+
+```sh
+bash experiments/issue-138/run-csharp-recycling-query-tests.sh
+```
+
+The scripts bound native Rust compilation to one job/linker worker and .NET to
+two reported processors with a 1 GiB managed heap. Small repository/release
+checks, focused Clippy, ShellCheck and scoped formatting pass. The before/final
+and validation logs are retained under `dev/log/issues/138/pulls/139/` with the
+`recycling-query` and `csharp-recycling-query` prefixes. Complete suites,
+linked WASM execution and platform coverage belong in CI under the latest
+maintainer instruction. Fresh exact-head CI is required after these commits.
+Neither this fix nor passing CI completes the wider R1–R12 acceptance inventory.

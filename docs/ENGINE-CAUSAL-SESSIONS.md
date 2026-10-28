@@ -105,8 +105,14 @@ An explicit ensure retires its matching pending identity. Rejection or rollback
 can leave gaps, as ordinary engine allocation already does. A preview copies the
 visible rows and their names and repeats query execution; it is a correctness
 cost, not a throughput optimization. Final ordinary constraints and explicit
-publication remain authoritative. Existing recycling stores retain their old
-allocation-probe fallback, including the separately documented prediction gaps.
+publication remain authoritative. Legacy Rust bare/named recycling stores and
+C# owned mapped named stores run the ordinary query on a detached copy of their
+actual allocator state, including free-list reuse, preceding explicit/named
+allocations and duplicate merges. Their transaction/history wrappers forward
+only after existing write fences permit a preview. Copying and repeated query
+execution have the [documented costs and compatibility limits](case-studies/issue-138/RECYCLING-QUERY-VERIFICATION.md).
+Caller-owned/custom/remote stores and trigger decorators without that capability
+retain the existing fallback and require separate validation.
 
 The Rust checked causal borrow and C# checked adapter admit at most 1 MiB of query text, depth 64, 4096
 syntax nodes, 4096 results, 16,384 bindings and 4 MiB of estimated owned binding

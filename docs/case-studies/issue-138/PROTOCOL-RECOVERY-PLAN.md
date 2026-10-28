@@ -25,14 +25,15 @@ inline PR comments or reviews were returned on the paginated refresh.
 - [x] Assert owned observations, private saves, preparation freezes and
       unchanged provider bytes before explicit publication in each port.
 - [x] Run a small local physical check where compiled tools are available.
-- [ ] Run complete five-runtime handoff and finite process-exit matrices in CI.
+- [x] Run complete five-runtime handoff and finite process-exit matrices in CI
+      on cbddc13; later allocator commits require fresh exact-head checks.
 - [x] Reproduce incorrect legacy recycling-query predictions in both native
       implementations before changing production code.
 - [x] Implement exact detached Rust previews, including transaction/history
       forwarding and portable regressions.
 - [x] Verify Rust file preservation and focused lint.
 - [x] Commit the atomic Rust fix.
-- [ ] Implement C# previews without writing providers; verify allocator order,
+- [x] Implement C# previews without writing providers; verify allocator order,
       names, retained preview lifetime and transaction/history fences.
 - [ ] Commit each useful step, push only the prepared issue branch, inspect
       exact-head runs and preserve any nonpassing logs with line references.

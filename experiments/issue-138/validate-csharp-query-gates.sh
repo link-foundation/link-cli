@@ -17,6 +17,8 @@ node --test csharp/scripts/release-scripts.test.mjs > "$prefix-release-tests.log
   experiments/issue-138/run-csharp-causal-query.sh \
   experiments/issue-138/validate-csharp-causal-protocol.sh \
   experiments/issue-138/run-csharp-causal-protocol.sh \
+  experiments/issue-138/run-recycling-query-tests.sh \
+  experiments/issue-138/run-csharp-recycling-query-tests.sh \
   experiments/issue-138/run-csharp-query-allocation.sh > "$prefix-shellcheck.log" 2>&1
 git diff --check > "$prefix-whitespace.log" 2>&1
 printf 'GATES PASS %s\n' "$(date -u +%FT%TZ)"

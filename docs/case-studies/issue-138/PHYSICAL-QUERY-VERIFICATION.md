@@ -35,7 +35,14 @@ retry/reopen/following sequences. Fault children additionally have the harness's
 builds/matrices are reserved for CI following the latest feedback; the existing
 JS client integration job runs all fifty handoffs, twenty reaped exits, one
 hundred blocked opens and one hundred recovery sequences. Those complete
-results are pending, and no fresh whole-production coverage result is claimed.
+results pass on `cbddc1343bbc07a1d5b8b52d2772c7749c18fb89` in
+[JS client CI run 40684594403](https://github.com/link-foundation/link-cli/actions/runs/40684594403),
+created 2026-10-28T12:02:27Z. Its raw log lines 5673 and 6284 report the session
+handoff and exit/retry totals; all 100 blocked opens also pass unchanged-byte
+checks. Rust/C#/Node/Bun/Deno consume both plain and mirrored stores. The
+[retained CI receipt](../../../dev/log/issues/138/pulls/139/physical-query-ci.txt)
+records source-log hashes, exact result lines and platform coverage. This
+predates the subsequent allocator fixes and does not verify those commits.
 
 The local recipe logs are preserved under `dev/log/issues/138/pulls/139/` with
 the `physical-query-csharp` prefix. Application process exits do not establish

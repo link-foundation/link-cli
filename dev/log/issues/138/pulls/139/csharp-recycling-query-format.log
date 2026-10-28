@@ -1,0 +1,31 @@
+The dotnet runtime version is '10.0.12'.
+Formatting code files in workspace '/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.sln'.
+Loading workspace.
+Project Foundation.Data.Doublets.Cli.Tests is using configuration from '/tmp/gh-issue-solver-1793187246880/csharp/.editorconfig'.
+Project Foundation.Data.Doublets.Cli.Tests is using configuration from '/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/obj/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.GeneratedMSBuildEditorConfig.editorconfig'.
+Project Foundation.Data.Doublets.Cli.Tests is using configuration from '/usr/lib/dotnet/sdk/10.0.112/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig'.
+Project Foundation.Data.Doublets.Cli is using configuration from '/tmp/gh-issue-solver-1793187246880/csharp/.editorconfig'.
+Project Foundation.Data.Doublets.Cli is using configuration from '/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/obj/Debug/net10.0/Foundation.Data.Doublets.Cli.GeneratedMSBuildEditorConfig.editorconfig'.
+Project Foundation.Data.Doublets.Cli is using configuration from '/usr/lib/dotnet/sdk/10.0.112/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig'.
+Project Foundation.Data.Doublets.Cli.Library is using configuration from '/tmp/gh-issue-solver-1793187246880/csharp/.editorconfig'.
+Project Foundation.Data.Doublets.Cli.Library is using configuration from '/tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/obj/Debug/net10.0/Foundation.Data.Doublets.Cli.Library.GeneratedMSBuildEditorConfig.editorconfig'.
+Project Foundation.Data.Doublets.Cli.Library is using configuration from '/usr/lib/dotnet/sdk/10.0.112/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig'.
+Complete in 6346ms.
+Determining formattable files.
+Complete in 533ms.
+Running formatters.
+Running Code Style analysis.
+Determining diagnostics...
+Running 3 analyzers on Foundation.Data.Doublets.Cli.Tests.
+Running 3 analyzers on Foundation.Data.Doublets.Cli.Library.
+Complete in 19931ms.
+Analysis complete in 19931ms.
+Running Analyzer Reference analysis.
+Determining diagnostics...
+Running 209 analyzers on Foundation.Data.Doublets.Cli.Tests.
+Running 156 analyzers on Foundation.Data.Doublets.Cli.Library.
+Complete in 35991ms.
+Analysis complete in 35991ms.
+Complete in 57664ms.
+Formatted 0 of 355 files.
+Format complete in 64544ms.

@@ -380,3 +380,9 @@ to protocol errors; count the final decoded text byte. Keep callback rows owned
 and read-only, preserve private staging and preparation freezes, and verify
 shared query vectors across all codecs. Standard operation address checks
 precede edits; finite limits retain broad-read refusals.
+
+Validate legacy owned mapped queries on detached data/names allocator images,
+including explicit/named allocations and duplicate merges. Keep refused queries
+free of provider and journal writes, close retained preview interfaces safely,
+and forward through existing transaction/version write fences. Preserve caller
+and derived-store allocator fallbacks instead of replacing their behavior.

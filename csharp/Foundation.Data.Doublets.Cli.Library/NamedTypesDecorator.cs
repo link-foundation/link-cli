@@ -15,7 +15,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Foundation.Data.Doublets.Cli
 {
-    public class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable, IDurableLinks
+    public partial class NamedTypesDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IPinnedTypes<TLinkAddress>, IDisposable, IDurableLinks
         where TLinkAddress : struct,
             IUnsignedNumber<TLinkAddress>,
             IComparisonOperators<TLinkAddress, TLinkAddress, bool>,
@@ -30,13 +30,13 @@ namespace Foundation.Data.Doublets.Cli
         private readonly ILinks<TLinkAddress> _namedLinksFacade;
         private bool _disposed;
         private readonly DurableMappedMemory? _dataMemory;
-        private readonly DurableMappedMemory _namesMemory;
+        private readonly DurableMappedMemory? _namesMemory;
 
         public bool SupportsDurableFlush => _dataMemory is not null;
 
         public virtual void Flush()
         {
-            if (_dataMemory is null)
+            if (_dataMemory is null || _namesMemory is null)
                 throw new InvalidOperationException("A caller-owned store needs an explicit flush callback.");
             _dataMemory.Flush();
             _namesMemory.Flush();
