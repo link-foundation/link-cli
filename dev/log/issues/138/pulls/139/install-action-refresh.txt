@@ -22,3 +22,22 @@ Repository gate:
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 4377.417632
+
+A second action release followed at 2026-10-28T13:25:57Z: v2.88.0.
+Fresh head aae1422fd88cf09d6a9414e3544b495cd5ca63ac therefore failed
+Dependencies run https://github.com/link-foundation/link-cli/actions/runs/40698279431
+Raw log: experiments/issue-138/ci-logs/dependencies-40698279431.log
+196: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4056398Z Checked 127 declared versions and the Cargo.lock files.
+197: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4058659Z
+198: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4058870Z 1 dependencies are behind their latest release:
+199: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4059034Z
+200: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4059150Z | File | Dependency | Used | Latest |
+201: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4059359Z |---|---|---|---|
+202: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4059672Z | .github/workflows/security.yml | taiki-e/install-action | v2.87.33 | v2.88.0 |
+203: Dependencies are on their latest versions	Compare every dependency with its registry	2026-10-28T13:38:49.4460913Z ##[error]Process completed with exit code 1.
+Pin now: 86f7a0ffb25f40114606501a311ebcfaf882ea32 (v2.88.0).
+Release: https://github.com/taiki-e/install-action/releases/tag/v2.88.0
+Reviewed all three commits since v2.87.33: new similarity-rs tool manifest,
+codegen/CI tool listing and changelog only; cargo-audit installation is unchanged.
+After v2.88.0 update: Checked 127 declared versions (--skip-lockfiles).
+Focused repository/workflow/release policies: 221 tests, 221 pass.
