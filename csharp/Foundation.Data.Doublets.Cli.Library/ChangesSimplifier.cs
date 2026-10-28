@@ -1,3 +1,4 @@
+using System.Numerics;
 using Platform.Data.Doublets;
 
 namespace Foundation.Data.Doublets.Cli
@@ -21,15 +22,20 @@ namespace Foundation.Data.Doublets.Cli
         public static IEnumerable<(Link<uint> Before, Link<uint> After)> SimplifyChanges(
             IEnumerable<(Link<uint> Before, Link<uint> After)> changes
         )
+            => SimplifyChanges<uint>(changes);
+
+        public static IEnumerable<(Link<T> Before, Link<T> After)> SimplifyChanges<T>(
+            IEnumerable<(Link<T> Before, Link<T> After)> changes)
+            where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
         {
             ArgumentNullException.ThrowIfNull(changes);
 
-            var netChanges = new List<(Link<uint> Before, Link<uint> After)>();
-            var positionOfAddress = new Dictionary<uint, int>();
+            var netChanges = new List<(Link<T> Before, Link<T> After)>();
+            var positionOfAddress = new Dictionary<T, int>();
             foreach (var (before, after) in changes)
             {
-                var address = before.Index != 0 ? before.Index : after.Index;
-                if (address == 0)
+                var address = before.Index != T.Zero ? before.Index : after.Index;
+                if (address == T.Zero)
                 {
                     continue;
                 }
@@ -51,6 +57,6 @@ namespace Foundation.Data.Doublets.Cli
                 .ToList();
         }
 
-        private static bool IsNull(Link<uint> link) => link.Index == 0 && link.Source == 0 && link.Target == 0;
+        private static bool IsNull<T>(Link<T> link) where T : IUnsignedNumber<T> => link.Index == T.Zero && link.Source == T.Zero && link.Target == T.Zero;
     }
 }

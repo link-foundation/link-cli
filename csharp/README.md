@@ -56,6 +56,68 @@ while bare `1` is an address. This applies to definitions and restrictions as
 well as reference values. Use `--auto-create-missing-references` to create missing
 named points; strict queries require an existing name or a substitution definition.
 
+Embedded callers can select unsigned addresses through
+`AdvancedMixedQueryProcessor<T>`. The existing `AdvancedMixedQueryProcessor`
+API, including its `Options` and `Pattern` types, remains available for `uint`.
+The selected implementation shares the same matching and mutation algorithms.
+For example, an existing row at the largest stored u64 identity can be queried
+with `UInt128`, keeping the wildcard outside that range:
+
+```csharp
+using Foundation.Data.Doublets.Cli;
+using Foundation.Data.Doublets.Cli.Engine;
+
+var engine = new LinksEngine<UInt128>(new MemoryCommitLog());
+using var session = engine.Begin();
+UInt128 id = ulong.MaxValue;
+session.EnsureCreated(id);
+session.UpdateLink(id, id, id);
+AdvancedMixedQueryProcessor<UInt128>.ProcessQuery(session,
+    $"(({id}: {id} {id})) (({id}: {id} {id}))");
+```
+
+Queries edit this private session; publication still requires its explicit
+commit. Standard callbacks expose owned, read-only three-part lists, so later
+edits do not change retained observations. Read their parts through the list
+interface: the pinned upstream `Link<UInt128>` list helpers initialize default
+constants through reflection that does not support `UInt128`.
+Monotonic engine sessions preview queries over detached rows and names before
+reserving their allocation order. This avoids temporary create/delete probes;
+`(() ((1 1)))` creates the private point `(1: 1 1)` in a fresh session. Only
+real edits reach change callbacks. Preview failures preserve the cursor; a later
+missing-reference rejection or rollback can leave reserved address gaps.
+Explicit addresses use direct ensure rather than walking intervening identities.
+The reservation queue is allocated only when a query first reserves an address.
+Preview copies visible rows and executes the query before its real execution,
+so it adds a row snapshot and a second matching pass for this guarantee.
+Other stores keep their existing prediction through compatible interface defaults.
+Causal sessions expose `session.QueryLinks` as `INamedTypesLinks<UInt128>`.
+Pass that adapter to `AdvancedMixedQueryProcessor<UInt128>` to query the complete
+stored u64 range while staging in the caller's fresh address reservation. Even
+recreating a retained deletion at `ulong.MaxValue` preserves a lower fresh cursor.
+The adapter rejects reads and writes after preparation or disposal, including
+empty queries retained through an earlier adapter reference. Owned row callbacks
+and the session's finished diagnostics remain detached from subsequent edits.
+
+Checked queries admit at most 1 MiB of original UTF-8 input, depth 64, 4096 syntax
+nodes/results, 16,384 bindings, 4 MiB of estimated binding storage and 1 MiB of
+decoded named change references. Admission previews precede real private edits
+and external callbacks. Bare negative and overflowing numbers reject; quoted or
+encoded numeric names stay names. Publication still requires `session.Commit(token)`
+and its existing final constraints and 64-edit batch admission.
+
+`LinksOperation<T>`, `LinksRestriction<T>`, `RemoteLinks<T>` and the generic
+`LinksServer.Serve`/`ExecuteRequest` overloads share the standard protocol with
+selected unsigned addresses; the established uint APIs remain available. Serve
+`session.QueryLinks` to expose private causal edits through text and binary.
+`LinksClient.QueryLossless(text)` sends the explicit original-query envelope,
+retaining quoted numeric and special names. The peer must support that envelope;
+there is no fallback resend after an unknown outcome. Checked workers clamp raw
+text and binary decoding before canonical formatting. Request admission and
+query previews precede private edits; serving a session never publishes it.
+[The query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md) retains
+validation evidence and the unfinished physical query interchange work.
+
 LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
 `LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before
 writing. Invalid input leaves existing links and names unchanged, without
@@ -86,6 +148,14 @@ clink --db data.links --vc --tag v1
 clink --db data.links --vc --branch feature --branch-from 1
 clink --db data.links --vc --list-branches
 ```
+
+Tags accept `name=sequence` or `name=existing-tag`. For names containing `=`,
+the command uses the first delimiter whose complete suffix resolves. For example,
+after creating `v1`, `--tag 'release=雪=part=v1'` creates `release=雪=part`,
+and `--tag 'alias=release=雪=part'` creates an alias at the same point.
+Quote these arguments in the shell. The
+[tag-name example](../examples/version-control/tag-names.sh) checks both forms
+and checkout through repeated native command invocations.
 
 `BeginTransaction()` / `Commit()` / `Rollback()` are also exposed on the
 library API for explicit batches. End-to-end demo scripts live in
@@ -167,3 +237,62 @@ dotnet test --configuration Release
 
 Release automation for this package lives in `csharp/scripts/` and uses
 changesets from `csharp/.changeset/`.
+
+The optional `Foundation.Data.Doublets.Cli.Engine` namespace exposes
+`LinksEngine<T>` sessions through the existing links and names API. Concurrency,
+isolation, immutable history, constraints and revision-log storage are selected
+at construction. See [engine strategies](../docs/ENGINE-STRATEGIES.md) for costs,
+file/replication ownership, guarantee limits and runnable examples. The existing
+bare links store remains available for cache workloads.
+
+Select `ConcurrencyControl.Pessimistic` for overlapping sessions that reserve
+written addresses and immediately reject competing writes. It composes with the
+existing isolation and history options. See [point-write ownership, retry rules
+and costs](../docs/ENGINE-PESSIMISTIC.md).
+
+`TransactionsDecorator` borrows its data and journal stores. Finish foreground
+operations, dispose the decorator, then dispose those stores. `Shutdown()` and
+`Dispose()` wait for the active asynchronous checkpoint to finish; concurrent
+shutdown callers all wait for the same completion. Persistence callbacks must
+return for shutdown to complete. Calls from active background callbacks (including
+`Task.Run` descendants), or while holding the decorator's storage lock, throw
+`InvalidOperationException` to prevent joining their own work. Cancelled queued
+checkpoint work and failed checkpoints remain recoverable from committed journal
+records on reopen. Shutdown does not dispose the borrowed stores.
+
+When you own an entire facade graph, `LinksFacadeDisposer.Dispose(outermost)`
+releases borrowers before their dependencies. It joins transaction workers and
+finishes version transactions while their stores remain available.
+Nested cleanup shares cycle/duplicate detection and retains references detached
+during disposal. A borrower cleanup failure propagates before its dependencies
+close, allowing a retry. Calling `TransactionsDecorator.Dispose()` directly
+continues to leave its borrowed stores with the caller.
+
+If version-transaction rollback fails during undo or persistence, the version
+facade retains that transaction and rejects branch, tag, checkout and new
+transaction operations. Retry the same transaction rollback or owner disposal;
+only a terminal transaction releases admission. A whole-graph cleanup failure
+therefore leaves the stores available for the same retry.
+
+A commit can report a checkpoint error after the journal decision is durable.
+When `IsCommitted` is true, version transaction disposal, owner disposal and
+rollback finish that commit's branch metadata. They preserve the committed data.
+Failed metadata publication retains admission and rejects further writes until
+retry succeeds. Retried transition markers are idempotent, including when the
+original metadata write took effect before reporting an error.
+
+Initial version history visits retained journal records. Gaps in sequence
+numbers do not create checkout targets, and the final signed sequence remains
+publishable before later writes are rejected as exhausted.
+
+Version sidecars preserve delimiter text, Unicode, NUL and newline in branch,
+parent and tag names. New branch markers use a versioned encoding and ordinary
+legacy markers remain readable; see the [marker protocol](../docs/protocol/version-metadata.md)
+for compatibility and upgrade limits.
+
+The optional `Engine.PagedCommitLog` stores ordered records as immutable native
+doublets pages without SQL. Its caller-owned `IPageDevice` can be a native
+`FilePageDevice`; select a positive page quota with the log constructor. Keep the
+device alive while using the engine. Explicit disposal reports uncertain close
+outcomes and preserves ownership fencing; it never flushes staged records.
+See [native page guarantees, costs and examples](../docs/ENGINE-NATIVE-PAGES.md).

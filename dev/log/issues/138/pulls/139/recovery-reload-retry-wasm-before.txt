@@ -1,0 +1,57 @@
+Filtered 21207 walrus/wasm-bindgen DEBUG lines; complete raw log retained in experiments/issue-138/recovery-reload-retry-wasm-before.log.
+   Compiling link-cli v1.0.9 (<repository>/rust)
+   Compiling clink-wasm v2.4.0 (<repository>/rust/wasm)
+    Finished `test` profile [unoptimized] target(s) in 14.55s
+     Running tests/storage.rs (rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm)
+Set WASM_BINDGEN_TEST_TIMEOUT to 30 seconds...
+running 1 test
+test transactions_recovery_fault::reload_retry_refreshes_applied_external_state_before_releasing_admission ... FAIL
+
+failures:
+
+---- transactions_recovery_fault::reload_retry_refreshes_applied_external_state_before_releasing_admission output ----
+    error output:
+        panicked at tests/../../tests/transactions_recovery_fault_tests.rs:430:13:
+        reload-before/recover: skipped failed reload
+
+        Stack:
+
+        Error
+            at /tmp/.tmpIGXclZ/wasm-bindgen-test.js:336:25
+            at logError (/tmp/.tmpIGXclZ/wasm-bindgen-test.js:675:18)
+            at __wbg_new_9a14630036bbdb92 (/tmp/.tmpIGXclZ/wasm-bindgen-test.js:335:57)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new::__wbg_new_9a14630036bbdb92 externref shim (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[15545]:0x330cca)
+            at storage-91e7d092bac01889.wasm.<<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling::Error>::new (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[9948]:0x30364c)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::panic_handling (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[4110]:0x25bf06)
+            at storage-91e7d092bac01889.wasm.<wasm_bindgen_test[19938fe5035c967e]::__rt::Context>::new::{closure#0}::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[11250]:0x315458)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[3348]:0x230ca8)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[5847]:0x2a065c)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[19471]:0x33b685)
+
+
+
+    JS exception that was thrown:
+        RuntimeError: unreachable
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_abort (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[20817]:0x33dc16)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::__rust_start_panic (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[20633]:0x33d914)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_panic (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[16414]:0x333d69)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_with_hook (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[3348]:0x230cfd)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::panicking::panic_handler::{closure#0} (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[5847]:0x2a065c)
+            at storage-91e7d092bac01889.wasm.std[359a46decee746ed]::sys::backtrace::__rust_end_short_backtrace::<std[359a46decee746ed]::panicking::panic_handler::{closure#0}, !> (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[19471]:0x33b685)
+            at storage-91e7d092bac01889.wasm.__rustc[9d087a5ab36ea756]::rust_begin_unwind (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[11393]:0x316cde)
+            at storage-91e7d092bac01889.wasm.core[608f92abc48d28da]::panicking::panic_fmt (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[10427]:0x30a954)
+            at storage-91e7d092bac01889.wasm.storage[f4546c5f09aff2c4]::transactions_recovery_fault::reload_retry_refreshes_applied_external_state_before_releasing_admission (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[89]:0x3ae46)
+            at storage-91e7d092bac01889.wasm.<storage[f4546c5f09aff2c4]::transactions_recovery_fault::reload_retry_refreshes_applied_external_state_before_releasing_admission as core[608f92abc48d28da]::ops::function::FnOnce<()>>::call_once (wasm://wasm/storage-91e7d092bac01889.wasm-02505516:wasm-function[12917]:0x3232dd)
+
+failures:
+
+    transactions_recovery_fault::reload_retry_refreshes_applied_external_state_before_releasing_admission
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 277 filtered out; finished in 0.05s
+
+Error: Node failed with exit_code 1
+error: test failed, to rerun pass `--test storage`
+
+Caused by:
+  process didn't exit successfully: `/home/box/.cache/.wasm-pack/wasm-bindgen-9411bdb1a3e2bbb9/wasm-bindgen-test-runner <repository>/rust/wasm/target/wasm32-unknown-unknown/debug/deps/storage-91e7d092bac01889.wasm reload_retry` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.

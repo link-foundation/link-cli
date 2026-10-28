@@ -1,0 +1,75 @@
+Permanent address allocator: exact-head CI evidence, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: c14beca86e01bafb8ca9ceda9bffd5820e0d90d9
+Not an all-green head: Rust Windows socket bind and Dependencies failed.
+All runs below were created 2026-10-28T13:12:47Z, after the commit.
+
+Broken Link Checker: success; https://github.com/link-foundation/link-cli/actions/runs/40694371267
+C# CI/CD Pipeline: success; https://github.com/link-foundation/link-cli/actions/runs/40694371516
+Dependencies: failure; https://github.com/link-foundation/link-cli/actions/runs/40694371298
+Docs: success; https://github.com/link-foundation/link-cli/actions/runs/40694371264
+JS client CI: success; https://github.com/link-foundation/link-cli/actions/runs/40694371714
+Rust CI/CD Pipeline: failure; https://github.com/link-foundation/link-cli/actions/runs/40694371444
+Security: success; https://github.com/link-foundation/link-cli/actions/runs/40694371319
+WebAssembly CI: success; https://github.com/link-foundation/link-cli/actions/runs/40694371482
+Workflows: success; https://github.com/link-foundation/link-cli/actions/runs/40694371284
+
+Raw logs are retained locally; SHA256 and one-based line references follow.
+/tmp/issue-138-recovery/js-c14beca.log: SHA256 c987a2c0f94e8145815bd91c15249669be654eb276e535e054b335977360edc4
+5549: Conformance on Node.js, Bun and Deno	Verify complete native LSM store handoffs	2026-10-28T13:22:40.1865018Z PASS 50 allocation complete-store handoffs with physical hash preservation
+6160: Conformance on Node.js, Bun and Deno	Verify complete native LSM store handoffs	2026-10-28T13:23:20.3214517Z PASS 20 reaped process exits; 100 cross-runtime retry/reopen/following checks
+7346: Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-10-28T13:25:18.6253605Z PASS real etcd address reservations: 2 native ports, actual WASM creates, abandoned gap, competing writers, lost reply and exact retained retries
+7362: Conformance on Node.js, Bun and Deno	Verify actual consensus and language interoperability	2026-10-28T13:25:25.0318635Z PASS real etcd address reservations: 2 native ports, actual WASM creates, abandoned gap, competing writers, lost reply and exact retained retries
+9595: Unit tests and types	Unit tests and complete production coverage	2026-10-28T13:14:20.2109436Z ℹ tests 708
+9613: Unit tests and types	Unit tests and complete production coverage	2026-10-28T13:14:20.2136068Z ℹ  engine-address-allocator.js      | 100.00 |   100.00 |  100.00 |
+/tmp/issue-138-recovery/csharp-c14beca.log: SHA256 f80e1f9dbc57a1285a9e82973e0b699104e9412f69a75dfa5e8ac4ed30835c10
+13415: Simulate Fresh Merge	Simulate fresh merge with base branch	2026-10-28T13:14:32.7984239Z Total tests: 2622
+13416: Simulate Fresh Merge	Simulate fresh merge with base branch	2026-10-28T13:14:32.7984480Z      Passed: 2622
+20826: Test (ubuntu-24.04)	Run tests	2026-10-28T13:14:59.6677524Z Total tests: 2622
+20827: Test (ubuntu-24.04)	Run tests	2026-10-28T13:14:59.6677780Z      Passed: 2622
+27404: Test (windows-2025)	Run tests	2026-10-28T13:25:00.0877545Z Total tests: 2622
+27405: Test (windows-2025)	Run tests	2026-10-28T13:25:00.0877818Z      Passed: 2622
+33604: Test (macos-26)	Run tests	2026-10-28T13:16:45.9553820Z Total tests: 2622
+33605: Test (macos-26)	Run tests	2026-10-28T13:16:45.9554410Z      Passed: 2622
+/tmp/issue-138-recovery/wasm-c14beca.log: SHA256 d90af1a76fff6396f670a679159e7bdfb7fb203a60881ca7751929f26115a1ec
+801: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:01.7550015Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.07s
+811: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:03.4782270Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.15s
+1157: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:23.6507246Z test result: ok. 340 passed; 0 failed; 0 ignored; 0 filtered out; finished in 17.24s
+1173: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:25.3249644Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.08s
+1183: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:26.9261658Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.05s
+1192: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:28.5856882Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.05s
+1271: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:17:30.8483056Z test result: ok. 73 passed; 0 failed; 0 ignored; 0 filtered out; finished in 1.14s
+1637: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:18:26.1903167Z test result: ok. 360 passed; 0 failed; 0 ignored; 0 filtered out; finished in 53.07s
+1651: WASM coverage	Measure actual WebAssembly tests	2026-10-28T13:18:27.8499102Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 filtered out; finished in 0.07s
+
+Actual-WASM total: 812 tests in the nine measured test binaries above.
+New address allocator passes six linked contracts. C# complete per-platform totals: 2622.
+Allocation matrix: 50 handoffs; 20 reaped exits; 100 cross-runtime retry/reopen/following checks.
+The physical layout runs Node/Bun/Deno/Rust/C# in both plain and mirrored mode.
+Real-etcd allocation scenario passes with both public native ports and actual-WASM creates.
+
+experiments/issue-138/ci-logs/rust-40694371444.log: SHA256 9104f30c1abd031df567a44d5f6668c6308533e4e365d5ffc3716ea1a13f797e
+37918: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0446460Z failures:
+37919: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0446554Z
+37920: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0446709Z ---- a_stopped_server_executes_nothing stdout ----
+37921: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0446844Z
+37922: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0447076Z thread 'a_stopped_server_executes_nothing' (2264) panicked at tests\common\mod.rs:24:64:
+37923: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0447832Z called `Result::unwrap()` on an `Err` value: Io(Os { code: 10055, kind: Uncategorized, message: "An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full." })
+37924: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0448480Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+37925: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449009Z
+37926: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449013Z
+37927: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449068Z failures:
+37928: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449220Z     a_stopped_server_executes_nothing
+37929: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449349Z
+37930: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449551Z test result: FAILED. 10 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.05s
+37931: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0449764Z
+37932: Test (windows-2025)	Run tests	2026-10-28T13:35:27.0624011Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test protocol_tcp_tests`
+37933: Test (windows-2025)	Run tests	2026-10-28T13:35:27.3479235Z ##[error]Process completed with exit code 1.
+
+This fails before server storage or test mutations: LinksServer::bind at tests/common/mod.rs:24.
+Winsock 10055 identifies OS socket/ephemeral-port resource admission; the retained log has no
+port-state counters, so port exhaustion versus another socket resource shortage is not proved.
+Microsoft bind reference: https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-bind
+Dependencies 40694371298 rejects install-action v2.87.32 after v2.87.33 was released.
+Its exact log lines and pinned update are retained in install-action-refresh.txt.
+Later commits require fresh full CI. Wider R1-R12 criteria remain unfinished.

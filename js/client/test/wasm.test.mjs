@@ -82,3 +82,11 @@ test('the universal entry point imports nothing from node:', async () => {
   assert.ok(seen.size > 5);
   for (const file of seen) assert.ok(!/\/(tcp|process)\.js$/.test(file), file);
 });
+
+test('a request whose scope expires while queued never reaches native code', async () => {
+  const clink = fakeClink(); const transport = new WasmTransport(clink);
+  const controller = new AbortController();
+  const pending = transport.send('(count: ())', { signal: controller.signal }); controller.abort();
+  await assert.rejects(pending, { outcome: 'not-sent', name: 'AbortError' });
+  assert.equal(clink.requests.length, 0); await transport.close();
+});

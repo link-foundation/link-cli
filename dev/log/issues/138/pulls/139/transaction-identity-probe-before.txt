@@ -1,0 +1,64 @@
+Frozen realtime restart schedule: rollback
+Child seed: exit 0
+seed: transaction 00000192cc0914000000000000000000
+[Transactions] Recorded Create seq=1 tx=00000192cc0914000000000000000000: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=00000192cc0914000000000000000000: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 00000192cc0914000000000000000000 (mode=Sync, transitions=2).
+
+Child rollback: exit 0
+rollback: transaction 00000192cc0914000000000000000000
+[Transactions] Recorded Update seq=3 tx=00000192cc0914000000000000000000: (1,11,12) -> (1,21,22).
+[Transactions] Rolled back tx 00000192cc0914000000000000000000 (1 transitions).
+
+Child verify: exit 101
+
+thread 'main' (1223999) panicked at experiments/issue-138/identity-probe.rs:15:9:
+assertion `left == right` failed: reopening acknowledged a new uncommitted write using an old decision
+  left: 21
+ right: 11
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/panicking.rs:679:5
+   1: core::panicking::panic_fmt
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:80:14
+   2: core::panicking::assert_failed_inner
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:447:23
+   3: core::panicking::assert_failed::<u32, u32>
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:407:5
+   4: identity_probe::main
+   5: <fn() -> core::result::Result<(), alloc::boxed::Box<dyn core::error::Error>> as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+Regression result: FAIL
+Frozen realtime restart schedule: exit
+Child seed: exit 0
+seed: transaction 00000192cc0914000000000000000000
+[Transactions] Recorded Create seq=1 tx=00000192cc0914000000000000000000: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=00000192cc0914000000000000000000: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 00000192cc0914000000000000000000 (mode=Sync, transitions=2).
+
+Child exit: exit 0
+exit: transaction 00000192cc0914000000000000000000
+[Transactions] Recorded Update seq=3 tx=00000192cc0914000000000000000000: (1,11,12) -> (1,21,22).
+
+Child verify: exit 101
+
+thread 'main' (1224016) panicked at experiments/issue-138/identity-probe.rs:15:9:
+assertion `left == right` failed: reopening acknowledged a new uncommitted write using an old decision
+  left: 21
+ right: 11
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/std/src/panicking.rs:679:5
+   1: core::panicking::panic_fmt
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:80:14
+   2: core::panicking::assert_failed_inner
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:447:23
+   3: core::panicking::assert_failed::<u32, u32>
+             at /rustc/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4/library/core/src/panicking.rs:407:5
+   4: identity_probe::main
+   5: <fn() -> core::result::Result<(), alloc::boxed::Box<dyn core::error::Error>> as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+Regression result: FAIL
+Restart schedules: 0/2 passed

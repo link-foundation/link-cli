@@ -1,0 +1,13 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: python3 experiments/issue-138/causal-merkle-model.py
+Model SHA256: 3f0ba1e6d722a45e7bc34d2a40a89d50e2acf5cbe6a7fe8f249eb83c4f93a704
+Resource limits: 192 MiB address space and 8 MiB stack; finite eight snapshots, six addresses, depth sixteen.
+PASS independent Merkle model: 64 snapshot pairs, 48 leaf/proof groups; depth 16, fanout 16, six finite addresses.
+PASS differing-address oracle, changed leaf/root/path, mixed snapshots, malformed depth, address bounds and frozen ownership controls.
+Proof sibling payload is 16 * 15 * 32 = 7680 raw bytes. Empty equal roots visit one node and transfer no leaves.
+Model evidence only: canonical protocol admission, production parity, bounded transport/publication, process faults and safe reclamation remain unfinished.
+The direct differing-address oracle is separate from hash-guided traversal. Snapshot construction deep-copies its input before caller mutation.
+No production Merkle protocol or range publication is claimed; canonical data/proof validation and cross-runtime implementation remain unchecked under CAUSAL-MERKLE-PLAN.md.
+
+The draft production-domain admission independently rejected the original model because it reused the same author/dot across addresses. Corrected model dots are globally distinct; delete authors do not contradict the original live identity. The corrected bounded model still passes all 64 pairs and 48 proof groups. This correction changes model roots, not published production behavior.
+generate-causal-merkle-vectors.py derives eight canonical roots, four leaf proofs and three branch proofs from this independent model. Four JS draft contracts match every vector and verify immutable ownership, malformed/mixed proofs, retained deletion, dominated normalization and dot/capacity rejection at 100% draft lines/branches/functions. Native/C#/actual-WASM parity and production transfer remain unfinished.

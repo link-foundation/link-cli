@@ -218,6 +218,25 @@ public sealed class LinoProtocolCodecTests
     }
 
     [Fact]
+    public void TextByteLimitCountsTheFinalByteAndDecodedSeparators()
+    {
+        var protocol = new TextLinoProtocol { MaxTextBytes = 4 };
+        foreach (var text in new[] { "1234", ".123", "a\nbc" })
+        {
+            using var wire = new MemoryStream();
+            TextLinoProtocol.WriteText(wire, text); wire.Position = 0;
+            Assert.Equal(text, protocol.ReadText(new PacketReader(wire)));
+        }
+        foreach (var text in new[] { "12345", ".1234", "ab\ncd" })
+        {
+            using var wire = new MemoryStream();
+            TextLinoProtocol.WriteText(wire, text); wire.Position = 0;
+            Assert.Equal(LinoProtocolErrorKind.LimitExceeded,
+                Assert.Throws<LinoProtocolException>(() => protocol.ReadText(new PacketReader(wire))).Kind);
+        }
+    }
+
+    [Fact]
     public void AClosedStreamIsAnIoError()
     {
         var stream = new MemoryStream("() ()\n.\n"u8.ToArray());

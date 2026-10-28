@@ -1,0 +1,26 @@
+Finite independent LSM publication-order model
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: python3 experiments/issue-138/model-lsm-publication.py
+No production codec, native files or hardware proof; LSM composition is not implemented.
+
+PASS cut00: reserve-sync:before; exact values/tombstone/empty; next ID 2
+PASS cut01: reserve-sync:after; exact values/tombstone/empty; next ID 3
+PASS cut02: create:before; exact values/tombstone/empty; next ID 3
+PASS cut03: create:after; exact values/tombstone/empty; next ID 3
+PASS cut04: data-sync:before; exact values/tombstone/empty; next ID 3
+PASS cut05: data-sync:after; exact values/tombstone/empty; next ID 3
+PASS cut06: seal-sync:before; exact values/tombstone/empty; next ID 3
+PASS cut07: seal-sync:after; exact values/tombstone/empty; next ID 3
+PASS cut08: manifest-checkpoint-sync:before; exact values/tombstone/empty; next ID 3
+PASS cut09: manifest-checkpoint-sync:after; exact values/tombstone/empty; next ID 3
+PASS cut10: retire-old:before; exact values/tombstone/empty; next ID 3
+PASS cut11: retire-old:after; exact values/tombstone/empty; next ID 3
+PASS selected missing: error, no obsolete fallback
+PASS selected unsealed: error, no obsolete fallback
+PASS invalid table generation: reject
+PASS invalid buffer generation: reject
+PASS invalid global generation: reject
+PASS invalid unreserved ID: reject
+PASS invalid duplicate ID: reject
+PASS last u64 table ID; following reservation rejects without mutation
+PASS independent finite LSM publication model: 12 cuts, two damage and six counter controls

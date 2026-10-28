@@ -1,0 +1,52 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-mapped-generic-initialization-before.sh
+Reproduce: bash experiments/issue-138/validate-mapped-generic-initialization.sh
+Immutable 9bb985f: all three generic initialization controls fail; current pre-fix 40d850f fails the same three cases.
+Fresh/cross-page filled growth skips requested values, and a raw callback reports 24 initialized tail items instead of eight. All baseline byte patterns are valid.
+START 2026-10-27T11:54:51Z
+FOCUSED AND STRICT CHECKS PASS 2026-10-27T11:56:15Z
+NATIVE PASS 2026-10-27T12:13:34Z
+ACTUAL WASM PASS 2026-10-27T12:18:40Z
+ALL PASS 2026-10-27T12:19:05Z
+api-after: three generic initialization, four admission, six flush, six growth and six empty/shrink controls pass; one parent-driven child entry ignored.
+default-after: three generic initialization, four admission, six flush, six growth and six empty/shrink controls pass; one parent-driven child entry ignored.
+Nine ownership/growth unit controls pass, including injected mapping-after-extension and clone failures.
+Finite quota probe retains pointer, prefix and checked flush after EFBIG; owned-flush example passes.
+Native Rust: 1197 passed; 22 parent-driven child entries ignored by normal harness.
+Complete lines: 17168/18051 (95.10830%)
+Complete branches: 3294/3782 (87.09677%)
+Complete functions: 2218/2380 (93.19328%)
+Complete regions: 26413/28565 (92.46630%)
+Complete instantiations: 12397/22130 (56.01898%)
+/rust/src/storage/file_mem_grow.rs lines: 43/45 (95.55556%)
+/rust/src/storage/file_mem_grow.rs branches: 1/2 (50.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 4/4 (100.00000%)
+/rust/src/storage/file_mem.rs lines: 86/103 (83.49515%)
+/rust/src/storage/file_mem.rs branches: 6/8 (75.00000%)
+/rust/src/storage/file_mem.rs functions: 11/14 (78.57143%)
+/rust/src/storage/mapped_flush.rs lines: 82/82 (100.00000%)
+/rust/src/storage/mapped_flush.rs branches: 4/4 (100.00000%)
+/rust/src/storage/mapped_flush.rs functions: 17/17 (100.00000%)
+Actual WASM: 723 passed; 0 parent-driven child entries ignored by normal harness.
+Complete lines: 13144/15760 (83.40102%)
+Complete branches: 2663/3171 (83.97982%)
+Complete functions: 1636/2058 (79.49466%)
+Complete regions: 20244/24819 (81.56654%)
+Complete instantiations: 4342/7496 (57.92423%)
+/rust/src/storage/file_mem_grow.rs lines: 0/45 (0.00000%)
+/rust/src/storage/file_mem_grow.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem_grow.rs functions: 0/4 (0.00000%)
+/rust/src/storage/file_mem.rs lines: 0/103 (0.00000%)
+/rust/src/storage/file_mem.rs branches: 0/0 (0.00000%)
+/rust/src/storage/file_mem.rs functions: 0/14 (0.00000%)
+/rust/src/storage/mapped_flush.rs lines: 0/82 (0.00000%)
+/rust/src/storage/mapped_flush.rs branches: 0/2 (0.00000%)
+/rust/src/storage/mapped_flush.rs functions: 0/17 (0.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.31s
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, native/WASM strict Clippy, source sizes, changeset, dependency freshness and workflow/ShellCheck checks pass.
+Generic initialization uses the known original/successful-growth byte count; no new allocation, copying, lock or file operation is added.
+Fresh padding, a sixteen-item persisted prefix, within-page callback counts, cross-page growth, following growth, checked flush and exact destructor counts pass. All three baseline representations are transparent u64 values with distinct counters; no persisted pointers or panic inside an initialization callback.
+Genuine partial-shrink/generic-growth I/O failure, nonzero callback panic, shrink destructor panic and arbitrary persisted representation adoption remain unfinished; no physical repair or hardware power-loss claim.
+All production coverage denominators remain included. Complete native/C#/linked-WASM 100% and other unmet R1-R12 criteria remain required.
+Fresh exact-head Windows/Linux/macOS CI remains required. The PR stays draft and unmerged.

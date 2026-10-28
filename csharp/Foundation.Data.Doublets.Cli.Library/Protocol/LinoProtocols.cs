@@ -22,6 +22,20 @@ public interface ILinoProtocol
 /// <summary>Limits applied when reading messages of either protocol.</summary>
 public sealed record ProtocolLimits
 {
+    internal QueryLimits? Admission { get; init; }
+    internal ProtocolLimits ForQuery(QueryLimits? query) => query is null ? this : this with
+    {
+        Admission = query,
+        MaxTextBytes = Math.Min(MaxTextBytes, query.MaxInputBytes),
+        Binary = Binary with
+        {
+            MaxLinks = Math.Min(Binary.MaxLinks, (ulong)query.MaxNodes),
+            MaxReferences = Math.Min(Binary.MaxReferences, (ulong)query.MaxNodes),
+            MaxNodes = Math.Min(Binary.MaxNodes, query.MaxNodes),
+            MaxStringBytes = Math.Min(Binary.MaxStringBytes, query.MaxInputBytes),
+            MaxDepth = Math.Min(Binary.MaxDepth, query.MaxDepth)
+        }
+    };
     /// <summary>Limits applied to binary packets, see <see cref="BinaryLinoProtocol.Limits"/>.</summary>
     public DecodeLimits Binary { get; init; } = DecodeLimits.Default;
 
@@ -129,6 +143,8 @@ public sealed record TextLinoProtocol : ILinoProtocol
             first = false;
             var skip = line.Count > 0 && line[0] == (byte)'.' ? 1 : 0;
             text.AddRange(line.Skip(skip));
+            if (text.Count > MaxTextBytes)
+                throw LinoProtocolException.Limit($"text message longer than {MaxTextBytes} bytes");
         }
         try
         {
@@ -250,9 +266,10 @@ public static class LinoProtocols
         }
         if (!IsBinaryStart((byte)first))
         {
-            return new TextLinoProtocol { MaxTextBytes = limits.MaxTextBytes }.ReadDocument(input) is { } text
-                ? (text, MessageFormat.Text)
-                : null;
+            var text = new TextLinoProtocol { MaxTextBytes = limits.MaxTextBytes }.ReadText(input);
+            if (text is null) return null;
+            return LinoProtocolException.Wrap(() =>
+                (LinksServer.ParseDocument(text, limits.Admission), MessageFormat.Text));
         }
         var binary = limits.Binary;
         return LinoProtocolException.Wrap(() => LinksPacket.ReadFrom(input, binary) is { } packet

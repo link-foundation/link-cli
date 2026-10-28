@@ -38,7 +38,7 @@ public interface IVersionControlLinks : INamedTypesLinks<uint>
 /// (<see cref="Tag"/>) over the transitions log. Optional — when not
 /// instantiated the underlying transactions decorator behaves identically.
 /// </summary>
-public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
+public partial class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControlLinks, IDisposable
 {
     /// <summary>Default name of the initial branch (analogous to git's <c>main</c>).</summary>
     public const string DefaultBranchName = "main";
@@ -63,9 +63,13 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     private long _currentApplied;
     private VersionControlTransaction? _activeTransaction;
     private readonly bool _trace;
+    private readonly Action _flushBranches;
+
+    /// <summary>Both the transaction decision and version sidecar have explicit stable-storage flushes.</summary>
+    public bool SupportsDurablePublication { get; }
 
     /// <summary>
-    /// Rolls back and releases the transaction that is still open, if any.
+    /// Completes a committed version publication or rolls back an open transaction.
     /// The wrapped transactions decorator and branches store are owned by
     /// the caller and are deliberately left untouched.
     /// </summary>
@@ -76,7 +80,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     }
 
     /// <summary>
-    /// Rolls back and releases the open transaction. Derived decorators that
+    /// Finishes the active version transaction. Derived decorators that
     /// own extra resources override this and call
     /// <c>base.Dispose(disposing)</c>.
     /// </summary>
@@ -86,8 +90,8 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         VersionControlTransaction? active;
         lock (_lock)
         {
+            FinishMovementLocked();
             active = _activeTransaction;
-            _activeTransaction = null;
         }
         active?.Dispose();
     }
@@ -96,13 +100,37 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
       TransactionsDecorator transactions,
       INamedTypesLinks<uint> branchesStore,
       bool trace = false)
+      : this(transactions, branchesStore, null, trace)
+    {
+    }
+
+    /// <summary>Uses an explicit stable-storage flush for caller-owned metadata.</summary>
+    public VersionControlDecorator(
+      TransactionsDecorator transactions,
+      INamedTypesLinks<uint> branchesStore,
+      Action? flushBranches,
+      bool trace = false)
       : base(transactions)
     {
         _transactions = transactions ?? throw new ArgumentNullException(nameof(transactions));
         _branchesStore = branchesStore ?? throw new ArgumentNullException(nameof(branchesStore));
         _trace = trace;
-        Recover();
-        EnsureDefaultBranch();
+        var durable = branchesStore as IDurableLinks;
+        SupportsDurablePublication = transactions.SupportsDurableCommit
+            && (flushBranches is not null || durable?.SupportsDurableFlush == true);
+        _flushBranches = flushBranches ?? (durable?.SupportsDurableFlush == true ? durable.Flush : static () => { });
+        try
+        {
+            _transactions.ResumeVersionReplayRecovery();
+            Recover();
+            EnsureDefaultBranch();
+        }
+        catch
+        {
+            if (_activeMovement is not null)
+                _transactions.RetainVersionReplayRecovery(() => { lock (_lock) FinishMovementLocked(); });
+            throw;
+        }
     }
 
     public virtual string CurrentBranch { get { lock (_lock) return _currentBranch; } }
@@ -127,7 +155,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            if (_activeTransaction is not null)
+            if (_activeTransaction is not null || _activeMovement is not null)
             {
                 throw new InvalidOperationException("Nested version-control transactions are not supported.");
             }
@@ -167,23 +195,42 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            var beforeSeq = _transactions.LastLoggedSequence;
-            var result = innerWrite();
-            if (_activeTransaction is null)
+            EnsureWriteAllowedLocked();
+            // An automatic write needs the same publication owner as an
+            // explicit transaction, including when its commit throws.
+            var automatic = _activeTransaction is null ? BeginTransaction() : null;
+            uint result;
+            try
             {
-                AttributeNewTransitionsLocked(beforeSeq, _currentBranch);
+                result = innerWrite();
             }
+            catch
+            {
+                // Errors before commit still undo an automatic write. Failed
+                // undo retains this owner for a subsequent Dispose retry.
+                automatic?.Rollback();
+                throw;
+            }
+            // Keep this outside the undo catch: an attempted commit can be
+            // durable even when it reports an error, and must be completed.
+            automatic?.Commit();
             return result;
         }
     }
 
-    private void AttributeNewTransitionsLocked(long beforeSeq, string branchName)
+    private void EnsureWriteAllowedLocked()
     {
-        var afterSeq = _transactions.LastLoggedSequence;
+        if (_activeMovement is not null || _activeTransaction?.AfterSequence is not null || _activeTransaction?.Inner.IsCommitted == true)
+            throw new InvalidOperationException("Retry committed version publication before writing.");
+    }
+
+    private void AttributeNewTransitionsLocked(long beforeSeq, long afterSeq, string branchName)
+    {
         if (afterSeq <= beforeSeq) return;
 
-        for (var s = beforeSeq + 1; s <= afterSeq; s++)
+        for (var s = beforeSeq; s < afterSeq;)
         {
+            ++s;
             _transitionBranches[s] = branchName;
             WriteImmutableMarker($"{TransitionPrefix}{s.ToString(CultureInfo.InvariantCulture)}:branch={branchName}");
         }
@@ -292,43 +339,12 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void ApplyDiffToLocked(List<long> targetPath, string newBranch)
     {
-        var currentPath = BuildBranchSeqsLocked(_currentBranch)
-          .Where(s => s <= _currentApplied)
-          .ToList();
-
-        var common = 0;
-        var max = Math.Min(currentPath.Count, targetPath.Count);
-        while (common < max && currentPath[common] == targetPath[common]) common++;
-
-        for (var i = currentPath.Count - 1; i >= common; i--)
-        {
-            var transition = FindTransition(currentPath[i]);
-            if (transition is not null)
-            {
-                _transactions.RevertTransition(transition.Value);
-            }
-        }
-        for (var i = common; i < targetPath.Count; i++)
-        {
-            var transition = FindTransition(targetPath[i]);
-            if (transition is not null)
-            {
-                _transactions.ApplyTransition(transition.Value);
-            }
-        }
-
-        if (!ReferenceEquals(newBranch, _currentBranch))
-        {
-            _currentBranch = newBranch;
-            SetCurrentBranchLocked(newBranch);
-        }
-        _currentApplied = targetPath.Count == 0 ? 0 : targetPath[^1];
-        SetAppliedLocked(_currentApplied);
+        StartMovementLocked(targetPath, newBranch);
     }
 
     private void EnsureNoOpenTransactionLocked(string operation)
     {
-        if (_activeTransaction is not null)
+        if (_activeTransaction is not null || _activeMovement is not null || _transactions.HasOpenTransaction)
         {
             throw new InvalidOperationException($"{operation} is not allowed while a version-control transaction is open.");
         }
@@ -338,11 +354,27 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            if (!ReferenceEquals(_activeTransaction, transaction))
+            {
+                transaction.Inner.Commit();
+                return;
+            }
+            if (transaction.Inner.IsRolledBack)
+            {
+                FinishAbortedPublicationLocked(transaction);
+                return;
+            }
+            PreparePublicationLocked(transaction);
+            // IsCommitted reports the durable decision; a failed data checkpoint
+            // can still need retry before publishing the branch metadata.
             transaction.Inner.Commit();
             if (ReferenceEquals(_activeTransaction, transaction))
             {
+                AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.AfterSequence!.Value, transaction.BranchName);
+                _flushBranches();
+                ClearPublicationIntentLocked(transaction.IntentLink);
                 _activeTransaction = null;
-                AttributeNewTransitionsLocked(transaction.BeforeSequence, transaction.BranchName);
+                if (_trace) Trace($"Published committed version tx {transaction.Id:N} on '{transaction.BranchName}'.");
             }
         }
     }
@@ -351,15 +383,27 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            if (transaction.Inner.IsCommitted)
+            {
+                CommitVersionTransaction(transaction);
+                return;
+            }
             try
             {
                 transaction.Inner.Rollback();
+                // An uncertain inner decision can become known while cleanup
+                // retries it. Publish that commit before releasing admission.
+                if (transaction.Inner.IsCommitted) CommitVersionTransaction(transaction);
             }
             finally
             {
-                if (ReferenceEquals(_activeTransaction, transaction))
+                // Failed undo/checkpoint work still owns admission and must be
+                // retryable through this facade. Retention can fail after the
+                // inner rollback completes, so inspect its terminal state.
+                if (transaction.Inner.IsRolledBack
+                    && ReferenceEquals(_activeTransaction, transaction))
                 {
-                    _activeTransaction = null;
+                    FinishAbortedPublicationLocked(transaction);
                 }
             }
         }
@@ -367,33 +411,34 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private List<long> BuildBranchSeqsLocked(string branchName)
     {
-        return BuildBranchSeqsLocked(branchName, new HashSet<string>(StringComparer.Ordinal));
-    }
-
-    private List<long> BuildBranchSeqsLocked(string branchName, HashSet<string> visited)
-    {
-        if (!_branches.TryGetValue(branchName, out var info)) return new List<long>();
-        if (!visited.Add(branchName)) return new List<long>();
-        var seqs = new List<long>();
-        if (info.Parent is not null && _branches.ContainsKey(info.Parent))
+        // Only descendant fork points constrain inherited records. Each own
+        // head applies separately, preserving root-to-leaf history grouping.
+        var positions = new Dictionary<string, int>(StringComparer.Ordinal);
+        var chain = new List<(long Limit, List<long> Sequences)>();
+        string? current = branchName;
+        var cutoff = long.MaxValue;
+        while (current is not null && _branches.TryGetValue(current, out var info)
+            && positions.TryAdd(current, chain.Count))
         {
-            seqs.AddRange(BuildBranchSeqsLocked(info.Parent, visited).Where(s => s <= info.ForkSeq));
+            chain.Add((Math.Min(cutoff, info.Head), new List<long>()));
+            cutoff = Math.Min(cutoff, info.ForkSeq);
+            current = info.Parent;
         }
-        var own = _transitionBranches
-          .Where(p => p.Value == branchName && p.Key <= info.Head)
-          .Select(p => p.Key)
-          .OrderBy(s => s);
-        seqs.AddRange(own);
-        return seqs;
-    }
-
-    private Transition<uint>? FindTransition(long sequence)
-    {
-        foreach (var t in _transactions.Log)
+        // Partition in one attribution scan; only selected buckets need sorting.
+        foreach (var (sequence, owner) in _transitionBranches)
+            if (positions.TryGetValue(owner, out var position))
+            {
+                var entry = chain[position];
+                if (sequence <= entry.Limit) entry.Sequences.Add(sequence);
+            }
+        var result = new List<long>();
+        for (var position = chain.Count - 1; position >= 0; --position)
         {
-            if (t.Sequence == sequence) return t;
+            var sequences = chain[position].Sequences;
+            sequences.Sort();
+            result.AddRange(sequences);
         }
-        return null;
+        return result;
     }
 
     // -- Persistence helpers ----------------------------------------------
@@ -402,12 +447,16 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
-            var existing = _transactions.LastLoggedSequence;
             if (!_branches.ContainsKey(DefaultBranchName))
             {
-                // Pre-existing transitions are attributed to the default branch.
-                for (var s = 1L; s <= existing; s++)
+                var existing = 0L;
+                // Only committed records are versions. Aborts and recovered
+                // pending work can leave real sequence numbers in the journal.
+                foreach (var transition in _transactions.Log)
                 {
+                    if (!_transactions.IsTransactionCommitted(transition.TransactionId)) continue;
+                    var s = transition.Sequence;
+                    existing = Math.Max(existing, s);
                     if (!_transitionBranches.ContainsKey(s))
                     {
                         _transitionBranches[s] = DefaultBranchName;
@@ -477,26 +526,72 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void WriteImmutableMarker(string name)
     {
+        // Publication may be retried after SetName changed storage and threw.
+        if (_branchesStore.GetByName(name) != 0) return;
         var link = _branchesStore.CreateAndUpdate(_branchesStore.Constants.Null, _branchesStore.Constants.Null);
         _branchesStore.SetName(link, name);
     }
 
-    private static string EncodeBranchMarker(BranchInfo info)
+    internal static string EncodeBranchMarker(BranchInfo info)
     {
-        var parent = info.Parent ?? string.Empty;
-        return string.Concat(
-          BranchPrefix,
-          info.Name,
-          ":parent=", parent,
-          ":fork=", info.ForkSeq.ToString(CultureInfo.InvariantCulture),
-          ":head=", info.Head.ToString(CultureInfo.InvariantCulture));
+        return string.Concat(BranchPrefix, "2|", EncodeVersionName(info.Name), "|",
+          info.Parent is null ? "-" : EncodeVersionName(info.Parent), "|",
+          info.ForkSeq.ToString(CultureInfo.InvariantCulture), "|",
+          info.Head.ToString(CultureInfo.InvariantCulture));
     }
 
-    private static bool TryDecodeBranchMarker(string text, out BranchInfo info)
+    // Four hex digits per UTF-16 code unit avoid delimiter ambiguity and retain
+    // the exact .NET string, including supplementary characters and NULs.
+    private static string EncodeVersionName(string value)
+    {
+        const string digits = "0123456789ABCDEF";
+        return string.Create(checked(value.Length * 4), value, (output, name) =>
+        {
+            for (var i = 0; i < name.Length; ++i)
+                for (var j = 0; j < 4; ++j)
+                    output[i * 4 + j] = digits[(name[i] >> ((3 - j) * 4)) & 15];
+        });
+    }
+
+    private static bool TryDecodeVersionName(string text, out string name)
+    {
+        name = string.Empty;
+        if (text.Length % 4 != 0) return false;
+        var units = new char[text.Length / 4];
+        for (var i = 0; i < units.Length; ++i)
+        {
+            if (!ushort.TryParse(text.AsSpan(i * 4, 4), NumberStyles.AllowHexSpecifier,
+                CultureInfo.InvariantCulture, out var unit)) return false;
+            units[i] = (char)unit;
+        }
+        name = new string(units);
+        return true;
+    }
+
+    internal static bool TryDecodeBranchMarker(string text, out BranchInfo info)
     {
         info = default!;
         if (!text.StartsWith(BranchPrefix, StringComparison.Ordinal)) return false;
         var rest = text.Substring(BranchPrefix.Length);
+        if (rest.StartsWith("2|", StringComparison.Ordinal))
+        {
+            var fields = rest.Split('|');
+            if (fields.Length == 5 && TryDecodeVersionName(fields[1], out var decodedName)
+                && long.TryParse(fields[3], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var decodedFork)
+                && long.TryParse(fields[4], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var decodedHead))
+            {
+                string? parent = null;
+                if (fields[2] != "-")
+                {
+                    if (!TryDecodeVersionName(fields[2], out var decodedParent)) return false;
+                    parent = decodedParent;
+                }
+                info = new BranchInfo(decodedName, parent, decodedFork, decodedHead);
+                return true;
+            }
+            // A legacy branch name may itself start with "2|". Its delimiter
+            // suffix distinguishes it from a valid version-two marker.
+        }
         var parentIdx = rest.IndexOf(":parent=", StringComparison.Ordinal);
         if (parentIdx < 0) return false;
         var name = rest.Substring(0, parentIdx);
@@ -519,6 +614,10 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
     {
         lock (_lock)
         {
+            EnsureNoOpenTransactionLocked("Recover");
+            var uncommitted = _transactions.Log
+                .Where(t => !_transactions.IsTransactionCommitted(t.TransactionId))
+                .Select(t => t.Sequence).ToHashSet();
             _branches.Clear();
             _tags.Clear();
             _transitionBranches.Clear();
@@ -528,6 +627,9 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
             _currentBranchLink = 0;
             _appliedLink = 0;
             _currentApplied = 0;
+            var pending = new List<(uint Link, PublicationIntent Intent)>();
+            var movements = new List<(uint Link, MovementIntent Intent)>();
+            var ambiguousMovementMetadata = false;
 
             var any = _branchesStore.Constants.Any;
             var anyLink = new DoubletLink(any, any, any);
@@ -537,16 +639,31 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                 var name = _branchesStore.GetName(link.Index);
                 if (string.IsNullOrEmpty(name)) continue;
 
-                if (name.StartsWith(BranchPrefix, StringComparison.Ordinal))
+                if (name.StartsWith(MovementPrefix, StringComparison.Ordinal))
+                {
+                    if (!TryDecodeMovement(name, out var movement))
+                        throw new InvalidDataException("Invalid version movement intent.");
+                    movements.Add((link.Index, movement));
+                }
+                else if (name.StartsWith(PublicationPrefix, StringComparison.Ordinal))
+                {
+                    if (!TryDecodePublicationMarker(name, out var intent))
+                        throw new InvalidDataException("Invalid version publication intent.");
+                    pending.Add((link.Index, intent));
+                }
+                else if (name.StartsWith(BranchPrefix, StringComparison.Ordinal))
                 {
                     if (TryDecodeBranchMarker(name, out var info))
                     {
+                        ambiguousMovementMetadata |= _branches.ContainsKey(info.Name);
                         _branches[info.Name] = info;
                         _branchLinks[info.Name] = link.Index;
                     }
+                    else ambiguousMovementMetadata = true;
                 }
                 else if (name.StartsWith(CurrentPrefix, StringComparison.Ordinal))
                 {
+                    ambiguousMovementMetadata |= _currentBranchLink != 0;
                     _currentBranch = name.Substring(CurrentPrefix.Length);
                     _currentBranchLink = link.Index;
                 }
@@ -555,14 +672,16 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                     var rest = name.Substring(AppliedPrefix.Length);
                     if (long.TryParse(rest, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
                     {
+                        ambiguousMovementMetadata |= _appliedLink != 0 || seq < 0;
                         _currentApplied = seq;
                         _appliedLink = link.Index;
                     }
+                    else ambiguousMovementMetadata = true;
                 }
                 else if (name.StartsWith(TagPrefix, StringComparison.Ordinal))
                 {
                     var rest = name.Substring(TagPrefix.Length);
-                    var eq = rest.IndexOf('=');
+                    var eq = rest.LastIndexOf('=');
                     if (eq > 0)
                     {
                         var tagName = rest.Substring(0, eq);
@@ -580,20 +699,38 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
                     if (colon > 0 &&
                         long.TryParse(rest.Substring(0, colon), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
                     {
+                        if (uncommitted.Contains(seq))
+                            throw new InvalidDataException($"Version metadata references uncommitted transition {seq}.");
                         var branchName = rest.Substring(colon + ":branch=".Length);
+                        ambiguousMovementMetadata |= seq <= 0 || _transitionBranches.ContainsKey(seq);
                         _transitionBranches[seq] = branchName;
                     }
+                    else ambiguousMovementMetadata = true;
                 }
             }
+            if (pending.Count != 0 && movements.Count != 0)
+                throw new InvalidDataException("Version publication and movement intents overlap.");
+            if (movements.Count != 0 && (ambiguousMovementMetadata || _currentBranchLink == 0 || _appliedLink == 0))
+                throw new InvalidDataException("Ambiguous version movement metadata.");
+            RecoverPublicationsLocked(pending);
+            RecoverMovementsLocked(movements);
         }
     }
 
     // -- INamedTypes forwarding -------------------------------------------
 
+    public virtual bool ReassignsNames => _transactions.ReassignsNames;
+    public virtual IReadOnlyDictionary<uint, string> CaptureNames() => _transactions.CaptureNames();
     public virtual string? GetName(uint link) => _transactions.GetName(link);
-    public virtual uint SetName(uint link, string name) => _transactions.SetName(link, name);
+    public virtual uint SetName(uint link, string name)
+    {
+        return RunVcWrite(() => _transactions.SetName(link, name));
+    }
     public virtual uint GetByName(string name) => _transactions.GetByName(name);
-    public virtual void RemoveName(uint link) => _transactions.RemoveName(link);
+    public virtual void RemoveName(uint link)
+    {
+        RunVcWrite(() => { _transactions.RemoveName(link); return 0u; });
+    }
 
     // -- Convenience ------------------------------------------------------
 
@@ -608,7 +745,7 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
     private void Trace(string message)
     {
-        if (_trace) Console.WriteLine($"[VersionControl] {message}");
+        if (_trace) DiagnosticOutput.WriteLine($"[VersionControl] {message}");
     }
 
     private sealed class VersionControlTransaction : ITransaction<uint>
@@ -630,6 +767,8 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
         internal ITransaction<uint> Inner { get; }
         internal string BranchName { get; }
         internal long BeforeSequence { get; }
+        internal long? AfterSequence { get; set; }
+        internal uint IntentLink { get; set; }
 
         public Guid Id => Inner.Id;
         public DateTimeOffset StartedAt => Inner.StartedAt;
@@ -650,7 +789,13 @@ public class VersionControlDecorator : LinksDecoratorBase<uint>, IVersionControl
 
         public void Dispose()
         {
-            if (!Inner.IsCommitted && !Inner.IsRolledBack)
+            if (Inner.IsCommitted)
+            {
+                // The journal decision can precede a failed data checkpoint.
+                // Finish version publication without undoing that commit.
+                _owner.CommitVersionTransaction(this);
+            }
+            else
             {
                 _owner.RollbackVersionTransaction(this);
             }

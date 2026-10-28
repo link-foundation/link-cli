@@ -1,0 +1,29 @@
+Physical LSM store missing-API controls, before production implementation
+PR: https://github.com/link-foundation/link-cli/pull/139
+Codec-only baseline: d12760fc13db30439d114ee15ab98be970aae5f1
+
+Actual sequential controls completed 2026-10-27T00:45:26Z (JS),
+00:45:34Z (Rust) and 00:45:53Z (C#), all with expected nonzero status.
+experiments/issue-138/lsm-store-before-codec-js.log:5
+ERR_MODULE_NOT_FOUND: missing js/client/src/engine-lsm-store.js
+experiments/issue-138/lsm-store-before-codec-rust.log:5-11
+E0432: unresolved LsmStoreOptions, LsmTableNamespace, PhysicalLsmJournalStore.
+experiments/issue-138/lsm-store-before-codec-csharp.log:5-7
+CS0246: missing LsmStoreOptions, PhysicalLsmJournalStore, ILsmTableNamespace.
+
+Behavioral fixtures require group CAS guards/owned Unicode, tombstone versus
+live empty generations, repeated bounded buffering/WAL replacement/compaction,
+retirement, recovery and following use. JS additionally preserves finite
+compaction mutation cuts, selected damage and pre-I/O admission controls.
+Rust/C# fixtures do not yet implement the entire JS fault matrix.
+
+Reproduce from an isolated clean worktree at the baseline:
+bash /absolute/path/to/PR/experiments/issue-138/run-lsm-store-before.sh /absolute/path/to/PR
+The driver copies only the named fixtures/subprojects, never production files,
+and refuses a dirty/wrong baseline. Cargo jobs1/reduced debug and .NET640MiB
+keep compilers sequential and finite. It was packaged after the actual
+run-lsm-store-before-current.sh execution; no second baseline run is claimed.
+
+These failures establish a missing-component baseline. The isolated JS
+prototype is a design experiment, not a production store. Portable store ports,
+native namespaces/files/process tests and every broader unmet criterion remain.

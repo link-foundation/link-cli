@@ -27,6 +27,8 @@ import { pathToFileURL } from 'node:url';
 import { ANY, createWasmClient, LinksClient, MAX_U32_ADDRESS } from '../../src/index.js';
 import { connectProcess, startServer } from '../../src/process.js';
 import { connectTcp } from '../../src/tcp.js';
+import { engineConformance } from './engine.mjs';
+import { clusterConformance } from './cluster.mjs';
 
 const SCENARIO_TIMEOUT_MS = 60_000;
 const runtime = globalThis.Deno ? `deno ${globalThis.Deno.version.deno}` : globalThis.Bun ? `bun ${globalThis.Bun.version}` : `node ${process.versions.node}`;
@@ -72,6 +74,8 @@ function processBackend(name, path, capabilities) {
 async function wasmBackend(dir) {
   const module = await import(pathToFileURL(join(dir, 'clink_wasm.js')).href);
   module.initSync({ module: readFileSync(join(dir, 'clink_wasm_bg.wasm')) });
+  await engineConformance(module);
+  await clusterConformance(module);
   return {
     name: 'wasm',
     process: false,

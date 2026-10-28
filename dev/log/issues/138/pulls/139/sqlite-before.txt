@@ -1,0 +1,53 @@
+Optional SQLite journal: first-authored contracts and independent regressions
+Date: 2026-10-25 UTC
+Base: dd22de1835da742b48620f3c0b25e417d494a62e
+
+Feature contracts were authored before implementing each adapter:
+- experiments/issue-138/sqlite-native-before.log:23 E0432, unresolved
+  link_cli::engine::sqlite import. Native integration contracts could not build.
+- experiments/issue-138/sqlite-csharp-before.log:6-7 CS0246, missing
+  SqliteLogOptions / SqliteCommitLog. C# contracts could not build.
+- experiments/issue-138/sqlite-adapter-js-before.log:5 ERR_MODULE_NOT_FOUND,
+  missing engine-sqlite-log.js. Nine actual-provider contracts could not run.
+These missing-feature baselines are not existing-code correctness failures.
+
+Existing JS Unicode loss reproduced independently before changing decoders:
+- experiments/issue-138/utf8-bom-before.log:23,42,67,92,115,140,165,186,211
+  nine assertions fail for U+FEFF, U+FEFFleading and two leading U+FEFF values
+  through reference literals, framed messages (whole/fragmented) and file logs.
+- Root cause: TextDecoder's default BOM handling drops an initial U+FEFF even
+  when the bytes represent an opaque payload rather than a text-file signature.
+- js/client/test/utf8-preservation.test.mjs first fails all nine controls.
+  ignoreBOM:true preserves accepted payloads; fatal UTF-8 validation remains.
+- The initial new SQLite JS adapter exposed the same failure against separately
+  authored BLOB vectors; sqlite-js-bom-before.log preserves that failure.
+
+New-adapter cleanup regression caught before completing implementation:
+- sqlite-js-options-before.log:17,47,66: null/array/non-object option controls
+  show inconsistent rejection/owned-connection cleanup.
+- Validate options inside the constructor's cleanup scope, before SQL I/O.
+  Tests require the owned connection to close and the same database to reopen.
+
+New C# adapter numeric-result regression:
+- sqlite-csharp-missing-number-before.log:13-16,50: all four provider controls
+  fail with "No exception was thrown" when an identity/option query returns no
+  rows. Convert.ToInt64(null) silently treated the absent response as zero.
+- MissingNumericProviderRowsAreNeverInterpretedAsZero executes real zero-row SQL
+  for application_id, user_version, busy_timeout and wal_autocheckpoint. Reject
+  a missing scalar before conversion, close ownership and verify following writes.
+
+Repository integration policy:
+- sqlite-repository-before.log:241-242 rejects the newly tracked SQLite C#
+  example manifest because its directory was absent from Dependabot's watch list.
+  Add that directory; all 217 repository checks then pass.
+
+Finite actual-provider research controls are preserved separately:
+- sqlite-component-deno-text-before.log exposes Deno TEXT binding's embedded-NUL
+  behavior. BLOB bindings are used consistently in the shared storage protocol.
+- sqlite-component-csharp-json-before.log completed SQL assertions but failed
+  reflection-based JSON output in a NativeAOT file-app probe. Plain output fixes
+  the probe; this is not claimed as a production component defect.
+
+Following verification is recorded in sqlite.txt. Full issue completion remains
+subject to the acceptance inventory, including complete-project coverage and
+the wider physical/distributed requirements.

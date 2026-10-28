@@ -1,0 +1,33 @@
+Optional constraint-index feature contracts, before implementation
+
+Rust command: CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test --manifest-path rust/Cargo.toml --test engine_constraint_index_tests
+Expected compile failure, exit 101:
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+error[E0432]: unresolved import `link_cli::engine::ConstraintValidation`
+ --> tests/engine_constraint_index_tests.rs:3:17
+  |
+3 |     Constraint, ConstraintValidation, Engine, EngineOptions, MemoryLog,
+  |                 ^^^^^^^^^^^^^^^^^^^^ no `ConstraintValidation` in `engine`
+
+error[E0560]: struct `EngineOptions` has no field named `constraint_validation`
+  --> tests/engine_constraint_index_tests.rs:11:9
+   |
+11 |         constraint_validation: ConstraintValidation::Indexed,
+   |         ^^^^^^^^^^^^^^^^^^^^^ `EngineOptions` does not have this field
+   |
+   = note: available fields are: `state_structure`, `revision_encoding`, `concurrency`, `isolation`, `serializable_validation` ... and 3 others
+
+Some errors have detailed explanations: E0432, E0560.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `link-cli` (test "engine_constraint_index_tests") due to 2 previous errors
+
+C# command: DOTNET_GCHeapHardLimit=0x28000000 dotnet test csharp --configuration Debug --disable-build-servers -m:1 --filter FullyQualifiedName~EngineConstraintIndexTests
+Expected compile failure, exit 1:
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+/tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/EngineConstraintIndexTests.cs(12,13): error CS0117: 'EngineOptions' does not contain a definition for 'ConstraintValidation' [/tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+/tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/EngineConstraintIndexTests.cs(12,36): error CS0103: The name 'ConstraintValidation' does not exist in the current context [/tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+These demonstrate the missing configuration API before adding the feature, not an existing semantic bug in scan validation. Independent finite semantic oracles and allocation/root-sharing controls verify the implemented choice.

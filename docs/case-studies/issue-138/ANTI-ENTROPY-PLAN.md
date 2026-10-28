@@ -1,0 +1,88 @@
+# Causal reconciliation and bounded anti-entropy
+
+This continues the unfinished R4/R5/R6/R7/R8/R9/R10/R11 strategy work.
+Fixed-primary prefix copying and an atomic catalog remain useful selectable
+strategies. Independent writers require a different conflict model and cannot
+be presented as another acknowledgement threshold on the existing log.
+
+- [x] Re-read Dynamo's causal versioning and Merkle reconciliation sections and
+      Cassandra's repair/tombstone documentation. Inspect pinned MerkleTree,
+      RepairJob and LocalSyncTask source; preserve hashes and exact seams.
+- [x] Bound an independent causality model to two authors, five events, 120
+      event permutations and 216 state triples. Verify retained concurrent
+      siblings, observed resolution, deletion retention, merge laws and rejection
+      of contradictory payloads sharing the same causal identity.
+- [x] Specify canonical shared wire vectors for author identities, checked
+      counters, causal contexts, values, names and deletion markers. Preserve
+      incomparable versions; require explicit application resolution or a
+      separately selected deterministic projection for the ordinary links API.
+      Reject malformed/equal-clock contradictions before replacing live state.
+      The causal-version1 boundary has 46 codec, eleven merge and nine counter cases;
+      see ../../protocol/causal-version-v1.md. Runtime parity is a separate step.
+- [x] Add five test-first portable semantic contracts per implementation,
+      including 46 codec, eleven merge and nine checked-counter vectors,
+      24 delivery orders and 216 state triples. Native Rust, C# and JS pass
+      focused checks. Full native (1202), actual WASM (728), C# Debug/Release
+      (2467 each) and JS (649) pass; causal-version.txt retains complete
+      coverage denominators and remaining gaps.
+      The independent JS baseline fails with the new module absent. Select
+      Rust's `causal` feature or import the separate JS/TS module; neither
+      changes the bare engine's storage, metadata or dependency contract.
+- [x] Add failing durable replica conformance tests before local storage.
+      Include concurrent update/delete, stale reads and retries, duplicate
+      deliveries, lost replies, restart, independently writable replicas,
+      counter exhaustion, contradictory author histories and following edits.
+- [x] Implement selected local causal storage using native links/journals,
+      retaining the bare cache path's costs. Persist mutation and local causal
+      counter at the same publication boundary. Prevent two active local owners
+      from reusing one author counter; do not invent global serializability.
+      CAUSAL-LOCAL-PLAN.md tracks test-first local ownership and retry receipts.
+      Eight contracts and 29 shared cases pass native Rust, C#, JS and actual
+      WASM; 50 physical handoffs and 20 real process exits pass all five
+      runtime readers/writers. Complete validation passes 1210 native tests,
+      736 actual-WASM tests, 2475 C# tests per configuration and 657 JS tests.
+      All nine exact-head workflows pass on d00e022; all three actual C#
+      coverage archives verify size and SHA256. Finite capacity and full replay
+      are explicit; complete project coverage gaps remain.
+- [x] Implement bounded snapshot/Merkle comparison and differing-range transfer.
+      Validate the snapshot identity throughout transfer, bound tree depth,
+      range sizes, bytes and retries, verify received data, and preserve a retry
+      path after uncertain publication. Transfer deletions and causal context.
+      CAUSAL-MERKLE-PLAN.md tracks the independent 64-pair/48-proof model,
+      canonical roots/proofs, production ports and bounded publication controls.
+      Nine portable contracts and the 50-handoff/20-reaped-exit physical matrix
+      pass. Root/author-bound continuations retain the unprocessed frontier
+      when node, leaf or accepted-byte budgets stop an attempt.
+- [x] Supply native Rust, C# and actual WASM/JS parity with shared vectors,
+      independent finite schedule oracles, physical restart/process probes,
+      directory interoperability and unchanged optional-SQLite boundaries.
+      Focused contracts run on all six execution surfaces; the native physical
+      matrix exercises five runtimes in plain/mirrored modes with SQL disabled.
+      Complete current-source suites/coverage finish 2026-10-27T15:59:59Z.
+      causal-merkle.txt retains complete denominators and all remaining gaps.
+- [x] Add scenarios, complexity/space limits and primary-source comparisons;
+      run complete local suites and coverage without removing source.
+- [ ] Inspect fresh exact-head Windows/Linux/macOS and portable CI for the
+      Merkle composition. Ordinary-links projection and safe reclamation remain
+      separate unfinished requirements.
+
+The initial retention design must keep tombstones and causal evidence until a
+separately verified membership/reclamation protocol establishes safe removal.
+A time-only expiry can resurrect a deleted value when an old replica returns.
+Retaining evidence has a disclosed space cost; automatic reclamation is not
+implied by a successful causal merge.
+
+Existing AtomicJournalStore requires a global linearizable snapshot/CAS. An
+eventually convergent multiwriter backend must not claim to implement that
+contract globally. It may use such a store as a local durable publication
+component. Local atomicity and causal convergence are distinct from global
+serializability, cross-replica uniqueness, cascade constraints and consensus.
+Applications selecting those guarantees must retain their coordinated strategy.
+
+The finite model is design evidence; the selected production codec/merge/counter
+component and local owner have separate conformance evidence. Production
+snapshot comparison and bounded transfer pass complete local suites, with fresh
+platform verification in progress. Ordinary-links projection, global allocation,
+safe membership/history reclamation and every wider unmet criterion remain unfinished;
+PR139 stays draft and unmerged. See anti-entropy-causality-model.txt and
+../../ENGINE-CAUSAL-VERSIONS.md.

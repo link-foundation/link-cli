@@ -1,0 +1,107 @@
+Optional local page replacement: before-feature controls; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline: cdff1b48f007c9c4a8ca9322d491d41b5582f4f3
+First author the three portable durable-image tests, then execute them against the preceding code.
+These demonstrate a missing capability, not a previously promised atomic replacement defect.
+
+rust:
+Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+error[E0432]: unresolved import `link_cli::engine::paged::CheckpointPagedLog`
+ --> tests/engine_checkpoint_pages_tests.rs:2:31
+  |
+2 | use link_cli::engine::paged::{CheckpointPagedLog, PageDevice};
+  |                               ^^^^^^^^^^^^^^^^^^ no `CheckpointPagedLog` in `engine::paged`
+
+error[E0432]: unresolved import `link_cli::ReplaceableTransitionLogStore`
+ --> tests/engine_checkpoint_pages_tests.rs:3:27
+  |
+3 | use link_cli::{LinkError, ReplaceableTransitionLogStore, TransitionLogStore};
+  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `ReplaceableTransitionLogStore` in the root
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `link-cli` (test "engine_checkpoint_pages_tests") due to 2 previous errors
+
+csharp:
+Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/CheckpointPagesTests.cs(43,21): error CS0246: The type or namespace name 'CheckpointPagedCommitLog' could not be found (are you missing a using directive or an assembly reference?) [/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+js:
+node:internal/modules/esm/resolve:241
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/gh-issue-solver-1792987800525/js/client/src/engine-checkpoint-pages.js' imported from /tmp/gh-issue-solver-1792987800525/js/client/test/engine-checkpoint-pages.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:241:11)
+    at moduleResolve (node:internal/modules/esm/resolve:846:10)
+    at defaultResolve (node:internal/modules/esm/resolve:973:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///tmp/gh-issue-solver-1792987800525/js/client/src/engine-checkpoint-pages.js'
+}
+
+Node.js v26.12.1
+✖ js/client/test/engine-checkpoint-pages.test.mjs (125.350241ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 141.360522
+
+✖ failing tests:
+
+test at js/client/test/engine-checkpoint-pages.test.mjs:1:1
+✖ js/client/test/engine-checkpoint-pages.test.mjs (125.350241ms)
+  'test failed'
+
+Self-review regression before committing the new feature:
+The provisional Rust implementation declared and initialized root first.
+Command: CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test --manifest-path rust/Cargo.toml --no-default-features --test engine_checkpoint_pages_tests releases_
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 3.45s
+     Running tests/engine_checkpoint_pages_tests.rs (rust/target/debug/deps/engine_checkpoint_pages_tests-c1b62d800020a92c)
+
+running 2 tests
+test owning_device_destruction_releases_root_after_both_banks ... FAILED
+test failed_open_releases_banks_before_root_at_every_device_operation ... FAILED
+
+failures:
+
+---- owning_device_destruction_releases_root_after_both_banks stdout ----
+
+thread 'owning_device_destruction_releases_root_after_both_banks' (640617) panicked at tests/engine_checkpoint_pages_tests.rs:592:9:
+assertion `left == right` failed: root ownership must outlive both banks: ["root", "bank0", "bank1"]
+  left: "bank1"
+ right: "root"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- failed_open_releases_banks_before_root_at_every_device_operation stdout ----
+
+thread 'failed_open_releases_banks_before_root_at_every_device_operation' (640616) panicked at tests/engine_checkpoint_pages_tests.rs:620:17:
+assertion `left == right` failed: open fault 26/false: ["bank0", "root", "bank1"]
+  left: "bank1"
+ right: "root"
+
+
+failures:
+    failed_open_releases_banks_before_root_at_every_device_operation
+    owning_device_destruction_releases_root_after_both_banks
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test engine_checkpoint_pages_tests`
+
+Move root to the last field and initialize it only after fallible bank opening.
+The final-source complete 12-test portable target and both actual-WASM regressions pass.
+Complete final-source validation passes 992 native tests plus six doctests and 597 actual-WASM tests; see local-checkpoint.txt.
+This is a defect found in this new feature before publication, not behavior promised by the preceding committed API.

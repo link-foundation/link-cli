@@ -8,8 +8,17 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'rust/**'
+      - 'docs/protocol/native-pages*'
+      - 'docs/protocol/native-lsm-wal*'
+      - 'docs/protocol/checkpoint*'
+      - 'docs/protocol/journal-maintenance-v1.json'
+      - 'docs/protocol/reclamation-v1.json'
+      - 'docs/protocol/chunked-journal*'
+      - 'docs/protocol/reclaiming-chunks*'
+      - 'docs/protocol/causal-*'
       - 'rust/scripts/**'
       - '.github/workflows/rust.yml'
+      - '.github/scripts/check-sqlite-optional.mjs'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -275,11 +284,74 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Setup Node.js for dependency boundary checks
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Verify SQLite is optional
+        run: node .github/scripts/check-sqlite-optional.mjs rust
+
+      - name: Test native stores without optional providers
+        run: cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests
+
       - name: Run tests
         run: cargo test --manifest-path rust/Cargo.toml --all-features --verbose
 
       - name: Run doc tests
         run: cargo test --manifest-path rust/Cargo.toml --doc --verbose
+
+      - name: Native LSM cluster consumers without SQL or a coordinator
+        shell: bash
+        run: |
+          cargo build --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster direct
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster partitioned
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster chunks
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming
+          cargo run --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm --example native_lsm -- cluster reclaiming-chunks
+
+  # === COVERAGE MEASUREMENT ===
+  coverage:
+    name: Rust coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-coverage
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust coverage tools
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update --component llvm-tools-preview
+          rustup default stable
+          cargo install cargo-llvm-cov --version 0.9.1 --locked
+
+      - name: Measure Rust test coverage
+        # Branch instrumentation is experimental. Limit the unstable compiler
+        # option to this measurement; normal builds still use stable Rust.
+        env:
+          RUSTC_BOOTSTRAP: '1'
+        run: |
+          cargo llvm-cov --manifest-path rust/Cargo.toml --all-features --branch --lcov --output-path rust/coverage.lcov
+          cargo llvm-cov report --manifest-path rust/Cargo.toml --branch --json --summary-only --output-path rust/coverage-summary.json
+
+      - name: Check author guard coverage
+        run: python3 experiments/issue-138/check-author-fence-rust-coverage.py rust/coverage-summary.json
+
+      - name: Preserve coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-coverage
+          path: |
+            rust/coverage.lcov
+            rust/coverage-summary.json
+          if-no-files-found: error
 
   # === SEMANTIC MERGE CONFLICT CHECK ===
   # Every other job tests the pull request head. A pull request can be green in

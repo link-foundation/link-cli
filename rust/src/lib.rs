@@ -36,6 +36,8 @@
 
 pub mod changes_simplifier;
 pub mod cli;
+mod diagnostics;
+pub mod engine;
 pub mod error;
 pub mod hybrid_reference;
 pub mod indexed_links;
@@ -52,13 +54,17 @@ pub mod parser;
 pub mod persistent_transformations;
 pub mod pinned_types;
 pub mod protocol;
+pub mod query_address;
 pub mod query_options;
 mod query_parser;
 pub mod query_processor;
 pub mod query_processor_substitution;
+mod query_reply_budget;
 pub mod query_types;
 pub mod sequences;
 pub mod storage;
+mod structure_format;
+mod text_storage_format;
 pub mod transactions;
 pub mod unicode_string_storage;
 pub mod version_control;
@@ -92,17 +98,20 @@ pub use pinned_types::{PinnedTypes, PinnedTypesAccess, PinnedTypesDecorator};
 pub use protocol::{
     BinaryLinoOptions, BinaryLinoProtocol, LinksClient, LinksServer, LinoProtocol, TextLinoProtocol,
 };
+pub use query_address::QueryAddress;
 pub use query_options::QueryOptions;
-pub use query_processor::{Changes, QueryProcessor};
+pub use query_processor::{Changes, GenericQueryProcessor, QueryProcessor};
 pub use storage::{
     decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
-    LinksStorage, LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore,
-    StorageRevision,
+    LinksStorage, LinksStorageRef, LockMode, MappedFlush, PersistentFileMapped,
+    ResolvedFileMappedUnitStore, StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
-    GenericTransition, LogRetentionPolicy, TransactionHandle, TransactionsDecorator, Transition,
-    TransitionKind, TransitionLogStore,
+    GenericTransition, LogRetentionPolicy, ReplaceableTransitionLogStore, RowUndoPolicy,
+    TransactionHandle, TransactionsDecorator, Transition, TransitionKind, TransitionLogStore,
 };
 pub use unicode_string_storage::UnicodeStringStorage;
-pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};
+pub use version_control::{
+    BranchInfo, GenericVersionControlDecorator, VersionControlDecorator, DEFAULT_BRANCH_NAME,
+};

@@ -11,6 +11,16 @@ on:
       - 'csharp/scripts/**'
       - '.github/workflows/csharp.yml'
       - '.github/scripts/coverage*'
+      - '.github/scripts/check-sqlite-optional.mjs'
+      - 'docs/protocol/native-pages*'
+      - 'docs/protocol/native-lsm-wal*'
+      - 'docs/protocol/checkpoint*'
+      - 'docs/protocol/journal-maintenance-v1.json'
+      - 'docs/protocol/reclamation-v1.json'
+      - 'docs/protocol/chunked-journal*'
+      - 'docs/protocol/reclaiming-chunks*'
+      - 'docs/protocol/causal-*'
+      - 'examples/cluster-csharp/**'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -211,7 +221,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -228,6 +238,9 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+
+      - name: Verify core library has no SQLite provider
+        run: node ../.github/scripts/check-sqlite-optional.mjs csharp
 
       - name: Verify formatting
         run: dotnet format --verify-no-changes --verbosity diagnostic
@@ -264,7 +277,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Restore dependencies
         run: dotnet restore
@@ -273,25 +286,47 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage;Format=json,cobertura"
+
+      - name: Verify every compiled causal branch
+        working-directory: .
+        shell: bash
+        run: |
+          reports=(csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/*/coverage.json)
+          test "${#reports[@]}" -eq 1
+          test -f "${reports[0]}"
+          python3 experiments/issue-138/check-causal-raw-coverage.py "${reports[0]}" --require-session
+          python3 experiments/issue-138/check-author-fence-coverage.py "${reports[0]}"
+
+      - name: Native file LSM cluster consumers
+        working-directory: .
+        run: |
+          dotnet build examples/cluster-csharp --configuration Release
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm direct
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm partitioned
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm chunks
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming
+          dotnet run --project examples/cluster-csharp --configuration Release --no-build -- --native-lsm reclaiming-chunks
 
       - name: Setup Node.js for coverage
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        if: ${{ !cancelled() }}
         uses: actions/setup-node@v7
         with:
           node-version: '24.x'
 
       - name: Write coverage summary
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+        if: ${{ !cancelled() }}
         working-directory: .
         run: node .github/scripts/coverage.mjs summary csharp/Foundation.Data.Doublets.Cli.Tests/TestResults
 
-      - name: Retain Cobertura reports
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-24.04' }}
+      - name: Retain raw and Cobertura reports
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: csharp-coverage
-          path: csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml
+          name: ${{ matrix.os == 'ubuntu-24.04' && 'csharp-coverage' || format('csharp-coverage-{0}', matrix.os) }}
+          path: |
+            csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.cobertura.xml
+            csharp/Foundation.Data.Doublets.Cli.Tests/TestResults/**/coverage.json
           if-no-files-found: error
 
       # Only an explicitly inactive/missing Codecov repository relaxes upload
@@ -336,7 +371,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       # The script rewrites the working tree (detached checkout + merge), so it
       # has to run from the repository root, not from the csharp/ default.
@@ -367,7 +402,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Restore dependencies
         run: dotnet restore
@@ -410,7 +445,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -636,7 +671,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7

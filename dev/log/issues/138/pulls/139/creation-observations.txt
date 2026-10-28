@@ -1,0 +1,86 @@
+Issue 138 / PR 139: mapped creation observations
+
+BEFORE: four failures, two passing composite controls
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 4.50s
+     Running tests/transactions_create_observer_tests.rs (rust/target/debug/deps/transactions_create_observer_tests-5d27e139aec296eb)
+
+running 6 tests
+test rejected_automatic_creation_undoes_temporary_row ... FAILED
+test rejected_explicit_creation_keeps_temporary_row_reversible ... FAILED
+test duplicate_creation_preserves_existing_rows_on_rollback ... FAILED
+test composite_creation_preserves_existing_empty_row_on_rollback ... ok
+test duplicate_creation_preserves_existing_rows_on_recovery ... FAILED
+test composite_creation_preserves_existing_empty_row_on_recovery ... ok
+
+failures:
+
+---- rejected_automatic_creation_undoes_temporary_row stdout ----
+
+thread 'rejected_automatic_creation_undoes_temporary_row' (508652) panicked at tests/transactions_create_observer_tests.rs:92:5:
+assertion `left == right` failed: failed create must undo its temporary row
+  left: [GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 0, target: 0 }]
+ right: [GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- rejected_explicit_creation_keeps_temporary_row_reversible stdout ----
+
+thread 'rejected_explicit_creation_keeps_temporary_row_reversible' (508653) panicked at tests/transactions_create_observer_tests.rs:92:5:
+assertion `left == right` failed: failed create must undo its temporary row
+  left: [GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 0, target: 0 }]
+ right: [GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]
+
+---- duplicate_creation_preserves_existing_rows_on_rollback stdout ----
+
+thread 'duplicate_creation_preserves_existing_rows_on_rollback' (508651) panicked at tests/transactions_create_observer_tests.rs:43:9:
+assertion `left == right` failed
+  left: [GenericLink { index: 1, source: 0, target: 0 }]
+ right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+
+---- duplicate_creation_preserves_existing_rows_on_recovery stdout ----
+
+thread 'duplicate_creation_preserves_existing_rows_on_recovery' (508650) panicked at tests/transactions_create_observer_tests.rs:46:5:
+assertion `left == right` failed
+  left: [GenericLink { index: 1, source: 0, target: 0 }]
+ right: [GenericLink { index: 1, source: 0, target: 0 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 2, target: 2 }]
+
+
+failures:
+    duplicate_creation_preserves_existing_rows_on_recovery
+    duplicate_creation_preserves_existing_rows_on_rollback
+    rejected_automatic_creation_undoes_temporary_row
+    rejected_explicit_creation_keeps_temporary_row_reversible
+
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+
+error: test failed, to rerun pass `--test transactions_create_observer_tests`
+
+AFTER: all six Rust cases pass
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 4.72s
+     Running tests/transactions_create_observer_tests.rs (rust/target/debug/deps/transactions_create_observer_tests-5d27e139aec296eb)
+
+running 6 tests
+test duplicate_creation_preserves_existing_rows_on_rollback ... ok
+test rejected_automatic_creation_undoes_temporary_row ... ok
+test composite_creation_preserves_existing_empty_row_on_rollback ... ok
+test composite_creation_preserves_existing_empty_row_on_recovery ... ok
+test rejected_explicit_creation_keeps_temporary_row_reversible ... ok
+test duplicate_creation_preserves_existing_rows_on_recovery ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+
+C# existing implementation: all four parity controls pass
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792854251187/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 571 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

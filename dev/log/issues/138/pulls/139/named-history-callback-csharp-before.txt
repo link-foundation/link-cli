@@ -1,0 +1,52 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.23]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(operation: "update") [FAIL]
+[xUnit.net 00:00:02.48]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(operation: "delete") [FAIL]
+[xUnit.net 00:00:02.79]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(explicitOwner: False) [FAIL]
+[xUnit.net 00:00:02.89]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(explicitOwner: True) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(operation: "update") [631 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "callback 雪"
+Actual:   "original"
+           ↑ (pos 0)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(String operation) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 166
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(operation: "delete") [248 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "callback 雪"
+Actual:   null
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(String operation) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 166
+   at InvokeStub_TransactionNamedHistoryTests.NameWritesInsideRowCallbacksSurviveVersionRoundTrips(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(explicitOwner: False) [81 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 186
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(explicitOwner: True) [103 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.IOException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(Boolean explicitOwner) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 186
+   at InvokeStub_TransactionNamedHistoryTests.PostEffectNameCaptureFailureRetainsUndoAndCleanupOwnership(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     4, Passed:     1, Skipped:     0, Total:     5, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

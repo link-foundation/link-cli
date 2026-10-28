@@ -1,0 +1,37 @@
+Committed version publication after checkpoint/metadata failure (R1/R3/R8)
+
+Initial 18 checkpoint cases fail against published production code:
+  version-commit-before.log: Expected head 4, Actual 2, old test line 83.
+Adding six metadata phases produces 36 failures, zero passes:
+  version-commit-metadata-before.log, lines 16-19: Branch admitted while
+  publication is incomplete, Assert.Throws saw no exception, old test line 88.
+Two further regressions against the initial corrected draft fail separately:
+  version-commit-rollback-before.log, lines 15-21: Expected head 4, Actual 2
+  after Rollback on the known committed inner transaction.
+  version-commit-write-fence-before.log, lines 15-18: further writes are
+  unexpectedly admitted before pending version publication completes.
+
+The journal commit decision precedes its data/applied-marker checkpoint.
+The old version Dispose skipped committed inner transactions, and rollback
+dropped active ownership without publishing their metadata. Metadata writes
+also cleared ownership before fallible publication. Cleanup now finishes a
+known commit; admission remains fenced until attribution succeeds. Immutable
+markers check their existing name so after-effect retry is idempotent. The
+original checkpoint/metadata exception still propagates to the caller.
+
+Final matrix: 12 before/after fault phases times 4 retry entry points = 48.
+Phases: data Flush, applied marker, final journal Flush, version transition
+marker, branch head and applied version. Entry points: transaction Dispose,
+version-owner Dispose, whole-graph Dispose and Rollback after known commit.
+Every case verifies terminal state, write/branch/switch/tag/checkout/begin
+fencing, retry, unique named transition markers, exact recovered head/data,
+rewind/forward checkout, exclusive file reopening and following tagged commit.
+Focused publication/rollback/lifetime: 79 pass, zero fail.
+Full Debug and Release: 976 pass each. No source exclusions were added.
+Debug: 6,027/6,555 lines (91.95%); 2,753/3,174 branches (86.74%).
+Release: 4,573/4,897 lines (93.38%); 2,732/3,155 branches (86.59%).
+Formatting and existing minor release changeset validation pass.
+Complete project coverage remains below the requested 100%; process-exit
+between legacy journal and sidecar publication is a separate audit. These
+one-shot fault/retry tests do not prove power-loss atomicity of sidecars.
+Logs and full Cobertura reports remain under experiments/issue-138.

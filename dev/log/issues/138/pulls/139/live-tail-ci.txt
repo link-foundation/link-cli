@@ -1,0 +1,33 @@
+Same-handle journal tail repair: published-head CI
+Head: 7826d959a24ffeb741512c910a23130bde72a6a7
+Commit: 2026-10-25T01:48:30+00:00
+Push: approximately 2026-10-25T01:48:38Z
+All runs were created after the commit/push and match its exact SHA.
+
+Broken Link Checker: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:48:51Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067326
+C# CI/CD Pipeline: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:58:36Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067340
+Dependencies: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:49:08Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067338
+Docs: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:51:16Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067385
+JS client CI: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:52:14Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067374
+Rust CI/CD Pipeline: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:55:16Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067322
+Security: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:53:37Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067379
+WebAssembly CI: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:54:50Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067343
+Workflows: success
+  Created: 2026-10-25T01:48:39Z; updated: 2026-10-25T01:48:58Z
+  https://github.com/link-foundation/link-cli/actions/runs/40152067366

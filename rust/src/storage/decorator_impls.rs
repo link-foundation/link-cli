@@ -9,9 +9,8 @@
 //! All three keep their links in memory and rewrite the whole database
 //! file on [`LinksStorage::flush`], so **`flush` (or the inherent `save`)
 //! is required for durability**: nothing reaches the disk before it. The
-//! rewrite truncates the existing file in place rather than renaming a
-//! temporary over it, so the inode is preserved and other processes that
-//! already opened the database keep pointing at the same file.
+//! rewrite atomically replaces the file, syncs it and (on Unix) its parent
+//! directory. Other processes must reload after acquiring their advisory lock.
 
 use doublets::data::LinkReference;
 
@@ -30,8 +29,9 @@ fn storage_error(error: anyhow::Error) -> LinkError {
 /// shared by the three in-memory decorators, which expose the same
 /// inherent method set.
 macro_rules! impl_in_memory_links_storage {
-    ($type:ty, $create:expr, $flush:expr, $external:expr, $reload:expr) => {
+    ($type:ty, $create:expr, $flush:expr, $external:expr, $reload:expr $(, $extra:item)*) => {
         impl LinksStorage<u32> for $type {
+            $($extra)*
             fn create_link(&mut self, source: u32, target: u32) -> Result<u32, LinkError> {
                 #[allow(clippy::redundant_closure_call)]
                 Ok($create(self, source, target))
@@ -39,6 +39,21 @@ macro_rules! impl_in_memory_links_storage {
 
             fn ensure_link_created(&mut self, index: u32) -> Result<u32, LinkError> {
                 Ok(self.ensure_created(index))
+            }
+
+            fn ensure_link_created_observed(
+                &mut self,
+                index: u32,
+                observer: &mut dyn FnMut(GenericLink<u32>, GenericLink<u32>),
+            ) -> Result<u32, LinkError> {
+                let existing = self.exists(index);
+                let created = self.ensure_created(index);
+                // These adapters remove intermediate allocations; only the
+                // requested address survives. Avoid copying every stored row.
+                if index != 0 && !existing {
+                    observer(GenericLink::null(), *self.get(index).expect("ensured row"));
+                }
+                Ok(created)
             }
 
             fn get_link(&self, index: u32) -> Option<GenericLink<u32>> {
@@ -147,6 +162,24 @@ impl_in_memory_links_storage!(
     |storage: &mut LinkStorage, source, target| storage.create(source, target),
     |storage: &mut LinkStorage| {
         storage.save().map_err(storage_error)?;
+        if !storage.is_in_memory() {
+            // FlushFileBuffers on Windows requires a writable handle, even
+            // though flushing does not itself modify the file's contents.
+            std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(storage.database_path())?
+                .sync_all()?;
+            #[cfg(unix)]
+            std::fs::File::open(
+                storage
+                    .database_path()
+                    .parent()
+                    .filter(|p| !p.as_os_str().is_empty())
+                    .unwrap_or_else(|| std::path::Path::new(".")),
+            )?
+            .sync_all()?;
+        }
         storage.refresh_observed_revision()
     },
     |storage: &LinkStorage| {
@@ -159,10 +192,7 @@ impl_in_memory_links_storage!(
 impl_in_memory_links_storage!(
     PinnedTypesDecorator,
     |storage: &mut PinnedTypesDecorator, source, target| storage.create(source, target),
-    |storage: &mut PinnedTypesDecorator| {
-        storage.save().map_err(storage_error)?;
-        storage.links_mut().refresh_observed_revision()
-    },
+    |storage: &mut PinnedTypesDecorator| { storage.links_mut().flush() },
     |storage: &PinnedTypesDecorator| storage.links().has_external_changes(),
     |storage: &mut PinnedTypesDecorator| storage.links_mut().reload()
 );
@@ -171,9 +201,8 @@ impl_in_memory_links_storage!(
     NamedTypesDecorator,
     |storage: &mut NamedTypesDecorator, source, target| storage.create(source, target),
     |storage: &mut NamedTypesDecorator| {
-        storage.save().map_err(storage_error)?;
-        storage.links_mut().refresh_observed_revision()?;
-        storage.names_links_mut().refresh_observed_revision()
+        storage.links_mut().flush()?;
+        storage.names_links_mut().flush()
     },
     |storage: &NamedTypesDecorator| {
         Ok(storage.links().has_external_changes()?
@@ -182,6 +211,21 @@ impl_in_memory_links_storage!(
     |storage: &mut NamedTypesDecorator| {
         storage.links_mut().reload()?;
         storage.names_links_mut().reload()
+    },
+    fn capture_names(
+        &mut self,
+    ) -> Result<Option<std::collections::BTreeMap<u32, String>>, LinkError> {
+        self.logical_names().map(Some).map_err(storage_error)
+    },
+    fn set_link_name(&mut self, index: u32, name: Option<&str>) -> Result<u32, LinkError> {
+        use crate::named_types::NamedTypes;
+        match name {
+            Some(name) => self.set_name(index, name).map_err(storage_error),
+            None => {
+                self.remove_name(index).map_err(storage_error)?;
+                Ok(0)
+            }
+        }
     }
 );
 

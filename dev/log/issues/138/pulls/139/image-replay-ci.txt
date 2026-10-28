@@ -1,0 +1,28 @@
+Undo-image compatibility exact-head workflow verification
+
+Head: 71cad1c5f4f948fc7e326cc06604e303732c67ed
+Commit: 2026-10-25T15:50:56Z
+All nine workflows created: 2026-10-25T15:51:07Z (after commit).
+
+Broken Link Checker: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892085
+C# CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892166
+Dependencies: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892126
+Docs: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892077
+JS client CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892064
+Rust CI/CD Pipeline: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892127
+Security: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892386
+WebAssembly CI: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892137
+Workflows: success
+https://github.com/link-foundation/link-cli/actions/runs/40208892157
+
+Native and C# platform matrices, actual-WASM tests, strict lints,
+fresh-merge simulations, JS/types, security and documentation checks pass.
+Subsequent shared-state source changes require fresh exact-head CI.

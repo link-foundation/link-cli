@@ -16,12 +16,22 @@ crate-type = ["cdylib", "rlib"]
 anyhow = "1.0.104"
 link-cli = { path = ".." }
 wasm-bindgen = "0.2.129"
+js-sys = "0.3.106"
 console_error_panic_hook = { version = "0.1.7", optional = true }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.79"
+links-notation = "0.27.1"
+
+# The cdylib is linked before the test executable. It therefore needs the
+# profiling runtime itself when collecting experimental WASM coverage.
+[target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
+minicov = "=0.3.8"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
 
 [dependencies.web-sys]
 version = "0.3.106"
@@ -30,7 +40,16 @@ features = [
 ]
 
 [features]
-default = ["console_error_panic_hook"]
+default = ["console_error_panic_hook", "sorted-tables", "physical-lsm", "causal", "causal-merkle", "causal-batches", "causal-projection", "causal-sessions", "address-reservations", "author-fencing"]
+address-reservations = ["link-cli/address-reservations"]
+author-fencing = ["link-cli/author-fencing"]
+causal = ["link-cli/causal"]
+causal-batches = ["causal", "link-cli/causal-batches"]
+causal-sessions = ["causal-batches", "causal-projection", "link-cli/causal-sessions"]
+causal-projection = ["causal", "link-cli/causal-projection"]
+causal-merkle = ["causal", "link-cli/causal-merkle"]
+sorted-tables = ["link-cli/sorted-tables"]
+physical-lsm = ["link-cli/physical-lsm"]
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

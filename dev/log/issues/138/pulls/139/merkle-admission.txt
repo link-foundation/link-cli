@@ -1,0 +1,48 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Completed 2026-10-27T16:39:15Z; test-only admission step after published 283b86d.
+Coverage gaps, not a production behavior bug: both guards had true=0 before.
+Empty and 21-digit address mutations now reject for all four independent leaf frames.
+Production Merkle source and every complete-report denominator remain unchanged.
+Native 1219 passed/0 failed/22 parent-driven ignored; separate doctests 6 passed/1 existing ignored.
+Actual WASM 745 passed/0 failed/0 ignored; focused native/WASM each 9 pass.
+Native/WASM strict Clippy and formatting; 221 repository checks; source sizes,
+one C# changeset, workflow/ShellCheck and whitespace pass. No cgroup OOM events/kills.
+Reproduce: bash experiments/issue-138/validate-merkle-admission.sh
+The guard verifier fails on the preserved baseline and passes both complete new reports.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Unchanged production source SHA256: 7eadb5caee24647d074859bcf151ed44e3a03d255d3f9aa0f04499a1be439f6c
+Report experiments/issue-138/merkle-admission-native-coverage.json: 21866341 bytes; SHA256 cd122ad30db91f5efecb5bacf2d57c74b15fb5d35d38b4db7513044626e2dc11.
+Complete production lines: 18269/19163 (95.33476%).
+Complete production branches: 3592/4090 (87.82396%).
+Complete production functions: 2346/2515 (93.28032%).
+Complete production regions: 28155/30381 (92.67305%).
+Complete production instantiations: 12537/22433 (55.88642%).
+Merkle component lines: 512/516 (99.22481%).
+Merkle component branches: 114/116 (98.27586%).
+Merkle component functions: 63/67 (94.02985%).
+Merkle component regions: 809/837 (96.65472%).
+Merkle component instantiations: 66/146 (45.20548%).
+Address guard (415, 12, 415, 26): true=4, false=36.
+Address guard (415, 30, 415, 44): true=4, false=32.
+Report experiments/issue-138/merkle-admission-wasm-coverage.json: 24871576 bytes; SHA256 dcf731e32bc6895e1decf8407ea04646cfe8d590ebdddb98b0e8400adf2b39ed.
+Complete production lines: 14245/16872 (84.42982%).
+Complete production branches: 2961/3479 (85.11066%).
+Complete production functions: 1764/2193 (80.43776%).
+Complete production regions: 21986/26635 (82.54552%).
+Complete production instantiations: 4482/7664 (58.48121%).
+Merkle component lines: 512/516 (99.22481%).
+Merkle component branches: 114/116 (98.27586%).
+Merkle component functions: 63/67 (94.02985%).
+Merkle component regions: 809/837 (96.65472%).
+Merkle component instantiations: 66/79 (83.54430%).
+Address guard (415, 12, 415, 26): true=4, false=36.
+Address guard (415, 30, 415, 44): true=4, false=32.
+All original production files and denominators remain in each complete report.
+Coverage outside these two guards, generic mapped failures and all wider unmet requirements remain open.
+experiments/issue-138/merkle-admission-native-focused.log: 874 bytes; SHA256 f406d38cde6add44c6e573b2c03c3de3354a9f6cfc9e605e53e78168b0f2753a.
+experiments/issue-138/merkle-admission-wasm-focused.log: 16262477 bytes; SHA256 adfe23631f7003a364c6d18682de378de3fad54dc1e6f09daa352fdb1767cd31.
+experiments/issue-138/merkle-admission-native-full.log: 594628 bytes; SHA256 266c447212c5f381d09e7f6e11dfe47c41995e002f1feefc102195f9ee192816.
+experiments/issue-138/merkle-admission-doctests.log: 904 bytes; SHA256 04aa9b0baa579b454bdd200656820bf410d038743e8e220ff1783afb3003f8d7.
+experiments/issue-138/merkle-admission-wasm-full.log: 66383 bytes; SHA256 10c0b034a215dd327162c8b6b89ad2ee01de494ef66a4ab8976b138d860cf978.
+experiments/issue-138/merkle-admission-repository.log: 18482 bytes; SHA256 92165abcb7e5215bd82d641c4ffbe6a06f5808be7d131d734c4a2f1cce993ae1.
+Full validation of subsequent batch implementation changes and fresh CI remain required.

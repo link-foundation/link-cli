@@ -1,0 +1,18 @@
+Portable checkpoint/CI SDK formatting validation; PR https://github.com/link-foundation/link-cli/pull/139
+Head: c66e75f9d32774a13dc2f7cd61f5a45df7b0a02f
+All nine workflows succeeded; Rust and C# native platform matrices also succeeded.
+C# Lint and Format Check now passes using SDK10.0.403, matching the local correction.
+
+Broken Link Checker: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155418
+C# CI/CD Pipeline: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155484
+Dependencies: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155470
+Docs: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155498
+JS client CI: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155346
+Rust CI/CD Pipeline: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155510
+Security: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155437
+WebAssembly CI: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155335
+Workflows: success; 2026-10-26T16:32:48Z; https://github.com/link-foundation/link-cli/actions/runs/40360155374
+
+Prior C# failure40357520919 at652ce12 is preserved in ci-logs/csharp-40357520919.log.
+Only formatting errors10328-10356 failed; local SDK10.0.112 differed from CI10.0.403.
+The portable engine/file integration and all wider unfinished criteria remain open.

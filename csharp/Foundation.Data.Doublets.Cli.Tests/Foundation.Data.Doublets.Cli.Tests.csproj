@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <StartupObject>Foundation.Data.Doublets.Cli.Tests.ProbeProgram</StartupObject>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -10,8 +12,37 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../../docs/protocol/author-fence-v1.json" Link="author-fence-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/address-reservations-v1.json" Link="Protocol/address-reservations-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-query-v1.json" Link="Protocol/causal-query-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-session-v1.json" Link="Protocol/causal-session-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-projection-v1.json" Link="Protocol/causal-projection-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-batch-v1.json" Link="Protocol/causal-batch-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-merkle-v1.json" Link="Protocol/causal-merkle-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-replica-v1.json" Link="Protocol/causal-replica-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/causal-version-v1.json" Link="Protocol/causal-version-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/engine-checkpoint-vectors.json" Link="Protocol/engine-checkpoint-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/checkpoint-root-mirror-v1.json" Link="Protocol/checkpoint-root-mirror-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/checkpoint-pages-v1.json" Link="Protocol/checkpoint-pages-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/native-sorted-table-v1.json" Link="Protocol/native-sorted-table-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/native-lsm-wal-v1.json" Link="Protocol/native-lsm-wal-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/native-pages-v1.json" Link="Protocol/native-pages-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/native-pages-mirrored-v1.json" Link="Protocol/native-pages-mirrored-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/sqlite-log-vectors.json" Link="Protocol/sqlite-log-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/engine-change-vectors.json" Link="Protocol/engine-change-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/transaction-undo-vectors.json" Link="Protocol/transaction-undo-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/transaction-name-vectors.json" Link="Protocol/transaction-name-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/version-movement-vectors.json" Link="Protocol/version-movement-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/engine-revision-vectors.json" Link="Protocol/engine-revision-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/engine-delta-vectors.json" Link="Protocol/engine-delta-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/partitioned-journal-vectors.json" Link="Protocol/partitioned-journal-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/chunked-journal-vectors.json" Link="Protocol/chunked-journal-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/reclaiming-chunks-vectors.json" Link="Protocol/reclaiming-chunks-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/version-metadata-vectors.json" Link="Protocol/version-metadata-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/version-publication-vectors.json" Link="Protocol/version-publication-vectors.json" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="coverlet.collector" Version="10.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
@@ -30,4 +61,8 @@
     <ProjectReference Include="..\Foundation.Data.Doublets.Cli\Foundation.Data.Doublets.Cli.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../../docs/protocol/reclamation-v1.json" Link="reclamation-v1.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/protocol/journal-maintenance-v1.json" Link="journal-maintenance-v1.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

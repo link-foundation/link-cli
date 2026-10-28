@@ -7,6 +7,8 @@ updates:
     directories:
       - /rust
       - /rust/wasm
+      - /experiments/issue-138/lsm-store-before-rust
+      - /experiments/issue-138/mapped-grow-failure
       - /docs/case-studies/issue-100/evidence/external-range/rust
     schedule:
       interval: daily
@@ -17,6 +19,8 @@ updates:
     directories:
       - /csharp
       - /examples/lino-structure-probe
+      - /examples/sqlite-csharp
+      - /experiments/issue-138/lsm-store-before-csharp
       - /docs/case-studies/issue-100/evidence/csharp-merge-usages
       - /docs/case-studies/issue-100/evidence/external-range/csharp
     schedule:

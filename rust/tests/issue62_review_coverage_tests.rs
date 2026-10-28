@@ -1,12 +1,15 @@
 use anyhow::Result;
 use link_cli::{LinkStorage, NamedTypeLinks, PinnedTypes, QueryProcessor};
-use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn pinned_types_take_types_is_finite_and_deterministic() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_db_file, mut storage) = test_store::links()?;
     let mut pinned_types = PinnedTypes::new(&mut storage);
 
     assert_eq!(Vec::<u32>::new(), pinned_types.take_types(0)?);
@@ -15,11 +18,10 @@ fn pinned_types_take_types_is_finite_and_deterministic() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn unsupported_any_reference_is_rejected_without_placeholder_creation() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_db_file, mut storage) = test_store::links()?;
 
     let error = storage.try_ensure_created(u32::MAX).unwrap_err();
 
@@ -31,11 +33,10 @@ fn unsupported_any_reference_is_rejected_without_placeholder_creation() -> Resul
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn explicit_numeric_id_update_can_be_reversed_with_another_update() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_db_file, mut storage) = test_store::links()?;
     let processor = QueryProcessor::new(false).with_auto_create_missing_references(true);
 
     processor.process_query(&mut storage, "(() ((1: 1 1)))")?;
@@ -50,11 +51,10 @@ fn explicit_numeric_id_update_can_be_reversed_with_another_update() -> Result<()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn named_link_create_delete_recreate_clears_stale_name_mapping() -> Result<()> {
-    let db_file = NamedTempFile::new()?;
-    let db_path = db_file.path().to_str().unwrap();
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_db_file, mut storage) = test_store::links()?;
     let processor = QueryProcessor::new(false).with_auto_create_missing_references(true);
 
     processor.process_query(&mut storage, "(() ((child: father mother)))")?;

@@ -1,0 +1,21 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/validate-phase-pool.sh
+START 2026-10-27T09:43:13Z
+CSHARP Debug PASS 2026-10-27T09:48:56Z
+CSHARP Release PASS 2026-10-27T09:53:31Z
+ALL PASS 2026-10-27T09:53:53Z
+Immutable 89fbfad and original linked-helper logs reproduce the actual phase5/exit0 timeout symptom.
+All three durable occupied-worker controls fail first; none changes the test runner's pool.
+All 17 focused controls pass: occupied-worker progress/stall/repeat, monotonic clock, caller context, malformed phases, both streams and reaping.
+C# Debug: 2451 passed; zero failed/skipped.
+Complete lines: 9400/9726 (96.64816%)
+Complete branches: 5695/6144 (92.69206%)
+C# Release: 2451 passed; zero failed/skipped.
+Complete lines: 7253/7471 (97.08205%)
+Complete branches: 5639/6105 (92.36691%)
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+C# formatting, TS declarations, source sizes, changeset, dependency freshness and workflow/ShellCheck checks pass.
+No idle/suite bounds or production coverage denominators were widened or excluded.
+Three joined dedicated threads per active probe are test-only resource costs.
+The isolated control proves a helper dependency, not the exact CI runner scheduling or a persistence guarantee.
+Fresh exact-head CI and every wider unmet R1-R12 requirement remain active; the PR stays draft and unmerged.

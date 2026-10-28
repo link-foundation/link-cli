@@ -15,11 +15,10 @@
 //! # Durability
 //!
 //! Writes go straight into the shared memory mapping, which *is* the
-//! page cache on Linux, so a **process** crash cannot lose them: the
-//! kernel writes the dirty pages back. Surviving a **machine** crash
-//! (power loss, kernel panic) additionally requires an `fsync`, which is
-//! what [`LinksStorage::flush`] performs. `FileMapped` also syncs on
-//! drop, so a clean shutdown is durable without an explicit `flush`.
+//! page cache on Linux. [`LinksStorage::flush`] synchronizes that file;
+//! on Windows, owned mappings first flush the mapped view. Both barriers
+//! propagate errors. Drop attempts the same ordering without reporting errors.
+//! This does not repair torn pages or make in-place transactions atomic.
 //!
 //! # Multi-process access
 //!
@@ -44,6 +43,7 @@ use crate::link::GenericLink;
 use crate::storage::file_mem::PersistentFileMapped;
 use crate::storage::lock::{lock_file_path, FileLock, LockMode};
 use crate::storage::traits::{LinksStorage, StorageRevision};
+use crate::storage::MappedFlush;
 
 /// The file-mapped `doublets` store used by [`DoubletsStorage::open`].
 pub type FileMappedUnitStore<T> = UnitStore<T, PersistentFileMapped<LinkPart<T>>>;
@@ -65,6 +65,7 @@ pub struct DoubletsStorage<T: LinkReference, S: Doublets<T>> {
     path: Option<PathBuf>,
     known_revision: StorageRevision,
     lock: Option<FileLock>,
+    mapped_flush: Option<MappedFlush>,
     address: PhantomData<T>,
 }
 
@@ -114,12 +115,14 @@ impl<T: LinkReference> DoubletsStorage<T, FileMappedUnitStore<T>> {
             }
         }
         let mem = PersistentFileMapped::<LinkPart<T>>::from_path(path)?;
+        let mapped_flush = Some(mem.flush_handle());
         let store = FileMappedUnitStore::<T>::new(mem)?;
         Ok(Self {
             store,
             path: Some(path.to_path_buf()),
             known_revision: StorageRevision::of(path)?,
             lock,
+            mapped_flush,
             address: PhantomData,
         })
     }
@@ -138,13 +141,17 @@ impl<T: LinkReference, S: Doublets<T>> DoubletsStorage<T, S> {
             path: None,
             known_revision: StorageRevision::default(),
             lock: None,
+            mapped_flush: None,
             address: PhantomData,
         }
     }
 
     /// Adopts a store the caller already owns while recording the path
-    /// it is backed by, enabling [`LinksStorage::flush`],
+    /// it is backed by, enabling file synchronization,
     /// [`LinksStorage::has_external_changes`] and the lock helpers.
+    ///
+    /// For an adopted mapping, attach its matching view barrier with
+    /// [`Self::with_mapped_flush`]; a path alone cannot discover that view.
     pub fn wrap_at<P: AsRef<Path>>(store: S, path: P) -> Result<Self, LinkError> {
         let path = path.as_ref().to_path_buf();
         let known_revision = StorageRevision::of(&path)?;
@@ -153,16 +160,31 @@ impl<T: LinkReference, S: Doublets<T>> DoubletsStorage<T, S> {
             path: Some(path),
             known_revision,
             lock: None,
+            mapped_flush: None,
             address: PhantomData,
         })
     }
 
+    /// Attaches the flush barrier belonging to this store's mapped owner.
+    ///
+    /// Obtain it from [`PersistentFileMapped::flush_handle`] before moving
+    /// that mapping into the store. The handle must belong to this store's
+    /// backing file. It is preserved through [`Self::map_store`] and works
+    /// even when the adopted store has no recorded path. Arbitrary foreign
+    /// stores must provide their own view synchronization.
+    pub fn with_mapped_flush(mut self, flush: MappedFlush) -> Self {
+        self.mapped_flush = Some(flush);
+        self
+    }
+
     /// Replaces the underlying store with `map(store)`, keeping the path,
-    /// advisory lock and change-detection fingerprint of this storage.
+    /// advisory lock, mapped flush owner and change-detection fingerprint.
     ///
     /// This is the extension point for stacking any `doublets` decorator
     /// (or a custom one) under the transactions and version control
-    /// layers:
+    /// layers. If the closure replaces the mapped owner instead of retaining
+    /// it, attach that replacement's barrier with [`Self::with_mapped_flush`].
+    /// A retired owner's barrier rejects flush rather than publishing changes.
     ///
     /// ```no_run
     /// use doublets::decorators::DecoratorsExt;
@@ -183,6 +205,7 @@ impl<T: LinkReference, S: Doublets<T>> DoubletsStorage<T, S> {
             path: self.path,
             known_revision: self.known_revision,
             lock: self.lock,
+            mapped_flush: self.mapped_flush,
             address: PhantomData,
         }
     }
@@ -267,6 +290,21 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         Ok(Doublets::create_link(&mut self.store, source, target)?)
     }
 
+    fn create_link_observed(
+        &mut self,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<T, LinkError> {
+        let mut index = T::from_byte(0);
+        Doublets::create_link_with(&mut self.store, source, target, |before, after| {
+            index = after.index;
+            observer(before.into(), after.into());
+            Flow::Continue
+        })?;
+        Ok(index)
+    }
+
     fn ensure_link_created(&mut self, index: T) -> Result<T, LinkError> {
         if self.link_exists(index) {
             return Ok(index);
@@ -312,6 +350,38 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         Ok(before)
     }
 
+    fn update_link_observed(
+        &mut self,
+        index: T,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
+        let before = self
+            .get_link(index)
+            .ok_or_else(|| LinkError::not_found(index))?;
+        Doublets::update_with(&mut self.store, index, source, target, |before, after| {
+            observer(before.into(), after.into());
+            Flow::Continue
+        })?;
+        Ok(before)
+    }
+
+    fn delete_link_observed(
+        &mut self,
+        index: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<GenericLink<T>, LinkError> {
+        let before = self
+            .get_link(index)
+            .ok_or_else(|| LinkError::not_found(index))?;
+        Doublets::delete_with(&mut self.store, index, |before, after| {
+            observer(before.into(), after.into());
+            Flow::Continue
+        })?;
+        Ok(before)
+    }
+
     fn all_links(&self) -> Vec<GenericLink<T>> {
         let mut links = Vec::new();
         Doublets::each(&self.store, |link| {
@@ -353,10 +423,10 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         TryInto::<usize>::try_into(Doublets::count(&self.store)).unwrap_or(usize::MAX)
     }
 
-    /// `fsync`s the backing file so the mapped writes survive a machine
-    /// crash, and publishes them to other processes by advancing the
-    /// file's modification time. A no-op for stores adopted without a
-    /// known path.
+    /// Flushes the owned mapped view, synchronizes its file, and publishes
+    /// changes by advancing the known path's modification time. Without an
+    /// attached mapped owner, only the known file is synchronized. A no-op
+    /// for adopted stores with neither a flush owner nor a known path.
     ///
     /// Bumping the timestamp is deliberate: the kernel only refreshes
     /// `mtime` when a *clean* page of a shared mapping is first written
@@ -364,9 +434,14 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
     /// pages would otherwise stay invisible to
     /// [`LinksStorage::has_external_changes`].
     fn flush(&mut self) -> Result<(), LinkError> {
+        if let Some(flush) = &self.mapped_flush {
+            flush.flush()?;
+        }
         if let Some(path) = self.path.clone() {
             let file = std::fs::File::options().write(true).open(&path)?;
-            file.sync_all()?;
+            if self.mapped_flush.is_none() {
+                file.sync_all()?;
+            }
             file.set_modified(std::time::SystemTime::now())?;
             self.refresh_revision()?;
         }

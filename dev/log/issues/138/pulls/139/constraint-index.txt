@@ -1,0 +1,80 @@
+Optional indexed constraints: complete local validation
+PR: https://github.com/link-foundation/link-cli/pull/139
+Date: 2026-10-25 UTC
+Base: 3322f36aa838c7a6c01d1b7e0d7d30adb78f56dd
+
+Reproduce with experiments/issue-138/validate-constraint-index.sh after the
+documented validation setup, then summarize-constraint-index.py. Compilers run
+sequentially within the 2.92 GiB limit. An unnecessary Vec in the new Rust test
+first failed strict Clippy; a fixed array corrects it. The --resume-rust path
+retains the completed C# reports after that test-only correction and reruns all
+later validation. Only completed successful suites supply the final totals below.
+
+Scan remains the default. Independently selected Indexed retains persistent
+pair/name-owner and incoming-reference-count maps only for selected constraints.
+Private candidates remove every old changed key before adding new keys, allowing
+atomic swaps. Publication follows journal append and flush; rejected or uncertain
+candidates retain committed roots. Recovery validates every historical record
+before building the final indexes. The journal format is unchanged.
+
+Before-implementation native/C# contracts fail because the configuration API is
+absent; constraint-index-before.txt preserves that evidence without claiming a
+scan semantic defect. Each native language independently checks 6,400 finite
+candidate edits against a simple full-state oracle across all constraint subsets,
+both maps and both logical encodings. Tests cover zero/absent/self/cyclic refs,
+both incoming-reference positions, unchanged incoming rows, Unicode/NUL/empty
+names, swaps/transfers, transient rows, rejected/following writes, mixed replay,
+historical invalidity, pins, groups, branches and independent admission/read
+validation. The six portable Rust contracts also execute in actual WASM.
+Existing all-prefix durable group fault matrices now run with scan and indexed
+unique-name validation. C# additionally checks before/after append and flush
+uncertainty with exact committed root identity and recovered following writes.
+
+Finite cost controls verify only selected map allocation and retained root
+sharing. C# forbids all candidate enumeration and bounds one-row preparation to
+seven row lookups at 8 and 512 rows. The reusable native allocation example uses
+shared rows, changed-row encoding and all constraints for eight name edits.
+Scan versus indexed requests 54,805 versus 17,845 bytes at 128 rows, and 329,269
+versus 20,117 at 1,024 rows in this Debug run. These count allocation requests,
+including reallocations, excluding setup/recovery; they are neither live-memory
+nor latency/durability measurements. Exact totals can vary with toolchains.
+
+Complete local validation:
+
+- Native Rust all-features branch coverage: 859 standard passes, zero failed;
+  thirteen ignored child entries are exercised by bounded parent tests. The
+  custom stdout harness passes.
+- C# Debug and Release with Coverlet: 2,003 each, zero failed/skipped.
+- Actual WASM with LLVM coverage: 502 pass, zero failed/ignored.
+- JS: 168 tests; all eighteen production modules enforce 100% line/branch/function
+  coverage. Strict TypeScript and 217 repository checks pass.
+- Formatting, strict native/WASM Clippy, source sizes, release fragments,
+  actionlint/ShellCheck, whitespace and 117 latest declared dependencies pass.
+- Generated actual-WASM conformance passes Node, Bun and Deno, including the
+  public scan/indexed option, invalid types, swaps, groups, branches and replay.
+- All sixteen SQLite scan/indexed x flat/shared x snapshot/changes x plain/delta
+  compositions reopen the same database through Rust -> C# -> Node -> Bun ->
+  Deno. Both strategies select References only: repeated provider pairs/names
+  intentionally remain valid. All three runtime SQLite adapter suites pass.
+- Existing persistent strategy/group examples and both ordinary undo policies
+  pass. The finite allocation example passes. Container OOM/OOM-kill remain zero.
+
+Official complete-run totals, without filtered denominators or diagnostic unions:
+
+| Scope | Covered lines | Covered branches | Covered functions |
+| --- | --- | --- | --- |
+| Native Rust | 11,778/12,645 (93.14%) | 2,143/2,570 (83.39%) | 1,506/1,648 (91.38%) |
+| Actual WASM, complete linked source | 8,775/11,954 (73.41%) | 1,665/2,219 (75.03%) | 1,139/1,598 (71.28%) |
+| C# Debug | 7,323/7,838 (93.43%) | 3,843/4,282 (89.75%) | Not reported by this collector |
+| C# Release | 5,629/5,949 (94.62%) | 3,810/4,257 (89.50%) | Not reported by this collector |
+
+ConstraintIndex component: Native Rust: 117/117 lines, 42/42 branches, 10/10 functions; Actual WASM: 117/117 lines, 42/42 branches, 10/10 functions. C# Debug/Release class summaries report 100% lines and branches.
+
+All three actual-WASM wrapper files measure 100% lines, reported branches and
+functions. Whole native Rust, linked WASM and C# remain below the required 100%.
+Selected indexes do not remove flat-map copies, complete snapshot encoding,
+historical recovery scans, branch comparisons or physical I/O. Finer independent
+composition, legacy physical page repair, LSM, real power-loss verification,
+automatic balancing/multi-catalog transactions and wider competitor criteria
+remain unfinished. The native issue goal stays active and PR 139 remains draft;
+fresh exact-head CI is required after publication.

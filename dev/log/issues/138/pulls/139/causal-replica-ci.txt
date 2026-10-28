@@ -1,0 +1,37 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published local-owner head: d00e02232812346ace3525efb3525fc42fd6d17e
+Push completed: 2026-10-27T13:45:30Z
+All nine workflows created after the push and completed successfully:
+Rust CI/CD Pipeline: 2026-10-27T13:45:32Z https://github.com/link-foundation/link-cli/actions/runs/40514886744 SUCCESS
+WebAssembly CI: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886564 SUCCESS
+C# CI/CD Pipeline: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886300 SUCCESS
+JS client CI: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886464 SUCCESS
+Dependencies: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886266 SUCCESS
+Broken Link Checker: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886320 SUCCESS
+Workflows: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886293 SUCCESS
+Docs: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886294 SUCCESS
+Security: 2026-10-27T13:45:31Z https://github.com/link-foundation/link-cli/actions/runs/40514886304 SUCCESS
+
+Rust workflow completed 2026-10-27T14:36:23Z. Complete logs for its three completed platform jobs were downloaded via the job-log API while the aggregate workflow was still pending; raw logs are preserved in experiments/issue-138/ci-logs/. Log scans use chunks of at most 1500 lines.
+
+macos-26: https://github.com/link-foundation/link-cli/actions/runs/40514886744/job/122227336627
+experiments/issue-138/ci-logs/causal-replica-rust-122227336627.log: 1349972 bytes; SHA256 94ac0d4f3f3f6f924fa84a2469ad5032c8bf06b4e950e85b774d5182f50c433f; 8372 lines.
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 26 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1192 passed, 0 failed, 17 ignored across 146 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+
+ubuntu-24.04: https://github.com/link-foundation/link-cli/actions/runs/40514886744/job/122227336674
+experiments/issue-138/ci-logs/causal-replica-rust-122227336674.log: 1389634 bytes; SHA256 751d75cbb95da7c7be0c90a1ef87abf037ea008eb4b7654c1d35a0034d0f9b07; 8480 lines.
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 26 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1216 passed, 0 failed, 23 ignored across 146 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+
+windows-2025: https://github.com/link-foundation/link-cli/actions/runs/40514886744/job/122227337138
+experiments/issue-138/ci-logs/causal-replica-rust-122227337138.log: 1327674 bytes; SHA256 0da0f4584741c744ba04685c161bee1a368fe4a17c131ce376ba2b6693661b5e; 8403 lines.
+cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests: 25 passed, 0 failed, 2 ignored across 2 result records.
+cargo test --manifest-path rust/Cargo.toml --all-features --verbose: 1189 passed, 0 failed, 17 ignored across 146 result records.
+cargo test --manifest-path rust/Cargo.toml --doc --verbose: 6 passed, 0 failed, 1 ignored across 1 result records.
+
+The all-features command includes six passing doctests and one existing ignored doctest; the separate doc command repeats them. Focused no-default-feature tests are recorded separately, not added to the full-suite count.
+C# passes 2475 tests on each platform. All three actual coverage ZIP sizes and SHA256 digests verify; causal-replica-csharp-platform-coverage.txt retains complete platform denominators.
+Complete local validation is retained in causal-replica.txt. These exact-head CI results verify the local-owner publication, not subsequent Merkle changes or every wider R1-R12 criterion. PR139 remains draft and unmerged.

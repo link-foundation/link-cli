@@ -2,14 +2,16 @@
 
 use link_cli::{simplify_changes, Link};
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_empty() {
     let changes: Vec<(Link, Link)> = vec![];
     let result = simplify_changes(changes);
     assert!(result.is_empty());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_no_op() {
     let link = Link::new(1, 2, 3);
     let changes = vec![(link, link)];
@@ -18,7 +20,8 @@ fn test_simplify_no_op() {
     assert_eq!(result[0], (link, link));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_chain() {
     let link1 = Link::new(1, 1, 1);
     let link2 = Link::new(1, 2, 2);
@@ -31,7 +34,8 @@ fn test_simplify_chain() {
     assert_eq!(result[0], (link1, link3));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_with_unchanged() {
     let unchanged = Link::new(2, 2, 2);
     let link1 = Link::new(1, 1, 1);
@@ -43,7 +47,8 @@ fn test_simplify_with_unchanged() {
     assert_eq!(result.len(), 2);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_issue26_update_operation() {
     // This represents the scenario described in GitHub issue #26
     // Where links (1: 1 2) and (2: 2 1) are being updated to swap source and target
@@ -65,7 +70,8 @@ fn test_simplify_issue26_update_operation() {
     assert!(result.contains(&(Link::new(2, 2, 1), Link::new(2, 1, 2))));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_issue26_alternative_scenario() {
     // This tests the scenario where the same before state has multiple transitions:
     // one to null (deletion) and one to a non-null state (update)
@@ -85,7 +91,8 @@ fn test_simplify_issue26_alternative_scenario() {
     assert!(result.contains(&(Link::new(2, 2, 1), Link::new(2, 1, 2))));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_multiple_branches_from_same_initial() {
     // Original transitions (Before -> After):
     // (0: 0 0) -> (1: 0 0)
@@ -109,7 +116,8 @@ fn test_simplify_multiple_branches_from_same_initial() {
     assert!(result.contains(&(Link::new(0, 0, 0), Link::new(2, 2, 2))));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_specific_example_removes_intermediate_states() {
     // (1: 2 1) ↦ (1: 0 0)
     // (2: 1 2) ↦ (2: 0 0)
@@ -132,7 +140,8 @@ fn test_simplify_specific_example_removes_intermediate_states() {
     assert!(result.contains(&(Link::new(2, 1, 2), Link::new(0, 0, 0))));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_keeps_unchanged_states() {
     // (1: 1 2) ↦ (1: 2 1)
     // (2: 2 2) ↦ (2: 2 2) (unchanged)
@@ -149,7 +158,8 @@ fn test_simplify_keeps_unchanged_states() {
     assert!(result.contains(&(Link::new(2, 2, 2), Link::new(2, 2, 2))));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_create_then_match_reports_only_the_create() {
     let created = Link::new(1, 1, 1);
     let changes = vec![(Link::null(), created), (created, created)];
@@ -157,7 +167,8 @@ fn test_simplify_create_then_match_reports_only_the_create() {
     assert_eq!(simplify_changes(changes), vec![(Link::null(), created)]);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_match_then_update_reports_only_the_update() {
     let before = Link::new(1, 1, 1);
     let after = Link::new(1, 2, 2);
@@ -166,7 +177,8 @@ fn test_simplify_match_then_update_reports_only_the_update() {
     assert_eq!(simplify_changes(changes), vec![(before, after)]);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_keeps_unchanged_links_that_did_not_change_elsewhere() {
     let unchanged = Link::new(2, 2, 2);
     let created = Link::new(1, 1, 1);
@@ -178,7 +190,8 @@ fn test_simplify_keeps_unchanged_links_that_did_not_change_elsewhere() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_recreating_an_address_reports_one_change() {
     // The raw steps C# reports for `((1: 1 1)) ((3 3))`.
     let changes = vec![
@@ -194,7 +207,8 @@ fn test_simplify_recreating_an_address_reports_one_change() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_does_not_chain_a_deletion_into_another_creation() {
     let deleted = Link::new(3, 3, 3);
     let created = Link::new(4, 4, 4);
@@ -206,7 +220,8 @@ fn test_simplify_does_not_chain_a_deletion_into_another_creation() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_drops_a_link_created_and_deleted_again() {
     let temporary = Link::new(3, 0, 0);
     let changes = vec![(Link::null(), temporary), (temporary, Link::null())];
@@ -214,7 +229,8 @@ fn test_simplify_drops_a_link_created_and_deleted_again() {
     assert_eq!(simplify_changes(changes), vec![]);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_simplify_reports_a_link_changed_back_as_unchanged() {
     let original = Link::new(1, 1, 2);
     let swapped = Link::new(1, 2, 1);

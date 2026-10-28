@@ -1,0 +1,47 @@
+Portable archive and stream contracts; PR https://github.com/link-foundation/link-cli/pull/139
+Unchanged production baseline: 847ed01dd663fa43dfbac67072b812680c56e46c
+Run: bash experiments/issue-138/validate-archive-stream.sh <native|wasm|repository>
+One compiler job, reduced debug information, actual WASM capped at 256 MiB.
+All 16 original native archive test names are preserved: ten shared and six native-only.
+All 20 focused native cases pass before any further production change; no new defect is claimed.
+Four new portable groups check 31 reader failures (including final EOF), 30 truncated prefixes,
+three trailing bytes, 30 partial-write failures, one-byte reads/writes, retries and following writes.
+All probes use a 30-byte independently authored cross-language golden archive and small stores.
+One WASM-only file-helper control checks unsupported filesystem errors with exact path context,
+unchanged rows/names and successful following in-memory archive use.
+Read/parse rejection preserves rows and names; output errors retain only the expected byte prefix.
+Atomic rollback after storage errors and output flush durability are separate owner obligations.
+
+Native Rust: 967 passed, 0 failed; 17 ignored child entry points.
+Complete production:
+  lines: 13012/13788 (94.37192%)
+  branches: 2431/2842 (85.53835%)
+  functions: 1661/1789 (92.84516%)
+protocol/archive.rs:
+  lines: 131/131 (100.00000%)
+  branches: 6/6 (100.00000%)
+  functions: 18/18 (100.00000%)
+Report: experiments/issue-138/archive-stream-native-coverage.json
+
+Actual WASM: 571 passed, 0 failed; 0 ignored child entry points.
+Complete production:
+  lines: 10472/12857 (81.44979%)
+  branches: 2043/2493 (81.94946%)
+  functions: 1331/1709 (77.88180%)
+protocol/archive.rs:
+  lines: 129/131 (98.47328%)
+  branches: 5/6 (83.33333%)
+  functions: 18/18 (100.00000%)
+Three wrapper modules, separate from complete linked totals:
+  lines: 383/383 (100%)
+  branches: 20/20 (100%)
+  functions: 73/73 (100%)
+Report: experiments/issue-138/archive-stream-wasm-coverage.json
+Native doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.63s
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Strict native/WASM Clippy, formatting, source/release checks, optional-SQL guards, ShellCheck and whitespace pass.
+Unchanged C#/JS production retains the complete import-allocation.txt validation:
+2,172 C# tests per Debug/Release configuration, 209 JS at enforced 100% lines/branches/functions,
+Node/Bun/Deno actual-WASM conformance and 48 configurations / 288 cross-language file writers.
+These C#/JS checks are the preceding batch, not new executions claimed by this test-only batch.
+Whole-project 100% coverage and every wider unfinished issue requirement remain active.

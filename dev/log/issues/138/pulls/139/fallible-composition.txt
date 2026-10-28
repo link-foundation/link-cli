@@ -1,0 +1,71 @@
+Fallible composition; PR https://github.com/link-foundation/link-cli/pull/139
+Baseline production: a1f12fec0e27b7bad8f7d6ba88405f6dc953c5c4
+Run: bash experiments/issue-138/validate-fallible-composition.sh <stage>
+One compiler job; reduced debug information; actual WASM capped at 256 MiB.
+Before production changes: 10 file regressions fail (exit 101).
+Before production changes: 2 portable regressions fail (exit 101).
+C# is a passing exception-propagation control, without production changes.
+Returning Err does not undo uncertain writes; caller cleanup remains authoritative.
+
+Native Rust: 949 passed, 0 failed; 17 ignored child entry points.
+Complete production:
+  lines: 13011/13788 (94.36466%)
+  branches: 2427/2846 (85.27758%)
+  functions: 1661/1789 (92.84516%)
+named_type_links.rs:
+  lines: 351/381 (92.12598%)
+  branches: 36/40 (90.00000%)
+  functions: 82/90 (91.11111%)
+persistent_transformations.rs:
+  lines: 344/389 (88.43188%)
+  branches: 43/58 (74.13793%)
+  functions: 49/59 (83.05085%)
+link_reference_validator.rs:
+  lines: 278/284 (97.88732%)
+  branches: 47/50 (94.00000%)
+  functions: 24/24 (100.00000%)
+Report: experiments/issue-138/fallible-composition-native-coverage.json
+
+Actual WASM: 550 passed, 0 failed; 0 ignored child entry points.
+Complete production:
+  lines: 10329/12836 (80.46899%)
+  branches: 2033/2487 (81.74507%)
+  functions: 1311/1706 (76.84642%)
+named_type_links.rs:
+  lines: 223/381 (58.53018%)
+  branches: 36/40 (90.00000%)
+  functions: 54/90 (60.00000%)
+persistent_transformations.rs:
+  lines: 313/389 (80.46272%)
+  branches: 37/52 (71.15385%)
+  functions: 44/59 (74.57627%)
+link_reference_validator.rs:
+  lines: 278/284 (97.88732%)
+  branches: 47/50 (94.00000%)
+  functions: 24/24 (100.00000%)
+Three wrapper modules, separate from complete linked totals:
+  lines: 383/383 (100%)
+  branches: 20/20 (100%)
+  functions: 73/73 (100%)
+Report: experiments/issue-138/fallible-composition-wasm-coverage.json
+Native doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 1.93s
+
+Complete C# Debug: 2169 passed, 0 failed/skipped.
+lines: 8051/8353 (96.38453%)
+branches: 4352/4722 (92.16434%)
+Report: experiments/issue-138/fallible-composition-csharp-Debug-results/415d665c-0ca1-43f5-83be-ffdb1e81e947/coverage.cobertura.xml
+
+Complete C# Release: 2169 passed, 0 failed/skipped.
+lines: 6175/6365 (97.01493%)
+branches: 4301/4689 (91.72531%)
+Report: experiments/issue-138/fallible-composition-csharp-Release-results/79429d10-a0e5-4a23-91df-181245aea39a/coverage.cobertura.xml
+JS: {'tests': 209, 'pass': 209, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: actual-WASM public contract and full conformance pass; 8 client scenarios pass, 4 process-only scenarios skip for in-process WASM.
+bun: actual-WASM public contract and full conformance pass; 8 client scenarios pass, 4 process-only scenarios skip for in-process WASM.
+deno: actual-WASM public contract and full conformance pass; 8 client scenarios pass, 4 process-only scenarios skip for in-process WASM.
+48 physical/policy configurations / 288 cross-language file writers pass, including repair.
+Ten native real-filesystem regressions pass cleanup, following writes and two exact reopenings.
+Four portable contracts cover 11 bookkeeping faults, successful/no-op triggers and parked errors.
+Strict Clippy, format, types, release/source-size, optional-SQL guards, ShellCheck and whitespace pass.
+Complete 100% coverage and all wider unfinished issue requirements remain active.

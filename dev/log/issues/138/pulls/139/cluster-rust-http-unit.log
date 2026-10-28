@@ -1,0 +1,22 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792854251187/rust)
+    Finished `test` profile [unoptimized] target(s) in 0.98s
+     Running tests/engine_cluster_tests.rs (rust/target/debug/deps/engine_cluster_tests-184039cf7eaef44d)
+
+running 5 tests
+test invalid_policies_and_coordinates_are_rejected_and_constraints_publish_no_shards ... ok
+test independent_shards_commit_without_global_false_conflicts_and_rollback_is_private ... ok
+test lost_reply_ends_transaction_and_reopen_discovers_all_committed_shards ... ok
+test cross_shard_commit_is_atomic_and_checks_read_only_shards ... ok
+test selected_shard_supports_the_named_links_api_without_individual_publication ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/engine_etcd_tests.rs (rust/target/debug/deps/engine_etcd_tests-8b1612586a3b78e8)
+
+running 4 tests
+test etcd_bounds_and_coordinates_are_checked ... ok
+test etcd_snapshot_and_cas_check_every_selected_generation_and_accept_omitted_false ... ok
+test etcd_safe_read_failover_but_lost_mutation_response_is_not_replayed ... ok
+test etcd_invalid_wire_responses_fail_closed ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s

@@ -13,20 +13,76 @@ on:
     paths:
       - '.github/workflows/js-client.yml'
       - '.github/scripts/verify-npm-trust*'
+      - '.github/scripts/check-sqlite-optional.mjs'
       - 'js/client/**'
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
+      - 'examples/cluster-csharp/**'
+      - 'examples/journal-maintenance-csharp/**'
+      - 'examples/journal-reclamation-csharp/**'
+      - 'examples/sqlite-csharp/**'
+      - 'examples/native-lsm-js/**'
+      - 'examples/journal-chunks/**'
+      - 'examples/native-pages/**'
+      - 'examples/native-pages-csharp/**'
+      - 'examples/sorted-tables/**'
+      - 'examples/sorted-tables-csharp/**'
+      - 'examples/journal-checkpoints/**'
+      - 'experiments/issue-138/generate-checkpoint-vectors.py'
+      - 'experiments/issue-138/etcd-*.mjs'
+      - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
+      - 'experiments/issue-138/make-native-page-vectors.py'
+      - 'experiments/issue-138/*sorted-table*'
+      - 'experiments/issue-138/*lsm-wal*'
+      - 'experiments/issue-138/*lsm-store*'
+      - 'experiments/issue-138/run-lsm-readonly-inspection.sh'
+      - 'experiments/issue-138/make-mirrored-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-root-vectors.py'
+      - 'experiments/issue-138/make-maintenance-vectors.py'
+      - 'experiments/issue-138/verify-maintenance-lazy.mjs'
+      - 'experiments/issue-138/*reclamation*'
+      - 'experiments/issue-138/native-checkpoint-cut.mjs'
+      - 'experiments/issue-138/*chunk*'
   pull_request:
     branches:
       - main
     paths:
       - '.github/workflows/js-client.yml'
       - '.github/scripts/verify-npm-trust*'
+      - '.github/scripts/check-sqlite-optional.mjs'
       - 'js/client/**'
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
+      - 'examples/cluster-csharp/**'
+      - 'examples/journal-maintenance-csharp/**'
+      - 'examples/journal-reclamation-csharp/**'
+      - 'examples/sqlite-csharp/**'
+      - 'examples/native-lsm-js/**'
+      - 'examples/journal-chunks/**'
+      - 'examples/native-pages/**'
+      - 'examples/native-pages-csharp/**'
+      - 'examples/sorted-tables/**'
+      - 'examples/sorted-tables-csharp/**'
+      - 'examples/journal-checkpoints/**'
+      - 'experiments/issue-138/generate-checkpoint-vectors.py'
+      - 'experiments/issue-138/etcd-*.mjs'
+      - 'experiments/issue-138/sqlite-adapter-contracts.mjs'
+      - 'experiments/issue-138/make-native-page-vectors.py'
+      - 'experiments/issue-138/*sorted-table*'
+      - 'experiments/issue-138/*lsm-wal*'
+      - 'experiments/issue-138/*lsm-store*'
+      - 'experiments/issue-138/run-lsm-readonly-inspection.sh'
+      - 'experiments/issue-138/make-mirrored-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-page-vectors.py'
+      - 'experiments/issue-138/make-checkpoint-root-vectors.py'
+      - 'experiments/issue-138/make-maintenance-vectors.py'
+      - 'experiments/issue-138/verify-maintenance-lazy.mjs'
+      - 'experiments/issue-138/*reclamation*'
+      - 'experiments/issue-138/native-checkpoint-cut.mjs'
+      - 'experiments/issue-138/*chunk*'
   workflow_dispatch:
     inputs:
       verify_trusted_publishing:
@@ -101,8 +157,85 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Unit tests
-        run: npm test -- --test-timeout=30000
+      - name: Verify default imports and native logs need no SQLite
+        run: node ../../.github/scripts/check-sqlite-optional.mjs js
+
+      - name: Verify independently generated native page vectors
+        run: |
+          python3 ../../experiments/issue-138/make-native-page-vectors.py ../../experiments/issue-138/native-pages-regenerated.json
+          cmp ../../docs/protocol/native-pages-v1.json ../../experiments/issue-138/native-pages-regenerated.json
+          python3 ../../experiments/issue-138/make-sorted-table-vectors.py ../../experiments/issue-138/sorted-table-regenerated.json
+          cmp ../../docs/protocol/native-sorted-table-v1.json ../../experiments/issue-138/sorted-table-regenerated.json
+          node ../../experiments/issue-138/verify-sorted-table-lazy.mjs
+          python3 ../../experiments/issue-138/make-lsm-wal-vectors.py ../../experiments/issue-138/lsm-wal-regenerated.json
+          cmp ../../docs/protocol/native-lsm-wal-v1.json ../../experiments/issue-138/lsm-wal-regenerated.json
+          node ../../experiments/issue-138/verify-lsm-wal-lazy.mjs
+          node ../../experiments/issue-138/verify-lsm-store-lazy.mjs
+          python3 ../../experiments/issue-138/make-mirrored-page-vectors.py ../../experiments/issue-138/mirrored-pages-regenerated.json
+          cmp ../../docs/protocol/native-pages-mirrored-v1.json ../../experiments/issue-138/mirrored-pages-regenerated.json
+          python3 ../../experiments/issue-138/generate-checkpoint-vectors.py ../../experiments/issue-138/engine-checkpoint-regenerated.json
+          cmp ../../docs/protocol/engine-checkpoint-vectors.json ../../experiments/issue-138/engine-checkpoint-regenerated.json
+          python3 ../../experiments/issue-138/make-checkpoint-page-vectors.py ../../experiments/issue-138/checkpoint-pages-regenerated.json
+          cmp ../../docs/protocol/checkpoint-pages-v1.json ../../experiments/issue-138/checkpoint-pages-regenerated.json
+          python3 ../../experiments/issue-138/make-checkpoint-root-vectors.py ../../experiments/issue-138/checkpoint-root-regenerated.json
+          cmp ../../docs/protocol/checkpoint-root-mirror-v1.json ../../experiments/issue-138/checkpoint-root-regenerated.json
+          python3 ../../experiments/issue-138/make-maintenance-vectors.py ../../experiments/issue-138/maintenance-regenerated.json
+          cmp ../../docs/protocol/journal-maintenance-v1.json ../../experiments/issue-138/maintenance-regenerated.json
+          node ../../experiments/issue-138/verify-maintenance-lazy.mjs
+          python3 ../../experiments/issue-138/make-reclamation-vectors.py ../../experiments/issue-138/reclamation-regenerated.json
+          cmp ../../docs/protocol/reclamation-v1.json ../../experiments/issue-138/reclamation-regenerated.json
+          node ../../experiments/issue-138/verify-reclamation-lazy.mjs
+          node ../../experiments/issue-138/verify-reclamation-memory.mjs
+          python3 ../../experiments/issue-138/model-object-reclamation.py
+          python3 ../../experiments/issue-138/model-reclamation-readers.py
+          python3 ../../experiments/issue-138/model-chunked-journal.py
+          python3 ../../experiments/issue-138/model-chunk-reclamation.py
+          python3 ../../experiments/issue-138/model-chunk-readers.py
+          python3 ../../experiments/issue-138/build-chunk-vectors.py ../../experiments/issue-138/chunks-regenerated.json
+          cmp ../../docs/protocol/chunked-journal-vectors.json ../../experiments/issue-138/chunks-regenerated.json
+          python3 ../../experiments/issue-138/build-reclaiming-chunk-vectors.py ../../experiments/issue-138/reclaiming-chunks-regenerated.json
+          cmp ../../docs/protocol/reclaiming-chunks-vectors.json ../../experiments/issue-138/reclaiming-chunks-regenerated.json
+
+      - name: Verify finite physical LSM composition experiments
+        run: |
+          bash ../../experiments/issue-138/run-lsm-store-prototype.sh node
+          node --max-old-space-size=128 --stack-size=512 --test --test-concurrency=1 --test-timeout=30000 ../../experiments/issue-138/inspect-lsm-wal-pages.test.mjs
+
+      - name: Unit tests and complete production coverage
+        run: >-
+          node --test --test-concurrency=1 --test-timeout=30000
+          --experimental-test-coverage --test-coverage-include='src/**'
+          --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100
+          test/*.test.mjs
+
+      - name: Verify independent local batch models and vectors
+        run: |
+          python3 ../../experiments/issue-138/causal-batch-model.py
+          python3 ../../experiments/issue-138/generate-causal-batch-vectors.py ../../experiments/issue-138/causal-batch-regenerated.json
+          cmp ../../docs/protocol/causal-batch-v1.json ../../experiments/issue-138/causal-batch-regenerated.json
+
+      - name: Verify independent author takeover and guarded publication model
+        run: |
+          python3 ../../experiments/issue-138/author-fence-model.py ../../experiments/issue-138/author-fence-regenerated.json
+          cmp ../../docs/protocol/author-fence-v1.json ../../experiments/issue-138/author-fence-regenerated.json
+
+      - name: Verify independent permanent address allocation model and vectors
+        run: |
+          python3 ../../experiments/issue-138/address-allocation-model.py ../../experiments/issue-138/address-reservations-regenerated.json
+          cmp ../../docs/protocol/address-reservations-v1.json ../../experiments/issue-138/address-reservations-regenerated.json
+
+      - name: Verify independent causal projection model and vectors
+        run: |
+          python3 ../../experiments/issue-138/causal-projection-model.py --vectors ../../experiments/issue-138/causal-projection-regenerated.json
+          cmp ../../docs/protocol/causal-projection-v1.json ../../experiments/issue-138/causal-projection-regenerated.json
+          node --max-old-space-size=64 ../../examples/native-lsm-js/projection-cache.mjs
+
+      - name: Verify independent ordinary causal session model and vectors
+        run: |
+          python3 ../../experiments/issue-138/causal-session-model.py
+          python3 ../../experiments/issue-138/generate-causal-session-vectors.py ../../experiments/issue-138/causal-session-regenerated.json
+          cmp ../../docs/protocol/causal-session-v1.json ../../experiments/issue-138/causal-session-regenerated.json
+          python3 ../../experiments/issue-138/test-causal-raw-coverage.py
 
       - name: Type declarations
         run: npm run typecheck
@@ -136,7 +269,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -153,6 +286,26 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Portable checkpoint pages and replacement codecs on Bun and Deno
+        run: |
+          bun test js/client/test/cluster-maintenance.test.mjs js/client/test/reclaiming*.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/cluster-maintenance.test.mjs js/client/test/reclaiming*.test.mjs js/client/test/engine-checkpoint-pages.test.mjs js/client/test/engine-checkpoint-root.test.mjs js/client/test/engine-compaction*.test.mjs
+
+      - name: Native LSM files, ownership, process exits and finite syscall cuts
+        run: |
+          bun test js/client/test/engine-file-lsm-*.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-file-lsm-*.test.mjs
+
+      - name: Portable causal versions, local ownership and Merkle proofs on Bun and Deno
+        run: |
+          bun test js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs js/client/test/engine-author-fence.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/engine-causal-*.test.mjs js/client/test/engine-address-allocator.test.mjs js/client/test/engine-author-fence.test.mjs
+
+      - name: Verify immutable journal chunks in Bun and Deno
+        run: |
+          bun test js/client/test/partitioned-chunks.test.mjs --timeout 30000
+          deno test --allow-all js/client/test/partitioned-chunks.test.mjs
+
       - name: Cache cargo registry
         uses: actions/cache@v6
         with:
@@ -166,13 +319,132 @@ jobs:
             ${{ runner.os }}-js-client-cargo-
 
       - name: Build the Rust server
-        run: cargo build --release --manifest-path rust/Cargo.toml --bin clink
+        run: cargo build --release --manifest-path rust/Cargo.toml --features etcd,address-reservations,author-fencing --bin clink --example cluster --example address_allocation --example author_fence --example journal_maintenance --example journal_reclamation
 
       - name: Build the C# server
         run: dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
 
       - name: Build the WebAssembly store
         run: wasm-pack build --target web --out-dir ../../js/pkg rust/wasm
+
+      - name: Verify actual WASM cluster consumers over native LSM files
+        run: |
+          node --max-old-space-size=256 examples/native-lsm-js/cluster.mjs
+          bun examples/native-lsm-js/cluster.mjs
+          deno run --allow-all examples/native-lsm-js/cluster.mjs
+
+      - name: Build native coordinated example
+        run: |
+          dotnet build examples/cluster-csharp --configuration Release
+          dotnet build examples/journal-maintenance-csharp --configuration Release
+          dotnet build examples/journal-reclamation-csharp --configuration Release
+
+      - name: Verify bounded journal chunk payload costs with actual WASM
+        run: |
+          node --max-old-space-size=256 examples/journal-chunks/measure.mjs > experiments/issue-138/chunks-node-payloads.json
+          bun examples/journal-chunks/measure.mjs > experiments/issue-138/chunks-bun-payloads.json
+          deno run --allow-read --allow-env examples/journal-chunks/measure.mjs > experiments/issue-138/chunks-deno-payloads.json
+          cmp experiments/issue-138/chunks-node-payloads.json experiments/issue-138/chunks-bun-payloads.json
+          cmp experiments/issue-138/chunks-node-payloads.json experiments/issue-138/chunks-deno-payloads.json
+          node --max-old-space-size=256 examples/journal-chunks/reclaim.mjs > experiments/issue-138/chunks-reclaim-node-payloads.json
+          bun examples/journal-chunks/reclaim.mjs > experiments/issue-138/chunks-reclaim-bun-payloads.json
+          deno run --allow-read --allow-env examples/journal-chunks/reclaim.mjs > experiments/issue-138/chunks-reclaim-deno-payloads.json
+          cmp experiments/issue-138/chunks-reclaim-node-payloads.json experiments/issue-138/chunks-reclaim-bun-payloads.json
+          cmp experiments/issue-138/chunks-reclaim-node-payloads.json experiments/issue-138/chunks-reclaim-deno-payloads.json
+
+      - name: Verify complete native LSM store handoffs
+        env:
+          RUST_NATIVE_LSM_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/native_lsm
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,physical-lsm,causal-merkle,causal-batches,causal-sessions,address-reservations,author-fencing --example native_lsm
+          python3 examples/native-lsm-js/run-interop.py
+          NATIVE_LSM_LAYOUT=chunks python3 examples/native-lsm-js/run-interop.py
+          NATIVE_LSM_LAYOUT=reclaiming-chunks python3 examples/native-lsm-js/run-interop.py
+          NATIVE_LSM_LAYOUT=causal python3 examples/native-lsm-js/run-interop.py
+          python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_LSM_LAYOUT='batch' python3 examples/native-lsm-js/run-interop.py
+          NATIVE_CAUSAL_LAYOUT='batch' python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_LSM_LAYOUT='session' python3 examples/native-lsm-js/run-interop.py
+          NATIVE_CAUSAL_LAYOUT='session' python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_LSM_LAYOUT='fence' python3 examples/native-lsm-js/run-interop.py
+          NATIVE_LSM_LAYOUT='allocation' python3 examples/native-lsm-js/run-interop.py
+          NATIVE_CAUSAL_LAYOUT='allocation' python3 examples/native-lsm-js/run-causal-faults.py
+          NATIVE_CAUSAL_LAYOUT='fence' python3 examples/native-lsm-js/run-causal-faults.py
+          python3 examples/native-lsm-js/run-merkle-interop.py
+
+      - name: Verify actual consensus and language interoperability
+        env:
+          ETCD_BIN: ${{ github.workspace }}/experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64/etcd
+          MAINTENANCE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_maintenance
+          MAINTENANCE_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-maintenance-csharp/bin/Release/net10.0/JournalMaintenanceExample.dll
+          RECLAMATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/journal_reclamation
+          RECLAMATION_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/journal-reclamation-csharp/bin/Release/net10.0/JournalReclamationExample.dll
+          CLUSTER_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/cluster
+          FENCE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/author_fence
+          ALLOCATION_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/address_allocation
+          CLUSTER_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/cluster-csharp/bin/Release/net10.0/ClusterExample.dll
+        run: |
+          mkdir -p experiments/issue-138/etcd
+          curl --fail --location --retry 3 --output experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.7.3/etcd-v3.7.3-linux-amd64.tar.gz
+          printf '%s  %s\n' '5dfa9cc3b3ce3b4b491fbcc2057d3daa166bcc6676f743fcd20f8e5760cb9775' 'experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz' | sha256sum --check
+          tar -xzf experiments/issue-138/etcd/etcd-v3.7.3-linux-amd64.tar.gz -C experiments/issue-138/etcd
+          node --test --test-timeout=10000 experiments/issue-138/etcd-harness.test.mjs
+          node experiments/issue-138/etcd-maintenance.mjs
+          node experiments/issue-138/etcd-reclamation.mjs
+          RECLAMATION_CHUNKS=1 node experiments/issue-138/etcd-reclamation.mjs
+          node experiments/issue-138/etcd-cluster.mjs
+          CLUSTER_JOURNAL_CHECKPOINT_INTERVAL=1 node experiments/issue-138/etcd-cluster.mjs
+
+      - name: Verify finite checkpoint payloads with actual WASM
+        run: |
+          node examples/journal-checkpoints/measure.mjs > experiments/issue-138/checkpoint-node.json
+          bun examples/journal-checkpoints/measure.mjs > experiments/issue-138/checkpoint-bun.json
+          deno run --allow-all examples/journal-checkpoints/measure.mjs > experiments/issue-138/checkpoint-deno.json
+          cmp experiments/issue-138/checkpoint-node.json experiments/issue-138/checkpoint-bun.json
+          cmp experiments/issue-138/checkpoint-node.json experiments/issue-138/checkpoint-deno.json
+
+      - name: Verify checkpoint and physical delta composition with actual WASM
+        run: |
+          node examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-node.json
+          bun examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-bun.json
+          deno run --allow-all examples/journal-checkpoints/delta.mjs > experiments/issue-138/checkpoint-delta-deno.json
+          cmp experiments/issue-138/checkpoint-delta-node.json experiments/issue-138/checkpoint-delta-bun.json
+          cmp experiments/issue-138/checkpoint-delta-node.json experiments/issue-138/checkpoint-delta-deno.json
+
+      - name: Verify engine compaction with actual WASM and both bank modes
+        run: |
+          node examples/journal-checkpoints/compact.mjs > experiments/issue-138/checkpoint-compact-node.json
+          bun examples/journal-checkpoints/compact.mjs > experiments/issue-138/checkpoint-compact-bun.json
+          deno run --allow-all examples/journal-checkpoints/compact.mjs > experiments/issue-138/checkpoint-compact-deno.json
+          cmp experiments/issue-138/checkpoint-compact-node.json experiments/issue-138/checkpoint-compact-bun.json
+          cmp experiments/issue-138/checkpoint-compact-node.json experiments/issue-138/checkpoint-compact-deno.json
+
+      - name: Preserve checkpoint payload measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-checkpoint-payloads
+          path: experiments/issue-138/checkpoint-*.json
+          if-no-files-found: ignore
+
+      - name: Preserve journal chunk payload measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-journal-chunk-payloads
+          path: experiments/issue-138/chunks-*-payloads.json
+          if-no-files-found: ignore
+
+      - name: Preserve consensus member logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-etcd-logs
+          path: |
+            experiments/issue-138/etcd/run-*/*.log
+            experiments/issue-138/etcd/maintenance-*/*.log
+            experiments/issue-138/etcd/reclamation-*/*.log
+          if-no-files-found: ignore
 
       - name: Conformance on Node.js
         working-directory: js/client
@@ -185,6 +457,67 @@ jobs:
       - name: Conformance on Deno
         working-directory: js/client
         run: deno run --allow-all test/conformance/run.mjs
+
+      - name: SQLite journal providers and cross-language reopening
+        env:
+          CLINK_WASM: ${{ github.workspace }}/js/pkg
+        run: |
+          node experiments/issue-138/sqlite-adapter-contracts.mjs
+          bun experiments/issue-138/sqlite-adapter-contracts.mjs
+          deno run --allow-all experiments/issue-138/sqlite-adapter-contracts.mjs
+          cargo build --release --manifest-path rust/Cargo.toml --features sqlite --example engine_sqlite
+          dotnet build examples/sqlite-csharp --configuration Release
+          sqlite_data=$(mktemp -d)
+          for validation in scan indexed; do
+            for structure in shared flat; do
+              for encoding in changes snapshot; do
+                for physical in plain delta; do
+                  flags=(--references)
+                  if [[ "$validation" == indexed ]]; then flags+=(--indexed-constraints); fi
+                  if [[ "$structure" == flat ]]; then flags+=(--flat); fi
+                  if [[ "$encoding" == snapshot ]]; then flags+=(--snapshot); fi
+                  if [[ "$physical" == delta ]]; then flags+=(--delta); fi
+                  database="$sqlite_data/$validation-$structure-$encoding-$physical.db"
+                  rust/target/release/examples/engine_sqlite "$database" "${flags[@]}"
+                  dotnet examples/sqlite-csharp/bin/Release/net10.0/SqliteExample.dll "$database" "${flags[@]}"
+                  node js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                  bun js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                  deno run --allow-all js/client/examples/engine-sqlite.mjs "$database" "${flags[@]}"
+                done
+              done
+            done
+          done
+
+      - name: Native doublets pages and cross-language reopening
+        env:
+          CLINK_WASM: ${{ github.workspace }}/js/pkg
+          NATIVE_PAGES_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/engine_native_pages
+          NATIVE_PAGES_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/native-pages-csharp/bin/Release/net10.0/NativePagesExample.dll
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages --example engine_native_pages
+          dotnet build examples/native-pages-csharp --configuration Release
+          bash examples/native-pages/run-interop.sh
+          bash examples/journal-checkpoints/run-paged-interop.sh
+          bash examples/journal-checkpoints/run-native-compact-interop.sh
+
+      - name: Immutable physical sorted table interchange
+        env:
+          SORTED_TABLE_RUST_EXAMPLE: ${{ github.workspace }}/rust/target/release/examples/sorted_table
+          SORTED_TABLE_CSHARP_EXAMPLE: ${{ github.workspace }}/examples/sorted-tables-csharp/bin/Release/net10.0/SortedTablesExample.dll
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml --no-default-features --features native-pages,sorted-tables --example sorted_table
+          dotnet build examples/sorted-tables-csharp --configuration Release
+          bash examples/sorted-tables/run-interop.sh
+
+      - name: Preserve native checkpoint page handoffs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: issue-138-checkpoint-pages
+          path: |
+            experiments/issue-138/checkpoint-paged-interop.log
+            experiments/issue-138/native-compact-interop.log
+          if-no-files-found: ignore
 
       # A small run of the acceptance benchmark: it exits non-zero unless a
       # fresh client reads back exactly what was written. Full-size numbers

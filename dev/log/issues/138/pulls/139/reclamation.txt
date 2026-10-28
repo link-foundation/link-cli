@@ -1,0 +1,142 @@
+Selected epoch-fenced reclamation; https://github.com/link-foundation/link-cli/pull/139
+Missing-feature baseline 44e0fa889e291db571b7e987cc1b7e06764f8ae7; reclamation-before.txt.
+Reproduce complete validation: bash experiments/issue-138/validate-reclamation.sh
+START native 2026-10-26T21:49:03Z
+PASS native; START csharp 2026-10-26T22:01:31Z
+PASS csharp; START wasm 2026-10-26T22:09:53Z
+PASS wasm; START javascript 2026-10-26T22:14:38Z
+PASS javascript; START real-etcd 2026-10-26T22:16:38Z
+PASS real-etcd; START repository 2026-10-26T22:17:28Z
+Independent vectors: 30 addresses, 13 epoch cases, 22 pointer cases; compare with actual public APIs.
+PASS repository; ALL PASSED 2026-10-26T22:17:42Z
+Sequential compilers: Cargo jobs1/reduced debug; .NET heap640MiB; actual-WASM verified max256MiB.
+Independent wire vectors: 30 addresses, 13 epoch cases, 22 pointer cases; all three implementations consume them.
+
+Native Rust: 1057 passed; 18 child entries ignored by direct discovery.
+Complete lines: 14480/15307 (94.59724%)
+Complete branches: 2737/3164 (86.50442%)
+Complete functions: 1868/2008 (93.02789%)
+/rust/src/engine/reclaiming.rs lines: 198/207 (95.65217%)
+/rust/src/engine/reclaiming.rs branches: 37/46 (80.43478%)
+/rust/src/engine/reclaiming.rs functions: 14/14 (100.00000%)
+/rust/src/engine/reclaiming/codec.rs lines: 163/166 (98.19277%)
+/rust/src/engine/reclaiming/codec.rs branches: 47/50 (94.00000%)
+/rust/src/engine/reclaiming/codec.rs functions: 22/24 (91.66667%)
+/rust/src/engine/reclaiming/collector.rs lines: 57/58 (98.27586%)
+/rust/src/engine/reclaiming/collector.rs branches: 14/14 (100.00000%)
+/rust/src/engine/reclaiming/collector.rs functions: 3/4 (75.00000%)
+
+Actual WASM: 656 passed; 0 child entries ignored by direct discovery.
+Complete lines: 11667/14037 (83.11605%)
+Complete branches: 2294/2747 (83.50928%)
+Complete functions: 1470/1848 (79.54545%)
+/rust/src/engine/reclaiming.rs lines: 198/207 (95.65217%)
+/rust/src/engine/reclaiming.rs branches: 37/46 (80.43478%)
+/rust/src/engine/reclaiming.rs functions: 14/14 (100.00000%)
+/rust/src/engine/reclaiming/codec.rs lines: 163/166 (98.19277%)
+/rust/src/engine/reclaiming/codec.rs branches: 47/50 (94.00000%)
+/rust/src/engine/reclaiming/codec.rs functions: 22/24 (91.66667%)
+/rust/src/engine/reclaiming/collector.rs lines: 57/58 (98.27586%)
+/rust/src/engine/reclaiming/collector.rs branches: 14/14 (100.00000%)
+/rust/src/engine/reclaiming/collector.rs functions: 3/4 (75.00000%)
+/rust/wasm/src/engine.rs lines: 263/263 (100.00000%)
+/rust/wasm/src/engine.rs branches: 6/6 (100.00000%)
+/rust/wasm/src/engine.rs functions: 50/50 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.64s
+
+C# Debug: 2307 passed; zero failed/skipped.
+Complete lines: 8627/8921 (96.70441%)
+Complete branches: 4851/5228 (92.78883%)
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore [ReclaimingCollector.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore [ReclaimingPartitionedJournalStore.cs]: lines 100.00%; branches 95.83%
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore/Snapshot [ReclaimingPartitionedJournalStore.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore/Group [ReclaimingPartitionedJournalStore.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclamationCodec [ReclamationCodec.cs]: lines 100.00%; branches 93.42%
+Foundation.Data.Doublets.Cli.Engine.ReclamationCodec/Pointer [ReclamationCodec.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclamationOptions [ReclamationOptions.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclamationResult [ReclamationOptions.cs]: lines 100.00%; branches 100.00%
+
+C# Release: 2307 passed; zero failed/skipped.
+Complete lines: 6627/6813 (97.26993%)
+Complete branches: 4795/5191 (92.37141%)
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore [ReclaimingCollector.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore [ReclaimingPartitionedJournalStore.cs]: lines 100.00%; branches 95.83%
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore/Snapshot [ReclaimingPartitionedJournalStore.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclaimingPartitionedJournalStore/Group [ReclaimingPartitionedJournalStore.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclamationCodec [ReclamationCodec.cs]: lines 100.00%; branches 93.42%
+Foundation.Data.Doublets.Cli.Engine.ReclamationCodec/Pointer [ReclamationCodec.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclamationOptions [ReclamationOptions.cs]: lines 100.00%; branches 100.00%
+Foundation.Data.Doublets.Cli.Engine.ReclamationResult [ReclamationOptions.cs]: lines 100.00%; branches 100.00%
+JS: {'tests': 518, 'pass': 518, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Bun/Deno each pass all159 selected tests; strict TypeScript and JS100% full production coverage pass.
+PASS lazy reclamation: ordinary coordinator and blob1 reads load no selected helpers; explicit selection loads before I/O.
+PASS deterministic test provider: atomic guards, owned values, non-reused generations/ABA, complete limits, read-only comparisons and mutation-before-response loss. No production collector or durability claim.
+
+Negative control no epoch CAS: live-object loss reproduced after 263 states
+  writer0: snapshot epoch=0 pointer=(0, 'A')
+  writer0: stage (0, 'B')
+  writer0: publish (0, 'B') accepted=True
+  writer1: snapshot epoch=0 pointer=(0, 'B')
+  writer1: stage (0, 'C')
+  collector0: advance to epoch=1
+  collector0: snapshot pointer=(0, 'B')
+  writer1: publish (0, 'C') accepted=True
+  collector0: list candidates=((0, 'A'), (0, 'C'))
+  collector0: delete (0, 'A')
+  collector0: delete (0, 'C')
+Negative control no epoch namespace: live-object loss reproduced after 1588 states
+  writer0: snapshot epoch=0 pointer=(0, 'A')
+  writer0: stage (0, 'B')
+  writer0: publish (0, 'B') accepted=True
+  collector0: advance to epoch=1
+  writer1: snapshot epoch=1 pointer=(0, 'B')
+  writer1: stage (0, 'C')
+  collector0: snapshot pointer=(0, 'B')
+  writer1: publish (0, 'C') accepted=True
+  collector0: list candidates=((0, 'A'), (0, 'C'))
+  collector0: delete (0, 'A')
+  collector0: delete (0, 'C')
+Fenced model writers=2 collectors=1: 2199 complete unique states, 20 terminal states; live pointers retain objects
+Fenced model writers=1 collectors=2: 2739 complete unique states, 7 terminal states; live pointers retain objects
+Fenced model writers=2 collectors=2: 70859 complete unique states, 37 terminal states; live pointers retain objects
+Finite safety model only; no production implementation, provider-fault or physical-durability claim.
+
+Negative control: fractured multi-shard read after 18 states
+  reader: capture whole catalog ('a0', 'b0')
+  writer: publish both shard pointers atomically
+  reader: own a0
+  collector: retire both old objects
+  reader: unsafe refresh of only missing shard
+  reader: own b1
+Whole-group refresh: 20 complete states, 5 coherent terminal views
+ABA negative/positive controls: delete-by-name loses replacement; exact generation preserves it
+Design model only; no provider, production implementation or physical durability claim.
+
+PASS Rust reclamation: revision 1, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 0 retired objects
+PASS C# reclamation: revision 2, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS WASM reclamation: revision 3, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS WASM reclamation: revision 4, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS WASM reclamation: revision 5, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS real etcd: initialization before response loss, one mutation send, fresh recovery and collection
+PASS real etcd: initialization after response loss, one mutation send, fresh recovery and collection
+PASS real etcd: staging before response loss, one mutation send, fresh recovery and collection
+PASS real etcd: staging after response loss, one mutation send, fresh recovery and collection
+PASS real etcd: publication before response loss, one mutation send, fresh recovery and collection
+PASS real etcd: publication after response loss, one mutation send, fresh recovery and collection
+PASS real etcd: fence before response loss, one mutation send, fresh recovery and collection
+PASS real etcd: fence after response loss, one mutation send, fresh recovery and collection
+PASS real etcd: deletion before response loss, one mutation send, fresh recovery and collection
+PASS real etcd: deletion after response loss, one mutation send, fresh recovery and collection
+PASS real etcd: retired two-shard snapshot refresh returns one complete new group
+PASS real etcd: owned retired journals, warm-cache data outage, catalog remains required
+PASS Rust reclamation: revision 6, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS C# reclamation: revision 7, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS WASM reclamation: revision 8, atomic checkpoints, all retained history, deleted allocator gap, owned stale conflict, 2 retired objects
+PASS real etcd: native/WASM handoffs after leader loss, majority loss gives no partial read or false publication/collection acknowledgment
+PASS all reclamation integration contracts; retained server logs /tmp/gh-issue-solver-1792987800525/experiments/issue-138/etcd/reclamation-nWtmzY
+Freshly built bounded WASM engine used by actual Node/Bun/Deno handoffs; all child processes reaped.
+Vector regeneration, formatting, strict native/WASM Clippy, SQLite optionality, changesets, source limits, repository tests, actionlint and ShellCheck pass.
+Namespace ownership, nonreused generations and preserved epoch identity are provider/application assumptions.
+Bounded models and process/network probes do not certify physical device power loss.
+Whole-project Rust/C#/linked-WASM coverage and wider R1-R12 criteria remain unfinished; no denominator is reduced.

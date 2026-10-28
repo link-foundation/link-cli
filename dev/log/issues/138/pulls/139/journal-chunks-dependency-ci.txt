@@ -1,0 +1,22 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Failed head: 860a47f06823f00d9f18190b5f363e80298da80e (06:29:42Z)
+Run: https://github.com/link-foundation/link-cli/actions/runs/40461446999
+Run created: 2026-10-27T06:29:54Z; failure: 06:30:20Z.
+Complete log: experiments/issue-138/ci-logs/dependencies-40461446999.log
+Lines 194-204: 126 declarations checked; js/package.json and js/package-lock.json
+both resolve lucide-react 1.61.0 while the registry has released 1.62.0.
+The preceding 8d2ecdf freshness run passed at 05:38:54Z. This new release is a
+fresh failure, unrelated to immutable journal data or the reclamation protocol.
+
+Update the direct declaration and lockfile to 1.62.0 without changing policy.
+Local npm installation audits 23 packages with zero reported vulnerabilities.
+Authenticated check-latest-dependencies.mjs passes all 126 declarations and
+Cargo.lock files. All 221 repository JavaScript/script tests pass.
+Vite 8.3.5 production build passes with the existing explicitly bounded WASM
+engine and newly generated web binding. The initial build lacked the ignored
+js/pkg binding; generating it from the already validated raw WASM resolves that
+local artifact prerequisite without changing production sources.
+
+Logs: experiments/issue-138/chunks-lucide-{installed,freshness,policy,
+web-binding,build,build-after}.log. Check fresh correction-head CI separately.
+The unfinished chunks2 implementation is excluded from this atomic commit.

@@ -1,0 +1,53 @@
+Read-only checkpoint inspection validation; https://github.com/link-foundation/link-cli/pull/139
+Missing-API baseline: bc364d2e09100bc5bd0d93274b2ecd870e31b66e.
+Reproduce: bash experiments/issue-138/validate-checkpoint-inspect.sh
+START native 2026-10-27T02:04:48Z
+PASS native; START csharp 2026-10-27T02:19:04Z
+PASS csharp; START wasm 2026-10-27T02:29:04Z
+PASS wasm; START javascript 2026-10-27T02:34:18Z
+PASS javascript; START native interchange 2026-10-27T02:37:05Z
+PASS native interchange; START repository 2026-10-27T02:37:26Z
+PASS repository; ALL PASSED 2026-10-27T02:37:37Z
+Sequential compilers: Cargo jobs1/reduced debug, .NET640MiB, actual-WASM max256MiB.
+
+Native Rust: 1102 passed; 19 child entries ignored by direct discovery.
+Complete lines: 15716/16589 (94.73748%)
+Complete branches: 3036/3518 (86.29903%)
+Complete functions: 2014/2170 (92.81106%)
+Component src/engine/paged/checkpoint_inspect.rs
+lines: 61/62 (98.38710%)
+branches: 32/34 (94.11765%)
+functions: 3/3 (100.00000%)
+
+Actual WASM: 698 passed; 0 child entries ignored by direct discovery.
+Complete lines: 12900/15319 (84.20915%)
+Complete branches: 2593/3101 (83.61819%)
+Complete functions: 1615/2010 (80.34826%)
+Component src/engine/paged/checkpoint_inspect.rs
+lines: 61/62 (98.38710%)
+branches: 32/34 (94.11765%)
+functions: 3/3 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.06s
+
+C# Debug: 2375 passed; zero failed/skipped.
+Complete lines: 9066/9369 (96.76593%)
+Complete branches: 5391/5826 (92.53347%)
+
+C# Release: 2375 passed; zero failed/skipped.
+Complete lines: 6990/7184 (97.29955%)
+Complete branches: 5342/5789 (92.27846%)
+JS: {'tests': 576, 'pass': 576, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Bun/Deno: all 217 selected tests each; strict TypeScript and JS 100% production coverage pass.
+Formatting, strict Clippy, SQLite optionality, source limits, changesets, actionlint and ShellCheck pass.
+Existing immutable-table interchange, Rust/C#/Node/Bun/Deno: all 25 writer/reader pairs pass.
+Every reader preserves three physical file hashes and releases ownership.
+Independent binary-page, immutable-table and 111-case semantic WAL fixtures regenerate identically.
+Owned inspection retains the selected complete record prefix without identity allocation, writes, truncation, repair completion or device closure.
+Shared native Rust tests execute on actual WASM; C# and JS include equivalent controls.
+Controls cover every observed selected-prefix read failure before/after the effect, finite limits, empty/partial initialization, identity/mode/decision conflicts, selected corruption and ignored suffixes.
+Real mirrored root/bank decorators stage repairs during inspection; ordinary recovery alone completes those repairs after successful validation.
+Physical LSM consumers reject missing selected tables before truncating a staged WAL suffix.
+Rust and actual WASM coverage retain complete production denominators, including all uncovered source.
+This API borrows devices and does not implement native directory ownership or whole-store process-exit interchange.
+Native directory/read-only discovery, full native file-store implementations, whole-project 100% coverage and every other unmet R1-R12 criterion remain unfinished.

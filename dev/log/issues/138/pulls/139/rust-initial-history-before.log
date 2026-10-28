@@ -1,0 +1,67 @@
+   Compiling link-cli v1.0.9 (<repository>/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.21s
+     Running tests/version_initial_abort_tests.rs (rust/target/debug/deps/version_initial_abort_tests-f21fda9c1da88216)
+
+running 9 tests
+
+thread 'construction_rejects_a_transaction_with_a_live_owner' (902267) panicked at tests/version_initial_abort_tests.rs:137:5:
+assertion failed: VersionControlDecorator::new(tx, branches, false).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test construction_rejects_a_transaction_with_a_live_owner ... FAILED
+
+thread 'all_pending_records_are_not_versions' (902264) panicked at tests/version_initial_abort_tests.rs:65:9:
+assertion `left == right` failed
+  left: 2
+ right: 0
+test all_pending_records_are_not_versions ... FAILED
+
+thread 'all_aborted_records_are_not_versions' (902263) panicked at tests/version_initial_abort_tests.rs:65:9:
+assertion `left == right` failed
+  left: 2
+ right: 0
+test all_aborted_records_are_not_versions ... FAILED
+
+thread 'an_existing_sidecar_must_reject_recovered_pending_versions' (902265) panicked at tests/version_initial_abort_tests.rs:175:18:
+aborted sequence 3 was accepted from an existing sidecar
+test an_existing_sidecar_must_reject_recovered_pending_versions ... FAILED
+
+thread 'an_existing_sidecar_must_reject_rolled_back_versions' (902266) panicked at tests/version_initial_abort_tests.rs:175:18:
+aborted sequence 3 was accepted from an existing sidecar
+test an_existing_sidecar_must_reject_rolled_back_versions ... FAILED
+
+thread 'interleaved_abort_is_not_reachable' (902268) panicked at tests/version_initial_abort_tests.rs:68:13:
+aborted sequence 3 must not be reachable
+test interleaved_abort_is_not_reachable ... FAILED
+
+thread 'trailing_pending_does_not_advance_initial_head' (902271) panicked at tests/version_initial_abort_tests.rs:65:9:
+assertion `left == right` failed
+  left: 3
+ right: 2
+test trailing_pending_does_not_advance_initial_head ... FAILED
+
+thread 'trailing_abort_does_not_advance_initial_head' (902270) panicked at tests/version_initial_abort_tests.rs:65:9:
+assertion `left == right` failed
+  left: 3
+ right: 2
+test trailing_abort_does_not_advance_initial_head ... FAILED
+
+thread 'interleaved_recovered_pending_is_not_reachable' (902269) panicked at tests/version_initial_abort_tests.rs:68:13:
+aborted sequence 3 must not be reachable
+test interleaved_recovered_pending_is_not_reachable ... FAILED
+
+failures:
+
+failures:
+    all_aborted_records_are_not_versions
+    all_pending_records_are_not_versions
+    an_existing_sidecar_must_reject_recovered_pending_versions
+    an_existing_sidecar_must_reject_rolled_back_versions
+    construction_rejects_a_transaction_with_a_live_owner
+    interleaved_abort_is_not_reachable
+    interleaved_recovered_pending_is_not_reachable
+    trailing_abort_does_not_advance_initial_head
+    trailing_pending_does_not_advance_initial_head
+
+test result: FAILED. 0 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
+
+error: test failed, to rerun pass `--test version_initial_abort_tests`

@@ -1,0 +1,66 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <worktree>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <worktree>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.32]     Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: False, phase: "commit") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: False, phase: "commit") [322 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Boolean revert, String phase) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionReplayOwnerTests.cs:line 42
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:01.45]     Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: False, phase: "pending") [FAIL]
+[xUnit.net 00:00:01.54]     Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: True, phase: "commit") [FAIL]
+[xUnit.net 00:00:01.61]     Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: False, phase: "rollback") [FAIL]
+[xUnit.net 00:00:01.69]     Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: True, phase: "rollback") [FAIL]
+[xUnit.net 00:00:01.75]     Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: True, phase: "pending") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: False, phase: "pending") [141 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Boolean revert, String phase) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionReplayOwnerTests.cs:line 42
+   at InvokeStub_TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: True, phase: "commit") [91 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Boolean revert, String phase) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionReplayOwnerTests.cs:line 42
+   at InvokeStub_TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: False, phase: "rollback") [68 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Boolean revert, String phase) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionReplayOwnerTests.cs:line 42
+   at InvokeStub_TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: True, phase: "rollback") [72 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Boolean revert, String phase) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionReplayOwnerTests.cs:line 42
+   at InvokeStub_TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(revert: True, phase: "pending") [60 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.InvalidOperationException)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Boolean revert, String phase) in <worktree>/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionReplayOwnerTests.cs:line 42
+   at InvokeStub_TransactionReplayOwnerTests.UnloggedReplayWaitsForLiveOwner(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     6, Passed:     0, Skipped:     0, Total:     6, Duration: 793 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

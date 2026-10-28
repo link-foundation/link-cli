@@ -1,0 +1,60 @@
+Optional two-copy native page repair — Rust, 2026-10-26 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+
+Before: experiments/issue-138/mirrored-rust-before.log records unresolved
+MirroredPageDevice and RepairPageDevice imports. Independent mode-1 bytes and
+damage vectors precede provider implementation. The default mode-0 bytes and
+file ownership convention remain unchanged.
+
+Final sequential validator exits zero. Complete native all-features LLVM
+coverage: 922 passed, zero failed; 17 ignored child entries are exercised by
+bounded parents. Actual WASM LLVM coverage: 539 passed, zero failed/ignored.
+Native/WASM formatting and strict Clippy, optional-SQL resolved-dependency
+guards and the public native example build pass. Focused final contracts pass
+34 library, three native-file and eight portable tests; the native file suite
+has one separately ignored child entry. Portable mirror contracts execute both
+natively and in actual WASM.
+
+Exact independent initialization/group bytes, 36 damage vectors, flush/repair
+failures before and after every effect, stale valid pages/decisions, canonical
+validation before repair, both-copy loss, conflicting identities/decisions,
+unreadable copies, changed repair sources, portable bounds, tail cleanup fences,
+repeated recovery and following commits are covered. The native adapter checks
+partial acquisition, foreign owners and all eight failed closes: all handles
+are attempted once, both uncertain owner files remain, and retry never closes
+consumed handles. Bounded child probes cap output, use finite deadlines, and
+remove ownership only after observing process exit.
+
+Sixteen engine policy compositions cover independent state maps, record
+encoding, constraint validation and delta encoding, two replicas, grouped
+commits, pins, rejected constraints, rollback and exact reopening. The same
+next-record flush after 0/1/32 prior groups performs two new page writes, two
+metadata writes and four syncs, with no historical device reads or writes.
+
+The final public shared-file recipe passes 32 configurations / 192 writer
+invocations through Rust -> Node -> Bun -> C# -> Deno -> Rust. Every file ends
+with twelve exact revisions and prior names. Each mirrored handoff damages one
+closed data copy and its metadata; the following provider repairs to matching
+bytes and appends another acknowledged group. Both owner files are absent
+after each successful native close.
+
+Complete project coverage, preserving the complete report denominators:
+Native: 12,812/13,643 lines (93.91%), 2,381/2,816 branches (84.55%),
+1,638/1,771 functions (92.49%).
+Actual linked WASM: 9,540/12,693 lines (75.16%), 1,866/2,419 branches (77.14%),
+1,235/1,690 functions (73.08%). Whole-project 100% remains unmet.
+
+Final logs: mirrored-rust-final-validation.log; paged-{rust,wasm}-{full,clippy}.log;
+paged-{rust,wasm}-coverage.json; paged-rust-{optional,example-build,js-interop}.log.
+Focused: mirrored-rust-final-focused.log. Reproduce with
+experiments/issue-138/validate-rust-native-pages.sh, CLINK_WASM pointing to an
+actual web package and NATIVE_PAGES_CSHARP_EXAMPLE to the built Release example.
+The earlier full mirror run passed 919/537 but lacked a C# Debug example at its
+final recipe stage; it is not the successful final run recorded here.
+
+Assumptions: successful synchronization, preservation outside later writes and
+one expected surviving copy per damaged item. FNV detects accidental corruption,
+not hostile modification. This is selected two-copy shadow-page repair, not an
+InnoDB doublewrite buffer, legacy mapped repair, backup or consensus. Process
+exit tests are not physical power-loss certification. Fresh exact-head CI is
+required after publication; the wider issue remains unfinished.

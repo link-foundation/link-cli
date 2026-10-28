@@ -1,0 +1,24 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-version-setup-before.sh
+Reproduce: bash experiments/issue-138/validate-version-setup.sh
+Immutable 950bcb3: completed-creation boundary fails; independent duplicate-row behavior control passes.
+START 2026-10-27T11:12:48Z
+FOCUSED PASS 2026-10-27T11:14:42Z
+CSHARP Debug PASS 2026-10-27T11:17:51Z
+CSHARP Release PASS 2026-10-27T11:22:09Z
+ALL PASS 2026-10-27T11:22:31Z
+31 focused controls pass: two setup boundaries, twelve actual version exits and seventeen finite supervision controls.
+Actual creation returns before its reported phase; update begins afterward. Duplicate-row effects/results match the unchanged combined helper on a separate real store.
+The child enables existing transaction/version tracing; production tracing remains off by default.
+The 15-second idle bound, 64 finite phases, bounded capture, actual operations and unconditional reaping are unchanged.
+C# Debug: 2462 passed; zero failed/skipped.
+Complete lines: 9417/9726 (96.82295%).
+Complete branches: 5699/6144 (92.75716%).
+C# Release: 2462 passed; zero failed/skipped.
+Complete lines: 7270/7471 (97.30960%).
+Complete branches: 5643/6105 (92.43243%).
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+Formatting, TS declarations, source-size, changeset, dependency freshness and workflow/ShellCheck checks pass.
+This establishes operation-boundary visibility, not the original Windows host's exact scheduling or physical I/O cause.
+No production coverage denominator is removed. Complete native/C#/linked-WASM 100% and all other unmet R1-R12 requirements remain unfinished.
+Fresh exact-head platform CI remains required; the PR stays draft and unmerged.

@@ -1,0 +1,65 @@
+Selected reclamation missing-feature and regression evidence; https://github.com/link-foundation/link-cli/pull/139
+Baseline: 44e0fa889e291db571b7e987cc1b7e06764f8ae7; actual missing-API tests ran before implementation.
+Reproducer: experiments/issue-138/run-reclamation-before.sh in a clean isolated baseline worktree.
+Fixtures: reclamation-before.rs, ReclamationBeforeTests.cs, reclamation-initial.test.mjs and reclamation-memory.mjs.
+Independent bounded models retain unsafe negative controls without epoch guard, epoch-specific names or whole-group refresh.
+
+reclamation-rust-before.log:
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+error[E0432]: unresolved import `link_cli::engine::reclaiming`
+ --> tests/engine_reclaiming_tests.rs:4:5
+  |
+4 |     reclaiming::{ReclaimingPartitionedJournalStore, ReclamationOptions},
+  |     ^^^^^^^^^^ could not find `reclaiming` in `engine`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `link-cli` (test "engine_reclaiming_tests") due to 1 previous error
+
+
+reclamation-csharp-before.log:
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> <workspace>/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> <workspace>/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/ReclamationBeforeTests.cs(10,58): error CS0103: The name 'ReclaimingPartitionedJournalStore' does not exist in the current context [<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/ReclamationBeforeTests.cs(12,30): error CS0246: The type or namespace name 'ReclamationOptions' could not be found (are you missing a using directive or an assembly reference?) [<workspace>/csharp/Foundation.Data.Doublets.Cli.Tests/Foundation.Data.Doublets.Cli.Tests.csproj]
+
+
+reclamation-js-before.log:
+file://<workspace>/js/client/test/reclaiming.test.mjs:4
+import { ReclaimingPartitionedJournalStore } from '../src/index.js';
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: The requested module '../src/index.js' does not provide an export named 'ReclaimingPartitionedJournalStore'
+    at #asyncInstantiate (node:internal/modules/esm/module_job:463:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:561:5)
+    at async node:internal/modules/esm/loader:650:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)
+
+Node.js v26.12.1
+✖ js/client/test/reclaiming.test.mjs (111.495725ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.310128
+
+✖ failing tests:
+
+test at js/client/test/reclaiming.test.mjs:1:1
+✖ js/client/test/reclaiming.test.mjs (111.495725ms)
+  'test failed'
+
+
+Additional test-first defects exposed while implementing the new strategy:
+- Sparse JS updates/expected arrays staged before complete input validation; contradictory protected generations were accepted. Array.from validation and root contradiction checks now reject before I/O/deletion.
+- UTF-8 decoder stripped a leading BOM during JS record validation. Independent shared Unicode address vectors failed in three epoch cases; ignoreBOM preserves the original scalar string.
+- Rust/C#/JS initially deleted a live object when two partition providers aliased a physical namespace. A shared physical key is now protected across all partition names; exact per-partition generation validation remains.
+- All three readers initially accepted a changed pointer with a reused catalog generation during missing-object refresh. Reproducing tests now require both generation and pointer changes before one whole-group retry.
+- JS classified malformed snapshots as not-sent after the collector had already advanced its fence. All 24 catalog/data corruption cases failed an explicit unknown-outcome assertion before the fix; reply validation now conservatively preserves a possibly changed backend. reclamation-outcome-before.log preserves the failures.
+- Eight further JS cases first fail when a later request is not-sent/failed after successful initialization, staging, fencing or one deletion. Composite mutation boundaries now preserve unknown outcome and the original cause; reclamation-composite-before.log preserves these failures.
+These failures were preserved privately before their fixes in reclamation-{js-edge,js-faults,alias,rust-alias,csharp-alias,catalog-generation,rust-generation,csharp-generation}-before logs (the Unicode run is reclamation-js-faults.log).
+Focused after checks pass 25 Rust, 39 C#, 145 JS; full validation follows independently.
+Final selected JS controls pass 159 cases with 100% lines/branches/functions in every selected production module.

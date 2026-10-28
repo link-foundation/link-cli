@@ -168,7 +168,7 @@ var checkoutOption = new Option<string?>("--checkout")
 
 var tagOption = new Option<string?>("--tag")
 {
-    Description = "Create a tag in the form 'name' (at current head) or 'name=<seq>'. Implies --vc."
+    Description = "Create a tag as 'name' (current head) or 'name=<sequence-or-tag>'. Uses the first '=' whose suffix resolves. Implies --vc."
 };
 
 var listBranchesOption = new Option<bool>("--list-branches")
@@ -380,42 +380,27 @@ rootCommand.SetAction(
           }
       }
 
-      var baseLinks = new NamedTypesDecorator<uint>(db, trace);
+      // Each layer borrows its stores. Dispose wrappers before their stores,
+      // including when construction of a later layer fails.
+      using var baseLinks = new NamedTypesDecorator<uint>(db, trace);
       INamedTypesLinks<uint> decoratedLinks = baseLinks;
-      NamedTypesDecorator<uint>? transitionsStore = null;
-      NamedTypesDecorator<uint>? vcBranchesStore = null;
-      TransactionsDecorator? transactionsLinks = null;
-      VersionControlDecorator? vcLinks = null;
+      using var transitionsStore = transactionsRequested
+        ? new NamedTypesDecorator<uint>(!string.IsNullOrWhiteSpace(transactionsPathRaw)
+            ? transactionsPathRaw : TransactionsDecorator.MakeTransitionsDatabaseFilename(db), trace)
+        : null;
+      using var transactionsLinks = transitionsStore is not null
+        ? new TransactionsDecorator(baseLinks, transitionsStore, retentionPolicy, commitMode, trace)
+        : null;
+      if (transactionsLinks is not null) decoratedLinks = transactionsLinks;
 
-      if (transactionsRequested)
-      {
-          var effectiveTransactionsFile = !string.IsNullOrWhiteSpace(transactionsPathRaw)
-            ? transactionsPathRaw
-            : TransactionsDecorator.MakeTransitionsDatabaseFilename(db);
-          transitionsStore = new NamedTypesDecorator<uint>(effectiveTransactionsFile, trace);
-          transactionsLinks = new TransactionsDecorator(
-            baseLinks,
-            transitionsStore,
-            retentionPolicy,
-            commitMode,
-            trace);
-          decoratedLinks = transactionsLinks;
-      }
-
-      if (vcRequested)
-      {
-          if (transactionsLinks is null)
-          {
-              Console.Error.WriteLine("--vc requires the transactions layer (this should have been auto-enabled).");
-              return 1;
-          }
-          var effectiveVcFile = !string.IsNullOrWhiteSpace(vcFile)
-            ? vcFile
-            : VersionControlDecorator.MakeVersionControlDatabaseFilename(db);
-          vcBranchesStore = new NamedTypesDecorator<uint>(effectiveVcFile, trace);
-          vcLinks = new VersionControlDecorator(transactionsLinks, vcBranchesStore, trace);
-          decoratedLinks = vcLinks;
-      }
+      using var vcBranchesStore = vcRequested
+        ? new NamedTypesDecorator<uint>(!string.IsNullOrWhiteSpace(vcFile)
+            ? vcFile : VersionControlDecorator.MakeVersionControlDatabaseFilename(db), trace)
+        : null;
+      using var vcLinks = vcBranchesStore is not null && transactionsLinks is not null
+        ? new VersionControlDecorator(transactionsLinks, vcBranchesStore, trace)
+        : null;
+      if (vcLinks is not null) decoratedLinks = vcLinks;
 
       PersistentTransformationDecorator? persistentLinks = null;
       var defaultTriggersFile = PersistentTransformationDecorator.MakeTriggersDatabaseFilename(db);
@@ -428,11 +413,12 @@ rootCommand.SetAction(
         || !string.IsNullOrWhiteSpace(triggersFile)
         || File.Exists(effectiveTriggersFile);
 
+      using var separateTriggersStore = persistentTransformationsEnabled && !embedTriggers
+        ? new NamedTypesDecorator<uint>(effectiveTriggersFile, trace)
+        : null;
       if (persistentTransformationsEnabled)
       {
-          var triggerLinks = embedTriggers
-            ? (INamedTypesLinks<uint>)baseLinks
-            : new NamedTypesDecorator<uint>(effectiveTriggersFile, trace);
+          var triggerLinks = (INamedTypesLinks<uint>?)separateTriggersStore ?? baseLinks;
           persistentLinks = new PersistentTransformationDecorator(decoratedLinks, triggerLinks, trace)
           {
               AutoCreateMissingReferences = autoCreateMissingReferences
@@ -440,14 +426,7 @@ rootCommand.SetAction(
           decoratedLinks = persistentLinks;
       }
 
-      try
-      {
-          return RunCli();
-      }
-      finally
-      {
-          transactionsLinks?.Shutdown();
-      }
+      return RunCli();
 
       int RunCli()
       {
@@ -511,13 +490,21 @@ rootCommand.SetAction(
                   }
                   else
                   {
-                      tagName = tagSpec.Substring(0, eq);
                       var point = tagSpec.Substring(eq + 1);
-                      if (!TryResolveSequence(vcLinks, point, out var resolved))
+                      var separator = eq;
+                      long resolved;
+                      // Preserve existing aliases before trying delimiters in
+                      // the name: alias=release=0 may refer to tag release=0.
+                      while (!TryResolveSequence(vcLinks, tagSpec.Substring(separator + 1), out resolved))
                       {
-                          Console.Error.WriteLine($"Unknown tag point '{point}'.");
-                          return 1;
+                          separator = tagSpec.IndexOf('=', separator + 1);
+                          if (separator < 0)
+                          {
+                              Console.Error.WriteLine($"Unknown tag point '{point}'.");
+                              return 1;
+                          }
                       }
+                      tagName = tagSpec.Substring(0, separator);
                       tagSeq = resolved;
                   }
                   try

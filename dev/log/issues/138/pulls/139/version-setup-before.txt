@@ -1,0 +1,16 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Reproduce: bash experiments/issue-138/run-version-setup-before.sh
+Immutable baseline: 950bcb34ed060674ed3896f1deb187706be62c09.
+Archived C# and protocol fixtures are unchanged; the original combined call is extracted into a callable test helper without changing its effects.
+Only the new two-case test is added. Both cases use real finite mapped stores.
+Actual final result: one failed boundary regression, one passed independent duplicate-row behavior control.
+experiments/issue-138/version-setup-baseline.d7khqb/tests-baseline-proof.log:8–20:
+Expected create-returned, row-allocated, update-entered, row-created.
+Actual create-returned, update-entered, row-created.
+The passing control compares return value, row count, existence and row contents with the unchanged combined helper on a separate real store.
+The initial experiment omitted protocol fixtures; its MSB3030 build errors are preserved in version-setup-baseline.vJlCT5/tests.log and are not a logic reproduction.
+Early control drafts assumed which duplicate address survives or remains readable; those assumptions were corrected before recording this final proof. Intermediate compiler diagnostics are preserved separately.
+The forwarding decorator reports only after Create actually returns and keeps the combined helper's existing callbacks/results.
+This reproduces missing operation-boundary visibility, not the original Windows host's exact 15-second timeout or physical I/O cause.
+Fresh dec6cb7 C# run 40491222901 already passes 2,460 tests on Windows/Linux/macOS without this progress change; the earlier timeout remains intermittent.
+No idle bound is widened. Production persistence behavior and every wider unmet R1-R12 criterion remain separate.

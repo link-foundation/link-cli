@@ -1,6 +1,6 @@
 {
   "name": "@link-foundation/link-cli-client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Minimal universal JS/TS client for link-cli stores: the clink --serve TCP protocol (Node.js, Bun, Deno), a subprocess adapter and the in-process WebAssembly backend, behind one contract with explicit capabilities",
   "type": "module",
   "license": "Unlicense",
@@ -25,6 +25,10 @@
   "main": "./src/index.js",
   "types": "./types/index.d.ts",
   "exports": {
+    "./engine-address-allocator": {
+      "types": "./types/engine-address-allocator.d.ts",
+      "default": "./src/engine-address-allocator.js"
+    },
     ".": {
       "types": "./types/index.d.ts",
       "default": "./src/index.js"
@@ -41,7 +45,87 @@
       "types": "./types/lino.d.ts",
       "default": "./src/lino.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./engine-causal-version": {
+      "types": "./types/engine-causal-version.d.ts",
+      "default": "./src/engine-causal-version.js"
+    },
+    "./engine-sqlite-log": {
+      "types": "./types/engine-sqlite-log.d.ts",
+      "default": "./src/engine-sqlite-log.js"
+    },
+    "./engine-file-log": {
+      "types": "./types/engine-file-log.d.ts",
+      "default": "./src/engine-file-log.js"
+    },
+    "./engine-paged-log": {
+      "types": "./types/engine-paged-log.d.ts",
+      "default": "./src/engine-paged-log.js"
+    },
+    "./engine-checkpoint-root": {
+      "types": "./types/engine-checkpoint-root.d.ts",
+      "default": "./src/engine-checkpoint-root.js"
+    },
+    "./engine-checkpoint-pages": {
+      "types": "./types/engine-checkpoint-pages.d.ts",
+      "default": "./src/engine-checkpoint-pages.js"
+    },
+    "./engine-file-paged-log": {
+      "types": "./types/engine-file-paged-log.d.ts",
+      "default": "./src/engine-file-paged-log.js"
+    },
+    "./engine-mirrored-pages": {
+      "types": "./types/engine-mirrored-pages.d.ts",
+      "default": "./src/engine-mirrored-pages.js"
+    },
+    "./engine-file-mirrored-pages": {
+      "types": "./types/engine-file-mirrored-pages.d.ts",
+      "default": "./src/engine-file-mirrored-pages.js"
+    },
+    "./engine-file-checkpoint-pages": {
+      "types": "./types/engine-file-checkpoint-pages.d.ts",
+      "default": "./src/engine-file-checkpoint-pages.js"
+    },
+    "./engine-sorted-table": {
+      "types": "./types/engine-sorted-table.d.ts",
+      "default": "./src/engine-sorted-table.js"
+    },
+    "./engine-lsm-wal": {
+      "types": "./types/engine-lsm-wal.d.ts",
+      "default": "./src/engine-lsm-wal.js"
+    },
+    "./engine-lsm-store": {
+      "types": "./types/engine-lsm-store.d.ts",
+      "default": "./src/engine-lsm-store.js"
+    },
+    "./engine-file-lsm-store": {
+      "types": "./types/engine-file-lsm-store.d.ts",
+      "default": "./src/engine-file-lsm-store.js"
+    },
+    "./engine-causal-replica": {
+      "types": "./types/engine-causal-replica.d.ts",
+      "default": "./src/engine-causal-replica.js"
+    },
+    "./engine-causal-merkle": {
+      "types": "./types/engine-causal-merkle.d.ts",
+      "default": "./src/engine-causal-merkle.js"
+    },
+    "./engine-causal-projection": {
+      "types": "./types/engine-causal-projection.d.ts",
+      "default": "./src/engine-causal-projection.js"
+    },
+    "./engine-causal-session": {
+      "types": "./types/engine-causal-session.d.ts",
+      "default": "./src/engine-causal-session.js"
+    },
+    "./engine-causal-batch": {
+      "types": "./types/engine-causal-batch.d.ts",
+      "default": "./src/engine-causal-batch.js"
+    },
+    "./engine-author-fence": {
+      "types": "./types/engine-author-fence.d.ts",
+      "default": "./src/engine-author-fence.js"
+    }
   },
   "files": [
     "src",

@@ -1,0 +1,28 @@
+PASS C# causal session native LSM write plain
+PASS C# stale ownership rejected
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM retry-before plain
+PASS C# causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-before -> csharp retry/following -> csharp
+PASS C# stale ownership rejected
+PASS C# causal session native LSM read-advanced plain
+PASS C# causal session native LSM retry-after plain
+PASS C# causal session native LSM following plain
+PASS C# causal session native LSM read-following plain
+PASS session plain csharp exit-after -> csharp retry/following -> csharp
+PASS C# causal session native LSM write mirrored
+PASS C# stale ownership rejected
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM retry-before mirrored
+PASS C# causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-before -> csharp retry/following -> csharp
+PASS C# stale ownership rejected
+PASS C# causal session native LSM read-advanced mirrored
+PASS C# causal session native LSM retry-after mirrored
+PASS C# causal session native LSM following mirrored
+PASS C# causal session native LSM read-following mirrored
+PASS session mirrored csharp exit-after -> csharp retry/following -> csharp
+PASS 4 reaped process exits; 4 cross-runtime retry/reopen/following checks
+Process exits establish application-crash recovery after explicit operator marker recovery, not hardware power-loss certification.

@@ -1,0 +1,39 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792987800525/rust)
+    Finished `test` profile [unoptimized] target(s) in 6.48s
+     Running tests/store_archive_portable_tests.rs (rust/target/debug/deps/store_archive_portable_tests-b2ab9904df6fad32)
+
+running 10 tests
+test a_link_must_be_a_doublet_of_link_addresses ... ok
+test a_truncated_archive_is_rejected ... ok
+test a_store_exports_to_the_golden_archive ... ok
+test addresses_must_fit_a_32_bit_store ... ok
+test trailing_bytes_are_rejected ... ok
+test an_empty_name_is_kept ... ok
+test names_must_be_an_address_and_code_points ... ok
+test an_empty_store_is_two_empty_packets ... ok
+test an_archive_imports_into_a_store_that_already_has_the_links ... ok
+test an_imported_archive_restores_links_holes_and_names ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/store_archive_stream_tests.rs (rust/target/debug/deps/store_archive_stream_tests-09bd43cb90c17841)
+
+running 4 tests
+test single_byte_reads_preserve_archive_bytes_and_repeat_imports ... ok
+test every_truncated_prefix_and_trailing_byte_preserves_existing_rows_and_names ... ok
+test read_errors_at_every_archive_boundary_preserve_existing_rows_and_names ... ok
+test partial_export_errors_preserve_source_and_allow_a_complete_retry ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/store_archive_tests.rs (rust/target/debug/deps/store_archive_tests-5732219c229136e7)
+
+running 6 tests
+test archive_file_failures_name_the_file ... ok
+test the_cli_parses_the_archive_options_and_their_aliases ... ok
+test the_cli_reports_a_missing_archive ... ok
+test the_cli_imports_the_archive_before_the_lino_file_and_the_query ... ok
+test an_archive_round_trips_through_a_remote_store ... ok
+test the_cli_copies_a_store_through_an_archive ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s

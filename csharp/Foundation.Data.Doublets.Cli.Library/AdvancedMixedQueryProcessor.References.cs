@@ -1,27 +1,29 @@
+using System.Numerics;
 // Part of the partial AdvancedMixedQueryProcessor class.
 // Reference validation and auto-creation of links a substitution refers to.
 using System;
 using Platform.Delegates;
 using Platform.Data;
 using Platform.Data.Doublets;
-using Link.Foundation.Links.Notation;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
-using DoubletLink = Platform.Data.Doublets.Link<uint>;
 namespace Foundation.Data.Doublets.Cli
 {
-    public static partial class AdvancedMixedQueryProcessor
+    public static partial class AdvancedMixedQueryProcessor<T>
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         private static void ValidateLinksExistOrWillBeCreated(
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             IList<LinoLink> restrictionPatterns,
             IList<LinoLink> substitutionPatterns,
             Options options)
         {
+            if (options.SkipReferenceValidation) return;
             TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Starting validation");
 
             while (true)
             {
-                var plan = PlanReferences(links, restrictionPatterns, substitutionPatterns, options);
+                var finalIds = links.ReserveQueryAllocations(preview => PreviewQuery(preview, options.Query));
+                var plan = PlanReferences(links, restrictionPatterns, substitutionPatterns, options, finalIds);
                 if (plan.MissingReferences.Count == 0)
                 {
                     TraceIfEnabled(options, "[ValidateLinksExistOrWillBeCreated] Validation completed");
@@ -45,12 +47,13 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static LinkReferencePlan PlanReferences(
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             IList<LinoLink> restrictionPatterns,
             IList<LinoLink> substitutionPatterns,
-            Options options)
+            Options options,
+            IReadOnlySet<T>? finalIds)
         {
-            var plan = BuildLinkReferencePlan(links, substitutionPatterns);
+            var plan = BuildLinkReferencePlan(links, substitutionPatterns, finalIds);
 
             TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Numeric links to be created: {string.Join(", ", plan.NumericIdsToBeCreated.OrderBy(id => id))}");
             TraceIfEnabled(options, $"[ValidateLinksExistOrWillBeCreated] Named links to be created: {string.Join(", ", plan.NamesToBeCreated.OrderBy(name => name, StringComparer.Ordinal))}");
@@ -62,9 +65,9 @@ namespace Foundation.Data.Doublets.Cli
 
         private sealed class LinkReferencePlan
         {
-            public HashSet<uint> NumericIdsToBeCreated { get; } = new();
+            public HashSet<T> NumericIdsToBeCreated { get; } = new();
             public HashSet<string> NamesToBeCreated { get; } = new(StringComparer.Ordinal);
-            public HashSet<(uint Source, uint Target)> CompositePairsToBeCreated { get; } = new();
+            public HashSet<(T Source, T Target)> CompositePairsToBeCreated { get; } = new();
             public List<MissingLinkReference> MissingReferences { get; } = new();
             private readonly HashSet<string> _missingReferenceKeys = new(StringComparer.Ordinal);
 
@@ -81,11 +84,11 @@ namespace Foundation.Data.Doublets.Cli
         {
             public required string Identifier { get; init; }
             public required string PatternType { get; init; }
-            public required uint? NumericId { get; init; }
+            public required T? NumericId { get; init; }
             public string Key => NumericId.HasValue ? $"id:{NumericId.Value}" : $"name:{Identifier}";
         }
 
-        private static LinkReferencePlan BuildLinkReferencePlan(INamedTypesLinks<uint> links, IList<LinoLink> substitutionPatterns)
+        private static LinkReferencePlan BuildLinkReferencePlan(INamedTypesLinks<T> links, IList<LinoLink> substitutionPatterns, IReadOnlySet<T>? finalIds)
         {
             var plan = new LinkReferencePlan();
             var anonymousLinks = 0;
@@ -93,7 +96,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 CollectDefinitions(pattern, plan, ref anonymousLinks);
             }
-            plan.NumericIdsToBeCreated.UnionWith(NextCreatedAddresses(links, anonymousLinks));
+            plan.NumericIdsToBeCreated.UnionWith(finalIds ?? (IEnumerable<T>)NextCreatedAddresses(links, anonymousLinks));
             return plan;
         }
 
@@ -119,7 +122,7 @@ namespace Foundation.Data.Doublets.Cli
                 anonymousLinks++;
                 return;
             }
-            if (uint.TryParse(identifier, out var linkId))
+            if (TryParseAddress(identifier, out var linkId))
             {
                 plan.NumericIdsToBeCreated.Add(linkId);
             }
@@ -136,11 +139,11 @@ namespace Foundation.Data.Doublets.Cli
 
         /// <summary>The addresses the next <paramref name="count"/> links created in <paramref name="links"/> get.</summary>
         /// <remarks>
-        /// A store reuses the address freed last first, so the lowest free one is not necessarily next.
-        /// Creating the links and deleting them again in reverse leaves the store exactly as it was,
-        /// and is the one way to ask any store, a remote one included.
+        /// Compatibility fallback for stores without query reservations. A recycling store may
+        /// hand out its last freed address first. Creating and deleting in reverse preserves that
+        /// order; monotonic stores must provide ReserveQueryAllocations instead.
         /// </remarks>
-        private static List<uint> NextCreatedAddresses(INamedTypesLinks<uint> links, int count)
+        private static List<T> NextCreatedAddresses(INamedTypesLinks<T> links, int count)
         {
             var addresses = Enumerable.Range(0, count).Select(_ => links.Create()).ToList();
             for (var i = addresses.Count - 1; i >= 0; i--)
@@ -152,7 +155,7 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void CollectMissingReferences(
             IList<LinoLink> patterns,
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             LinkReferencePlan plan,
             bool isSubstitution,
             string patternType,
@@ -166,7 +169,7 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void CollectMissingReferences(
             LinoLink pattern,
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             LinkReferencePlan plan,
             bool isSubstitution,
             string patternType,
@@ -190,12 +193,12 @@ namespace Foundation.Data.Doublets.Cli
 
         private static void ValidateReferenceIdentifier(
             string identifier,
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             LinkReferencePlan plan,
             string patternType,
             Options options)
         {
-            if (uint.TryParse(identifier, out var linkId))
+            if (TryParseAddress(identifier, out var linkId))
             {
                 if (!links.Exists(linkId) && !plan.NumericIdsToBeCreated.Contains(linkId))
                 {
@@ -226,7 +229,7 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         private static void AutoCreateMissingReferences(
-            INamedTypesLinks<uint> links,
+            INamedTypesLinks<T> links,
             LinkReferencePlan plan,
             Options options)
         {
@@ -246,8 +249,8 @@ namespace Foundation.Data.Doublets.Cli
                     continue;
                 }
                 links.Update(
-                  new DoubletLink(linkId, links.Constants.Null, links.Constants.Null),
-                  new DoubletLink(linkId, linkId, linkId),
+                  new LinkParts<T>(linkId, links.Constants.Null, links.Constants.Null),
+                  new LinkParts<T>(linkId, linkId, linkId),
                   (beforeState, afterState) =>
                       options.ChangesHandler?.Invoke(beforeState, afterState) ?? links.Constants.Continue
                 );
@@ -284,10 +287,10 @@ namespace Foundation.Data.Doublets.Cli
             return true;
         }
 
-        private static bool TryGetConcreteNumericIdentifier(string? id, out uint linkId)
+        private static bool TryGetConcreteNumericIdentifier(string? id, out T linkId)
         {
-            linkId = 0;
-            return TryGetConcreteIdentifier(id, out var identifier) && uint.TryParse(identifier, out linkId);
+            linkId = T.Zero;
+            return TryGetConcreteIdentifier(id, out var identifier) && TryParseAddress(identifier, out linkId);
         }
     }
 }

@@ -1,0 +1,25 @@
+Native LSM API reproduction before implementation
+PR https://github.com/link-foundation/link-cli/pull/139
+Baseline bc364d2e09100bc5bd0d93274b2ecd870e31b66e, isolated git archive.
+
+Reproduce: bash experiments/issue-138/run-native-lsm-before.sh
+Requires Node, Rust and .NET10; builds run sequentially with jobs1/debug0 and
+.NET640MiB. Historical project manifests are .fixture files copied to ignored
+build directories, rather than additional maintained packages.
+
+The same minimal intended contract acquires an exclusive directory, performs
+exact group CAS with Unicode and live empty entries, flushes, rejects a competing
+owner, closes, reopens and verifies owned values. The missing native APIs prevent
+execution first; this is an API-absence baseline, not evidence of an existing
+storage corruption bug.
+
+Preserved logs in experiments/issue-138/:
+ native-lsm-before-baseline-js.log line5: ERR_MODULE_NOT_FOUND, native entry absent.
+ native-lsm-before-baseline-rust.log line5: E0432, FileLsmJournalStore and
+ FileLsmOptions missing from engine::lsm.
+ native-lsm-before-baseline-csharp.log lines5-8: CS0246/CS0103, FileLsmOptions
+ and FileLsmJournalStore absent.
+ native-lsm-before-baseline-driver.log: all three expected failures reproduced.
+
+The new JS facade subsequently passes actual native-file, fault and consumer
+controls; native Rust/C# facades remain required and unfinished.

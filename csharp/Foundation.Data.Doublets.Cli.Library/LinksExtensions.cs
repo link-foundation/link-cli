@@ -6,7 +6,17 @@ namespace Foundation.Data.Doublets.Cli
 {
     public static class LinksExtensions
     {
-        public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress> { links.EnsureCreated(links.Create, addresses); }
+        public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
+        {
+            // Validate every argument before an optional direct ensure can write.
+            foreach (var address in addresses) EnsureSupportedInternalReference(links, address);
+            if (links is INamedTypesLinks<TLinkAddress> named)
+            {
+                var fallback = addresses.Where(address => !named.TryEnsureCreated(address)).ToArray();
+                links.EnsureCreated(links.Create, fallback);
+            }
+            else links.EnsureCreated(links.Create, addresses);
+        }
 
         public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
         {

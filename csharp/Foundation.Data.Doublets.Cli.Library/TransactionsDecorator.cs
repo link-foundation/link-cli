@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using System.Threading.Channels;
 using System.Globalization;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -32,12 +32,12 @@ public enum CommitMode
 /// Retention policy for the transitions log:
 /// <list type="bullet">
 /// <item><see cref="Infinite"/> keeps every transition forever.</item>
-/// <item><see cref="Chunked"/> archives the oldest <c>ChunkSize</c> transitions
-/// to a rolling file in <c>ArchiveDirectory</c> once the live log reaches that
-/// size.</item>
+/// <item><see cref="Chunked"/> processes the oldest <c>ChunkSize</c> records
+/// once the live log reaches that size, archiving committed changes in
+/// <c>ArchiveDirectory</c> and discarding aborted records.</item>
 /// <item><see cref="Sized"/> drops the oldest transitions once the live log
-/// exceeds <c>MaxTransitions</c>, but only after verifying every dropped
-/// transition has been applied (R7).</item>
+/// exceeds <c>MaxTransitions</c>, after verifying each is applied or rolled
+/// back. Pending writes remain in the live log.</item>
 /// </list>
 /// </summary>
 public abstract record LogRetentionPolicy
@@ -147,7 +147,10 @@ public readonly record struct Transition<TLinkAddress>(
         if (!Guid.TryParseExact(parts[1], "N", out var txId)) return false;
         if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq)) return false;
         if (!long.TryParse(parts[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out var ms)) return false;
-        if (!int.TryParse(parts[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kindValue)) return false;
+        if (!int.TryParse(parts[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var kindValue)
+            || !Enum.IsDefined((TransitionKind)kindValue)) return false;
+        if (ms < DateTimeOffset.MinValue.ToUnixTimeMilliseconds()
+            || ms > DateTimeOffset.MaxValue.ToUnixTimeMilliseconds()) return false;
         if (!TryParseLink(parts[5], out var before)) return false;
         if (!TryParseLink(parts[6], out var after)) return false;
         transition = new Transition<TLinkAddress>(
@@ -180,6 +183,9 @@ public interface ITransaction<TLinkAddress> : IDisposable
 {
     Guid Id { get; }
     DateTimeOffset StartedAt { get; }
+    /// <summary>A durable commit decision is known. False after a failed Commit
+    /// can mean an unknown outcome. Retry Commit, Rollback or Dispose to finish
+    /// the attempted decision, including any incomplete checkpoint.</summary>
     bool IsCommitted { get; }
     bool IsRolledBack { get; }
     IReadOnlyList<Transition<TLinkAddress>> Transitions { get; }
@@ -210,7 +216,7 @@ public interface ITransactionsLinks<TLinkAddress> : INamedTypesLinks<TLinkAddres
 /// retention policies, and crash recovery. Optional — no behavioural
 /// change if not opted in (R8).
 /// </summary>
-public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, ITransactionsLinks<TLinkAddress>, IDisposable
+public partial class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, ITransactionsLinks<TLinkAddress>, IDisposable
   where TLinkAddress : IUnsignedNumber<TLinkAddress>
 {
     internal const string CommitMarkerPrefix = "__transactions:commit:";
@@ -222,13 +228,27 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     private readonly INamedTypesLinks<TLinkAddress> _logStore;
     private readonly bool _trace;
     private readonly object _lock = new();
-    private readonly List<Transition<TLinkAddress>> _log = new();
+    private readonly object _shutdownLock = new();
+    private readonly AsyncLocal<BackgroundWorkContext?> _backgroundWork = new();
+    private readonly AsyncLocal<Action<IReadOnlyDictionary<TLinkAddress, string>?>?> _rowNameObserver = new();
+    private readonly List<JournalRecord<TLinkAddress>> _log = new();
     private readonly HashSet<Guid> _committed = new();
     private readonly HashSet<Guid> _rolledBack = new();
     private readonly HashSet<long> _applied = new();
-    private readonly BlockingCollection<Func<Task>> _asyncQueue = new();
+    private readonly Channel<Action> _asyncQueue = Channel.CreateUnbounded<Action>(new UnboundedChannelOptions
+    {
+        SingleReader = true,
+        AllowSynchronousContinuations = false,
+    });
     private readonly CancellationTokenSource _backgroundCts = new();
-    private readonly Task _backgroundWorker;
+    // The base facade can retain this object if recovery fails construction.
+    // Disposal must also be safe before a real worker has been started.
+    private readonly Task _backgroundWorker = Task.CompletedTask;
+    private readonly Action _flushData;
+    private readonly Action _flushLog;
+
+    /// <summary>True when both data and journal have explicit stable-storage flushes.</summary>
+    public bool SupportsDurableCommit { get; }
     private Transaction? _current;
     private long _sequenceCounter;
     private long _appliedSequence;
@@ -242,16 +262,37 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
       INamedTypesLinks<TLinkAddress> logStore,
       LogRetentionPolicy? retentionPolicy = null,
       CommitMode commitMode = CommitMode.Sync,
-      bool trace = false)
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
+      : this(inner, logStore, RowUndoPolicy.Observed, retentionPolicy, commitMode, trace, flushData, flushLog) { }
+
+    public TransactionsDecorator(
+      INamedTypesLinks<TLinkAddress> inner,
+      INamedTypesLinks<TLinkAddress> logStore,
+      RowUndoPolicy rowUndoPolicy,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
       : base(inner)
     {
+        if (!Enum.IsDefined(rowUndoPolicy)) throw new ArgumentOutOfRangeException(nameof(rowUndoPolicy));
+        RowUndoPolicy = rowUndoPolicy;
         _inner = inner;
         _logStore = logStore;
         _retentionPolicy = retentionPolicy ?? LogRetentionPolicy.Default;
         _commitMode = commitMode;
         _trace = trace;
-        _backgroundWorker = Task.Run(RunBackgroundWorker);
+        var durableData = inner as IDurableLinks;
+        var durableLog = logStore as IDurableLinks;
+        SupportsDurableCommit = (flushData is not null || durableData?.SupportsDurableFlush == true)
+            && (flushLog is not null || durableLog?.SupportsDurableFlush == true);
+        _flushData = flushData ?? (durableData?.SupportsDurableFlush == true ? durableData.Flush : static () => { });
+        _flushLog = flushLog ?? (durableLog?.SupportsDurableFlush == true ? durableLog.Flush : static () => { });
         Recover();
+        _backgroundWorker = RunBackgroundWorkerAsync();
     }
 
     public CommitMode CommitMode
@@ -268,16 +309,33 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 
     public IReadOnlyList<Transition<TLinkAddress>> Log
     {
+        get { lock (_lock) return _log.Select(record => record.Transition).ToArray(); }
+    }
+
+    public IReadOnlyList<JournalRecord<TLinkAddress>> Journal
+    {
         get { lock (_lock) return _log.ToArray(); }
+    }
+
+    public virtual bool ReassignsNames => _inner.ReassignsNames;
+
+    public virtual IReadOnlyDictionary<TLinkAddress, string> CaptureNames()
+    {
+        lock (_lock) return _inner.CaptureNames();
     }
 
     public long AppliedSequence { get { lock (_lock) return _appliedSequence; } }
     public long LastLoggedSequence { get { lock (_lock) return _sequenceCounter; } }
+    internal bool HasOpenTransaction { get { lock (_lock) return _current is not null || _versionReplay || _recoveryPending; } }
+    internal bool IsTransactionCommitted(Guid id) { lock (_lock) return _committed.Contains(id); }
+    internal bool IsTransactionRolledBack(Guid id) { lock (_lock) return _rolledBack.Contains(id); }
 
     public virtual ITransaction<TLinkAddress> BeginTransaction()
     {
         lock (_lock)
         {
+            EnsureNoVersionReplayLocked();
+            EnsureRecoveryCompleteLocked();
             if (_current is not null)
             {
                 throw new InvalidOperationException("Nested transactions are not supported.");
@@ -294,109 +352,37 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         return Task.FromResult(BeginTransaction());
     }
 
+    /// <summary>Rolls back the current transaction, including retrying cleanup
+    /// after an automatic write's rollback failed. A known durable commit instead
+    /// finishes its checkpoint. A failure keeps either outcome pending.</summary>
+    public virtual void Rollback()
+    {
+        lock (_lock)
+        {
+            if (_recoveryPending)
+            {
+                Recover();
+                return;
+            }
+            if (_current is not null) OnRollback(_current);
+        }
+    }
+
     // Write API (wraps the user's handler so we observe before/after) -------
 
     public override TLinkAddress Create(IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
     {
-        return RunWrite(TransitionKind.Create, h => _inner.Create(substitution, h), handler);
+        return RunWrite(h => _inner.Create(substitution, h), handler);
     }
 
     public override TLinkAddress Update(IList<TLinkAddress>? restriction, IList<TLinkAddress>? substitution, WriteHandler<TLinkAddress>? handler)
     {
-        return RunWrite(TransitionKind.Update, h => _inner.Update(restriction, substitution, h), handler);
+        return RunWrite(h => _inner.Update(restriction, substitution, h), handler);
     }
 
     public override TLinkAddress Delete(IList<TLinkAddress>? restriction, WriteHandler<TLinkAddress>? handler)
     {
-        return RunWrite(TransitionKind.Delete, h => _inner.Delete(restriction, h), handler);
-    }
-
-    private TLinkAddress RunWrite(
-      TransitionKind kind,
-      Func<WriteHandler<TLinkAddress>, TLinkAddress> innerCall,
-      WriteHandler<TLinkAddress>? userHandler)
-    {
-        if (_replaying)
-        {
-            return innerCall(userHandler ?? NullHandler);
-        }
-
-        Transaction transaction;
-        bool ownsTransaction;
-        lock (_lock)
-        {
-            if (_current is null)
-            {
-                _current = new Transaction(this, autoCommit: true);
-                ownsTransaction = true;
-            }
-            else
-            {
-                ownsTransaction = false;
-            }
-            transaction = _current;
-        }
-
-        var @continue = _inner.Constants.Continue;
-        var observed = new Dictionary<TLinkAddress, (Link<TLinkAddress>? Before, Link<TLinkAddress>? After)>();
-        var observedOrder = new List<TLinkAddress>();
-
-        WriteHandler<TLinkAddress> wrapped = (before, after) =>
-        {
-            var beforeLink = before is null ? default(Link<TLinkAddress>?) : new Link<TLinkAddress>(before);
-            var afterLink = after is null ? default(Link<TLinkAddress>?) : new Link<TLinkAddress>(after);
-            var key = beforeLink.HasValue ? beforeLink.Value.Index
-                    : afterLink.HasValue ? afterLink.Value.Index
-                    : TLinkAddress.Zero;
-            if (key != TLinkAddress.Zero)
-            {
-                if (!observed.TryGetValue(key, out var state))
-                {
-                    observedOrder.Add(key);
-                    state = (beforeLink, afterLink);
-                }
-                else
-                {
-                    state = (state.Before ?? beforeLink, afterLink);
-                }
-                observed[key] = state;
-            }
-            return userHandler is null ? @continue : userHandler(before, after);
-        };
-
-        TLinkAddress result;
-        try
-        {
-            result = innerCall(wrapped);
-        }
-        catch
-        {
-            // best-effort: record nothing if the inner store threw before any
-            // before/after callback fired, and discard the auto transaction.
-            if (ownsTransaction)
-            {
-                lock (_lock)
-                {
-                    if (_current == transaction) _current = null;
-                }
-            }
-            throw;
-        }
-
-        foreach (var key in observedOrder)
-        {
-            var state = observed[key];
-            var before = state.Before ?? default;
-            var after = state.After ?? default;
-            RecordTransition(transaction, kind, before, after);
-        }
-
-        if (ownsTransaction)
-        {
-            transaction.Commit();
-        }
-
-        return result;
+        return RunWrite(h => _inner.Delete(restriction, h), handler);
     }
 
     private static Link<TLinkAddress> LinkOrEmpty(IList<TLinkAddress>? raw)
@@ -406,130 +392,22 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 
     private static TLinkAddress NullHandler(IList<TLinkAddress>? before, IList<TLinkAddress>? after) => TLinkAddress.Zero;
 
-    private void RecordTransition(Transaction transaction, TransitionKind kind, Link<TLinkAddress> before, Link<TLinkAddress> after)
-    {
-        Transition<TLinkAddress> transition;
-        lock (_lock)
-        {
-            var sequence = ++_sequenceCounter;
-            transition = new Transition<TLinkAddress>(
-              transaction.Id,
-              sequence,
-              DateTimeOffset.UtcNow,
-              kind,
-              before,
-              after);
-            transaction.AddTransition(transition);
-            _log.Add(transition);
-            WriteTransitionToLog(transition);
-            Trace($"Recorded {kind} seq={sequence} tx={transaction.Id:N}: ({before.Index},{before.Source},{before.Target}) -> ({after.Index},{after.Source},{after.Target}).");
-        }
-    }
-
     // INamedTypes forwarding ------------------------------------------------
 
     public virtual string? GetName(TLinkAddress link) => _inner.GetName(link);
-    public virtual TLinkAddress SetName(TLinkAddress link, string name) => _inner.SetName(link, name);
-    public virtual TLinkAddress GetByName(string name) => _inner.GetByName(name);
-    public virtual void RemoveName(TLinkAddress link) => _inner.RemoveName(link);
-
-    // Recovery --------------------------------------------------------------
-
-    public virtual void Recover()
+    public virtual TLinkAddress SetName(TLinkAddress link, string name)
     {
         lock (_lock)
         {
-            _log.Clear();
-            _committed.Clear();
-            _rolledBack.Clear();
-            _applied.Clear();
-            _sequenceCounter = 0;
-            _appliedSequence = 0;
-
-            var any = _logStore.Constants.Any;
-            var anyLink = new Link<TLinkAddress>(any, any, any);
-            foreach (var raw in _logStore.All(anyLink))
-            {
-                var link = new Link<TLinkAddress>(raw);
-                var name = _logStore.GetName(link.Index);
-                if (string.IsNullOrEmpty(name)) continue;
-
-                if (name.StartsWith(TransitionNamePrefix, StringComparison.Ordinal))
-                {
-                    var payload = name.Substring(TransitionNamePrefix.Length);
-                    if (Transition<TLinkAddress>.TryParse(payload, out var transition))
-                    {
-                        InsertOrdered(_log, transition);
-                        if (transition.Sequence > _sequenceCounter)
-                        {
-                            _sequenceCounter = transition.Sequence;
-                        }
-                    }
-                }
-                else if (name.StartsWith(CommitMarkerPrefix, StringComparison.Ordinal))
-                {
-                    if (Guid.TryParseExact(name.Substring(CommitMarkerPrefix.Length), "N", out var txId))
-                    {
-                        _committed.Add(txId);
-                    }
-                }
-                else if (name.StartsWith(RollbackMarkerPrefix, StringComparison.Ordinal))
-                {
-                    if (Guid.TryParseExact(name.Substring(RollbackMarkerPrefix.Length), "N", out var txId))
-                    {
-                        _rolledBack.Add(txId);
-                    }
-                }
-                else if (name.StartsWith(AppliedMarkerPrefix, StringComparison.Ordinal))
-                {
-                    var rest = name.Substring(AppliedMarkerPrefix.Length);
-                    if (long.TryParse(rest, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seq))
-                    {
-                        _applied.Add(seq);
-                        if (seq > _appliedSequence) _appliedSequence = seq;
-                    }
-                }
-            }
-
-            _replaying = true;
-            try
-            {
-                // Re-apply committed transitions whose side-effects were lost
-                // (e.g. async crash before checkpoint). Only those not yet
-                // recorded as applied are touched.
-                foreach (var transition in _log)
-                {
-                    if (!_committed.Contains(transition.TransactionId)) continue;
-                    if (_applied.Contains(transition.Sequence)) continue;
-                    TryApplyTransition(transition, recordApplied: true);
-                }
-
-                // Auto-rollback transitions written but never committed and never
-                // rolled back: this is the crash-mid-transaction case (R10).
-                foreach (var transition in _log.OrderByDescending(t => t.Sequence))
-                {
-                    if (_committed.Contains(transition.TransactionId)) continue;
-                    if (_rolledBack.Contains(transition.TransactionId)) continue;
-                    TryRevertTransition(transition);
-                }
-
-                // Mark recovered-but-incomplete transactions as rolled back so
-                // we don't try to revert them on the next open.
-                var pendingTxIds = _log
-                  .Where(t => !_committed.Contains(t.TransactionId) && !_rolledBack.Contains(t.TransactionId))
-                  .Select(t => t.TransactionId)
-                  .Distinct()
-                  .ToList();
-                foreach (var txId in pendingTxIds)
-                {
-                    _rolledBack.Add(txId);
-                    WriteMarker(RollbackMarkerPrefix + txId.ToString("N"));
-                }
-            }
-            finally
-            {
-                _replaying = false;
-            }
+            return WriteNameLocked(link, name);
+        }
+    }
+    public virtual TLinkAddress GetByName(string name) => _inner.GetByName(name);
+    public virtual void RemoveName(TLinkAddress link)
+    {
+        lock (_lock)
+        {
+            WriteNameLocked(link, null);
         }
     }
 
@@ -558,85 +436,36 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     }
 
     /// <summary>
-    /// Stops the background worker. Kept as a named method for backwards
-    /// compatibility; <see cref="Dispose()"/> delegates to it.
+    /// Stops and joins the background worker before borrowed stores may close.
+    /// Concurrent callers all wait for completion. Queued checkpoint work may
+    /// be cancelled; committed journal records remain recoverable on reopen.
+    /// Callers must finish foreground operations first and callbacks must return.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Called from active background work or while holding the storage lock.
+    /// Such a caller cannot wait for worker completion without risking deadlock.
+    /// </exception>
     public virtual void Shutdown()
     {
-        if (_disposed) return;
-        _disposed = true;
-        try
+        // Check before the shutdown mutex: an external caller may already hold
+        // it while waiting for this callback (or its Task.Run descendant).
+        var work = _backgroundWork.Value;
+        if ((work is not null && Volatile.Read(ref work.Active) != 0) || Monitor.IsEntered(_lock))
         {
-            _asyncQueue.CompleteAdding();
+            throw new InvalidOperationException("Shutdown must run outside active storage callbacks.");
+        }
+        lock (_shutdownLock)
+        {
+            if (_disposed) return;
+            lock (_lock) { EnsureNoVersionReplayLocked(); }
+            _asyncQueue.Writer.TryComplete();
             _backgroundCts.Cancel();
-            _backgroundWorker.Wait(TimeSpan.FromSeconds(5));
-        }
-        catch
-        {
-            // best-effort shutdown
-        }
-        _asyncQueue.Dispose();
-        _backgroundCts.Dispose();
-    }
-
-    // Commit / rollback paths -----------------------------------------------
-
-    internal void OnCommit(Transaction transaction, bool forceAsync)
-    {
-        bool runAsync;
-        Transition<TLinkAddress>[] transitions;
-        lock (_lock)
-        {
-            if (transaction.IsCommitted || transaction.IsRolledBack) return;
-            _committed.Add(transaction.Id);
-            transaction.MarkCommitted();
-            WriteMarker(CommitMarkerPrefix + transaction.Id.ToString("N"));
-            if (_current == transaction) _current = null;
-            runAsync = forceAsync || _commitMode == CommitMode.Async;
-            transitions = transaction.Transitions.ToArray();
-            Trace($"Committed tx {transaction.Id:N} (mode={(runAsync ? "async" : "sync")}, transitions={transitions.Length}).");
-        }
-
-        if (runAsync)
-        {
-            _asyncQueue.Add(() => Task.Run(() => ApplyTransitionsAsync(transitions)));
-        }
-        else
-        {
-            lock (_lock)
-            {
-                foreach (var transition in transitions)
-                {
-                    MarkApplied(transition);
-                }
-                EnforceRetentionLocked();
-            }
-        }
-    }
-
-    internal void OnRollback(Transaction transaction)
-    {
-        lock (_lock)
-        {
-            if (transaction.IsCommitted || transaction.IsRolledBack) return;
-            transaction.MarkRolledBack();
-            _rolledBack.Add(transaction.Id);
-            _replaying = true;
-            try
-            {
-                foreach (var transition in transaction.Transitions.AsEnumerable().Reverse())
-                {
-                    TryRevertTransition(transition);
-                }
-            }
-            finally
-            {
-                _replaying = false;
-            }
-            WriteMarker(RollbackMarkerPrefix + transaction.Id.ToString("N"));
-            if (_current == transaction) _current = null;
-            Trace($"Rolled back tx {transaction.Id:N} ({transaction.Transitions.Count} transitions).");
-            EnforceRetentionLocked();
+            // A timed join cannot establish that borrowed mappings are unused.
+            // Never hold the storage lock while waiting for its current owner.
+            _backgroundWorker.GetAwaiter().GetResult();
+            while (_asyncQueue.Reader.TryRead(out _)) { }
+            _backgroundCts.Dispose();
+            _disposed = true;
         }
     }
 
@@ -656,6 +485,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         catch (Exception ex)
         {
             Trace($"Failed to revert transition seq={transition.Sequence}: {ex.Message}");
+            throw;
         }
     }
 
@@ -665,10 +495,13 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
+    /// <exception cref="InvalidOperationException">A transaction or its cleanup
+    /// still owns the data store.</exception>
     public virtual void RevertTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
+            EnsureReplayAllowedLocked();
             _replaying = true;
             try
             {
@@ -687,14 +520,17 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     /// decorators (e.g. version control) that need to drive replay/rewind
     /// without producing additional transitions.
     /// </summary>
+    /// <exception cref="InvalidOperationException">A transaction or its cleanup
+    /// still owns the data store.</exception>
     public virtual void ApplyTransition(Transition<TLinkAddress> transition)
     {
         lock (_lock)
         {
+            EnsureReplayAllowedLocked();
             _replaying = true;
             try
             {
-                TryApplyTransition(transition, recordApplied: false);
+                TryApplyTransition(transition);
             }
             finally
             {
@@ -703,7 +539,13 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         }
     }
 
-    private void TryApplyTransition(Transition<TLinkAddress> transition, bool recordApplied)
+    private void EnsureReplayAllowedLocked()
+    {
+        if (_current is not null || _versionReplay || _recoveryPending)
+            throw new InvalidOperationException("Complete the current transaction or its cleanup before unlogged replay.");
+    }
+
+    private void TryApplyTransition(Transition<TLinkAddress> transition)
     {
         try
         {
@@ -716,24 +558,31 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
                 RestoreLink(transition.After);
             }
 
-            if (recordApplied)
-            {
-                MarkApplied(transition);
-            }
         }
         catch (Exception ex)
         {
             Trace($"Failed to apply transition seq={transition.Sequence}: {ex.Message}");
+            throw;
         }
     }
 
     private void MarkApplied(Transition<TLinkAddress> transition)
     {
-        if (_applied.Add(transition.Sequence))
+        if (!_applied.Contains(transition.Sequence))
         {
             WriteMarker(AppliedMarkerPrefix + transition.Sequence.ToString(CultureInfo.InvariantCulture));
+            _applied.Add(transition.Sequence);
             if (transition.Sequence > _appliedSequence) _appliedSequence = transition.Sequence;
         }
+    }
+
+    private void CheckpointTransition(Transition<TLinkAddress> transition)
+    {
+        // Writes run inline. Replaying an older uncheckpointed record here
+        // could overwrite newer committed or still-pending foreground data.
+        _flushData();
+        MarkApplied(transition);
+        _flushLog();
     }
 
     private void RestoreLink(Link<TLinkAddress> link)
@@ -757,7 +606,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         }
     }
 
-    internal void WriteTransitionToLog(Transition<TLinkAddress> transition)
+    internal void WriteTransitionToLog(JournalRecord<TLinkAddress> transition)
     {
         var link = _logStore.CreateAndUpdate(_logStore.Constants.Null, _logStore.Constants.Null);
         var name = TransitionNamePrefix + transition.Serialize();
@@ -768,18 +617,6 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     {
         var link = _logStore.CreateAndUpdate(_logStore.Constants.Null, _logStore.Constants.Null);
         _logStore.SetName(link, name);
-    }
-
-    private static void InsertOrdered(List<Transition<TLinkAddress>> list, Transition<TLinkAddress> transition)
-    {
-        var lo = 0;
-        var hi = list.Count;
-        while (lo < hi)
-        {
-            var mid = (lo + hi) >> 1;
-            if (list[mid].Sequence < transition.Sequence) lo = mid + 1; else hi = mid;
-        }
-        list.Insert(lo, transition);
     }
 
     private void EnforceRetentionLocked()
@@ -803,14 +640,15 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         while (_log.Count > maxTransitions)
         {
             var head = _log[0];
-            if (!_applied.Contains(head.Sequence))
+            if (!_rolledBack.Contains(head.TransactionId) && !_applied.Contains(head.Sequence))
             {
+                if (!_committed.Contains(head.TransactionId)) break;
                 // R7: never drop an un-applied transition.
-                TryApplyTransition(head, recordApplied: true);
+                CheckpointTransition(head);
                 if (!_applied.Contains(head.Sequence)) break;
             }
             _log.RemoveAt(0);
-            Trace($"Dropped applied transition seq={head.Sequence} per sized retention.");
+            Trace($"Dropped completed transition seq={head.Sequence} per sized retention.");
         }
     }
 
@@ -820,13 +658,23 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         if (_log.Count < chunked.ChunkSize) return;
 
         var chunk = _log.Take((int)chunked.ChunkSize).ToList();
-        foreach (var transition in chunk)
+        // A durable rollback makes its records reclaimable without reapplying
+        // their writes. Archive only committed changes, not aborted operations.
+        var archived = chunk.Where(t => !_rolledBack.Contains(t.TransactionId)).ToList();
+        foreach (var transition in archived)
         {
             if (!_applied.Contains(transition.Sequence))
             {
-                TryApplyTransition(transition, recordApplied: true);
+                if (!_committed.Contains(transition.TransactionId)) return;
+                CheckpointTransition(transition);
                 if (!_applied.Contains(transition.Sequence)) return; // never drop unapplied
             }
+        }
+
+        if (archived.Count == 0)
+        {
+            _log.RemoveRange(0, chunk.Count);
+            return;
         }
 
         try
@@ -835,11 +683,8 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
             var fileName = Path.Combine(
               chunked.ArchiveDirectory,
               $"transitions-chunk-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{Guid.NewGuid():N}.log");
-            using (var writer = new StreamWriter(fileName, append: false))
-            {
-                foreach (var t in chunk) writer.WriteLine(t.Serialize());
-            }
-            Trace($"Archived {chunk.Count} transitions to {fileName}.");
+            ChunkArchive.Write(fileName, archived.Select(t => t.Serialize()));
+            Trace($"Archived {archived.Count} transitions to {fileName}.");
         }
         catch (Exception ex)
         {
@@ -850,7 +695,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         _log.RemoveRange(0, chunk.Count);
     }
 
-    private async Task ApplyTransitionsAsync(IReadOnlyList<Transition<TLinkAddress>> transitions)
+    private void ApplyTransitions(IReadOnlyList<JournalRecord<TLinkAddress>> transitions)
     {
         foreach (var transition in transitions)
         {
@@ -858,31 +703,47 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
             {
                 lock (_lock)
                 {
-                    // Side-effects normally already applied (inner store ran
-                    // them inline). Re-apply only if needed and mark applied.
-                    MarkApplied(transition);
+                    if (_versionReplay || _recoveryPending) continue;
+                    CheckpointTransition(transition);
                 }
             }
-            catch
+            catch (Exception error)
             {
-                // Recovery on next open will resume.
+                Trace($"Asynchronous checkpoint failed; recovery will resume on reopen: {error.Message}");
             }
         }
 
         lock (_lock)
         {
-            EnforceRetentionLocked();
+            if (!_versionReplay && !_recoveryPending) EnforceRetentionLocked();
         }
-        await Task.CompletedTask;
     }
 
-    private void RunBackgroundWorker()
+    private sealed class BackgroundWorkContext
+    {
+        // Descendant tasks can retain the ExecutionContext after work finishes.
+        // Shared state prevents a stale AsyncLocal value from rejecting them.
+        public int Active = 1;
+    }
+
+    private async Task RunBackgroundWorkerAsync()
     {
         try
         {
-            foreach (var work in _asyncQueue.GetConsumingEnumerable(_backgroundCts.Token))
+            // Waiting for work must not occupy a shared ThreadPool thread.
+            // A single reader also checkpoints batches in admission order.
+            await foreach (var work in _asyncQueue.Reader.ReadAllAsync(_backgroundCts.Token).ConfigureAwait(false))
             {
-                try { work().GetAwaiter().GetResult(); } catch { /* ignored */ }
+                _backgroundCts.Token.ThrowIfCancellationRequested();
+                var context = new BackgroundWorkContext();
+                _backgroundWork.Value = context;
+                try { work(); }
+                catch (Exception error) { Trace($"Background checkpoint failed: {error.Message}"); }
+                finally
+                {
+                    Volatile.Write(ref context.Active, 0);
+                    _backgroundWork.Value = null;
+                }
             }
         }
         catch (OperationCanceledException) { /* expected */ }
@@ -891,7 +752,7 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 
     private void Trace(string message)
     {
-        if (_trace) Console.WriteLine($"[Transactions] {message}");
+        if (_trace) DiagnosticOutput.WriteLine($"[Transactions] {message}");
     }
 
     /// <summary>Conventional sidecar filename for the transitions log.</summary>
@@ -908,9 +769,12 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
     internal sealed class Transaction : ITransaction<TLinkAddress>
     {
         private readonly TransactionsDecorator<TLinkAddress> _owner;
-        private readonly List<Transition<TLinkAddress>> _transitions = new();
+        private readonly List<JournalRecord<TLinkAddress>> _transitions = new();
         private readonly bool _autoCommit;
         private int _state; // 0 = open, 1 = committed, 2 = rolled back
+        internal TransactionUndoImage<TLinkAddress>? Image { get; set; }
+        public bool IsRollbackOnly { get; private set; }
+        public bool IsCommitAttempted { get; private set; }
 
         public Transaction(TransactionsDecorator<TLinkAddress> owner, bool autoCommit)
         {
@@ -924,11 +788,14 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
         public DateTimeOffset StartedAt { get; }
         public bool IsCommitted => _state == 1;
         public bool IsRolledBack => _state == 2;
-        public IReadOnlyList<Transition<TLinkAddress>> Transitions => _transitions;
+        public IReadOnlyList<Transition<TLinkAddress>> Transitions => _transitions.Select(record => record.Transition).ToArray();
+        internal IReadOnlyList<JournalRecord<TLinkAddress>> Records => _transitions;
 
-        internal void AddTransition(Transition<TLinkAddress> transition) => _transitions.Add(transition);
+        internal void AddTransition(JournalRecord<TLinkAddress> transition) => _transitions.Add(transition);
         internal void MarkCommitted() => _state = 1;
+        internal void MarkCommitAttempted() => IsCommitAttempted = true;
         internal void MarkRolledBack() => _state = 2;
+        internal void MarkRollbackOnly() => IsRollbackOnly = true;
 
         public void Commit() => _owner.OnCommit(this, forceAsync: false);
 
@@ -943,7 +810,11 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 
         public void Dispose()
         {
-            if (_state == 0)
+            if (IsCommitted)
+            {
+                _owner.OnCommit(this, forceAsync: false);
+            }
+            else if (_state == 0)
             {
                 // Per-write auto transactions should not auto-rollback if the
                 // caller forgot to commit (Commit happens automatically in
@@ -974,14 +845,26 @@ public class TransactionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddre
 /// </remarks>
 public class TransactionsDecorator : TransactionsDecorator<uint>
 {
-    /// <inheritdoc cref="TransactionsDecorator{TLinkAddress}(INamedTypesLinks{TLinkAddress}, INamedTypesLinks{TLinkAddress}, LogRetentionPolicy, CommitMode, bool)"/>
+    /// <inheritdoc cref="TransactionsDecorator{TLinkAddress}(INamedTypesLinks{TLinkAddress}, INamedTypesLinks{TLinkAddress}, LogRetentionPolicy, CommitMode, bool, Action, Action)"/>
     public TransactionsDecorator(
       INamedTypesLinks<uint> inner,
       INamedTypesLinks<uint> logStore,
       LogRetentionPolicy? retentionPolicy = null,
       CommitMode commitMode = CommitMode.Sync,
-      bool trace = false)
-      : base(inner, logStore, retentionPolicy, commitMode, trace)
-    {
-    }
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
+      : base(inner, logStore, retentionPolicy, commitMode, trace, flushData, flushLog) { }
+
+    /// <summary>Select pre-write row undo for newly opened transactions.</summary>
+    public TransactionsDecorator(
+      INamedTypesLinks<uint> inner,
+      INamedTypesLinks<uint> logStore,
+      RowUndoPolicy rowUndoPolicy,
+      LogRetentionPolicy? retentionPolicy = null,
+      CommitMode commitMode = CommitMode.Sync,
+      bool trace = false,
+      Action? flushData = null,
+      Action? flushLog = null)
+      : base(inner, logStore, rowUndoPolicy, retentionPolicy, commitMode, trace, flushData, flushLog) { }
 }

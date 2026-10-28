@@ -60,11 +60,68 @@ impl StorageRevision {
 /// [`GenericLink<T>`] values so that both in-memory maps and
 /// memory-mapped doublets stores can implement it.
 pub trait LinksStorage<T: LinkReference> {
-    /// Creates a new link and returns its address.
+    /// Creates a link and returns its address. A uniqueness resolver may return
+    /// an existing link after removing the temporary allocation.
     fn create_link(&mut self, source: T, target: T) -> Result<T, LinkError>;
+
+    /// [`Self::create_link`], reporting every change, including partial changes
+    /// before an error. Transactions need these callbacks to distinguish a new
+    /// allocation from a duplicate resolved into an existing link.
+    ///
+    /// The default is for backends that create one row atomically. Backends
+    /// with cascades or partial writes must override it with their callbacks,
+    /// as for [`Self::update_link_observed`].
+    fn create_link_observed(
+        &mut self,
+        source: T,
+        target: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<T, LinkError> {
+        let index = self.create_link(source, target)?;
+        let after = self
+            .get_link(index)
+            .unwrap_or_else(|| GenericLink::new(index, source, target));
+        observer(GenericLink::null(), after);
+        Ok(index)
+    }
 
     /// Ensures a link exists at `index`, creating placeholders as needed.
     fn ensure_link_created(&mut self, index: T) -> Result<T, LinkError>;
+
+    /// [`Self::ensure_link_created`], reporting every placeholder it creates.
+    ///
+    /// Backends differ in whether intermediate addresses remain allocated.
+    /// This default compares rows before/after the operation, including partial
+    /// changes on error, so a transaction can undo either backend's behavior.
+    /// It costs O(N log N) time and O(N) rows; backends may override it with
+    /// allocation callbacks. The built-in map adapters avoid this copy.
+    fn ensure_link_created_observed(
+        &mut self,
+        index: T,
+        observer: &mut dyn FnMut(GenericLink<T>, GenericLink<T>),
+    ) -> Result<T, LinkError> {
+        let before: std::collections::BTreeMap<_, _> = self
+            .all_links()
+            .into_iter()
+            .map(|row| (row.index, row))
+            .collect();
+        let outcome = self.ensure_link_created(index);
+        let mut after: std::collections::BTreeMap<_, _> = self
+            .all_links()
+            .into_iter()
+            .map(|row| (row.index, row))
+            .collect();
+        for (id, previous) in before {
+            let next = after.remove(&id).unwrap_or_else(GenericLink::null);
+            if previous != next {
+                observer(previous, next);
+            }
+        }
+        for (_, row) in after {
+            observer(GenericLink::null(), row);
+        }
+        outcome
+    }
 
     /// Returns the link stored at `index`, if any.
     fn get_link(&self, index: T) -> Option<GenericLink<T>>;
@@ -159,6 +216,22 @@ pub trait LinksStorage<T: LinkReference> {
     /// Number of links currently stored.
     fn links_count(&self) -> usize {
         self.all_links().len()
+    }
+
+    /// Optional logical name snapshot for transactional undo. Unnamed stores
+    /// return None without allocation. Include names of absent/external rows.
+    fn capture_names(
+        &mut self,
+    ) -> Result<Option<std::collections::BTreeMap<T, String>>, LinkError> {
+        Ok(None)
+    }
+
+    /// Changes one logical name without recording. A named adapter must restore
+    /// external-reference names even when their row currently does not exist.
+    fn set_link_name(&mut self, _index: T, _name: Option<&str>) -> Result<T, LinkError> {
+        Err(LinkError::StorageError(
+            "storage does not support names".into(),
+        ))
     }
 
     /// Makes every write durable on disk.

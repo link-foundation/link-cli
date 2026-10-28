@@ -39,11 +39,12 @@
 //! # Durability
 //!
 //! Writes land in a `MAP_SHARED` mapping, which on Linux *is* the page
-//! cache, so they survive a process crash without any explicit action
-//! and are written back by the kernel. `FileMapped` additionally
-//! `sync_all()`s the file when it is dropped, and
-//! [`LinksStorage::flush`](crate::LinksStorage::flush) `fsync`s on
-//! demand for durability across a machine crash.
+//! cache, and the kernel writes dirty pages back. A checked durability barrier
+//! is available through [`MappedFlush`] handles:
+//! Windows flushes the mapped view before synchronizing the owned file;
+//! Unix synchronizes the file's shared page cache. Drop attempts that barrier
+//! without reporting errors. Explicit flush reports them. These barriers do
+//! not repair torn pages or make a sequence of in-place mutations atomic.
 
 use std::fs::File;
 use std::io;
@@ -53,6 +54,11 @@ use std::path::Path;
 use doublets::data::LinkReference;
 use doublets::mem::{FileMapped, RawMem, Result as MemResult};
 use doublets::unit::LinkPart;
+
+use super::MappedFlush;
+
+#[path = "file_mem_grow.rs"]
+mod grow;
 
 /// A value whose representation can safely be adopted from existing file bytes.
 ///
@@ -90,22 +96,51 @@ unsafe impl<T: FileMappedValue + LinkReference> FileMappedValue for LinkPart<T> 
 /// See the module documentation for the upstream behaviour this works
 /// around.
 #[derive(Debug)]
-pub struct PersistentFileMapped<T>(FileMapped<T>);
+pub struct PersistentFileMapped<T> {
+    inner: FileMapped<T>,
+    flush: MappedFlush,
+    initialized_bytes: u64,
+}
 
 impl<T> PersistentFileMapped<T> {
     /// Opens (creating it if needed) the file at `path` and maps it.
     pub fn from_path<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
-        FileMapped::from_path(path).map(Self)
+        File::options()
+            .create(true)
+            .truncate(false)
+            .read(true)
+            .write(true)
+            .open(path)
+            .and_then(Self::new)
     }
 
     /// Maps an already-opened file.
     pub fn new(file: File) -> io::Result<Self> {
-        FileMapped::new(file).map(Self)
+        // Capture before upstream adds minimum-page padding. Failed growth can
+        // also extend a file before mapping fails; neither is initialized data.
+        let initialized_bytes = file.metadata()?.len();
+        Ok(Self {
+            inner: FileMapped::new(file.try_clone()?)?,
+            flush: MappedFlush::new(file),
+            initialized_bytes,
+        })
     }
 
     /// Borrows the wrapped [`FileMapped`].
     pub fn inner(&self) -> &FileMapped<T> {
-        &self.0
+        &self.inner
+    }
+
+    /// Returns a checked flush barrier that follows this owner's remaps.
+    ///
+    /// Retain this before adopting the mapping into a generic doublets store,
+    /// then attach it with [`DoubletsStorage::with_mapped_flush`](super::DoubletsStorage::with_mapped_flush).
+    /// Rejected growth of values without drop glue retains the existing view
+    /// and barrier. Failed shrink or destructor growth can leave unsafe upstream
+    /// allocator state and invalidate the barrier. Reopening alone cannot establish
+    /// safe cleanup. Dropping a valid owner closes every retained handle.
+    pub fn flush_handle(&self) -> MappedFlush {
+        self.flush.clone()
     }
 }
 
@@ -136,7 +171,7 @@ impl<T: FileMappedValue> PersistentFileMapped<T> {
         // its minimum mapping size. That padding was not part of the persisted
         // contents and must not become visible as logical items.
         let byte_len = file.metadata()?.len();
-        let mut mapped = FileMapped::new(file)?;
+        let mut mapped = Self::new(file)?;
         let item_size = mem::size_of::<T>() as u64;
         debug_assert_ne!(item_size, 0, "FileMappedValue must not be zero-sized");
         let capacity = usize::try_from(byte_len / item_size).map_err(|_| {
@@ -156,7 +191,7 @@ impl<T: FileMappedValue> PersistentFileMapped<T> {
             })?;
         }
 
-        Ok(Self(mapped))
+        Ok(mapped)
     }
 }
 
@@ -164,11 +199,11 @@ impl<T> RawMem for PersistentFileMapped<T> {
     type Item = T;
 
     fn allocated(&self) -> &[Self::Item] {
-        self.0.allocated()
+        self.inner.allocated()
     }
 
     fn allocated_mut(&mut self) -> &mut [Self::Item] {
-        self.0.allocated_mut()
+        self.inner.allocated_mut()
     }
 
     unsafe fn grow(
@@ -176,11 +211,62 @@ impl<T> RawMem for PersistentFileMapped<T> {
         addition: usize,
         fill: impl FnOnce(usize, (&mut [Self::Item], &mut [MaybeUninit<Self::Item>])),
     ) -> MemResult<&mut [Self::Item]> {
-        unsafe { self.0.grow(addition, fill) }
+        if !mem::needs_drop::<T>() {
+            // Two views may share plain data, but dropping overlapping owners
+            // of destructor values would drop those values twice.
+            return unsafe { self.grow_retained(addition, fill) };
+        }
+        let previous_len = self.inner.allocated().len();
+        // Empty growth has no new items to initialize and needs no remap. Keep
+        // the live descriptor valid even when this callback unwinds.
+        if addition == 0 {
+            fill(0, (self.inner.allocated_mut(), &mut []));
+            return Ok(&mut self.inner.allocated_mut()[previous_len..]);
+        }
+        // These errors leave the upstream view untouched. Reject them before
+        // invalidating its still-valid descriptor, including for Drop values.
+        let capacity = previous_len
+            .checked_add(addition)
+            .ok_or(doublets::mem::Error::CapacityOverflow)?;
+        std::alloc::Layout::array::<T>(capacity)
+            .map_err(|_| doublets::mem::Error::CapacityOverflow)?;
+        // Upstream counts its minimum-page padding as initialized data. Only
+        // bytes known before that padding (or from successful growth) contain
+        // application values that the caller may skip when filling the tail.
+        let initialized = (self.initialized_bytes / mem::size_of::<T>() as u64)
+            .saturating_sub(previous_len as u64)
+            .min(addition as u64) as usize;
+        self.flush.invalidate();
+        unsafe {
+            self.inner
+                .grow(addition, |_, slices| fill(initialized, slices))
+        }?;
+        self.initialized_bytes = self
+            .initialized_bytes
+            .max(mem::size_of_val(self.inner.allocated()) as u64);
+        // RawMem::grow returns only the added tail. The barrier must cover
+        // the complete current mapping, including writes to its old prefix.
+        self.flush.publish(self.inner.allocated());
+        Ok(&mut self.inner.allocated_mut()[previous_len..])
     }
 
     fn shrink(&mut self, cap: usize) -> MemResult<()> {
-        self.0.shrink(cap)
+        // Upstream still unmaps and truncates for zero removal. In particular,
+        // a not-yet-adopted owner can have persisted items but zero live items.
+        if cap == 0 {
+            return Ok(());
+        }
+        // Reject before retiring the descriptor of the still-valid live view.
+        self.inner
+            .allocated()
+            .len()
+            .checked_sub(cap)
+            .expect("Tried to shrink to a larger capacity");
+        self.flush.invalidate();
+        self.inner.shrink(cap)?;
+        self.initialized_bytes = mem::size_of_val(self.inner.allocated()) as u64;
+        self.flush.publish(self.inner.allocated());
+        Ok(())
     }
 
     /// Fills only the genuinely uninitialised tail of the grown region,
@@ -189,9 +275,16 @@ impl<T> RawMem for PersistentFileMapped<T> {
     where
         Self::Item: Clone,
     {
-        // SAFETY: `FileMapped::grow` derives `inited` from the size the
-        // file had before growing, so the elements below it really are
-        // initialised (they were written by a previous session).
-        unsafe { self.0.grow_filled_exact(cap, value) }
+        // SAFETY: growth reports only genuinely initialized file items below
+        // `inited`; the closure fills every remaining item. Minimum-page
+        // padding is excluded for both plain and destructor-bearing values.
+        unsafe { self.grow_filled_exact(cap, value) }
+    }
+}
+
+impl<T> Drop for PersistentFileMapped<T> {
+    fn drop(&mut self) {
+        // Close retained handles before the inner owner unmaps its address.
+        self.flush.close();
     }
 }

@@ -5,6 +5,8 @@
 
 export { LinksClient, LinksDecorator } from './client.js';
 export { createWasmClient, WasmTransport } from './wasm.js';
+export { EngineClient, WasmEngine, WasmBranch } from './engine.js';
+export { MemoryCommitLog, ReplicatedCommitLog } from './engine-logs.js';
 export { GUARANTEES, MAX_U32_ADDRESS, tcpServerCapabilities, wasmCapabilities } from './capabilities.js';
 export { scopeOf } from './deadline.js';
 export {
@@ -22,3 +24,9 @@ export {
 export { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './framing.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
 export { ANY, toAddress } from './operations.js';
+
+export { ClusterEngine, ClusterTransaction, EtcdJournalStore } from './cluster.js';
+export { PartitionedJournalStore } from './partitioned.js';
+export { DeltaCommitLog } from './engine-delta.js';
+
+export { ReclaimingPartitionedJournalStore } from './reclaiming.js';

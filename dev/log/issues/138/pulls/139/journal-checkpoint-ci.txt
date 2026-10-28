@@ -1,0 +1,22 @@
+Logical journal checkpoints: fresh exact-head CI; PR https://github.com/link-foundation/link-cli/pull/139
+Head: a329fa7bad3d76777c1fb0d8bfb1495cc4ee217b
+All nine workflows completed successfully; native platform matrices include Linux, macOS and Windows.
+Broken Link Checker: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:42:19Z; https://github.com/link-foundation/link-cli/actions/runs/40332894315
+C# CI/CD Pipeline: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T14:03:47Z; https://github.com/link-foundation/link-cli/actions/runs/40332894391
+Dependencies: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:42:36Z; https://github.com/link-foundation/link-cli/actions/runs/40332894355
+Docs: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:44:45Z; https://github.com/link-foundation/link-cli/actions/runs/40332894292
+JS client CI: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:47:01Z; https://github.com/link-foundation/link-cli/actions/runs/40332894434
+Rust CI/CD Pipeline: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:55:22Z; https://github.com/link-foundation/link-cli/actions/runs/40332894262
+Security: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:48:13Z; https://github.com/link-foundation/link-cli/actions/runs/40332894471
+WebAssembly CI: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:51:14Z; https://github.com/link-foundation/link-cli/actions/runs/40332894268
+Workflows: success; created 2026-10-26T13:42:08Z; updated 2026-10-26T13:42:49Z; https://github.com/link-foundation/link-cli/actions/runs/40332894286
+
+C# first attempt failed two Windows fixture cleanups, with branches.links still in use.
+Evidence: checkpoint-ci-windows-before.txt; complete original log saved under experiments/issue-138/ci-logs.
+No assertion or timing rule was changed. Failed jobs were rerun with debug enabled.
+Attempt 2 passed all 2,180 Windows tests. The two earlier failing cases passed in 2s and 1s.
+Fresh debug log: experiments/issue-138/ci-logs/csharp-40332894391-attempt2.log.
+Lines 6503/6505 record those two successes; 11800-11802 record the complete successful run.
+The underlying cause of the first-attempt cleanup failures is not established.
+This CI result covers the committed checkpoint batch, not the later uncommitted delta composition correction.
+Wider acceptance criteria and complete-project coverage remain unfinished.

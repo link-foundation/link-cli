@@ -1,0 +1,6 @@
+Finite public Rust probe; 2,048 parents, 256 KiB stack, 512 MiB address space,
+core dumps disabled, ten-second deadline; metadata-only adapter.
+Constructed 2049 valid branches; checking out their unchanged root
+
+thread 'main' (1364851) has overflowed its stack
+fatal runtime error: stack overflow, aborting

@@ -1,0 +1,42 @@
+Issue 138 / PR 139: bounded C# process diagnostics
+https://github.com/link-foundation/link-cli/pull/139
+
+Investigated source: 6d134e8f1a62edbc167a75e80da0b02ac45cf4a2
+CI failure: https://github.com/link-foundation/link-cli/actions/runs/40447379413
+The separate native-lsm-csharp-ci-before.txt preserves exact errors and log lines.
+
+Confirmed formatter cause: the old local SDK 10.0.112 differs from CI's pinned
+10.0.403. Apply the exact SDK formatter and make the validation driver reject an
+unexpected SDK. Production changes in this correction are whitespace only.
+
+Windows process failures remain under investigation. The old timeout discarded
+child output; recursive directory cleanup sometimes masked the primary failure.
+Do not attribute them to concurrent native LSM tests: those completed earlier.
+The new test-only supervisor retains bounded stdout/stderr and phase diagnostics,
+always kills/reaps a live child before directory cleanup, and aggregates primary
+and cleanup failures. The existing 15-second deadline remains unchanged.
+
+Reproduction: finite-exit-child-before.log fails compilation with CS0103 before
+the missing supervisor API is implemented. Three independent controls then check
+an actual deadline/held-file child, an unexpected exit with both streams, and
+retention of both injected primary and cleanup exceptions. Focused suite: 67 pass.
+
+Final Linux validation, SDK 10.0.403, completed 2026-10-27T04:38:29Z:
+  Debug:   2,412 passed, zero failed/skipped.
+  Release: 2,412 passed, zero failed/skipped.
+  Debug production coverage:   9,280/9,606 lines; 5,559/6,004 branches.
+  Release production coverage: 7,167/7,385 lines; 5,505/5,965 branches.
+  Complete denominators retained; native/C#/linked-WASM 100% is unfinished.
+  Direct, partitioned and reclaiming native C# consumers: pass.
+  C#/Node/Bun/Deno plain/mirrored whole-store handoffs: all 32 pass.
+  Optional SQLite dependency checks and exact-SDK format verification: pass.
+  Repository checks: 211 workflow/C# controls plus ten JS controls, all pass.
+  Source size, release fragments, actionlint, shellcheck and diff checks: pass.
+
+Reproduce final C# validation with:
+  NATIVE_LSM_CSHARP_PREFIX=experiments/issue-138/finite-exit-csharp \
+    bash experiments/issue-138/validate-native-lsm-csharp.sh
+Logs are retained in experiments/issue-138/finite-exit-csharp-*.log and coverage
+XML under finite-exit-csharp-{Debug,Release}-results. CI uses the same test suite.
+Fresh exact-head Windows CI is required to establish and verify the remaining
+process-failure cause. This correction does not claim that cause is resolved.

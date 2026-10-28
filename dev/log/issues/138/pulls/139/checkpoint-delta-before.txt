@@ -1,0 +1,20 @@
+Checkpoint/delta composition regression before production changes
+Parent commit a329fa7bad3d76777c1fb0d8bfb1495cc4ee217b
+Each minimal test reads independently authored checkpoint vectors through the physical delta decorator.
+All three commands failed on the first engine3 record.
+
+experiments/issue-138/checkpoint-delta-native-before.log
+6: test physical_delta_accepts_independent_initial_checkpoint_vectors ... FAILED
+12: thread 'physical_delta_accepts_independent_initial_checkpoint_vectors' (522416) panicked at tests/engine_checkpoint_delta_tests.rs:20:43:
+13: called `Result::unwrap()` on an `Err` value: Transaction("expected an engine revision")
+20: test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+22: error: test failed, to rerun pass `--test engine_checkpoint_delta_tests`
+
+experiments/issue-138/checkpoint-delta-csharp-before.log
+12:   Failed Foundation.Data.Doublets.Cli.Tests.CheckpointDeltaTests.PhysicalDeltaAcceptsIndependentInitialCheckpointVectors [27 ms]
+14:    System.IO.InvalidDataException : Expected an engine revision.
+16:      at Foundation.Data.Doublets.Cli.Engine.DeltaCommitLog.Full(String record) in /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/Engine/DeltaCommitLog.cs:line 58
+22: Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 27 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
+
+experiments/issue-138/checkpoint-delta-js-before.log
+15:   Error: expected an engine revision

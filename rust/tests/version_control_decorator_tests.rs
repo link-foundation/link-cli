@@ -4,25 +4,24 @@
 //! of issue #94.
 
 use anyhow::Result;
+#[cfg(not(target_arch = "wasm32"))]
+use link_cli::NamedTypesDecorator;
 use link_cli::{
-    CommitMode, Link, LogRetentionPolicy, NamedTypesDecorator, TransactionsDecorator,
-    VersionControlDecorator, DEFAULT_BRANCH_NAME,
+    CommitMode, Link, LogRetentionPolicy, TransactionsDecorator, VersionControlDecorator,
+    DEFAULT_BRANCH_NAME,
 };
+#[cfg(not(target_arch = "wasm32"))]
 use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
-struct VcGuard {
-    _data_file: NamedTempFile,
-    _log_file: NamedTempFile,
-    _vc_file: NamedTempFile,
-}
-
-fn make_vc() -> (VersionControlDecorator, VcGuard) {
-    let data_file = NamedTempFile::new().unwrap();
-    let log_file = NamedTempFile::new().unwrap();
-    let vc_file = NamedTempFile::new().unwrap();
-    let data_links = NamedTypesDecorator::new(data_file.path(), false).unwrap();
-    let log_links = NamedTypesDecorator::new(log_file.path(), false).unwrap();
-    let vc_links = NamedTypesDecorator::new(vc_file.path(), false).unwrap();
+fn make_vc() -> (VersionControlDecorator, Vec<test_store::NamedFiles>) {
+    let (data_files, data_links) = test_store::named().unwrap();
+    let (log_files, log_links) = test_store::named().unwrap();
+    let (vc_files, vc_links) = test_store::named().unwrap();
     let tx = TransactionsDecorator::new(
         data_links,
         log_links,
@@ -32,17 +31,11 @@ fn make_vc() -> (VersionControlDecorator, VcGuard) {
     )
     .unwrap();
     let vc = VersionControlDecorator::new(tx, vc_links, false).unwrap();
-    (
-        vc,
-        VcGuard {
-            _data_file: data_file,
-            _log_file: log_file,
-            _vc_file: vc_file,
-        },
-    )
+    (vc, vec![data_files, log_files, vc_files])
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn default_branch_exists_on_first_open() {
     let (vc, _guard) = make_vc();
     assert_eq!(DEFAULT_BRANCH_NAME, vc.current_branch());
@@ -51,7 +44,8 @@ fn default_branch_exists_on_first_open() {
     assert_eq!(DEFAULT_BRANCH_NAME, branches[0].name);
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn new_transitions_are_attributed_to_current_branch() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     let _id = vc.create_and_update(0, 0)?;
@@ -64,7 +58,8 @@ fn new_transitions_are_attributed_to_current_branch() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn checkout_to_zero_rewinds_everything() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     let a = vc.create_and_update(0, 0)?;
@@ -80,7 +75,8 @@ fn checkout_to_zero_rewinds_everything() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn checkout_and_forward_replay_restores_state() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     let a = vc.create_and_update(0, 0)?;
@@ -104,7 +100,8 @@ fn checkout_and_forward_replay_restores_state() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn branch_forks_from_current_head() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     vc.create_and_update(0, 0)?;
@@ -113,7 +110,8 @@ fn branch_forks_from_current_head() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn switch_branch_applies_and_rewinds_transitions() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     let a = vc.create_and_update(0, 0)?;
@@ -146,7 +144,8 @@ fn switch_branch_applies_and_rewinds_transitions() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn tag_points_to_current_head() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     vc.create_and_update(0, 0)?;
@@ -157,7 +156,8 @@ fn tag_points_to_current_head() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn branch_from_explicit_seq_uses_given_point() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     vc.create_and_update(0, 0)?;
@@ -174,6 +174,7 @@ fn branch_from_explicit_seq_uses_given_point() -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn recover_rebuilds_state_from_branches_store() -> Result<()> {
     let data_file = NamedTempFile::new()?;
@@ -217,7 +218,8 @@ fn recover_rebuilds_state_from_branches_store() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn checkout_out_of_range_throws() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     vc.create_and_update(0, 0)?;
@@ -225,7 +227,8 @@ fn checkout_out_of_range_throws() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn duplicate_branch_throws() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     vc.branch("feature", None)?;
@@ -233,7 +236,8 @@ fn duplicate_branch_throws() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn full_stack_acid_rollback_is_atomic_and_isolated() -> Result<()> {
     let (mut vc, _guard) = make_vc();
     let baseline = snapshot(&vc);
@@ -262,6 +266,7 @@ fn full_stack_acid_rollback_is_atomic_and_isolated() -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn full_stack_acid_commit_is_consistent_and_durable_across_reopen() -> Result<()> {
     let data_file = NamedTempFile::new()?;

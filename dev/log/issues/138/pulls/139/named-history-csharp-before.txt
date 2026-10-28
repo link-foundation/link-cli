@@ -1,0 +1,72 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.59]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "cascade") [FAIL]
+[xUnit.net 00:00:01.70]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "delete") [FAIL]
+[xUnit.net 00:00:01.86]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "remove") [FAIL]
+[xUnit.net 00:00:02.01]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "rename") [FAIL]
+[xUnit.net 00:00:02.11]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "move") [FAIL]
+[xUnit.net 00:00:02.26]     Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameOnlyVersionsAdvanceAndReplay [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "cascade") [379 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "first 雪|\0\n"
+Actual:   null
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(String kind) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 36
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "delete") [109 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "second"
+Actual:   null
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(String kind) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 36
+   at InvokeStub_TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "remove") [159 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "first 雪|\0\n"
+Actual:   null
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(String kind) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 36
+   at InvokeStub_TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "rename") [150 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "first 雪|\0\n"
+Actual:   "changed"
+           ↑ (pos 0)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(String kind) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 36
+   at InvokeStub_TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(kind: "move") [96 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "first 雪|\0\n"
+Actual:   null
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(String kind) in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 36
+   at InvokeStub_TransactionNamedHistoryTests.RollbackRestoresNamesAndTheirUniqueOwners(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameOnlyVersionsAdvanceAndReplay [152 ms]
+  Error Message:
+   A name-only write must advance version history.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TransactionNamedHistoryTests.NameOnlyVersionsAdvanceAndReplay() in /tmp/gh-issue-solver-1792924568628/csharp/Foundation.Data.Doublets.Cli.Tests/TransactionNamedHistoryTests.cs:line 56
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     6, Passed:     0, Skipped:     0, Total:     6, Duration: 1 s - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

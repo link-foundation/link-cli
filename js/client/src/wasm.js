@@ -6,10 +6,14 @@
 import { wasmCapabilities } from './capabilities.js';
 import { LinksClient } from './client.js';
 import { scopeError } from './deadline.js';
-import { ConnectionClosedError, LimitExceededError } from './errors.js';
+import { ConnectionClosedError, LimitExceededError, LinksError, UnsupportedError } from './errors.js';
 import { DEFAULT_MAX_MESSAGE_BYTES } from './framing.js';
 
 const encoder = new TextEncoder();
+// Internal ownership protocol for staged group commits. These symbols are not
+// exported by the client package's public entry point.
+export const canTransferHandle = Symbol('can transfer wasm handle');
+export const transferHandle = Symbol('transfer wasm handle');
 
 /**
  * Adapts a `Clink` instance (anything with `request(text) => text`) to the
@@ -21,6 +25,8 @@ export class WasmTransport {
   #clink;
   #owned;
   #closed = false;
+  #reserved = false;
+  #closing = false;
   #tail = Promise.resolve();
 
   constructor(clink, { owned = false, maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES, maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES, capabilities } = {}) {
@@ -36,6 +42,7 @@ export class WasmTransport {
   }
 
   send(text, scope = {}) {
+    if (this.#reserved) return Promise.reject(new ConnectionClosedError('the WebAssembly session belongs to a commit group', { outcome: 'not-sent' }));
     const run = () => {
       if (this.#closed) throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
       const size = encoder.encode(text).length;
@@ -56,14 +63,48 @@ export class WasmTransport {
       return reply;
     };
     // Keep requests in order, each after the previous one settled.
+    return this.#enqueue(run);
+  }
+
+  #enqueue(run) {
     const result = this.#tail.then(run);
     this.#tail = result.catch(() => {});
     return result;
   }
 
+  /** Serializes transaction controls after all previously queued requests. */
+  control(method) {
+    if (this.#reserved) return Promise.reject(new ConnectionClosedError('the WebAssembly session belongs to a commit group', { outcome: 'not-sent' }));
+    return this.#enqueue(() => {
+      if (this.#closed) throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
+      if (!['commit', 'rollback'].includes(method) || typeof this.#clink[method] !== 'function') {
+        throw new UnsupportedError('this WebAssembly store has no transaction control');
+      }
+      try { return this.#clink[method](); }
+      catch (cause) { throw new LinksError(String(cause), {
+        outcome: method === 'commit' && String(cause).includes('indeterminate commit') ? 'unknown' : 'failed', cause,
+      }); }
+    });
+  }
+
+  [canTransferHandle]() { return this.#owned && !this.#closed && !this.#reserved && !this.#closing; }
+  [transferHandle]() {
+    if (!this[canTransferHandle]()) throw new ConnectionClosedError('the WebAssembly session is closed or already transferred', { outcome: 'not-sent' });
+    // Reserve synchronously: previously queued work drains, while subsequent
+    // requests/controls cannot race the transfer. Close waits for the same tail.
+    this.#reserved = true;
+    return this.#enqueue(() => {
+      this.#closed = true;
+      this.#owned = false;
+      return this.#clink;
+    });
+  }
+
   /** Waits for queued requests; frees the store only if this transport owns it. */
   async close() {
+    this.#closing = true;
     await this.#tail;
+    if (this.#reserved) { await this.#tail; return; }
     if (this.#closed) return;
     this.#closed = true;
     if (this.#owned) this.#clink.free?.();

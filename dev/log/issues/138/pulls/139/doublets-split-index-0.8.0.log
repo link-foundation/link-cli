@@ -1,0 +1,82 @@
+    Updating crates.io index
+     Locking 1 package to highest compatible version
+ Downgrading doublets v0.9.0 -> v0.8.0 (available: v0.9.0)
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libc v0.2.191
+   Compiling autocfg v1.5.1
+   Compiling num-traits v0.2.19
+   Compiling syn v3.0.9
+   Compiling rustix v1.1.6
+   Compiling getrandom v0.4.3
+   Compiling thiserror v2.0.21
+   Compiling thiserror-impl v2.0.21
+   Compiling bitflags v2.13.2
+   Compiling linux-raw-sys v0.12.1
+   Compiling cfg-if v1.0.5
+   Compiling platform-num v0.8.0
+   Compiling once_cell v1.21.4
+   Compiling fastrand v2.5.0
+   Compiling tempfile v3.27.0
+   Compiling memmap2 v0.9.12
+   Compiling beef v0.5.2
+   Compiling allocator-api2 v0.4.0
+   Compiling platform-mem v0.3.0
+   Compiling platform-data v2.0.0
+   Compiling platform-trees v0.3.4
+   Compiling tap v1.0.1
+   Compiling leak_slice v0.2.0
+   Compiling doublets v0.8.0
+   Compiling doublets-index-regression v0.0.0 (/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression)
+    Finished `test` profile [unoptimized] target(s) in 22.96s
+     Running unittests ../../../rust/tests/doublets_split_index_tests.rs (experiments/issue-138/doublets-index-regression/target/debug/deps/doublets_index_regression-8b1101b13e7f3f8d)
+
+running 4 tests
+test absent_source_count_filters_the_concrete_target ... FAILED
+test allocating_forward_source_preserves_indexed_queries_and_updates ... FAILED
+test allocating_forward_target_preserves_indexed_queries_and_deletes ... FAILED
+test allocating_shared_forward_endpoint_preserves_both_indexes ... FAILED
+
+failures:
+
+---- absent_source_count_filters_the_concrete_target stdout ----
+
+thread 'absent_source_count_filters_the_concrete_target' (11272) panicked at ../../../rust/tests/doublets_split_index_tests.rs:29:5:
+assertion `left == right` failed
+  left: 2
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- allocating_forward_source_preserves_indexed_queries_and_updates stdout ----
+
+thread 'allocating_forward_source_preserves_indexed_queries_and_updates' (11273) panicked at ../../../rust/tests/doublets_split_index_tests.rs:42:5:
+assertion `left == right` failed
+  left: [(2, 2, 2)]
+ right: [(1, 2, 7), (2, 2, 2)]
+
+---- allocating_forward_target_preserves_indexed_queries_and_deletes stdout ----
+
+thread 'allocating_forward_target_preserves_indexed_queries_and_deletes' (11274) panicked at ../../../rust/tests/doublets_split_index_tests.rs:59:5:
+assertion `left == right` failed
+  left: [(2, 2, 2)]
+ right: [(1, 7, 2), (2, 2, 2)]
+
+---- allocating_shared_forward_endpoint_preserves_both_indexes stdout ----
+
+thread 'allocating_shared_forward_endpoint_preserves_both_indexes' (11275) panicked at ../../../rust/tests/doublets_split_index_tests.rs:74:5:
+assertion `left == right` failed
+  left: []
+ right: [(1, 2, 2)]
+
+
+failures:
+    absent_source_count_filters_the_concrete_target
+    allocating_forward_source_preserves_indexed_queries_and_updates
+    allocating_forward_target_preserves_indexed_queries_and_deletes
+    allocating_shared_forward_endpoint_preserves_both_indexes
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
+
+error: test failed, to rerun pass `--lib`
+PROBE exit=101, cumulative child maximum RSS KiB=251388

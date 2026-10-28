@@ -1,0 +1,73 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/bin/Release/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Release/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.24]     Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(query: "() ((100: 100 100) (1 1))") [FAIL]
+[xUnit.net 00:00:02.28]     Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(query: "() ((foo: (1 1) (1 1)) (3 3))") [FAIL]
+[xUnit.net 00:00:02.29]     Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(query: "() ((100: 100 100) (99 99))", first: 99, second: 100) [FAIL]
+[xUnit.net 00:00:02.31]     Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(query: "() ((1: 1 1) (2 2))", first: 1, second: 2) [FAIL]
+[xUnit.net 00:00:02.32]     Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(query: "() ((foo: foo foo) (2 2))", first: 1, second: 2) [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(query: "() ((100: 100 100) (1 1))") [458 ms]
+  Error Message:
+   Assert.ThrowsAny() Failure: No exception was thrown
+Expected: typeof(System.Exception)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.<>c__DisplayClass3_0.<RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 42
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.WithLinks(Action`1 action) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 13
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(String query) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 40
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(query: "() ((foo: (1 1) (1 1)) (3 3))") [21 ms]
+  Error Message:
+   Assert.ThrowsAny() Failure: No exception was thrown
+Expected: typeof(System.Exception)
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.<>c__DisplayClass3_0.<RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 42
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.WithLinks(Action`1 action) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 13
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(String query) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 40
+   at InvokeStub_LegacyQueryAllocationTests.RejectedPredictionsDoNotWriteRowsOrConsumeTheAllocator(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(query: "() ((100: 100 100) (99 99))", first: 99, second: 100) [19 ms]
+  Error Message:
+   System.InvalidOperationException : Invalid reference to non-existent link '99' in substitution pattern. Link '99' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor`1.ValidateLinksExistOrWillBeCreated(INamedTypesLinks`1 links, IList`1 restrictionPatterns, IList`1 substitutionPatterns, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 36
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor`1.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs:line 92
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Legacy.cs:line 12
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.<>c__DisplayClass2_0.<ValidationUsesTheRealFollowingAllocation>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 29
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.WithLinks(Action`1 action) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 13
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(String query, UInt32 first, UInt32 second) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 27
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(query: "() ((1: 1 1) (2 2))", first: 1, second: 2) [20 ms]
+  Error Message:
+   System.InvalidOperationException : Invalid reference to non-existent link '2' in substitution pattern. Link '2' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor`1.ValidateLinksExistOrWillBeCreated(INamedTypesLinks`1 links, IList`1 restrictionPatterns, IList`1 substitutionPatterns, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 36
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor`1.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs:line 92
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Legacy.cs:line 12
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.<>c__DisplayClass2_0.<ValidationUsesTheRealFollowingAllocation>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 29
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.WithLinks(Action`1 action) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 13
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(String query, UInt32 first, UInt32 second) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 27
+   at InvokeStub_LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(query: "() ((foo: foo foo) (2 2))", first: 1, second: 2) [15 ms]
+  Error Message:
+   System.InvalidOperationException : Invalid reference to non-existent link '2' in substitution pattern. Link '2' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor`1.ValidateLinksExistOrWillBeCreated(INamedTypesLinks`1 links, IList`1 restrictionPatterns, IList`1 substitutionPatterns, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.References.cs:line 36
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor`1.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.cs:line 92
+   at Foundation.Data.Doublets.Cli.AdvancedMixedQueryProcessor.ProcessQuery(INamedTypesLinks`1 links, Options options) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Library/AdvancedMixedQueryProcessor.Legacy.cs:line 12
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.<>c__DisplayClass2_0.<ValidationUsesTheRealFollowingAllocation>b__0(NamedTypesDecorator`1 links) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 29
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.WithLinks(Action`1 action) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 13
+   at Foundation.Data.Doublets.Cli.Tests.LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(String query, UInt32 first, UInt32 second) in /tmp/gh-issue-solver-1793187246880/csharp/Foundation.Data.Doublets.Cli.Tests/LegacyQueryAllocationTests.cs:line 27
+   at InvokeStub_LegacyQueryAllocationTests.ValidationUsesTheRealFollowingAllocation(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     5, Passed:     0, Skipped:     0, Total:     5, Duration: 560 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)

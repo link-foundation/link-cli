@@ -1,0 +1,29 @@
+Test	Test JavaScript	2026-10-24T16:07:54.4462434Z ℹ suites 0
+Test	Test JavaScript	2026-10-24T16:07:54.4462558Z ℹ pass 216
+Test	Test JavaScript	2026-10-24T16:07:54.4462679Z ℹ fail 1
+Test	Test JavaScript	2026-10-24T16:07:54.4462799Z ℹ cancelled 0
+Test	Test JavaScript	2026-10-24T16:07:54.4462928Z ℹ skipped 0
+Test	Test JavaScript	2026-10-24T16:07:54.4463051Z ℹ todo 0
+Test	Test JavaScript	2026-10-24T16:07:54.4463190Z ℹ duration_ms 1193.883245
+Test	Test JavaScript	2026-10-24T16:07:54.4467460Z
+Test	Test JavaScript	2026-10-24T16:07:54.4467624Z ✖ failing tests:
+Test	Test JavaScript	2026-10-24T16:07:54.4467746Z
+Test	Test JavaScript	2026-10-24T16:07:54.4467918Z test at test/repositoryLayout.test.mjs:27:1
+Test	Test JavaScript	2026-10-24T16:07:54.4468472Z ✖ language code package manifests and generated evidence stay out of the root folder (1.260305ms)
+Test	Test JavaScript	2026-10-24T16:07:54.4468923Z   AssertionError [ERR_ASSERTION]: .gitkeep should live under the package-specific project tree or case-study evidence
+Test	Test JavaScript	2026-10-24T16:07:54.4469227Z
+Test	Test JavaScript	2026-10-24T16:07:54.4469338Z   true !== false
+Test	Test JavaScript	2026-10-24T16:07:54.4469521Z
+Test	Test JavaScript	2026-10-24T16:07:54.4470007Z       at TestContext.<anonymous> (file:///home/runner/work/link-cli/link-cli/js/test/repositoryLayout.test.mjs:42:12)
+Test	Test JavaScript	2026-10-24T16:07:54.4470581Z       at Test.runInAsyncScope (node:async_hooks:227:14)
+Test	Test JavaScript	2026-10-24T16:07:54.4470946Z       at Test.run (node:internal/test_runner/test:1402:25)
+Test	Test JavaScript	2026-10-24T16:07:54.4471333Z       at Test.start (node:internal/test_runner/test:1262:17)
+Test	Test JavaScript	2026-10-24T16:07:54.4471793Z       at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+Test	Test JavaScript	2026-10-24T16:07:54.4472191Z     generatedMessage: false,
+Test	Test JavaScript	2026-10-24T16:07:54.4472432Z     code: 'ERR_ASSERTION',
+Test	Test JavaScript	2026-10-24T16:07:54.4472650Z     actual: true,
+Test	Test JavaScript	2026-10-24T16:07:54.4472857Z     expected: false,
+Test	Test JavaScript	2026-10-24T16:07:54.4473074Z     operator: 'strictEqual',
+Test	Test JavaScript	2026-10-24T16:07:54.4473303Z     diff: 'simple'
+Test	Test JavaScript	2026-10-24T16:07:54.4473509Z   }
+Test	Test JavaScript	2026-10-24T16:07:54.4599557Z ##[error]Process completed with exit code 1.

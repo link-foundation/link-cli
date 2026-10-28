@@ -1,0 +1,145 @@
+{
+  "branches": [
+    {
+      "version": 2,
+      "name": "main",
+      "parent": null,
+      "fork": 0,
+      "head": 0,
+      "marker": "__vc:branch:2|006D00610069006E|-|0|0"
+    },
+    {
+      "version": 2,
+      "name": "feature",
+      "parent": "main",
+      "fork": 5,
+      "head": 9,
+      "marker": "__vc:branch:2|0066006500610074007500720065|006D00610069006E|5|9"
+    },
+    {
+      "version": 2,
+      "name": "topic:parent=decoy:fork=7:head=9/😀",
+      "parent": "main",
+      "fork": 2,
+      "head": 4,
+      "marker": "__vc:branch:2|0074006F007000690063003A0070006100720065006E0074003D006400650063006F0079003A0066006F0072006B003D0037003A0068006500610064003D0039002FD83DDE00|006D00610069006E|2|4"
+    },
+    {
+      "version": 2,
+      "name": "child",
+      "parent": "{\"name\":\"quoted\"}:parent=:",
+      "fork": 4,
+      "head": 9223372036854775807,
+      "marker": "__vc:branch:2|006300680069006C0064|007B0022006E0061006D00650022003A002200710075006F0074006500640022007D003A0070006100720065006E0074003D003A|4|9223372036854775807"
+    },
+    {
+      "version": 2,
+      "name": "2|0041|-|0|0",
+      "parent": "%2F|:=😀",
+      "fork": 0,
+      "head": 8,
+      "marker": "__vc:branch:2|0032007C0030003000340031007C002D007C0030007C0030|002500320046007C003A003DD83DDE00|0|8"
+    },
+    {
+      "version": 2,
+      "name": "zero\u0000line\n:parent=😀",
+      "parent": "zero\u0000parent\n",
+      "fork": 0,
+      "head": 1,
+      "marker": "__vc:branch:2|007A00650072006F0000006C0069006E0065000A003A0070006100720065006E0074003DD83DDE00|007A00650072006F00000070006100720065006E0074000A|0|1"
+    },
+    {
+      "version": 2,
+      "name": "empty-parent",
+      "parent": "",
+      "fork": 0,
+      "head": 0,
+      "marker": "__vc:branch:2|0065006D007000740079002D0070006100720065006E0074||0|0"
+    },
+    {
+      "version": 1,
+      "name": "main",
+      "parent": null,
+      "fork": 0,
+      "head": 0,
+      "marker": "__vc:branch:main:parent=:fork=0:head=0"
+    },
+    {
+      "version": 1,
+      "name": "legacy",
+      "parent": "main",
+      "fork": 2,
+      "head": 4,
+      "marker": "__vc:branch:legacy:parent=main:fork=2:head=4"
+    },
+    {
+      "version": 1,
+      "name": "2|0041|-|0|0",
+      "parent": null,
+      "fork": 0,
+      "head": 0,
+      "marker": "__vc:branch:2|0041|-|0|0:parent=:fork=0:head=0"
+    }
+  ],
+  "invalidBranches": [
+    "garbage",
+    "__vc:branch:x",
+    "__vc:branch:x:parent=",
+    "__vc:branch:x:parent=:fork=",
+    "__vc:branch:x:parent=:fork=0:head=no",
+    "__vc:branch:x:parent=:fork=no:head=0",
+    "__vc:branch:2|0041|-|0",
+    "__vc:branch:2|0041|-|0|0|extra",
+    "__vc:branch:2|001|-|0|0",
+    "__vc:branch:2|00ZZ|-|0|0",
+    "__vc:branch:2|0041|001|0|0",
+    "__vc:branch:2|0041|00ZZ|0|0",
+    "__vc:branch:2|0041|-|no|0",
+    "__vc:branch:2|0041|-|0|no",
+    "__vc:branch:2|0041|-|9223372036854775808|0",
+    "__vc:branch:2|0041|-|0|9223372036854775808",
+    "__vc:branch:2|0041|-| 0|0",
+    "__vc:branch:2|0041|-|0|0 ",
+    "__vc:branch:3|0041|-|0|0"
+  ],
+  "tags": [
+    {
+      "name": "plain",
+      "sequence": 0,
+      "marker": "__vc:tag:plain=0"
+    },
+    {
+      "name": "release=version=😀",
+      "sequence": 1,
+      "marker": "__vc:tag:release=version=😀=1"
+    },
+    {
+      "name": "\"quoted\"=value",
+      "sequence": 2,
+      "marker": "__vc:tag:\"quoted\"=value=2"
+    },
+    {
+      "name": "%2F|:=",
+      "sequence": 3,
+      "marker": "__vc:tag:%2F|:==3"
+    },
+    {
+      "name": "zero\u0000=\n",
+      "sequence": 4,
+      "marker": "__vc:tag:zero\u0000=\n=4"
+    },
+    {
+      "name": "2|0041|-|0|0",
+      "sequence": 5,
+      "marker": "__vc:tag:2|0041|-|0|0=5"
+    }
+  ],
+  "invalidTags": [
+    "__vc:tag:missing",
+    "__vc:tag:=1",
+    "__vc:tag:missing-sequence=",
+    "__vc:tag:bad=no",
+    "__vc:tag:bad=1=oops",
+    "__vc:tag:overflow=9223372036854775808"
+  ]
+}

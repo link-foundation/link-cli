@@ -23,16 +23,95 @@ path = "src/lib.rs"
 name = "clink"
 path = "src/main.rs"
 
+# A normal test harness writes to stdout before invoking a child test, which
+# prevents exercising library stdout failures against /dev/full.
+[[test]]
+name = "diagnostic_stdout"
+harness = false
+
 [dependencies]
 thiserror = "2.0.21"
 anyhow = "1.0.104"
+# Native std::time semantics, JavaScript Date.now for browser/Node WASM.
+web-time = "1.1.0"
+# Optional engine strategy uses the maintained Arc-based persistent ordered map.
+rpds = "1.2.1"
+# Optional runtime object caching reuses bounded LRU ordering; std hashing only.
+lru = { version = "0.19.0", default-features = false }
 # Issue 67 Rust basis crates:
 # Source: http://github.com/linksplatform/doublets-rs
-doublets = "0.8.0"
+doublets = "0.9.0"
 # Source: http://github.com/link-foundation/links-notation
 links-notation = "0.27.1"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.5.0"
+ureq = { version = "3.5.0", features = ["json"], optional = true }
+base64 = { version = "0.23.1", optional = true }
+serde_json = { version = "1.0.154", optional = true }
+sha2 = { version = "0.11.1", default-features = false, optional = true }
 
 [dev-dependencies]
 tempfile = "3.27.0"
+serde_json = "1.0.154"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Selected physical pager/WAL component; absent from default/native and WASM builds.
+getrandom = { version = "0.4.3", optional = true }
+rusqlite = { version = "0.41.0", default-features = false, features = ["bundled"], optional = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = { version = "0.2.191", optional = true }
+errno = { version = "0.3.14", optional = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_Memory", "Win32_Security"] }
+
+[features]
+address-reservations = ["dep:serde_json"]
+author-fencing = ["dep:serde_json"]
+causal = ["dep:serde_json"]
+causal-batches = ["causal"]
+causal-sessions = ["causal-batches", "causal-projection"]
+causal-projection = ["causal"]
+causal-merkle = ["causal", "dep:sha2"]
+etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
+sqlite = ["dep:rusqlite"]
+native-pages = ["dep:getrandom", "dep:libc", "dep:errno"]
+sorted-tables = ["dep:serde_json"]
+physical-lsm = ["sorted-tables"]
+
+[[example]]
+name = "cluster"
+required-features = ["etcd"]
+
+[[example]]
+name = "address_allocation"
+required-features = ["etcd", "address-reservations"]
+
+[[example]]
+name = "engine_sqlite"
+required-features = ["sqlite"]
+
+[[example]]
+name = "engine_native_pages"
+required-features = ["native-pages"]
+
+[[example]]
+name = "journal_maintenance"
+required-features = ["etcd"]
+
+[[example]]
+name = "journal_reclamation"
+required-features = ["etcd"]
+
+[[example]]
+name = "sorted_table"
+required-features = ["native-pages", "sorted-tables"]
+
+[[example]]
+name = "native_lsm"
+required-features = ["native-pages", "physical-lsm"]
+
+[[example]]
+name = "author_fence"
+required-features = ["etcd", "author-fencing"]

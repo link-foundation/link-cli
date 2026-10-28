@@ -1,0 +1,12 @@
+[package]
+name = "checkpoint-inspect-before"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+link-cli = { path = "../../../rust", default-features = false, features = ["native-pages"] }
+
+[[test]]
+name = "checkpoint_inspect_before"
+path = "../checkpoint-inspect-before.rs"

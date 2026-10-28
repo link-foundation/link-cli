@@ -1,0 +1,104 @@
+Selected checkpoint root mirroring; https://github.com/link-foundation/link-cli/pull/139
+Before controls: portable 600cf5f; native 6a0f7c9; see mirrored-root-before.txt.
+Validation: bash experiments/issue-138/validate-mirrored-root-all.sh
+Sequential compilers: Cargo jobs=1/reduced debug; .NET heap640MiB; actual-WASM cap256MiB.
+native: complete stage passed
+csharp: complete stage passed
+wasm: complete stage passed
+js: complete stage passed
+cluster: complete stage passed
+interop: complete stage passed
+repository: complete stage passed
+
+Native Rust: 1028 passed; 18 child entries ignored by direct discovery.
+Complete lines: 13860/14669 (94.48497%)
+Complete branches: 2580/2994 (86.17234%)
+Complete functions: 1803/1938 (93.03406%)
+/rust/src/engine/paged/checkpoint_root.rs lines: 164/164 (100.00000%)
+/rust/src/engine/paged/checkpoint_root.rs branches: 29/30 (96.66667%)
+/rust/src/engine/paged/checkpoint_root.rs functions: 27/27 (100.00000%)
+/rust/src/engine/paged/file_checkpoint.rs lines: 259/267 (97.00375%)
+/rust/src/engine/paged/file_checkpoint.rs branches: 7/8 (87.50000%)
+/rust/src/engine/paged/file_checkpoint.rs functions: 61/62 (98.38710%)
+
+Actual WASM: 631 passed; 0 child entries ignored by direct discovery.
+Complete lines: 11241/13598 (82.66657%)
+Complete branches: 2196/2637 (83.27645%)
+Complete functions: 1430/1805 (79.22438%)
+/rust/src/engine/paged/checkpoint_root.rs lines: 164/164 (100.00000%)
+/rust/src/engine/paged/checkpoint_root.rs branches: 29/30 (96.66667%)
+/rust/src/engine/paged/checkpoint_root.rs functions: 27/27 (100.00000%)
+/rust/wasm/src/engine.rs lines: 263/263 (100.00000%)
+/rust/wasm/src/engine.rs branches: 6/6 (100.00000%)
+/rust/wasm/src/engine.rs functions: 50/50 (100.00000%)
+Doctests: test result: ok. 6 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.88s
+
+C# Debug: 2264 passed; zero failed/skipped.
+Complete lines: 8327/8621 (96.58972%)
+Complete branches: 4583/4950 (92.58586%)
+Foundation.Data.Doublets.Cli.Engine.FileCheckpointPagedCommitLog: lines 1; branches 1
+Foundation.Data.Doublets.Cli.Engine.MirroredCheckpointRoot: lines 1; branches 0.9833
+Foundation.Data.Doublets.Cli.Engine.MirroredCheckpointRoot/Repair: lines 1; branches 1
+
+C# Release: 2264 passed; zero failed/skipped.
+Complete lines: 6399/6585 (97.17540%)
+Complete branches: 4527/4913 (92.14329%)
+Foundation.Data.Doublets.Cli.Engine.FileCheckpointPagedCommitLog: lines 1; branches 1
+Foundation.Data.Doublets.Cli.Engine.MirroredCheckpointRoot: lines 1; branches 0.9833
+Foundation.Data.Doublets.Cli.Engine.MirroredCheckpointRoot/Repair: lines 1; branches 1
+JS actual native mutation cuts: [('false', 'false', 'replace', '34'), ('true', 'false', 'replace', '62'), ('true', 'false', 'repair', '12'), ('false', 'true', 'replace', '40'), ('true', 'true', 'replace', '68'), ('true', 'true', 'repair', '12'), ('false', 'true', 'root-repair', '6'), ('true', 'true', 'root-repair', '6'), ('true', 'true', 'both-repair', '18')]
+JS: {'tests': 261, 'pass': 261, 'fail': 0, 'skipped': 0}
+Repository: {'tests': 221, 'pass': 221, 'fail': 0, 'skipped': 0}
+node: identical72-case actual-WASM composition; conformance/48 ordinary native policies pass.
+bun: identical72-case actual-WASM composition; conformance/48 ordinary native policies pass.
+deno: identical72-case actual-WASM composition; conformance/48 ordinary native policies pass.
+PASS checkpoint pages: 48 configurations, 288 persistent writer handoffs
+PASS native compaction: 96 configurations, 576 persistent writer handoffs
+Ordinary48/288 and initial-checkpoint48/288 controls retained. Compaction96/576 independently selects root/bank modes and damages both while closed.
+Real three-member etcd mode 0: complete fault/handoff controls pass.
+Real three-member etcd mode 1: complete fault/handoff controls pass.
+Real three-member etcd mode cache: complete fault/handoff controls pass.
+Vector regeneration, format/strict Clippy, TypeScript, SQL optionality, release/source/workflow checks pass.
+Independent finite corruption/selection/publication/recovery faults, all selected native ownership modes and258 before/after process cuts per language pass.
+Complete native Rust/C#/linked-WASM coverage and every wider unmet criterion stay unfinished. No denominator is reduced.
+Truthful synchronization is assumed; process exits do not certify physical power loss or arbitrary simultaneous loss of both root copies.
+
+Complete validation: 2026-10-26T19:38:18Z through 2026-10-26T20:22:23Z.
+All seven sequential stage reports end with their success marker. No test is
+filtered from the complete coverage reports. Eighteen ignored Rust direct child
+entry points execute through their bounded parents; one legacy doc example is
+ignored. No runtime skips are hidden: conformance reports four declared backend
+capability skips separately from the complete portable/native unit suites.
+
+Original raw evidence remains under experiments/issue-138/mirrored-root-*:
+  native-full.log and native-coverage.json; wasm-full.log and wasm-coverage.json;
+  csharp-{Debug,Release}-full.log and their complete Cobertura attachments;
+  js-full.log; {node,bun,deno}-{conformance,compact,composition,payload} reports;
+  {all,initial,compact}-interop.log; etcd-{0,1,cache}.log; repository.log.
+C# successful minimal VSTest output suppresses its operation counters; the
+independent checkpoint-cut-baselines.mjs retains all nine actual trace counts
+in mirrored-root-csharp-cut-baselines.log. Full C# tests independently execute
+every observed cut. Focused Rust actual trace counters are retained in
+mirrored-root-rust-native-expanded.log:28-36. Each language observes the same
+34/62/12/40/68/12/6/6/18 operations, not an assumed fixed fault count.
+
+Preliminary strict Clippy rejected an owned temporary comparison in the vector
+control; the test now encodes that epoch once and compares borrowed strings.
+The original diagnostic is preserved in mirrored-root-clippy-before-vector-fix.log.
+Final native/WASM strict Clippy passes. This is a test allocation correction.
+The final baseline trace command was added to the finished C# driver afterward;
+that exact command independently passes and ShellCheck is reverified.
+
+Current GitHub comments/reviews were refreshed and read; no new request is
+unaddressed. Latest main is an ancestor. gh pr diff still returns HTTP406 for
+more than 300 files; mirrored-root-full-pr-diff-error.log preserves that limit.
+Local branch/base diffs and the full new batch supply reviewable source.
+CI is pending on the published mirrored-root head, separately from all nine
+passing workflows at preceding native test head 6a0f7c9.
+
+Unfinished criteria: complete native/C#/linked-WASM 100% coverage, physical
+power-loss verification, legacy mapped repair and efficient page undo, physical
+on-disk LSM, finer independent validation/history decorators, wider competitor
+algorithms, persistent object reclamation, catalog throughput/multi-catalog
+transactions and automatic balancing. Root-copy repair does not complete these.
+The PR remains draft and unmerged while the acceptance inventory contains gaps.

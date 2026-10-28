@@ -1,10 +1,10 @@
 using System.Net;
+using System.Numerics;
 using System.Net.Sockets;
 using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 
-using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 
 namespace Foundation.Data.Doublets.Cli.Protocol;
@@ -26,7 +26,7 @@ public sealed record LinksServerOptions
     /// <summary>Print every request and reply to stderr.</summary>
     public bool Trace { get; init; }
 
-    /// <summary>Passed to <see cref="AdvancedMixedQueryProcessor.Options.AutoCreateMissingReferences"/>.</summary>
+    /// <summary>Passed to <c>AdvancedMixedQueryProcessor.Options.AutoCreateMissingReferences</c>.</summary>
     public bool AutoCreateMissingReferences { get; init; }
 
     /// <summary>Protocols the server answers.</summary>
@@ -45,7 +45,7 @@ public sealed record LinksServerOptions
 /// thread safety of its own. The protocol is detected per message and the
 /// reply uses the same protocol, so text and binary clients can share one server.
 /// </remarks>
-public sealed class LinksServer : IDisposable
+public sealed partial class LinksServer : IDisposable
 {
     private readonly TcpListener _listener;
     private readonly LinksServerOptions _options;
@@ -95,9 +95,14 @@ public sealed class LinksServer : IDisposable
     }
 
     /// <summary>Serves <paramref name="links"/> until <see cref="Shutdown"/> is called.</summary>
-    public void Serve(INamedTypesLinks<uint> links)
+    public void Serve(INamedTypesLinks<uint> links) => Serve<uint>(links);
+
+    /// <summary>Serves the selected unsigned address type through the same protocols.</summary>
+    public void Serve<T>(INamedTypesLinks<T> links)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         ArgumentNullException.ThrowIfNull(links);
+        var limits = _options.Limits.ForQuery(links.QueryLimits);
         var workers = new List<Thread>();
         while (!_stopping)
         {
@@ -110,11 +115,18 @@ public sealed class LinksServer : IDisposable
             {
                 break;
             }
+            catch (NullReferenceException) when (_stopping)
+            {
+                // .NET 10 TcpListener.Stop clears its socket after disposing it.
+                // AcceptTcpClient can pass its active check before that clear,
+                // then dereference the cleared socket. Only shutdown permits it.
+                break;
+            }
             if (Register(client) is not { } stream)
             {
                 continue;
             }
-            var worker = new Thread(() => HandleConnection(client, stream, links)) { IsBackground = true };
+            var worker = new Thread(() => HandleConnection(client, stream, links, limits)) { IsBackground = true };
             workers.Add(worker);
             worker.Start();
             workers.RemoveAll(thread => !thread.IsAlive);
@@ -172,6 +184,10 @@ public sealed class LinksServer : IDisposable
 
     /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
     internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
+        => HandleConnection(client, stream, links, _options.Limits);
+
+    private void HandleConnection<T>(TcpClient client, NetworkStream stream, INamedTypesLinks<T> links, ProtocolLimits limits)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         try
         {
@@ -181,7 +197,7 @@ public sealed class LinksServer : IDisposable
                 (IReadOnlyList<LinoLink> Document, MessageFormat Format)? message;
                 try
                 {
-                    message = LinoProtocols.ReadAnyDocument(reader, _options.Limits);
+                    message = LinoProtocols.ReadAnyDocument(reader, limits);
                 }
                 catch (LinoProtocolException error) when (error.Kind != LinoProtocolErrorKind.Io)
                 {
@@ -236,6 +252,10 @@ public sealed class LinksServer : IDisposable
     };
 
     internal IReadOnlyList<LinoLink> Execute(INamedTypesLinks<uint> links, IReadOnlyList<LinoLink> document)
+        => Execute<uint>(links, document);
+
+    internal IReadOnlyList<LinoLink> Execute<T>(INamedTypesLinks<T> links, IReadOnlyList<LinoLink> document)
+        where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         lock (_storeLock)
         {
@@ -244,9 +264,8 @@ public sealed class LinksServer : IDisposable
             {
                 return ErrorDocument("server is shutting down");
             }
-            Trace($"request: {LinoFormat.FormatDocument(document)}");
-            var reply = ExecuteRequest(links, document, _options.AutoCreateMissingReferences);
-            Trace($"reply: {LinoFormat.FormatDocument(reply)}");
+            var reply = ExecuteRequestCore(links, document, _options.AutoCreateMissingReferences, _options.Trace ? Trace : null);
+            if (_options.Trace) Trace($"reply: {LinoFormat.FormatDocument(reply)}");
             return reply;
         }
     }
@@ -255,7 +274,7 @@ public sealed class LinksServer : IDisposable
     {
         if (_options.Trace)
         {
-            Console.Error.WriteLine($"[server] {message}");
+            DiagnosticOutput.WriteErrorLine($"[server] {message}");
         }
     }
 
@@ -281,56 +300,6 @@ public sealed class LinksServer : IDisposable
     /// <c>(index: source target)</c> per line. Failures produce an <see cref="ErrorDocument"/>.
     /// </remarks>
     public static IReadOnlyList<LinoLink> ExecuteRequest(
-        INamedTypesLinks<uint> links,
-        IReadOnlyList<LinoLink> document,
-        bool autoCreateMissingReferences = false)
-    {
-        ArgumentNullException.ThrowIfNull(links);
-        ArgumentNullException.ThrowIfNull(document);
-        try
-        {
-            if (LinksOperation.FromDocument(document) is { } operation)
-            {
-                return operation.Execute(links);
-            }
-            if (document.Count == 0)
-            {
-                var any = links.Constants.Any;
-                return links.All(new DoubletLink(any, any, any))
-                    .Select(link => new DoubletLink(link))
-                    .OrderBy(link => link.Index)
-                    .Select(link => LinkLino(links, link))
-                    .ToList();
-            }
-            var changes = new List<(DoubletLink Before, DoubletLink After)>();
-            AdvancedMixedQueryProcessor.ProcessQuery(links, new AdvancedMixedQueryProcessor.Options
-            {
-                Query = LinoFormat.FormatDocument(document),
-                AutoCreateMissingReferences = autoCreateMissingReferences,
-                ChangesHandler = (before, after) =>
-                {
-                    changes.Add((new DoubletLink(before), new DoubletLink(after)));
-                    return links.Constants.Continue;
-                },
-            });
-            return ChangesSimplifier.SimplifyChanges(changes)
-                .Select(change => LinksOperation.ChangeLino(change.Before, change.After, link => LinkLino(links, link)))
-                .ToList();
-        }
-        catch (Exception error) when (error is not OutOfMemoryException)
-        {
-            return ErrorDocument(error.Message);
-        }
-    }
-
-    // `(index: source target)`, naming every reference that has a name.
-    private static LinoLink LinkLino(INamedTypesLinks<uint> links, DoubletLink link) =>
-        LinoFormat.Link(ReferenceName(links, link.Index), new List<LinoLink>
-        {
-            LinoFormat.Reference(ReferenceName(links, link.Source)),
-            LinoFormat.Reference(ReferenceName(links, link.Target)),
-        });
-
-    private static string ReferenceName(INamedTypesLinks<uint> links, uint id) =>
-        links.GetName(id) ?? id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        INamedTypesLinks<uint> links, IReadOnlyList<LinoLink> document, bool autoCreateMissingReferences = false)
+        => ExecuteRequest<uint>(links, document, autoCreateMissingReferences);
 }

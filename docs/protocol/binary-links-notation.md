@@ -340,7 +340,18 @@ Only then does it touch the store: it creates every missing address, writes
 each link at its own address, and sets every name. So exporting the imported
 store gives the same bytes again.
 
-The golden archive of `rust/tests/store_archive_tests.rs` and
+Rust's stream import checks the complete input, including the final EOF read,
+before changing rows or names. Short reads are supported. Read errors, truncated
+packets and trailing bytes preserve the existing store. A later storage error
+can follow earlier imported effects. Atomic imports require an explicit
+transaction with the selected owner's documented
+[cleanup and recovery guarantees](../FALLIBLE-COMPOSITION.md).
+An export writer can retain a partial byte prefix after an error. A complete
+retry needs a fresh or reset output, and the caller owns output synchronization.
+The implementation materializes both packets; archive size determines its
+temporary memory cost.
+
+The golden archive of `rust/tests/store_archive_portable_tests.rs` and
 `StoreArchiveTests.cs` holds `(a: a a)`, `(é: é é)` at address 3 and
 `(ab: a é)` at address 4, with a hole at 2. It is
 `12 02 20 01 24 01 02 01 01 03 03 01 03 13 02 21 02 30 01 ff ff 9f ff fd ff 17 ff fc 9f 9e`:

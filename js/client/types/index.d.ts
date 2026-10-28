@@ -1,5 +1,116 @@
 import type { LinoDocument } from './lino.js';
 
+export interface EngineOptions {
+  /** Default full scans, or persistent indexes for only the selected constraints. */
+  constraintValidation?: 'scan' | 'indexed';
+  /** In-memory immutable state; independent of journal and isolation. */
+  stateStructure?: 'flat' | 'shared' | 'sorted-runs';
+  /** Logical journal records; independent of the physical delta decorator. */
+  revisionEncoding?: 'snapshot' | 'changes';
+  concurrency?: 'optimistic' | 'exclusive' | 'pessimistic';
+  isolation?: 'read-committed' | 'snapshot' | 'serializable';
+  /** Serializable point dependencies; scans conservatively validate the revision. */
+  serializableValidation?: 'revision' | 'read-set';
+  history?: null | 'all' | number;
+  constraints?: ('references' | 'unique-pairs' | 'unique-names')[];
+  trace?: boolean;
+  requireDurableFlush?: boolean;
+}
+export interface CommitLog {
+  /** Optional synchronous atomic replacement; false means identical records. */
+  readonly supportsReplacement?: boolean;
+  replace?(records: readonly string[]): boolean;
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class MemoryCommitLog implements CommitLog {
+  constructor(records?: string[]);
+  readonly supportsDurableFlush: false;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class DeltaCommitLog implements CommitLog {
+  constructor(inner: CommitLog, options?: { checkpointInterval?: number });
+  readonly supportsDurableFlush: boolean;
+  readonly supportsReplacement: boolean;
+  replace(records: readonly string[]): boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+}
+export class ReplicatedCommitLog implements CommitLog {
+  constructor(primary: CommitLog, replicas: CommitLog[], options?: { acknowledgements?: number | null; trace?: (message: string) => void });
+  readonly supportsDurableFlush: boolean;
+  read(): string;
+  append(record: string): void;
+  flush(): void;
+  synchronize(): number;
+}
+export interface StagedSessionLike extends ClinkLike {
+  commit(): bigint;
+  rollback(): void;
+}
+export interface StagedEngineLike {
+  begin(): StagedSessionLike;
+  group(): StagedCommitGroupLike;
+  snapshot(revision?: bigint): string;
+  journal(): string;
+  exportCheckpoint(): string;
+  compactJournal(): boolean;
+  fork(options: string, journal: string): StagedBranchLike;
+  forkWithLog(options: string, log: CommitLog): StagedBranchLike;
+  resume(options: string, journal: string, base: string): StagedBranchLike;
+  resumeWithLog(options: string, log: CommitLog, base: string): StagedBranchLike;
+  free(): void;
+}
+export interface StagedCommitGroupLike {
+  /** Takes ownership of the native session handle. */
+  add(session: StagedSessionLike): void;
+  commit(): string;
+  free(): void;
+}
+export type GroupCommitOutcome =
+  | { status: 'committed'; revision: bigint }
+  | { status: 'aborted' | 'indeterminate'; error: string };
+export interface StagedBranchLike {
+  engine(): StagedEngineLike;
+  merge(): bigint;
+  mergeBaseRecord(): string;
+  free(): void;
+}
+export class EngineClient extends LinksClient {
+  constructor(session: StagedSessionLike, capabilities?: { durableFlush?: boolean; persistent?: boolean });
+  commit(): Promise<bigint>;
+  rollback(): Promise<void>;
+}
+export class WasmEngine {
+  constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
+  begin(): EngineClient;
+  /** Drains queued requests, consumes all members and shares one flush. */
+  commitGroup(sessions: EngineClient[]): Promise<GroupCommitOutcome[]>;
+  fork(options?: EngineOptions, journal?: string[] | CommitLog): WasmBranch;
+  resumeBranch(journal: string[] | CommitLog, mergeBaseRecord: string, options?: EngineOptions): WasmBranch;
+  snapshot(revision?: AddressInput): { revision: bigint; rows: (Link & { name: string | null })[] };
+  journal(): string[];
+  /** Retained committed snapshots; does not rewrite or publish the live log. */
+  exportCheckpoint(): string[];
+  /** Publish under the commit lock. Unknown outcomes require reopening. */
+  compactJournal(): boolean;
+  close(): void;
+  [Symbol.dispose](): void;
+}
+export class WasmBranch {
+  private constructor();
+  readonly engine: WasmEngine;
+  merge(): bigint;
+  mergeBaseRecord(): string;
+  close(): void;
+  [Symbol.dispose](): void;
+}
+
 export type { LinoDocument, LinoLink, LinoNode, LinoRef } from './lino.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
 
@@ -66,6 +177,8 @@ export interface Capabilities {
   readonly transport: 'tcp' | 'in-process' | string;
   readonly protocol: 'links-text/1' | string;
   readonly operations: readonly string[];
+  /** Original query-text envelopes are understood by this peer. */
+  readonly losslessQueries?: boolean;
   readonly addressBits: number;
   readonly maxAddress: bigint;
   readonly atomicTransactions: boolean;
@@ -185,6 +298,8 @@ export class WasmTransport implements Transport {
   readonly capabilities: Capabilities;
   readonly stats: { requests: number; bytesSent: number; bytesReceived: number };
   send(text: string, scope?: Scope): Promise<string>;
+  control(method: 'commit'): Promise<bigint>;
+  control(method: 'rollback'): Promise<void>;
   close(): Promise<void>;
 }
 export function createWasmClient(clink: ClinkLike, options?: WasmOptions): LinksClient;
@@ -195,4 +310,91 @@ export class MessageReader {
   constructor(options?: { maxBytes?: number });
   push(chunk: Uint8Array): string[];
   readonly midMessage: boolean;
+}
+
+
+export interface JournalVersion { generation: string; entries: string[] }
+export interface AtomicJournalStore {
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+/** Synchronous providers may be selected by consumers that await I/O results. */
+export interface SynchronousAtomicJournalStore {
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): JournalVersion[];
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): boolean;
+}
+export type AtomicJournalStoreProvider = AtomicJournalStore | SynchronousAtomicJournalStore;
+export interface EtcdJournalStoreOptions {
+  prefix?: string;
+  fetch?: typeof globalThis.fetch;
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+  maxRequestBytes?: number;
+  maxResponseBytes?: number;
+}
+/** Decoded key bytes + 8 generation bytes + UTF-8 records with one separator each.
+ * Container overhead also depends on the accounted record count. */
+export interface JournalScanOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; keysOnly?: boolean }
+export interface JournalNamespaceEntry { key: string; version: JournalVersion }
+export interface JournalMaintenanceStore extends AtomicJournalStore {
+  scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
+  compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
+}
+export interface SynchronousJournalMaintenanceStore extends SynchronousAtomicJournalStore {
+  scanNamespace(options?: JournalScanOptions): JournalNamespaceEntry[];
+  compareDelete(key: string, expectedGeneration: string): boolean;
+}
+export type JournalMaintenanceProvider = JournalMaintenanceStore | SynchronousJournalMaintenanceStore;
+export class EtcdJournalStore implements JournalMaintenanceStore {
+  constructor(endpoints: string[], options?: EtcdJournalStoreOptions);
+  scanNamespace(options?: JournalScanOptions): Promise<JournalNamespaceEntry[]>;
+  compareDelete(key: string, expectedGeneration: string): Promise<boolean>;
+  readonly supportsDurableFlush: true;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+export class ClusterEngine {
+  constructor(binding: ConstructorParameters<typeof WasmEngine>[0], store: AtomicJournalStoreProvider, options?: EngineOptions & { journalCheckpointInterval?: number });
+  begin(keys: string[]): Promise<ClusterTransaction>;
+}
+export class ClusterTransaction {
+  private constructor();
+  shard(key: string): LinksClient;
+  commit(): Promise<void>;
+  rollback(): Promise<void>;
+  close(): Promise<void>;
+  [Symbol.asyncDispose](): Promise<void>;
+}
+/** Bounded immutable journal chunk write policy, independent of read caching. */
+export interface JournalChunkOptions {
+  /** Positive record limit, at most 65,536; default 64. */
+  maxRecords?: number;
+  /** UTF-8 payload bytes per chunk, at most 8,388,608; default 65,536. */
+  maxBytes?: number;
+  /** Positive manifest bound, at most 4,096; default 1,024. */
+  maxChunks?: number;
+}
+/** Immutable data objects in independent stores; atomic publication in a catalog. */
+export class PartitionedJournalStore implements AtomicJournalStore {
+  /** Cache budget counts one byte per object/record plus record UTF-8 bytes; zero disables. Catalogs stay fresh. */
+  constructor(catalog: AtomicJournalStoreProvider, partitions: Record<string, AtomicJournalStoreProvider>, route: (shard: string) => string, options?: { cacheBytes?: number; chunks?: JournalChunkOptions | null });
+  readonly supportsDurableFlush: boolean;
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+}
+
+/** Dedicated epoch-fenced namespaces; collection is caller-selected and never automatic. */
+export interface ReclamationOptions { maxKeys?: number; maxBytes?: number; pageKeys?: number; cacheBytes?: number; chunks?: JournalChunkOptions | null }
+export interface ReclamationResult { epoch: string; examined: number; deleted: number }
+export class ReclaimingPartitionedJournalStore implements AtomicJournalStore {
+  private constructor();
+  static open(catalog: JournalMaintenanceProvider, partitions: Record<string, JournalMaintenanceProvider>, route: (shard: string) => string, options?: ReclamationOptions): Promise<ReclaimingPartitionedJournalStore>;
+  readonly supportsDurableFlush: boolean;
+  /** 1..31 distinct nonreserved shards; returned groups are owned. */
+  read(keys: string[]): Promise<JournalVersion[]>;
+  compareExchange(keys: string[], expected: JournalVersion[], updates: (string[] | null)[]): Promise<boolean>;
+  /** Null means a known competing epoch. Errors can follow acknowledged cuts. */
+  collectGarbage(): Promise<ReclamationResult | null>;
 }

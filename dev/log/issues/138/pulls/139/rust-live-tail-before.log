@@ -1,0 +1,87 @@
+    Finished `test` profile [unoptimized] target(s) in 0.08s
+     Running tests/transactions_live_tail_tests.rs (rust/target/debug/deps/transactions_live_tail_tests-e879f0622afde382)
+
+running 7 tests
+test quota_child ... ignored, finite 8 KiB quota child entry point
+Expected actual quota failure: I/O error: Expected actual quota failure: File too largeI/O error:  (os error 27)
+File too large (os error 27)
+Error: I/O error: File too large (os error 27)
+
+Caused by:
+    File too large (os error 27)
+Expected actual quota failure: I/O error: File too large (os error 27)
+Error: I/O error: stream did not contain valid UTF-8
+
+Caused by:
+    stream did not contain valid UTF-8
+Expected actual quota failure: I/O error: Error: I/O error: File too largestream did not contain valid UTF-8 (os error
+
+Caused by:27
+)
+stream did not contain valid UTF-8
+Expected actual quota failure: I/O error: File too large (os error 27)
+Expected actual quota failure: I/O error: File too large (os error 27)
+Error: Error: I/O error: I/O error: File too largeFile too large (os error  (os error 2727))
+
+Caused by:
+
+Caused by:
+
+    File too large (os error 27)
+    File too large (os error 27)
+Error: I/O error: File too large (os error 27)
+
+Caused by:
+    File too large (os error 27)
+test append_after_partial_ascii ... FAILED
+test read_after_partial_utf8 ... FAILED
+test flush_after_partial_utf8 ... FAILED
+test read_after_partial_ascii ... FAILED
+test flush_after_partial_ascii ... FAILED
+test append_after_partial_utf8 ... FAILED
+
+failures:
+
+---- append_after_partial_ascii stdout ----
+
+thread 'append_after_partial_ascii' (1084914) panicked at tests/transactions_live_tail_tests.rs:26:5:
+quota child failed at append/false
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- read_after_partial_utf8 stdout ----
+
+thread 'read_after_partial_utf8' (1084919) panicked at tests/transactions_live_tail_tests.rs:26:5:
+quota child failed at read/true
+
+---- flush_after_partial_utf8 stdout ----
+
+thread 'flush_after_partial_utf8' (1084917) panicked at tests/transactions_live_tail_tests.rs:26:5:
+quota child failed at flush/true
+
+---- read_after_partial_ascii stdout ----
+
+thread 'read_after_partial_ascii' (1084918) panicked at tests/transactions_live_tail_tests.rs:26:5:
+quota child failed at read/false
+
+---- flush_after_partial_ascii stdout ----
+
+thread 'flush_after_partial_ascii' (1084916) panicked at tests/transactions_live_tail_tests.rs:26:5:
+quota child failed at flush/false
+
+---- append_after_partial_utf8 stdout ----
+
+thread 'append_after_partial_utf8' (1084915) panicked at tests/transactions_live_tail_tests.rs:26:5:
+quota child failed at append/true
+
+
+failures:
+    append_after_partial_ascii
+    append_after_partial_utf8
+    flush_after_partial_ascii
+    flush_after_partial_utf8
+    read_after_partial_ascii
+    read_after_partial_utf8
+
+test result: FAILED. 0 passed; 6 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--test transactions_live_tail_tests`

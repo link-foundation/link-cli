@@ -1,0 +1,81 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.73s
+     Running tests/version_movement_failure_tests.rs (rust/target/debug/deps/version_movement_failure_tests-f33b5bcec1a546f0)
+
+running 6 tests
+[VersionControl] Prepared version publication 000001a170c362160000000000000001: 0..2 on 'main'.
+[VersionControl] Prepared version publication 000001a170c362190000000000000002: 0..2 on 'main'.
+[VersionControl] Prepared version publication 000001a170c3621e0000000000000003: 0..2 on 'main'.
+[VersionControl] Prepared version publication 000001a170c362110000000000000000: 0..2 on 'main'.
+[VersionControl] Prepared version publication 000001a170c3622d0000000000000005: 0..2 on 'main'.
+[VersionControl] Prepared version publication 000001a170c362290000000000000004: 0..2 on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication 000001a170c362750000000000000006: 2..3 on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication 000001a170c3627d0000000000000007: 2..3 on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication 000001a170c3628d0000000000000008: 2..3 on 'main'.
+[VersionControl] Prepared version publication 000001a170c362960000000000000009: 2..3 on 'main'.
+[VersionControl] Prepared version publication 000001a170c36298000000000000000a: 2..3 on 'main'.
+[VersionControl] Created branch 'original' from 'main' at seq 2.
+[VersionControl] Prepared version publication 000001a170c362ba000000000000000b: 2..3 on 'main'.
+[VersionControl] Prepared version publication 000001a170c362d5000000000000000c: 3..4 on 'main'.
+[VersionControl] Prepared version publication 000001a170c362ef000000000000000d: 3..4 on 'original'.
+[VersionControl] Switched to branch 'original' at seq 2.
+test switch_flush_before ... FAILED
+[VersionControl] Prepared version publication 000001a170c3630d000000000000000e: 3..4 on 'main'.
+[VersionControl] Checked out seq 2 on branch 'main'.
+test checkout_flush_before ... FAILED
+[VersionControl] Prepared version publication 000001a170c3631e000000000000000f: 3..4 on 'original'.
+test checkout_applied_before ... FAILED
+test switch_applied_after ... FAILED
+test checkout_applied_after ... FAILED
+test switch_applied_before ... FAILED
+
+failures:
+
+---- switch_flush_before stdout ----
+
+thread 'switch_flush_before' (1142367) panicked at tests/version_movement_failure_tests.rs:37:5:
+movement omitted its persistence barrier: flush-before
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- checkout_flush_before stdout ----
+
+thread 'checkout_flush_before' (1142364) panicked at tests/version_movement_failure_tests.rs:37:5:
+movement omitted its persistence barrier: flush-before
+
+---- checkout_applied_before stdout ----
+
+thread 'checkout_applied_before' (1142363) panicked at tests/version_movement_failure_tests.rs:40:9:
+failed movement admitted a write
+
+---- switch_applied_after stdout ----
+
+thread 'switch_applied_after' (1142365) panicked at tests/version_movement_failure_tests.rs:40:9:
+failed movement admitted a write
+
+---- checkout_applied_after stdout ----
+
+thread 'checkout_applied_after' (1142362) panicked at tests/version_movement_failure_tests.rs:40:9:
+failed movement admitted a write
+
+---- switch_applied_before stdout ----
+
+thread 'switch_applied_before' (1142366) panicked at tests/version_movement_failure_tests.rs:40:9:
+failed movement admitted a write
+
+
+failures:
+    checkout_applied_after
+    checkout_applied_before
+    checkout_flush_before
+    switch_applied_after
+    switch_applied_before
+    switch_flush_before
+
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+
+error: test failed, to rerun pass `--test version_movement_failure_tests`

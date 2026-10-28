@@ -1,0 +1,28 @@
+Physical sorted tables and checkpoint test scheduling: exact-head GitHub Actions evidence
+PR: https://github.com/link-foundation/link-cli/pull/139
+Commit: 523888a302c49d8b148ab28d69acc9ad34bdf87d
+Commit created: 2026-10-26T23:52:24+00:00
+All nine workflows completed successfully after this commit.
+
+Broken Link Checker: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719710
+C# CI/CD Pipeline: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719881
+Dependencies: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719870
+Docs: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719681
+JS client CI: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719915
+Rust CI/CD Pipeline: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719827
+Security: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719904
+WebAssembly CI: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719664
+Workflows: success; created 2026-10-26T23:52:43Z; https://github.com/link-foundation/link-cli/actions/runs/40422719736
+
+Native Linux/macOS/Windows matrices and actual WASM pass. Later commits need fresh CI.
+Whole-project coverage and every wider unfinished requirement remain active.
+
+Individually inspected native matrix jobs (all completed successfully):
+csharp Test (macos-26): success; started 2026-10-26T23:53:08Z; completed 2026-10-26T23:55:19Z; https://github.com/link-foundation/link-cli/actions/runs/40422719881/job/121920939526
+csharp Test (ubuntu-24.04): success; started 2026-10-26T23:53:09Z; completed 2026-10-26T23:55:13Z; https://github.com/link-foundation/link-cli/actions/runs/40422719881/job/121920939582
+csharp Test (windows-2025): success; started 2026-10-26T23:53:08Z; completed 2026-10-27T00:03:25Z; https://github.com/link-foundation/link-cli/actions/runs/40422719881/job/121920939583
+rust Test (windows-2025): success; started 2026-10-26T23:53:53Z; completed 2026-10-27T00:04:39Z; https://github.com/link-foundation/link-cli/actions/runs/40422719827/job/121921211349
+rust Test (macos-26): success; started 2026-10-26T23:53:54Z; completed 2026-10-27T00:01:18Z; https://github.com/link-foundation/link-cli/actions/runs/40422719827/job/121921211478
+rust Test (ubuntu-24.04): success; started 2026-10-26T23:53:53Z; completed 2026-10-26T23:58:38Z; https://github.com/link-foundation/link-cli/actions/runs/40422719827/job/121921211506
+
+This exact-head result includes the C# Windows checkpoint cases that exceeded the prior per-case limit. All original process cuts remain covered; the scheduling change did not increase either deadline.

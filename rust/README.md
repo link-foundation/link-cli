@@ -98,6 +98,14 @@ clink --db data.links --vc --branch feature --branch-from 1
 clink --db data.links --vc --list-branches
 ```
 
+Tags accept `name=sequence` or `name=existing-tag`. For names containing `=`,
+the command uses the first delimiter whose complete suffix resolves. For example,
+after creating `v1`, `--tag 'release=雪=part=v1'` creates `release=雪=part`,
+and `--tag 'alias=release=雪=part'` creates an alias at the same point.
+Quote these arguments in the shell. The
+[tag-name example](../examples/version-control/tag-names.sh) checks both forms
+and checkout through repeated native command invocations.
+
 End-to-end demo scripts live in
 [`examples/transactions/`](../examples/transactions) and
 [`examples/version-control/`](../examples/version-control).
@@ -168,12 +176,25 @@ A runnable, self-checking version of this is
 - **In-place mutation.** A file-mapped store is written through its mapping, so
   the inode never changes and other processes that mapped the same file keep
   observing the same data. Nothing is replaced through a temporary file.
-- **Durability.** Writes to a file-mapped store survive a *process* crash
-  without any `save()` — the mapping is the page cache. Surviving a *machine*
-  crash needs the `fsync` that `LinksStorage::flush` performs (a clean drop also
-  syncs). In-memory stores keep everything in memory until `flush`/`save`.
+- **Durability.** `LinksStorage::flush` synchronizes an owned mapped store's
+  file. On Windows it first flushes the mapped view, then the file buffers.
+  Explicit flush propagates both errors; Drop attempts the same ordering.
+  Adopted mappings attach their matching `PersistentFileMapped::flush_handle()`
+  with `DoubletsStorage::with_mapped_flush`; a path alone cannot discover a
+  foreign store's view. Rejected plain-data growth retains the old view and
+  flush owner until a replacement is fully prepared; fresh padding and failed
+  extension tails receive the requested initializer. This temporarily holds
+  two views and a cloned file handle. Failed shrink and arbitrary destructor
+  growth retain their upstream limitations. These barriers do not supply
+  torn-page repair or
+  certify hardware power-loss safety. In-memory stores keep everything in
+  memory until `flush`/`save`.
   Recovery runs when the decorator is created: committed-but-unapplied
   transitions are replayed, uncommitted ones are rolled back.
+  A known durable commit retains ownership after a checkpoint error: retry
+  `commit`, `rollback` or `save` before writing again. Public `recover` rejects
+  an open transaction. In-memory transactions also run in browser/Node WASM;
+  timestamps use its wall clock and do not provide distributed ordering.
 - **Multi-process access.** `storage::lock` locks a `<database>.lock` sidecar,
   shared for readers and exclusive for writers, through
   `DoubletsStorage::open_shared` / `open_exclusive` / `try_open_exclusive`.
@@ -193,3 +214,25 @@ cargo test --manifest-path rust/Cargo.toml --all-features
 
 Release automation for this package lives in `rust/scripts/` and uses changelog
 fragments from `rust/changelog.d/`.
+
+The optional [`engine`](src/engine/mod.rs)
+module provides private transaction sessions, configurable concurrency/isolation,
+immutable history, constraints and replaceable revision logs. See
+[engine strategies](../docs/ENGINE-STRATEGIES.md) for configuration, costs,
+distributed ownership, guarantees and examples. The existing bare store remains
+available for cache workloads without these layers.
+
+Select `ConcurrencyControl::Pessimistic` for overlapping sessions that reserve
+written addresses and immediately reject competing writes. Isolation and history
+remain independent options. See [ownership, retry rules and costs](../docs/ENGINE-PESSIMISTIC.md).
+
+Legacy version sidecars preserve delimiter text, Unicode, NUL and newline in
+branch, parent and tag names. New branch markers use a versioned encoding and
+ordinary legacy markers remain readable; see the [marker protocol](../docs/protocol/version-metadata.md)
+for compatibility and upgrade limits.
+
+The portable `engine::paged::PagedLog<D>` stores ordered records as immutable
+native doublets pages without SQL. Feature `native-pages` adds the exclusive
+`FilePageDevice` adapter. Select a page quota with `PagedLog::with_max_pages`;
+explicit `log.into_device().close()?` reports uncertain close outcomes without
+flushing pending records. See [native page guarantees, costs and examples](../docs/ENGINE-NATIVE-PAGES.md).

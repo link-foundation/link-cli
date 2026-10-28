@@ -1,0 +1,13 @@
+Known-commit C# checkpoint ownership / native named-write fences
+Published SHA 8429c534fffef7bde60f8c6f86c1b72f3b07cb12
+All nine exact-SHA workflows pass; created 2026-10-24T23:12:40Z.
+
+Broken Link Checker: success https://github.com/link-foundation/link-cli/actions/runs/40141790858
+C# CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40141790871
+Dependencies: success https://github.com/link-foundation/link-cli/actions/runs/40141790869
+Docs: success https://github.com/link-foundation/link-cli/actions/runs/40141790842
+JS client CI: success https://github.com/link-foundation/link-cli/actions/runs/40141790957
+Rust CI/CD Pipeline: success https://github.com/link-foundation/link-cli/actions/runs/40141790861
+Security: success https://github.com/link-foundation/link-cli/actions/runs/40141790864
+WebAssembly CI: success https://github.com/link-foundation/link-cli/actions/runs/40141790840
+Workflows: success https://github.com/link-foundation/link-cli/actions/runs/40141790964

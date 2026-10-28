@@ -1,0 +1,58 @@
+Serializable point-read validation: reproduction and verification
+
+Base: 6d240a9 (metadata optimization); branch issue-138-adc2aa56c4cb.
+
+Before, actual WASM:
+unknown field `serializableValidation`, expected one of `concurrency`, `isolation`, `history`, `constraints`, `trace`, `requireDurableFlush`
+
+Before, Rust/C# API:
+unresolved import link_cli::engine::SerializableValidation
+EngineOptions has no field named serializable_validation
+CS0117: EngineOptions does not contain SerializableValidation
+
+After:
+- Rust: full all-features suite 440 passed, 2 subprocess helpers ignored.
+- C#: full Debug and Release suites each 649 passed; format verification passed.
+- Independent finite serial-history oracle: 216 profiles x 6 commit orders =
+  1,296 histories per native implementation; compare reads and final state.
+- Native cases: missing rows, ABA, branches, disjoint writes, read/write cycles,
+  conservative scans, read-only/empty reads, own writes/deletes, blind ID
+  collisions, conflict retries and selected bookkeeping cleanup.
+- Rust scoped parallel reads retain Send/Sync; injected read-set poisoning
+  rejects the commit and releases admission without publishing writes.
+- Actual WASM: 17 wasm-bindgen tests; wrapper 331/331 lines, 68/68 functions,
+  16/16 reported branches and 505/505 regions. Linked core remains below 100%.
+- Actual WASM conformance passes Node/Bun/Deno (including read-set schedules).
+- JS: 95 unit tests; 17 production modules 100% lines/branches/functions;
+  strict TypeScript declarations pass.
+- Rust and wasm-target Clippy deny warnings. Cargo fmt checks pass.
+- Rust/C#/JS examples select --read-set, independently of --delta and log choice.
+
+Finite acceptance comparison (not throughput/latency):
+{"serializableValidation":"revision","sessions":32,"committed":1,"aborted":31}
+{"serializableValidation":"read-set","sessions":32,"committed":32,"aborted":0}
+
+Native measured coverage:
+Rust: 8576/9767 lines, 1384/1802 branches, 1151/1359 functions,
+      13116/15441 regions. No new exclusions.
+C# Debug: 5746/6435 lines, 2494/3060 branches.
+C# Release: 4377/4810 lines, 2473/3041 branches.
+Optimized sequence points change denominators; compare configurations separately.
+C# LinksEngine and EngineSession: 100% lines/branches in both configurations.
+All native project coverage remains below the required 100% scope.
+
+Research: apple/foundationdb dbf079f58df53df898eee906738a506cb80a21a6,
+NativeAPI.cpp:3548-3568,3908-3931,4755-4820 and ConflictSet.cpp:799-847.
+Sources were studied, not copied. Local address sets and whole-revision scans
+are distinct from FoundationDB range indexes and distributed conflict resolvers.
+
+Reusable scripts/examples:
+experiments/issue-138/readset-contention.mjs
+js/client/examples/serializable-points.mjs
+rust/examples/engine_strategies.rs --read-set
+examples/engine-csharp --read-set
+
+Local complete raw logs/reports: experiments/issue-138/readset-* (ignored).
+CI publishes complete native and actual-WASM coverage reports as artifacts.
+Previous exact-SHA metadata CI: 6d240a9, 37 successful checks,
+10 skipped, one neutral. New read-set commit still requires its own CI.

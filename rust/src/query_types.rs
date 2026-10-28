@@ -2,7 +2,7 @@
 //! restriction or substitution parses into, and the [`ResolvedLink`] a pattern
 //! becomes once its variables are bound.
 
-use crate::link::Link;
+use crate::link::GenericLink;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Pattern {
@@ -26,15 +26,15 @@ impl Pattern {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ResolvedLink {
-    pub index: u32,
-    pub source: u32,
-    pub target: u32,
+pub struct GenericResolvedLink<T> {
+    pub index: T,
+    pub source: T,
+    pub target: T,
     pub name: Option<String>,
 }
 
-impl ResolvedLink {
-    pub fn new(index: u32, source: u32, target: u32, name: Option<String>) -> Self {
+impl<T: Copy> GenericResolvedLink<T> {
+    pub fn new(index: T, source: T, target: T, name: Option<String>) -> Self {
         Self {
             index,
             source,
@@ -43,7 +43,10 @@ impl ResolvedLink {
         }
     }
 
-    pub fn to_link(&self) -> Link {
-        Link::new(self.index, self.source, self.target)
+    pub fn to_link(&self) -> GenericLink<T> {
+        GenericLink::new(self.index, self.source, self.target)
     }
 }
+
+/// The existing CLI specialization.
+pub type ResolvedLink = GenericResolvedLink<u32>;

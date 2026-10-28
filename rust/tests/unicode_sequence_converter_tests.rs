@@ -7,12 +7,14 @@ use link_cli::sequences::{
 };
 use link_cli::{external_reference, HybridReference, LinkStorage, PinnedTypes};
 use std::cell::Cell;
-use tempfile::NamedTempFile;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
 
 fn with_links(test: impl FnOnce(&mut LinkStorage) -> Result<()>) -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-    let mut links = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut links) = test_store::links()?;
     test(&mut links)
 }
 
@@ -24,7 +26,8 @@ fn allocate_unicode_types(links: &mut LinkStorage) -> Result<(u32, u32)> {
     Ok((unicode_symbol_type, unicode_sequence_type))
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn raw_number_converters_match_hybrid_external_reference_encoding() {
     let address_to_number = AddressToRawNumberConverter::new();
     let number_to_address = RawNumberToAddressConverter::new();
@@ -38,7 +41,8 @@ fn raw_number_converters_match_hybrid_external_reference_encoding() {
     assert_eq!(Some(0), zero.absolute_value());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn target_and_char_symbol_converters_create_and_decode_symbols() -> Result<()> {
     with_links(|links| {
         let (unicode_symbol_type, _) = allocate_unicode_types(links)?;
@@ -58,7 +62,8 @@ fn target_and_char_symbol_converters_create_and_decode_symbols() -> Result<()> {
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn balanced_variant_and_right_sequence_walker_preserve_symbol_order() -> Result<()> {
     with_links(|links| {
         let (unicode_symbol_type, _) = allocate_unicode_types(links)?;
@@ -86,7 +91,8 @@ fn balanced_variant_and_right_sequence_walker_preserve_symbol_order() -> Result<
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn string_and_unicode_sequence_converters_round_trip_utf16_text() -> Result<()> {
     with_links(|links| {
         let (unicode_symbol_type, unicode_sequence_type) = allocate_unicode_types(links)?;
@@ -119,7 +125,8 @@ fn string_and_unicode_sequence_converters_round_trip_utf16_text() -> Result<()> 
     })
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn caching_converter_decorator_reuses_cached_values() -> Result<()> {
     let calls = Cell::new(0);
     let mut cache = CachingConverterDecorator::<String, usize>::new();

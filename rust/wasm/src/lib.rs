@@ -6,6 +6,18 @@ use link_cli::{Link, LinkStorage, QueryProcessor};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+#[cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))]
+extern crate minicov;
+
+#[cfg(feature = "causal-sessions")]
+mod causal_session;
+#[cfg(feature = "causal-sessions")]
+pub use causal_session::CausalLinksWorkspace;
+
+mod engine;
+mod engine_log;
+pub use engine::{StagedCommitGroup, StagedEngine, StagedSession};
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct ClinkOptions {
@@ -181,12 +193,11 @@ fn parse_options(options_json: &str) -> Result<ClinkOptions> {
     serde_json::from_str(trimmed).map_err(|error| anyhow::anyhow!("Invalid options JSON: {error}"))
 }
 
-fn to_json<T: Serialize>(value: &T) -> String {
-    serde_json::to_string(value).unwrap_or_else(|error| {
-        format!(
-            r#"{{"success":false,"output":"","error":"Failed to serialize result: {error}","links":[]}}"#
-        )
-    })
+fn to_json(value: &ClinkResult) -> String {
+    // This concrete reply contains only strings, integers, options and vectors;
+    // none can fail JSON serialization. Keep the invariant explicit rather than
+    // constructing an unescaped error JSON document in an unreachable fallback.
+    serde_json::to_string(value).expect("ClinkResult contains only JSON-compatible values")
 }
 
 fn set_panic_hook() {
@@ -222,7 +233,8 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn executes_queries_with_the_rust_core() {
         let mut clink = Clink::new();
         let raw = clink.execute(
@@ -243,7 +255,8 @@ mod tests {
         parsed["output"].as_str().unwrap().to_string()
     }
 
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn deleting_a_link_deletes_its_usages_as_the_cli_does() {
         let mut clink = Clink::new();
         run(&mut clink, "() ((1 1) (2 2) (1 2))");
@@ -254,7 +267,8 @@ mod tests {
         );
     }
 
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn updating_a_link_into_an_existing_pair_merges_them_as_the_cli_does() {
         let mut clink = Clink::new();
         run(&mut clink, "() ((1 1) (2 2) (1 2) (2 1))");
@@ -265,7 +279,8 @@ mod tests {
         );
     }
 
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn reset_empties_the_store() {
         let mut clink = Clink::new();
         run(&mut clink, "() ((named: named named))");
@@ -277,7 +292,8 @@ mod tests {
         assert_eq!(parsed["output"], "");
     }
 
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn answers_links_protocol_requests_like_the_server() {
         let mut clink = Clink::new();
         assert_eq!(clink.request("(create: (1 1))"), "() ((1: 1 1))");
@@ -297,7 +313,8 @@ mod tests {
         assert!(clink.request("garbage((").starts_with("(error: "));
     }
 
-    #[test]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn rejects_invalid_options() {
         let mut clink = Clink::new();
         let raw = clink.execute("() ((1 1))", "not json");

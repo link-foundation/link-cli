@@ -1,0 +1,29 @@
+Public unlogged replay admission (R1/R3/R7/R8)
+
+Six cases per native language first fail: public apply/revert accepts replay
+over a pending transaction, a known commit awaiting checkpoint, or an unfinished
+rollback. Original behavioral before logs are retained beside this report.
+The initial Rust fixture compile diagnostic is separate, not a reproduction.
+
+Both public helpers now check for any live owner before setting the replay flag
+or touching data. Internal recovery and rollback retain their private helpers.
+Tests verify unchanged rows and journal sequence, continued admission fencing,
+the original cleanup decision on retry, following edits and unlogged replay
+without an owner. Existing version controls remain available. The success-path
+check costs O(1), with no allocation, log scan or additional background work.
+
+Focused suites: 22 native Rust and 24 C# pass. Full C# Debug/Release: 1,449 pass
+each, zero skips. Full native Rust: 681 standard tests plus the custom stdout
+harness pass; five ignored child entries execute through finite parent tests.
+Actual WASM: 365 pass, including the same six replay contracts. All three WASM
+wrapper modules remain 100% in measured lines, functions and reported branches.
+Formatting, release metadata, strict native/WASM Clippy and source sizes pass.
+Debug: 6,267/6,757 lines (92.75%), 2,943/3,346 branches (87.96%)
+Release: 4,765/5,064 lines (94.10%), 2,923/3,327 branches (87.86%)
+native: 9,720/10,540 lines (92.22%), 1,650/1,996 branches (82.67%), 1,294/1,434 functions (90.24%)
+wasm: 6,928/10,132 lines (68.38%), 1,195/1,701 branches (70.25%), 947/1,417 functions (66.83%)
+
+Complete project coverage remains below 100%. All nine workflows pass on prior
+retention/Windows-correction head 1f742c5, with the ten formerly failing Windows
+fixtures verified in passing logs. This replay change needs its own exact-head
+CI. Atomic checkout failures and ordinary legacy name logging remain open.

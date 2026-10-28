@@ -1,0 +1,17 @@
+Optional immutable journal cache: pre-implementation contracts
+PR: https://github.com/link-foundation/link-cli/pull/139
+Date: 2026-10-25 UTC
+Base: 3843e00a0c124f1f51fff4aad99bea959c0888c8
+
+Rust: focused portable immutable_cache tests fail to compile with E0599 at all
+three with_object_cache calls: the option does not exist.
+C#: focused PartitionedObjectCacheTests fail with CS1739: the constructor has no
+cacheBytes parameter.
+JS: all three focused cache contracts fail their data-read counters because an
+unrecognized fourth constructor argument currently has no effect. Repeated
+fresh reads download the same immutable object (4 reads rather than 3 in the
+first contract); the LRU sequence performs five downloads rather than three.
+
+These are feature/cost reproductions, not claims of incorrect current isolation.
+The tests retain fresh catalog reads and expect stale selected-generation CAS
+to reject even when immutable object content is cached.

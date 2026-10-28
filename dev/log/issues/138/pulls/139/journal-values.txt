@@ -1,0 +1,25 @@
+Journal value contracts; PR https://github.com/link-foundation/link-cli/pull/139
+Run: bash experiments/issue-138/validate-journal-values.sh
+All 17 focused controls pass before any production change; no defect reproduced.
+Captured collections, single enumeration, read-only ownership, complete equality,
+hash collections, header properties, offset-equivalent instants and row-only wire pass.
+A finite 65,536-unit name preserves the complete existing .NET UTF-16 domain;
+this includes lone surrogates and does not claim UTF-8 cross-language compatibility.
+Twelve malformed name-unit vectors reject without a result.
+
+Complete C# Debug: 2143 passed, 0 failed/skipped.
+lines: 7950/8260 (96.24697%)
+branches: 4268/4638 (92.02242%)
+JournalRecord.cs unique lines: 83/84
+Report: experiments/issue-138/journal-value-csharp-Debug-results/0f25cddb-e9a8-4da0-9ad5-97a8bf7c4974/coverage.cobertura.xml
+
+Complete C# Release: 2143 passed, 0 failed/skipped.
+lines: 6104/6298 (96.91966%)
+branches: 4223/4611 (91.58534%)
+JournalRecord.cs unique lines: 67/68
+Report: experiments/issue-138/journal-value-csharp-Release-results/3b9c0be4-b1a3-40a2-ada4-fdcd5d08a6ed/coverage.cobertura.xml
+
+Formatting, release/source-size checks, ShellCheck and 221 repository tests pass.
+Production source and complete coverage denominators remain unchanged.
+Native Rust 930 / actual WASM 546 / JS 209 unchanged since recorded runs.
+Whole-project 100% and every wider unfinished criterion remain open.

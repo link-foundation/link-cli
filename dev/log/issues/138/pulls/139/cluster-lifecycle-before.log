@@ -1,0 +1,32 @@
+✔ etcd snapshot reads all selected journals atomically and compares modification generations (54.055029ms)
+✔ read failover is bounded while an uncertain commit is never replayed (2.751483ms)
+✔ malformed, oversized and rejected coordinator responses fail closed (5.831588ms)
+✔ invalid cluster coordinates are rejected before network I/O (1.293643ms)
+✖ close waits for an in-flight commit and frees every workspace after cleanup failure (5.023973ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.542841
+
+✖ failing tests:
+
+test at js/client/test/cluster.test.mjs:78:1
+✖ close waits for an in-flight commit and frees every workspace after cleanup failure (5.023973ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1792854251187/js/client/test/cluster.test.mjs:86:60)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

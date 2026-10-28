@@ -282,13 +282,15 @@ fn run_with_vc(
     if let Some(tag_spec) = cli.tag.as_deref() {
         let (name, seq) = match tag_spec.find('=') {
             None => (tag_spec.to_string(), None),
-            Some(eq) => {
-                let (name_part, value_part) = tag_spec.split_at(eq);
-                let value_part = &value_part[1..];
-                let resolved = resolve_sequence(&vc, value_part)
-                    .ok_or_else(|| anyhow!("Unknown tag point '{value_part}'."))?;
-                (name_part.to_string(), Some(resolved))
-            }
+            // Preserve existing aliases before trying delimiters in the name:
+            // alias=release=0 may refer to the complete existing tag release=0.
+            Some(eq) => tag_spec
+                .match_indices('=')
+                .find_map(|(separator, _)| {
+                    resolve_sequence(&vc, &tag_spec[separator + 1..])
+                        .map(|resolved| (tag_spec[..separator].to_string(), Some(resolved)))
+                })
+                .ok_or_else(|| anyhow!("Unknown tag point '{}'.", &tag_spec[eq + 1..]))?,
         };
         vc.tag(&name, seq)?;
         if cli.trace {

@@ -1,0 +1,23 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: a0d7a6d8c6dbb65cd51c48ec5d30ec3527c6d14e
+Run: https://github.com/link-foundation/link-cli/actions/runs/40603217901
+Created: 2026-10-27T23:35:54Z; completed 2026-10-28T00:03:43Z; conclusion cancelled
+Windows Rust was cancelled after dfbddb3 starts at 2026-10-28T00:02:36Z; this is not a passing run.
+Detect Changes: success; 2026-10-27T23:40:08Z
+Rust coverage: success; 2026-10-27T23:49:42Z
+Create Changelog PR: skipped; 2026-10-27T23:35:54Z
+Verify crates.io trusted publishing: skipped; 2026-10-27T23:35:54Z
+Simulate Fresh Merge: success; 2026-10-27T23:50:31Z
+Lint and Format Check: success; 2026-10-27T23:46:10Z
+Test (macos-26): success; 2026-10-27T23:51:07Z
+Test (ubuntu-24.04): success; 2026-10-27T23:51:55Z
+Test (windows-2025): cancelled; 2026-10-28T00:03:43Z
+Changelog Fragment Check: skipped; 2026-10-27T23:40:08Z
+Auto Release: skipped; 2026-10-28T00:03:43Z
+Manual Release: skipped; 2026-10-28T00:03:43Z
+Build Package: skipped; 2026-10-28T00:03:43Z
+Preserved raw log: experiments/issue-138/ci-logs/rust-40603217901.log
+41256: ##[error]The operation was canceled.
+41253-41255: three finite native LSM/checkpoint process-exit suites still running at cancellation.
+Raw log SHA256: f4885725eb17250e8a379526b151b86713ab53180b85a59aabef4ac16da9617b
+The current head requires its own complete platform CI; successful preceding jobs do not establish all-head passing status.

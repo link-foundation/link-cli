@@ -1,0 +1,17 @@
+    Updating crates.io index
+     Locking 1 package to highest compatible version
+    Updating doublets v0.8.0 -> v0.9.0
+   Compiling doublets v0.9.0
+   Compiling doublets-index-regression v0.0.0 (/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-index-regression)
+    Finished `test` profile [unoptimized] target(s) in 3.78s
+     Running unittests ../../../rust/tests/doublets_split_index_tests.rs (experiments/issue-138/doublets-index-regression/target/debug/deps/doublets_index_regression-4f6362c2bbe5e183)
+
+running 4 tests
+test absent_source_count_filters_the_concrete_target ... ok
+test allocating_forward_source_preserves_indexed_queries_and_updates ... ok
+test allocating_forward_target_preserves_indexed_queries_and_deletes ... ok
+test allocating_shared_forward_endpoint_preserves_both_indexes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s
+
+PROBE exit=0, cumulative child maximum RSS KiB=251388

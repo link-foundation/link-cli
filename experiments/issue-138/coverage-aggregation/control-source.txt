@@ -1,0 +1,16 @@
+    1|       |// Control: both outcomes execute within one generic instantiation.
+    2|      2|fn select<T>(left: bool) -> u32 {
+    3|      2|    let _type_size = std::mem::size_of::<T>();
+    4|      2|    if left {
+  ------------------
+  |  Branch (4:8): [True: 1, False: 1]
+  ------------------
+    5|      1|        11
+    6|       |    } else {
+    7|      1|        22
+    8|       |    }
+    9|      2|}
+   10|      1|fn main() {
+   11|      1|    assert_eq!(select::<u32>(true), 11);
+   12|      1|    assert_eq!(select::<u32>(false), 22);
+   13|      1|}

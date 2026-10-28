@@ -1,0 +1,30 @@
+C# native facade publication: exact-head CI failures retained
+PR: https://github.com/link-foundation/link-cli/pull/139
+Head: 6d134e8f1a62edbc167a75e80da0b02ac45cf4a2
+Created: 2026-10-27T04:01:04Z, after the latest published commit.
+C# run: https://github.com/link-foundation/link-cli/actions/runs/40447379413
+The eight other workflows completed successfully on this same head.
+
+Full 30,873-line log: experiments/issue-138/ci-logs/csharp-40447379413.log
+Read in bounded excerpts. Lint lines 3214-3399 report four-space indentation
+errors; line 3429 reports exit 2. Local formatter was SDK 10.0.112, whereas CI
+uses 10.0.403. This repeated a previously documented local SDK mismatch.
+The exact CI SDK is already installed locally. Apply its formatter and make
+validate-native-lsm-csharp.sh reject other SDK versions before running checks.
+
+Windows failures: line 15097 names interrupted recovery at intent-remove-before;
+lines 15112-15122 report create/false row-WAL child expiration. Further failures
+cover transition-before, cascade/true and publication-flush-after, all at 15-16s.
+Version recovery finally blocks throw branches.links sharing violations and
+hide the primary failure. The row-WAL parent discards already-captured child
+output when reporting the deadline. The downloaded failure log cannot establish
+which setup phase stalled. New C# native-LSM operation-cut groups finish before
+these failures, so direct temporal overlap with those groups is not established.
+Linux/macOS full suites pass; this does not verify Windows.
+
+Add finite bounded diagnostic capture, coarse child phases, cleanup aggregation
+and actual kill/reap controls. Keep the existing 15-second child deadline.
+Preserve the child PID, elapsed time, actual exit status and both streams on
+failure. Retain the primary exception if fixture-directory deletion also fails.
+These are supervision diagnostics, not additional durability evidence. The
+underlying Windows timeout criterion remains unresolved pending fresh CI.

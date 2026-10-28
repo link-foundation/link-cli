@@ -1,0 +1,40 @@
+SQLite optionality: resolved dependencies and native contracts
+PR: https://github.com/link-foundation/link-cli/pull/139
+Date: 2026-10-26 UTC
+
+Commands (run from repository root, after dependency restoration):
+  node .github/scripts/check-sqlite-optional.mjs rust
+  node .github/scripts/check-sqlite-optional.mjs csharp
+  node .github/scripts/check-sqlite-optional.mjs js
+  npm exec --yes --package=node@24 -- node .github/scripts/check-sqlite-optional.mjs js
+  CARGO_BUILD_JOBS=1 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 cargo test --manifest-path rust/Cargo.toml --no-default-features --test doublets_storage_tests --test engine_journal_tests
+
+All commands succeed. Default native, bare native, default WASM and the native
+crate's WASM target with the native-only sqlite feature resolve neither
+rusqlite nor libsqlite3-sys in their production trees. Explicit native sqlite
+selects both, proving that the dependency check sees the selected provider.
+The C# core resolves 25 direct/transitive packages and no SQLite provider.
+
+The JS import hook rejects every SQLite specifier. Root imports, memory replica
+acknowledgements and an actual native-file write/flush/close/reopen succeed.
+A deliberate import of the optional SQL entry is rejected, verifying the hook.
+Both the local Node 26 runtime and CI's Node 24 major pass this guard.
+
+Without optional native providers, doublets_storage_tests passes 15 tests and
+engine_journal_tests passes 11 tests. Both suites have one ignored child helper
+exercised by a bounded parent. These include native mapped doublets persistence,
+cross-process locking, file-journal recovery and following engine commits.
+No optional SQL implementation supplies these native paths.
+
+The normal Rust/C#/JS CI workflows now invoke the guards; Rust additionally
+runs the same two integration targets without default/optional features.
+All 221 repository checks and workflow/shell lint pass locally. The complete
+recovered suites also pass, as recorded in structure-depth.txt. Fresh exact-head
+CI remains required after publication.
+
+This audit found no default SQLite dependency leak. Native feature completeness
+is a separate requirement: logical undo and checksummed file records cannot
+repair an unreadable/torn mapped page. ENGINE-SQLITE.md maps existing native
+paths and unfinished physical/distributed strategies. The pinned LMDB source
+study in RESEARCH.md describes a possible native shadow-page design only;
+it is not presented as an implemented provider or an LMDB-compatible format.

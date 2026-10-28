@@ -1,0 +1,36 @@
+Public argument contracts; PR https://github.com/link-foundation/link-cli/pull/139
+Run: bash experiments/issue-138/validate-argument-contracts.sh
+Run: bash experiments/issue-138/validate-argument-wasm.sh
+One compiler job, debug information disabled; WASM linear memory capped at 256 MiB.
+
+Native Rust: 930 passed; 0 failed; 17 ignored child entries.
+Complete measured production:
+  lines: 12867/13646 (94.29137%)
+  branches: 2397/2816 (85.12074%)
+  functions: 1644/1773 (92.72420%)
+cli.rs:
+  lines: 404/405 (99.75309%)
+  branches: 116/118 (98.30508%)
+  functions: 28/28 (100.00000%)
+Report: experiments/issue-138/arguments-rust-coverage.json
+
+Actual WASM: 546 passed; 0 failed; 0 ignored child entries.
+Complete measured production:
+  lines: 9931/12693 (78.23997%)
+  branches: 1978/2419 (81.76933%)
+  functions: 1259/1690 (74.49704%)
+cli.rs:
+  lines: 394/405 (97.28395%)
+  branches: 112/118 (94.91525%)
+  functions: 25/28 (89.28571%)
+Report: experiments/issue-138/arguments-wasm-coverage.json
+
+Seven shared semantic groups compare complete configurations, all aliases,
+literal Unicode/whitespace/delimiters, booleans, numeric/arity boundaries,
+missing/invalid values, positional/literal queries and independent strategy flags.
+Rejected parses are followed by clean parses. No production defect reproduced.
+An initial diagnostic oracle was corrected to the established canonical alias.
+Native/WASM strict Clippy and formatting, ShellCheck, release/source-size
+checks and 221 repository tests pass. No production source changed.
+C# 2124 per configuration and JS 209 unchanged since their recorded runs.
+All production denominators retained; whole-project 100% and wider criteria stay open.

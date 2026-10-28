@@ -1,0 +1,22 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Portable backend head: 2a58588829682d670306e37eb7bbd0b342de41ab
+Run: https://github.com/link-foundation/link-cli/actions/runs/40357127712
+Created: 2026-10-26T16:14:08Z, after the portable commit.
+Complete downloaded log: ci-logs/dependencies-40357127712.log (226 lines).
+
+Lines 201-210 preserve the actual failure:
+Checked 121 declared versions and the Cargo.lock files.
+1 dependencies are behind their latest release:
+| File | Dependency | Used | Latest |
+|---|---|---|---|
+| .github/workflows/security.yml | taiki-e/install-action | v2.87.31 | v2.87.32 |
+Process completed with exit code 1.
+
+The official release API reports v2.87.32 published 2026-10-26T15:24:17Z,
+after preceding head cdff1b4's passing run created at 15:00:52Z.
+The official tag resolves directly to commit 5488ac5a951645ce95062214902ac4b6bc1a1037.
+The complete registry check reproduces the same single outdated dependency
+locally; after updating the pin/comment it checks all 121 versions and both
+Cargo lock files successfully. All 19 dependency-checker contracts and strict
+actionlint/ShellCheck pass. No freshness rule or application behavior changed.
+Fresh exact-head CI is required after the pin correction.

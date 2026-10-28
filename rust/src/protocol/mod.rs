@@ -57,13 +57,14 @@ pub use links_notation::binary::{
     format_reference, parse_document, ArityRange, BinaryError, BinaryLinoOptions, DecodeLimits,
     LinksPacket, LinoDocument, Reference, Section,
 };
-pub use links_operations::LinksOperation;
+pub use links_operations::{GenericLinksOperation, LinksOperation};
 pub use protocols::{
     is_binary_start, read_any_document, BinaryLinoProtocol, LinoConnection, LinoProtocol,
     MessageFormat, ProtocolLimits, TextLinoProtocol, DEFAULT_MAX_TEXT_BYTES,
 };
 pub use remote_links::RemoteLinks;
 pub use server::{
-    error_document, error_message, execute_request, AcceptedProtocols, LinksServer, ServerOptions,
+    error_document, error_message, execute_request, execute_request_for,
+    parse_document_with_limits, query_document, AcceptedProtocols, LinksServer, ServerOptions,
     ShutdownHandle,
 };

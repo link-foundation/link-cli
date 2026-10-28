@@ -1,0 +1,33 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Published head: 78e2c2a2040d4a9d75b96ee1fbda295d64941c56
+Rust run created 2026-10-27T04:41:46Z:
+https://github.com/link-foundation/link-cli/actions/runs/40451145660
+Rust coverage, lint, fresh merge, Ubuntu and macOS pass. Windows fails.
+Downloaded full log: experiments/issue-138/ci-logs/rust-40451145660.log
+
+Lines 43193-43195: explicit checkpoint, pending exit and name-only parent fail.
+Lines 43205, 43237 and 43268: finite version-exit child did not finish, at
+checkpoint/false/false, pending/false/false and success/false/true respectively.
+Lines 43299-43306: 4 passed, 3 failed, 1 child entry ignored; target exits 101.
+This is the actual pre-fix reproduction, not inferred from another workflow.
+
+Retained child diagnostics establish an aggregate-deadline problem. The first
+child reaches seed-ready at 9.5426923s, returns its change at 9.5510199s, and
+starts commit before the ten-second total deadline kills it. The pending case
+reaches seed-ready at 9.1524962s, returns its change at 9.159584s and starts
+save before it is killed. The name-only case reaches seed-ready at 8.8715577s,
+returns its change at 9.6255536s and starts commit before it is killed.
+These diagnostics show finite progress across separate persistence operations;
+they do not establish the lower-level cause of Windows filesystem latency.
+
+Reuse the existing, deterministically tested movement_progress supervisor.
+It keeps the ten-second idle limit, admits only complete consecutive numbered
+phases, rejects repeated/partial/regressing/oversized progress, and kills/reaps
+on every supervision error. Each child has at most 64 phases. Emit progress
+only at the existing coarse operation boundaries, never as timer heartbeats.
+All original 12 version/name scenarios and persistence assertions remain.
+
+Focused actual native execution with diagnostic streams passes 10 tests:
+seven original parents plus three supervisor controls, two ignored bounded
+child entry points; 6.51s. Log: version-progress-native.log under experiments.
+Complete validation and fresh Windows CI still required after publication.

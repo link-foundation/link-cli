@@ -1,0 +1,7 @@
+  Determining projects to restore...
+  Restored /tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-before-csharp/Before.csproj (in 794 ms).
+  1 of 2 projects are up-to-date for restore.
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+/tmp/gh-issue-solver-1792987800525/experiments/issue-138/CheckpointInspectBeforeTests.cs(9,47): error CS0117: 'CheckpointPagedCommitLog' does not contain a definition for 'Inspect' [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-before-csharp/Before.csproj]
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedTestDevice.cs(20,19): warning CS0649: Field 'PagedTestDevice.ReadError' is never assigned to, and will always have its default value false [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-before-csharp/Before.csproj]
+/tmp/gh-issue-solver-1792987800525/csharp/Foundation.Data.Doublets.Cli.Tests/PagedTestDevice.cs(19,36): warning CS0649: Field 'PagedTestDevice.Fault' is never assigned to, and will always have its default value [/tmp/gh-issue-solver-1792987800525/experiments/issue-138/checkpoint-inspect-before-csharp/Before.csproj]

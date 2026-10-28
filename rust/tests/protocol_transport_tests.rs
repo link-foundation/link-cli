@@ -8,7 +8,8 @@ use link_cli::protocol::{
 };
 use std::io::{self, Cursor};
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn text_messages_are_dot_stuffed() {
     let document = parse_document(".dot\n'first\n.second'\n(a b)").unwrap();
     let mut wire = Vec::new();
@@ -35,7 +36,8 @@ fn text_messages_are_dot_stuffed() {
         .is_none());
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn text_messages_preserve_crlf_inside_lossless_reference_literals() {
     let document = vec![links_notation::LiNo::Ref("first\r\n.second".to_string())];
     let mut wire = Vec::new();
@@ -50,7 +52,8 @@ fn text_messages_preserve_crlf_inside_lossless_reference_literals() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn connections_decorate_any_byte_stream() {
     let document = parse_document("() ((1 1))").unwrap();
     let mut connection = LinoConnection::new(Cursor::new(Vec::new()), TextLinoProtocol::new());
@@ -63,7 +66,8 @@ fn connections_decorate_any_byte_stream() {
     assert_eq!(connection.into_inner().into_inner(), b"() ((1 1))\n.\n");
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn text_messages_accept_crlf_and_reject_truncation() {
     let mut reader = Cursor::new(b"() ((1 1))\r\n.\r\n".to_vec());
     let document = TextLinoProtocol::new()
@@ -107,7 +111,8 @@ fn text_messages_accept_crlf_and_reject_truncation() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn protocols_are_detected_per_message() {
     let document = parse_document("() ((1 1))").unwrap();
     let options = BinaryLinoOptions::default().with_external_references(true);
@@ -140,7 +145,8 @@ fn protocols_are_detected_per_message() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn notation_errors_keep_their_kind_and_message() {
     let reset = BinaryError::Io(io::ErrorKind::ConnectionReset.into());
     let io = ProtocolError::from(reset);
@@ -165,7 +171,8 @@ fn notation_errors_keep_their_kind_and_message() {
     ));
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn protocol_limits_split_binary_and_text_budgets() {
     let limits = ProtocolLimits::default();
     assert_eq!(limits.binary, DecodeLimits::default());
@@ -190,7 +197,8 @@ fn protocol_limits_split_binary_and_text_budgets() {
     );
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn binary_protocol_refuses_to_write_what_its_peer_would_reject() {
     // links-notation 0.23 checks the limits when encoding too, so a sender
     // finds out before the receiver drops the connection.

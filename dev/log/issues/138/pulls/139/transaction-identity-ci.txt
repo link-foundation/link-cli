@@ -1,0 +1,38 @@
+Restart-safe transaction identity: published-head CI
+Head: 6d231fababf4cf06459f6ccb0e50b0b8c26db992
+Commit: 2026-10-25T03:04:43+00:00
+All nine runs match this SHA and were created after the commit/push.
+
+Broken Link Checker: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:05:02Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875872
+C# CI/CD Pipeline: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:10:15Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875789
+Dependencies: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:05:20Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875892
+Docs: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:07:23Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875780
+JS client CI: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:07:29Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875902
+Rust CI/CD Pipeline: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:13:21Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875767
+Security: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:09:04Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875775
+WebAssembly CI: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:11:52Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875810
+Workflows: success
+  Created: 2026-10-25T03:04:52Z; updated: 2026-10-25T03:05:09Z
+  https://github.com/link-foundation/link-cli/actions/runs/40156875805
+
+Native Windows/Linux/macOS, fresh-merge, package, lint, release metadata, JS,
+TypeScript and actual-WASM tests/coverage pass. No identity workflow failed.
+The Linux clock-interposition contracts run only on Linux; ordinary native
+contracts also pass on Windows/macOS. Full project coverage and the wider issue
+remain unfinished. Later code, including archive ownership, needs fresh CI.

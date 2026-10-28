@@ -1,0 +1,31 @@
+PR: https://github.com/link-foundation/link-cli/pull/139
+Before: phase-context-before.txt; exact failing run 40467581526 at c1abe42.
+After commands use the same linked helper and finite child limits:
+  DOTNET_GCHeapHardLimit=0x10000000 dotnet run --project experiments/issue-138/phase-context-probe --configuration Release --disable-build-servers
+  dotnet test csharp --configuration Release --disable-build-servers -m:1 --filter 'FullyQualifiedName~FiniteExit|FullyQualifiedName~FinitePhaseWatch'
+  bash experiments/issue-138/validate-reclamation-admission.sh
+  bash experiments/issue-138/validate-admission-repository.sh
+
+phase-context-after.log: real child exits 0; zero queued caller callbacks;
+PASS finite progress supervision does not depend on caller synchronization context.
+phase-context-focused-after.log: all 13 finite process/phase controls pass.
+reclamation-admission-csharp-Debug-full.log: 2,447 passed, zero failed/skipped.
+Debug completes 2026-10-27T08:05:29Z.
+reclamation-admission-csharp-Release-full.log: 2,447 passed, zero failed/skipped.
+Release completes 2026-10-27T08:09:08Z. The new durable context regression is
+included in both complete suites, with ready/continue gating before supervision.
+
+Repository continuation completes 2026-10-27T08:13:50Z: 221 passed, zero failed/
+skipped; JS declarations, 658 source-size checks, existing minor changeset,
+126 dependency declarations, actionlint/ShellCheck and whitespace pass.
+The initial layout check reports a root-level ci-logs directory; its complete
+ignored failure log is moved to experiments/issue-138/ci-logs. Rerunning the
+unchanged check passes. No repository policy is relaxed.
+
+ConfigureAwait(false) applies to real pipe reads, process waits/reaping and
+stream completion. Idle/test bounds are unchanged; malformed/repeated/stalled
+phases, actual exit status, bounded capture and cleanup failures remain checked.
+The original helper still fails through the immutable baseline runner after
+the correction. This proves the dependency, not Windows scheduling causality.
+Fresh exact-head Windows CI remains required. No production persistence or
+coverage scope changes; the wider R1-R12 inventory remains unfinished.

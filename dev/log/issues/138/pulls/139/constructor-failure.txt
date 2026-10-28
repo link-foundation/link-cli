@@ -1,0 +1,34 @@
+C# constructor failure ownership audit, 2026-10-24, baseline 6f9673b
+
+Reproduction:
+  Create one temporary data.links path and a directory at data.names.links.
+  Attempt typed, named and simple owned constructors. Each throws on opening
+  the names path, as expected. Immediately reopen data.links with FileShare.None.
+  Before the fix all three exclusive reopens throw:
+    System.IO.IOException: The process cannot access the file .../data.links
+    because it is being used by another process.
+  Original focused suite: three failed, three passed (borrowed store remains
+  usable). No GC forcing, invalid mapped input or stress allocation is used.
+
+Cause:
+  Owned data is opened as an argument to a delegating names constructor.
+  When that constructor throws, the outer constructor body never runs and
+  no object is available to dispose the owned data chain. Names initialization
+  also needs cleanup if the raw facade or its content initialization fails.
+
+Change:
+  Distinguish owned data during construction; dispose it on names failure.
+  Leave caller-owned data usable after failed construction. Transfer a names
+  mapping to its facade only after successful initialization; otherwise release
+  the partial facade chain or the mapping itself. Normal public constructor
+  signatures and successful disposal behavior remain unchanged.
+
+After:
+  All nine focused cases pass. Three owned paths release the handle immediately;
+  four borrowed paths retain a usable caller store; two bounded memory faults
+  verify cleanup before raw access and after names-content initialization begins.
+  The latter exception's stack confirms UnicodeStringStorage was entered.
+  Full Debug and Release suites: 727 pass each. Formatting verification passes.
+  Debug coverage: 5,821/6,482 lines; 2,547/3,074 branches.
+  Release coverage: 4,423/4,843 lines; 2,526/3,055 branches.
+  Project-wide 100% coverage remains unfinished; no source exclusions added.

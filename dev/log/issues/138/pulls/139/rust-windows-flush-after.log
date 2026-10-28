@@ -1,0 +1,17 @@
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9154704Z
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9155326Z running 0 tests
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9155716Z
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9156283Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9157044Z
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9177209Z ^[[1m^[[92m     Running^[[0m `D:\a\link-cli\link-cli\rust\target\debug\deps\acid_readiness_tests-1148b3ee3afe93c9.exe`
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9303705Z
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9304303Z running 6 tests
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9313830Z test recovery_refuses_a_complete_corrupt_transition ... ok
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9314758Z test failed_recovery_is_reported ... ok
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9317833Z test failed_checkpoint_never_writes_applied_markers ... ok
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9318770Z test recovery_refuses_corrupt_markers ... ok
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9870133Z test rollback_is_persistent_before_its_marker ... ok
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9904790Z test committed_buffered_store_survives_reopen_without_save ... ok
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9905391Z
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9905814Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+Test (windows-2025)	Run tests	2026-10-24T16:00:36.9906389Z

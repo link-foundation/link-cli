@@ -1,0 +1,55 @@
+   Compiling link-cli v1.0.9 (<workspace>/rust)
+    Finished `test` profile [unoptimized] target(s) in 1.17s
+     Running tests/transactions_identity_restart_tests.rs (rust/target/debug/deps/transactions_identity_restart_tests-7a2d6933dbafdc41)
+
+running 5 tests
+test identity_child ... ignored, Executed only by bounded frozen-clock restart parents
+
+thread 'aborted_id_does_not_hide_a_new_pending_write' (1229352) panicked at tests/transactions_identity_restart_tests.rs:32:5:
+
+thread 'identity_child' (1229394) panicked at tests/transactions_identity_restart_tests.rs:125:9:
+assertion `left == right` failed: A recovered old decision changed a newer transaction's outcome.
+  left: 21
+ right: 11
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test aborted_id_does_not_hide_a_new_pending_write ... FAILED
+
+thread 'committed_id_does_not_commit_a_new_pending_write' (1229354) panicked at tests/transactions_identity_restart_tests.rs:32:5:
+
+thread 'identity_child' (1229397) panicked at tests/transactions_identity_restart_tests.rs:125:9:
+assertion `left == right` failed: A recovered old decision changed a newer transaction's outcome.
+  left: 21
+ right: 13
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+test committed_id_does_not_commit_a_new_pending_write ... FAILED
+
+thread 'committed_id_does_not_resurrect_a_new_aborted_write' (1229355) panicked at tests/transactions_identity_restart_tests.rs:32:5:
+
+thread 'identity_child' (1229399) panicked at tests/transactions_identity_restart_tests.rs:125:9:
+assertion `left == right` failed: A recovered old decision changed a newer transaction's outcome.
+  left: 21
+ right: 13
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+test committed_id_does_not_resurrect_a_new_aborted_write ... FAILED
+
+thread 'aborted_id_does_not_identify_a_new_aborted_write' (1229353) panicked at tests/transactions_identity_restart_tests.rs:79:5:
+assertion `left != right` failed: A recovered decision was reused for a new owner.
+  left: "31912867247517524295680000000000"
+ right: "31912867247517524295680000000000"
+test aborted_id_does_not_identify_a_new_aborted_write ... FAILED
+
+failures:
+
+failures:
+    aborted_id_does_not_hide_a_new_pending_write
+    aborted_id_does_not_identify_a_new_aborted_write
+    committed_id_does_not_commit_a_new_pending_write
+    committed_id_does_not_resurrect_a_new_aborted_write
+
+test result: FAILED. 0 passed; 4 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.64s
+
+error: test failed, to rerun pass `--test transactions_identity_restart_tests`

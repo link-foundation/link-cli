@@ -2,14 +2,41 @@
 
 use anyhow::Result;
 use link_cli::LinkStorage;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "common/storage.rs"]
+mod test_store;
+#[cfg(target_arch = "wasm32")]
+use crate::test_store;
+#[cfg(not(target_arch = "wasm32"))]
 use tempfile::NamedTempFile;
 
-#[test]
-fn test_storage_create() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn test_memory_reload_clears_rows_names_and_allocator() -> Result<()> {
+    for indexed in [false, true] {
+        let mut storage = LinkStorage::in_memory(false);
+        if indexed {
+            storage = storage.with_indexed_lookups();
+        }
+        storage.create(10, 11);
+        storage.create(20, 21);
+        storage.set_name(1, "stored");
+        storage.set_name(0, "external");
+        storage.reload_from_disk()?;
+        assert!(storage.all().is_empty());
+        assert_eq!(storage.get_by_name("stored"), None);
+        assert_eq!(storage.get_by_name("external"), None);
+        assert_eq!(storage.search(10, 11), None);
+        assert_eq!(storage.create(30, 31), 1);
+        assert_eq!(storage.search(30, 31), Some(1));
+    }
+    Ok(())
+}
 
-    let mut storage = LinkStorage::new(db_path, false)?;
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn test_storage_create() -> Result<()> {
+    let (_temp_file, mut storage) = test_store::links()?;
     let id = storage.create(2, 3);
 
     assert!(id > 0);
@@ -20,12 +47,10 @@ fn test_storage_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_update() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let id = storage.create(2, 3);
     storage.update(id, 4, 5)?;
 
@@ -36,12 +61,10 @@ fn test_storage_update() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_delete() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let id = storage.create(2, 3);
     storage.delete(id)?;
 
@@ -50,7 +73,9 @@ fn test_storage_delete() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn test_storage_persistence() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
     let db_path = temp_file.path().to_str().unwrap();
@@ -74,12 +99,10 @@ fn test_storage_persistence() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_named_links() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let id = storage.get_or_create_named("test");
 
     assert!(id > 0);
@@ -92,7 +115,8 @@ fn test_storage_named_links() -> Result<()> {
 /// A name belongs to one link: naming another link with it takes it away
 /// from the first, as the file-backed names store and the C# port do
 /// (issue #108 conformance).
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_moving_a_name_unnames_its_previous_link() -> Result<()> {
     let mut storage = LinkStorage::in_memory(false);
     let first = storage.create(5, 5);
@@ -123,7 +147,9 @@ fn test_storage_moving_a_name_unnames_its_previous_link() -> Result<()> {
 /// now writes a new file and moves it over the old one, so a reader that holds
 /// the old file keeps seeing it whole.
 #[cfg(unix)]
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn test_storage_save_replaces_the_file_instead_of_truncating_it() -> Result<()> {
     use std::io::Read;
 
@@ -148,7 +174,9 @@ fn test_storage_save_replaces_the_file_instead_of_truncating_it() -> Result<()> 
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn test_storage_save_leaves_only_the_database_file() -> Result<()> {
     let dir = tempfile::tempdir()?;
     let db_path = dir.path().join("db.links");
@@ -168,12 +196,10 @@ fn test_storage_save_leaves_only_the_database_file() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_search() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let id = storage.create(2, 3);
 
     assert_eq!(storage.search(2, 3), Some(id));
@@ -182,12 +208,10 @@ fn test_storage_search() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_storage_get_or_create() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     let id1 = storage.get_or_create(2, 3);
     let id2 = storage.get_or_create(2, 3);
@@ -197,12 +221,10 @@ fn test_storage_get_or_create() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_lines_use_numbered_references_without_names() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     storage.create(1, 1);
     storage.create(1, 2);
 
@@ -211,12 +233,10 @@ fn test_lino_lines_use_numbered_references_without_names() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_lines_use_names_for_indexes_sources_and_targets() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let father = storage.get_or_create_named("father");
     let mother = storage.get_or_create_named("mother");
     let child = storage.create(father, mother);
@@ -234,12 +254,10 @@ fn test_lino_lines_use_names_for_indexes_sources_and_targets() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_lines_escape_names_that_need_quoting() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let source = storage.create(1, 1);
     storage.set_name(source, "source name");
     let target = storage.create(2, 2);
@@ -259,12 +277,10 @@ fn test_lino_lines_escape_names_that_need_quoting() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_lino_lines_select_quote_style_for_names_containing_quotes() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let single_quote = storage.create(1, 1);
     storage.set_name(single_quote, "single'quote");
     let double_quote = storage.create(2, 2);
@@ -284,7 +300,9 @@ fn test_lino_lines_select_quote_style_for_names_containing_quotes() -> Result<()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn test_write_lino_output_writes_complete_database() -> Result<()> {
     let db_file = NamedTempFile::new()?;
     let output_file = NamedTempFile::new()?;
@@ -305,12 +323,10 @@ fn test_write_lino_output_writes_complete_database() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_format_structure_renders_left_branch_with_link_indexes() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let first = storage.create(0, 0);
     let second = storage.create(first, first);
     let third = storage.create(second, first);
@@ -324,12 +340,10 @@ fn test_format_structure_renders_left_branch_with_link_indexes() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_format_structure_renders_repeated_source_and_target_as_reference_on_right() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let db_path = temp_file.path().to_str().unwrap();
-
-    let mut storage = LinkStorage::new(db_path, false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
     let first = storage.create(0, 0);
     let second = storage.create(first, first);
     storage.create(second, first);
@@ -350,10 +364,10 @@ fn test_format_structure_renders_repeated_source_and_target_as_reference_on_righ
 /// resolves to `Doublets::search`, which treats `LinksConstants::any` as a
 /// wildcard. That made `get_or_create(any, target)` hand back an unrelated
 /// existing link instead of creating a new one.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn get_or_create_matches_service_constants_literally() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path().to_str().unwrap(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     let existing = storage.create(0, 0);
     storage.update(existing, 7, 42)?;
@@ -386,10 +400,10 @@ fn get_or_create_matches_service_constants_literally() -> Result<()> {
 /// The address a new link gets is part of what a query reports, so the store
 /// hands out addresses the way `ResizableDirectMemoryLinks` does: a freed one
 /// before a fresh one.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_freed_address_is_reused_before_the_store_grows() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     let first = storage.create(1, 1);
     let second = storage.create(2, 2);
@@ -407,10 +421,10 @@ fn test_freed_address_is_reused_before_the_store_grows() -> Result<()> {
 /// Freed addresses come back in the reverse of the order they were freed: the
 /// C# store pushes each one onto the head of its free list and allocates from
 /// that same head.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_freed_addresses_are_reused_most_recently_freed_first() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     for part in 1..=5 {
         storage.create(part, part);
@@ -427,10 +441,10 @@ fn test_freed_addresses_are_reused_most_recently_freed_first() -> Result<()> {
 
 /// Freeing the highest address shrinks the store instead of leaving a hole,
 /// and takes the freed addresses that have become the end with it.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_freeing_the_last_link_shrinks_the_store() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     for part in 1..=3 {
         storage.create(part, part);
@@ -448,7 +462,9 @@ fn test_freeing_the_last_link_shrinks_the_store() -> Result<()> {
 
 /// The free list decides the next address and nothing in the stored links
 /// implies it, so it has to survive a save and a load.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn test_free_list_survives_a_reload() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
 
@@ -473,7 +489,9 @@ fn test_free_list_survives_a_reload() -> Result<()> {
 /// A database written before the free list was recorded — or by hand — still
 /// loads, with the addresses missing below the highest stored link recovered
 /// as freed ones, lowest reused first.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn test_missing_addresses_are_recovered_from_a_database_without_a_free_list() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
     std::fs::write(temp_file.path(), "(1 1 1)\n(3 3 3)\n(5 5 5)\n")?;
@@ -488,10 +506,10 @@ fn test_missing_addresses_are_recovered_from_a_database_without_a_free_list() ->
 
 /// Reaching a requested address allocates the addresses before it, and those
 /// are freed again — `EnsureCreated` deletes every link it did not ask for.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn test_ensure_created_frees_the_addresses_it_passed_over() -> Result<()> {
-    let temp_file = NamedTempFile::new()?;
-    let mut storage = LinkStorage::new(temp_file.path(), false)?;
+    let (_temp_file, mut storage) = test_store::links()?;
 
     storage.create(1, 1);
     assert_eq!(storage.ensure_created(4), 4);
@@ -513,7 +531,8 @@ fn test_ensure_created_frees_the_addresses_it_passed_over() -> Result<()> {
 /// The browser workbench has no file system, so an in-memory storage must work
 /// without one: writing to its empty path would fail, so `save` and `flush`
 /// succeed only because they write nothing.
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn in_memory_storage_never_touches_a_file() -> Result<()> {
     use link_cli::LinksStorage;
 
@@ -536,7 +555,9 @@ fn in_memory_storage_never_touches_a_file() -> Result<()> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+#[cfg(not(target_arch = "wasm32"))]
 fn file_storage_is_not_in_memory() -> Result<()> {
     let temp_file = NamedTempFile::new()?;
     let storage = LinkStorage::new(temp_file.path(), false)?;

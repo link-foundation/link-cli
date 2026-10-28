@@ -1,4 +1,4 @@
-//! Write-side operations for [`QueryProcessor`].
+//! Write-side operations for [`GenericQueryProcessor`].
 //!
 //! Extracted from `query_processor.rs` for issue #100: resolving unspecified
 //! substitution halves pushed the file past the 1000-line limit enforced by
@@ -10,22 +10,23 @@
 use anyhow::Result;
 
 use crate::error::LinkError;
-use crate::link::Link;
+use crate::link::GenericLink as Link;
 use crate::lino_link::LinoLink;
 use crate::named_type_links::NamedTypeLinks;
-use crate::query_types::ResolvedLink;
+use crate::query_address::QueryAddress;
+use crate::query_types::GenericResolvedLink as ResolvedLink;
 
-use super::{Changes, QueryProcessor};
+use super::{Changes, GenericQueryProcessor, ResolvedChange};
 
 /// A store change as `--changes` reports it: a null link is no link at all.
-fn change(before: Link, after: Link) -> (Option<Link>, Option<Link>) {
+fn change<T: QueryAddress>(before: Link<T>, after: Link<T>) -> (Option<Link<T>>, Option<Link<T>>) {
     (
         (!before.is_null()).then_some(before),
         (!after.is_null()).then_some(after),
     )
 }
 
-impl QueryProcessor {
+impl<T: QueryAddress> GenericQueryProcessor<T> {
     /// Deletes `id` and appends every resulting change to `changes`.
     ///
     /// A delete cascades into the links that still used the deleted one, and
@@ -39,10 +40,10 @@ impl QueryProcessor {
     /// ```
     pub(super) fn delete_observed(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        id: u32,
-        changes: &mut Changes,
-    ) -> Result<Link> {
+        storage: &mut impl NamedTypeLinks<T>,
+        id: T,
+        changes: &mut Changes<T>,
+    ) -> Result<Link<T>> {
         storage.delete_observed(id, &mut |before, after| changes.push(change(before, after)))
     }
 
@@ -53,12 +54,12 @@ impl QueryProcessor {
     /// the handler it passes to `links.Update`.
     pub(super) fn update_observed(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        id: u32,
-        source: u32,
-        target: u32,
-        changes: &mut Changes,
-    ) -> Result<Link> {
+        storage: &mut impl NamedTypeLinks<T>,
+        id: T,
+        source: T,
+        target: T,
+        changes: &mut Changes<T>,
+    ) -> Result<Link<T>> {
         storage.update_observed(id, source, target, &mut |before, after| {
             changes.push(change(before, after))
         })
@@ -72,10 +73,10 @@ impl QueryProcessor {
     /// `intendedFinalStates` dictionary the C# processor builds before
     /// applying its planned operations.
     pub(super) fn intended_final_states(
-        operations: &[(Option<ResolvedLink>, Option<ResolvedLink>)],
-    ) -> Vec<(u32, Option<ResolvedLink>)> {
-        let mut states: Vec<(u32, Option<ResolvedLink>)> = Vec::new();
-        let mut set = |index: u32, state: Option<ResolvedLink>| match states
+        operations: &[ResolvedChange<T>],
+    ) -> Vec<(T, Option<ResolvedLink<T>>)> {
+        let mut states: Vec<(T, Option<ResolvedLink<T>>)> = Vec::new();
+        let mut set = |index: T, state: Option<ResolvedLink<T>>| match states
             .iter_mut()
             .find(|(existing, _)| *existing == index)
         {
@@ -109,14 +110,14 @@ impl QueryProcessor {
     /// duplicates a link that the second swap would have made unique again.
     pub(super) fn restore_unexpected_deletions(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        intended_final_states: &[(u32, Option<ResolvedLink>)],
-        changes: &mut Changes,
+        storage: &mut impl NamedTypeLinks<T>,
+        intended_final_states: &[(T, Option<ResolvedLink<T>>)],
+        changes: &mut Changes<T>,
     ) -> Result<()> {
         for (index, intended) in intended_final_states {
             let Some(intended) = intended else {
                 self.trace_msg(&format!(
-                    "[RestoreUnexpectedLinkDeletions] Link {index} was intended-deletion => skip restore."
+                    "[RestoreUnexpectedLinkDeletions] Link<T> {index} was intended-deletion => skip restore."
                 ));
                 continue;
             };
@@ -153,15 +154,15 @@ impl QueryProcessor {
     /// nothing.
     pub(super) fn create_or_update_resolved_link(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        definition: &ResolvedLink,
-        changes: &mut Changes,
-    ) -> Result<u32> {
+        storage: &mut impl NamedTypeLinks<T>,
+        definition: &ResolvedLink<T>,
+        changes: &mut Changes<T>,
+    ) -> Result<T> {
         let id = if Self::is_normal_index(definition.index) {
             self.ensure_address(storage, definition.index, changes)?;
             let existing = storage
                 .get_link(definition.index)
-                .unwrap_or_else(|| Link::new(definition.index, 0, 0));
+                .unwrap_or_else(|| Link::new(definition.index, T::from_byte(0), T::from_byte(0)));
             let source = Self::resolve_unspecified(definition.source, existing.source);
             let target = Self::resolve_unspecified(definition.target, existing.target);
             if existing.source != source || existing.target != target {
@@ -172,7 +173,7 @@ impl QueryProcessor {
                 self.update_observed(storage, definition.index, source, target, changes)?;
             } else {
                 self.trace_msg(&format!(
-                    "[CreateOrUpdateLink] Link {} is already S={source}, T={target} => no change.",
+                    "[CreateOrUpdateLink] Link<T> {} is already S={source}, T={target} => no change.",
                     definition.index
                 ));
                 changes.push((Some(existing), Some(existing)));
@@ -182,7 +183,7 @@ impl QueryProcessor {
             Self::search_unspecified(storage, definition.source, definition.target)
         {
             self.trace_msg(&format!(
-                "[CreateOrUpdateLink] Link already found => ID={existing_id}, no changes."
+                "[CreateOrUpdateLink] Link<T> already found => ID={existing_id}, no changes."
             ));
             let existing = storage
                 .get_link(existing_id)
@@ -190,12 +191,12 @@ impl QueryProcessor {
             changes.push((Some(existing), Some(existing)));
             existing_id
         } else {
-            let source = Self::resolve_unspecified(definition.source, 0);
-            let target = Self::resolve_unspecified(definition.target, 0);
+            let source = Self::resolve_unspecified(definition.source, T::from_byte(0));
+            let target = Self::resolve_unspecified(definition.target, T::from_byte(0));
             self.trace_msg(&format!(
                 "[CreateOrUpdateLink] Creating new link => (S={source},T={target})."
             ));
-            let created = storage.create(source, target);
+            let created = storage.try_create(source, target)?;
             changes.push((None, storage.get_link(created)));
             created
         };
@@ -216,25 +217,25 @@ impl QueryProcessor {
     /// as created too.
     pub(super) fn ensure_link_created(
         &self,
-        storage: &mut impl NamedTypeLinks,
+        storage: &mut impl NamedTypeLinks<T>,
         lino_link: &LinoLink,
-        changes: &mut Changes,
-    ) -> Result<u32> {
+        changes: &mut Changes<T>,
+    ) -> Result<T> {
         // Handle leaf nodes (names or numbers)
         if !lino_link.has_values() {
             if let Some(ref id) = lino_link.id {
                 if id == "*" || Self::is_variable(id) {
-                    return Ok(u32::MAX);
+                    return Ok(T::MAX);
                 }
 
                 // Check if it's a number
-                if let Ok(num) = id.parse::<u32>() {
+                if let Ok(num) = id.parse::<T>() {
                     return Ok(num);
                 }
 
                 return self.ensure_named_point_link(storage, id, changes);
             }
-            return Ok(0);
+            return Ok(T::from_byte(0));
         }
 
         // Handle composite links with 2 values
@@ -247,23 +248,23 @@ impl QueryProcessor {
 
             // Create or get the composite link
             let link_id = if let Some(ref id) = lino_link.id {
-                if let Ok(num) = id.parse::<u32>() {
+                if let Ok(num) = id.parse::<T>() {
                     // Specific ID requested.
                     self.ensure_indexed_link(storage, num, source_id, target_id, changes)?
                 } else if id == "*" || Self::is_variable(id) {
-                    self.ensure_doublet(storage, source_id, target_id, changes)
+                    self.ensure_doublet(storage, source_id, target_id, changes)?
                 } else if let Some(named) = storage.get_by_name(crate::query_parser::name(id))? {
                     self.ensure_indexed_link(storage, named, source_id, target_id, changes)?
                 } else {
                     // A doublet is unique, so a new name for an existing
                     // `(source, target)` names that link instead of copying it.
-                    let named = self.ensure_doublet(storage, source_id, target_id, changes);
+                    let named = self.ensure_doublet(storage, source_id, target_id, changes)?;
                     storage.set_name(named, crate::query_parser::name(id))?;
                     named
                 }
             } else {
                 // Anonymous link
-                self.ensure_doublet(storage, source_id, target_id, changes)
+                self.ensure_doublet(storage, source_id, target_id, changes)?
             };
 
             return Ok(link_id);
@@ -279,7 +280,7 @@ impl QueryProcessor {
     /// reports `(existing, existing)` without touching the store:
     ///
     /// ```csharp
-    /// TraceIfEnabled(options, $"[EnsureLinkCreated] Link #{link.Index} is already correct => no-op.");
+    /// TraceIfEnabled(options, $"[EnsureLinkCreated] Link<T> #{link.Index} is already correct => no-op.");
     /// options.ChangesHandler?.Invoke(storedD, storedD);
     /// ```
     ///
@@ -288,16 +289,16 @@ impl QueryProcessor {
     /// every stored transformation for a query that changed nothing.
     fn ensure_indexed_link(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        index: u32,
-        source: u32,
-        target: u32,
-        changes: &mut Changes,
-    ) -> Result<u32> {
+        storage: &mut impl NamedTypeLinks<T>,
+        index: T,
+        source: T,
+        target: T,
+        changes: &mut Changes<T>,
+    ) -> Result<T> {
         self.ensure_address(storage, index, changes)?;
         let stored = storage
             .get_link(index)
-            .unwrap_or_else(|| Link::new(index, 0, 0));
+            .unwrap_or_else(|| Link::new(index, T::from_byte(0), T::from_byte(0)));
         let source = Self::resolve_unspecified(source, stored.source);
         let target = Self::resolve_unspecified(target, stored.target);
         if stored.source != source || stored.target != target {
@@ -308,7 +309,7 @@ impl QueryProcessor {
             self.update_observed(storage, index, source, target, changes)?;
         } else {
             self.trace_msg(&format!(
-                "[EnsureLinkCreated] Link {index} is already correct => no-op."
+                "[EnsureLinkCreated] Link<T> {index} is already correct => no-op."
             ));
             changes.push((Some(stored), Some(stored)));
         }
@@ -320,29 +321,29 @@ impl QueryProcessor {
     /// genuinely new one reports a creation.
     fn ensure_doublet(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        source: u32,
-        target: u32,
-        changes: &mut Changes,
-    ) -> u32 {
+        storage: &mut impl NamedTypeLinks<T>,
+        source: T,
+        target: T,
+        changes: &mut Changes<T>,
+    ) -> Result<T> {
         if let Some(existing_id) = Self::search_unspecified(storage, source, target) {
             self.trace_msg(&format!(
-                "[EnsureLinkCreated] Link already found => ID={existing_id} => no-op."
+                "[EnsureLinkCreated] Link<T> already found => ID={existing_id} => no-op."
             ));
             let existing = storage
                 .get_link(existing_id)
                 .unwrap_or_else(|| Link::new(existing_id, source, target));
             changes.push((Some(existing), Some(existing)));
-            existing_id
+            Ok(existing_id)
         } else {
-            let source = Self::resolve_unspecified(source, 0);
-            let target = Self::resolve_unspecified(target, 0);
+            let source = Self::resolve_unspecified(source, T::from_byte(0));
+            let target = Self::resolve_unspecified(target, T::from_byte(0));
             self.trace_msg(&format!(
                 "[EnsureLinkCreated] Creating link for (S={source}, T={target})."
             ));
-            let created = storage.create(source, target);
+            let created = storage.try_create(source, target)?;
             changes.push((None, storage.get_link(created)));
-            created
+            Ok(created)
         }
     }
 
@@ -350,13 +351,16 @@ impl QueryProcessor {
     /// `(index: 0 0)` link that creates.
     fn ensure_address(
         &self,
-        storage: &mut impl NamedTypeLinks,
-        index: u32,
-        changes: &mut Changes,
+        storage: &mut impl NamedTypeLinks<T>,
+        index: T,
+        changes: &mut Changes<T>,
     ) -> Result<()> {
         if !storage.exists(index) {
             storage.try_ensure_created(index)?;
-            changes.push((None, Some(Link::new(index, 0, 0))));
+            changes.push((
+                None,
+                Some(Link::new(index, T::from_byte(0), T::from_byte(0))),
+            ));
         }
         Ok(())
     }
@@ -365,10 +369,10 @@ impl QueryProcessor {
     /// `(name: name name)` when there is none yet.
     pub(super) fn ensure_named_point_link(
         &self,
-        storage: &mut impl NamedTypeLinks,
+        storage: &mut impl NamedTypeLinks<T>,
         name: &str,
-        changes: &mut Changes,
-    ) -> Result<u32> {
+        changes: &mut Changes<T>,
+    ) -> Result<T> {
         if let Some(named) = storage.get_by_name(crate::query_parser::name(name))? {
             return Ok(named);
         }

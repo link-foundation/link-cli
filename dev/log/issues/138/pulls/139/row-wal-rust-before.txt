@@ -1,0 +1,143 @@
+   Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1792924568628/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.09s
+     Running tests/transaction_row_wal_tests.rs (rust/target/debug/deps/transaction_row_wal_tests-1dfd42b9510fb109)
+
+running 7 tests
+test native::exit_child ... ignored, finite process entry point
+[Transactions] Recorded Create seq=1 tx=000001a1735e8cec0000000000000001: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Create seq=1 tx=000001a1735e8ceb0000000000000000: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a1735e8cec0000000000000001: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1735e8cec0000000000000001 (mode=Sync, transitions=2).
+[Transactions] Recorded Create seq=1 tx=000001a1735e8cec0000000000000002: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=3 tx=000001a1735e8cee0000000000000003: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a1735e8ceb0000000000000000: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1735e8ceb0000000000000000 (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=3 tx=000001a1735e8cef0000000000000005: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8cee0000000000000003 (mode=Sync, transitions=1).
+[Transactions] Recorded Create seq=1 tx=000001a1735e8cee0000000000000004: (0,0,0) -> (1,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a1735e8cec0000000000000002: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1735e8cec0000000000000002 (mode=Sync, transitions=2).
+[Transactions] Recorded Create seq=4 tx=000001a1735e8cef0000000000000006: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=2 tx=000001a1735e8cee0000000000000004: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1735e8cee0000000000000004 (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=3 tx=000001a1735e8cf10000000000000007: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=3 tx=000001a1735e8cf10000000000000008: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1735e8cef0000000000000006: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1735e8cef0000000000000006 (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=6 tx=000001a1735e8cf2000000000000000a: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Create seq=1 tx=000001a1735e8cf10000000000000009: (0,0,0) -> (1,0,0).
+[Transactions] Committed tx 000001a1735e8cf10000000000000007 (mode=Sync, transitions=1).
+[Transactions] Committed tx 000001a1735e8cef0000000000000005 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=2 tx=000001a1735e8cf10000000000000009: (1,0,0) -> (1,11,12).
+[Transactions] Committed tx 000001a1735e8cf10000000000000009 (mode=Sync, transitions=2).
+[Transactions] Committed tx 000001a1735e8cf2000000000000000a (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=3 tx=000001a1735e8cf3000000000000000d: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=7 tx=000001a1735e8cf4000000000000000e: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Create seq=4 tx=000001a1735e8cf2000000000000000b: (0,0,0) -> (2,0,0).
+[Transactions] Committed tx 000001a1735e8cf10000000000000008 (mode=Sync, transitions=1).
+[Transactions] Committed tx 000001a1735e8cf4000000000000000e (mode=Sync, transitions=1).
+[Transactions] Recorded Create seq=4 tx=000001a1735e8cf5000000000000000f: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Create seq=4 tx=000001a1735e8cf3000000000000000c: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1735e8cf3000000000000000c: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1735e8cf3000000000000000c (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=6 tx=000001a1735e8cf90000000000000011: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1735e8cf5000000000000000f: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1735e8cf5000000000000000f (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=8 tx=000001a1735e8cf70000000000000010: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1735e8cf2000000000000000b: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1735e8cf3000000000000000d (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=6 tx=000001a1735e8cfb0000000000000013: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8cf70000000000000010 (mode=Sync, transitions=1).
+[Transactions] Recorded Create seq=4 tx=000001a1735e8cfa0000000000000012: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1735e8cfa0000000000000012: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1735e8cf90000000000000011 (mode=Sync, transitions=1).
+[Transactions] Committed tx 000001a1735e8cf2000000000000000b (mode=Sync, transitions=2).
+[Transactions] Committed tx 000001a1735e8cfb0000000000000013 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=7 tx=000001a1735e8cfd0000000000000014: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=6 tx=000001a1735e8cfe0000000000000015: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=7 tx=000001a1735e8cfe0000000000000016: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8cfa0000000000000012 (mode=Sync, transitions=2).
+[Transactions] Committed tx 000001a1735e8cfd0000000000000014 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=6 tx=000001a1735e8cff0000000000000017: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8cfe0000000000000016 (mode=Sync, transitions=1).
+[Transactions] Committed tx 000001a1735e8cff0000000000000017 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=8 tx=000001a1735e8d010000000000000019: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=8 tx=000001a1735e8d02000000000000001a: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8cfe0000000000000015 (mode=Sync, transitions=1).
+[Transactions] Committed tx 000001a1735e8d010000000000000019 (mode=Sync, transitions=1).
+[Transactions] Committed tx 000001a1735e8d02000000000000001a (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=7 tx=000001a1735e8d04000000000000001b: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Update seq=7 tx=000001a1735e8d06000000000000001e: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8d04000000000000001b (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=8 tx=000001a1735e8d08000000000000001f: (0,0,0) -> (0,0,0).
+[Transactions] Recorded Create seq=9 tx=000001a1735e8d05000000000000001d: (0,0,0) -> (5,0,0).
+[Transactions] Committed tx 000001a1735e8d06000000000000001e (mode=Sync, transitions=1).
+[Transactions] Rolled back tx 000001a1735e8d05000000000000001d (1 transitions).
+[Transactions] Recorded Update seq=8 tx=000001a1735e8d0b0000000000000020: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8d08000000000000001f (mode=Sync, transitions=1).
+[Transactions] Recorded Create seq=1 tx=000001a1735e8d020000000000000000: (0,0,0) -> (1,0,0).
+
+thread 'cascade_before_observer_recovers_rows_and_names' (298898) panicked at tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: cascade/false/0
+  left: "[]\n{0: \"zero\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[Transactions] Committed tx 000001a1735e8d0b0000000000000020 (mode=Sync, transitions=1).
+test cascade_before_observer_recovers_rows_and_names ... FAILED
+[Transactions] Recorded Update seq=2 tx=000001a1735e8d020000000000000000: (1,0,0) -> (1,11,12).
+
+thread 'delete_before_observer_recovers_rows_and_names' (298900) panicked at tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: delete/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }]\n{0: \"zero\", 1: \"original 雪\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+test delete_before_observer_recovers_rows_and_names ... FAILED
+
+thread 'update_before_observer_recovers_rows_and_names' (298903) panicked at tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: update/false/0
+  left: "[GenericLink { index: 1, source: 21, target: 22 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+test update_before_observer_recovers_rows_and_names ... FAILED
+
+thread 'ensure_before_observer_recovers_rows_and_names' (298901) panicked at tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: ensure/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 5, source: 0, target: 0 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+test ensure_before_observer_recovers_rows_and_names ... FAILED
+
+thread 'create_before_observer_recovers_rows_and_names' (298899) panicked at tests/transaction_row_wal_tests.rs:138:13:
+assertion `left == right` failed: create/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 21, target: 22 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+test create_before_observer_recovers_rows_and_names ... FAILED
+[Transactions] Committed tx 000001a1735e8d020000000000000000 (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=3 tx=000001a1735e8d380000000000000001: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8d380000000000000001 (mode=Sync, transitions=1).
+[Transactions] Recorded Create seq=4 tx=000001a1735e8d4c0000000000000002: (0,0,0) -> (2,0,0).
+[Transactions] Recorded Update seq=5 tx=000001a1735e8d4c0000000000000002: (2,0,0) -> (2,1,1).
+[Transactions] Committed tx 000001a1735e8d4c0000000000000002 (mode=Sync, transitions=2).
+[Transactions] Recorded Update seq=6 tx=000001a1735e8d6f0000000000000003: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8d6f0000000000000003 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=7 tx=000001a1735e8d870000000000000004: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8d870000000000000004 (mode=Sync, transitions=1).
+[Transactions] Recorded Update seq=8 tx=000001a1735e8d970000000000000005: (0,0,0) -> (0,0,0).
+[Transactions] Committed tx 000001a1735e8d970000000000000005 (mode=Sync, transitions=1).
+
+thread 'native::real_exit_before_observer_recovers_every_operation' (298902) panicked at tests/transaction_row_wal_tests.rs:198:21:
+assertion `left == right` failed: create/false/0
+  left: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 21, target: 22 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+ right: "[GenericLink { index: 1, source: 11, target: 12 }, GenericLink { index: 2, source: 1, target: 1 }]\n{0: \"zero\", 1: \"original 雪\", 2: \"dependent\", 77: \"absent\"}"
+test native::real_exit_before_observer_recovers_every_operation ... FAILED
+
+failures:
+
+failures:
+    cascade_before_observer_recovers_rows_and_names
+    create_before_observer_recovers_rows_and_names
+    delete_before_observer_recovers_rows_and_names
+    ensure_before_observer_recovers_rows_and_names
+    native::real_exit_before_observer_recovers_every_operation
+    update_before_observer_recovers_rows_and_names
+
+test result: FAILED. 0 passed; 6 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+error: test failed, to rerun pass `--test transaction_row_wal_tests`
