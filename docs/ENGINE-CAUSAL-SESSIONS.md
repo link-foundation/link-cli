@@ -10,7 +10,7 @@ JS/TS links and query API with BigInt addresses over that same workspace. Rust
 supplies the standard query processor and protocol through a checked named-store
 borrow. C# supplies the ordinary processor and standard protocols through a
 checked `QueryLinks` adapter. The [session plan](case-studies/issue-138/CAUSAL-MUTABLE-SESSION-PLAN.md)
-tracks remaining physical query interchange and wider requirements.
+tracks complete physical query interchange verification and wider requirements.
 
 Choose an explicit conflict policy and a fresh inclusive address reservation.
 The reservation cannot intersect any retained causal identity, including a
@@ -192,9 +192,15 @@ With the compiled native examples and WASM package available, run
 50 plain/mirrored complete-store handoffs, and
 `NATIVE_CAUSAL_LAYOUT=session python3 examples/native-lsm-js/run-causal-faults.py`
 for 20 finite, reaped process exits and 100 recovery/following sequences.
+These recipes use ordinary create/name requests and original-text queries for
+matching, full encoded names and deletion. They check private provider bytes,
+owned query observations and prepared requests, reject later edits/queries,
+and retain tokens 100/200/300/400 with their original expected versions. The
+full matrix runs in CI; `NATIVE_LSM_RUNTIMES=csharp` selects a focused local
+check after building the C# example.
 Readers and durable retries preserve every file hash. Operator marker recovery
 happens only after the owner has exited and been reaped, preserving the markers
 as evidence. These are application-crash experiments; hardware power-loss
-certification remains unfinished. Complete project coverage, full query parity,
+certification remains unfinished. Complete project coverage, fresh query CI,
 global allocation, membership/history reclamation and every other unmet issue
 requirement remain tracked in the plan; PR139 stays draft and unmerged.

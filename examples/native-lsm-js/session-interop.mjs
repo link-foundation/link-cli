@@ -7,6 +7,7 @@ import { CausalSession } from '../../js/client/src/engine-causal-session.js';
 import { FileLsmJournalStore } from '../../js/client/src/engine-file-lsm-store.js';
 import { CausalBatch } from '../../js/client/src/engine-causal-batch.js';
 import { CausalVersion } from '../../js/client/src/engine-causal-version.js';
+import { encodeReferenceLiteral } from '../../js/client/src/lino.js';
 
 const packagePath = resolve(process.env.CLINK_WASM ?? 'js/pkg');
 const binding = await import(pathToFileURL(join(packagePath, 'clink_wasm.js')).href);
@@ -49,6 +50,24 @@ if (action === 'blocked') {
   };
   const batches = new CausalBatch(store, 'replica', 'batches', author, { requireDurableFlush: true });
   const session = (first, last) => CausalSession.open(binding, batches, first, last, 'reject');
+  const create = async (client, id, name) => {
+    assert.deepEqual(await client.create(2n, 3n), { index: id, source: 2n, target: 3n });
+    await client.setName(id, name);
+  };
+  const change = (before, after) => {
+    const named = index => ({ index, source: 'second', target: '3' });
+    return { before: named(before), after: after === null ? null : named(after) };
+  };
+  const prepare = async (tx, client, value, generation, edits) => {
+    const expected = { token: token(value), generation, edits };
+    const request = await tx.prepare(token(value));
+    assert.deepEqual(request, expected);
+    if (request.edits.length) request.edits[0].address = '99';
+    assert.deepEqual(tx.prepared, expected);
+    await assert.rejects(client.count());
+    await assert.rejects(client.query('(($i: $s $t)) (($i: $s $t))'));
+    assert.deepEqual(await tx.prepare(token(value)), expected);
+  };
   const check = async phase => {
     const expected = phase ? [...second] : [...first];
     if (phase === 2) expected.push(following);
@@ -66,8 +85,17 @@ if (action === 'blocked') {
     if (action === 'write') {
       const tx = await session('1', '2');
       try {
-        assert.equal(await tx.createLink('2', '3'), '1'); await tx.setName('1', first[0].payload.name);
-        assert.equal(await tx.createLink('2', '3'), '2'); await tx.setName('2', 'second');
+        const client = tx.client(), bytes = physicalBytes();
+        await create(client, 1n, first[0].payload.name); await create(client, 2n, 'second');
+        assert.deepEqual(await client.query('(($i: $s $t)) (($i: $s $t))'),
+          [change(first[0].payload.name, first[0].payload.name), change('second', 'second')]);
+        const literal = encodeReferenceLiteral(first[0].payload.name);
+        assert.deepEqual(await client.query(`((${literal}: $s $t)) ((${literal}: $s $t))`),
+          [change(first[0].payload.name, first[0].payload.name)]);
+        assert.equal((await tx.rows()).length, 2);
+        assert.deepEqual((await batches.snapshot()).versions, []);
+        await prepare(tx, client, 100, '0', initialEdits());
+        assert.deepEqual(physicalBytes(), bytes);
         assert.deepEqual(wire(await tx.commit(token(100))), wire(first));
       } finally { await tx.close(); }
       physical.flush(); physical.compact();
@@ -80,7 +108,17 @@ if (action === 'blocked') {
       } else {
         const stale = await session('8', '9'), tx = await session('3', '3');
         try {
-          await stale.setName('1', 'stale'); await tx.deleteLink('1'); await tx.setName('2', second[1].payload.name);
+          const client = tx.client(), bytesBefore = physicalBytes();
+          await stale.client().setName(1n, 'stale');
+          const observed = await client.query('(($i: $s $t)) (($i: $s $t))');
+          const originalReply = structuredClone(observed);
+          assert.deepEqual(await client.query('((1: $s $t)) ()'), [change('1', null)]);
+          await client.setName(2n, second[1].payload.name);
+          assert.equal(await tx.getLink('1'), null);
+          assert.equal(await tx.getName('2'), second[1].payload.name);
+          assert.deepEqual(observed, originalReply);
+          await prepare(tx, client, 200, '1', nextEdits());
+          assert.deepEqual(physicalBytes(), bytesBefore);
           assert.deepEqual(wire(await tx.commit(token(200))), wire(second));
           const before = await store.read(['replica', 'batches']);
           const bytes = physicalBytes();
@@ -93,7 +131,13 @@ if (action === 'blocked') {
     }
     if (action === 'following') {
       const tx = await session('3', '3');
-      try { await tx.createLink('2', '3'); await tx.setName('3', 'following'); assert.deepEqual(wire(await tx.commit(token(300))), wire([following])); }
+      try {
+        const client = tx.client(), bytes = physicalBytes();
+        await create(client, 3n, 'following');
+        await prepare(tx, client, 300, '2', [{ address: '3', observed: [], payload: following.payload }]);
+        assert.deepEqual(physicalBytes(), bytes);
+        assert.deepEqual(wire(await tx.commit(token(300))), wire([following]));
+      }
       finally { await tx.close(); }
       const empty = await session('4', '4');
       try { assert.deepEqual(await empty.commit(token(400)), []); } finally { await empty.close(); }

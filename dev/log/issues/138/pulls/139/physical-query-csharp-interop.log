@@ -1,0 +1,11 @@
+PASS C# causal session native LSM write plain
+PASS C# causal session native LSM read plain
+PASS C# causal session native LSM mutate plain
+PASS C# causal session native LSM read-advanced plain
+PASS session complete-store plain csharp -> csharp -> csharp
+PASS C# causal session native LSM write mirrored
+PASS C# causal session native LSM read mirrored
+PASS C# causal session native LSM mutate mirrored
+PASS C# causal session native LSM read-advanced mirrored
+PASS session complete-store mirrored csharp -> csharp -> csharp
+PASS 2 session complete-store handoffs with physical hash preservation

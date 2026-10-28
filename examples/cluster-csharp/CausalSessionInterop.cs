@@ -1,5 +1,9 @@
 using System.Globalization;
 using Foundation.Data.Doublets.Cli.Engine;
+using Foundation.Data.Doublets.Cli.Protocol;
+using Link.Foundation.Links.Notation.Binary;
+using LinoLink = Link.Foundation.Links.Notation.Link<string>;
+using Operation = Foundation.Data.Doublets.Cli.Protocol.LinksOperation<System.UInt128>;
 
 internal static class CausalSessionInterop
 {
@@ -8,6 +12,39 @@ internal static class CausalSessionInterop
     private static CausalPayload Row(string name) => new(2, 3, name);
     private static void Require(bool condition) { if (!condition) throw new InvalidDataException("Causal session interchange mismatch."); }
     private static string[] Wires(IEnumerable<CausalVersion> versions) => versions.Select(v => v.Encode()).ToArray();
+    private static IReadOnlyList<LinoLink> Request(CausalSession tx, IReadOnlyList<LinoLink> document)
+    {
+        var reply = LinksServer.ExecuteRequest(tx.QueryLinks, document);
+        if (LinksServer.ErrorMessage(reply) is { } message) throw new InvalidDataException(message);
+        return reply;
+    }
+    private static IReadOnlyList<LinoLink> Query(CausalSession tx, string query) => Request(tx, LinksServer.QueryDocument(query));
+    private static void Create(CausalSession tx, ulong id, string name)
+    {
+        Require(Operation.ParseChanges(Request(tx, new Operation.Create(2, 3).ToDocument())).Single().After.Index == id);
+        Request(tx, new Operation.SetName(id, name).ToDocument());
+    }
+    private static LinoLink Change(string before, string? after)
+    {
+        LinoLink Row(string id) => LinoFormat.Link(id, [LinoFormat.Reference("second"), LinoFormat.Reference("3")]);
+        return LinoFormat.Link(null, [LinoFormat.Link(null, [Row(before)]),
+            LinoFormat.Link(null, after is null ? [] : [Row(after)])]);
+    }
+    private static void Prepare(CausalSession tx, int token, ulong generation, CausalBatchEdit[] expected)
+    {
+        var links = tx.QueryLinks; // Keep the original adapter to verify its freeze too.
+        var request = tx.Prepare(Token(token));
+        Require(request.Token == Token(token) && request.Generation == generation);
+        string Encode(object value) => System.Text.Json.JsonSerializer.Serialize(value);
+        Require(Encode(request.Edits) == Encode(expected));
+        if (request.Edits.Count != 0) ((CausalBatchEdit[])request.Edits)[0] = new(99, [], null);
+        Require(Encode(tx.Prepared!.Edits) == Encode(expected));
+        Require(LinksServer.ErrorMessage(LinksServer.ExecuteRequest(links,
+            new Operation.Count(LinksRestriction<UInt128>.All).ToDocument())) is not null);
+        Require(LinksServer.ErrorMessage(LinksServer.ExecuteRequest(links,
+            LinksServer.QueryDocument("(($i: $s $t)) (($i: $s $t))"))) is not null);
+        Require(Encode(tx.Prepare(Token(token)).Edits) == Encode(expected));
+    }
     private static string[] PhysicalBytes(string directory) => Directory.EnumerateFiles(directory).Order(StringComparer.Ordinal).Select(path =>
     {
         // The existing writer also needs write sharing from this new reader on Windows.
@@ -63,8 +100,17 @@ internal static class CausalSessionInterop
         if (action == "write")
         {
             using var tx = Session(1, 2);
-            Require(tx.CreateLink(2, 3) == 1); tx.SetName(1, first[0].Payload!.Name!);
-            Require(tx.CreateLink(2, 3) == 2); tx.SetName(2, "second");
+            var bytes = PhysicalBytes(directory);
+            Create(tx, 1, first[0].Payload!.Name!); Create(tx, 2, "second");
+            var matched = Query(tx, "(($i: $s $t)) (($i: $s $t))");
+            Require(LinoFormat.FormatDocument(matched) == LinoFormat.FormatDocument(
+                [Change(first[0].Payload!.Name!, first[0].Payload!.Name!), Change("second", "second")]));
+            var literal = Link.Foundation.Links.Notation.ReferenceLiteral.Encode(first[0].Payload!.Name!);
+            Require(LinoFormat.FormatDocument(Query(tx, $"(({literal}: $s $t)) (({literal}: $s $t))")) ==
+                LinoFormat.FormatDocument([Change(first[0].Payload!.Name!, first[0].Payload!.Name!)]));
+            Require(tx.Rows().Length == 2 && batches.Snapshot().Versions.Count == 0);
+            Prepare(tx, 100, 0, InitialEdits());
+            Require(PhysicalBytes(directory).SequenceEqual(bytes));
             Require(Wires(tx.Commit(Token(100))).SequenceEqual(Wires(first)));
             physical.Flush(); physical.Compact();
         }
@@ -75,8 +121,18 @@ internal static class CausalSessionInterop
                 Require(Wires(batches.Write(Token(200), 1, NextEdits())).SequenceEqual(Wires(second)));
             else
             {
-                using var stale = Session(8, 9); stale.SetName(1, "stale");
-                using var tx = Session(3, 3); tx.DeleteLink(1); tx.SetName(2, second[1].Payload!.Name!);
+                using var stale = Session(8, 9); Request(stale, new Operation.SetName(1, "stale").ToDocument());
+                using var tx = Session(3, 3);
+                var privateBytes = PhysicalBytes(directory);
+                var observed = Query(tx, "(($i: $s $t)) (($i: $s $t))");
+                var originalReply = LinoFormat.FormatDocument(observed);
+                var deleted = Query(tx, "((1: $s $t)) ()");
+                Require(LinoFormat.FormatDocument(deleted) == LinoFormat.FormatDocument([Change("1", null)]));
+                Request(tx, new Operation.SetName(2, second[1].Payload!.Name!).ToDocument());
+                Require(tx.GetLink(1) is null && tx.GetName(2) == second[1].Payload!.Name);
+                Require(LinoFormat.FormatDocument(observed) == originalReply);
+                Prepare(tx, 200, 1, NextEdits());
+                Require(PhysicalBytes(directory).SequenceEqual(privateBytes));
                 Require(Wires(tx.Commit(Token(200))).SequenceEqual(Wires(second)));
                 string[] keys = ["replica", "batches"];
                 string before = System.Text.Json.JsonSerializer.Serialize(physical.Read(keys));
@@ -90,7 +146,9 @@ internal static class CausalSessionInterop
         }
         if (action == "following")
         {
-            using var tx = Session(3, 3); Require(tx.CreateLink(2, 3) == 3); tx.SetName(3, "following");
+            using var tx = Session(3, 3); var bytes = PhysicalBytes(directory);
+            Create(tx, 3, "following"); Prepare(tx, 300, 2, [new(3, [], following.Payload)]);
+            Require(PhysicalBytes(directory).SequenceEqual(bytes));
             Require(Wires(tx.Commit(Token(300))).SequenceEqual(Wires([following])));
             using var empty = Session(4, 4); Require(empty.Commit(Token(400)).Length == 0); Check(2);
         }

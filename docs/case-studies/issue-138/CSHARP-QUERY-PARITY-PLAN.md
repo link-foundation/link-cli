@@ -3,8 +3,8 @@
 Continue CAUSAL-PROTOCOL-PLAN.md. The C# processor now shares selected-address
 matching and mutation helpers while retaining its uint facade. CausalSession
 also exposes checked QueryLinks through UInt128, separating its wildcard from
-every stored u64 identity. Standard C# protocol dispatch and physical query
-interchange remain unfinished. The raw session contracts and passing
+every stored u64 identity. Standard C# protocol dispatch is implemented; physical
+query recipes await complete interchange CI. The raw session contracts and passing
 Rust/actual-WASM/JS protocol tests do not verify that remaining work.
 
 - [x] First reproduce the existing monotonic allocation failure through
@@ -38,7 +38,7 @@ Rust/actual-WASM/JS protocol tests do not verify that remaining work.
 - [x] Bound input bytes, parser depth, document nodes, result/binding expansion
       and decoded named reply bytes before checked writes. Use finite bounded
       probes, ordinary positive controls and no host-exhaustion experiments.
-- [ ] Extend standard protocol operations and server dispatch with the same
+- [x] Extend standard protocol operations and server dispatch with the same
       selected address type, preserving all uint entry points. Carry original
       query text in the matching explicit envelope through text and binary;
       apply checked admission before recursive canonical formatting.

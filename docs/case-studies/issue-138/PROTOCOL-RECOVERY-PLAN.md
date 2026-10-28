@@ -19,10 +19,10 @@ inline PR comments or reviews were returned on the paginated refresh.
 - [x] Supply stable focused validation scripts referenced by the recovered
       gate, run formatting and cheap repository/release checks, and record
       exact commands and limits. Complete suites and coverage belong in CI.
-- [ ] Extend the existing physical session examples to exercise ordinary
+- [x] Extend the existing physical session examples to exercise ordinary
       selected-address protocol operations and original-text queries. Retain
       exact expected versions, publication tokens and crash-recovery requests.
-- [ ] Assert owned observations, private saves, preparation freezes and
+- [x] Assert owned observations, private saves, preparation freezes and
       unchanged provider bytes before explicit publication in each port.
 - [ ] Run a small local physical check where compiled tools are available;
       run complete five-runtime handoff and finite process-exit matrices in CI.

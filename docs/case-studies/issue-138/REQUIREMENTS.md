@@ -1,5 +1,16 @@
 # Acceptance inventory
 
+The recovered C# selected-address protocol draft now passes 144 focused Release
+tests, covering all thirteen codecs, the established uint facade, bounded
+framing, original-text envelopes, owned callbacks and preparation freezes.
+PROTOCOL-RECOVERY-VERIFICATION.md records the restored commit and limits.
+The Rust/C#/actual-WASM JS physical recipes now stage standard operations and
+queries against unchanged independent versions and exact requests. Focused C#
+checks pass two plain/mirrored handoffs and four reaped exit/retry sequences;
+PHYSICAL-QUERY-VERIFICATION.md records the pending full five-runtime CI matrix.
+Complete suites remain in CI per the latest maintainer feedback. These steps
+advance R1/R7/R8/R9 without completing the wider open criteria below.
+
 Generic Rust initialization (R1/R6/R7/R8) now uses the original file length
 and successful-growth boundary for destructor-bearing values. Three finite
 regressions fail against immutable 9bb985f and current pre-fix 40d850f:

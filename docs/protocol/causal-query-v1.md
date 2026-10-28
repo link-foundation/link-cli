@@ -52,5 +52,7 @@ Native Rust, C# checked sessions, linked actual WASM and actual Node/Bun/Deno
 consume these vectors. C# also round-trips each case through text and all binary
 codec options before standard dispatch. The JS consumers assert that staging
 and preparation preserve real provider bytes and publication count. The
-physical cross-language query recipe remains unfinished in
-[the parity plan](../case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).
+physical recipes now use those operations and original-text queries with exact
+independent versions and retained retry requests. Focused C# physical checks
+pass; [the physical parity plan](../case-studies/issue-138/CAUSAL-PHYSICAL-QUERY-PLAN.md)
+tracks complete five-runtime CI verification.

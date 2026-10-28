@@ -8,7 +8,12 @@ use link_cli::engine::{
     cluster::{AtomicJournalStore, JournalVersion},
     lsm::{FileLsmJournalStore, FileLsmOptions, LsmOptions, LsmStoreOptions},
 };
+use link_cli::protocol::{
+    error_message, execute_request_for, format_document, links_operations::parse_changes_for,
+    query_document, GenericLinksOperation as Operation, LinoDocument,
+};
 use link_cli::{LinkError, LinksStorage};
+use links_notation::LiNo;
 use std::{cell::RefCell, rc::Rc};
 fn physical_bytes(
     directory: &str,
@@ -30,6 +35,81 @@ fn row(name: &str) -> Option<CausalPayload> {
         target: 3,
         name: Some(name.into()),
     })
+}
+fn request(tx: &mut CausalSession<CutStore>, document: LinoDocument) -> LinoDocument {
+    let reply = execute_request_for(
+        &mut tx.named_links(),
+        &link_cli::GenericQueryProcessor::<u128>::new(false),
+        &document,
+    );
+    assert!(error_message(&reply).is_none(), "{reply:?}");
+    reply
+}
+fn create(tx: &mut CausalSession<CutStore>, id: u128, name: &str) {
+    let reply = request(
+        tx,
+        Operation::<u128>::Create {
+            source: 2,
+            target: 3,
+        }
+        .to_document(),
+    );
+    let changes = parse_changes_for::<u128>(&reply).unwrap();
+    assert_eq!(changes.len(), 1);
+    assert_eq!(changes[0].1.index, id);
+    request(tx, Operation::SetName(id, name.into()).to_document());
+}
+fn change(before: &str, after: Option<&str>) -> LiNo<String> {
+    let side = |id: Option<&str>| LiNo::Link {
+        id: None,
+        values: id
+            .map(|id| LiNo::Link {
+                id: Some(id.into()),
+                values: vec![LiNo::Ref("second".into()), LiNo::Ref("3".into())],
+            })
+            .into_iter()
+            .collect(),
+    };
+    LiNo::Link {
+        id: None,
+        values: vec![side(Some(before)), side(after)],
+    }
+}
+fn assert_edits(actual: &[CausalBatchEdit], expected: &[CausalBatchEdit]) {
+    assert_eq!(actual.len(), expected.len());
+    for (actual, expected) in actual.iter().zip(expected) {
+        assert_eq!(actual.address, expected.address);
+        assert_eq!(actual.observed, expected.observed);
+        assert_eq!(actual.payload, expected.payload);
+    }
+}
+fn prepare(
+    tx: &mut CausalSession<CutStore>,
+    value: u64,
+    generation: u64,
+    expected: &[CausalBatchEdit],
+) -> Result<(), LinkError> {
+    let mut prepared = tx.prepare(&token(value))?;
+    assert_eq!(prepared.token, token(value));
+    assert_eq!(prepared.generation, generation);
+    assert_edits(&prepared.edits, expected);
+    if let Some(edit) = prepared.edits.first_mut() {
+        edit.address = 99;
+    }
+    assert_edits(&tx.prepared().unwrap().edits, expected);
+    for document in [
+        Operation::<u128>::SetName(2, "frozen".into()).to_document(),
+        query_document("(($i: $s $t)) (($i: $s $t))"),
+    ] {
+        let refused = execute_request_for(
+            &mut tx.named_links(),
+            &link_cli::GenericQueryProcessor::<u128>::new(false),
+            &document,
+        );
+        assert!(error_message(&refused).is_some());
+    }
+    assert_edits(&tx.prepare(&token(value))?.edits, expected);
+    Ok(())
 }
 #[derive(Clone)]
 struct CutStore {
@@ -207,10 +287,27 @@ pub fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError
     let following = CausalVersion::advance(3, A, 4, &[], row("following"))?;
     if action == "write" {
         let mut tx = session(1, 2)?;
-        assert_eq!(tx.create_link(2, 3)?, 1);
-        tx.set_name(1, first[0].payload.as_ref().unwrap().name.clone())?;
-        assert_eq!(tx.create_link(2, 3)?, 2);
-        tx.set_name(2, Some("second".into()))?;
+        let bytes = physical_bytes(directory)?;
+        let name = first[0].payload.as_ref().unwrap().name.as_deref().unwrap();
+        create(&mut tx, 1, name);
+        create(&mut tx, 2, "second");
+        let matched = request(&mut tx, query_document("(($i: $s $t)) (($i: $s $t))"));
+        assert_eq!(
+            format_document(&matched),
+            format_document(&[change(name, Some(name)), change("second", Some("second"))])
+        );
+        let literal = links_notation::encode_reference_literal(name);
+        assert_eq!(
+            format_document(&request(
+                &mut tx,
+                query_document(&format!("(({literal}: $s $t)) (({literal}: $s $t))"))
+            )),
+            format_document(&[change(name, Some(name))])
+        );
+        assert_eq!(tx.rows().len(), 2);
+        assert!(owner.snapshot()?.versions.is_empty());
+        prepare(&mut tx, 100, 0, &initial_edits(&first))?;
+        assert_eq!(physical_bytes(directory)?, bytes);
         assert_eq!(tx.commit(&token(100))?, first);
         drop(tx);
         store.physical.borrow_mut().flush()?;
@@ -239,10 +336,29 @@ pub fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError
             );
         } else {
             let mut stale = session(8, 9)?;
-            stale.set_name(1, Some("stale".into()))?;
+            request(
+                &mut stale,
+                Operation::<u128>::SetName(1, "stale".into()).to_document(),
+            );
             let mut tx = session(3, 3)?;
-            tx.delete_link(1)?;
-            tx.set_name(2, second[1].payload.as_ref().unwrap().name.clone())?;
+            let private_bytes = physical_bytes(directory)?;
+            let observed = request(&mut tx, query_document("(($i: $s $t)) (($i: $s $t))"));
+            let original_reply = observed.clone();
+            let deleted = request(&mut tx, query_document("((1: $s $t)) ()"));
+            assert_eq!(
+                format_document(&deleted),
+                format_document(&[change("1", None)])
+            );
+            let name = second[1].payload.as_ref().unwrap().name.as_deref().unwrap();
+            request(
+                &mut tx,
+                Operation::<u128>::SetName(2, name.into()).to_document(),
+            );
+            assert!(tx.get_link(1).is_none());
+            assert_eq!(tx.get_name(2).as_deref(), Some(name));
+            assert_eq!(observed, original_reply);
+            prepare(&mut tx, 200, 1, &next_edits(&first, &second))?;
+            assert_eq!(physical_bytes(directory)?, private_bytes);
             assert_eq!(tx.commit(&token(200))?, second);
             let keys = ["replica".into(), "batches".into()];
             let before = store.physical.borrow_mut().read(&keys)?;
@@ -255,8 +371,19 @@ pub fn run(action: &str, directory: &str, mirrors: &str) -> Result<(), LinkError
     }
     if action == "following" {
         let mut tx = session(3, 3)?;
-        assert_eq!(tx.create_link(2, 3)?, 3);
-        tx.set_name(3, Some("following".into()))?;
+        let bytes = physical_bytes(directory)?;
+        create(&mut tx, 3, "following");
+        prepare(
+            &mut tx,
+            300,
+            2,
+            &[CausalBatchEdit {
+                address: 3,
+                observed: vec![],
+                payload: following.payload.clone(),
+            }],
+        )?;
+        assert_eq!(physical_bytes(directory)?, bytes);
         assert_eq!(
             tx.commit(&token(300))?.as_slice(),
             std::slice::from_ref(&following)
