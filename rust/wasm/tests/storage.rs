@@ -10,6 +10,9 @@ mod version_metadata;
 #[path = "../../tests/common/store_archive.rs"]
 mod archive_fixture;
 
+#[path = "../../tests/doublets_portable_tests.rs"]
+mod doublets_portable;
+
 #[path = "../../tests/query_processor_tests.rs"]
 mod query_processor;
 

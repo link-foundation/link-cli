@@ -71,6 +71,40 @@ fn doublets_storage_queries_by_pattern() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn mapped_literal_queries_preserve_nulls_and_duplicates_after_reopen() -> Result<()> {
+    let dir = TempDir::new()?;
+    let path = dir.path().join("literal-queries.doublets");
+    let (null_pair, first, second) = {
+        let mut storage = DoubletsStorage::<u32, _>::open(&path)?;
+        let null_pair = storage.create_link(0, 0)?;
+        let first = storage.create_link(null_pair, null_pair)?;
+        let second = storage.create_link(null_pair, null_pair)?;
+        storage.flush()?;
+        (null_pair, first, second)
+    };
+    let bytes = std::fs::read(&path)?;
+    let mut reopened = DoubletsStorage::<u32, _>::open(&path)?;
+    assert_eq!(reopened.query_links(None, None, Some(0)).len(), 1);
+    assert_eq!(reopened.search_link(0, 0), Some(null_pair));
+    assert_eq!(reopened.get_or_create_link(0, 0)?, null_pair);
+    let mut duplicates = reopened.query_links(None, Some(null_pair), Some(null_pair));
+    duplicates.sort_unstable_by_key(|row| row.index);
+    assert_eq!(
+        duplicates.iter().map(|row| row.index).collect::<Vec<_>>(),
+        vec![first, second]
+    );
+    assert!(reopened.query_links(None, Some(u32::MAX), None).is_empty());
+    assert_eq!(reopened.links_count(), 3);
+    drop(reopened);
+    assert_eq!(
+        std::fs::read(path)?,
+        bytes,
+        "reads and exact reuse preserve physical bytes"
+    );
+    Ok(())
+}
+
 /// Issue #98 asks for the storage to be generic over the doublets
 /// address type, because `link-assistant/router` uses `unit::Store<usize, _>`.
 #[test]

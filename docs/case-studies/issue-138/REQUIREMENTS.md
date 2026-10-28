@@ -1,3 +1,14 @@
+Shared native/actual-WASM heap-doublets contracts now reproduce three existing
+literal-query defects on immutable `d3ba9bb`. The adapter returns null endpoints
+and all bare-store duplicates, treats every `Some` filter literally, and reuses
+existing null pairs without changing public APIs. Eleven native and twelve
+actual-WASM cases pass, plus 24 related native checks including unchanged
+persisted bytes after reopen/query/reuse. Focused WASM coverage retains every
+production denominator and records 255/294 adapter lines, 28/38 branches and
+76/142 instantiations. DOUBLETS-PORTABLE-VERIFICATION.md records reproduction,
+costs and remaining filesystem/coverage gaps. Fresh exact-head CI and all wider
+unfinished criteria remain required.
+
 Selected author takeover fencing now composes ordinary atomic providers,
 address reservations and causal batches in Rust/C#/JS. A bound claim is
 validated at reads and compared in the same data CAS; superseded token retries

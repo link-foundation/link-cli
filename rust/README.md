@@ -173,6 +173,13 @@ A runnable, self-checking version of this is
   is written against. `storage::DoubletsStorage::open` creates a file-mapped
   `doublets::unit::Store`; `DoubletsStorage::wrap` adopts a store you already
   own.
+- **Literal queries.** `LinksStorage::query_links` uses `None` for an unrestricted
+  field and matches each `Some(value)` exactly, including zero and the upstream
+  wildcard value. Bare doublets stores return every duplicate pair. Results have
+  no guaranteed order. The adapter uses one available endpoint index and filters
+  its candidates; queries with only unindexed endpoints scan the store. Search
+  and get-or-create reuse existing zero-valued pairs through a scan that stops
+  at the first exact match. Ordinary nonzero pair search keeps its index.
 - **In-place mutation.** A file-mapped store is written through its mapping, so
   the inode never changes and other processes that mapped the same file keep
   observing the same data. Nothing is replaced through a temporary file.

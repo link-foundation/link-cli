@@ -1,0 +1,329 @@
+Heap-doublets literal query regression, 2026-10-28 UTC.
+PR: https://github.com/link-foundation/link-cli/pull/139
+Immutable baseline: d3ba9bba0b3ad5577264235a1245c926f4afcd14
+Copy the final shared contract target into an archived baseline and run
+run-doublets-portable.sh BASELINE. Exactly three semantic contracts fail;
+eight behavior controls pass. The runner verifies cargo status 101.
+Its isolated target directory prevents stale fixed-library reuse. An
+earlier shared-target attempt unexpectedly passed and was rejected by
+the negative-control assertion; that attempt is not verification evidence.
+After the fix, all eleven native and twelve actual-WASM cases pass, plus
+24 existing native storage/decorator/transaction-observer cases. The
+existing ignored subprocess helper is executed by its parent lock test.
+The mapped regression reopens a real file, reuses its null pair, returns
+both duplicates and preserves every physical byte after read-only reuse.
+The independent 125-pattern oracle compares row sets, not traversal order.
+WASM also checks typed errors from unavailable filesystem constructors.
+No production coverage source, branch, region or instantiation is removed.
+Focused WASM counters are not complete-suite coverage. Unexecuted native
+filesystem paths and generic instantiations remain explicitly included.
+Queries use one usable endpoint index and filter all candidates; queries
+with only unindexed endpoints scan. Literal null/wildcard searches scan
+and stop at the first match without copying all rows. Ordinary nonzero
+pair searches retain their index. The public storage API is unchanged.
+Complete suites remain in CI per maintainer feedback. Fresh CI for this
+change and all wider unfinished R1-R12 criteria remain required.
+Related native command (same one-job/debug-zero/linker bounds as runner):
+cargo test --manifest-path rust/Cargo.toml --test doublets_storage_tests
+  --test doublets_decorators_tests --test transactions_doublets_observer_tests
+  -- --test-threads=1
+Focused lint command: cargo clippy --manifest-path rust/Cargo.toml
+  --test doublets_portable_tests --test doublets_storage_tests
+  --test doublets_decorators_tests --test transactions_doublets_observer_tests
+  -- -D warnings
+
+rust/src/storage/doublets_storage.rs; SHA256 1ff29331814ef8feed61145f8c8b34713ea1bbb0ef32ef328e8b6f7e569df744
+rust/tests/doublets_portable_tests.rs; SHA256 79e566577893e36f7302912adefb9d9b3a2bd538da862769612ecd936404a1e4
+rust/tests/doublets_storage_tests.rs; SHA256 b116bdba9306890e72e1c9fcbdcac597f8b63e56a8616c18d4e1fb562977e2fd
+rust/wasm/tests/storage.rs; SHA256 40da255c5a90ce02f57c8cdaff7e363438a6d4f35d5a908ae0b344d5376c1cbc
+experiments/issue-138/run-doublets-portable.sh; SHA256 178eaba64423a1ebb15ed55ea39b568f81060bb4bbf055012e696d6ee6762828
+experiments/issue-138/run-doublets-portable-wasm-coverage.sh; SHA256 5e1bd77b7721bc42dec1c7418c33c69049dad62a19f5aacfe8b1c8188576be9a
+
+--- ci-logs/doublets-portable-baseline-command.log; SHA256 7a80f9f685b9701cd54af4637a4ad3acd0887eff2ff01d2f60e7079f0050b1b7 ---
+1: Immutable baseline: d3ba9bba0b3ad5577264235a1245c926f4afcd14
+2:    Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/experiments/issue-138/doublets-portable-baseline-d3ba9bba0b3ad5577264235a1245c926f4afcd14/rust)
+3:     Finished `test` profile [unoptimized] target(s) in 1.66s
+4:      Running tests/doublets_portable_tests.rs (experiments/issue-138/doublets-portable-baseline-d3ba9bba0b3ad5577264235a1245c926f4afcd14/target/debug/deps/doublets_portable_tests-d0782e3f9efb14cc)
+5:
+6: running 11 tests
+7: test caller_owned_heap_keeps_identity_through_mapping_and_extraction ... ok
+8: test concrete_pair_query_returns_every_duplicate_in_an_undecorated_store ... FAILED
+9: test create_observations_distinguish_reuse_from_a_new_allocation ... ok
+10: test heap_adoption_preserves_u64_and_usize_endpoint_values ... ok
+11: test missing_updates_and_deletes_return_typed_errors_without_callbacks ... ok
+12: test null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row ... FAILED
+13: test observations_reconstruct_the_actual_effects_of_uniqueness_and_cascades ... ok
+14: test owned_heap_crud_returns_previous_values_and_reuses_deleted_addresses ... ok
+15: test patterns_intersect_index_source_and_target_without_mutating_rows ... FAILED
+16: test reservation_reports_intermediate_rows_and_recycles_only_free_addresses ... ok
+17: test transaction_rollback_restores_every_heap_cascade_and_allows_following_commit ... ok
+18:
+19: failures:
+20:
+21: ---- concrete_pair_query_returns_every_duplicate_in_an_undecorated_store stdout ----
+22:
+23: thread 'concrete_pair_query_returns_every_duplicate_in_an_undecorated_store' (50555) panicked at tests/doublets_portable_tests.rs:122:5:
+24: assertion `left == right` failed
+25:   left: [GenericLink { index: 2, source: 1, target: 1 }]
+26:  right: [GenericLink { index: 2, source: 1, target: 1 }, GenericLink { index: 3, source: 1, target: 1 }]
+27: stack backtrace:
+28:    0:     0x572182487411 - <<std[c29fa2d9dbea2b0e]::sys::backtrace::BacktraceLock>::print::DisplayBacktrace as core[a9090a07a7fa7517]::fmt::Display>::fmt
+29:    1:     0x57218249cb3a - core[a9090a07a7fa7517]::fmt::write
+30:    2:     0x57218248bf7c - <alloc[12ca63220423dfc2]::vec::Vec<u8> as core[a9090a07a7fa7517]::io::write::Write>::write_fmt
+31:    3:     0x572182461fb6 - std[c29fa2d9dbea2b0e]::panicking::default_hook::{closure#0}
+32:    4:     0x57218247f8e9 - std[c29fa2d9dbea2b0e]::panicking::default_hook
+33:    5:     0x572182358810 - test[de0ab365ed256f3]::test_main_inner::<test[de0ab365ed256f3]::test_main_static::{closure#0}>::{closure#0}
+34:    6:     0x57218247faa2 - std[c29fa2d9dbea2b0e]::panicking::panic_with_hook
+35:    7:     0x572182462062 - std[c29fa2d9dbea2b0e]::panicking::panic_handler::{closure#0}
+36:    8:     0x57218245a519 - std[c29fa2d9dbea2b0e]::sys::backtrace::__rust_end_short_backtrace::<std[c29fa2d9dbea2b0e]::panicking::panic_handler::{closure#0}, !>
+37:    9:     0x572182462efd - __rustc[9d087a5ab36ea756]::rust_begin_unwind
+38:   10:     0x57218249d35c - core[a9090a07a7fa7517]::panicking::panic_fmt
+39:   11:     0x57218249d1f3 - core[a9090a07a7fa7517]::panicking::assert_failed_inner
+40:   12:     0x57218231457c - core[a9090a07a7fa7517]::panicking::assert_failed::<alloc[12ca63220423dfc2]::vec::Vec<link_cli[afffbd8621e9c793]::link::GenericLink<u32>>, alloc[12ca63220423dfc2]::vec::Vec<link_cli[afffbd8621e9c793]::link::GenericLink<u32>>>
+41:   13:     0x57218230f526 - doublets_portable_tests[e1c0cfeb4568c192]::concrete_pair_query_returns_every_duplicate_in_an_undecorated_store
+42:   14:     0x57218230c793 - doublets_portable_tests[e1c0cfeb4568c192]::concrete_pair_query_returns_every_duplicate_in_an_undecorated_store::{closure#0}
+43:   15:     0x57218232d566 - <doublets_portable_tests[e1c0cfeb4568c192]::concrete_pair_query_returns_every_duplicate_in_an_undecorated_store::{closure#0} as core[a9090a07a7fa7517]::ops::function::FnOnce<()>>::call_once
+44:   16:     0x57218234bafb - test[de0ab365ed256f3]::__rust_begin_short_backtrace::<core[a9090a07a7fa7517]::result::Result<(), alloc[12ca63220423dfc2]::string::String>, fn() -> core[a9090a07a7fa7517]::result::Result<(), alloc[12ca63220423dfc2]::string::String>>
+45:   17:     0x572182359165 - test[de0ab365ed256f3]::run_test::{closure#0}
+46:   18:     0x572182353b24 - std[c29fa2d9dbea2b0e]::sys::backtrace::__rust_begin_short_backtrace::<test[de0ab365ed256f3]::run_test::{closure#1}, ()>
+47:   19:     0x57218235c2c2 - <std[c29fa2d9dbea2b0e]::thread::lifecycle::spawn_unchecked<test[de0ab365ed256f3]::run_test::{closure#1}, ()>::{closure#1} as core[a9090a07a7fa7517]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+48:   20:     0x572182486ce9 - <std[c29fa2d9dbea2b0e]::sys::thread::unix::Thread>::new::thread_start
+49:   21:     0x7509a46ddb84 - <unknown>
+50:   22:     0x7509a476aecc - <unknown>
+51:   23:                0x0 - <unknown>
+52:
+53: ---- null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row stdout ----
+54:
+55: thread 'null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row' (50559) panicked at tests/doublets_portable_tests.rs:98:9:
+56: assertion `left == right` failed: 0, 0
+57:   left: None
+58:  right: Some(2)
+59: stack backtrace:
+60:    0:     0x572182487411 - <<std[c29fa2d9dbea2b0e]::sys::backtrace::BacktraceLock>::print::DisplayBacktrace as core[a9090a07a7fa7517]::fmt::Display>::fmt
+61:    1:     0x57218249cb3a - core[a9090a07a7fa7517]::fmt::write
+62:    2:     0x57218248bf7c - <alloc[12ca63220423dfc2]::vec::Vec<u8> as core[a9090a07a7fa7517]::io::write::Write>::write_fmt
+63:    3:     0x572182461fb6 - std[c29fa2d9dbea2b0e]::panicking::default_hook::{closure#0}
+64:    4:     0x57218247f8e9 - std[c29fa2d9dbea2b0e]::panicking::default_hook
+65:    5:     0x572182358810 - test[de0ab365ed256f3]::test_main_inner::<test[de0ab365ed256f3]::test_main_static::{closure#0}>::{closure#0}
+66:    6:     0x57218247faa2 - std[c29fa2d9dbea2b0e]::panicking::panic_with_hook
+67:    7:     0x572182462062 - std[c29fa2d9dbea2b0e]::panicking::panic_handler::{closure#0}
+68:    8:     0x57218245a519 - std[c29fa2d9dbea2b0e]::sys::backtrace::__rust_end_short_backtrace::<std[c29fa2d9dbea2b0e]::panicking::panic_handler::{closure#0}, !>
+69:    9:     0x572182462efd - __rustc[9d087a5ab36ea756]::rust_begin_unwind
+70:   10:     0x57218249d35c - core[a9090a07a7fa7517]::panicking::panic_fmt
+71:   11:     0x57218249d253 - core[a9090a07a7fa7517]::panicking::assert_failed_inner
+72:   12:     0x5721823144f6 - core[a9090a07a7fa7517]::panicking::assert_failed::<core[a9090a07a7fa7517]::option::Option<u32>, core[a9090a07a7fa7517]::option::Option<u32>>
+73:   13:     0x572182311fe2 - doublets_portable_tests[e1c0cfeb4568c192]::null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row
+74:   14:     0x57218230c853 - doublets_portable_tests[e1c0cfeb4568c192]::null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row::{closure#0}
+75:   15:     0x57218232d5e6 - <doublets_portable_tests[e1c0cfeb4568c192]::null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row::{closure#0} as core[a9090a07a7fa7517]::ops::function::FnOnce<()>>::call_once
+76:   16:     0x57218234bafb - test[de0ab365ed256f3]::__rust_begin_short_backtrace::<core[a9090a07a7fa7517]::result::Result<(), alloc[12ca63220423dfc2]::string::String>, fn() -> core[a9090a07a7fa7517]::result::Result<(), alloc[12ca63220423dfc2]::string::String>>
+77:   17:     0x572182359165 - test[de0ab365ed256f3]::run_test::{closure#0}
+78:   18:     0x572182353b24 - std[c29fa2d9dbea2b0e]::sys::backtrace::__rust_begin_short_backtrace::<test[de0ab365ed256f3]::run_test::{closure#1}, ()>
+79:   19:     0x57218235c2c2 - <std[c29fa2d9dbea2b0e]::thread::lifecycle::spawn_unchecked<test[de0ab365ed256f3]::run_test::{closure#1}, ()>::{closure#1} as core[a9090a07a7fa7517]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+80:   20:     0x572182486ce9 - <std[c29fa2d9dbea2b0e]::sys::thread::unix::Thread>::new::thread_start
+81:   21:     0x7509a46ddb84 - <unknown>
+82:   22:     0x7509a476aecc - <unknown>
+83:   23:                0x0 - <unknown>
+84:
+85: ---- patterns_intersect_index_source_and_target_without_mutating_rows stdout ----
+86:
+87: thread 'patterns_intersect_index_source_and_target_without_mutating_rows' (50562) panicked at tests/doublets_portable_tests.rs:72:17:
+88: assertion `left == right` failed: index=None, source=None, target=Some(0)
+89:   left: []
+90:  right: [GenericLink { index: 1, source: 0, target: 0 }]
+91: stack backtrace:
+92:    0:     0x572182487411 - <<std[c29fa2d9dbea2b0e]::sys::backtrace::BacktraceLock>::print::DisplayBacktrace as core[a9090a07a7fa7517]::fmt::Display>::fmt
+93:    1:     0x57218249cb3a - core[a9090a07a7fa7517]::fmt::write
+94:    2:     0x57218248bf7c - <alloc[12ca63220423dfc2]::vec::Vec<u8> as core[a9090a07a7fa7517]::io::write::Write>::write_fmt
+95:    3:     0x572182461fb6 - std[c29fa2d9dbea2b0e]::panicking::default_hook::{closure#0}
+96:    4:     0x57218247f8e9 - std[c29fa2d9dbea2b0e]::panicking::default_hook
+97:    5:     0x572182358810 - test[de0ab365ed256f3]::test_main_inner::<test[de0ab365ed256f3]::test_main_static::{closure#0}>::{closure#0}
+98:    6:     0x57218247faa2 - std[c29fa2d9dbea2b0e]::panicking::panic_with_hook
+99:    7:     0x572182462062 - std[c29fa2d9dbea2b0e]::panicking::panic_handler::{closure#0}
+100:    8:     0x57218245a519 - std[c29fa2d9dbea2b0e]::sys::backtrace::__rust_end_short_backtrace::<std[c29fa2d9dbea2b0e]::panicking::panic_handler::{closure#0}, !>
+101:    9:     0x572182462efd - __rustc[9d087a5ab36ea756]::rust_begin_unwind
+102:   10:     0x57218249d35c - core[a9090a07a7fa7517]::panicking::panic_fmt
+103:   11:     0x57218249d253 - core[a9090a07a7fa7517]::panicking::assert_failed_inner
+104:   12:     0x57218231457c - core[a9090a07a7fa7517]::panicking::assert_failed::<alloc[12ca63220423dfc2]::vec::Vec<link_cli[afffbd8621e9c793]::link::GenericLink<u32>>, alloc[12ca63220423dfc2]::vec::Vec<link_cli[afffbd8621e9c793]::link::GenericLink<u32>>>
+105:   13:     0x57218230e82d - doublets_portable_tests[e1c0cfeb4568c192]::patterns_intersect_index_source_and_target_without_mutating_rows
+106:   14:     0x57218230c733 - doublets_portable_tests[e1c0cfeb4568c192]::patterns_intersect_index_source_and_target_without_mutating_rows::{closure#0}
+107:   15:     0x57218232d526 - <doublets_portable_tests[e1c0cfeb4568c192]::patterns_intersect_index_source_and_target_without_mutating_rows::{closure#0} as core[a9090a07a7fa7517]::ops::function::FnOnce<()>>::call_once
+108:   16:     0x57218234bafb - test[de0ab365ed256f3]::__rust_begin_short_backtrace::<core[a9090a07a7fa7517]::result::Result<(), alloc[12ca63220423dfc2]::string::String>, fn() -> core[a9090a07a7fa7517]::result::Result<(), alloc[12ca63220423dfc2]::string::String>>
+109:   17:     0x572182359165 - test[de0ab365ed256f3]::run_test::{closure#0}
+110:   18:     0x572182353b24 - std[c29fa2d9dbea2b0e]::sys::backtrace::__rust_begin_short_backtrace::<test[de0ab365ed256f3]::run_test::{closure#1}, ()>
+111:   19:     0x57218235c2c2 - <std[c29fa2d9dbea2b0e]::thread::lifecycle::spawn_unchecked<test[de0ab365ed256f3]::run_test::{closure#1}, ()>::{closure#1} as core[a9090a07a7fa7517]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+112:   20:     0x572182486ce9 - <std[c29fa2d9dbea2b0e]::sys::thread::unix::Thread>::new::thread_start
+113:   21:     0x7509a46ddb84 - <unknown>
+114:   22:     0x7509a476aecc - <unknown>
+115:   23:                0x0 - <unknown>
+116:
+117:
+118: failures:
+119:     concrete_pair_query_returns_every_duplicate_in_an_undecorated_store
+120:     null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row
+121:     patterns_intersect_index_source_and_target_without_mutating_rows
+122:
+123: test result: FAILED. 8 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.07s
+124:
+125: error: test failed, to rerun pass `--test doublets_portable_tests`
+126: PASS immutable negative control: exactly the three semantic regressions fail
+
+--- ci-logs/doublets-portable-after.log; SHA256 4f769ee9fbe50505c734a1d9aacf4ff4a3f9305e3af757c26352f2b3d2c65ef7 ---
+1:    Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+2:     Finished `test` profile [unoptimized] target(s) in 1.90s
+3:      Running tests/doublets_portable_tests.rs (rust/target/debug/deps/doublets_portable_tests-d0782e3f9efb14cc)
+4:
+5: running 11 tests
+6: test caller_owned_heap_keeps_identity_through_mapping_and_extraction ... ok
+7: test concrete_pair_query_returns_every_duplicate_in_an_undecorated_store ... ok
+8: test create_observations_distinguish_reuse_from_a_new_allocation ... ok
+9: test heap_adoption_preserves_u64_and_usize_endpoint_values ... ok
+10: test missing_updates_and_deletes_return_typed_errors_without_callbacks ... ok
+11: test null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row ... ok
+12: test observations_reconstruct_the_actual_effects_of_uniqueness_and_cascades ... ok
+13: test owned_heap_crud_returns_previous_values_and_reuses_deleted_addresses ... ok
+14: test patterns_intersect_index_source_and_target_without_mutating_rows ... ok
+15: test reservation_reports_intermediate_rows_and_recycles_only_free_addresses ... ok
+16: test transaction_rollback_restores_every_heap_cascade_and_allows_following_commit ... ok
+17:
+18: test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.33s
+19:
+
+--- ci-logs/doublets-portable-existing-native.log; SHA256 6c7e2659ffb4785afc6f52bcb66229c4246c90bab9a8db46234b70d6063a7f7a ---
+1:    Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+2:     Finished `test` profile [unoptimized] target(s) in 3.11s
+3:      Running tests/doublets_decorators_tests.rs (rust/target/debug/deps/doublets_decorators_tests-550c56379e0fe6bf)
+4:
+5: running 6 tests
+6: test map_store_accepts_any_upstream_decorator ... ok
+7: test map_store_preserves_the_backing_path_and_durability ... ok
+8: test resolved_storage_cascades_deletion_to_usages ... ok
+9: test resolved_storage_repoints_usages_of_the_redundant_link ... ok
+10: test resolved_storage_turns_duplicate_creation_into_get_or_create ... ok
+11: test undecorated_storage_still_allows_duplicate_pairs ... ok
+12:
+13: test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s
+14:
+15:      Running tests/doublets_storage_tests.rs (rust/target/debug/deps/doublets_storage_tests-d5f6a1d3ddfd80f5)
+16:
+17: running 17 tests
+18: test cross_process_lock_probe ... ignored, helper process spawned by exclusive_lock_is_honoured_across_processes
+19: test doublets_storage_creates_updates_and_deletes_links ... ok
+20: test doublets_storage_detects_external_writes ... ok
+21: test doublets_storage_mutates_the_database_file_in_place ... ok
+22: test doublets_storage_queries_by_pattern ... ok
+23: test doublets_storage_reserves_specific_addresses ... ok
+24: test doublets_storage_supports_u64_addresses ... ok
+25: test doublets_storage_supports_usize_addresses ... ok
+26: test doublets_storage_survives_reopen ... ok
+27: test doublets_storage_wraps_an_externally_owned_store ... ok
+28: test exclusive_lock_excludes_other_holders ... ok
+29: test exclusive_lock_is_honoured_across_processes ...
+30: running 1 test
+31:
+32: running 1 test
+33: ok
+34: test mapped_literal_queries_preserve_nulls_and_duplicates_after_reopen ... ok
+35: test opened_storage_holds_its_lock_for_its_lifetime ... ok
+36: test persistent_file_mapped_adopts_existing_file_capacity ... ok
+37: test persistent_file_mapped_preserves_existing_contents ... ok
+38: test shared_locks_allow_concurrent_readers_but_block_writers ... ok
+39:
+40: test result: ok. 16 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.37s
+41:
+42:      Running tests/transactions_doublets_observer_tests.rs (rust/target/debug/deps/transactions_doublets_observer_tests-5c34e963650cb774)
+43:
+44: running 2 tests
+45: test mapped_cascading_delete_rolls_back_every_row ... ok
+46: test mapped_uniqueness_merge_rolls_back_every_row ... ok
+47:
+48: test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+49:
+
+--- ci-logs/doublets-portable-clippy.log; SHA256 c8fd94343d3e4f26bd91868e730441fcab1a326872066ebc67973e946cff527c ---
+1:     Checking link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+2:     Finished `dev` profile [unoptimized] target(s) in 0.48s
+
+--- ci-logs/doublets-portable-wasm-baseline-summary.log; SHA256 26c08369dc017099faa079af33c9f9429ee459550ff7156adbe5f71cddf149a2 ---
+1: Report: experiments/issue-138/coverage-40704187898-wasm-coverage/wasm-coverage.json; SHA256 0bb34a9eb79a12d1a047e6b8fe4e9f60d069cbb1780e71394802aed91d1ca4ef
+2: Complete instrumented production totals: {"branches": {"count": 3919, "covered": 3380, "notcovered": 539, "percent": 86.246491451901}, "functions": {"count": 2482, "covered": 2056, "percent": 82.83642224012893}, "instantiations": {"count": 9306, "covered": 5362, "percent": 57.618740597464}, "lines": {"count": 19163, "covered": 16619, "percent": 86.72441684496165}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 30098, "covered": 25531, "notcovered": 4567, "percent": 84.82623430128248}}
+3: DoubletsStorage official file summary: {"branches": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "functions": {"count": 47, "covered": 0, "percent": 0.0}, "instantiations": {"count": 47, "covered": 0, "percent": 0.0}, "lines": {"count": 264, "covered": 0, "percent": 0.0}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "regions": {"count": 395, "covered": 0, "notcovered": 395, "percent": 0.0}}
+4: Focused execution does not establish complete-project or filesystem coverage.
+
+--- ci-logs/doublets-portable-wasm-summary.log; SHA256 fa37208bca776f165418d4c137e1a0c3678dcd03afa9590e49c7ab8e98b92a5a ---
+1: Report: experiments/issue-138/doublets-portable-wasm.json; SHA256 98ccc60f1ec30e8f058d49b8f49bddd723a169f912e0dfd1b3f1a908b9f1763e
+2: Complete instrumented production totals: {"branches": {"count": 2979, "covered": 136, "notcovered": 2843, "percent": 4.565290365894596}, "functions": {"count": 2477, "covered": 207, "percent": 8.356883326604764}, "instantiations": {"count": 5434, "covered": 240, "percent": 4.416635995583364}, "lines": {"count": 19079, "covered": 1432, "percent": 7.505634467215263}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0}, "regions": {"count": 29872, "covered": 1906, "notcovered": 27966, "percent": 6.38055704338511}}
+3: DoubletsStorage official file summary: {"branches": {"count": 38, "covered": 28, "notcovered": 10, "percent": 73.68421052631578}, "functions": {"count": 53, "covered": 52, "percent": 98.11320754716981}, "instantiations": {"count": 142, "covered": 76, "percent": 53.52112676056338}, "lines": {"count": 294, "covered": 255, "percent": 86.73469387755102}, "mcdc": {"count": 0, "covered": 0, "notcovered": 0, "percent": 0.0}, "regions": {"count": 447, "covered": 365, "notcovered": 82, "percent": 81.65548098434004}}
+4: Focused execution does not establish complete-project or filesystem coverage.
+
+--- ci-logs/doublets-portable-source-size.log; SHA256 9acff293a54303aefab5a7b93b07247743dccc3544b0e508548d40565eeeff3d ---
+1:
+2: Checking files for maximum 1000 lines...
+3:
+4: Checking C# files in csharp/...
+5:   Found 350 C# file(s)
+6: Checking Rust files in rust/...
+7:   Found 406 Rust file(s)
+8:
+9: Checked 756 file(s) - all within the line limit
+10:
+
+--- ci-logs/doublets-portable-shellcheck.log; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- ci-logs/doublets-portable-tool-versions.log; SHA256 cfe10322aa3000462c508ce6afa0cf0a82b52ea7a7f600d17bdf177544159589 ---
+1: rustc 1.99.0 (b940084d7 2026-09-28)
+2: binary: rustc
+3: commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+4: commit-date: 2026-09-28
+5: host: x86_64-unknown-linux-gnu
+6: release: 1.99.0
+7: LLVM version: 23.1.1
+8: rustc 1.98.0 (88d9e12ae 2026-08-18)
+9: binary: rustc
+10: commit-hash: 88d9e12ae178fab0fb5cc050a94da85685d449ea
+11: commit-date: 2026-08-18
+12: host: x86_64-unknown-linux-gnu
+13: release: 1.98.0
+14: LLVM version: 22.1.8
+15: v26.12.1
+16: wasm-bindgen-test-runner 0.2.129
+17: cargo-llvm-cov 0.9.1
+
+--- ci-logs/doublets-portable-format.log; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ---
+
+--- doublets-portable-wasm-tests.log; SHA256 0f12b0274b96438db12098d7a2254e7f3b7df599432e1035eea538c994769301 ---
+1: warning: --branch option is unstable
+2: info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); you can opt-out it by passing --no-cfg-coverage and --no-cfg-coverage-nightly
+3:    Compiling link-cli v1.0.9 (/tmp/gh-issue-solver-1793187246880/rust)
+4:    Compiling clink-wasm v2.4.0 (/tmp/gh-issue-solver-1793187246880/rust/wasm)
+5:     Finished `test` profile [unoptimized] target(s) in 36.32s
+6:      Running tests/storage.rs (rust/wasm/target/llvm-cov-target/wasm32-unknown-unknown/debug/deps/storage-f15f8a14e3bbe12b.wasm)
+7: Set WASM_BINDGEN_TEST_TIMEOUT to 30 seconds...
+8: running 12 tests
+9: test doublets_portable::transaction_rollback_restores_every_heap_cascade_and_allows_following_commit ... ok
+10: test doublets_portable::reservation_reports_intermediate_rows_and_recycles_only_free_addresses ... ok
+11: test doublets_portable::patterns_intersect_index_source_and_target_without_mutating_rows ... ok
+12: test doublets_portable::owned_heap_crud_returns_previous_values_and_reuses_deleted_addresses ... ok
+13: test doublets_portable::observations_reconstruct_the_actual_effects_of_uniqueness_and_cascades ... ok
+14: test doublets_portable::null_endpoints_are_searchable_and_get_or_create_reuses_the_existing_row ... ok
+15: test doublets_portable::missing_updates_and_deletes_return_typed_errors_without_callbacks ... ok
+16: test doublets_portable::heap_adoption_preserves_u64_and_usize_endpoint_values ... ok
+17: test doublets_portable::filesystem_constructors_report_typed_capability_errors_in_wasm ... ok
+18: test doublets_portable::create_observations_distinguish_reuse_from_a_new_allocation ... ok
+19: test doublets_portable::concrete_pair_query_returns_every_duplicate_in_an_undecorated_store ... ok
+20: test doublets_portable::caller_owned_heap_keeps_identity_through_mapping_and_extraction ... ok
+21:
+22: test result: ok. 12 passed; 0 failed; 0 ignored; 360 filtered out; finished in 0.77s
+23:
+24:
+25:     Finished report saved to experiments/issue-138/doublets-portable-wasm.json
+
+--- ci-logs/doublets-portable-repository.log; SHA256 7dd564b736544f2ac75cc3b47afbaf17fcaba93b36a15d14f42a7c6f23c05e1e ---
+237: ℹ tests 221
+239: ℹ pass 221
+240: ℹ fail 0
+241: ℹ cancelled 0
+
+--- ci-logs/doublets-portable-release.log; SHA256 5e557c869144773dcbd92c495dd3ecfd47968c926061aea311e2054cba41a0ea ---
+1: Validating changesets added by this PR...
+6: Validating changeset: csharp/.changeset/acid-durability.md
+7: Changeset validation passed

@@ -398,25 +398,60 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
         target: Option<T>,
     ) -> Vec<GenericLink<T>> {
         let any = self.store.constants().any;
+        let zero = T::from_byte(0);
+        // Unit-store indexes omit null endpoints, and its concrete-pair lookup
+        // returns only one duplicate. Use at most one usable endpoint index,
+        // then apply the public trait's literal optional filters to every row.
+        let indexed_source = source.filter(|value| *value != zero && *value != any);
+        let indexed_target = if indexed_source.is_some() {
+            None
+        } else {
+            target.filter(|value| *value != zero && *value != any)
+        };
         let query = [
             index.unwrap_or(any),
-            source.unwrap_or(any),
-            target.unwrap_or(any),
+            indexed_source.unwrap_or(any),
+            indexed_target.unwrap_or(any),
         ];
         let mut links = Vec::new();
         Doublets::each_by(&self.store, query, |link| {
-            links.push(GenericLink::from(link));
+            if index.is_none_or(|value| link.index == value)
+                && source.is_none_or(|value| link.source == value)
+                && target.is_none_or(|value| link.target == value)
+            {
+                links.push(GenericLink::from(link));
+            }
             Flow::Continue
         });
         links
     }
 
     fn search_link(&self, source: T, target: T) -> Option<T> {
-        Doublets::search(&self.store, source, target)
+        let zero = T::from_byte(0);
+        let any = self.store.constants().any;
+        if source != zero && target != zero && source != any && target != any {
+            return Doublets::search(&self.store, source, target);
+        }
+        // Null endpoints are not indexed; `any` is a literal here, not the
+        // upstream query wildcard. Stop at the first exact pair without
+        // materializing a complete copy of the store.
+        let mut found = None;
+        Doublets::each(&self.store, |link| {
+            if link.source == source && link.target == target {
+                found = Some(link.index);
+                Flow::Break
+            } else {
+                Flow::Continue
+            }
+        });
+        found
     }
 
     fn get_or_create_link(&mut self, source: T, target: T) -> Result<T, LinkError> {
-        Ok(Doublets::get_or_create(&mut self.store, source, target)?)
+        match self.search_link(source, target) {
+            Some(index) => Ok(index),
+            None => self.create_link(source, target),
+        }
     }
 
     fn links_count(&self) -> usize {
