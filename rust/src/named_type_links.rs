@@ -208,6 +208,15 @@ pub trait NamedTypeLinks<T: QueryAddress = u32> {
 }
 
 impl NamedTypeLinks for LinkStorage {
+    fn reserve_query_allocations(
+        &mut self,
+        processor: &crate::QueryProcessor,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<HashSet<u32>>> {
+        preview_recycling_query(self.query_copy(), processor, restriction, substitution)
+    }
+
     fn create(&mut self, source: u32, target: u32) -> u32 {
         LinkStorage::create(self, source, target)
     }
@@ -278,6 +287,15 @@ impl NamedTypeLinks for LinkStorage {
 }
 
 impl NamedTypeLinks for NamedTypesDecorator {
+    fn reserve_query_allocations(
+        &mut self,
+        processor: &crate::QueryProcessor,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<HashSet<u32>>> {
+        preview_recycling_query(self.query_copy(), processor, restriction, substitution)
+    }
+
     fn create(&mut self, source: u32, target: u32) -> u32 {
         NamedTypesDecorator::create(self, source, target)
     }
@@ -342,6 +360,17 @@ impl NamedTypeLinks for NamedTypesDecorator {
 }
 
 impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
+    fn reserve_query_allocations(
+        &mut self,
+        processor: &crate::QueryProcessor,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<HashSet<u32>>> {
+        self.ensure_write_allowed()?;
+        self.inner_mut()
+            .reserve_query_allocations(processor, restriction, substitution)
+    }
+
     fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
         Ok(crate::transactions::TransactionsDecorator::get_or_create(
             self, source, target,
@@ -438,6 +467,17 @@ impl NamedTypeLinks for crate::transactions::TransactionsDecorator {
 impl<B: NamedTypeLinks> NamedTypeLinks
     for crate::version_control::GenericVersionControlDecorator<B>
 {
+    fn reserve_query_allocations(
+        &mut self,
+        processor: &crate::QueryProcessor,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<HashSet<u32>>> {
+        self.ensure_write_allowed()?;
+        self.transactions_mut()
+            .reserve_query_allocations(processor, restriction, substitution)
+    }
+
     fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
         crate::version_control::GenericVersionControlDecorator::get_or_create(self, source, target)
     }
@@ -516,6 +556,22 @@ impl<B: NamedTypeLinks> NamedTypeLinks
     fn save(&mut self) -> Result<()> {
         crate::version_control::GenericVersionControlDecorator::save(self)
     }
+}
+
+fn preview_recycling_query(
+    mut scratch: impl NamedTypeLinks,
+    processor: &crate::QueryProcessor,
+    restriction: &crate::lino_link::LinoLink,
+    substitution: &crate::lino_link::LinoLink,
+) -> Result<Option<HashSet<u32>>> {
+    processor.preview(&mut scratch, restriction, substitution)?;
+    Ok(Some(
+        scratch
+            .all_links()
+            .into_iter()
+            .map(|row| row.index)
+            .collect(),
+    ))
 }
 
 pub fn escape_lino_reference(reference: &str) -> String {

@@ -116,6 +116,10 @@ impl NamedTypesDecorator {
         &mut self.names_links
     }
 
+    pub(crate) fn query_copy(&self) -> Self {
+        Self::from_link_storages(self.links().query_copy(), self.names_links.query_copy())
+    }
+
     pub fn into_link_storages(self) -> (LinkStorage, LinkStorage) {
         (
             self.pinned_types_decorator.into_link_storage(),

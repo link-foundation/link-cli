@@ -125,6 +125,20 @@ impl LinkStorage {
         }
     }
 
+    /// Own the exact recycling state for query preview without file I/O.
+    pub(crate) fn query_copy(&self) -> Self {
+        let mut copy = Self::in_memory(false);
+        copy.links = LinksMap::Plain(self.links.iter().map(|(id, row)| (*id, *row)).collect());
+        copy.names = self.names.clone();
+        copy.name_to_id = self.name_to_id.clone();
+        copy.allocated = self.allocated;
+        copy.unused = self.unused.clone();
+        if self.links.indexed().is_some() {
+            copy.enable_indexed_lookups();
+        }
+        copy
+    }
+
     /// Adds an optional lookup-index decorator, retaining the scan-based
     /// implementation when this builder is not called. Indexes use O(n) memory
     /// and are rebuilt from persisted links when enabled after opening a store.

@@ -1,5 +1,13 @@
 # Acceptance inventory
 
+Legacy query allocation previews now reproduce the actual Rust recycling
+allocator instead of probing before explicit/named allocations and merges.
+Four baseline regressions fail before the fix; nine focused native cases now
+pass, including unchanged provider bytes, free-list order, transaction rollback
+and version checkout. Eight portable cases are linked into actual-WASM CI.
+The same five C# cases fail before its fix; its port is under focused review.
+RECYCLING-QUERY-VERIFICATION.md records costs and compatibility limits.
+
 Registry releases after the earlier passing head caused Dependencies CI to
 reject doublets 0.8.0 and lucide-react 1.62.0. Both manifests and every affected
 lockfile now use the latest releases. Four finite split-index regressions fail

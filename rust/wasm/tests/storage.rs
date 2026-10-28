@@ -13,6 +13,9 @@ mod archive_fixture;
 #[path = "../../tests/query_processor_tests.rs"]
 mod query_processor;
 
+#[path = "../../tests/recycling_query_allocation_tests.rs"]
+mod recycling_query_allocation;
+
 #[path = "../../tests/query_processor_change_report_tests.rs"]
 mod query_processor_change_report;
 
