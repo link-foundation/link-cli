@@ -32,7 +32,8 @@ the author permanently. Header-only present state has epoch zero.
 
 Before JSON parsing, admit at most 256 bytes per record, 4096 total entries
 including the header, and 1,048,576 bytes across all records. Accepted fields
-are ASCII, so accepted character and UTF-8 byte counts agree. Selected options
+are ASCII; non-ASCII records reject before JSON parsing, so admitted character
+and UTF-8 byte counts agree. Selected options
 can lower total entries (minimum two) or bytes (minimum one). Corrupt framing,
 extra fields, numeric epochs, altered authors, duplicate tokens, missing or
 nonsequential epochs and exceeded limits reject without mutation. All native

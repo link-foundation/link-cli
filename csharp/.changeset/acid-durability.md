@@ -395,3 +395,5 @@ and derived-store allocator fallbacks instead of replacing their behavior.
 Add separately selected author takeover fencing with permanent claim receipts
 and atomic fence comparisons alongside ordinary data publications. Retrying a
 superseded owner token cannot reclaim ownership; inner providers stay caller-owned.
+Admit canonical ASCII ownership records before JSON parsing so the declared
+byte budget also bounds malformed UTF-8 records.

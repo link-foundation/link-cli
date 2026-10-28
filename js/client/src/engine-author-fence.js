@@ -29,7 +29,9 @@ export class AuthorFence {
   #admit(entries) {
     if (!Array.isArray(entries) || entries.length > this.#maxEntries) invalid();
     let bytes = 0;
-    for (const entry of entries) if (typeof entry !== 'string' || entry.length > 256 || (bytes += entry.length) > this.#maxBytes) invalid();
+    // Canonical fields are ASCII; reject other code units before JSON parsing,
+    // so each admitted character is exactly one UTF-8 byte.
+    for (const entry of entries) if (typeof entry !== 'string' || entry.length > 256 || /[^\x00-\x7f]/.test(entry) || (bytes += entry.length) > this.#maxBytes) invalid();
   }
   #parse(value) {
     if (value === null || typeof value !== 'object') invalid();

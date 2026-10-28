@@ -36,7 +36,8 @@ public sealed class AuthorFence
     {
         if (entries is null || entries.Count > _options.MaxEntries) throw Invalid();
         int bytes = 0;
-        foreach (string entry in entries) if (entry is null || entry.Length > 256 || (bytes += entry.Length) > _options.MaxBytes) throw Invalid();
+        // Canonical fields are ASCII: count real UTF-8 bytes before JSON parsing.
+        foreach (string entry in entries) if (entry is null || entry.Length > 256 || entry.Any(c => c > 127) || (bytes += entry.Length) > _options.MaxBytes) throw Invalid();
     }
     private (JournalVersion Expected, List<AuthorClaim> Claims) Parse(JournalVersion value)
     {

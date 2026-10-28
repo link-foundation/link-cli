@@ -92,7 +92,7 @@ impl<S: AtomicJournalStore> AuthorFence<S> {
         }
         let mut bytes = 0;
         for entry in entries {
-            if entry.len() > 256 {
+            if entry.len() > 256 || !entry.is_ascii() {
                 return Err(invalid());
             }
             bytes += entry.len();

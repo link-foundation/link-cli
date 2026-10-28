@@ -63,6 +63,8 @@ for name, generation, entries in [
     ('extra-field', 1, [header, wire(['claim-author1', T[0], '1', 'extra'])]),
     ('nested', 1, [header, '['*65 + '0' + ']'*65]),
     ('oversized', 1, [header, 'x'*257]),
+    ('oversized-utf8-before-parse', 1, [header, '雪'*100]),
+    ('non-ascii-token', 1, [header, '["claim-author1","' + '0'*31 + '雪","1"]']),
     ('object', 1, [header, '{}']), ('null', 1, [header, 'null']),
     ('escaped-token', 1, [header, record(1).replace('000', '\\u003000', 1)]),
 ]: case(name, generation, entries)

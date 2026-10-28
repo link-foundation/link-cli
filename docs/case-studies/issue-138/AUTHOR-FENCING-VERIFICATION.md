@@ -11,6 +11,16 @@ draft incorrectly allowed an old owner to bind a newly read epoch; correcting
 the model to check the bound claim makes the refused post-takeover read explicit.
 That was a model correction, not a claimed production regression.
 
+The later [early-admission audit](AUTHOR-FENCE-ADMISSION-PLAN.md) reproduces a
+real protocol mismatch in JS/C#: a 100-character non-ASCII record exceeds the
+256-byte pre-parse budget but still reaches JSON parsing. Focused parser-call
+and exception-type controls fail first. All three ports now reject non-ASCII
+records before parsing; every canonical accepted record remains compatible.
+The independent model now supplies 24 fixtures. Seven Rust, nine C# and ten
+tests on each JS runtime pass; the JS module retains strict 100% measured
+lines/branches/functions. The [admission evidence](../../../dev/log/issues/138/pulls/139/author-fence-admission.txt)
+retains before/after output and digests. Complete fresh CI remains required.
+
 Focused local checks pass seven Rust contracts, eight C# cases and nine tests
 on each of Node, Bun and Deno. Node's new
 production module covers every measured line, branch and function. The shared

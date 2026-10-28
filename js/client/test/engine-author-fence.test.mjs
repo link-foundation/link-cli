@@ -29,6 +29,19 @@ test('independent canonical claim journal fixtures are owned and read-only', asy
     assert.equal(bytes(store), before); assert.equal(store.calls, 0);
   }
 });
+test('non-ASCII wire records are refused before the JSON parser is called', async () => {
+  const store = new Store(), f = fence(store);
+  const header = JSON.stringify(['author-fence1', A]);
+  // 100 UTF-16 units, 300 UTF-8 bytes: the byte budget precedes parsing.
+  store.values.set('fence', {generation:'1', entries:[header, '雪'.repeat(100)]});
+  const before = bytes(store);
+  const original = JSON.parse; let calls = 0;
+  JSON.parse = () => { calls++; throw Error('JSON parser was reached'); };
+  try { await assert.rejects(f.snapshot(), TypeError); }
+  finally { JSON.parse = original; }
+  assert.equal(calls, 0);
+  assert.equal(bytes(store), before); assert.equal(store.calls, 0);
+});
 test('explicit takeover fences old reads and publications without undoing earlier data', async () => {
   const store = new Store(), coordinator = fence(store), first = await coordinator.claim('0', token(10));
   const old = coordinator.bind(first); first.token = token(99);

@@ -263,6 +263,32 @@
       "claims": []
     },
     {
+      "name": "oversized-utf8-before-parse",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea\u96ea"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
+      "name": "non-ascii-token",
+      "journal": {
+        "generation": "1",
+        "entries": [
+          "[\"author-fence1\",\"00000000000000000000000000000001\"]",
+          "[\"claim-author1\",\"0000000000000000000000000000000\u96ea\",\"1\"]"
+        ]
+      },
+      "valid": false,
+      "epoch": "0",
+      "claims": []
+    },
+    {
       "name": "object",
       "journal": {
         "generation": "1",

@@ -25,6 +25,16 @@ public class AuthorFenceTests
         internal string Bytes() => JsonSerializer.Serialize(Values);
     }
     [Fact]
+    public void NonAsciiWireIsRefusedBeforeJsonParsing()
+    {
+        var s = new Store(); var f = new AuthorFence(s, "fence", A);
+        // 100 UTF-16 units, 300 UTF-8 bytes. A parser failure has a different type.
+        s.Values["fence"] = new(1, [JsonSerializer.Serialize(new[] { "author-fence1", A }), new string('雪', 100)]);
+        string before = s.Bytes();
+        Assert.Throws<InvalidDataException>(() => f.Snapshot());
+        Assert.Equal(before, s.Bytes()); Assert.Equal(0, s.Calls);
+    }
+    [Fact]
     public void CanonicalFixtures()
     {
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "author-fence-v1.json")));
