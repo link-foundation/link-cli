@@ -55,3 +55,13 @@ and its uncovered raw branches. The six existing causal components retain their
 strict complete-branch gate. Passing that gate does not imply that new query
 sources or the complete project have reached 100%; their remaining lines and
 branches stay in the full report and the evidence receipt.
+
+`check-author-fence-coverage.py` independently applies the same strict rule to
+the optional author guard. The first focused Release report fails at 62/63
+source lines and 106/124 raw branches. Additional public-contract cases cover
+every recorded outcome in both Debug (87/87 lines, 124/124 branches) and Release
+(63/63, 124/124). Both focused runs still instrument the complete production
+assembly; their whole-project denominators and report hashes are retained in
+[author-fence-coverage.txt](../../../dev/log/issues/138/pulls/139/author-fence-coverage.txt).
+CI checks the component against each complete platform test report. This
+component result does not complete the whole-project 100% criterion.

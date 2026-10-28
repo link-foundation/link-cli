@@ -2,6 +2,7 @@
 """Verify real platform artifacts against one successful, immutable C# run."""
 import argparse
 import hashlib
+import itertools
 import json
 import re
 import subprocess
@@ -42,15 +43,27 @@ assert not missing, f"Missing complete platform coverage artifacts: {missing}"
 log_path = Path(f"{prefix}-full.log")
 with log_path.open("wb") as output:
     subprocess.run(["gh", "run", "view", str(args.run), "--repo", repository, "--log"], stdout=output, check=True)
-full_log = log_path.read_text()
+counts_by_platform = {platform: {label: [] for label in ("Total tests:", "Passed:")}
+                      for platform in platforms}
+summaries = set()
+with log_path.open() as source:
+    while chunk := list(itertools.islice(source, 1500)):
+        for line in chunk:
+            for platform in platforms:
+                if line.startswith(f"Test ({platform})\tWrite coverage summary\t"):
+                    summaries.add(platform)
+                if not line.startswith(f"Test ({platform})\tRun tests\t"):
+                    continue
+                for label in counts_by_platform[platform]:
+                    if match := re.search(re.escape(label) + r"\s+(\d+)\s*$", line):
+                        counts_by_platform[platform][label].append(match[1])
 for platform, name in platforms.items():
     job, = [job for job in run["jobs"] if job["name"] == f"Test ({platform})"]
     assert job["status"] == "completed" and job["conclusion"] == "success"
-    step = rf"^Test \({re.escape(platform)}\)\tRun tests\t[^\n]*"
     for label in ("Total tests:", "Passed:"):
-        counts = re.findall(step + re.escape(label) + r"\s+(\d+)\s*$", full_log, re.M)
+        counts = counts_by_platform[platform][label]
         assert counts == [str(args.expected_tests)], (platform, label, counts)
-    assert f"Test ({platform})\tWrite coverage summary\t" in full_log
+    assert platform in summaries
     artifact = by_name[name]
     assert not artifact["expired"] and artifact["workflow_run"]["head_sha"] == args.sha
     assert artifact["size_in_bytes"] < 16 * 1024 * 1024

@@ -3,7 +3,11 @@ address reservations and causal batches in Rust/C#/JS. A bound claim is
 validated at reads and compared in the same data CAS; superseded token retries
 cannot retake ownership. Focused checks and explicit provider/authority/cost
 limits are tracked in AUTHOR-FENCING-VERIFICATION.md. Actual-WASM/real-etcd and
-fresh complete platform CI remain pending. Bypass admission, membership/history
+all three C# platform suites pass on aae1422; later admission, physical handoff
+and component coverage changes require fresh exact-head CI. Fifteen focused C#
+contracts now execute every author-guard source line and raw branch in both
+Debug and Release, with complete production instrumentation retained. Whole-
+project coverage remains below target. Bypass admission, membership/history
 reclamation and every wider unmet criterion remain unfinished.
 
 # Acceptance inventory

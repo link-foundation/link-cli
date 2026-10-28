@@ -21,6 +21,15 @@ tests on each JS runtime pass; the JS module retains strict 100% measured
 lines/branches/functions. The [admission evidence](../../../dev/log/issues/138/pulls/139/author-fence-admission.txt)
 retains before/after output and digests. Complete fresh CI remains required.
 
+The later [C# coverage audit](AUTHOR-FENCE-COVERAGE-PLAN.md) adds six public
+contract cases without production changes. All fifteen focused cases now pass;
+every author-guard source line and raw compiled branch executes in Debug
+(87/87 lines, 124/124 branches) and Release (63/63, 124/124). CI applies that
+strict component gate to the complete platform reports. The retained
+[coverage evidence](../../../dev/log/issues/138/pulls/139/author-fence-coverage.txt)
+includes the initial rejection and complete focused-report denominators.
+Whole-project coverage remains below the acceptance target.
+
 Focused local checks pass seven Rust contracts, eight C# cases and nine tests
 on each of Node, Bun and Deno. Node's new
 production module covers every measured line, branch and function. The shared
@@ -46,8 +55,16 @@ The linked Rust tests also run on actual WASM in CI. The existing bounded
 three-member etcd harness now invokes
 [author-fence-consensus.mjs](../../../examples/native-lsm-js/author-fence-consensus.mjs),
 using actual-WASM staging, public Rust/C# claim CLIs, stale prepared publication,
-burned reservation suffixes and continued author counters. **That new real-etcd
-scenario, full actual-WASM execution and fresh platform CI remain pending.**
+burned reservation suffixes and continued author counters. Both real-etcd runs
+pass on `aae1422`, using both native claim ports and actual-WASM staging. That
+head also passes 819 actual-WASM tests, 717 JS tests and 2,630 C# tests per
+platform. Complete C# artifacts retain their digest-verified denominators:
+Linux 8,470/8,685 lines and 7,202/7,709 branches; Windows 8,456/8,685 and
+7,182/7,709; macOS 8,465/8,685 and 7,197/7,709. Later admission, physical
+handoff and coverage changes still require fresh exact-head CI. The
+[initial CI receipt](../../../dev/log/issues/138/pulls/139/author-fence-ci.txt)
+retains raw log line references, artifact digests, the passing Rust Windows
+control and the separate dependency freshness failure.
 
 The [physical handoff plan](AUTHOR-FENCE-PHYSICAL-PLAN.md) extends verification
 through actual SQL-free native stores. Its missing-recipe baseline fails before

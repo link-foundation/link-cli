@@ -4,16 +4,22 @@ using Xunit;
 
 namespace Foundation.Data.Doublets.Cli.Tests;
 
-public class AuthorFenceTests
+public partial class AuthorFenceTests
 {
     private const string A = "00000000000000000000000000000001";
     private const string T1 = "00000000000000000000000000000010", T2 = "00000000000000000000000000000020";
     private sealed class Store : IAtomicJournalStore
     {
         internal Dictionary<string, JournalVersion> Values = new();
-        internal int Calls, Failure; internal Action? Before;
-        public bool SupportsDurableFlush => true;
-        public IReadOnlyList<JournalVersion> Read(IReadOnlyList<string> keys) => keys.Select(k => Values.TryGetValue(k, out var v) ? v with { Entries = v.Entries.ToArray() } : new JournalVersion(0, [])).ToArray();
+        internal int Calls, Failure; internal Action? Before, BeforeRead;
+        internal bool Durable = true;
+        internal Func<IReadOnlyList<string>, IReadOnlyList<JournalVersion>>? ReadOverride;
+        public bool SupportsDurableFlush => Durable;
+        public IReadOnlyList<JournalVersion> Read(IReadOnlyList<string> keys)
+        {
+            var before = BeforeRead; BeforeRead = null; before?.Invoke();
+            return ReadOverride is { } read ? read(keys) : keys.Select(k => Values.TryGetValue(k, out var v) ? v with { Entries = v.Entries.ToArray() } : new JournalVersion(0, [])).ToArray();
+        }
         public bool CompareExchange(IReadOnlyList<string> keys, IReadOnlyList<JournalVersion> expected, IReadOnlyList<IReadOnlyList<string>?> updates)
         {
             var before = Before; Before = null; before?.Invoke(); Calls++;

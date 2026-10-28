@@ -296,6 +296,7 @@ jobs:
           test "${#reports[@]}" -eq 1
           test -f "${reports[0]}"
           python3 experiments/issue-138/check-causal-raw-coverage.py "${reports[0]}" --require-session
+          python3 experiments/issue-138/check-author-fence-coverage.py "${reports[0]}"
 
       - name: Native file LSM cluster consumers
         working-directory: .
