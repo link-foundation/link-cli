@@ -1,0 +1,10 @@
+
+Checking files for maximum 1000 lines...
+
+Checking C# files in csharp/...
+  Found 340 C# file(s)
+Checking Rust files in rust/...
+  Found 395 Rust file(s)
+
+Checked 735 file(s) - all within the line limit
+

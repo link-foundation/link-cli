@@ -230,8 +230,11 @@ public abstract record LinksOperation<T>
             RemoveName operation => [operation.Link],
             _ => []
         };
-        if (limits is not null) foreach (var address in addresses)
-            if (UInt128.CreateChecked(address) > limits.MaxAddress) throw new ArgumentOutOfRangeException(nameof(address));
+        if (limits is not null)
+        {
+            foreach (var address in addresses)
+                if (UInt128.CreateChecked(address) > limits.MaxAddress) throw new ArgumentOutOfRangeException(nameof(address));
+        }
         var reply = ExecuteCore(links);
         limits?.DecodedReply(reply);
         return reply;
