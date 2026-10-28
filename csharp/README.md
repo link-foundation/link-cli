@@ -104,8 +104,19 @@ nodes/results, 16,384 bindings, 4 MiB of estimated binding storage and 1 MiB of
 decoded named change references. Admission previews precede real private edits
 and external callbacks. Bare negative and overflowing numbers reject; quoted or
 encoded numeric names stay names. Publication still requires `session.Commit(token)`
-and its existing final constraints and 64-edit batch admission. Standard C# protocol
-parity remains tracked in [the query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).
+and its existing final constraints and 64-edit batch admission.
+
+`LinksOperation<T>`, `LinksRestriction<T>`, `RemoteLinks<T>` and the generic
+`LinksServer.Serve`/`ExecuteRequest` overloads share the standard protocol with
+selected unsigned addresses; the established uint APIs remain available. Serve
+`session.QueryLinks` to expose private causal edits through text and binary.
+`LinksClient.QueryLossless(text)` sends the explicit original-query envelope,
+retaining quoted numeric and special names. The peer must support that envelope;
+there is no fallback resend after an unknown outcome. Checked workers clamp raw
+text and binary decoding before canonical formatting. Request admission and
+query previews precede private edits; serving a session never publishes it.
+[The query plan](../docs/case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md) retains
+validation evidence and the unfinished physical query interchange work.
 
 LiNo imports (`--import`, `--in`, `--lino-input`, and the library's
 `LinoDatabaseInput.ImportText`/`ReadFromFile`) validate the complete input before

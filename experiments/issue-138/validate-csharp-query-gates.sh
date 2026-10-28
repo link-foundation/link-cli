@@ -15,6 +15,8 @@ experiments/issue-138/tools/shellcheck-v0.11.0/shellcheck \
   experiments/issue-138/validate-csharp-query-reservations.sh \
   experiments/issue-138/validate-csharp-causal-query.sh \
   experiments/issue-138/run-csharp-causal-query.sh \
+  experiments/issue-138/validate-csharp-causal-protocol.sh \
+  experiments/issue-138/run-csharp-causal-protocol.sh \
   experiments/issue-138/run-csharp-query-allocation.sh > "$prefix-shellcheck.log" 2>&1
 git diff --check > "$prefix-whitespace.log" 2>&1
 printf 'GATES PASS %s\n' "$(date -u +%FT%TZ)"

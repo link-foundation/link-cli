@@ -26,6 +26,9 @@ public sealed partial class CausalQueryTests
     [Theory]
     [MemberData(nameof(Vectors))]
     public void SharedQueriesStayPrivateAndPublishOneExactlyRetryableBatch(string name, string json)
+        => CheckVector(name, json, Query);
+
+    private static void CheckVector(string name, string json, Action<INamedTypesLinks<UInt128>, string> execute)
     {
         using var document = JsonDocument.Parse(json);
         var vector = document.RootElement;
@@ -39,7 +42,7 @@ public sealed partial class CausalQueryTests
         Assert.Same(links, tx.QueryLinks);
         foreach (var query in vector.GetProperty("queries").EnumerateArray())
         {
-            var error = Record.Exception(() => Query(links, query.GetProperty("text").GetString()!));
+            var error = Record.Exception(() => execute(links, query.GetProperty("text").GetString()!));
             Assert.True((error is not null) == query.GetProperty("error").GetBoolean(), $"{name}: {error}");
         }
         var actual = tx.Rows().Select(row => (row.Link.Index, row.Link.Source, row.Link.Target, row.Name));

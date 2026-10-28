@@ -369,4 +369,14 @@ mutation, reservation and explicit-token batch implementations; retain the uint
 facade and opt-in limits for existing stores. Keep anonymous creation callbacks
 compatible with the pinned upstream helper while avoiding its UInt128 list
 initializer. Verify shared query vectors, bounded refusals and exact lost-reply
-retries; standard C# protocol and physical query interchange remain required work.
+retries; physical query interchange remains required work.
+
+Select unsigned addresses in the existing operation/restriction, server and
+remote-store implementations, retaining public uint facades. Add an explicit
+original-query envelope and QueryLossless without mutation fallback retries.
+Admit decoded documents before recursive formatting/tracing and clamp checked
+text/binary decoding before canonicalization. Convert parser/admission failures
+to protocol errors; count the final decoded text byte. Keep callback rows owned
+and read-only, preserve private staging and preparation freezes, and verify
+shared query vectors across all codecs. Standard operation address checks
+precede edits; finite limits retain broad-read refusals.

@@ -560,6 +560,11 @@ Each call is one request, such as `(count: (* 1))`, `(update: (1 2 2))` or
 `(set-name: (2 'a pair'))`. A write replies with the net change of every link
 it touched. [`docs/protocol/links-operations.txt`](docs/protocol/links-operations.txt)
 records one whole conversation, and both ports replay it in their tests.
+C# also exposes `RemoteLinks<T>`, `LinksOperation<T>` and selected-address server
+overloads while retaining the uint APIs. `LinksClient.QueryLossless` carries
+original query text to supporting peers; use a checked causal `QueryLinks`
+adapter to stage full-u64 edits before explicit session publication. See
+[ordinary causal sessions](docs/ENGINE-CAUSAL-SESSIONS.md) for bounds and costs.
 
 ### Use a served database from JavaScript or TypeScript
 

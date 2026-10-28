@@ -63,6 +63,10 @@ public sealed class LinksClient : IDisposable
     public IReadOnlyList<LinoLink> Query(string query) =>
         Request(LinoProtocolException.Wrap(() => LinoFormat.ParseDocument(query)));
 
+    /// <summary>Sends original query text to a peer supporting the explicit query envelope.
+    /// Never retries a mutation through a different representation.</summary>
+    public IReadOnlyList<LinoLink> QueryLossless(string query) => Request(LinksServer.QueryDocument(query));
+
     /// <summary>Like <see cref="Query"/>, returning the reply as canonical text.</summary>
     public string QueryText(string query) => LinoFormat.FormatDocument(Query(query));
 

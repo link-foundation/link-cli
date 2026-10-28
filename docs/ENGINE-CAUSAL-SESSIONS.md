@@ -8,9 +8,9 @@ uses the actual Rust WASM workspace. The raw JS methods preserve the entire
 u64 range as canonical decimal strings. `tx.client()` supplies the ordinary
 JS/TS links and query API with BigInt addresses over that same workspace. Rust
 supplies the standard query processor and protocol through a checked named-store
-borrow. C# supplies the ordinary processor through a checked `QueryLinks`
-adapter; its standard protocol parity remains unfinished and is tracked in the
-[session plan](case-studies/issue-138/CAUSAL-MUTABLE-SESSION-PLAN.md).
+borrow. C# supplies the ordinary processor and standard protocols through a
+checked `QueryLinks` adapter. The [session plan](case-studies/issue-138/CAUSAL-MUTABLE-SESSION-PLAN.md)
+tracks remaining physical query interchange and wider requirements.
 
 Choose an explicit conflict policy and a fresh inclusive address reservation.
 The reservation cannot intersect any retained causal identity, including a
@@ -82,8 +82,12 @@ is the atomic batch boundary, and rollback discards the whole private session.
 
 Rust's `GenericLinksOperation<T>`, `execute_request_for` and
 `LinksServer::serve_for` reuse the existing operations and server owner thread;
-the established u32 names remain available. `LinksClient::query_lossless` and
-the selected JS session client carry original query text in a `(query: text)`
+the established u32 names remain available. C# supplies `LinksOperation<T>`,
+`LinksRestriction<T>`, `RemoteLinks<T>` and generic `LinksServer.Serve` and
+`ExecuteRequest` overloads over the same existing algorithms, keeping the uint
+facades. Serve `tx.QueryLinks` to stage private causal requests. Rust
+`LinksClient::query_lossless`, C# `LinksClient.QueryLossless` and the selected
+JS session client carry original query text in a `(query: text)`
 envelope, preserving quoted numeric, wildcard and variable names through text
 and binary transports. Use this only with a peer that explicitly supports it;
 there is no fallback resend after an unknown outcome. Legacy direct document
@@ -113,7 +117,7 @@ restriction implementation and check result counts before retaining each row.
 Bare negative or overflowing numeric addresses reject before staging; quoted
 numeric names remain names. Named output uses lossless notation literals,
 including empty/control names and numeric names outside the stored range.
-Rust checked TCP workers apply these text byte/depth bounds before canonical model
+Rust and C# checked TCP workers apply these text byte/depth bounds before canonical model
 conversion and clamp binary link/reference/node/string/depth admission before
 decoding. JS preflights bounded query syntax before sending any batch member;
 its node count also includes identifiers, so admission can be stricter than the
@@ -124,6 +128,13 @@ reaching the workspace. Named query/export replies admit at most 1 MiB of
 decoded identifier/reference bytes before accumulating the complete document;
 notation and JSON escaping add encoding overhead. The owned query preview
 checks the same named-change budget before real private edits are applied.
+C# generic remote callbacks own read-only three-part rows, avoiding upstream
+UInt128 list initialization. Each standard operation is one serialized round
+trip; matching owns and sorts results. Checked limits are captured for worker
+decoding when serving starts and the live adapter is checked again per request.
+Protocol decoding, original-query envelopes, canonical formatting and reply
+construction add copies proportional to their bounded input/output. Serving
+and closing a client never publish the private session.
 
 Preparation freezes the original owner generation, retry token and complete
 ordered final edits. Each changed identity observes every retained sibling,

@@ -1,6 +1,6 @@
 # Standard queries over a private causal workspace
 
-The standard Rust protocol and the selected actual-WASM/JS session transport
+The standard Rust and C# protocols and the selected actual-WASM/JS session transport
 accept one top-level link named `query`, with exactly one reference containing
 the original query text. Construct this reference with the notation formatter;
 quotes, newlines and literal-reference envelopes inside the query remain text.
@@ -48,8 +48,9 @@ count after creating/deleting that next identity. Addresses use canonical
 decimal strings; names are nullable strings. Cases are independent, so their
 publication tokens and reservations need not be globally unique.
 
-Native Rust, linked actual WASM and actual Node/Bun/Deno consume these vectors.
-The JS consumers also assert that staging and preparation preserve the real
-provider bytes and publication count. C# query/protocol consumption and the
-physical cross-language query recipe remain unfinished in
+Native Rust, C# checked sessions, linked actual WASM and actual Node/Bun/Deno
+consume these vectors. C# also round-trips each case through text and all binary
+codec options before standard dispatch. The JS consumers assert that staging
+and preparation preserve real provider bytes and publication count. The
+physical cross-language query recipe remains unfinished in
 [the parity plan](../case-studies/issue-138/CSHARP-QUERY-PARITY-PLAN.md).

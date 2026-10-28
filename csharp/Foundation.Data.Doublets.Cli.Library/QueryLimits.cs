@@ -31,6 +31,37 @@ public sealed class QueryLimits
             if (node.Values is { } children) foreach (var child in children) pending.Push(child);
         }
     }
+    internal void Document(IReadOnlyList<LinoLink> roots)
+    {
+        if (roots.Count > MaxNodes) throw new InvalidOperationException("Protocol node limit exceeded.");
+        var pending = new Stack<(LinoLink Node, int Depth)>(roots.Select(node => (node, 0)));
+        var count = roots.Count; long bytes = 0;
+        while (pending.TryPop(out var item))
+        {
+            if (item.Depth > MaxDepth) throw new InvalidOperationException("Protocol depth limit exceeded.");
+            ReferenceBytes(item.Node.Id, ref bytes, MaxInputBytes);
+            if (item.Node.Values is not { } children) continue;
+            if (children.Count > MaxNodes - count) throw new InvalidOperationException("Protocol node limit exceeded.");
+            count += children.Count;
+            foreach (var child in children) pending.Push((child, item.Depth + 1));
+        }
+    }
+    internal void DecodedReply(IReadOnlyList<LinoLink> roots)
+    {
+        var pending = new Stack<LinoLink>(roots); long bytes = 0;
+        while (pending.TryPop(out var node))
+        {
+            ReferenceBytes(node.Id, ref bytes, MaxReplyBytes);
+            if (node.Values is { } children) foreach (var child in children) pending.Push(child);
+        }
+    }
+    private static void ReferenceBytes(string? value, ref long bytes, int limit)
+    {
+        if (value is null) return;
+        if (value.Length > limit) throw new InvalidOperationException("Protocol decoded byte limit exceeded.");
+        bytes += Encoding.UTF8.GetByteCount(value);
+        if (bytes > limit) throw new InvalidOperationException("Protocol decoded byte limit exceeded.");
+    }
     internal void Numeric(string value)
     {
         var digits = value.AsSpan();
