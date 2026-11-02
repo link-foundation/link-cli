@@ -24,6 +24,13 @@ namespace Foundation.Data.Doublets.Cli
             /// </summary>
             public bool AutoCreateMissingReferences { get; set; } = false;
 
+            /// <summary>
+            /// The store references are checked in, when it is not the one the query runs on: under a
+            /// <see cref="PermissionsDecorator{TLinkAddress}"/> a query may refer to a link its subject may
+            /// not read, such as the type of its own link (issue #149).
+            /// </summary>
+            public INamedTypesLinks<uint>? References { get; set; }
+
             public static implicit operator Options(string query) => new Options { Query = query };
         }
 

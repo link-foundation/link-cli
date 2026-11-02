@@ -34,6 +34,21 @@ public sealed record LinksServerOptions
 
     /// <summary>Limits applied to messages of either protocol.</summary>
     public ProtocolLimits Limits { get; init; } = ProtocolLimits.Default;
+
+    /// <summary>
+    /// Who may read and write what (issue #149): every connection then sees the store as its subject
+    /// may, and every request is undone whole when it fails. Null (the default) serves everything to everyone.
+    /// </summary>
+    public IPermissionPolicy<uint>? Permissions { get; init; }
+
+    /// <summary>
+    /// The subject of a token, or null when the token is not valid: answers <c>(auth: token)</c>, such as
+    /// <see cref="LinksTokenTable.Authenticate"/>. Null (the default) refuses every token.
+    /// </summary>
+    public Func<string, uint?>? Authenticate { get; init; }
+
+    /// <summary>The subject of a connection before any <c>(auth: token)</c>; the null link (0, the default) is a guest.</summary>
+    public uint Subject { get; init; }
 }
 
 /// <summary>
@@ -44,6 +59,7 @@ public sealed record LinksServerOptions
 /// requests are executed one at a time under a lock, so the store needs no
 /// thread safety of its own. The protocol is detected per message and the
 /// reply uses the same protocol, so text and binary clients can share one server.
+/// Every connection is a <see cref="LinksSession"/>, with a subject of its own.
 /// </remarks>
 public sealed class LinksServer : IDisposable
 {
@@ -98,6 +114,7 @@ public sealed class LinksServer : IDisposable
     public void Serve(INamedTypesLinks<uint> links)
     {
         ArgumentNullException.ThrowIfNull(links);
+        var sessions = new LinksSessions(links, _options);
         var workers = new List<Thread>();
         while (!_stopping)
         {
@@ -114,7 +131,8 @@ public sealed class LinksServer : IDisposable
             {
                 continue;
             }
-            var worker = new Thread(() => HandleConnection(client, stream, links)) { IsBackground = true };
+            var session = sessions.Open();
+            var worker = new Thread(() => HandleConnection(client, stream, session)) { IsBackground = true };
             workers.Add(worker);
             worker.Start();
             workers.RemoveAll(thread => !thread.IsAlive);
@@ -171,7 +189,7 @@ public sealed class LinksServer : IDisposable
     }
 
     /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
-    internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
+    internal void HandleConnection(TcpClient client, NetworkStream stream, LinksSession session)
     {
         try
         {
@@ -196,7 +214,7 @@ public sealed class LinksServer : IDisposable
                     return;
                 }
                 var (document, format) = received;
-                var reply = Accepts(format) ? Execute(links, document) : ErrorDocument("this server does not accept this protocol");
+                var reply = Accepts(format) ? Execute(session, document) : ErrorDocument("this server does not accept this protocol");
                 format.Protocol(_options.Limits).WriteDocument(stream, reply);
             }
         }
@@ -210,6 +228,7 @@ public sealed class LinksServer : IDisposable
             {
                 _clients.Remove(client);
             }
+            session?.Dispose();
             // Also disposes the stream.
             client.Dispose();
         }
@@ -235,7 +254,7 @@ public sealed class LinksServer : IDisposable
         _ => true,
     };
 
-    internal IReadOnlyList<LinoLink> Execute(INamedTypesLinks<uint> links, IReadOnlyList<LinoLink> document)
+    internal IReadOnlyList<LinoLink> Execute(LinksSession session, IReadOnlyList<LinoLink> document)
     {
         lock (_storeLock)
         {
@@ -245,7 +264,7 @@ public sealed class LinksServer : IDisposable
                 return ErrorDocument("server is shutting down");
             }
             Trace($"request: {LinoFormat.FormatDocument(document)}");
-            var reply = ExecuteRequest(links, document, _options.AutoCreateMissingReferences);
+            var reply = session.Execute(document);
             Trace($"reply: {LinoFormat.FormatDocument(reply)}");
             return reply;
         }
@@ -279,11 +298,13 @@ public sealed class LinksServer : IDisposable
     /// query; the reply holds one <c>(before) (after)</c> line per change, exactly
     /// like <c>clink --changes</c>. The empty document asks for every link, one
     /// <c>(index: source target)</c> per line. Failures produce an <see cref="ErrorDocument"/>.
+    /// The references of a query are checked in <paramref name="references"/>, by default <paramref name="links"/>.
     /// </remarks>
     public static IReadOnlyList<LinoLink> ExecuteRequest(
         INamedTypesLinks<uint> links,
         IReadOnlyList<LinoLink> document,
-        bool autoCreateMissingReferences = false)
+        bool autoCreateMissingReferences = false,
+        INamedTypesLinks<uint>? references = null)
     {
         ArgumentNullException.ThrowIfNull(links);
         ArgumentNullException.ThrowIfNull(document);
@@ -307,6 +328,7 @@ public sealed class LinksServer : IDisposable
             {
                 Query = LinoFormat.FormatDocument(document),
                 AutoCreateMissingReferences = autoCreateMissingReferences,
+                References = references,
                 ChangesHandler = (before, after) =>
                 {
                     changes.Add((new DoubletLink(before), new DoubletLink(after)));
