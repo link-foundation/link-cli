@@ -363,6 +363,42 @@ namespace Foundation.Data.Doublets.Cli.Tests
         }
 
         [Fact]
+        public void Keeps_The_Hierarchy_In_A_Named_File_Store()
+        {
+            var dataFile = Path.GetTempFileName();
+            var namesFile = Path.GetTempFileName();
+            try
+            {
+                uint note, news, @public;
+                using (var memory = new FileMappedResizableDirectMemory(dataFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep))
+                using (var unitedLinks = new UnitedMemoryLinks<uint>(memory))
+                using (var named = new NamedTypesDecorator<uint>(unitedLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing(), namesFile))
+                {
+                    var types = new TypesDecorator<uint>(named);
+                    var doc = types.Define();
+                    @public = types.Define();
+                    note = types.Define(doc);
+                    news = types.Define(note, @public);
+                    named.SetName(@public, "Public");
+                }
+                using (var memory = new FileMappedResizableDirectMemory(dataFile, UnitedMemoryLinks<uint>.DefaultLinksSizeStep))
+                using (var unitedLinks = new UnitedMemoryLinks<uint>(memory))
+                using (var named = new NamedTypesDecorator<uint>(unitedLinks.DecorateWithAutomaticUniquenessAndUsagesRepointing(), namesFile))
+                {
+                    var types = new TypesDecorator<uint>(named);
+                    Assert.Equal(@public, named.GetByName("Public"));
+                    Assert.Equal(new[] { note, @public }, types.ParentsOf(news));
+                    Assert.True(types.IsA(types.Instance(news), @public));
+                }
+            }
+            finally
+            {
+                File.Delete(dataFile);
+                File.Delete(namesFile);
+            }
+        }
+
+        [Fact]
         public void Pinned_Types_Are_SubTypes_Of_The_Root()
         {
             var dataFile = Path.GetTempFileName();

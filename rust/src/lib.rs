@@ -23,6 +23,7 @@
 //! - `named_type_links` - The storage interface every layer is written against
 //! - `named_types`, `pinned_types` - Named and pinned type decorators
 //! - `persistent_transformations` - Persistent transformation triggers
+//! - `types` - A type hierarchy with sub-types and multiple inheritance
 //! - `transactions`, `version_control` - Reversible transitions, branches and tags
 //! - `cli` - Argument parsing, so a custom tool can accept the same options
 //!
@@ -60,6 +61,7 @@ pub mod query_types;
 pub mod sequences;
 pub mod storage;
 pub mod transactions;
+pub mod types;
 pub mod unicode_string_storage;
 pub mod version_control;
 
@@ -104,5 +106,6 @@ pub use transactions::{
     GenericTransition, LogRetentionPolicy, TransactionHandle, TransactionsDecorator, Transition,
     TransitionKind, TransitionLogStore,
 };
+pub use types::{ensure_point, TypeMarkers, Types, TypesDecorator, EXTENDS_NAME, ROOT_TYPE_NAME};
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};
