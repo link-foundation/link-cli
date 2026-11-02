@@ -147,6 +147,9 @@ impl<S: NamedTypeLinks> NamedTypeLinksCalls for S {
             .delete_observed(1, &mut |before, after| deleted.push((before, after)))
             .unwrap();
         assert_eq!(removed, Link::new(1, 0, 0));
+        // The cascade resets each usage to `(0 0)` before deleting it (doublets
+        // 0.17, as in C#); the net change of every link is its deletion.
+        let deleted = simplify_changes(deleted);
         assert!(deleted.contains(&(Link::new(1, 0, 0), Link::null())));
         assert!(deleted.contains(&(Link::new(2, 1, 1), Link::null())));
         assert!(self.delete(1).is_err());
