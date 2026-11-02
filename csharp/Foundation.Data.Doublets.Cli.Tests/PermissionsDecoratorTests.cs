@@ -264,6 +264,26 @@ namespace Foundation.Data.Doublets.Cli.Tests
             });
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void Gives_A_Rule_Given_Twice_Once(bool separateRules)
+        {
+            WithWorld(w =>
+            {
+                var (t, m) = (w.T, w.Markers);
+                var count = w.Rules.Count();
+                var rule = w.Rules.SearchOrDefault(t["User"], t["Note"]);
+                Assert.NotEqual(0u, rule);
+                Assert.Equal(rule, PermissionPolicy<uint>.Allow(w.Rules, m, PermissionAccess.Write, t["User"], t["Note"]));
+                Assert.Equal(count, w.Rules.Count());
+                Assert.True(w.Policy.CanWrite(w.V["alice"], w.Links.GetLink(w.V["note"])!));
+                // The same pair may carry both marks.
+                Assert.Equal(rule, PermissionPolicy<uint>.Allow(w.Rules, m, PermissionAccess.Read, t["User"], t["Note"]));
+                Assert.Equal(count + 1, w.Rules.Count());
+            }, separateRules);
+        }
+
         [Fact]
         public void Owns_What_It_Created_While_Untyped()
         {

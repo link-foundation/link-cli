@@ -232,14 +232,27 @@ namespace Foundation.Data.Doublets.Cli
                 // A pair from a marker would read as a mark.
                 throw new ArgumentException("A marker cannot be a subject", nameof(subject));
             }
-            var rule = rules.Create();
-            rules.Update(rule, subject, @object);
-            var mark = rules.Create();
-            rules.Update(mark, markers.Of(access), rule);
+            // A rule given twice is the same rule: the pair and its mark are
+            // found before they are made, as a store of unique doublets would
+            // merge them anyway.
+            var rule = SearchOrCreate(rules, subject, @object);
+            SearchOrCreate(rules, markers.Of(access), rule);
             return rule;
         }
 
         /// <summary>Parses <c>read</c> or <c>write</c>.</summary>
+        private static TLinkAddress SearchOrCreate(ILinks<TLinkAddress> links, TLinkAddress source, TLinkAddress target)
+        {
+            var found = links.SearchOrDefault(source, target);
+            if (found != links.Constants.Null)
+            {
+                return found;
+            }
+            var link = links.Create();
+            links.Update(link, source, target);
+            return link;
+        }
+
         public static PermissionAccess ParseAccess(string access) => access switch
         {
             "read" => PermissionAccess.Read,
