@@ -425,6 +425,81 @@ Both ports write and read the same bytes, so an archive written by the Rust
 CLI can be read by the C# CLI and the other way around
 ([examples/archive](examples/archive/README.md)).
 
+## Type hierarchy
+
+A type hierarchy `Type -> SubType -> … -> Value` of any depth, with multiple
+inheritance, is kept in ordinary links, so the CLI needs no new syntax:
+
+- the type of a link is its source: `(v: S x)` is a value of type `S`;
+- the root is the point `(Type: Type Type)`;
+- a sub-type of `T` is `(S: T S)`, a value of `T` that points at itself;
+- an extra parent is a pair `(p: S T2)` marked by `(m: Extends p)`, where
+  `Extends` is a type too.
+
+Build `Type -> Doc -> Note -> News`, make `News` extend `Public` as well, and
+add a value `today` of `News`:
+
+```bash
+clink --db types.links --auto-create-missing-references '() ((Type: Type Type) (Extends: Extends Extends) (User: Type User) (Doc: Type Doc) (Public: Type Public) (Note: Doc Note) (News: Note News) (Extends (News Public)) (today: News today))' --after
+```
+→
+```
+(Type: Type Type)
+(Extends: Extends Extends)
+(User: Type User)
+(Doc: Type Doc)
+(Public: Type Public)
+(Note: Doc Note)
+(News: Note News)
+(8: News Public)
+(9: Extends 8)
+(today: News today)
+```
+
+The links that point at themselves are the types (`today` is one too: a
+value `(v: T v)` can be sub-typed further), and the links whose source is
+`News` are its values and its extra parents:
+
+```bash
+clink --db types.links '((($t: $p $t)) (($t: $p $t)))' --changes
+clink --db types.links '((($v: News $x)) (($v: News $x)))' --changes
+```
+→
+```
+((Type: Type Type)) ((Type: Type Type))
+((Extends: Extends Extends)) ((Extends: Extends Extends))
+((User: Type User)) ((User: Type User))
+((Doc: Type Doc)) ((Doc: Type Doc))
+((Public: Type Public)) ((Public: Type Public))
+((Note: Doc Note)) ((Note: Doc Note))
+((News: Note News)) ((News: Note News))
+((today: News today)) ((today: News today))
+((8: News Public)) ((8: News Public))
+((today: News today)) ((today: News today))
+```
+
+Walking the hierarchy is the job of `TypesDecorator`, a decorator over the
+links in both libraries (C# `TypesDecorator<TLinkAddress>`, which implements
+`ITypes<TLinkAddress>`; Rust `link_cli::TypesDecorator`, which implements the
+`Types` trait). It answers `TypeOf`, `IsType`, `ParentsOf`, `AncestorsOf`,
+`IsA` (the type itself or of it) and `IsOf` (strictly of it) through any
+depth, diamonds and cycles, and writes with `Define(parent, more…)`,
+`Extend(type, parent)` and `Instance(type[, target])`:
+
+```csharp
+var types = new TypesDecorator<uint>(namedLinks); // finds or creates Type and Extends
+var doc = types.Define(types.Root);
+var @public = types.Define(types.Root);
+var note = types.Define(doc);
+var news = types.Define(note, doc, @public);
+types.IsA(types.Instance(news), @public); // true
+```
+
+The pinned types `(1: 1 1)`, `(2: 1 2)`, `(3: 1 3)`, … are sub-types of the
+root `1`, so a store with pinned types is already such a hierarchy. Runnable
+scripts for both CLIs and a Rust example live in
+[`examples/type-hierarchy/`](examples/type-hierarchy).
+
 ## Persistent transformation triggers
 
 Store a query as a trigger with `--always` to apply it after later write operations:

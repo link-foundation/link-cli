@@ -265,9 +265,9 @@ jobs:
         env:
           VERSION: ${{ steps.check.outputs.version }}
         run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
-          # Trusted publishing needs npm 11.5.1+. The npm bundled with
-          # Node.js 26 is new enough, but the publishing npm stays pinned to an
-          # exact release so a publish never depends on the runner's cache.
+          # Trusted publishing needs npm 11.5.1+. Pinned to an exact release
+          # of the 11 line (Node.js ^20.17.0 || >=22.9.0, so 26.x included),
+          # so the npm that publishes does not change with the runner's Node.js.
           npm install --global npm@11.21.1
           if npm publish --access public --provenance --loglevel verbose; then
             exit 0

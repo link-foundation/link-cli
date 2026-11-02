@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [1.1.0] - 2026-11-02
+
+Add the `Types` trait and `TypesDecorator` (#148): a type hierarchy `Type -> SubType -> … -> Value` with multiple inheritance kept in plain links, the port of the C# `TypesDecorator` with the same tests. The type of a link is its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)` and extra parents are pairs `(p: S T2)` marked by `(m: Extends p)`. `type_of`, `is_type`, `parents_of`, `ancestors_of`, `is_a` and `is_of` terminate on cycles, and `define`, `extend` and `instance` write. `NamedTypeLinks` gains `query_links`, which finds links by a pattern.
+
+Update `doublets` to 0.17.0, `links-notation` to 0.30.0 and the WebAssembly `wasm-bindgen` family to their latest releases, with the lock files. With doublets 0.17 a cascading delete resets every usage to `(0 0)` before deleting it, as C# does; the net change reported for each link is unchanged.
+
 ## [1.0.9] - 2026-10-24
 
 Expanded Rust query processor parity with the C# implementation, including unwrapped query pairs, structural and wildcard deletes, variable-driven updates, named composite rename behavior, direct Rust basis dependencies on doublets, links-notation, and lino-arguments without a direct clap dependency, and a doublet-backed Rust port of the C# Unicode string storage path with explicit Data.Doublets.Sequences-style converter abstractions.

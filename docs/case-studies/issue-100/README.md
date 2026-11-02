@@ -54,7 +54,7 @@ docs/case-studies/issue-100/
 ├── README.md                        # This document.
 └── evidence/
     ├── cli-parity/run.sh            # 39 scenarios run through both CLIs and diffed (§6).
-    ├── csharp-merge-usages/         # Reproduction of the Data.Doublets MergeUsages defect (§5.5).
+    ├── csharp-merge-usages/         # Guard for the Data.Doublets MergeUsages fix (§5.5).
     │   ├── Program.cs
     │   ├── csharp-merge-usages.csproj
     │   └── run.sh
@@ -195,13 +195,9 @@ whose `LinksUniquenessAndUsagesRepointingResolver` re-points usages itself, so
 this scenario now agrees and the harness has no exemption left (see
 [the issue #105 case study, §6.3](../issue-105/README.md#63-behaviour-differences-between-the-ports-query-processors)).
 
-**Update (issue #150):** upstream fixed `MergeUsages` in the 0.18.x releases
-that followed 0.18.1, and
-[Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)
-is closed. With `Platform.Data.Doublets` 0.18.6 and 0.18.7, `run.sh` reports
-both usages re-pointed correctly (`(4: 2 3)` and `(5: 3 2)`) and exits
-non-zero, as it was written to once the defect is gone. The library keeps its
-own repointing resolver, which updates both halves of a usage at once.
+**Update (issue #148):** Platform.Data.Doublets 0.18.6 fixes `MergeUsages`
+itself: the reproduction prints `FIXED` for both usages. It now guards the fix
+and exits non-zero only if the defect comes back.
 
 ### 5.6 The constants differ, and it is unreachable in practice
 
@@ -359,11 +355,10 @@ trigger scenarios including the embedded store.
 
 ## 10. Risks and follow-ups
 
-- **The `MergeUsages` exemption** (worked around in issue #105, §5.5). Until
-  [Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)
-  is released, `update into duplicate` produces a corrupt link in C#. The
-  harness will turn red the moment the languages agree, which is the signal to
-  drop the exemption.
+- **The `MergeUsages` exemption** (worked around in issue #105, §5.5).
+  Platform.Data.Doublets 0.18.6 fixes the defect of
+  [Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515);
+  `evidence/csharp-merge-usages` now guards that fix.
 - **The constants overlap.** `is_external(continue)` is `true` in Rust and
   `False` in C#. Unreachable through the CLI (§5.6), but a *library* consumer
   that calls it directly will see the difference. Tracked as

@@ -183,6 +183,32 @@ A runnable, self-checking version of this is
 - **Typed errors and paths.** Public entry points take `AsRef<Path>` and return
   `LinkError`, not `anyhow::Error`.
 
+### Type hierarchy
+
+`TypesDecorator` wraps any `NamedTypeLinks` and keeps a type hierarchy with
+multiple inheritance in plain links (#148): the type of a link is its source,
+the root is `(Type: Type Type)`, a sub-type is `(S: T S)`, and an extra parent
+is a pair `(p: S T2)` marked by `(m: Extends p)`. Its queries stop on cycles.
+
+```rust
+use link_cli::{LinkStorage, Types, TypesDecorator};
+
+let mut types = TypesDecorator::with_named_markers(LinkStorage::in_memory(false))?;
+let root = types.root();
+let doc = types.define(root, &[])?;
+let public = types.define(root, &[])?;
+let note = types.define(doc, &[])?;
+let news = types.define(note, &[doc, public])?;
+let today = types.instance(news)?;
+assert!(types.is_a(today, public));
+assert_eq!(vec![note, doc, public], types.parents_of(news));
+```
+
+The `Types` trait needs only `root()` and `extends()`; everything else has a
+default that reads and writes through the implementing layer, so a layer that
+wraps `TypesDecorator` can reuse or override any of it. Run
+`cargo run --example type_hierarchy` for a complete walk-through.
+
 ## Develop
 
 ```bash

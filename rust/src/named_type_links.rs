@@ -67,6 +67,29 @@ pub trait NamedTypeLinks {
     /// ```
     fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link>;
     fn all_links(&mut self) -> Vec<Link>;
+    /// The links that match a pattern, where `None` matches any value, in
+    /// the order of their addresses.
+    ///
+    /// The default filters [`Self::all_links`]; a store with a lookup index
+    /// overrides it.
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        let mut links: Vec<Link> = self
+            .all_links()
+            .into_iter()
+            .filter(|link| {
+                index.is_none_or(|index| link.index == index)
+                    && source.is_none_or(|source| link.source == source)
+                    && target.is_none_or(|target| link.target == target)
+            })
+            .collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
+    }
     fn search(&mut self, source: u32, target: u32) -> Option<u32>;
     fn get_or_create(&mut self, source: u32, target: u32) -> u32;
     fn get_name(&mut self, id: u32) -> Result<Option<String>>;
@@ -212,6 +235,20 @@ impl NamedTypeLinks for LinkStorage {
         self.all().into_iter().copied().collect()
     }
 
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        let mut links: Vec<Link> = LinkStorage::query(self, index, source, target)
+            .into_iter()
+            .copied()
+            .collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
+    }
+
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
         LinkStorage::search(self, source, target)
     }
@@ -280,6 +317,20 @@ impl NamedTypeLinks for NamedTypesDecorator {
 
     fn all_links(&mut self) -> Vec<Link> {
         self.all().into_iter().copied().collect()
+    }
+
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        let mut links: Vec<Link> = NamedTypesDecorator::query(self, index, source, target)
+            .into_iter()
+            .copied()
+            .collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
     }
 
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
