@@ -152,9 +152,9 @@ checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "doublets"
-version = "0.8.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5366b5f09ff97e65121f948f03ca55db186bacb4d1af1e42ba1d5a22f71bccd"
+checksum = "6537599f44fd9449e15f7ff4be61f78dfa5a59e252c2bc8ed295bba4839ffa41"
 dependencies = [
  "cfg-if",
  "leak_slice",
@@ -346,9 +346,9 @@ dependencies = [
 
 [[package]]
 name = "platform-mem"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27cff7c92440ac926c8c91ea3151db6e52a262f602d0c157f254e422fc15b12"
+checksum = "b0d53b63c04591c28fa7c495a797c2c37801a008eeecd2e072908c30013fa915"
 dependencies = [
  "allocator-api2",
  "memmap2",
