@@ -36,6 +36,12 @@ Key files:
 - `NamedTypesDecorator.cs`: names layered over links with a sidecar names
   database.
 - `PinnedTypesDecorator.cs`: pinned type support composed into named types.
+- `TypesDecorator.cs`: optional type hierarchy layer (#148). `ITypes` answers
+  `TypeOf`, `IsType`, `ParentsOf`, `AncestorsOf`, `IsA` and `IsOf` through
+  sub-types `(S: T S)` and extra parents `(p: S T2)` marked by
+  `(m: Extends p)`, and writes with `Define`, `Extend` and `Instance`. It wraps
+  any `ILinks`, is not sealed, and its members are virtual; pinned types are
+  sub-types of its root.
 - `LinoDatabaseInput.cs`: `.lino` import.
 - `LinoDatabaseOutput.cs`: database export, change formatting, and structure
   formatting.
@@ -78,6 +84,9 @@ Key files:
 - `rust/src/query_processor_substitution.rs`: substitution preservation helpers.
 - `rust/src/link_reference_validator.rs`: reference validation and auto-create.
 - `rust/src/named_types.rs`: names sidecar storage.
+- `rust/src/types.rs`: the `Types` trait and `TypesDecorator`, the type
+  hierarchy layer of `TypesDecorator.cs`, over any `NamedTypeLinks`, with the
+  same test cases in `rust/tests/types_decorator_tests.rs`.
 - `rust/src/indexed_links.rs`: optional `IndexedLinksDecorator`, composed by
   `with_indexed_lookups()` / Rust `--indexed-lookups` under local data and names
   stores. It maintains pair/source/target indexes at raw mutation boundaries;

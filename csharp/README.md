@@ -157,6 +157,30 @@ A runnable version of this is
   shared/exclusive semantics match the Rust `storage::lock` module, so both
   implementations can guard the same database.
 
+### Type hierarchy
+
+`TypesDecorator<TLinkAddress>` wraps any `ILinks<TLinkAddress>` and keeps a type
+hierarchy with multiple inheritance in plain links (#148): the type of a link is
+its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)`, and an
+extra parent is a pair `(p: S T2)` marked by `(m: Extends p)`. Its queries stop
+on cycles.
+
+```csharp
+using var named = new NamedTypesDecorator<uint>("db.links");
+var types = new TypesDecorator<uint>(named); // finds or creates Type and Extends
+var doc = types.Define(types.Root);
+var @public = types.Define(types.Root);
+var note = types.Define(doc);
+var news = types.Define(note, doc, @public);
+var isPublic = types.IsA(types.Instance(news), @public); // true
+var parents = types.ParentsOf(news); // [note, doc, public]
+```
+
+The class is not sealed and every member is virtual. Queries read the
+decorated links and writes go through the decorator, so a derived decorator
+that checks writes sees them. With `new TypesDecorator<uint>(links, root,
+extends)` the pinned types `(1: 1 1)`, `(2: 1 2)`, … are sub-types of root `1`.
+
 ## Develop
 
 ```bash
