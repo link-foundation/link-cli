@@ -8,6 +8,7 @@ issue [#105](https://github.com/link-foundation/link-cli/issues/105).
 | File | What it shows |
 |------|---------------|
 | `run-interop.sh` | One port serves a database and the other port queries it, over the text protocol and every binary option |
+| `watch-changes.mjs` | One connection subscribes, another writes, and the first prints every `(notify: N)` push (issue [#150](https://github.com/link-foundation/link-cli/issues/150)) |
 | `README.md` | This file |
 
 ```bash
@@ -66,3 +67,27 @@ lists every such request with its reply.
 
 The wire formats are described in
 [`docs/case-studies/issue-105`](../../docs/case-studies/issue-105/README.md).
+
+## Watching changes
+
+```bash
+cargo build --manifest-path rust/Cargo.toml --bin clink
+node examples/tcp/watch-changes.mjs                       # the Rust server
+node examples/tcp/watch-changes.mjs csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+```
+
+prints
+
+```
+watching every link as subscription 1, links (1 1) as 2
+(notify: 1) () -> (1: 0 0)
+(notify: 1) (1: 0 0) -> (1: 1 1)
+(notify: 2) () -> (1: 1 1)
+(notify: 1) () -> (2: 2 2)
+(notify: 1) (1: 1 1) -> ()
+(notify: 2) (1: 1 1) -> ()
+links left: 2
+```
+
+The writer's own connection is never told about its writes, and the last
+`create` comes after `unsubscribe`, so nothing is printed for it.

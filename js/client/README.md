@@ -76,6 +76,9 @@ as its last argument:
 | `query(text)` | changes of a LiNo substitution query, references as the backend wrote them |
 | `exportLinks()` | every link, with names in place of named references |
 | `batch(operations, { window })` | per operation `ok`, `failed`, `unknown` or `not-sent`, and `completed` |
+| `subscribe(restriction?)` / `unsubscribe(n)` | the subscription number (from 1 on each connection) / nothing |
+| `receiveNotification()` | the next `{ subscription, changes }` pushed, or `null` when the deadline passes first |
+| `onNotification(listener)` | the function that removes the listener |
 | `requestText(text)` / `request(document)` | raw protocol access |
 | `require(...guarantees)` | throws `UnsupportedError` unless the backend offers them all |
 | `close()` / `[Symbol.asyncDispose]()` | releases what this client owns |
@@ -121,6 +124,31 @@ connection instead of buffering without end. `maxInFlight` (default 64) caps
 pipelined requests on a connection, the rest wait in a queue, and writes wait
 for the socket to drain.
 
+**Subscriptions** (`capabilities.subscriptions`, servers only).
+`subscribe(restriction)` asks the server to push the changes that *other*
+connections make to the links matching the restriction (the same patterns as
+`each`). The server pushes one `(notify: N)` document per subscription per
+write, followed by its `(before) (after)` changes. A side that does not match
+the restriction is `null`, so a link that moves into the pattern arrives as a
+creation and one that leaves it as a deletion. The transport tells pushes from
+replies by their first link, `(notify: N)`. Pipelined requests still match
+their replies. Pushes wait in a queue for `receiveNotification()`, or go to the
+`onNotification` listeners while any are registered. The server writes every
+push before any later reply on the connection, so once a reply arrives, every
+push from earlier writes is already received. A connection with more than
+`maxPendingPushes` (default 1024) unread pushes is closed, just as the server
+disconnects a subscriber that falls too far behind. Closing the connection ends
+its subscriptions.
+
+```js
+const watcher = await connectTcp('127.0.0.1:8080');
+const subscription = await watcher.subscribe([ANY, ANY, ANY]);
+// ... another connection runs create(0, 0) ...
+const { changes } = await watcher.receiveNotification({ timeout: 5000 });
+// changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }]
+await watcher.unsubscribe(subscription);
+```
+
 **Batches** pipeline up to `window` requests and stop sending after the first
 failure. A batch is **not a transaction**: what ran stays applied. A batch is
 verified when `completed` is `true`, or when a fresh client reads the result
@@ -150,6 +178,7 @@ rather than letting a batch look atomic.
 | `pagination` | no: `each`/`exportLinks` return every match in one reply | no | no |
 | `bulk` | `pipelined-non-atomic` | `pipelined-non-atomic` | `sequential-non-atomic` |
 | `sharding` | no: one store per server | no | no |
+| `subscriptions` | yes: `(notify: N)` pushes | yes | no: an in-process store has no other connection |
 | `duplicateLinks` | `true`: equal links stay apart | `false`: equal links merge, so `create` resolves to `null` | `true` |
 | set-name answers | the names-store link (`(link: 102)`) | the names-store link | the named link |
 
@@ -189,8 +218,9 @@ CLINK_WASM=../pkg \
 npm run benchmark -- --backend rust --records 300
 ```
 
-The conformance runner replays `docs/protocol/links-operations.txt`, the
-golden conversation that the Rust and C# test suites also replay. It covers
+The conformance runner replays `docs/protocol/links-operations.txt` and, over
+two connections, `docs/protocol/subscriptions.txt`, the golden conversations
+that the Rust and C# test suites also replay. It covers
 u32 addresses, duplicates, holes and reuse, append and restart through a fresh
 server process, aborted batches read back by a fresh client, a server stopped
 in the middle of a write, Unicode and LiNo quoting of names, size limits, a
