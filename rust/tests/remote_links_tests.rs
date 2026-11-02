@@ -264,6 +264,8 @@ fn operations_round_trip_through_their_documents() {
         LinksOperation::SetName(8, "a name".to_string()),
         LinksOperation::GetByName("a name".to_string()),
         LinksOperation::RemoveName(9),
+        LinksOperation::Subscribe(vec![None, Some(1), None]),
+        LinksOperation::Unsubscribe(10),
     ];
     for protocol in protocols() {
         for operation in &operations {
@@ -307,6 +309,8 @@ fn only_operation_shaped_documents_are_operations() {
         "(set-name: (1 (a b)))",
         "(get-by-name: (a b))",
         "(remove-name: 4294967296)",
+        "(subscribe: (1 2 3 4))",
+        "(unsubscribe: (1 2))",
     ] {
         assert!(
             matches!(parse(malformed), Err(ProtocolError::Malformed(_))),

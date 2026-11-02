@@ -18,6 +18,8 @@
 //! | `(set-name: (link 'text'))`      | `(link: N)`                            |
 //! | `(get-by-name: 'text')`          | `(link: N)`, or nothing                |
 //! | `(remove-name: link)`            | nothing                                |
+//! | `(subscribe: (index source target))` | `(subscription: N)`; later pushes of `(notify: N)` and its changes |
+//! | `(unsubscribe: N)`               | nothing                                |
 //!
 //! A restriction holds up to three parts, matched like the raw links
 //! interface matches a query: none matches every link, `(index)` one link,
@@ -30,6 +32,12 @@
 //! delete is one `((index: source target)) ()` per removed link, without the
 //! intermediate steps by which the store behind the server got there, which
 //! differ between the C# and the Rust stores.
+//!
+//! A subscription belongs to the connection that made it: once a connection
+//! sent `(subscribe: restriction)`, the server pushes it every later change
+//! another connection makes to a matching link, as `(notify: N)` followed by
+//! the `(before) (after)` lines of the change. A side that does not match is
+//! left empty, so a link that leaves the subscription arrives as a deletion.
 
 use super::error::{ProtocolError, ProtocolResult};
 use crate::changes_simplifier::simplify_changes;
@@ -70,6 +78,31 @@ pub enum LinksOperation {
     GetByName(String),
     /// Removes the name of a link.
     RemoveName(u32),
+    /// Asks a [`LinksServer`](super::LinksServer) to push the changes other
+    /// connections make to the links matching the restriction; the reply is
+    /// `(subscription: N)` and every later push a [`notification_document`].
+    ///
+    /// A subscription belongs to the connection that made it: only the server
+    /// can run it, so [`execute`](Self::execute) on a store fails.
+    Subscribe(Vec<Part>),
+    /// Stops a subscription of this connection; the reply is empty, even for
+    /// an unknown number.
+    Unsubscribe(u32),
+}
+
+/// A change a [`LinksServer`](super::LinksServer) pushed to a subscriber: the
+/// subscription it fits and its changes, a missing side being [`Link::null`].
+///
+/// Each side is the link as the subscription sees it: a side that does not fit
+/// the restriction (or that the subscriber may not read) is the null link, so a
+/// link that leaves the subscription arrives as a deletion and one that comes
+/// into it as a creation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LinksNotification {
+    /// The number the `subscribe` reply gave.
+    pub subscription: u32,
+    /// The `(before, after)` changes.
+    pub changes: Vec<Change>,
 }
 
 /// A `(before, after)` change; a missing side is [`Link::null`].
@@ -95,6 +128,8 @@ impl LinksOperation {
             ),
             Self::GetByName(name) => ("get-by-name", LiNo::Ref(name.clone())),
             Self::RemoveName(index) => ("remove-name", number(*index)),
+            Self::Subscribe(restriction) => ("subscribe", restriction_lino(restriction)),
+            Self::Unsubscribe(subscription) => ("unsubscribe", number(*subscription)),
         };
         vec![named(name, vec![argument])]
     }
@@ -138,6 +173,8 @@ impl LinksOperation {
                 _ => return Err(malformed_argument("get-by-name", argument)),
             },
             "remove-name" => Self::RemoveName(parse_number(argument)?),
+            "subscribe" => Self::Subscribe(parse_restriction(argument)?),
+            "unsubscribe" => Self::Unsubscribe(parse_number(argument)?),
             _ => return Ok(None),
         };
         Ok(Some(operation))
@@ -197,6 +234,9 @@ impl LinksOperation {
                 storage.save()?;
                 Vec::new()
             }
+            Self::Subscribe(_) | Self::Unsubscribe(_) => {
+                anyhow::bail!("subscriptions belong to a connection to a links server")
+            }
         })
     }
 }
@@ -240,6 +280,68 @@ pub fn parse_count(document: &[LiNo<String>]) -> ProtocolResult<u32> {
         },
         _ => Err(malformed_reply("count", document)),
     }
+}
+
+/// The number of a `(subscription: N)` reply.
+pub fn parse_subscription(document: &[LiNo<String>]) -> ProtocolResult<u32> {
+    match document {
+        [LiNo::Link {
+            id: Some(id),
+            values,
+        }] if id == "subscription" => match values.as_slice() {
+            [subscription] => parse_number(subscription),
+            _ => Err(malformed_reply("subscription", document)),
+        },
+        _ => Err(malformed_reply("subscription", document)),
+    }
+}
+
+/// The reply to a [`LinksOperation::Subscribe`]: `(subscription: N)`.
+pub fn subscription_document(subscription: u32) -> LinoDocument {
+    vec![named("subscription", vec![number(subscription)])]
+}
+
+/// Whether `document` is a push rather than a reply: its first link is
+/// `(notify: N)`.
+///
+/// No reply starts that way: the replies to operations name their first link
+/// after the operation's result or leave it unnamed, and the links a server
+/// lists are `(index: source target)`, with two values.
+pub fn is_notification(document: &[LiNo<String>]) -> bool {
+    notification_number(document).is_some()
+}
+
+fn notification_number(document: &[LiNo<String>]) -> Option<u32> {
+    match document.first()? {
+        LiNo::Link {
+            id: Some(id),
+            values,
+        } if id == "notify" => match values.as_slice() {
+            [LiNo::Ref(text)] if text.bytes().all(|byte| byte.is_ascii_digit()) => {
+                text.parse().ok()
+            }
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// A push: `(notify: N)` followed by one `(before) (after)` line per change,
+/// with plain numbers.
+pub fn notification_document(subscription: u32, changes: &[Change]) -> LinoDocument {
+    let mut document = vec![named("notify", vec![number(subscription)])];
+    document.extend(changes_document(changes));
+    document
+}
+
+/// The subscription and the changes of a [`notification_document`].
+pub fn parse_notification(document: &[LiNo<String>]) -> ProtocolResult<LinksNotification> {
+    let subscription =
+        notification_number(document).ok_or_else(|| malformed_reply("notify", document))?;
+    Ok(LinksNotification {
+        subscription,
+        changes: parse_changes(&document[1..])?,
+    })
 }
 
 /// The links of an `each` reply.
