@@ -561,6 +561,46 @@ Each call is one request, such as `(count: (* 1))`, `(update: (1 2 2))` or
 it touched. [`docs/protocol/links-operations.txt`](docs/protocol/links-operations.txt)
 records one whole conversation, and both ports replay it in their tests.
 
+### Subscribe to changes
+
+A connection can ask the server to push it every change that fits a
+pattern. `(subscribe: (* * *))` replies `(subscription: 1)`. After that,
+whenever another connection changes a link that fits, the server sends the
+subscriber `(notify: 1)` followed by one `(before) (after)` line for each
+change, without being asked:
+
+```
+A> (subscribe: (* * *))
+A< (subscription: 1)
+B> (create: (0 0))
+B< () ((1: 0 0))
+A< (notify: 1)
+A< () ((1: 0 0))
+```
+
+- **Numbering.** Subscription numbers count from 1 on each connection.
+- **Patterns.** The restriction is the same kind of pattern as in
+  `(each: ...)`.
+- **Own writes.** A connection is not told about its own writes.
+- **Partial matches.** A side of a change that does not fit the pattern is
+  left out, so a link that stops matching arrives as a deletion.
+- **Hidden links.** The server's readable predicate hides links from
+  subscribers in the same way: `LinksServerOptions.Readable` in C#,
+  `LinksServer::with_readable` in Rust.
+- **Stopping.** `(unsubscribe: 1)` replies nothing, and closing the
+  connection drops its subscriptions.
+- **Slow readers.** A subscriber that lets more than 1024 pushes pile up is
+  disconnected. Change the limit with `MaxPendingNotifications` or
+  `max_pending_notifications`.
+
+`RemoteLinks` (`Subscribe`, `Unsubscribe` and `ReceiveNotification`) and the JS
+client (`subscribe`, `unsubscribe`, `receiveNotification` and
+`onNotification`) keep pushes apart from replies.
+[`docs/protocol/subscriptions.txt`](docs/protocol/subscriptions.txt) records a
+whole conversation over two connections, and C#, Rust and the JS client replay
+it. To see it run, use
+[`examples/tcp/watch-changes.mjs`](examples/tcp/watch-changes.mjs).
+
 ### Use a served database from JavaScript or TypeScript
 
 [`@link-foundation/link-cli-client`](js/client/README.md) is the JS/TS
