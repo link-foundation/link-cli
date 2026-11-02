@@ -47,5 +47,21 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
                 Assert.Equal(new[] { new DoubletLink(1, 1, 1), new DoubletLink(2, 1, 2) }, GetAllLinks(links));
             });
         }
+
+        [Fact]
+        public void UpdateIntoAnUntouchedPairReportsOnlyTheMergedLinkTest()
+        {
+            RunTestWithLinks(links =>
+            {
+                ProcessQuery(links, "() ((1 1) (2 2))");
+
+                // (1: 1 1) is where (2) merges, but the update does not change it, so it is not reported
+                // (as in the Rust port), although the store reports it since Platform.Data.Doublets 0.18.6.
+                var changes = ReportedChanges(links, "((2: 2 2)) ((2: 1 1))");
+
+                Assert.Equal(new[] { (new DoubletLink(2, 2, 2), default(DoubletLink)) }, changes);
+                Assert.Equal(new[] { new DoubletLink(1, 1, 1) }, GetAllLinks(links));
+            });
+        }
     }
 }

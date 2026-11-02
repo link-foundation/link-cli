@@ -424,8 +424,9 @@ public sealed class RemoteLinksTests
     }
 
     /// <summary>
-    /// Restricting by source or target visits a link once even when both halves match, where
-    /// <c>UnitedMemoryLinks</c> visits a self-referencing link once per usage.
+    /// Restricting by source or target visits a link once even when both halves match, as
+    /// <c>UnitedMemoryLinks</c> does since Platform.Data.Doublets 0.18.6 (it used to visit a
+    /// self-referencing link once per usage).
     /// </summary>
     [Fact]
     public void ALinkUsingAnAddressTwiceMatchesOnce()
@@ -434,7 +435,7 @@ public sealed class RemoteLinksTests
         var point = local.Links.GetOrCreate(1u, 1u);
         Assert.Equal(1u, point);
         var any = local.Links.Constants.Any;
-        Assert.Equal(2u, local.Links.Count(new[] { any, point }));
+        Assert.Equal(1u, local.Links.Count(new[] { any, point }));
 
         using var server = new RunningServer();
         using var remote = server.Remote(new TextLinoProtocol());

@@ -623,6 +623,15 @@ impl<L: NamedTypeLinks> NamedTypeLinks for PersistentTransformationDecorator<L> 
         self.links.all_links()
     }
 
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        self.links.query_links(index, source, target)
+    }
+
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
         self.links.search(source, target)
     }

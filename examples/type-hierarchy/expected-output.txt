@@ -1,0 +1,26 @@
+# define
+(Type: Type Type)
+(Extends: Extends Extends)
+(User: Type User)
+(Doc: Type Doc)
+(Public: Type Public)
+(Note: Doc Note)
+(News: Note News)
+(8: News Public)
+(9: Extends 8)
+(today: News today)
+# types
+((Type: Type Type)) ((Type: Type Type))
+((Extends: Extends Extends)) ((Extends: Extends Extends))
+((User: Type User)) ((User: Type User))
+((Doc: Type Doc)) ((Doc: Type Doc))
+((Public: Type Public)) ((Public: Type Public))
+((Note: Doc Note)) ((Note: Doc Note))
+((News: Note News)) ((News: Note News))
+((today: News today)) ((today: News today))
+# values of News
+((8: News Public)) ((8: News Public))
+((today: News today)) ((today: News today))
+# parents marked by Extends
+((Extends: Extends Extends)) ((Extends: Extends Extends))
+((9: Extends 8)) ((9: Extends 8))

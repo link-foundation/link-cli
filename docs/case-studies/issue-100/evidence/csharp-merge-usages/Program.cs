@@ -1,4 +1,5 @@
-// Isolates `ILinksExtensions.MergeUsages` in Platform.Data.Doublets 0.18.1.
+// Isolates `ILinksExtensions.MergeUsages`, broken in Platform.Data.Doublets 0.18.1
+// and fixed in 0.18.6.
 //
 // The store below carries no decorators, so nothing but `MergeUsages` can
 // touch the links: whatever the dump prints is what `MergeUsages` wrote.
@@ -58,16 +59,15 @@ finally
 {
     File.Delete(databaseFilename);
 }
-// Exit 0 while the defect reproduces -- this harness records upstream
-// behaviour rather than asserting it. It turns red once both usages survive
-// the merge intact, which is the signal to drop the parity exemption in
-// ../cli-parity/run.sh and re-check the pinned Platform.Data.Doublets version.
-if (reproduced == 2)
+// Platform.Data.Doublets 0.18.6 repairs both usages, so this harness now
+// guards the fix: exit 0 while both usages survive the merge intact, and
+// non-zero if the 0.18.1 defect (Data.Doublets#515) ever comes back.
+if (reproduced == 0)
 {
-    Console.WriteLine("MergeUsages still corrupts both kinds of usage.");
+    Console.WriteLine("MergeUsages repoints both kinds of usage correctly.");
     return 0;
 }
-Console.WriteLine("MergeUsages no longer matches the recorded behaviour -- revisit the case study.");
+Console.WriteLine("MergeUsages corrupts a usage again -- revisit the case study.");
 return 1;
 
 static string Dump(ILinks<uint> links)

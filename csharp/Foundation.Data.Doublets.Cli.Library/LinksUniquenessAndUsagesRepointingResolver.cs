@@ -15,6 +15,12 @@ namespace Foundation.Data.Doublets.Cli
     /// <c>MergeUsages</c> in Platform.Data.Doublets 0.18.1 writes <c>(index: a, source: b, target: 0)</c>
     /// where it means <c>(source: a, target: b)</c>, so a usage loses its target instead of being re-pointed
     /// (https://github.com/linksplatform/Data.Doublets/issues/515).
+    /// <para>
+    /// A merge reports the re-pointed usages and the deletion of the merged-away link, nothing else. Since
+    /// Platform.Data.Doublets 0.18.6 the base resolver also ends a merge by reporting the surviving link unchanged;
+    /// that notice is not passed on, so a merge reports the same changes as in the Rust port, where
+    /// <c>clink --changes</c> and the protocol server do not list a link the write did not touch.
+    /// </para>
     /// </remarks>
     public class LinksUniquenessAndUsagesRepointingResolver<TLinkAddress> : LinksUniquenessResolver<TLinkAddress>
         where TLinkAddress : IUnsignedNumber<TLinkAddress>
@@ -28,8 +34,27 @@ namespace Foundation.Data.Doublets.Cli
             {
                 handlerState.Apply(RepointUsages(oldLinkAddress, newLinkAddress, handlerState.Handler));
             }
-            handlerState.Apply(base.ResolveAddressChangeConflict(oldLinkAddress, newLinkAddress, handlerState.Handler));
+            handlerState.Apply(base.ResolveAddressChangeConflict(oldLinkAddress, newLinkAddress, WithoutSurvivorNotice(newLinkAddress, handlerState.Handler)));
             return handlerState.Result;
+        }
+
+        /// <summary>
+        /// Passes every change on to <paramref name="handler"/> except the one that reports the link at
+        /// <paramref name="survivor"/> unchanged: the base resolver only deletes the merged-away link, so a
+        /// survivor-to-survivor change from it is the notice it ends a merge with, not a change.
+        /// </summary>
+        private WriteHandler<TLinkAddress>? WithoutSurvivorNotice(TLinkAddress survivor, WriteHandler<TLinkAddress>? handler)
+        {
+            if (handler is null)
+            {
+                return null;
+            }
+            return (before, after) =>
+                before is not null && after is not null
+                && _facade.GetIndex(before) == survivor
+                && before.SequenceEqual(after)
+                    ? _constants.Continue
+                    : handler(before, after);
         }
 
         /// <summary>
