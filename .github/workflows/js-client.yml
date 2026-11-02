@@ -70,7 +70,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Verify npm OIDC exchange
         run: node .github/scripts/verify-npm-trust.mjs
@@ -94,7 +94,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
           cache: npm
           cache-dependency-path: js/client/package-lock.json
 
@@ -131,7 +131,7 @@ jobs:
           rustup default stable
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack --version 0.15.0 --locked
+        run: cargo install wasm-pack --version 0.15.1 --locked
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
@@ -141,7 +141,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -220,7 +220,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Check whether this version is published
@@ -265,10 +265,9 @@ jobs:
         env:
           VERSION: ${{ steps.check.outputs.version }}
         run: | # zizmor: ignore[adhoc-packages] -- exact pinned release, see below
-          # Trusted publishing needs npm 11.5.1+, newer than the npm bundled
-          # with Node.js 24. Pinned to an exact release, and to the 11 line
-          # because npm 12 requires Node.js ^24.15.0, which the runner's
-          # cached 24.x need not satisfy.
+          # Trusted publishing needs npm 11.5.1+. The npm bundled with
+          # Node.js 26 is new enough, but the publishing npm stays pinned to an
+          # exact release so a publish never depends on the runner's cache.
           npm install --global npm@11.21.1
           if npm publish --access public --provenance --loglevel verbose; then
             exit 0

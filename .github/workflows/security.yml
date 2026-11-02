@@ -120,7 +120,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+      - uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
         with:
           tool: cargo-audit@0.22.2
 
@@ -148,7 +148,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Audit current lock
         working-directory: js
@@ -175,7 +175,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Run secretlint
         run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"

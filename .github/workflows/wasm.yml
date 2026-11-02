@@ -57,12 +57,12 @@ jobs:
           rustup default stable
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack --version 0.15.0 --locked
+        run: cargo install wasm-pack --version 0.15.1 --locked
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
           cache: npm
           cache-dependency-path: js/package-lock.json
 
