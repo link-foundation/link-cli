@@ -94,9 +94,51 @@ namespace Foundation.Data.Doublets.Cli.Tests
 
             Assert.Contains((new DoubletLink(surviving, surviving, merged), new DoubletLink(surviving, surviving, surviving)), changes);
             Assert.Contains((new DoubletLink(merged, 0, 0), new DoubletLink(0, 0, 0)), changes);
-            // Platform.Data.Doublets 0.18.6 ends a merge by reporting the link it merged into, unchanged.
-            var survivor = new DoubletLink(surviving, surviving, surviving);
-            Assert.Equal((survivor, survivor), changes[^1]);
+            Assert.DoesNotContain(changes, change => change.Before == change.After);
+        }
+
+        [Fact]
+        public void AMergeIntoAnUntouchedLinkReportsOnlyTheMergedLink()
+        {
+            // Platform.Data.Doublets 0.18.6 ends a merge by reporting the surviving link unchanged; the resolver does
+            // not pass that on, so the survivor, which the update did not touch, is not among the changes.
+            var surviving = Point();
+            var merged = Point();
+            var changes = new List<(DoubletLink Before, DoubletLink After)>();
+
+            _links.Update(
+                new DoubletLink(merged, _links.Constants.Any, _links.Constants.Any),
+                new DoubletLink(merged, surviving, surviving),
+                (before, after) =>
+                {
+                    changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                    return _links.Constants.Continue;
+                });
+
+            Assert.NotEmpty(changes);
+            Assert.All(changes, change => Assert.Equal(merged, change.Before.Index));
+            Assert.Equal(new[] { new DoubletLink(surviving, surviving, surviving) }, AllLinks());
+        }
+
+        [Fact]
+        public void AMergeStillReportsBreakFromTheHandler()
+        {
+            var surviving = Point();
+            var merged = Point();
+            var changes = new List<(DoubletLink Before, DoubletLink After)>();
+
+            var result = _links.Update(
+                new DoubletLink(merged, _links.Constants.Any, _links.Constants.Any),
+                new DoubletLink(merged, surviving, surviving),
+                (before, after) =>
+                {
+                    changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                    return _links.Constants.Break;
+                });
+
+            Assert.Equal(_links.Constants.Break, result);
+            Assert.All(changes, change => Assert.Equal(merged, change.Before.Index));
+            Assert.Equal(new[] { new DoubletLink(surviving, surviving, surviving) }, AllLinks());
         }
 
         [Fact]
