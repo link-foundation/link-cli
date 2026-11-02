@@ -9,3 +9,7 @@ the connection drops its subscriptions. `LinksServerOptions.Readable` hides link
 unreadable arrives as a deletion) and `LinksServerOptions.MaxPendingNotifications` disconnects a subscriber that stops
 reading. `LinksClient` sets pushes aside for `ReceiveNotification`, and `RemoteLinks` gains `Subscribe`, `Unsubscribe`
 and `ReceiveNotification`.
+
+Updated Platform.Data.Doublets to 0.18.7 and System.CommandLine to 2.0.14. A merge into an existing doublet still
+reports only the links it changed: the surviving link, which Platform.Data.Doublets 0.18.7 now reports as unchanged,
+does not appear in `--changes`, protocol replies or subscription notifications.

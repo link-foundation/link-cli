@@ -97,6 +97,31 @@ namespace Foundation.Data.Doublets.Cli.Tests
             Assert.Equal(merged, changes[^1].Before.Index);
         }
 
+        /// <summary>
+        /// A merge leaves the surviving link as it was, so it is not reported as changed, although the base
+        /// resolver of Platform.Data.Doublets 0.18.7 reports it as <c>(survivor) → (survivor)</c>.
+        /// </summary>
+        [Fact]
+        public void AMergeDoesNotReportTheUntouchedSurvivor()
+        {
+            var surviving = Point();
+            var merged = Store(0, 0);
+            var changes = new List<(DoubletLink Before, DoubletLink After)>();
+
+            _links.Update(
+                new DoubletLink(merged, _links.Constants.Any, _links.Constants.Any),
+                new DoubletLink(merged, surviving, surviving),
+                (before, after) =>
+                {
+                    changes.Add((new DoubletLink(before), new DoubletLink(after)));
+                    return _links.Constants.Continue;
+                });
+
+            Assert.DoesNotContain(changes, change => change.Before.Index == surviving || change.After.Index == surviving);
+            Assert.Equal(new DoubletLink(0, 0, 0), changes[^1].After);
+            Assert.Equal(new[] { new DoubletLink(surviving, surviving, surviving) }, AllLinks());
+        }
+
         [Fact]
         public void AUsageOfTheMergedLinkInBothHalvesIsRepointedInOneUpdate()
         {

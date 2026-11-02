@@ -195,6 +195,14 @@ whose `LinksUniquenessAndUsagesRepointingResolver` re-points usages itself, so
 this scenario now agrees and the harness has no exemption left (see
 [the issue #105 case study, §6.3](../issue-105/README.md#63-behaviour-differences-between-the-ports-query-processors)).
 
+**Update (issue #150):** upstream fixed `MergeUsages` in the 0.18.x releases
+that followed 0.18.1, and
+[Data.Doublets#515](https://github.com/linksplatform/Data.Doublets/issues/515)
+is closed. With `Platform.Data.Doublets` 0.18.6 and 0.18.7, `run.sh` reports
+both usages re-pointed correctly (`(4: 2 3)` and `(5: 3 2)`) and exits
+non-zero, as it was written to once the defect is gone. The library keeps its
+own repointing resolver, which updates both halves of a usage at once.
+
 ### 5.6 The constants differ, and it is unreachable in practice
 
 `doublets` 0.5.0 re-exports `platform-data` 2.0.0's `LinksConstants`.

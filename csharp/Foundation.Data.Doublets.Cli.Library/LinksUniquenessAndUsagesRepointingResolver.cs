@@ -11,10 +11,20 @@ namespace Foundation.Data.Doublets.Cli
     /// re-pointing every link that used the merged-away address at the surviving one.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Replaces <see cref="LinksCascadeUniquenessAndUsagesResolver{TLinkAddress}"/>, whose
     /// <c>MergeUsages</c> in Platform.Data.Doublets 0.18.1 writes <c>(index: a, source: b, target: 0)</c>
     /// where it means <c>(source: a, target: b)</c>, so a usage loses its target instead of being re-pointed
-    /// (https://github.com/linksplatform/Data.Doublets/issues/515).
+    /// (https://github.com/linksplatform/Data.Doublets/issues/515). Releases since 0.18.6 fix that, but
+    /// still re-point the source and the target of a usage in two separate updates.
+    /// </para>
+    /// <para>
+    /// In Platform.Data.Doublets 0.18.7 the base resolver ends every conflict by reporting the surviving
+    /// link as unchanged, <c>(survivor) → (survivor)</c>, so that address-returning extensions get the
+    /// survivor as their result. A merge leaves the survivor as it was, so that report would show up as a
+    /// change the query never made (in <c>--changes</c>, protocol replies and subscription notifications)
+    /// and that the Rust store never reports; this resolver deletes the merged-away link itself instead.
+    /// </para>
     /// </remarks>
     public class LinksUniquenessAndUsagesRepointingResolver<TLinkAddress> : LinksUniquenessResolver<TLinkAddress>
         where TLinkAddress : IUnsignedNumber<TLinkAddress>
@@ -27,8 +37,11 @@ namespace Foundation.Data.Doublets.Cli
             if (oldLinkAddress != newLinkAddress)
             {
                 handlerState.Apply(RepointUsages(oldLinkAddress, newLinkAddress, handlerState.Handler));
+                if (_links.Exists(oldLinkAddress))
+                {
+                    handlerState.Apply(_facade.Delete(oldLinkAddress, handlerState.Handler));
+                }
             }
-            handlerState.Apply(base.ResolveAddressChangeConflict(oldLinkAddress, newLinkAddress, handlerState.Handler));
             return handlerState.Result;
         }
 
