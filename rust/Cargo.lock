@@ -152,9 +152,9 @@ checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "doublets"
-version = "0.8.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5366b5f09ff97e65121f948f03ca55db186bacb4d1af1e42ba1d5a22f71bccd"
+checksum = "58865196554a6e9ffb347670fb445478b69f27b5f9450f3f645303f104fa74a2"
 dependencies = [
  "cfg-if",
  "leak_slice",
@@ -237,9 +237,9 @@ checksum = "39c29a617ce3df32c08497bdc1ab6e2376e0b17948ac166a2fbe5977c5954cd9"
 
 [[package]]
 name = "links-notation"
-version = "0.27.1"
+version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9f029afccea88d0172f161424435d81ddedf2db29505de317c7b5fa55ef1cf4"
+checksum = "23ea995916b72531e127cb553aff8a5cf255c15e1d02a063d6d2e3acd587b722"
 dependencies = [
  "links-notation-macro",
  "nom",
@@ -346,9 +346,9 @@ dependencies = [
 
 [[package]]
 name = "platform-mem"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27cff7c92440ac926c8c91ea3151db6e52a262f602d0c157f254e422fc15b12"
+checksum = "b0d53b63c04591c28fa7c495a797c2c37801a008eeecd2e072908c30013fa915"
 dependencies = [
  "allocator-api2",
  "memmap2",
@@ -367,9 +367,9 @@ dependencies = [
 
 [[package]]
 name = "platform-trees"
-version = "0.3.4"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40e25a531617fa762c8505826c930f6c1cfcc226f63dea09882b56ae0b8ed078"
+checksum = "9979e14bb2788f13943906daa7ea9695a2b1dfcec64d9eb7302e775ffe475c5a"
 dependencies = [
  "platform-num",
 ]
@@ -400,9 +400,9 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "rustix"
-version = "1.1.5"
+version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891efababe418670775f199f0d233d84843c227a0949a883ce15b37c78d6629d"
+checksum = "e5e76742e5294153d4dde1207dbec5bdd81eef6fabdc0d2118babadabfd858aa"
 dependencies = [
  "bitflags",
  "errno",
