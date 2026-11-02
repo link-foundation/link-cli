@@ -93,8 +93,10 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 });
 
             Assert.Contains((new DoubletLink(surviving, surviving, merged), new DoubletLink(surviving, surviving, surviving)), changes);
-            Assert.Equal(new DoubletLink(0, 0, 0), changes[^1].After);
-            Assert.Equal(merged, changes[^1].Before.Index);
+            Assert.Contains((new DoubletLink(merged, 0, 0), new DoubletLink(0, 0, 0)), changes);
+            // Platform.Data.Doublets 0.18.6 ends a merge by reporting the link it merged into, unchanged.
+            var survivor = new DoubletLink(surviving, surviving, surviving);
+            Assert.Equal((survivor, survivor), changes[^1]);
         }
 
         [Fact]
