@@ -299,6 +299,63 @@ public sealed class LinoConnection : IDisposable
     /// <summary>Receives one document; <c>null</c> when the peer closed the stream.</summary>
     public IReadOnlyList<LinoLink>? Receive() => LinoProtocolException.Wrap(() => Protocol.ReadDocument(_reader));
 
+    /// <summary>
+    /// Waits up to <paramref name="timeout"/> for the peer to send something; true when a message (or the end of the
+    /// stream) is ready for <see cref="Receive"/>, false when the time ran out with nothing to read.
+    /// </summary>
+    /// <remarks>
+    /// A stream that cannot time out waits until something arrives. <see cref="Timeout.InfiniteTimeSpan"/> waits
+    /// forever.
+    /// </remarks>
+    public bool WaitForMessage(TimeSpan timeout)
+    {
+        if (!_stream.CanTimeout)
+        {
+            LinoProtocolException.Wrap(() => _reader.PeekByte());
+            return true;
+        }
+        var previous = _stream.ReadTimeout;
+        try
+        {
+            // A buffered byte is answered without reading, so the timeout only applies to an empty buffer.
+            _stream.ReadTimeout = timeout == Timeout.InfiniteTimeSpan
+                ? Timeout.Infinite
+                : (int)Math.Clamp(Math.Ceiling(timeout.TotalMilliseconds), 1, int.MaxValue);
+            _reader.PeekByte();
+            return true;
+        }
+        catch (Exception error) when (TimedOut(error))
+        {
+            return false;
+        }
+        catch (Exception error) when (error is IOException or ObjectDisposedException or BinaryNotationException)
+        {
+            throw new LinoProtocolException(LinoProtocolErrorKind.Io, error.Message, error);
+        }
+        finally
+        {
+            try
+            {
+                _stream.ReadTimeout = previous;
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
+    }
+
+    private static bool TimedOut(Exception? error)
+    {
+        for (; error is not null; error = error.InnerException)
+        {
+            if (error is System.Net.Sockets.SocketException { SocketErrorCode: System.Net.Sockets.SocketError.TimedOut or System.Net.Sockets.SocketError.WouldBlock })
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>Sends <paramref name="document"/> and waits for the reply.</summary>
     public IReadOnlyList<LinoLink> Request(IReadOnlyList<LinoLink> document)
     {

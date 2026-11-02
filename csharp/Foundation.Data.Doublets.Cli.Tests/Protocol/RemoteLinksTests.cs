@@ -317,6 +317,9 @@ public sealed class RemoteLinksTests
             new LinksOperation.SetName(8, "a name"),
             new LinksOperation.GetByName("a name"),
             new LinksOperation.RemoveName(9),
+            new LinksOperation.Subscribe(LinksRestriction.Of(null, 1, null)),
+            new LinksOperation.Subscribe(LinksRestriction.All),
+            new LinksOperation.Unsubscribe(10),
         };
         foreach (var protocol in RunningServer.Protocols())
         {
@@ -353,6 +356,8 @@ public sealed class RemoteLinksTests
     [InlineData("(set-name: (1 (a b)))")]
     [InlineData("(get-by-name: (a b))")]
     [InlineData("(remove-name: 4294967296)")]
+    [InlineData("(subscribe: (1 2 3 4))")]
+    [InlineData("(unsubscribe: (1 2))")]
     public void MalformedOperationsAreRejected(string query)
     {
         var error = Assert.Throws<LinoProtocolException>(() => LinksOperation.FromDocument(LinoFormat.ParseDocument(query)));
