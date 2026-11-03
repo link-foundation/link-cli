@@ -79,15 +79,15 @@ jobs:
       # Annotations instead of SARIF, so findings fail the job loudly without
       # depending on code scanning. `version` is named because the action's
       # default is its own frozen table, not the latest zizmor. To reproduce:
-      #   pipx run zizmor==1.31.1 --config .github/zizmor.yml .github
+      #   pipx run zizmor==1.32.0 --config .github/zizmor.yml .github
       - name: Audit workflow files
-        uses: zizmorcore/zizmor-action@v0.8.0
+        uses: zizmorcore/zizmor-action@v0.8.1
         with:
           inputs: .github
           advanced-security: false
           annotations: true
           config: .github/zizmor.yml
-          version: 1.31.1
+          version: 1.32.0
 
       # The audits that cover container image references (`unpinned-images`
       # among them) are pedantic-only, so the hash-pin policy is not enforced
@@ -97,7 +97,7 @@ jobs:
       - name: Audit for pedantic-only high-severity findings
         timeout-minutes: 5
         run: |
-          pipx run zizmor==1.31.1 --config .github/zizmor.yml \
+          pipx run zizmor==1.32.0 --config .github/zizmor.yml \
             --persona pedantic --min-severity high --min-confidence high \
             .github
 
