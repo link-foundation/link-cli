@@ -53,6 +53,17 @@ pub trait NamedTypeLinks {
     fn reference_exists(&mut self, id: u32) -> bool {
         self.exists(id)
     }
+    /// Whether `id` is an address of this store, so a link created there
+    /// ([`Self::ensure_created`], the undo of a delete) belongs in it.
+    ///
+    /// Every address is, but in a store made of others: a
+    /// [`RemapLinks`](crate::RemapLinks) claims the addresses of its map and a
+    /// [`UnionLinks`](crate::UnionLinks) those a member claims, so a union
+    /// recreates a link in the member its address is of (issue #149).
+    fn claims(&mut self, id: u32) -> bool {
+        let _ = id;
+        true
+    }
     /// The addresses the next `count` links created in the store get.
     ///
     /// A store reuses the address freed last first, so the lowest free one is
@@ -577,6 +588,10 @@ impl<L: NamedTypeLinks + ?Sized> NamedTypeLinks for &mut L {
 
     fn reference_exists(&mut self, id: u32) -> bool {
         (**self).reference_exists(id)
+    }
+
+    fn claims(&mut self, id: u32) -> bool {
+        (**self).claims(id)
     }
 
     fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {
