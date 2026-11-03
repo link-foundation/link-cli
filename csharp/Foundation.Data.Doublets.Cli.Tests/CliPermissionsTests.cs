@@ -82,12 +82,30 @@ public sealed class CliPermissionsTests : IDisposable
         var seen = await Clink.RunAsync(Permissions(false, "--after"));
         Clink.AssertSucceeded(seen);
         Assert.Equal("", seen.Stdout);
-        var refused = await Clink.RunAsync(Permissions(false, "() ((0 0))"));
+        var refused = await Clink.RunAsync(Permissions(false, "() ((1 2))"));
         Assert.Equal(1, refused.ExitCode);
         Assert.Contains("Forbidden: create", refused.Stderr, StringComparison.Ordinal);
         var unknown = await Clink.RunAsync(Permissions(false, "--subject", "nobody", "--after"));
         Assert.Equal(1, unknown.ExitCode);
         Assert.Contains("Unknown subject 'nobody'", unknown.Stderr, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task TokenCommandsNeedATokenTableAndASubject()
+    {
+        MakeWorld(separateRules: false);
+        var noTable = await Clink.RunAsync("--db", Data, "--subject", "alice", "--grant-token", "x");
+        Assert.Equal(1, noTable.ExitCode);
+        Assert.Contains("--grant-token and --revoke-token need --tokens.", noTable.Stderr, StringComparison.Ordinal);
+        var noSubject = await Clink.RunAsync("--db", Data, "--tokens", "self", "--grant-token", "x");
+        Assert.Equal(1, noSubject.ExitCode);
+        Assert.Contains("--grant-token needs a --subject.", noSubject.Stderr, StringComparison.Ordinal);
+        var unknown = await Clink.RunAsync("--db", Data, "--tokens", "self", "--revoke-token", "x");
+        Clink.AssertSucceeded(unknown);
+        Assert.Equal("Unknown token.\n", unknown.Stdout);
+        var triggers = await Clink.RunAsync(Permissions(false, "--always", "() ((1 1))"));
+        Assert.Equal(1, triggers.ExitCode);
+        Assert.Contains("--always, --once and --never cannot be used with --permissions.", triggers.Stderr, StringComparison.Ordinal);
     }
 
     [Theory]
