@@ -23,8 +23,13 @@
 //! - `named_type_links` - The storage interface every layer is written against
 //! - `named_types`, `pinned_types` - Named and pinned type decorators
 //! - `persistent_transformations` - Persistent transformation triggers
+//! - `permissions` - An optional permission layer with rules stored in links
+//! - `undoable_links` - Writes kept to be undone, so a failed request leaves nothing
 //! - `types` - A type hierarchy with sub-types and multiple inheritance
 //! - `transactions`, `version_control` - Reversible transitions, branches and tags
+//! - `union_links` - Many networks seen as one, the first member shadowing the rest
+//! - `remap_links` - A network under other addresses: an offset or a table
+//! - `external_ids` - The ids of other systems (UUIDs, URLs) bound to links
 //! - `cli` - Argument parsing, so a custom tool can accept the same options
 //!
 //! # Extending
@@ -38,6 +43,7 @@
 pub mod changes_simplifier;
 pub mod cli;
 pub mod error;
+pub mod external_ids;
 pub mod hybrid_reference;
 pub mod indexed_links;
 pub mod link;
@@ -50,6 +56,7 @@ pub mod named_links;
 pub mod named_type_links;
 pub mod named_types;
 pub mod parser;
+pub mod permissions;
 pub mod persistent_transformations;
 pub mod pinned_types;
 pub mod protocol;
@@ -58,11 +65,14 @@ mod query_parser;
 pub mod query_processor;
 pub mod query_processor_substitution;
 pub mod query_types;
+pub mod remap_links;
 pub mod sequences;
 pub mod storage;
 pub mod transactions;
 pub mod types;
+pub mod undoable_links;
 pub mod unicode_string_storage;
+pub mod union_links;
 pub mod version_control;
 
 /// The `doublets` crate this library is built on, re-exported so
@@ -74,6 +84,7 @@ pub use doublets;
 // Re-export main types for easy access
 pub use changes_simplifier::simplify_changes;
 pub use error::LinkError;
+pub use external_ids::{LinksExternalIds, EXTERNAL_ID_NAME};
 pub use hybrid_reference::{external_reference, external_reference_value, HybridReference};
 pub use indexed_links::IndexedLinksDecorator;
 pub use link::{DoubletsLink, GenericLink, Link};
@@ -85,6 +96,10 @@ pub use named_links::NamedLinks;
 pub use named_type_links::NamedTypeLinks;
 pub use named_types::{NamedTypes, NamedTypesDecorator};
 pub use parser::Parser;
+pub use permissions::{
+    AccessPolicy, Forbidden, LinksTokenTable, PermissionAccess, PermissionMarkers,
+    PermissionPolicy, PermissionsDecorator,
+};
 pub use persistent_transformations::{
     make_triggers_database_filename, PersistentTransformation, PersistentTransformationDecorator,
     PersistentTransformationKind, PersistentTransformationQuery, TriggerStore,
@@ -96,10 +111,11 @@ pub use protocol::{
 };
 pub use query_options::QueryOptions;
 pub use query_processor::{Changes, QueryProcessor};
+pub use remap_links::{AddressMap, AddressTable, OffsetAddressMap, RemapLinks};
 pub use storage::{
     decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
-    LinksStorage, LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore,
-    StorageRevision,
+    LinksStorage, LinksStorageRef, LockMode, NamedLinksStorage, PersistentFileMapped,
+    ResolvedFileMappedUnitStore, StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
@@ -107,5 +123,7 @@ pub use transactions::{
     TransitionKind, TransitionLogStore,
 };
 pub use types::{ensure_point, TypeMarkers, Types, TypesDecorator, EXTENDS_NAME, ROOT_TYPE_NAME};
+pub use undoable_links::{LinkChange, LinksUndoLog, UndoableLinksDecorator};
 pub use unicode_string_storage::UnicodeStringStorage;
+pub use union_links::{UnionLinks, UnionMember};
 pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};

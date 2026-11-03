@@ -17,7 +17,7 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 /// The subscriptions are read and changed under the server's store lock only.
 /// </para>
 /// </remarks>
-internal sealed class LinksSession
+internal sealed class LinksConnection
 {
     private readonly object _lock = new();
     private readonly Queue<(IReadOnlyList<LinoLink> Document, MessageFormat Format, bool IsReply)> _outbox = new();
@@ -31,7 +31,7 @@ internal sealed class LinksSession
 
     /// <param name="connection">Disposed when the session closes, which ends both of its threads.</param>
     /// <param name="maxPendingNotifications">Pushes the session holds before it gives up on a reader too slow to take them.</param>
-    public LinksSession(IDisposable connection, int maxPendingNotifications)
+    public LinksConnection(IDisposable connection, int maxPendingNotifications)
     {
         _connection = connection;
         _maxPendingNotifications = maxPendingNotifications;

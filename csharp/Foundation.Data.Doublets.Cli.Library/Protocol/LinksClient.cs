@@ -108,6 +108,21 @@ public sealed class LinksClient : IDisposable
     /// <summary>Like <see cref="Query"/>, returning the reply as canonical text.</summary>
     public string QueryText(string query) => LinoFormat.FormatDocument(Query(query));
 
+    /// <summary>
+    /// Sends <c>(auth: token)</c>: every later request of the connection runs as the subject the server gives
+    /// the token, which this returns (issue #149). A token the server does not know raises a
+    /// <see cref="LinoProtocolErrorKind.Remote"/> error.
+    /// </summary>
+    public uint Authenticate(string token)
+    {
+        ArgumentNullException.ThrowIfNull(token);
+        var reply = Request(new[] { LinoFormat.Link("auth", new List<LinoLink> { LinoFormat.Reference(token) }) });
+        return reply is [{ Id: "subject", Values: [{ Values: null, Id: { } subject }] }]
+            && uint.TryParse(subject, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var index)
+            ? index
+            : throw LinoProtocolException.Malformed($"expected a subject reply, found {LinoFormat.FormatDocument(reply)}");
+    }
+
     /// <inheritdoc/>
     public void Dispose()
     {

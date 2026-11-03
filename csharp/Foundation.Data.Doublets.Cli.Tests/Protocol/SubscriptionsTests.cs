@@ -117,6 +117,60 @@ public sealed class SubscriptionsTests
     }
 
     [Fact]
+    public void ASubscriberIsPushedOnlyWhatItsSubjectMayRead()
+    {
+        // Issue #149: with permissions every connection is a session of its subject, and its pushes are filtered by them.
+        PermissionsDecoratorTests.WithWorld(w =>
+        {
+            var server = LinksServer.Bind("127.0.0.1", 0, new LinksServerOptions
+            {
+                Permissions = w.Policy,
+                Authenticate = token => w.V.TryGetValue(token, out var subject) ? subject : null,
+            });
+            Exception? failure = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    server.Serve(w.Links);
+                }
+                catch (Exception error)
+                {
+                    failure = error;
+                }
+            })
+            { IsBackground = true };
+            thread.Start();
+            try
+            {
+                var (alice, boss, note, secret) = (w.V["alice"], w.V["boss"], w.V["note"], w.V["secret"]);
+                var aliceClient = LinksClient.Connect("127.0.0.1", server.LocalEndPoint.Port, new TextLinoProtocol());
+                Assert.Equal(alice, aliceClient.Authenticate("alice"));
+                using var subscriber = new RemoteLinks(aliceClient);
+                using var writer = LinksClient.Connect("127.0.0.1", server.LocalEndPoint.Port, new TextLinoProtocol());
+                Assert.Equal(boss, writer.Authenticate("boss"));
+                subscriber.Subscribe(LinksRestriction.All);
+
+                // alice may not read the secret: a change she cannot see is not pushed to her at all...
+                writer.QueryText($"(update: ({secret} {w.T["Secret"]} {alice}))");
+                // ...while one to a note she may read is.
+                writer.QueryText($"(update: ({note} {w.T["Note"]} {alice}))");
+
+                Assert.Equal(
+                    new LinksNotification(1, new[] { (new DoubletLink(note, w.T["Note"], note), new DoubletLink(note, w.T["Note"], alice)) }),
+                    subscriber.ReceiveNotification(PushTimeout));
+                Assert.Null(subscriber.ReceiveNotification(SilenceTimeout));
+            }
+            finally
+            {
+                server.Shutdown();
+                Assert.True(thread.Join(TimeSpan.FromSeconds(30)), "the server did not stop");
+            }
+            Assert.Null(failure);
+        });
+    }
+
+    [Fact]
     public void ASubscriberSeesOnlyWhatItMayRead()
     {
         // A link whose source is 2 is hidden: one that becomes hidden is gone, one that stops being hidden is new.

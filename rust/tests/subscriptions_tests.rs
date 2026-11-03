@@ -3,6 +3,8 @@
 //! to, and only those.
 
 mod common;
+#[path = "common/permissions_world.rs"]
+mod world;
 
 use common::{protocols, RunningServer};
 use link_cli::protocol::links_operations::{
@@ -11,9 +13,10 @@ use link_cli::protocol::links_operations::{
 };
 use link_cli::protocol::{
     execute_request, format_document, parse_document, LinksNotification, LinksOperation,
-    ProtocolError, RemoteLinks, ServerOptions, TextLinoProtocol,
+    LinksSessions, ProtocolError, RemoteLinks, ServerOptions, TextLinoProtocol,
 };
 use link_cli::{Link, LinkStorage, NamedTypeLinks, QueryProcessor};
+use std::sync::mpsc;
 use std::time::Duration;
 use tempfile::NamedTempFile;
 
@@ -184,6 +187,54 @@ fn a_subscriber_sees_only_what_it_may_read() {
     assert_eq!(next(), pushed(Link::new(1, 0, 0), Link::null()));
     // A change between two hidden states is not pushed at all.
     assert_eq!(next(), pushed(Link::null(), Link::new(1, 1, 1)));
+    assert_eq!(
+        subscriber.receive_notification(SILENCE_TIMEOUT).unwrap(),
+        None
+    );
+}
+
+#[test]
+fn a_subscriber_is_pushed_only_what_its_subject_may_read() {
+    // Issue #149: with permissions every connection is a session of its
+    // subject, and its pushes are filtered by them.
+    let (sent, received) = mpsc::channel();
+    let server = RunningServer::start_serving(ServerOptions::default(), move |server, _| {
+        let mut w = world::World::new(false).unwrap();
+        let v = w.v.clone();
+        sent.send((w.t.clone(), w.v.clone())).unwrap();
+        let mut sessions = LinksSessions::with_permissions(&mut w.links, &mut w.policy)
+            .with_authenticator(move |_, token| Ok(v.get(token).copied()));
+        server.serve_sessions(&mut sessions).unwrap();
+    });
+    let (t, v) = received.recv().unwrap();
+    let (alice, boss, note, secret) = (v["alice"], v["boss"], v["note"], v["secret"]);
+    let mut alice_client = server.client(TextLinoProtocol::new());
+    assert_eq!(alice, alice_client.authenticate("alice").unwrap());
+    let subscriber = RemoteLinks::new(alice_client);
+    let mut writer = server.client(TextLinoProtocol::new());
+    assert_eq!(boss, writer.authenticate("boss").unwrap());
+    subscriber.subscribe(&[]).unwrap();
+
+    // alice may not read the secret: a change she cannot see is not pushed
+    // to her at all...
+    writer
+        .query(&format!("(update: ({secret} {} {alice}))", t["Secret"]))
+        .unwrap();
+    // ...while one to a note she may read is.
+    writer
+        .query(&format!("(update: ({note} {} {alice}))", t["Note"]))
+        .unwrap();
+
+    assert_eq!(
+        subscriber.receive_notification(PUSH_TIMEOUT).unwrap(),
+        Some(LinksNotification {
+            subscription: 1,
+            changes: vec![(
+                Link::new(note, t["Note"], note),
+                Link::new(note, t["Note"], alice)
+            )],
+        })
+    );
     assert_eq!(
         subscriber.receive_notification(SILENCE_TIMEOUT).unwrap(),
         None

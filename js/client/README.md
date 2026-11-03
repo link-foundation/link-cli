@@ -107,7 +107,9 @@ you what you can know about the request:
 
 Other subclasses: `ProtocolMismatchError` (the peer is not a links server, or
 it refuses the text protocol), `MalformedMessageError`, `LimitExceededError`,
-`ConnectionClosedError`, `AbortError` and `DeadlineExceededError`.
+`ConnectionClosedError`, `AbortError`, `DeadlineExceededError`, and
+`NotFoundError` (a composing layer was asked to write a link it has not got,
+`not-sent`).
 
 **Cancellation.** `signal` is an `AbortSignal`. `deadline` is absolute (a
 `Date` or epoch milliseconds), and `timeout` becomes `Date.now() + timeout`;
@@ -159,6 +161,54 @@ connection, and the server process it started (`connectProcess`). A borrowed
 socket (`new TcpTransport(socket, { owned: false })`), a server you started
 yourself (`startServer`), and a `Clink` passed without `{ owned: true }` all
 outlive the client.
+
+## Permissions
+
+A server started with `--permissions` (and `--tokens` for authentication)
+serves every connection as a subject: the default `--subject`, or the one a
+token authenticates as. Send the token first, as raw protocol text:
+
+```js
+const links = await connectTcp('127.0.0.1:7878');
+console.log(await links.requestText('(auth: alice-secret)')); // (subject: 11)
+```
+
+From then on, reads skip what the subject may not read, and writes it may not
+make reject with `RemoteError` (`Forbidden: update 14`). `getByName` of a link
+the subject cannot read resolves to `null`. The package has no permission
+layer of its own: the rules are the server's. See
+[examples/permissions](../../examples/permissions).
+
+## Composing networks
+
+These layers are links clients over links clients, so they wrap any backend
+or each other. The C# and Rust ports have the same layers;
+[docs/COMPOSITION.md](../../docs/COMPOSITION.md) describes how they compose.
+
+| Export | What it does |
+| --- | --- |
+| `UnionLinks([a, b, ...])` | Many networks seen as one. The first member that has an address shadows the rest, a new link goes to the first member, and a write goes to the member that has the link (`ownerOf(index)`). Names are found in member order. Raw text, queries and subscriptions go to a member: `union.members[i]`. |
+| `RemapLinks(links, map)` | A network under other addresses, both ways. A read of a foreign address finds nothing; a write naming one rejects before sending. `toOuter(inner)` and `toInner(outer)` translate by hand. |
+| `OffsetAddressMap(offset)` | Moves a network by `offset`, so a union of remapped networks shadows nothing. |
+| `AddressTable({ first, newId })` | Gives addresses (from `first`) or ids (from `newId()`) in the order they are seen. It lives in memory. |
+| `LinksExternalIds(scheme)` | The ids of another system bound to links, stored as links: `find`, `idOf`, `bind`, `ensure`, `unbind`, each taking the store of the table. |
+| `ExternalIdMap(table, scheme, { newId })` | A `RemapLinks` map that reads a network under those ids (random UUIDs by default) and keeps them in `table`. |
+
+```js
+import { ExternalIdMap, OffsetAddressMap, RemapLinks, UnionLinks } from '@link-foundation/link-cli-client';
+
+// The client's own links first, the server's moved out of their way.
+const links = new UnionLinks([local, new RemapLinks(server, new OffsetAddressMap(1n << 24n))]);
+const draft = (await links.create(0n, 0n)).index;     // in local
+await links.update(draft, draft, await links.getByName('news')); // refers to the server
+
+// The same network under UUIDs, kept in a store of their own.
+const byUuid = new RemapLinks(links, new ExternalIdMap(ids, 'uuid'));
+console.log(await byUuid.each([]));                   // indexes are UUID strings
+```
+
+[examples/composition](../../examples/composition) runs this against a server
+with permissions, with both CLIs.
 
 ## Capabilities
 

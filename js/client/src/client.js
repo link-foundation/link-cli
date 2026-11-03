@@ -2,7 +2,7 @@
 // JS counterpart of `INamedTypesLinks` / `NamedTypeLinks` behind which the C#
 // and Rust `RemoteLinks` swap a local store for a server.
 
-import { GUARANTEES } from './capabilities.js';
+import { requireGuarantees } from './composed.js';
 import { scopeError, scopeOf } from './deadline.js';
 import { DeadlineExceededError, LinksError, MalformedMessageError, RemoteError, UnsupportedError } from './errors.js';
 import { formatDocument, parseDocument } from './lino.js';
@@ -28,13 +28,7 @@ export class LinksClient {
 
   /** Throws an UnsupportedError unless the backend offers every guarantee named. */
   require(...guarantees) {
-    const missing = guarantees.filter((guarantee) => {
-      if (!GUARANTEES.includes(guarantee)) throw new TypeError(`unknown guarantee "${guarantee}"; known: ${GUARANTEES.join(', ')}`);
-      return this.capabilities[guarantee] !== true;
-    });
-    if (missing.length > 0) {
-      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not offer ${missing.join(', ')}; nothing is emulated`);
-    }
+    requireGuarantees(this.capabilities, guarantees);
     return this;
   }
 

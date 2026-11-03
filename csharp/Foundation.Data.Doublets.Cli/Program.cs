@@ -221,6 +221,36 @@ var packedWidthsOption = new Option<bool>("--packed-widths")
     DefaultValueFactory = _ => false
 };
 
+var permissionsOption = new Option<string?>("--permissions")
+{
+    Description = "Check every read and write against permission rules stored as links: 'self' (rules in the data) or a links file of rules; without it, nothing is checked"
+};
+
+var subjectOption = new Option<string?>("--subject")
+{
+    Description = "The subject (a link index or name) queries run as with --permissions, and the subject of --serve connections before (auth: token) (default: 0, a guest)"
+};
+
+var tokensOption = new Option<string?>("--tokens")
+{
+    Description = "The token table of (auth: token) for --serve, --grant-token and --revoke-token: 'self' (tokens in the data) or a links file"
+};
+
+var grantTokenOption = new Option<string?>("--grant-token")
+{
+    Description = "Let a token authenticate as --subject in the --tokens table, then exit"
+};
+
+var revokeTokenOption = new Option<string?>("--revoke-token")
+{
+    Description = "Forget a token of the --tokens table, then exit"
+};
+
+var tokenOption = new Option<string?>("--token")
+{
+    Description = "With --connect: authenticate with (auth: token) before sending the query"
+};
+
 var rootCommand = new RootCommand("LiNo CLI Tool for managing links data store");
 rootCommand.Options.Add(dbOption);
 rootCommand.Options.Add(queryOption);
@@ -260,6 +290,12 @@ rootCommand.Options.Add(protocolOption);
 rootCommand.Options.Add(externalReferencesOption);
 rootCommand.Options.Add(arityOption);
 rootCommand.Options.Add(packedWidthsOption);
+rootCommand.Options.Add(permissionsOption);
+rootCommand.Options.Add(subjectOption);
+rootCommand.Options.Add(tokensOption);
+rootCommand.Options.Add(grantTokenOption);
+rootCommand.Options.Add(revokeTokenOption);
+rootCommand.Options.Add(tokenOption);
 
 rootCommand.SetAction(
   parseResult =>
@@ -299,6 +335,12 @@ rootCommand.SetAction(
       var serveAddress = parseResult.GetValue(serveOption);
       var connectAddress = parseResult.GetValue(connectOption);
       var protocolName = parseResult.GetValue(protocolOption)?.Trim();
+      var permissionsSource = parseResult.GetValue(permissionsOption)?.Trim();
+      var subjectText = parseResult.GetValue(subjectOption)?.Trim();
+      var tokensSource = parseResult.GetValue(tokensOption)?.Trim();
+      var grantToken = parseResult.GetValue(grantTokenOption);
+      var revokeToken = parseResult.GetValue(revokeTokenOption);
+      var clientToken = parseResult.GetValue(tokenOption);
       var arity = ArityRange.Doublets;
       if (parseResult.GetValue(arityOption) is { } arityText
           && !ArityRange.TryParse(arityText.Trim(), out arity, out var arityError))
@@ -329,7 +371,7 @@ rootCommand.SetAction(
       if (connectAddress is not null)
       {
           var clientQuery = !string.IsNullOrWhiteSpace(queryOptionValue) ? queryOptionValue : queryArgumentValue;
-          return RunClient(connectAddress, protocolName, binaryOptions, clientQuery);
+          return RunClient(connectAddress, protocolName, binaryOptions, clientQuery, clientToken);
       }
 
       var vcRequested = vc
@@ -440,12 +482,57 @@ rootCommand.SetAction(
           decoratedLinks = persistentLinks;
       }
 
+      // `--permissions` (issue #149): the store as the subject sees it. The
+      // rules live in the data (`self`) or in a links file of their own.
+      NamedTypesDecorator<uint>? rulesStore = null;
+      NamedTypesDecorator<uint>? tokensStore = null;
+      PermissionPolicy<uint>? permissionPolicy = null;
+      UndoableLinksDecorator<uint>? undoableLinks = null;
+      INamedTypesLinks<uint> storeLinks = decoratedLinks;
+      uint subject = 0;
+
       try
       {
+          if (!string.IsNullOrWhiteSpace(subjectText) && !CliPermissions.TryResolveSubject(decoratedLinks, subjectText, out subject))
+          {
+              Console.Error.WriteLine($"Unknown subject '{subjectText}'.");
+              return 1;
+          }
+          if (!string.IsNullOrWhiteSpace(tokensSource))
+          {
+              tokensStore = tokensSource == "self" ? null : new NamedTypesDecorator<uint>(tokensSource, trace);
+          }
+          else if (grantToken is not null || revokeToken is not null)
+          {
+              Console.Error.WriteLine("--grant-token and --revoke-token need --tokens.");
+              return 1;
+          }
+          if (!string.IsNullOrWhiteSpace(permissionsSource))
+          {
+              if (always || once || never)
+              {
+                  // Triggers run below the view, as the store itself.
+                  Console.Error.WriteLine("--always, --once and --never cannot be used with --permissions.");
+                  return 1;
+              }
+              if (permissionsSource != "self")
+              {
+                  rulesStore = new NamedTypesDecorator<uint>(permissionsSource, trace);
+              }
+              permissionPolicy = new PermissionPolicy<uint>(decoratedLinks, rulesStore ?? decoratedLinks);
+              if (serveAddress is null)
+              {
+                  undoableLinks = new UndoableLinksDecorator<uint>(decoratedLinks);
+                  var subjectOfView = subject;
+                  decoratedLinks = new PermissionsDecorator<uint>(undoableLinks, permissionPolicy, () => subjectOfView);
+              }
+          }
           return RunCli();
       }
       finally
       {
+          rulesStore?.Dispose();
+          tokensStore?.Dispose();
           transactionsLinks?.Shutdown();
       }
 
@@ -567,6 +654,11 @@ rootCommand.SetAction(
               return 0;
           }
 
+          if (grantToken is not null || revokeToken is not null)
+          {
+              return CliPermissions.RunTokens(new LinksTokenTable(tokensStore ?? storeLinks), subject, grantToken, revokeToken);
+          }
+
           if (serveAddress is not null)
           {
               return RunServer();
@@ -593,11 +685,15 @@ rootCommand.SetAction(
                   Console.Error.WriteLine($"Invalid --protocol value '{protocolName}'. Use 'any', 'text' or 'binary'.");
                   return 1;
           }
+          var tokenTable = string.IsNullOrWhiteSpace(tokensSource) ? null : new LinksTokenTable(tokensStore ?? storeLinks);
           using var server = LinksServer.Bind(serveAddress, new LinksServerOptions
           {
               Trace = trace,
               AutoCreateMissingReferences = autoCreateMissingReferences,
               Accept = accept,
+              Permissions = permissionPolicy,
+              Subject = subject,
+              Authenticate = tokenTable is null ? null : tokenTable.Authenticate,
           });
           Console.CancelKeyPress += (_, eventArgs) =>
           {
@@ -698,9 +794,11 @@ rootCommand.SetAction(
 
               try
               {
-                  QueryProcessor.ProcessQuery(decoratedLinks, options);
+                  // With --permissions a query is atomic: a failed one is undone whole.
+                  CliPermissions.ProcessQuery(decoratedLinks, undoableLinks, options, changesList.Clear);
               }
-              catch (Exception error) when (error is ParseException or InvalidOperationException)
+              catch (Exception error) when (error is ParseException or InvalidOperationException
+                  || (undoableLinks is not null && error is ArgumentException))
               {
                   var kind = error is ParseException ? "Parse error" : "Query error";
                   Console.Error.WriteLine($"Error: {kind}: {error.Message}");
@@ -752,7 +850,7 @@ return rootCommand.Parse(args).Invoke();
 
 // `--connect`: sends the query to a server and prints the reply.
 // Any binary option implies `--protocol binary`.
-static int RunClient(string address, string? protocolName, BinaryLinoOptions binaryOptions, string query)
+static int RunClient(string address, string? protocolName, BinaryLinoOptions binaryOptions, string query, string? token)
 {
     ILinoProtocol protocol;
     switch (protocolName?.ToLowerInvariant())
@@ -776,6 +874,10 @@ static int RunClient(string address, string? protocolName, BinaryLinoOptions bin
     try
     {
         using var client = LinksClient.Connect(address, protocol);
+        if (token is not null)
+        {
+            client.Authenticate(token);
+        }
         var reply = client.QueryText(query);
         if (reply.Length > 0)
         {

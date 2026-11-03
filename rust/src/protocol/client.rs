@@ -5,6 +5,7 @@ use super::links_operations::is_notification;
 use super::protocols::{LinoConnection, LinoProtocol};
 use super::server::error_message;
 use links_notation::binary::{format_document, parse_document, LinoDocument};
+use links_notation::LiNo;
 use std::collections::VecDeque;
 use std::io;
 use std::net::{TcpStream, ToSocketAddrs};
@@ -103,5 +104,32 @@ impl LinksClient {
     /// Like [`query`](Self::query), returning the reply as canonical text.
     pub fn query_text(&mut self, query: &str) -> ProtocolResult<String> {
         Ok(format_document(&self.query(query)?))
+    }
+
+    /// Sends `(auth: token)`: every later request of the connection runs as
+    /// the subject the server gives the token, which this returns (issue
+    /// #149). A token the server does not know is a [`ProtocolError::Remote`].
+    pub fn authenticate(&mut self, token: &str) -> ProtocolResult<u32> {
+        let reply = self.request(&vec![LiNo::Link {
+            id: Some("auth".to_string()),
+            values: vec![LiNo::Ref(token.to_string())],
+        }])?;
+        if let [LiNo::Link {
+            id: Some(id),
+            values,
+        }] = reply.as_slice()
+        {
+            if let [LiNo::Ref(subject)] = values.as_slice() {
+                if id == "subject" && subject.bytes().all(|byte| byte.is_ascii_digit()) {
+                    if let Ok(subject) = subject.parse() {
+                        return Ok(subject);
+                    }
+                }
+            }
+        }
+        Err(ProtocolError::Malformed(format!(
+            "expected a subject reply, found {}",
+            format_document(&reply)
+        )))
     }
 }

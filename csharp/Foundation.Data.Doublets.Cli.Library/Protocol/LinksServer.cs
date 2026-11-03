@@ -36,11 +36,30 @@ public sealed record LinksServerOptions
     public ProtocolLimits Limits { get; init; } = ProtocolLimits.Default;
 
     /// <summary>
+    /// Who may read and write what (issue #149): every connection then sees the store as its subject
+    /// may, and every request is undone whole when it fails. Null (the default) serves everything to everyone.
+    /// </summary>
+    /// <remarks>
+    /// A subscriber is pushed only the sides of a change its subject may read, as if <see cref="Readable"/> refused the others.
+    /// </remarks>
+    public IPermissionPolicy<uint>? Permissions { get; init; }
+
+    /// <summary>
+    /// The subject of a token, or null when the token is not valid: answers <c>(auth: token)</c>, such as
+    /// <see cref="LinksTokenTable.Authenticate"/>. Null (the default) refuses every token.
+    /// </summary>
+    public Func<string, uint?>? Authenticate { get; init; }
+
+    /// <summary>The subject of a connection before any <c>(auth: token)</c>; the null link (0, the default) is a guest.</summary>
+    public uint Subject { get; init; }
+
+    /// <summary>
     /// Which links a subscriber may see; null lets every subscriber see every link.
     /// </summary>
     /// <remarks>
     /// A side of a change the subscriber may not read is left out of its push, so a link that becomes unreadable
-    /// arrives as a deletion and one that becomes readable as a creation. This is where a permission layer plugs in.
+    /// arrives as a deletion and one that becomes readable as a creation. <see cref="Permissions"/> plug in here
+    /// too: with them, a subscriber sees only what its subject may read, and what this lets it see.
     /// </remarks>
     public Func<DoubletLink, bool>? Readable { get; init; }
 
@@ -64,6 +83,9 @@ public sealed record LinksServerOptions
 /// pushed to it as <c>(notify: N)</c> and the changes, in the protocol of the
 /// subscription request, until it sends <c>(unsubscribe: N)</c> or hangs up.
 /// </para>
+/// <para>
+/// Every connection is a <see cref="LinksSession"/>, with a subject of its own (issue #149).
+/// </para>
 /// </remarks>
 public sealed class LinksServer : IDisposable
 {
@@ -72,7 +94,7 @@ public sealed class LinksServer : IDisposable
     private readonly object _storeLock = new();
     private readonly HashSet<TcpClient> _clients = new();
     // Read and changed under _storeLock only.
-    private readonly List<LinksSession> _sessions = new();
+    private readonly List<(LinksConnection Connection, LinksSession? Session)> _connections = new();
     private volatile bool _stopping;
 
     private LinksServer(TcpListener listener, LinksServerOptions options)
@@ -120,6 +142,7 @@ public sealed class LinksServer : IDisposable
     public void Serve(INamedTypesLinks<uint> links)
     {
         ArgumentNullException.ThrowIfNull(links);
+        var sessions = new LinksSessions(links, _options);
         var workers = new List<Thread>();
         while (!_stopping)
         {
@@ -136,7 +159,8 @@ public sealed class LinksServer : IDisposable
             {
                 continue;
             }
-            var worker = new Thread(() => HandleConnection(client, stream, links)) { IsBackground = true };
+            var session = sessions.Open();
+            var worker = new Thread(() => HandleConnection(client, stream, session)) { IsBackground = true };
             workers.Add(worker);
             worker.Start();
             workers.RemoveAll(thread => !thread.IsAlive);
@@ -193,16 +217,16 @@ public sealed class LinksServer : IDisposable
     }
 
     /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
-    internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
+    internal void HandleConnection(TcpClient client, NetworkStream stream, LinksSession session)
     {
-        var session = new LinksSession(client, _options.MaxPendingNotifications);
+        var connection = new LinksConnection(client, _options.MaxPendingNotifications);
         lock (_storeLock)
         {
-            _sessions.Add(session);
+            _connections.Add((connection, session));
         }
         var writer = new Thread(() =>
         {
-            if (session.WriteAll((document, format) => format.Protocol(_options.Limits).WriteDocument(stream, document)) is { } error)
+            if (connection.WriteAll((document, format) => format.Protocol(_options.Limits).WriteDocument(stream, document)) is { } error)
             {
                 Trace($"connection closed: {error.Message}");
             }
@@ -222,8 +246,8 @@ public sealed class LinksServer : IDisposable
                 catch (LinoProtocolException error) when (error.Kind != LinoProtocolErrorKind.Io)
                 {
                     // The stream may be out of sync; answer in text and hang up.
-                    session.Reply(ErrorDocument(error.Message), MessageFormat.Text);
-                    session.WaitForReplies();
+                    connection.Reply(ErrorDocument(error.Message), MessageFormat.Text);
+                    connection.WaitForReplies();
                     Trace($"connection closed: {error.Message}");
                     return;
                 }
@@ -235,14 +259,14 @@ public sealed class LinksServer : IDisposable
                 var (document, format) = received;
                 if (Accepts(format))
                 {
-                    Execute(links, document, session, format);
+                    Execute(session, document, connection, format);
                 }
                 else
                 {
-                    session.Reply(ErrorDocument("this server does not accept this protocol"), format);
+                    connection.Reply(ErrorDocument("this server does not accept this protocol"), format);
                 }
-                session.WaitForReplies();
-                if (session.IsClosed)
+                connection.WaitForReplies();
+                if (connection.IsClosed)
                 {
                     Trace("connection closed");
                     return;
@@ -258,14 +282,15 @@ public sealed class LinksServer : IDisposable
             // Its subscriptions go with it.
             lock (_storeLock)
             {
-                _sessions.Remove(session);
+                _connections.RemoveAll(open => open.Connection == connection);
             }
             lock (_clients)
             {
                 _clients.Remove(client);
             }
+            session?.Dispose();
             // Disposes the client, and so the stream, which stops the writer.
-            session.Close();
+            connection.Close();
             writer.Join();
         }
     }
@@ -297,20 +322,20 @@ public sealed class LinksServer : IDisposable
         {
             lock (_storeLock)
             {
-                return _sessions.Count;
+                return _connections.Count;
             }
         }
     }
 
     /// <summary>
-    /// Executes one request of <paramref name="session"/>, queues its reply there, and pushes the changes it made to
-    /// the subscriptions of every other session; all under the store lock, so every connection gets its replies and
-    /// pushes in the order the store changed.
+    /// Executes one request of <paramref name="session"/>, queues its reply on <paramref name="connection"/>, and
+    /// pushes the changes it made to the subscriptions of every other connection; all under the store lock, so every
+    /// connection gets its replies and pushes in the order the store changed.
     /// </summary>
     internal IReadOnlyList<LinoLink> Execute(
-        INamedTypesLinks<uint> links,
+        LinksSession session,
         IReadOnlyList<LinoLink> document,
-        LinksSession? session = null,
+        LinksConnection? connection = null,
         MessageFormat format = default)
     {
         lock (_storeLock)
@@ -319,37 +344,49 @@ public sealed class LinksServer : IDisposable
             if (_stopping)
             {
                 var stopping = ErrorDocument("server is shutting down");
-                session?.Reply(stopping, format);
+                connection?.Reply(stopping, format);
                 return stopping;
             }
             Trace($"request: {LinoFormat.FormatDocument(document)}");
             var changes = new List<(DoubletLink Before, DoubletLink After)>();
-            var reply = (session is null ? null : ExecuteSubscription(session, document, format))
-                ?? ExecuteRequest(links, document, _options.AutoCreateMissingReferences, changes);
+            var reply = (connection is null ? null : ExecuteSubscription(connection, document, format))
+                ?? session.Execute(document, changes);
             Trace($"reply: {LinoFormat.FormatDocument(reply)}");
-            session?.Reply(reply, format);
+            connection?.Reply(reply, format);
             if (changes.Count > 0)
             {
-                foreach (var other in _sessions.Where(other => other != session).ToList())
+                foreach (var other in _connections.Where(other => other.Connection != connection).ToList())
                 {
-                    other.Notify(changes, _options.Readable);
+                    other.Connection.Notify(changes, Readable(other.Session));
                 }
             }
             return reply;
         }
     }
 
+    /// <summary>What a subscriber of <paramref name="session"/> may be pushed: what its subject may read, and what <see cref="LinksServerOptions.Readable"/> lets it see.</summary>
+    private Func<DoubletLink, bool>? Readable(LinksSession? session)
+    {
+        var view = session?.View;
+        var readable = _options.Readable;
+        if (view is null)
+        {
+            return readable;
+        }
+        return link => view.CanRead(link) && (readable?.Invoke(link) ?? true);
+    }
+
     /// <summary>The reply to a <c>subscribe</c> or an <c>unsubscribe</c>; null for any other request.</summary>
-    private static IReadOnlyList<LinoLink>? ExecuteSubscription(LinksSession session, IReadOnlyList<LinoLink> document, MessageFormat format)
+    private static IReadOnlyList<LinoLink>? ExecuteSubscription(LinksConnection connection, IReadOnlyList<LinoLink> document, MessageFormat format)
     {
         try
         {
             switch (LinksOperation.FromDocument(document))
             {
                 case LinksOperation.Subscribe subscribe:
-                    return LinksOperation.SubscriptionDocument(session.Subscribe(subscribe.Restriction, format));
+                    return LinksOperation.SubscriptionDocument(connection.Subscribe(subscribe.Restriction, format));
                 case LinksOperation.Unsubscribe unsubscribe:
-                    session.Unsubscribe(unsubscribe.Subscription);
+                    connection.Unsubscribe(unsubscribe.Subscription);
                     return Array.Empty<LinoLink>();
                 default:
                     return null;
@@ -389,12 +426,14 @@ public sealed class LinksServer : IDisposable
     /// query; the reply holds one <c>(before) (after)</c> line per change, exactly
     /// like <c>clink --changes</c>. The empty document asks for every link, one
     /// <c>(index: source target)</c> per line. Failures produce an <see cref="ErrorDocument"/>.
+    /// The references of a query are checked in <paramref name="references"/>, by default <paramref name="links"/>.
     /// </remarks>
     public static IReadOnlyList<LinoLink> ExecuteRequest(
         INamedTypesLinks<uint> links,
         IReadOnlyList<LinoLink> document,
-        bool autoCreateMissingReferences = false) =>
-        ExecuteRequest(links, document, autoCreateMissingReferences, null);
+        bool autoCreateMissingReferences = false,
+        INamedTypesLinks<uint>? references = null) =>
+        ExecuteRequest(links, document, autoCreateMissingReferences, references, null);
 
     /// <summary>
     /// Executes one request and adds the net change of every link it changed to <paramref name="changed"/>, with
@@ -404,6 +443,7 @@ public sealed class LinksServer : IDisposable
         INamedTypesLinks<uint> links,
         IReadOnlyList<LinoLink> document,
         bool autoCreateMissingReferences,
+        INamedTypesLinks<uint>? references,
         List<(DoubletLink Before, DoubletLink After)>? changed)
     {
         ArgumentNullException.ThrowIfNull(links);
@@ -434,6 +474,7 @@ public sealed class LinksServer : IDisposable
             {
                 Query = LinoFormat.FormatDocument(document),
                 AutoCreateMissingReferences = autoCreateMissingReferences,
+                References = references,
                 ChangesHandler = (before, after) =>
                 {
                     changes.Add((new DoubletLink(before), new DoubletLink(after)));

@@ -47,6 +47,7 @@ pub mod links_operations;
 mod protocols;
 mod remote_links;
 mod server;
+mod sessions;
 
 pub use archive::{export_store, export_store_file, import_store, import_store_file};
 pub use client::LinksClient;
@@ -67,3 +68,4 @@ pub use server::{
     error_document, error_message, execute_request, AcceptedProtocols, LinksServer, Readable,
     ServerOptions, ShutdownHandle, DEFAULT_MAX_PENDING_NOTIFICATIONS,
 };
+pub use sessions::{Authenticator, LinksSessions, SessionId};

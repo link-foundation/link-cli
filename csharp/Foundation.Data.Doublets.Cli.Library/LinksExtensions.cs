@@ -6,7 +6,16 @@ namespace Foundation.Data.Doublets.Cli
 {
     public static class LinksExtensions
     {
-        public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress> { links.EnsureCreated(links.Create, addresses); }
+        public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
+        {
+            if (links is IComposedLinks<TLinkAddress> composed)
+            {
+                // A union or a remap creates a link in the network its address is of.
+                composed.EnsureCreated(addresses);
+                return;
+            }
+            links.EnsureCreated(links.Create, addresses);
+        }
 
         public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, Func<TLinkAddress> creator, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
         {
@@ -76,6 +85,22 @@ namespace Foundation.Data.Doublets.Cli
             if (!links.Constants.IsInternalReference(address))
             {
                 throw new InvalidOperationException($"Cannot ensure unsupported link address {address}. Only non-zero internal references in the supported range can be created.");
+            }
+        }
+
+        /// <summary>
+        /// Gives <paramref name="links"/> back its own facade. A decorator makes
+        /// itself the facade of every decorator under it, which those call for
+        /// the writes a write leads to (the usages a merge repoints, the links a
+        /// delete deletes too); a layer that is not a plain pass-through (a view
+        /// as a subject sees it, a union of networks, a remap of addresses) keeps
+        /// those writes in the store they belong to.
+        /// </summary>
+        internal static void KeepOwnFacade<TLinkAddress>(ILinks<TLinkAddress> links) where TLinkAddress : IUnsignedNumber<TLinkAddress>
+        {
+            if (links is Platform.Data.Doublets.Decorators.LinksDecoratorBase<TLinkAddress> decorator)
+            {
+                decorator.Facade = decorator;
             }
         }
     }

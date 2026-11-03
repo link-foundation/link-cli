@@ -181,6 +181,51 @@ decorated links and writes go through the decorator, so a derived decorator
 that checks writes sees them. With `new TypesDecorator<uint>(links, root,
 extends)` the pinned types `(1: 1 1)`, `(2: 1 2)`, … are sub-types of root `1`.
 
+### Permissions
+
+`--permissions self|<rules.links>` runs queries as `--subject` (an index or a
+name; a guest by default) and checks every read and write against rules stored
+as links (#149); see [Permissions](../README.md#permissions) and
+[`examples/permissions`](../examples/permissions). In the library:
+
+```csharp
+using var data = new NamedTypesDecorator<uint>("data.links");
+var markers = PermissionPolicy<uint>.EnsureMarkers(data, data);
+PermissionPolicy<uint>.Allow(data, markers, PermissionAccess.Read, user, @public);
+var policy = new PermissionPolicy<uint>(data, data); // or a rules store of its own
+var alice = new PermissionsDecorator<uint>(data, policy, aliceLink);
+// Reads skip what alice may not read; a forbidden write throws
+// ForbiddenException ("Forbidden: update 14") and changes nothing.
+```
+
+`UndoableLinksDecorator<uint>` (`Begin`, `Commit`, `Rollback`) makes a request
+atomic under the view, writes the store made on its own included.
+`LinksServerOptions.Permissions`, `Subject` and `Authenticate` give every
+connection of a `LinksServer` a session of its own (`LinksSessions`);
+`(auth: token)` answers `(subject: i)`. `Authenticate` is any callback;
+`LinksTokenTable` keeps the tokens as links named after their SHA-256.
+
+### Composing networks
+
+`UnionLinksDecorator<uint>` joins links networks into one,
+`RemapLinksDecorator<uint>` reads one under other addresses
+(`OffsetAddressMap<uint>`, `AddressTable<uint>` or any `IAddressMap<uint>`), and
+`LinksExternalIds` keeps the ids of other systems (UUIDs, URLs) as links
+(#149). None of them depends on permissions or on each other; a
+`PermissionsDecorator` over a union restricts every member, one under it a
+single member. See [docs/COMPOSITION.md](../docs/COMPOSITION.md).
+
+```csharp
+var union = new UnionLinksDecorator<uint>(client, new RemapLinksDecorator<uint>(server, new OffsetAddressMap<uint>(1u << 24)));
+var draft = union.Create();              // in client, the primary member
+union.Update(draft, serverNote, draft);  // may refer to the server's links
+var owner = union.OwnerOf(draft);        // 0: the member that has the link
+var alice = new PermissionsDecorator<uint>(union, new PermissionPolicy<uint>(union, union), aliceLink);
+
+var ids = new LinksExternalIds(idsStore, "uuid");     // or the data itself
+var link = ids.Ensure("6f1c...", data);               // bound, or a new point
+```
+
 ## Develop
 
 ```bash

@@ -13,6 +13,10 @@
 //! serving thread queues a reply together with the pushes of the same write,
 //! so every connection reads its replies and pushes in the order the store
 //! changed.
+//!
+//! Every connection is a session of a [`LinksSessions`], with a subject of
+//! its own (issue #149); a subscriber is pushed only what its subject may
+//! read.
 
 use super::error::ProtocolResult;
 use super::links_operations::{
@@ -20,8 +24,10 @@ use super::links_operations::{
     Part,
 };
 use super::protocols::{read_any_document, MessageFormat, ProtocolLimits};
+use super::sessions::{LinksSessions, SessionId};
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
+use crate::permissions::AccessPolicy;
 use crate::query_processor::QueryProcessor;
 use links_notation::binary::{format_document, LinoDocument};
 use links_notation::LiNo;
@@ -185,8 +191,22 @@ impl LinksServer {
         })
     }
 
-    /// Serves `storage` until a [`ShutdownHandle`] stops the server.
+    /// Serves `storage` until a [`ShutdownHandle`] stops the server; every
+    /// connection sees and changes the whole store.
     pub fn serve<S: NamedTypeLinks>(self, storage: &mut S) -> ProtocolResult<()> {
+        let auto_create = self.options.auto_create_missing_references;
+        let mut sessions =
+            LinksSessions::new(storage).with_auto_create_missing_references(auto_create);
+        self.serve_sessions(&mut sessions)
+    }
+
+    /// Serves `sessions` until a [`ShutdownHandle`] stops the server: every
+    /// connection is a session of its own, opened with the default subject
+    /// of `sessions` and closed when the connection closes (issue #149).
+    pub fn serve_sessions<S: NamedTypeLinks, P: AccessPolicy>(
+        self,
+        sessions: &mut LinksSessions<S, P>,
+    ) -> ProtocolResult<()> {
         let LinksServer {
             listener,
             options,
@@ -201,10 +221,11 @@ impl LinksServer {
         };
         let mut dispatcher = Dispatcher::new(options, readable);
         while let Ok(job) = queue.recv() {
-            if !dispatcher.run(storage, job) {
+            if !dispatcher.run(sessions, job) {
                 break;
             }
         }
+        dispatcher.close_all(sessions);
         stopping.store(true, Ordering::SeqCst);
         drop(queue);
         let _ = acceptor.join();
@@ -217,8 +238,7 @@ impl LinksServer {
 struct Dispatcher {
     options: ServerOptions,
     readable: Option<Readable>,
-    processor: QueryProcessor,
-    sessions: BTreeMap<u64, Session>,
+    connections: BTreeMap<u64, Connection>,
 }
 
 impl Dispatcher {
@@ -226,18 +246,22 @@ impl Dispatcher {
         Self {
             options,
             readable,
-            processor: QueryProcessor::new(false)
-                .with_auto_create_missing_references(options.auto_create_missing_references),
-            sessions: BTreeMap::new(),
+            connections: BTreeMap::new(),
         }
     }
 
     /// Runs `job`; false once the server should stop.
-    fn run<S: NamedTypeLinks>(&mut self, storage: &mut S, job: Job) -> bool {
+    fn run<S: NamedTypeLinks, P: AccessPolicy>(
+        &mut self,
+        sessions: &mut LinksSessions<S, P>,
+        job: Job,
+    ) -> bool {
         match job {
             Job::Shutdown => return false,
             Job::Close(connection) => {
-                self.sessions.remove(&connection);
+                if let Some(closed) = self.connections.remove(&connection) {
+                    sessions.close(closed.session);
+                }
             }
             Job::Request {
                 connection,
@@ -249,21 +273,26 @@ impl Dispatcher {
                 if self.options.trace {
                     eprintln!("[server] request: {}", format_document(&document));
                 }
-                let session = self
-                    .sessions
+                let current = self
+                    .connections
                     .entry(connection)
-                    .or_insert_with(|| Session::new(outbox));
+                    .or_insert_with(|| Connection::new(outbox, sessions.open(None)));
                 let mut changes = Vec::new();
-                let reply = session.execute(&document, format).unwrap_or_else(|| {
-                    execute_observed_request(storage, &self.processor, &document, &mut changes)
+                let reply = current.execute(&document, format).unwrap_or_else(|| {
+                    sessions.execute_observed(current.session, &document, &mut changes)
                 });
                 if self.options.trace {
                     eprintln!("[server] reply: {}", format_document(&reply));
                 }
-                session.outbox.reply(reply, format);
+                current.outbox.reply(reply, format);
                 if !changes.is_empty() {
-                    for (_, other) in self.sessions.iter().filter(|(id, _)| **id != connection) {
-                        other.notify(&changes, self.readable.as_ref());
+                    let readable = self.readable.as_ref();
+                    for (_, other) in self.connections.iter().filter(|(id, _)| **id != connection) {
+                        let session = other.session;
+                        other.notify(&changes, &mut |link: &Link| {
+                            readable.is_none_or(|readable| readable(link))
+                                && sessions.can_read(session, link)
+                        });
                     }
                 }
                 let _ = done.send(());
@@ -271,19 +300,32 @@ impl Dispatcher {
         }
         true
     }
+
+    /// Closes the session of every connection still open.
+    fn close_all<S: NamedTypeLinks, P: AccessPolicy>(
+        &mut self,
+        sessions: &mut LinksSessions<S, P>,
+    ) {
+        for (_, connection) in std::mem::take(&mut self.connections) {
+            sessions.close(connection.session);
+        }
+    }
 }
 
-/// The subscriptions of one connection; only the serving thread touches them.
-struct Session {
+/// The subscriptions of one connection, and the session its requests run
+/// as; only the serving thread touches them.
+struct Connection {
     outbox: Arc<Outbox>,
+    session: SessionId,
     subscriptions: BTreeMap<u32, (Vec<Part>, MessageFormat)>,
     next_subscription: u32,
 }
 
-impl Session {
-    fn new(outbox: Arc<Outbox>) -> Self {
+impl Connection {
+    fn new(outbox: Arc<Outbox>, session: SessionId) -> Self {
         Self {
             outbox,
+            session,
             subscriptions: BTreeMap::new(),
             next_subscription: 1,
         }
@@ -316,19 +358,18 @@ impl Session {
     /// Pushes `changes` to every subscription they fit, one `(notify: N)`
     /// document each; a side that does not fit (or that `readable` refuses) is
     /// left out, and a change left with no side is not pushed.
-    fn notify(&self, changes: &[Change], readable: Option<&Readable>) {
+    fn notify(&self, changes: &[Change], readable: &mut dyn FnMut(&Link) -> bool) {
         for (subscription, (restriction, format)) in &self.subscriptions {
-            let fits = |link: &Link| {
-                !link.is_null()
-                    && matches(link, restriction)
-                    && readable.is_none_or(|readable| readable(link))
+            let mut side = |link: &Link| {
+                if !link.is_null() && matches(link, restriction) && readable(link) {
+                    *link
+                } else {
+                    Link::null()
+                }
             };
             let seen: Vec<Change> = changes
                 .iter()
-                .map(|(before, after)| {
-                    let side = |link: &Link| if fits(link) { *link } else { Link::null() };
-                    (side(before), side(after))
-                })
+                .map(|(before, after)| (side(before), side(after)))
                 .filter(|(before, after)| !before.is_null() || !after.is_null())
                 .collect();
             if !seen.is_empty()
@@ -630,7 +671,7 @@ pub fn execute_request<S: NamedTypeLinks>(
 
 /// Like [`execute_request`], adding the net change of every link the request
 /// changed to `changed`, with plain numbers.
-fn execute_observed_request<S: NamedTypeLinks>(
+pub(super) fn execute_observed_request<S: NamedTypeLinks>(
     storage: &mut S,
     processor: &QueryProcessor,
     document: &[LiNo<String>],
@@ -731,7 +772,7 @@ mod tests {
 
     fn request(
         dispatcher: &mut Dispatcher,
-        storage: &mut LinkStorage,
+        sessions: &mut LinksSessions<LinkStorage>,
         connection: u64,
         outbox: &Arc<Outbox>,
         text: &str,
@@ -744,7 +785,7 @@ mod tests {
             format: MessageFormat::Text,
             done,
         };
-        assert!(dispatcher.run(storage, job));
+        assert!(dispatcher.run(sessions, job));
         finished.recv().unwrap();
     }
 
@@ -760,19 +801,27 @@ mod tests {
     #[test]
     fn closing_a_connection_drops_its_subscriptions() {
         let database = tempfile::NamedTempFile::new().unwrap();
-        let mut storage = LinkStorage::new(database.path(), false).unwrap();
+        let storage = LinkStorage::new(database.path(), false).unwrap();
+        let mut sessions = LinksSessions::new(storage);
         let mut dispatcher = Dispatcher::new(ServerOptions::default(), None);
         let (subscriber, writer) = (outbox(), outbox());
 
         request(
             &mut dispatcher,
-            &mut storage,
+            &mut sessions,
             1,
             &subscriber,
             "(subscribe: ())",
         );
-        request(&mut dispatcher, &mut storage, 2, &writer, "(create: (0 0))");
-        assert_eq!(dispatcher.sessions.len(), 2);
+        request(
+            &mut dispatcher,
+            &mut sessions,
+            2,
+            &writer,
+            "(create: (0 0))",
+        );
+        assert_eq!(dispatcher.connections.len(), 2);
+        assert_eq!(sessions.sessions().len(), 2);
         assert_eq!(
             queued(&subscriber),
             ["(subscription: 1)", "(notify: 1)\n() ((1: 0 0))"]
@@ -780,10 +829,20 @@ mod tests {
         // A connection is never told about its own writes.
         assert_eq!(queued(&writer), ["() ((1: 0 0))"]);
 
-        assert!(dispatcher.run(&mut storage, Job::Close(1)));
-        assert_eq!(dispatcher.sessions.keys().collect::<Vec<_>>(), [&2]);
-        request(&mut dispatcher, &mut storage, 2, &writer, "(create: (1 1))");
+        assert!(dispatcher.run(&mut sessions, Job::Close(1)));
+        assert_eq!(dispatcher.connections.keys().collect::<Vec<_>>(), [&2]);
+        // Its session is closed with it.
+        assert_eq!(sessions.sessions().len(), 1);
+        request(
+            &mut dispatcher,
+            &mut sessions,
+            2,
+            &writer,
+            "(create: (1 1))",
+        );
         assert!(queued(&subscriber).is_empty());
-        assert!(!dispatcher.run(&mut storage, Job::Shutdown));
+        assert!(!dispatcher.run(&mut sessions, Job::Shutdown));
+        dispatcher.close_all(&mut sessions);
+        assert!(sessions.sessions().is_empty());
     }
 }

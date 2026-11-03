@@ -1,4 +1,4 @@
-import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links } from '../types/index.js';
+import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links, UnionLinks, RemapLinks, OffsetAddressMap, AddressTable, ExternalIdMap, LinksExternalIds, NotFoundError } from '../types/index.js';
 import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';
 class Logging extends LinksDecorator {
@@ -20,6 +20,15 @@ async function main(links: Links) {
   if (note) for (const { before, after } of note.changes) void [before?.source, after?.target];
   await c.unsubscribe(subscription);
   void c.pendingNotifications;
+  const union: Links = new UnionLinks([w, new RemapLinks(c, new OffsetAddressMap(1n << 24n))]);
+  const owner: number | null = await (union as UnionLinks).ownerOf(1n);
+  const table = new AddressTable<string>({ newId: () => crypto.randomUUID() });
+  const uuids = new RemapLinks(w, table);
+  const uuid: string | bigint = await uuids.toOuter(1n);
+  const pairs: [string, bigint][] = table.pairs();
+  const kept = new RemapLinks(w, new ExternalIdMap(p, 'uuid'));
+  const bound: bigint | null = await new LinksExternalIds('uuid').find(p, 'id');
+  void [owner, uuid, pairs, kept, bound, new AddressTable({ first: 500n }), NotFoundError];
   await using x = c;
   return [n, p];
 }

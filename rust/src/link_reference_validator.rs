@@ -161,7 +161,7 @@ impl LinkReferenceValidator {
             Self::collect_definitions(pattern, &mut plan, &mut anonymous_links);
         }
         plan.numeric_ids_to_be_created
-            .extend(Self::next_created_addresses(storage, anonymous_links)?);
+            .extend(storage.next_created_addresses(anonymous_links)?);
         Ok(plan)
     }
 
@@ -196,20 +196,6 @@ impl LinkReferenceValidator {
         ) {
             plan.composite_pairs_to_be_created.insert((source, target));
         }
-    }
-
-    /// The addresses the next `count` links created in `storage` get.
-    ///
-    /// A store reuses the address freed last first, so the lowest free one is
-    /// not necessarily next. Creating the links and deleting them again in
-    /// reverse leaves the store exactly as it was, and is the one way to ask
-    /// any store, a remote one included.
-    fn next_created_addresses(storage: &mut impl NamedTypeLinks, count: usize) -> Result<Vec<u32>> {
-        let addresses: Vec<u32> = (0..count).map(|_| storage.create(0, 0)).collect();
-        for &address in addresses.iter().rev() {
-            storage.delete(address)?;
-        }
-        Ok(addresses)
     }
 
     fn collect_missing_references(
@@ -272,7 +258,9 @@ impl LinkReferenceValidator {
         pattern_type: &'static str,
     ) -> Result<()> {
         if let Ok(link_id) = identifier.parse::<u32>() {
-            if !storage.exists(link_id) && !plan.numeric_ids_to_be_created.contains(&link_id) {
+            if !storage.reference_exists(link_id)
+                && !plan.numeric_ids_to_be_created.contains(&link_id)
+            {
                 plan.add_missing_reference(MissingLinkReference {
                     identifier: identifier.to_string(),
                     pattern_type,
@@ -326,7 +314,7 @@ impl LinkReferenceValidator {
         numeric_references.dedup();
 
         for link_id in numeric_references {
-            if storage.exists(link_id) {
+            if storage.reference_exists(link_id) {
                 continue;
             }
 

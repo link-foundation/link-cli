@@ -63,3 +63,11 @@ export class UnsupportedError extends LinksError {
     super(message, { outcome: 'not-sent' });
   }
 }
+
+/** No link has the address a write names; nothing was sent. */
+export class NotFoundError extends LinksError {
+  constructor(index) {
+    super(`link ${index} not found`, { outcome: 'not-sent' });
+    this.index = index;
+  }
+}

@@ -301,6 +301,70 @@ rewinds everything; checkout to a higher seq replays as needed.
 When no version-control flag is passed, no `versioncontrol.links`
 sidecar is created.
 
+## Type Hierarchy
+
+Types are ordinary links, so the query language needs nothing new for them
+(#148):
+
+- the type of a link is its source: `(v: S x)` is a value of type `S`;
+- the root is the point `(Type: Type Type)`;
+- a sub-type of `T` is `(S: T S)`, a value of `T` that points at itself;
+- an extra parent is a pair `(p: S T2)` marked by `(m: Extends p)`.
+
+`TypesDecorator` (C# `ITypes<T>`, Rust `Types`) walks the hierarchy:
+`TypeOf`, `IsType`, `ParentsOf`, `AncestorsOf`, `IsA` and `IsOf` follow
+sources and `Extends` pairs through any depth and stop on cycles. `Define`,
+`Extend` and `Instance` write new types and values. The root and the
+`Extends` marker are found by name by default, or passed in as any links.
+
+## Optional Permissions
+
+Pass `--permissions self` (rules in the data) or `--permissions rules.links`
+(rules in a file of their own) to run the query as `--subject`, a link given
+by index or name. Without the option nothing is checked.
+
+1. The rules are links: a pair `(g: Subject Object)` marked by
+   `(r: AllowRead g)` or `(r: AllowWrite g)`. A subject matches `Subject`
+   when it is that link or of that type; a link matches `Object` when it is
+   of that type or that link. `Anything` matches everything, and write
+   implies read.
+2. `PermissionsDecorator` wraps the named store. Each read skips links the
+   subject may not read, so they look deleted.
+3. Each create, update and delete is checked before it is made. An update
+   needs the right to write the link before and after it. A link the subject
+   created is its own while its source is the null link, so it can still give
+   it a type.
+4. The store may change more than asked (merges, cascading deletes). Every
+   link a write changed must be the subject's to change.
+5. `UndoableLinksDecorator` records the writes of the whole query. A
+   `Forbidden: <operation> <link>` error, or any other error, rolls them all
+   back, names included.
+
+A served store (`--serve --permissions`) runs each connection as its own
+subject. `(auth: token)` looks the token up in `--tokens` (a table of links
+that keeps only the SHA-256 of each token) and switches the connection to
+its subject. The design is in
+[ARCHITECTURE.md](ARCHITECTURE.md#permissions).
+
+## Composing Networks
+
+Every layer exposes the same links contract as the store below it, so
+layers stack in any order, and a remote store is one more network:
+
+- `UnionLinks` reads many networks as one. The first member with an address
+  shadows the rest, new links go to the first member, and writes go to the
+  member that holds the link.
+- `RemapLinks` translates addresses both ways through a map: an offset, a
+  table of another system's ids, or (in JavaScript) UUIDs kept as links by
+  `LinksExternalIds`.
+- Permissions restrict whatever is below them. Over a union they restrict
+  every member; under it, only theirs.
+
+[COMPOSITION.md](COMPOSITION.md) lists every layer in C#, Rust and
+JavaScript, every order and the test that checks it, and the scenarios each
+composition serves. [`examples/composition`](../examples/composition) runs a
+client joined to a served store with permissions, under UUIDs.
+
 ## Serving Over TCP
 
 `clink --serve host:port` keeps a database open and answers LiNo requests

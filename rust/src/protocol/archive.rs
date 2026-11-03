@@ -104,7 +104,7 @@ where
     // Every address exists before any link refers to it.
     for &(index, _, _) in &doublets {
         if !storage.exists(index) {
-            storage.ensure_created(index);
+            storage.try_ensure_created(index)?;
         }
     }
     for (index, source, target) in doublets {

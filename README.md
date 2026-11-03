@@ -39,6 +39,9 @@ package built from `doublets-rs`.
 
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
+- [docs/COMPOSITION.md](docs/COMPOSITION.md): how the permission, union, remap and external-id layers compose with each other and the other layers, in C#, Rust and JavaScript, with scenarios.
+- [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
+- [examples/](examples): runnable examples, one folder per feature.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
@@ -694,6 +697,95 @@ await links.setName(link.index, 'a pair');
 await links.close();
 ```
 
+## Permissions
+
+`--permissions` checks every read and write against rules stored as links.
+The rules live in the data (`--permissions self`) or in a links file of their
+own (`--permissions rules.links`); both behave the same. Without the option
+nothing is checked and clink works exactly as before.
+
+- A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or
+  `(r: AllowWrite g)`. `Subject` and `Object` are types of the
+  [type hierarchy](#type-hierarchy), or single links. `Anything` stands for
+  every subject or every link. Write implies read.
+- `--subject` names the subject queries run as, by index or by name. Without
+  it the subject is `0`, a guest, which only rules about `Anything` let in.
+- A link the subject created is its own while its source is the null link,
+  so it can still be given a type it may not read.
+- A link the subject may not read is missing to it. A create, update or
+  delete it may not do fails with `Forbidden: <operation> <link>`, and the
+  whole query is undone, including the writes the store made on its own.
+
+```bash
+clink --db data.links --auto-create-missing-references '() ((Type: Type Type) (Extends: Extends Extends) (AllowRead: AllowRead AllowRead) (AllowWrite: AllowWrite AllowWrite) (Anything: Anything Anything) (User: Type User) (Admin: User Admin) (Doc: Type Doc) (Public: Type Public) (Note: Doc Note) (Secret: Doc Secret) (alice: User alice) (boss: Admin boss) (note: Note note) (secret: Secret secret) (news: Public news) (AllowWrite (Admin Anything)) (AllowWrite (User Note)) (AllowRead (User Public)))'
+clink --db data.links --permissions self --subject alice --after
+```
+→
+```
+(note: Note note)
+(news: Public news)
+```
+
+```bash
+clink --db data.links --permissions self --subject alice '((note: Note note)) ((note: Secret note))'
+```
+→
+```
+Error: Query error: Forbidden: update 14
+```
+
+A served store checks the subject of each connection. A connection starts as
+`--subject` (a guest by default). `(auth: token)` switches it to the subject
+the token table of `--tokens` gives the token, and the reply is
+`(subject: i)`. The token table is made of links, kept in the data
+(`--tokens self`) or in a links file of its own. `--grant-token` and
+`--revoke-token` write it, and `--connect --token` authenticates before
+sending the query:
+
+```bash
+clink --db data.links --tokens tokens.links --subject alice --grant-token alice-secret
+clink --db data.links --serve 127.0.0.1:7777 --permissions self --tokens tokens.links   # terminal 1
+clink --connect 127.0.0.1:7777 '(count: ())'                          # (count: 0), a guest
+clink --connect 127.0.0.1:7777 --token alice-secret '(count: ())'     # (count: 2)
+```
+
+In both libraries the layer is `PermissionsDecorator` over any store, with
+`PermissionPolicy` reading the rules. The server's sessions take the
+authentication as a callback, so a token table in links (`LinksTokenTable`)
+is only one choice. Runnable scripts for both CLIs live in
+[`examples/permissions/`](examples/permissions), and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#permissions) explains the design.
+
+## Join and remap networks
+
+Several links networks can be read as one, and a network can be read under
+other addresses. Each of these layers is a links network itself, so it wraps
+a local store, a served one, or another layer, in C#, Rust and JavaScript:
+
+- **Union** (`UnionLinksDecorator`, `UnionLinks`) joins networks, for example a
+  client's links with a server's. The first member that has an address
+  shadows the rest. A new link goes to the first member, and a write goes to
+  the member that has the link.
+- **Remap** (`RemapLinksDecorator`, `RemapLinks`) maps addresses both ways. An
+  offset moves a server's links out of the client's way, and a table gives
+  another system's ids addresses of our own. In JavaScript, a network can be
+  read under UUIDs.
+- **External ids** (`LinksExternalIds`) keep the ids other systems give our
+  links as links, in the data or in a store of their own.
+- **Permissions** compose with all of them. Over a union, the rules restrict
+  every member. Under it, they restrict one member, such as a server that
+  enforces its own rules.
+
+```js
+const links = new UnionLinks([local, new RemapLinks(server, new OffsetAddressMap(1n << 24n))]);
+const byUuid = new RemapLinks(links, new ExternalIdMap(ids, 'uuid'));
+```
+
+[`examples/composition/`](examples/composition) runs a client joined to a
+server with `--permissions`, under UUIDs, with both CLIs.
+[docs/COMPOSITION.md](docs/COMPOSITION.md) shows how the layers compose and
+the scenarios they serve.
+
 ## Update single link
 
 Update link with index 1 and source 1 and target 1, changing target to 2.
@@ -873,6 +965,12 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
 | `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |
 | `--packed-widths`       | bool    | `false`        | _None_                              | Binary protocol: give each section the narrowest reference width          |
+| `--permissions`         | string  | _None_         | _None_                              | Check reads and writes against rules stored as links: `self` or a rules file |
+| `--subject`             | string  | `0` (guest)    | _None_                              | The subject (link index or name) of queries and of served connections     |
+| `--tokens`              | string  | _None_         | _None_                              | The token table of `(auth: token)`: `self` or a links file                 |
+| `--grant-token`         | string  | _None_         | _None_                              | Let a token authenticate as `--subject` in the `--tokens` table, then exit |
+| `--revoke-token`        | string  | _None_         | _None_                              | Forget a token of the `--tokens` table, then exit                          |
+| `--token`               | string  | _None_         | _None_                              | With `--connect`: authenticate with `(auth: token)` before the query       |
 
 The query can be passed as the first positional argument or through `--query`,
 `--apply`, or `--do`. In the Rust CLI, `--query` takes precedence when both

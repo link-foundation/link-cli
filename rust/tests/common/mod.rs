@@ -8,6 +8,7 @@ use link_cli::protocol::{
 };
 use link_cli::{LinkStorage, NamedTypesDecorator};
 use std::net::SocketAddr;
+use std::path::Path;
 use std::thread::{self, JoinHandle};
 use tempfile::NamedTempFile;
 
@@ -30,22 +31,31 @@ impl RunningServer {
     pub fn start_with(
         options: ServerOptions,
         named: bool,
-        configure: impl FnOnce(LinksServer) -> LinksServer,
+        configure: impl FnOnce(LinksServer) -> LinksServer + Send + 'static,
+    ) -> Self {
+        Self::start_serving(options, move |server, path| {
+            let server = configure(server);
+            if named {
+                let mut storage = NamedTypesDecorator::new(path, false).unwrap();
+                server.serve(&mut storage).unwrap();
+            } else {
+                let mut storage = LinkStorage::new(path, false).unwrap();
+                server.serve(&mut storage).unwrap();
+            }
+        })
+    }
+
+    /// Lets `serve` serve the temporary store at the path it is given.
+    pub fn start_serving(
+        options: ServerOptions,
+        serve: impl FnOnce(LinksServer, &Path) + Send + 'static,
     ) -> Self {
         let database = NamedTempFile::new().unwrap();
         let path = database.path().to_path_buf();
-        let server = configure(LinksServer::bind("127.0.0.1:0", options).unwrap());
+        let server = LinksServer::bind("127.0.0.1:0", options).unwrap();
         let address = server.local_addr().unwrap();
         let shutdown = server.shutdown_handle().unwrap();
-        let thread = thread::spawn(move || {
-            if named {
-                let mut storage = NamedTypesDecorator::new(&path, false).unwrap();
-                server.serve(&mut storage).unwrap();
-            } else {
-                let mut storage = LinkStorage::new(&path, false).unwrap();
-                server.serve(&mut storage).unwrap();
-            }
-        });
+        let thread = thread::spawn(move || serve(server, &path));
         Self {
             address,
             shutdown,

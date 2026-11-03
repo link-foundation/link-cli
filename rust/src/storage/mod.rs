@@ -15,9 +15,11 @@ mod decorator_impls;
 mod doublets_storage;
 mod file_mem;
 pub mod lock;
+mod named_links_storage;
 mod traits;
 
 pub use doublets_storage::{DoubletsStorage, FileMappedUnitStore, ResolvedFileMappedUnitStore};
 pub use file_mem::{FileMappedValue, PersistentFileMapped};
 pub use lock::{lock_file_path, FileLock, LockMode};
+pub use named_links_storage::NamedLinksStorage;
 pub use traits::{LinksStorage, LinksStorageRef, StorageRevision};
