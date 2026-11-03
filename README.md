@@ -39,6 +39,9 @@ package built from `doublets-rs`.
 
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
+- [docs/COMPOSITION.md](docs/COMPOSITION.md): how the permission, union, remap and external-id layers compose with each other and the other layers, in C#, Rust and JavaScript, with scenarios.
+- [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
+- [examples/](examples): runnable examples, one folder per feature.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
@@ -752,6 +755,36 @@ authentication as a callback, so a token table in links (`LinksTokenTable`)
 is only one choice. Runnable scripts for both CLIs live in
 [`examples/permissions/`](examples/permissions), and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#permissions) explains the design.
+
+## Join and remap networks
+
+Several links networks can be read as one, and a network can be read under
+other addresses. Each of these layers is a links network itself, so it wraps
+a local store, a served one, or another layer, in C#, Rust and JavaScript:
+
+- **Union** (`UnionLinksDecorator`, `UnionLinks`) joins networks, for example a
+  client's links with a server's. The first member that has an address
+  shadows the rest. A new link goes to the first member, and a write goes to
+  the member that has the link.
+- **Remap** (`RemapLinksDecorator`, `RemapLinks`) maps addresses both ways. An
+  offset moves a server's links out of the client's way, and a table gives
+  another system's ids addresses of our own. In JavaScript, a network can be
+  read under UUIDs.
+- **External ids** (`LinksExternalIds`) keep the ids other systems give our
+  links as links, in the data or in a store of their own.
+- **Permissions** compose with all of them. Over a union, the rules restrict
+  every member. Under it, they restrict one member, such as a server that
+  enforces its own rules.
+
+```js
+const links = new UnionLinks([local, new RemapLinks(server, new OffsetAddressMap(1n << 24n))]);
+const byUuid = new RemapLinks(links, new ExternalIdMap(ids, 'uuid'));
+```
+
+[`examples/composition/`](examples/composition) runs a client joined to a
+server with `--permissions`, under UUIDs, with both CLIs.
+[docs/COMPOSITION.md](docs/COMPOSITION.md) shows how the layers compose and
+the scenarios they serve.
 
 ## Update single link
 
