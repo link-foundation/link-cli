@@ -148,7 +148,7 @@ impl<S: NamedTypeLinks> NamedTypeLinksCalls for S {
             .unwrap();
         assert_eq!(removed, Link::new(1, 0, 0));
         // The cascade resets each usage to `(0 0)` before deleting it (doublets
-        // 0.17, as in C#); the net change of every link is its deletion.
+        // 0.17 and later, as in C#); the net change of every link is its deletion.
         let deleted = simplify_changes(deleted);
         assert!(deleted.contains(&(Link::new(1, 0, 0), Link::null())));
         assert!(deleted.contains(&(Link::new(2, 1, 1), Link::null())));
@@ -267,6 +267,8 @@ fn operations_round_trip_through_their_documents() {
         LinksOperation::SetName(8, "a name".to_string()),
         LinksOperation::GetByName("a name".to_string()),
         LinksOperation::RemoveName(9),
+        LinksOperation::Subscribe(vec![None, Some(1), None]),
+        LinksOperation::Unsubscribe(10),
     ];
     for protocol in protocols() {
         for operation in &operations {
@@ -310,6 +312,8 @@ fn only_operation_shaped_documents_are_operations() {
         "(set-name: (1 (a b)))",
         "(get-by-name: (a b))",
         "(remove-name: 4294967296)",
+        "(subscribe: (1 2 3 4))",
+        "(unsubscribe: (1 2))",
     ] {
         assert!(
             matches!(parse(malformed), Err(ProtocolError::Malformed(_))),

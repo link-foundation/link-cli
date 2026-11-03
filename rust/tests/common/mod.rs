@@ -22,9 +22,19 @@ pub struct RunningServer {
 
 impl RunningServer {
     pub fn start(options: ServerOptions, named: bool) -> Self {
+        Self::start_with(options, named, |server| server)
+    }
+
+    /// Like [`start`](Self::start), letting `configure` set the server up
+    /// before it serves.
+    pub fn start_with(
+        options: ServerOptions,
+        named: bool,
+        configure: impl FnOnce(LinksServer) -> LinksServer,
+    ) -> Self {
         let database = NamedTempFile::new().unwrap();
         let path = database.path().to_path_buf();
-        let server = LinksServer::bind("127.0.0.1:0", options).unwrap();
+        let server = configure(LinksServer::bind("127.0.0.1:0", options).unwrap());
         let address = server.local_addr().unwrap();
         let shutdown = server.shutdown_handle().unwrap();
         let thread = thread::spawn(move || {

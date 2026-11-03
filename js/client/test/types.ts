@@ -13,6 +13,13 @@ async function main(links: Links) {
   const p = await connectProcess({ command: 'clink', db: 'a b.links' });
   const w = createWasmClient({ request: (t: string) => t });
   new Logging(w).require('rawTcp');
+  const subscription: number = await c.subscribe([ANY, ANY, ANY]);
+  const stop = c.onNotification(({ subscription: n, changes }) => void [n, changes[0]?.after?.index]);
+  stop();
+  const note = await c.receiveNotification({ timeout: 10 });
+  if (note) for (const { before, after } of note.changes) void [before?.source, after?.target];
+  await c.unsubscribe(subscription);
+  void c.pendingNotifications;
   await using x = c;
   return [n, p];
 }

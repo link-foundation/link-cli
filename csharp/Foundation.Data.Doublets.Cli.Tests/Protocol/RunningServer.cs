@@ -31,6 +31,8 @@ internal sealed class RunningServer : IDisposable
 
     public int Port => _server.LocalEndPoint.Port;
 
+    public LinksServer Server => _server;
+
     public LinksClient Client(ILinoProtocol protocol) => LinksClient.Connect("127.0.0.1", Port, protocol);
 
     public RemoteLinks Remote(ILinoProtocol protocol) => new(Client(protocol));

@@ -29,8 +29,8 @@
 use super::client::LinksClient;
 use super::error::{ProtocolError, ProtocolResult};
 use super::links_operations::{
-    parse_changes, parse_count, parse_link_reply, parse_links, parse_name, Change, LinksOperation,
-    Part,
+    parse_changes, parse_count, parse_link_reply, parse_links, parse_name, parse_notification,
+    parse_subscription, Change, LinksNotification, LinksOperation, Part,
 };
 use super::protocols::LinoProtocol;
 use crate::link::Link;
@@ -41,7 +41,8 @@ use doublets::data::{Flow, LinksConstants, ReadHandler, WriteHandler};
 use doublets::{Doublets, Error, Link as DoubletsLink, Links};
 use links_notation::binary::LinoDocument;
 use std::net::ToSocketAddrs;
-use std::sync::{Mutex, PoisonError};
+use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::time::Duration;
 
 /// A links store served by a [`LinksServer`](super::LinksServer), usable
 /// wherever a local store is.
@@ -68,10 +69,36 @@ impl RemoteLinks {
 
     /// Runs one operation on the server and returns its reply.
     pub fn execute(&self, operation: &LinksOperation) -> ProtocolResult<LinoDocument> {
-        self.client
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .request(&operation.to_document())
+        self.client().request(&operation.to_document())
+    }
+
+    /// Asks the server to push the changes other connections make to the
+    /// links matching `restriction`; returns the subscription number that
+    /// [`receive_notification`](Self::receive_notification) reports them with.
+    pub fn subscribe(&self, restriction: &[Part]) -> ProtocolResult<u32> {
+        parse_subscription(&self.execute(&LinksOperation::Subscribe(restriction.to_vec()))?)
+    }
+
+    /// Stops a subscription; an unknown number is ignored.
+    pub fn unsubscribe(&self, subscription: u32) -> ProtocolResult<()> {
+        self.execute(&LinksOperation::Unsubscribe(subscription))?;
+        Ok(())
+    }
+
+    /// The next change pushed to a subscription of this connection, waiting
+    /// up to `timeout` for one; `Ok(None)` when none arrived in time.
+    pub fn receive_notification(
+        &self,
+        timeout: Duration,
+    ) -> ProtocolResult<Option<LinksNotification>> {
+        self.client()
+            .receive_notification(timeout)?
+            .map(|document| parse_notification(&document))
+            .transpose()
+    }
+
+    fn client(&self) -> MutexGuard<'_, LinksClient> {
+        self.client.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
     /// Number of links matching `restriction`.

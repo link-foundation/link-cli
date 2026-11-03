@@ -43,6 +43,28 @@ async function goldenConversation() {
   return exchanges.map(({ request, reply }) => ({ request, reply: reply.join('\n') }));
 }
 
+const subscriptionsGolden = new URL('../../../../docs/protocol/subscriptions.txt', import.meta.url);
+
+/**
+ * `[{ connection, kind, text, reply }]` of the subscriptions conversation:
+ * `kind` is `'request'` (`A> text`, then its reply lines) or `'push'`
+ * (`A< (notify: n)`, then its change lines, all in `reply`).
+ */
+async function subscriptionsConversation() {
+  const lines = (await readFile(subscriptionsGolden, 'utf8')).split('\n').filter((line) => line !== '' && !line.startsWith('#'));
+  const steps = [];
+  for (const line of lines) {
+    const step = /^([AB])([<>]) (.*)$/.exec(line);
+    if (step) {
+      const [, connection, direction, text] = step;
+      steps.push(direction === '>' ? { connection, kind: 'request', text, reply: [] } : { connection, kind: 'push', text, reply: [text] });
+    } else {
+      steps.at(-1).reply.push(line);
+    }
+  }
+  return steps.map((step) => ({ ...step, reply: step.reply.join('\n') }));
+}
+
 // ---------------------------------------------------------------- backends
 
 /** A server process backend: a fresh database in a directory with spaces. */
@@ -152,6 +174,78 @@ const scenarios = [
           }
         }
       });
+    },
+  },
+  {
+    name: 'subscriptions conversation (docs/protocol/subscriptions.txt) over two connections',
+    processOnly: true,
+    async run(store) {
+      const conversation = await subscriptionsConversation();
+      assert.equal(conversation.length, 24);
+      const server = await store.start();
+      const connections = {};
+      try {
+        connections.A = await connectTcp(server.address);
+        connections.B = await connectTcp(server.address);
+        for (const [position, { connection, kind, text, reply }] of conversation.entries()) {
+          const client = connections[connection];
+          const label = `step ${position + 1}: ${connection}${kind === 'push' ? '<' : '>'} ${text}`;
+          if (kind === 'push') {
+            assert.equal((await client.transport.receivePush({ timeout: 10_000 })).trimEnd(), reply, label);
+            continue;
+          }
+          const actual = (await client.requestText(text)).trimEnd();
+          if (reply.startsWith('! ')) {
+            assert.match(actual, /^\(error: /, label);
+            assert.ok(actual.includes(reply.slice(2)), `${label}: ${actual}`);
+          } else {
+            assert.equal(actual, reply, label);
+          }
+          // Every push is written before any later reply on its connection.
+          assert.equal(client.pendingNotifications, 0, `${label}: a push the conversation does not list`);
+        }
+        // Through the typed API: unsubscribed, A hears of nothing more.
+        assert.equal(await connections.B.subscribe([ANY, ANY, ANY]), 2);
+        await connections.A.create(7n, 7n);
+        const pushed = await connections.B.receiveNotification({ timeout: 10_000 });
+        assert.deepEqual(pushed, { subscription: 2, changes: [{ before: null, after: { index: 4n, source: 7n, target: 7n } }] });
+        assert.equal(await connections.A.receiveNotification({ timeout: 200 }), null);
+      } finally {
+        await connections.A?.close();
+        await connections.B?.close();
+        await server.close();
+      }
+    },
+  },
+  {
+    name: 'subscriptions: a write is pushed only to the other connections that subscribed, until they unsubscribe',
+    processOnly: true,
+    async run(store) {
+      const server = await store.start();
+      const clients = [];
+      try {
+        for (let i = 0; i < 3; i += 1) clients.push(await connectTcp(server.address));
+        const [subscriber, writer, bystander] = clients;
+        // The acceptance scenario of issue #150.
+        assert.equal(await subscriber.subscribe([ANY, ANY, ANY]), 1);
+        const seen = [];
+        const stop = subscriber.onNotification((notification) => seen.push(notification));
+        await writer.create(0n, 0n);
+        // A round trip on the subscriber: its pushes come before its replies.
+        assert.equal(await subscriber.count(), 1n);
+        assert.deepEqual(seen, [{ subscription: 1, changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }] }]);
+        stop();
+        assert.equal(bystander.pendingNotifications, 0);
+        await subscriber.unsubscribe(1);
+        await writer.delete(1n);
+        assert.equal(await subscriber.count(), 0n);
+        assert.equal(subscriber.pendingNotifications, 0);
+        assert.equal(await subscriber.receiveNotification({ timeout: 200 }), null);
+        assert.equal(seen.length, 1);
+      } finally {
+        for (const client of clients) await client.close();
+        await server.close();
+      }
     },
   },
   {

@@ -4,9 +4,9 @@
 
 import { GUARANTEES } from './capabilities.js';
 import { scopeError, scopeOf } from './deadline.js';
-import { LinksError, MalformedMessageError, RemoteError, UnsupportedError } from './errors.js';
+import { DeadlineExceededError, LinksError, MalformedMessageError, RemoteError, UnsupportedError } from './errors.js';
 import { formatDocument, parseDocument } from './lino.js';
-import { errorMessage, replies, requests } from './operations.js';
+import { errorMessage, parseNotification, replies, requests } from './operations.js';
 
 /**
  * A links store behind a transport. Every address it takes or returns is a
@@ -15,7 +15,9 @@ import { errorMessage, replies, requests } from './operations.js';
  * {@link LinksError} whose `outcome` says whether the request may have run.
  *
  * A transport is `{ capabilities, send(text, { signal, deadline }), close() }`
- * where `send` resolves to the LiNo text of the reply.
+ * where `send` resolves to the LiNo text of the reply. A transport that
+ * receives pushes (TCP) also has `receivePush(scope)`, `onPush(listener)` and
+ * `pendingPushes`, which subscriptions need.
  */
 export class LinksClient {
   constructor(transport, { capabilities } = {}) {
@@ -121,6 +123,65 @@ export class LinksClient {
   /** Every link, names substituted for named references (the empty request). */
   async exportLinks(options) {
     return replies.namedLinks(await this.request([], options));
+  }
+
+  /**
+   * Subscribes to the changes other connections make to the links matching a
+   * restriction (the same patterns as `each`) and resolves to the number of
+   * the subscription, counted from 1 on every connection. Each later write
+   * of another connection that touches a matching link is pushed as one
+   * notification per subscription; this connection's own writes are not.
+   */
+  async subscribe(restriction = [], options) {
+    this.#requirePushes();
+    return replies.subscription(await this.request(requests.subscribe(restriction, this.maxAddress), options));
+  }
+
+  /** Ends a subscription; an unknown number is ignored. Pushes already received stay receivable. */
+  async unsubscribe(subscription, options) {
+    this.#requirePushes();
+    replies.empty(await this.request(requests.unsubscribe(subscription), options));
+  }
+
+  /**
+   * The next notification, `{ subscription, changes }`, where each change is
+   * `{ before, after }` and a side the subscription does not see is null.
+   * Waits until one arrives; resolves to null when the `deadline` or
+   * `timeout` passes first, rejects with an AbortError when `signal` aborts
+   * and with a ConnectionClosedError once the connection is closed.
+   */
+  async receiveNotification(options = {}) {
+    this.#requirePushes();
+    let text;
+    try {
+      text = await this.transport.receivePush(scopeOf(options));
+    } catch (error) {
+      if (error instanceof DeadlineExceededError) return null;
+      throw error;
+    }
+    return parseNotification(parseDocument(text));
+  }
+
+  /**
+   * Calls `listener({ subscription, changes })` with every notification from
+   * now on; while a listener is registered, notifications are not kept for
+   * `receiveNotification`. Returns the function that removes the listener.
+   */
+  onNotification(listener) {
+    this.#requirePushes();
+    if (typeof listener !== 'function') throw new TypeError('a notification listener is a function');
+    return this.transport.onPush((text) => listener(parseNotification(parseDocument(text))));
+  }
+
+  /** The number of notifications received and not taken yet. */
+  get pendingNotifications() {
+    return this.transport.pendingPushes ?? 0;
+  }
+
+  #requirePushes() {
+    if (typeof this.transport.receivePush !== 'function' || typeof this.transport.onPush !== 'function') {
+      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not push changes: subscriptions need a connection to a server`);
+    }
   }
 
   /**
@@ -293,6 +354,26 @@ export class LinksDecorator {
 
   batch(operations, options) {
     return this.links.batch(operations, options);
+  }
+
+  subscribe(restriction, options) {
+    return this.links.subscribe(restriction, options);
+  }
+
+  unsubscribe(subscription, options) {
+    return this.links.unsubscribe(subscription, options);
+  }
+
+  receiveNotification(options) {
+    return this.links.receiveNotification(options);
+  }
+
+  onNotification(listener) {
+    return this.links.onNotification(listener);
+  }
+
+  get pendingNotifications() {
+    return this.links.pendingNotifications;
   }
 
   close() {
