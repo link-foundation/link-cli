@@ -181,6 +181,31 @@ decorated links and writes go through the decorator, so a derived decorator
 that checks writes sees them. With `new TypesDecorator<uint>(links, root,
 extends)` the pinned types `(1: 1 1)`, `(2: 1 2)`, … are sub-types of root `1`.
 
+### Triplets
+
+`TripletsOverDoublets<TLinkAddress>` wraps any `INamedTypesLinks<TLinkAddress>`
+and keeps triplets `(index: type from to)` in its doublets (#151): a node
+`(i: T 0 0)` is `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`,
+with the points `Pair` and `Nothing` found or created by name.
+
+```csharp
+using var named = new NamedTypesDecorator<uint>("db.links");
+var triplets = new TripletsOverDoublets<uint>(named);
+var type = triplets.CreateTripletPoint();               // (type: type 0 0)
+var person = triplets.CreateTriplet(type, 0, 0);
+var alice = triplets.CreateTriplet(person, 0, 0);
+var bob = triplets.CreateTriplet(person, 0, 0);
+var knows = triplets.CreateTriplet(type, alice, bob);   // (knows: type alice bob)
+triplets.UpdateTriplet(knows, type, bob, alice);        // the address stays
+var fromBob = triplets.EachTriplet(TripletQuery<uint>.ByFrom(bob));
+var deleted = triplets.DeleteTriplet(alice);            // alice and knows
+TripletsQueryProcessor.ProcessQuery(triplets, $"(() (({type} {bob} {bob})))"); // a create
+Console.Write(TripletsLino.Export(triplets));           // (index: type from to) lines
+```
+
+The class is not sealed and every member is virtual. See
+[docs/TRIPLETS.md](../docs/TRIPLETS.md) for the encoding and its costs.
+
 ### Permissions
 
 `--permissions self|<rules.links>` runs queries as `--subject` (an index or a

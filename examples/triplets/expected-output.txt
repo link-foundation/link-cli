@@ -1,0 +1,25 @@
+Some(Triplet { index: 9, type_id: 5, from: 6, to: 7 }) -> Some(Triplet { index: 9, type_id: 5, from: 6, to: 8 })
+by to carol: [Triplet { index: 9, type_id: 5, from: 6, to: 8 }]
+by type knows: 2
+
+(Type: Type 0 0)
+(Person: Type 0 0)
+(knows: Type 0 0)
+(alice: Person 0 0)
+(bob: Person 0 0)
+(carol: Person 0 0)
+(r: knows alice carol)
+
+(1: 1 1) Some(Marker)
+(2: 2 2) Some(Marker)
+(3: 3 3) Some(Triplet(Triplet { index: 3, type_id: 3, from: 0, to: 0 }))
+(4: 3 4) Some(Triplet(Triplet { index: 4, type_id: 3, from: 0, to: 0 }))
+(5: 3 5) Some(Triplet(Triplet { index: 5, type_id: 3, from: 0, to: 0 }))
+(6: 4 6) Some(Triplet(Triplet { index: 6, type_id: 4, from: 0, to: 0 }))
+(7: 4 7) Some(Triplet(Triplet { index: 7, type_id: 4, from: 0, to: 0 }))
+(8: 4 8) Some(Triplet(Triplet { index: 8, type_id: 4, from: 0, to: 0 }))
+(9: 5 12) Some(Triplet(Triplet { index: 9, type_id: 5, from: 6, to: 8 }))
+(10: 1 6) Some(Wrapper)
+(12: 10 8) Some(Pair)
+
+1011 triplets in 2319 doublets (2317 besides the two markers)
