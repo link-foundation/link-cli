@@ -5,18 +5,23 @@
 //! [`LinksServer::serve`], one at a time, so the store needs neither `Send`
 //! nor locking. The protocol is detected per message and the reply uses the
 //! same protocol, so text and binary clients can share one server.
+//! Every connection is a session of a [`LinksSessions`], with a subject of
+//! its own (issue #149).
 
 use super::error::ProtocolResult;
 use super::links_operations::LinksOperation;
 use super::protocols::{read_any_document, MessageFormat, ProtocolLimits};
+use super::sessions::{LinksSessions, SessionId};
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
+use crate::permissions::AccessPolicy;
 use crate::query_processor::QueryProcessor;
 use links_notation::binary::{format_document, LinoDocument};
 use links_notation::LiNo;
+use std::collections::HashMap;
 use std::io::{BufReader, BufWriter, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::Arc;
 use std::thread;
@@ -59,9 +64,11 @@ pub struct ServerOptions {
 
 enum Job {
     Request {
+        connection: u64,
         document: LinoDocument,
         reply: Sender<LinoDocument>,
     },
+    Closed(u64),
     Shutdown,
 }
 
@@ -121,8 +128,22 @@ impl LinksServer {
         })
     }
 
-    /// Serves `storage` until a [`ShutdownHandle`] stops the server.
+    /// Serves `storage` until a [`ShutdownHandle`] stops the server; every
+    /// connection sees and changes the whole store.
     pub fn serve<S: NamedTypeLinks>(self, storage: &mut S) -> ProtocolResult<()> {
+        let auto_create = self.options.auto_create_missing_references;
+        let mut sessions =
+            LinksSessions::new(storage).with_auto_create_missing_references(auto_create);
+        self.serve_sessions(&mut sessions)
+    }
+
+    /// Serves `sessions` until a [`ShutdownHandle`] stops the server: every
+    /// connection is a session of its own, opened with the default subject
+    /// of `sessions` and closed when the connection closes (issue #149).
+    pub fn serve_sessions<S: NamedTypeLinks, P: AccessPolicy>(
+        self,
+        sessions: &mut LinksSessions<S, P>,
+    ) -> ProtocolResult<()> {
         let LinksServer {
             listener,
             options,
@@ -134,22 +155,36 @@ impl LinksServer {
             let stopping = Arc::clone(&stopping);
             thread::spawn(move || accept_loop(listener, jobs, stopping, options))
         };
-        let processor = QueryProcessor::new(false)
-            .with_auto_create_missing_references(options.auto_create_missing_references);
+        let mut open: HashMap<u64, SessionId> = HashMap::new();
         while let Ok(job) = queue.recv() {
             match job {
                 Job::Shutdown => break,
-                Job::Request { document, reply } => {
+                Job::Closed(connection) => {
+                    if let Some(session) = open.remove(&connection) {
+                        sessions.close(session);
+                    }
+                }
+                Job::Request {
+                    connection,
+                    document,
+                    reply,
+                } => {
                     if options.trace {
                         eprintln!("[server] request: {}", format_document(&document));
                     }
-                    let response = execute_request(storage, &processor, &document);
+                    let session = *open
+                        .entry(connection)
+                        .or_insert_with(|| sessions.open(None));
+                    let response = sessions.execute(session, &document);
                     if options.trace {
                         eprintln!("[server] reply: {}", format_document(&response));
                     }
                     let _ = reply.send(response);
                 }
             }
+        }
+        for (_, session) in open {
+            sessions.close(session);
         }
         stopping.store(true, Ordering::SeqCst);
         drop(queue);
@@ -164,14 +199,18 @@ fn accept_loop(
     stopping: Arc<AtomicBool>,
     options: ServerOptions,
 ) {
+    let connections = AtomicU64::new(0);
     for stream in listener.incoming() {
         if stopping.load(Ordering::SeqCst) {
             return;
         }
         let Ok(stream) = stream else { continue };
         let jobs = jobs.clone();
+        let connection = connections.fetch_add(1, Ordering::Relaxed);
         thread::spawn(move || {
-            if let Err(error) = handle_connection(stream, jobs, options) {
+            let result = handle_connection(stream, &jobs, connection, options);
+            let _ = jobs.send(Job::Closed(connection));
+            if let Err(error) = result {
                 if options.trace {
                     eprintln!("[server] connection closed: {error}");
                 }
@@ -182,7 +221,8 @@ fn accept_loop(
 
 fn handle_connection(
     stream: TcpStream,
-    jobs: Sender<Job>,
+    jobs: &Sender<Job>,
+    connection: u64,
     options: ServerOptions,
 ) -> ProtocolResult<()> {
     let _ = stream.set_nodelay(true);
@@ -209,10 +249,14 @@ fn handle_connection(
         let response = if options.accept.accepts(format) {
             let (reply, response) = mpsc::channel();
             // Once `serve` returns, no request may touch the store.
-            jobs.send(Job::Request { document, reply })
-                .ok()
-                .and_then(|()| response.recv().ok())
-                .unwrap_or_else(|| error_document("server is shutting down"))
+            jobs.send(Job::Request {
+                connection,
+                document,
+                reply,
+            })
+            .ok()
+            .and_then(|()| response.recv().ok())
+            .unwrap_or_else(|| error_document("server is shutting down"))
         } else {
             error_document("this server does not accept this protocol")
         };

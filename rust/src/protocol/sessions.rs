@@ -1,0 +1,327 @@
+//! Sessions of a links server, each with its subject (issue #149).
+//!
+//! [`LinksSessions`] is what a [`LinksServer`](super::LinksServer) gives
+//! every connection, without the network. The C# counterparts are
+//! `LinksSessions` and `LinksSession`.
+
+use std::collections::{HashMap, HashSet};
+use std::panic::{self, AssertUnwindSafe};
+
+use anyhow::Result;
+use links_notation::binary::{format_document, parse_document, LinoDocument};
+use links_notation::LiNo;
+
+use super::links_operations::LinksOperation;
+use super::server::{error_document, error_message, execute_request};
+use crate::named_type_links::NamedTypeLinks;
+use crate::permissions::{AccessPolicy, PermissionPolicy, PermissionsDecorator};
+use crate::query_processor::QueryProcessor;
+use crate::undoable_links::UndoableLinksDecorator;
+
+/// The subject of a token, or `None` when the token is not valid: answers
+/// `(auth: token)`.
+///
+/// It is given the store the sessions serve, below any permissions, so a
+/// [`LinksTokenTable`](crate::LinksTokenTable) kept in the data can read it:
+/// `Box::new(|store, token| LinksTokenTable::new(store).authenticate(token))`.
+/// An error fails the authentication.
+pub type Authenticator = Box<dyn FnMut(&mut dyn NamedTypeLinks, &str) -> Result<Option<u32>>>;
+
+/// A session of a [`LinksSessions`], as [`LinksSessions::open`] returns it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct SessionId(u64);
+
+/// What a session keeps between its requests.
+#[derive(Debug, Default)]
+struct Session {
+    subject: u32,
+    /// The links the subject created, while they are its own.
+    created: HashSet<u32>,
+}
+
+enum Store<S: NamedTypeLinks, P: AccessPolicy> {
+    Plain(S),
+    Permitted(PermissionsDecorator<UndoableLinksDecorator<S>, P>),
+}
+
+/// A store served to many sessions, each with its subject (issue #149).
+///
+/// Without permissions every session sees and changes the whole store,
+/// exactly as before permissions existed. With them
+/// ([`with_permissions`](Self::with_permissions)), a session sees the store
+/// through a [`PermissionsDecorator`] of its subject, and every request is
+/// atomic: one that fails is undone whole, the writes the store made on its
+/// own (cascades, merges) and the names it took included, even where they
+/// touched links the subject cannot see.
+///
+/// `(auth: token)` sets the subject of the session to the one the
+/// [`Authenticator`] gives the token, and answers `(subject: i)`; an unknown
+/// token, or sessions without an authenticator, answer
+/// `(error: 'Forbidden: authentication failed')`.
+///
+/// Requests run one at a time, as `&mut self` already demands.
+pub struct LinksSessions<S: NamedTypeLinks, P: AccessPolicy = PermissionPolicy> {
+    store: Store<S, P>,
+    processor: QueryProcessor,
+    authenticate: Option<Authenticator>,
+    subject: u32,
+    sessions: HashMap<SessionId, Session>,
+    next: u64,
+}
+
+impl<S: NamedTypeLinks> LinksSessions<S> {
+    /// Sessions that see and change the whole store.
+    pub fn new(store: S) -> Self {
+        Self::of(Store::Plain(store))
+    }
+}
+
+impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
+    /// Sessions that see the store as `policy` lets their subjects.
+    pub fn with_permissions(store: S, policy: P) -> Self {
+        Self::of(Store::Permitted(PermissionsDecorator::new(
+            UndoableLinksDecorator::new(store),
+            policy,
+            0,
+        )))
+    }
+
+    fn of(store: Store<S, P>) -> Self {
+        Self {
+            store,
+            processor: QueryProcessor::new(false),
+            authenticate: None,
+            subject: 0,
+            sessions: HashMap::new(),
+            next: 0,
+        }
+    }
+
+    /// Answers `(auth: token)` with `authenticate`.
+    pub fn with_authenticator(
+        mut self,
+        authenticate: impl FnMut(&mut dyn NamedTypeLinks, &str) -> Result<Option<u32>> + 'static,
+    ) -> Self {
+        self.authenticate = Some(Box::new(authenticate));
+        self
+    }
+
+    /// The subject of a session before any `(auth: token)`; the null link
+    /// (0, the default) is a guest.
+    pub fn with_subject(mut self, subject: u32) -> Self {
+        self.subject = subject;
+        self
+    }
+
+    /// Passed to [`QueryProcessor::with_auto_create_missing_references`].
+    pub fn with_auto_create_missing_references(mut self, enabled: bool) -> Self {
+        self.processor = QueryProcessor::new(false).with_auto_create_missing_references(enabled);
+        self
+    }
+
+    /// Whether the sessions see the store through permissions.
+    pub fn has_permissions(&self) -> bool {
+        matches!(self.store, Store::Permitted(_))
+    }
+
+    /// The store.
+    pub fn store(&self) -> &S {
+        match &self.store {
+            Store::Plain(store) => store,
+            Store::Permitted(view) => view.inner().inner(),
+        }
+    }
+
+    /// The store, to read or write it as no session.
+    pub fn store_mut(&mut self) -> &mut S {
+        match &mut self.store {
+            Store::Plain(store) => store,
+            Store::Permitted(view) => view.inner_mut().inner_mut(),
+        }
+    }
+
+    /// The policy, when there are permissions.
+    pub fn policy(&self) -> Option<&P> {
+        match &self.store {
+            Store::Plain(_) => None,
+            Store::Permitted(view) => Some(view.policy()),
+        }
+    }
+
+    pub fn into_inner(self) -> S {
+        match self.store {
+            Store::Plain(store) => store,
+            Store::Permitted(view) => view.into_inner().into_inner(),
+        }
+    }
+
+    /// Opens a session of `subject`, by default the one of
+    /// [`with_subject`](Self::with_subject).
+    pub fn open(&mut self, subject: Option<u32>) -> SessionId {
+        let id = SessionId(self.next);
+        self.next += 1;
+        self.sessions.insert(
+            id,
+            Session {
+                subject: subject.unwrap_or(self.subject),
+                created: HashSet::new(),
+            },
+        );
+        id
+    }
+
+    /// Closes a session.
+    pub fn close(&mut self, session: SessionId) {
+        self.sessions.remove(&session);
+    }
+
+    /// The sessions that are open.
+    pub fn sessions(&self) -> Vec<SessionId> {
+        let mut sessions: Vec<SessionId> = self.sessions.keys().copied().collect();
+        sessions.sort();
+        sessions
+    }
+
+    /// The subject the requests of `session` run as, while it is open.
+    pub fn subject(&self, session: SessionId) -> Option<u32> {
+        self.sessions.get(&session).map(|session| session.subject)
+    }
+
+    /// The links `session` created, while they are its own.
+    pub fn created(&self, session: SessionId) -> Option<&HashSet<u32>> {
+        self.sessions.get(&session).map(|session| &session.created)
+    }
+
+    /// Answers a request written as LiNo text, as the text protocol does.
+    pub fn request(&mut self, session: SessionId, text: &str) -> String {
+        let reply = match parse_document(text) {
+            Ok(document) => self.execute(session, &document),
+            Err(error) => error_document(&error.to_string()),
+        };
+        format_document(&reply)
+    }
+
+    /// Answers one request document of `session`; a session that is not
+    /// open is opened.
+    pub fn execute(&mut self, session: SessionId, document: &[LiNo<String>]) -> LinoDocument {
+        let mut state = self.sessions.remove(&session).unwrap_or(Session {
+            subject: self.subject,
+            created: HashSet::new(),
+        });
+        let reply = self.execute_as(&mut state, document);
+        self.sessions.insert(session, state);
+        reply
+    }
+
+    fn execute_as(&mut self, session: &mut Session, document: &[LiNo<String>]) -> LinoDocument {
+        if let [LiNo::Link {
+            id: Some(id),
+            values,
+        }] = document
+        {
+            if id == "auth" {
+                return self.authenticate(session, values);
+            }
+        }
+        let view = match &mut self.store {
+            Store::Plain(store) => return execute_request(store, &self.processor, document),
+            Store::Permitted(view) => view,
+        };
+        view.set_subject(session.subject);
+        view.replace_created(std::mem::take(&mut session.created));
+        view.inner_mut().begin();
+        let processor = &self.processor;
+        let outcome = panic::catch_unwind(AssertUnwindSafe(|| request(view, processor, document)));
+        let reply = match outcome {
+            Ok(reply) if error_message(&reply).is_none() => {
+                let deleted: HashSet<u32> = view
+                    .inner()
+                    .log()
+                    .changes()
+                    .iter()
+                    .filter_map(|change| match change {
+                        (Some(before), None) => Some(before.index),
+                        _ => None,
+                    })
+                    .collect();
+                view.inner_mut().commit();
+                // The links are gone: no other session owns them any more.
+                for other in self.sessions.values_mut() {
+                    other.created.retain(|index| !deleted.contains(index));
+                }
+                reply
+            }
+            Ok(reply) => match undo(view) {
+                Ok(()) => reply,
+                Err(error) => error_document(&format!(
+                    "{}; undoing it failed: {error:#}",
+                    error_message(&reply).unwrap_or_default()
+                )),
+            },
+            Err(panicked) => {
+                let _ = undo(view);
+                session.created = view.replace_created(HashSet::new());
+                panic::resume_unwind(panicked);
+            }
+        };
+        session.created = view.replace_created(HashSet::new());
+        reply
+    }
+
+    fn authenticate(&mut self, session: &mut Session, values: &[LiNo<String>]) -> LinoDocument {
+        let found = match (values, self.authenticate.as_mut()) {
+            ([LiNo::Ref(token)], Some(authenticate)) => {
+                let store: &mut dyn NamedTypeLinks = match &mut self.store {
+                    Store::Plain(store) => store,
+                    Store::Permitted(view) => view.inner_mut().inner_mut(),
+                };
+                authenticate(store, token).ok().flatten()
+            }
+            _ => None,
+        };
+        match found {
+            Some(subject) => {
+                session.subject = subject;
+                vec![LiNo::Link {
+                    id: Some("subject".to_string()),
+                    values: vec![LiNo::Ref(subject.to_string())],
+                }]
+            }
+            None => error_document("Forbidden: authentication failed"),
+        }
+    }
+}
+
+/// Undoes the request, and forgets the links it created.
+fn undo<S: NamedTypeLinks, P: AccessPolicy>(
+    view: &mut PermissionsDecorator<UndoableLinksDecorator<S>, P>,
+) -> Result<()> {
+    for created in view.inner_mut().rollback()? {
+        view.forget(created);
+    }
+    Ok(())
+}
+
+/// A request as the subject sees the store: names of links it cannot read
+/// are not found, and references are checked in the store below.
+fn request<L: NamedTypeLinks, P: AccessPolicy>(
+    view: &mut PermissionsDecorator<L, P>,
+    processor: &QueryProcessor,
+    document: &[LiNo<String>],
+) -> LinoDocument {
+    let operation = match LinksOperation::from_document(document) {
+        Ok(operation) => operation,
+        Err(error) => return error_document(&error.to_string()),
+    };
+    match operation {
+        Some(LinksOperation::GetName(link)) if !view.exists(link) => Vec::new(),
+        Some(LinksOperation::GetByName(name)) => match view.get_by_name(&name) {
+            Ok(Some(link)) if link != 0 && view.exists(link) => {
+                execute_request(view, processor, document)
+            }
+            Ok(_) => Vec::new(),
+            Err(error) => error_document(&format!("{error:#}")),
+        },
+        _ => execute_request(view, processor, document),
+    }
+}
