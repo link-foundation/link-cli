@@ -159,7 +159,7 @@ impl LinksOperation {
                 .collect(),
             Self::Create { source, target } => {
                 // `create` makes exactly `(index: source target)`.
-                let created = Link::new(storage.create(*source, *target), *source, *target);
+                let created = Link::new(storage.try_create(*source, *target)?, *source, *target);
                 storage.save()?;
                 changes_document(&[(Link::null(), created)])
             }

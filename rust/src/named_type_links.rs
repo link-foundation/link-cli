@@ -31,6 +31,45 @@ pub trait NamedTypeLinks {
     }
     fn get_link(&mut self, id: u32) -> Option<Link>;
     fn exists(&mut self, id: u32) -> bool;
+    /// [`Self::create`] for a layer that may refuse it, as a
+    /// [`PermissionsDecorator`](crate::permissions::PermissionsDecorator)
+    /// does: the query processor and the type hierarchy create through it.
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        Ok(self.create(source, target))
+    }
+    /// [`Self::get_or_create`] for a layer that may refuse it.
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        match self.search(source, target) {
+            Some(found) => Ok(found),
+            None => self.try_create(source, target),
+        }
+    }
+    /// Whether a reference of a query to `id` names a link that exists.
+    ///
+    /// The same as [`Self::exists`], but for a view that hides links: a
+    /// reference to a link the subject cannot see is checked in the store
+    /// below, so a query cannot learn that a hidden address is taken by
+    /// trying to create a link there (issue #149).
+    fn reference_exists(&mut self, id: u32) -> bool {
+        self.exists(id)
+    }
+    /// The addresses the next `count` links created in the store get.
+    ///
+    /// A store reuses the address freed last first, so the lowest free one is
+    /// not necessarily next. Creating the links and deleting them again in
+    /// reverse leaves the store exactly as it was, and is the one way to ask
+    /// any store, a remote one included. A view that may not create asks the
+    /// store below.
+    fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {
+        let mut addresses = Vec::with_capacity(count);
+        for _ in 0..count {
+            addresses.push(self.try_create(0, 0)?);
+        }
+        for &address in addresses.iter().rev() {
+            self.delete(address)?;
+        }
+        Ok(addresses)
+    }
     fn update(&mut self, id: u32, source: u32, target: u32) -> Result<Link> {
         self.update_observed(id, source, target, &mut |_, _| {})
     }
@@ -103,7 +142,7 @@ pub trait NamedTypeLinks {
             return Ok(id);
         }
 
-        let id = self.create(0, 0);
+        let id = self.try_create(0, 0)?;
         self.set_name(id, name)?;
         self.update(id, id, id)?;
         Ok(id)
@@ -135,7 +174,10 @@ pub trait NamedTypeLinks {
             .collect::<Result<Vec<_>>>()
     }
 
-    fn write_lino_output<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+    fn write_lino_output<P: AsRef<Path>>(&mut self, path: P) -> Result<()>
+    where
+        Self: Sized,
+    {
         let path = path.as_ref();
         let file = OpenOptions::new()
             .write(true)
@@ -498,6 +540,106 @@ impl NamedTypeLinks for crate::version_control::VersionControlDecorator {
 
     fn save(&mut self) -> Result<()> {
         crate::version_control::VersionControlDecorator::save(self)
+    }
+}
+
+/// A borrowed store is a store: a layer can wrap `&mut store` and leave the
+/// store with its owner, as the permission policy does when it reads the
+/// types of the data through a [`TypesDecorator`](crate::types::TypesDecorator).
+impl<L: NamedTypeLinks + ?Sized> NamedTypeLinks for &mut L {
+    fn create(&mut self, source: u32, target: u32) -> u32 {
+        (**self).create(source, target)
+    }
+
+    fn ensure_created(&mut self, id: u32) -> u32 {
+        (**self).ensure_created(id)
+    }
+
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        (**self).try_ensure_created(id)
+    }
+
+    fn get_link(&mut self, id: u32) -> Option<Link> {
+        (**self).get_link(id)
+    }
+
+    fn exists(&mut self, id: u32) -> bool {
+        (**self).exists(id)
+    }
+
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        (**self).try_create(source, target)
+    }
+
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        (**self).try_get_or_create(source, target)
+    }
+
+    fn reference_exists(&mut self, id: u32) -> bool {
+        (**self).reference_exists(id)
+    }
+
+    fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {
+        (**self).next_created_addresses(count)
+    }
+
+    fn update_observed(
+        &mut self,
+        id: u32,
+        source: u32,
+        target: u32,
+        observer: ChangeObserver<'_>,
+    ) -> Result<Link> {
+        (**self).update_observed(id, source, target, observer)
+    }
+
+    fn delete_observed(&mut self, id: u32, observer: ChangeObserver<'_>) -> Result<Link> {
+        (**self).delete_observed(id, observer)
+    }
+
+    fn all_links(&mut self) -> Vec<Link> {
+        (**self).all_links()
+    }
+
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        (**self).query_links(index, source, target)
+    }
+
+    fn search(&mut self, source: u32, target: u32) -> Option<u32> {
+        (**self).search(source, target)
+    }
+
+    fn get_or_create(&mut self, source: u32, target: u32) -> u32 {
+        (**self).get_or_create(source, target)
+    }
+
+    fn get_name(&mut self, id: u32) -> Result<Option<String>> {
+        (**self).get_name(id)
+    }
+
+    fn set_name(&mut self, id: u32, name: &str) -> Result<u32> {
+        (**self).set_name(id, name)
+    }
+
+    fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
+        (**self).get_by_name(name)
+    }
+
+    fn remove_name(&mut self, id: u32) -> Result<()> {
+        (**self).remove_name(id)
+    }
+
+    fn save(&mut self) -> Result<()> {
+        (**self).save()
+    }
+
+    fn get_or_create_named(&mut self, name: &str) -> Result<u32> {
+        (**self).get_or_create_named(name)
     }
 }
 

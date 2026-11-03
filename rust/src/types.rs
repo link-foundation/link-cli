@@ -63,7 +63,7 @@ pub fn ensure_point<L: NamedTypeLinks + ?Sized>(links: &mut L, name: &str) -> Re
             return Ok(known);
         }
     }
-    let id = links.create(0, 0);
+    let id = links.try_create(0, 0)?;
     links.update(id, id, id)?;
     links.set_name(id, name)?;
     Ok(id)
@@ -191,7 +191,7 @@ pub trait Types: NamedTypeLinks {
         for &other in more {
             ensure_exists(self, other)?;
         }
-        let id = self.create(0, 0);
+        let id = self.try_create(0, 0)?;
         self.update(id, parent, id)?;
         for &other in more {
             self.extend(id, other)?;
@@ -223,15 +223,15 @@ pub trait Types: NamedTypeLinks {
                 "Type {parent} is a direct sub-type of {type_id}: the pair ({type_id} {parent}) would be its definition."
             );
         }
-        let pair = self.get_or_create(type_id, parent);
-        self.get_or_create(extends, pair);
+        let pair = self.try_get_or_create(type_id, parent)?;
+        self.try_get_or_create(extends, pair)?;
         Ok(pair)
     }
 
     /// A value `(v: type v)` of `type_id`.
     fn instance(&mut self, type_id: u32) -> Result<u32> {
         ensure_exists(self, type_id)?;
-        let id = self.create(0, 0);
+        let id = self.try_create(0, 0)?;
         self.update(id, type_id, id)?;
         Ok(id)
     }
@@ -240,7 +240,7 @@ pub trait Types: NamedTypeLinks {
     fn instance_with_target(&mut self, type_id: u32, target: u32) -> Result<u32> {
         ensure_exists(self, type_id)?;
         ensure_exists(self, target)?;
-        Ok(self.get_or_create(type_id, target))
+        self.try_get_or_create(type_id, target)
     }
 }
 
@@ -333,12 +333,32 @@ impl<L: NamedTypeLinks> NamedTypeLinks for TypesDecorator<L> {
         self.links.ensure_created(id)
     }
 
+    fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
+        self.links.try_ensure_created(id)
+    }
+
     fn get_link(&mut self, id: u32) -> Option<Link> {
         self.links.get_link(id)
     }
 
     fn exists(&mut self, id: u32) -> bool {
         self.links.exists(id)
+    }
+
+    fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        self.links.try_create(source, target)
+    }
+
+    fn try_get_or_create(&mut self, source: u32, target: u32) -> Result<u32> {
+        self.links.try_get_or_create(source, target)
+    }
+
+    fn reference_exists(&mut self, id: u32) -> bool {
+        self.links.reference_exists(id)
+    }
+
+    fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {
+        self.links.next_created_addresses(count)
     }
 
     fn update_observed(
@@ -394,5 +414,9 @@ impl<L: NamedTypeLinks> NamedTypeLinks for TypesDecorator<L> {
 
     fn save(&mut self) -> Result<()> {
         self.links.save()
+    }
+
+    fn get_or_create_named(&mut self, name: &str) -> Result<u32> {
+        self.links.get_or_create_named(name)
     }
 }
