@@ -9,8 +9,8 @@ export. The encoding and the cost of every operation are in
 
 The Rust example imports a few people, moves `r` from `bob` to `carol` with
 the substitution `((($r: knows alice bob)) (($r: knows alice carol)))`, prints
-the triplets and the doublets behind them, and then stores the 1011 triplets
-of the parity test to count their doublets:
+the triplets and the doublets behind them, and then stores 1011 triplets made
+by the generator of the parity test to count their doublets:
 
 ```sh
 cargo run --manifest-path rust/Cargo.toml --example triplets

@@ -8,8 +8,8 @@
 //!
 //! It imports a few people as Links Notation, changes a triplet by a
 //! substitution query and by the API, deletes one, prints the triplets and
-//! the doublets that hold them, and then stores the 1011 triplets of the
-//! parity test to count the doublets they take
+//! the doublets that hold them, and then stores 1011 triplets made by
+//! the generator of the parity test to count the doublets they take
 //! (`experiments/issue-151/encodings.py` predicts 2317 plus the two markers).
 
 use anyhow::Result;
@@ -27,7 +27,7 @@ const PEOPLE: &str = "(Type: Type 0 0)
 (r: knows alice bob)
 ";
 
-/// The LCG of the tests, so the workload is the one of the parity test.
+/// The LCG of the tests, so the triplets are made as in the parity test.
 struct Random(u64);
 
 impl Random {
@@ -81,7 +81,7 @@ fn main() -> Result<()> {
         );
     }
 
-    // The creates of the parity test: a root, 10 types, then 1000 triplets.
+    // Creates only, made as in the parity test: a root, 10 types, then 1000 triplets.
     let mut triplets = TripletsOverDoublets::with_named_markers(
         LinkStorage::in_memory(false).with_indexed_lookups(),
     )?;

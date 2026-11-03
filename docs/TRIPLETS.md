@@ -87,9 +87,9 @@ The issue names two candidates: *type as source* `(i: T (f t))` and *pair of
 pairs* `(i: (T) (f t))` with marker links. The chosen encoding is the first
 one with the from-part wrapped in `(P f)`. The three were measured on the same
 workload by [`experiments/issue-151/encodings.py`](../experiments/issue-151/encodings.py):
-the 1011 triplets the parity test creates (a root, 10 types, then 1000
-triplets with a random type and a from and a to that are empty one time in
-four; 81 of them are nodes), in a store with unique `(source, target)` pairs
+1011 triplets created with the generator of the parity test, without its
+updates and deletes (a root, 10 types, then 1000 triplets with a random type
+and a from and a to that are empty one time in four; 81 of them are nodes), in a store with unique `(source, target)` pairs
 and source and target indexes, as link-cli's stores are. "Visited" counts the
 doublets an `Each` reads through the indexes, including the one it reads to
 classify a candidate, averaged over every triplet as the queried part; "noise"

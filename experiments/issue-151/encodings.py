@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compare encodings of triplets (index: type from to) in doublets (issue #151).
 
-Every encoding stores the same 1000+ random triplets (the workload of the parity
-test: a root, 10 types, then triplets whose type is any triplet and whose from
+Every encoding stores the same 1000+ random triplets (the creates of the parity
+test, without its updates and deletes: a root, 10 types, then triplets whose type is any triplet and whose from
 and to are any triplet or 0 one time in four) in a doublets store with unique
 (source, target) pairs and source / target indexes, the way link-cli's stores
 work. It then measures:
@@ -234,7 +234,7 @@ class Pairs(Encoding):
 
 
 def workload():
-    """The creates of the parity test: (type, from, to) with indices 1.."""
+    """The creates of the parity test (no updates or deletes): (type, from, to) with indices 1.."""
     random = Random(151)
     triplets = [(1, 0, 0)] + [(1, 0, 0)] * 10
     ids = list(range(1, 12))
