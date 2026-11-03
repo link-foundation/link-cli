@@ -48,6 +48,16 @@ pub struct Cli {
     pub external_references: bool,
     pub arity: ArityRange,
     pub packed_widths: bool,
+    /// `--permissions`: `self` or a links file of permission rules (issue #149).
+    pub permissions: Option<String>,
+    /// `--subject`: the link index or name queries run as.
+    pub subject: Option<String>,
+    /// `--tokens`: `self` or a links file of the token table.
+    pub tokens: Option<String>,
+    pub grant_token: Option<String>,
+    pub revoke_token: Option<String>,
+    /// `--token`: authenticates a `--connect` client.
+    pub token: Option<String>,
 }
 
 impl Default for Cli {
@@ -92,6 +102,12 @@ impl Default for Cli {
             external_references: false,
             arity: ArityRange::DOUBLETS,
             packed_widths: false,
+            permissions: None,
+            subject: None,
+            tokens: None,
+            grant_token: None,
+            revoke_token: None,
+            token: None,
         }
     }
 }
@@ -323,6 +339,30 @@ impl Cli {
                 cli.packed_widths = parse_bool("--packed-widths", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--permissions"]) {
+                cli.permissions = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--subject"]) {
+                cli.subject = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--tokens"]) {
+                cli.tokens = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--grant-token"]) {
+                cli.grant_token = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--revoke-token"]) {
+                cli.revoke_token = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--token"]) {
+                cli.token = Some(value.to_string());
+                continue;
+            }
 
             match arg.as_str() {
                 "-h" | "--help" => return Ok(CliCommand::Help),
@@ -443,6 +483,24 @@ impl Cli {
                 "--packed-widths" => {
                     cli.packed_widths = next_bool_value(&mut args, true)?;
                 }
+                "--permissions" => {
+                    cli.permissions = Some(next_value(&mut args, &arg)?);
+                }
+                "--subject" => {
+                    cli.subject = Some(next_value(&mut args, &arg)?);
+                }
+                "--tokens" => {
+                    cli.tokens = Some(next_value(&mut args, &arg)?);
+                }
+                "--grant-token" => {
+                    cli.grant_token = Some(next_value(&mut args, &arg)?);
+                }
+                "--revoke-token" => {
+                    cli.revoke_token = Some(next_value(&mut args, &arg)?);
+                }
+                "--token" => {
+                    cli.token = Some(next_value(&mut args, &arg)?);
+                }
                 "--" => {
                     for value in args.by_ref() {
                         set_positional_query(&mut cli, value)?;
@@ -562,6 +620,23 @@ impl Cli {
             "      --packed-widths\n",
             "          Binary protocol: give each section of links the narrowest reference\n",
             "          width it needs instead of one width for the whole packet\n",
+            "      --permissions <RULES>\n",
+            "          Check every read and write against permission rules stored as links:\n",
+            "          'self' (rules in the data) or a links file of rules; without it,\n",
+            "          nothing is checked\n",
+            "      --subject <LINK>\n",
+            "          The subject (a link index or name) queries run as with --permissions,\n",
+            "          and the subject of --serve connections before (auth: token)\n",
+            "          (default: 0, a guest)\n",
+            "      --tokens <TOKENS>\n",
+            "          The token table of (auth: token) for --serve, --grant-token and\n",
+            "          --revoke-token: 'self' (tokens in the data) or a links file\n",
+            "      --grant-token <TOKEN>\n",
+            "          Let a token authenticate as --subject in the --tokens table, then exit\n",
+            "      --revoke-token <TOKEN>\n",
+            "          Forget a token of the --tokens table, then exit\n",
+            "      --token <TOKEN>\n",
+            "          With --connect: authenticate with (auth: token) before sending the query\n",
             "  -h, --help\n",
             "          Print help\n",
             "  -V, --version\n",

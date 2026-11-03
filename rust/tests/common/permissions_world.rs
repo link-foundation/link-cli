@@ -85,8 +85,8 @@ pub type Names = HashMap<&'static str, u32>;
 /// The world of ui-links' test helpers in `links`, its rules in `rules` or
 /// in `links` when `None`.
 pub fn make_world(
-    links: &mut LinkStorage,
-    rules: Option<&mut LinkStorage>,
+    links: &mut dyn NamedTypeLinks,
+    rules: Option<&mut dyn NamedTypeLinks>,
 ) -> Result<(Names, Names, PermissionMarkers, TypeMarkers)> {
     let mut types = TypesDecorator::with_named_markers(&mut *links)?;
     let markers = PermissionMarkers::ensure(&mut types)?;
