@@ -187,7 +187,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             _named = links;
             // The writes a write leads to are reported through it already.
-            PermissionsDecorator<TLinkAddress>.KeepFacade(links);
+            LinksExtensions.KeepOwnFacade(links);
         }
 
         /// <summary>The writes kept since <see cref="Begin"/>.</summary>

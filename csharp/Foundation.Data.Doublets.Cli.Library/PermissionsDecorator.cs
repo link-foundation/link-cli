@@ -60,7 +60,7 @@ namespace Foundation.Data.Doublets.Cli
             _named = links;
             Policy = policy;
             _subject = subject;
-            KeepFacade(links);
+            LinksExtensions.KeepOwnFacade(links);
         }
 
         /// <param name="links">The store below.</param>
@@ -69,21 +69,6 @@ namespace Foundation.Data.Doublets.Cli
         public PermissionsDecorator(INamedTypesLinks<TLinkAddress> links, IPermissionPolicy<TLinkAddress> policy, TLinkAddress subject)
             : this(links, policy, () => subject)
         {
-        }
-
-        /// <summary>
-        /// Gives the store below back its own facade. A decorator makes itself
-        /// the facade of every decorator under it, which those call for the
-        /// writes a write leads to (the usages a merge repoints, the links a
-        /// delete deletes too); those writes belong to the store, not to a view
-        /// over it, which checks them as changes of the write that led to them.
-        /// </summary>
-        internal static void KeepFacade(ILinks<TLinkAddress> links)
-        {
-            if (links is LinksDecoratorBase<TLinkAddress> decorator)
-            {
-                decorator.Facade = decorator;
-            }
         }
 
         /// <summary>Who may read and write what.</summary>
