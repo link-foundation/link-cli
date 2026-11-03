@@ -285,8 +285,8 @@ impl<L: NamedTypeLinks, M: AddressMap> NamedTypeLinks for RemapLinks<L, M> {
             .is_some_and(|inner| inner != 0 && self.links.reference_exists(inner))
     }
 
-    fn claims(&mut self, id: u32) -> bool {
-        self.to_inner(id).is_some()
+    fn claims(&mut self, id: u32) -> Option<bool> {
+        Some(self.to_inner(id).is_some())
     }
 
     fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {

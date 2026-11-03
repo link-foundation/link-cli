@@ -17,7 +17,8 @@
 //! not across them. A link created at a given address
 //! ([`ensure_created`](NamedTypeLinks::ensure_created), the undo of a delete)
 //! is created in the first member that [claims](NamedTypeLinks::claims) the
-//! address, as a remap claims the addresses of its map.
+//! address, as a remap claims the addresses of its map, and in the primary
+//! member when none does.
 //!
 //! A link may refer to links of other members: a link of the client typed by
 //! a type of the server holds the address of the server's type. Names are
@@ -106,7 +107,7 @@ impl<'a> UnionLinks<'a> {
     fn place_of(&mut self, index: u32) -> usize {
         self.members
             .iter_mut()
-            .position(|member| member.claims(index))
+            .position(|member| member.claims(index) == Some(true))
             .unwrap_or(0)
     }
 
@@ -166,8 +167,13 @@ impl NamedTypeLinks for UnionLinks<'_> {
             .any(|member| member.reference_exists(id))
     }
 
-    fn claims(&mut self, id: u32) -> bool {
-        self.members.iter_mut().any(|member| member.claims(id))
+    /// A plain member has every address; a composed one those it claims.
+    fn claims(&mut self, id: u32) -> Option<bool> {
+        Some(
+            self.members
+                .iter_mut()
+                .any(|member| member.claims(id) != Some(false)),
+        )
     }
 
     fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {

@@ -114,8 +114,8 @@ pub use query_processor::{Changes, QueryProcessor};
 pub use remap_links::{AddressMap, AddressTable, OffsetAddressMap, RemapLinks};
 pub use storage::{
     decorators, lock_file_path, DoubletsStorage, FileLock, FileMappedUnitStore, FileMappedValue,
-    LinksStorage, LinksStorageRef, LockMode, PersistentFileMapped, ResolvedFileMappedUnitStore,
-    StorageRevision,
+    LinksStorage, LinksStorageRef, LockMode, NamedLinksStorage, PersistentFileMapped,
+    ResolvedFileMappedUnitStore, StorageRevision,
 };
 pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,

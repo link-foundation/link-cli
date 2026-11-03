@@ -611,6 +611,10 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
         self.links.reference_exists(id)
     }
 
+    fn claims(&mut self, id: u32) -> Option<bool> {
+        self.links.claims(id)
+    }
+
     fn next_created_addresses(&mut self, count: usize) -> Result<Vec<u32>> {
         self.links.next_created_addresses(count)
     }

@@ -54,15 +54,17 @@ pub trait NamedTypeLinks {
         self.exists(id)
     }
     /// Whether `id` is an address of this store, so a link created there
-    /// ([`Self::ensure_created`], the undo of a delete) belongs in it.
+    /// ([`Self::ensure_created`], the undo of a delete) belongs in it; `None`
+    /// for a plain store, which has no addresses of its own.
     ///
-    /// Every address is, but in a store made of others: a
-    /// [`RemapLinks`](crate::RemapLinks) claims the addresses of its map and a
-    /// [`UnionLinks`](crate::UnionLinks) those a member claims, so a union
-    /// recreates a link in the member its address is of (issue #149).
-    fn claims(&mut self, id: u32) -> bool {
+    /// A store made of others answers: a [`RemapLinks`](crate::RemapLinks)
+    /// claims the addresses of its map, and a [`UnionLinks`](crate::UnionLinks)
+    /// creates a link at an address in the first member that claims it, the
+    /// primary one when none does, so a union recreates a link in the member
+    /// its address is of (issue #149). The C# twin is `IComposedLinks.Claims`.
+    fn claims(&mut self, id: u32) -> Option<bool> {
         let _ = id;
-        true
+        None
     }
     /// The addresses the next `count` links created in the store get.
     ///
@@ -590,7 +592,7 @@ impl<L: NamedTypeLinks + ?Sized> NamedTypeLinks for &mut L {
         (**self).reference_exists(id)
     }
 
-    fn claims(&mut self, id: u32) -> bool {
+    fn claims(&mut self, id: u32) -> Option<bool> {
         (**self).claims(id)
     }
 
