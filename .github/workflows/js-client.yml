@@ -14,6 +14,7 @@ on:
       - '.github/workflows/js-client.yml'
       - '.github/scripts/verify-npm-trust*'
       - 'js/client/**'
+      - 'examples/composition/**'
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
@@ -24,6 +25,7 @@ on:
       - '.github/workflows/js-client.yml'
       - '.github/scripts/verify-npm-trust*'
       - 'js/client/**'
+      - 'examples/composition/**'
       - 'rust/**'
       - 'csharp/**'
       - 'docs/protocol/**'
@@ -195,6 +197,14 @@ jobs:
           node examples/synthetic-consumer.mjs --backend rust --records 40
           bun examples/synthetic-consumer.mjs --backend csharp --records 40
           deno run --allow-all examples/synthetic-consumer.mjs --backend wasm --records 40
+
+      # The composition example of issue #149 (a union of a client's store and
+      # a served one with permissions, read under UUIDs) prints the same
+      # through both servers.
+      - name: Composition example
+        run: |
+          node examples/composition/client-and-server.mjs "$CLINK_RUST" | diff examples/composition/expected-output.txt -
+          node examples/composition/client-and-server.mjs "$CLINK_CSHARP" | diff examples/composition/expected-output.txt -
 
   release:
     name: Release to npm
