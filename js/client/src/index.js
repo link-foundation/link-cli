@@ -4,6 +4,9 @@
 // live in `./tcp` and `./process`.
 
 export { LinksClient, LinksDecorator } from './client.js';
+export { UnionLinks } from './union.js';
+export { AddressTable, OffsetAddressMap, RemapLinks } from './remap.js';
+export { EXTERNAL_ID_NAME, ExternalIdMap, LinksExternalIds } from './external-ids.js';
 export { createWasmClient, WasmTransport } from './wasm.js';
 export { GUARANTEES, MAX_U32_ADDRESS, tcpServerCapabilities, wasmCapabilities } from './capabilities.js';
 export { scopeOf } from './deadline.js';
@@ -15,6 +18,7 @@ export {
   LimitExceededError,
   LinksError,
   MalformedMessageError,
+  NotFoundError,
   ProtocolMismatchError,
   RemoteError,
   UnsupportedError,

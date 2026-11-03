@@ -21,6 +21,11 @@ export class ConnectionClosedError extends LinksError {}
 export class AbortError extends LinksError {}
 export class DeadlineExceededError extends LinksError {}
 export class UnsupportedError extends LinksError {}
+/** No link has the address a write names; nothing was sent. */
+export class NotFoundError extends LinksError {
+  constructor(index: unknown);
+  readonly index: unknown;
+}
 
 /** A bigint, a safe-integer number, or a string of digits. */
 export type AddressInput = bigint | number | string;
@@ -191,6 +196,89 @@ export interface LinksDecorator extends Links {}
 export class LinksDecorator implements Links {
   constructor(links: Links);
   readonly links: Links;
+}
+
+/**
+ * Many links networks seen as one: the first member that has an address
+ * shadows the rest, new links go to the primary (first) member, writes and
+ * names to the member that has the link. Raw text, queries, exports and
+ * subscriptions belong to one store: they reject with an UnsupportedError.
+ */
+export interface UnionLinks extends Links {}
+export class UnionLinks implements Links {
+  constructor(members: Links[]);
+  readonly members: readonly Links[];
+  readonly primary: Links;
+  /** The position of the member that has the link at `index`, null when none has it. */
+  ownerOf(index: AddressInput, options?: RequestOptions): Promise<number | null>;
+}
+
+/** How the addresses of a network below a RemapLinks read above it; either method may return a promise. */
+export interface AddressMap<Outer = bigint> {
+  /** The address below of `outer`, null when it is no address of the network below. */
+  toInner(outer: Outer): bigint | null | Promise<bigint | null>;
+  /** The address above of `inner`, given one when it has none yet. */
+  toOuter(inner: bigint): Outer | Promise<Outer>;
+  /** The largest address above, given the largest one below. */
+  maxAddress?(innerMaxAddress: bigint): bigint;
+}
+/** Every address moved by `offset`: the network below reads at `offset + 1` and up. */
+export class OffsetAddressMap implements AddressMap<bigint> {
+  constructor(offset: AddressInput);
+  readonly offset: bigint;
+  toInner(outer: AddressInput): bigint | null;
+  toOuter(inner: AddressInput): bigint;
+  maxAddress(innerMaxAddress: bigint): bigint;
+}
+/** Addresses given from `first` on, or ids of another kind from `newId()` (UUIDs). */
+export class AddressTable<Outer = bigint> implements AddressMap<Outer> {
+  constructor(options: Outer extends bigint ? { first: AddressInput } : { newId: () => Outer });
+  readonly numeric: boolean;
+  toInner(outer: Outer): bigint | null;
+  toOuter(inner: AddressInput): Outer;
+  add(outer: Outer, inner: AddressInput): void;
+  pairs(): [Outer, bigint][];
+}
+/** A link above a remap whose ids are not addresses (UUID strings). */
+export interface RemappedLink<Outer> {
+  index: Outer;
+  source: Outer | bigint;
+  target: Outer | bigint;
+}
+/**
+ * `links` under the addresses of `map`. With a map of BigInt addresses it is a
+ * links client like any other (and a member of a union); with ids of another
+ * kind its links read under those ids, the null link staying `0n`.
+ */
+export interface RemapLinks<Outer = bigint> extends Links {}
+export class RemapLinks<Outer = bigint> extends LinksDecorator {
+  constructor(links: Links, map: AddressMap<Outer>);
+  readonly map: AddressMap<Outer>;
+  toOuter(inner: AddressInput): Promise<Outer | bigint>;
+  toInner(outer: Outer | AddressInput): Promise<bigint | null>;
+}
+
+/** The name of the point every scheme of external ids starts from. */
+export const EXTERNAL_ID_NAME: 'ExternalId';
+/** The ids of one scheme (such as `uuid`) bound to links, stored as links; every method takes the store of the table. */
+export class LinksExternalIds {
+  constructor(scheme: string);
+  readonly scheme: string;
+  nameOf(id: string): string;
+  find(store: Links, id: string, options?: RequestOptions): Promise<bigint | null>;
+  idOf(store: Links, link: AddressInput, options?: RequestOptions): Promise<string | null>;
+  bind(store: Links, id: string, link: AddressInput, options?: RequestOptions): Promise<bigint>;
+  /** `data` is null when the table is in the data. */
+  ensure(store: Links, data: Links | null, id: string, options?: RequestOptions): Promise<bigint>;
+  unbind(store: Links, id: string, options?: RequestOptions): Promise<boolean>;
+}
+/** External ids kept in `table` (a store apart from the network remapped) as the map of a RemapLinks. */
+export class ExternalIdMap implements AddressMap<string> {
+  constructor(table: Links, scheme: string | LinksExternalIds, options?: { newId?: () => string });
+  readonly table: Links;
+  readonly ids: LinksExternalIds;
+  toInner(outer: string): Promise<bigint | null> | null;
+  toOuter(inner: bigint): Promise<string>;
 }
 
 /** The `Clink` class of `rust/wasm` (or anything answering LinksOperation text). */

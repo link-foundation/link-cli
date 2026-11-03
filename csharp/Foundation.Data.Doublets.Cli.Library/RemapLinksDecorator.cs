@@ -13,7 +13,7 @@ namespace Foundation.Data.Doublets.Cli
     /// goes down is mapped to the network's own, and every address that comes up
     /// is mapped back, so the code above never thinks about remapping. The
     /// JavaScript counterpart is <c>RemapLinks</c> of
-    /// <c>@link-foundation/links-client</c>, whose addresses above may be
+    /// <c>@link-foundation/link-cli-client</c>, whose addresses above may be
     /// strings such as UUIDs; the Rust one is <c>link_cli::RemapLinks</c>.
     /// </summary>
     /// <remarks>

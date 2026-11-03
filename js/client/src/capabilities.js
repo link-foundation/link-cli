@@ -16,6 +16,7 @@ const common = {
   pagination: false,
   bulk: 'pipelined-non-atomic',
   // One store per server; nothing shards or merges stores behind the client.
+  // A UnionLinks over clients does merge them, and its capabilities say so.
   sharding: false,
 };
 

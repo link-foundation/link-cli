@@ -29,7 +29,7 @@
 //! every member at once, its rules and types coming from any of them, and one
 //! under it restricts a single member. The C# twin is
 //! `UnionLinksDecorator<TLinkAddress>`, the JavaScript one `UnionLinks` of
-//! `@link-foundation/links-client`.
+//! `@link-foundation/link-cli-client`.
 
 use anyhow::{bail, Result};
 

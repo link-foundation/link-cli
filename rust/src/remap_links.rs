@@ -11,7 +11,7 @@
 //! A read that names an address that is not of the network below finds
 //! nothing; a write that names one fails. The null link reads the same on
 //! both sides. The C# twin is `RemapLinksDecorator<TLinkAddress>`, the
-//! JavaScript one `RemapLinks` of `@link-foundation/links-client`, whose
+//! JavaScript one `RemapLinks` of `@link-foundation/link-cli-client`, whose
 //! addresses above may be strings such as UUIDs.
 
 use std::collections::BTreeMap;

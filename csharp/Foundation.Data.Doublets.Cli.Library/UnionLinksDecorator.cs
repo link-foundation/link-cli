@@ -13,7 +13,7 @@ namespace Foundation.Data.Doublets.Cli
     /// Many links networks seen as one (issue #149): the joining decorator of
     /// a client's links with a server's, of a cache with its source, of the
     /// networks of several services. The JavaScript counterpart is
-    /// <c>UnionLinks</c> of <c>@link-foundation/links-client</c>, the Rust one
+    /// <c>UnionLinks</c> of <c>@link-foundation/link-cli-client</c>, the Rust one
     /// <c>link_cli::UnionLinks</c>.
     /// </summary>
     /// <remarks>
