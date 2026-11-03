@@ -3,6 +3,7 @@ using Link.Foundation.Links.Notation.Binary;
 using Platform.Data;
 using Platform.Data.Doublets;
 
+using DoubletLink = Platform.Data.Doublets.Link<uint>;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 
 namespace Foundation.Data.Doublets.Cli.Protocol;
@@ -125,7 +126,13 @@ public sealed class LinksSession : IDisposable
     public PermissionsDecorator<uint>? View { get; }
 
     /// <summary>Answers one request document.</summary>
-    public IReadOnlyList<LinoLink> Execute(IReadOnlyList<LinoLink> document)
+    public IReadOnlyList<LinoLink> Execute(IReadOnlyList<LinoLink> document) => Execute(document, null);
+
+    /// <summary>
+    /// Answers one request document and adds the net change of every link it changed in the store to
+    /// <paramref name="changed"/>; a request undone for failing changed nothing.
+    /// </summary>
+    internal IReadOnlyList<LinoLink> Execute(IReadOnlyList<LinoLink> document, List<(DoubletLink Before, DoubletLink After)>? changed)
     {
         ArgumentNullException.ThrowIfNull(document);
         lock (_host.Lock)
@@ -136,7 +143,7 @@ public sealed class LinksSession : IDisposable
             }
             if (View is null)
             {
-                return LinksServer.ExecuteRequest(_host.Links, document, _host.Options.AutoCreateMissingReferences);
+                return LinksServer.ExecuteRequest(_host.Links, document, _host.Options.AutoCreateMissingReferences, null, changed);
             }
             var store = _host.Undoable!;
             store.Begin();
@@ -159,6 +166,11 @@ public sealed class LinksSession : IDisposable
                 .Where(change => change.Before is not null && change.After is null)
                 .Select(change => change.Before!.Value.Index)
                 .ToHashSet();
+            // The changes of the store below the view: the cascades and merges a write led to as well.
+            changed?.AddRange(ChangesSimplifier.SimplifyChanges(store.Log.Changes
+                .Select(change => (change.Before ?? default, change.After ?? default))
+                .ToList())
+                .Where(change => !change.Before.Equals(change.After)));
             store.Commit();
             _host.Forget(this, deleted);
             return reply;

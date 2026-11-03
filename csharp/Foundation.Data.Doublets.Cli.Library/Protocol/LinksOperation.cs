@@ -79,6 +79,8 @@ public sealed record LinksRestriction(IReadOnlyList<uint?> Parts)
 /// <item><term><c>(set-name: (link 'text'))</c></term><description><c>(link: N)</c></description></item>
 /// <item><term><c>(get-by-name: 'text')</c></term><description><c>(link: N)</c>, or nothing</description></item>
 /// <item><term><c>(remove-name: link)</c></term><description>nothing</description></item>
+/// <item><term><c>(subscribe: (index source target))</c></term><description><c>(subscription: N)</c>; later pushes of <c>(notify: N)</c> and its changes</description></item>
+/// <item><term><c>(unsubscribe: N)</c></term><description>nothing</description></item>
 /// </list>
 /// <para>
 /// Every reference in a reply is a number; failures are <c>(error: 'message')</c>. The changes of a
@@ -206,6 +208,31 @@ public abstract record LinksOperation
         }
     }
 
+    /// <summary>
+    /// Asks a <see cref="LinksServer"/> to push the changes other connections make to the links matching the
+    /// restriction; the reply is <c>(subscription: N)</c>, and every later push is a <see cref="NotificationDocument"/>.
+    /// </summary>
+    /// <remarks>
+    /// A subscription belongs to the connection that made it: only the server can run it, so
+    /// <see cref="Execute"/> on a store throws.
+    /// </remarks>
+    public sealed record Subscribe(LinksRestriction Restriction) : LinksOperation
+    {
+        private protected override (string, LinoLink) Request => ("subscribe", RestrictionLino(Restriction));
+
+        /// <inheritdoc/>
+        public override IReadOnlyList<LinoLink> Execute(INamedTypesLinks<uint> links) => throw NeedsServer();
+    }
+
+    /// <summary>Stops a subscription of this connection; the reply is empty, even for an unknown number.</summary>
+    public sealed record Unsubscribe(uint Subscription) : LinksOperation
+    {
+        private protected override (string, LinoLink) Request => ("unsubscribe", Number(Subscription));
+
+        /// <inheritdoc/>
+        public override IReadOnlyList<LinoLink> Execute(INamedTypesLinks<uint> links) => throw NeedsServer();
+    }
+
     /// <summary>The operation name and its one argument.</summary>
     private protected abstract (string Name, LinoLink Argument) Request { get; }
 
@@ -253,6 +280,10 @@ public abstract record LinksOperation
                     : throw MalformedArgument("get-by-name", argument);
             case "remove-name":
                 return new RemoveName(ParseNumber(argument));
+            case "subscribe":
+                return new Subscribe(ParseRestriction(argument));
+            case "unsubscribe":
+                return new Unsubscribe(ParseNumber(argument));
             default:
                 return null;
         }
@@ -310,6 +341,48 @@ public abstract record LinksOperation
             [{ Id: "link", Values: [var link] }] => ParseNumber(link),
             _ => throw MalformedReply("link", document),
         };
+    }
+
+    /// <summary>The number of a <c>(subscription: N)</c> reply.</summary>
+    public static uint ParseSubscription(IReadOnlyList<LinoLink> document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return document is [{ Id: "subscription", Values: [var subscription] }]
+            ? ParseNumber(subscription)
+            : throw MalformedReply("subscription", document);
+    }
+
+    /// <summary>The reply to a <see cref="Subscribe"/>: <c>(subscription: N)</c>.</summary>
+    public static IReadOnlyList<LinoLink> SubscriptionDocument(uint subscription) =>
+        new[] { Named("subscription", Number(subscription)) };
+
+    /// <summary>
+    /// Whether <paramref name="document"/> is a push rather than a reply: its first link is <c>(notify: N)</c>.
+    /// </summary>
+    /// <remarks>
+    /// No reply starts that way: the replies to operations name their first link after the operation's result or
+    /// leave it unnamed, and the links a server lists are <c>(index: source target)</c>, with two values.
+    /// </remarks>
+    public static bool IsNotification(IReadOnlyList<LinoLink> document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return document is [{ Id: "notify", Values: [{ Values: null, Id: { } number }] }, ..]
+            && uint.TryParse(number, NumberStyles.None, CultureInfo.InvariantCulture, out _);
+    }
+
+    /// <summary>
+    /// A push: <c>(notify: N)</c> followed by one <c>(before) (after)</c> line per change, with plain numbers.
+    /// </summary>
+    public static IReadOnlyList<LinoLink> NotificationDocument(uint subscription, IEnumerable<(DoubletLink Before, DoubletLink After)> changes) =>
+        ChangesDocument(changes).Prepend(Named("notify", Number(subscription))).ToList();
+
+    /// <summary>The subscription and the changes of a <see cref="NotificationDocument"/>.</summary>
+    public static LinksNotification ParseNotification(IReadOnlyList<LinoLink> document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return IsNotification(document) && document[0].Values is [var subscription]
+            ? new LinksNotification(ParseNumber(subscription), ParseChanges(document.Skip(1).ToList()))
+            : throw MalformedReply("notify", document);
     }
 
     /// <summary>A reply listing <paramref name="changes"/>, one <c>(before) (after)</c> line each.</summary>
@@ -426,9 +499,31 @@ public abstract record LinksOperation
             ? number
             : throw LinoProtocolException.Malformed($"expected a number, found '{text}'");
 
+    private static InvalidOperationException NeedsServer() =>
+        new("subscriptions belong to a connection to a links server");
+
     private static LinoProtocolException MalformedArgument(string expected, LinoLink argument) =>
         LinoProtocolException.Malformed($"expected {expected}, found {LinoFormat.FormatLink(argument)}");
 
     private static LinoProtocolException MalformedReply(string expected, IReadOnlyList<LinoLink> document) =>
         LinoProtocolException.Malformed($"expected a {expected} reply, found {LinoFormat.FormatDocument(document)}");
+}
+
+/// <summary>
+/// A change a <see cref="LinksServer"/> pushed to a subscriber: the subscription it fits and its changes, a missing side
+/// being the null link.
+/// </summary>
+/// <remarks>
+/// Each side is the link as the subscription sees it: a side that does not fit the restriction (or that the subscriber
+/// may not read) is the null link, so a link that leaves the subscription arrives as a deletion and one that comes
+/// into it as a creation.
+/// </remarks>
+public sealed record LinksNotification(uint Subscription, IReadOnlyList<(DoubletLink Before, DoubletLink After)> Changes)
+{
+    /// <inheritdoc/>
+    public bool Equals(LinksNotification? other) =>
+        other is not null && Subscription == other.Subscription && Changes.SequenceEqual(other.Changes);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => HashCode.Combine(Subscription, Changes.Count);
 }

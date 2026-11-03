@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LinksClient, LinksDecorator, tcpServerCapabilities, wasmCapabilities } from '../src/index.js';
+import { ANY, DeadlineExceededError, isNotification, LinksClient, LinksDecorator, parseDocument, parseNotification, tcpServerCapabilities, wasmCapabilities } from '../src/index.js';
 
 /** A transport answering from a script: `answer(text) => reply text`. */
 function scripted(answer, capabilities = tcpServerCapabilities()) {
@@ -179,4 +179,57 @@ test('a decorator is a drop-in client over any backend', async () => {
   assert.equal(batch.completed, true);
   await decorated[Symbol.asyncDispose]();
   assert.equal(transport.closed, 1);
+});
+
+test('subscriptions: requests, replies and pushes', async () => {
+  const transport = scripted((text) => (text.startsWith('(subscribe:') ? '(subscription: 3)' : ''));
+  const client = new LinksClient(transport);
+  // A transport without pushes cannot subscribe.
+  await assert.rejects(client.subscribe([]), { name: 'UnsupportedError', outcome: 'not-sent' });
+  assert.throws(() => client.onNotification(() => {}), { name: 'UnsupportedError' });
+  assert.equal(transport.sent.length, 0);
+
+  const pushes = ['(notify: 3)\n() ((1: 0 0))'];
+  transport.receivePush = async (scope) => {
+    if (pushes.length > 0) return pushes.shift();
+    throw new DeadlineExceededError('late', { outcome: 'not-sent' });
+  };
+  transport.onPush = (listener) => {
+    listener('(notify: 4)\n((1: 0 0)) ((1: 1 1))\n((2: 1 1)) ()');
+    return () => {};
+  };
+  assert.equal(await client.subscribe([ANY, 1n, ANY]), 3);
+  await client.unsubscribe(3);
+  assert.deepEqual(transport.sent, ['(subscribe: (* 1 *))', '(unsubscribe: 3)']);
+  assert.deepEqual(await client.receiveNotification(), {
+    subscription: 3,
+    changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }],
+  });
+  // The deadline passing is no error: nothing arrived in time.
+  assert.equal(await client.receiveNotification({ timeout: 0 }), null);
+  const seen = [];
+  client.onNotification((notification) => seen.push(notification));
+  assert.deepEqual(seen, [
+    {
+      subscription: 4,
+      changes: [
+        { before: { index: 1n, source: 0n, target: 0n }, after: { index: 1n, source: 1n, target: 1n } },
+        { before: { index: 2n, source: 1n, target: 1n }, after: null },
+      ],
+    },
+  ]);
+  await assert.rejects(client.unsubscribe(2n ** 32n), { name: 'AddressRangeError' });
+  await assert.rejects(client.subscribe([1, 2, 3, 4]), TypeError);
+});
+
+test('a push is told from a reply by its first link, (notify: N)', () => {
+  const push = parseDocument('(notify: 1)\n() ((1: 0 0))');
+  assert.equal(isNotification(push), true);
+  assert.equal(isNotification(parseDocument('(notify: 12)')), true);
+  for (const text of ['(count: 1)', '(notify: 1 1)', '(notify: x)', '(notify: (1 2))', '() ((1: 0 0))', '']) {
+    assert.equal(isNotification(parseDocument(text)), false, JSON.stringify(text));
+  }
+  assert.deepEqual(parseNotification(push), { subscription: 1, changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }] });
+  assert.throws(() => parseNotification(parseDocument('(count: 1)')), { name: 'MalformedMessageError' });
+  assert.throws(() => parseNotification(parseDocument('(notify: 1)\n(1: 0 0)')), { name: 'MalformedMessageError' });
 });

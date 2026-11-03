@@ -353,7 +353,7 @@ fn authenticates_with_a_token_table_in_links() -> Result<()> {
 
 #[test]
 fn authenticates_over_tcp() {
-    let server = RunningServer::start_with(ServerOptions::default(), |server, path| {
+    let server = RunningServer::start_serving(ServerOptions::default(), |server, path| {
         let storage = LinkStorage::new(path, false).unwrap();
         let mut sessions = LinksSessions::new(storage)
             .with_authenticator(|_, token| Ok((token == "secret").then_some(7)));

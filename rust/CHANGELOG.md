@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [1.2.0] - 2026-11-03
+
+The LiNo protocol server now supports subscriptions (#150).
+
+- `(subscribe: (index source target))` replies `(subscription: N)`.
+- Later changes that other connections make to matching links are pushed as `(notify: N)` followed by their `(before) (after)` lines. Pushes and replies arrive in the order the store changed.
+- `(unsubscribe: N)` replies nothing, and closing a connection drops its subscriptions.
+- `LinksServer::with_readable` hides links from subscribers, so a link that becomes unreadable arrives as a deletion.
+- `ServerOptions::max_pending_notifications` disconnects subscribers that fall too far behind.
+- `LinksClient` sets pushes aside for `receive_notification`.
+- `RemoteLinks` gains `subscribe`, `unsubscribe` and `receive_notification`.
+
+Both ports replay the shared conversation in `docs/protocol/subscriptions.txt`.
+
+Updated `doublets` to 0.18.0.
+
 ## [1.1.0] - 2026-11-02
 
 Add the `Types` trait and `TypesDecorator` (#148): a type hierarchy `Type -> SubType -> … -> Value` with multiple inheritance kept in plain links, the port of the C# `TypesDecorator` with the same tests. The type of a link is its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)` and extra parents are pairs `(p: S T2)` marked by `(m: Extends p)`. `type_of`, `is_type`, `parents_of`, `ancestors_of`, `is_a` and `is_of` terminate on cycles, and `define`, `extend` and `instance` write. `NamedTypeLinks` gains `query_links`, which finds links by a pattern.

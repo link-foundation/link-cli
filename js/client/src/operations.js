@@ -11,13 +11,19 @@
 //   (set-name: (i 'text'))-> (link: N)
 //   (get-by-name: 'text') -> (link: N) or nothing
 //   (remove-name: i)      -> nothing
+//   (subscribe: (i s t))  -> (subscription: N), then (notify: N) pushes
+//   (unsubscribe: N)      -> nothing
+//
+// A server pushes the changes of other connections that fit a subscription
+// as `(notify: N)` followed by `(before) (after)` lines; a push is told from
+// a reply by its first link, `(notify: N)` with one number.
 //
 // A restriction has up to three parts, `*` (or null) matching anything:
 // `[]` every link, `[i]`, `[i, v]` where `v` is the source or the target, and
 // `[i, s, t]`.
 
 import { AddressRangeError, MalformedMessageError } from './errors.js';
-import { formatLink, group, named } from './lino.js';
+import { formatLink, group, named, parseDocument } from './lino.js';
 
 export const ANY = '*';
 const DIGITS = /^[0-9]+$/;
@@ -94,7 +100,18 @@ export const requests = {
     return operation('get-by-name', name);
   },
   removeName: (index, maxAddress) => operation('remove-name', number(checkAddress(index, maxAddress, 'index'))),
+  subscribe: (restriction = [], maxAddress) => operation('subscribe', restrictionLino(restriction, maxAddress)),
+  unsubscribe: (subscription) => operation('unsubscribe', number(toSubscription(subscription))),
 };
+
+/** The largest subscription number: the servers count them in a `u32`. */
+const MAX_SUBSCRIPTION = 2n ** 32n - 1n;
+
+function toSubscription(value) {
+  const subscription = toAddress(value, 'subscription');
+  if (subscription > MAX_SUBSCRIPTION) throw new AddressRangeError(`subscription ${subscription} exceeds ${MAX_SUBSCRIPTION}`);
+  return subscription;
+}
 
 function malformed(what, document) {
   return new MalformedMessageError(`expected ${what}, found ${document.map(formatLink).join(' ') || 'an empty reply'}`);
@@ -177,7 +194,41 @@ export const replies = {
     }
     return parseNumber(link.values[0], 'a link');
   },
+  /** `(subscription: N)` as a number. */
+  subscription(document) {
+    const [link] = document;
+    if (document.length !== 1 || typeof link === 'string' || link.id !== 'subscription' || link.values.length !== 1) {
+      throw malformed('(subscription: N)', document);
+    }
+    const subscription = parseNumber(link.values[0], 'a subscription');
+    if (subscription > MAX_SUBSCRIPTION) throw new MalformedMessageError(`subscription ${subscription} exceeds ${MAX_SUBSCRIPTION}`);
+    return Number(subscription);
+  },
   empty(document) {
     if (document.length !== 0) throw malformed('an empty reply', document);
   },
 };
+
+function notificationNumber(document) {
+  const [link] = document;
+  if (document.length === 0 || typeof link === 'string' || link.id !== 'notify' || link.values.length !== 1) return null;
+  const [value] = link.values;
+  return typeof value === 'string' && DIGITS.test(value) ? BigInt(value) : null;
+}
+
+/** Whether a document is a push: its first link is `(notify: N)`, N a number. */
+export function isNotification(document) {
+  return notificationNumber(document) !== null;
+}
+
+/** Whether the text of a message is a push, without parsing every reply in full. */
+export function isNotificationText(text) {
+  return text.startsWith('(notify:') && isNotification(parseDocument(text));
+}
+
+/** `(notify: N)` and its `(before) (after)` lines as `{ subscription, changes }`. */
+export function parseNotification(document) {
+  const subscription = notificationNumber(document);
+  if (subscription === null || subscription > MAX_SUBSCRIPTION) throw malformed('(notify: N) (before) (after) ...', document);
+  return { subscription: Number(subscription), changes: replies.changes(document.slice(1)) };
+}

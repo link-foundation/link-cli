@@ -11,8 +11,10 @@ use anyhow::Result;
 use links_notation::binary::{format_document, parse_document, LinoDocument};
 use links_notation::LiNo;
 
-use super::links_operations::LinksOperation;
-use super::server::{error_document, error_message, execute_request};
+use super::links_operations::{Change, LinksOperation};
+use super::server::{error_document, error_message, execute_observed_request, execute_request};
+use crate::changes_simplifier::simplify_changes;
+use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
 use crate::permissions::{AccessPolicy, PermissionPolicy, PermissionsDecorator};
 use crate::query_processor::QueryProcessor;
@@ -204,16 +206,55 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
     /// Answers one request document of `session`; a session that is not
     /// open is opened.
     pub fn execute(&mut self, session: SessionId, document: &[LiNo<String>]) -> LinoDocument {
+        self.execute_observed(session, document, &mut Vec::new())
+    }
+
+    /// Like [`execute`](Self::execute), adding the net change of every link
+    /// the request changed in the store to `changed`, with plain numbers:
+    /// the cascades and merges a write led to as well, even where the
+    /// subject cannot see them. A request undone for failing changed nothing.
+    pub fn execute_observed(
+        &mut self,
+        session: SessionId,
+        document: &[LiNo<String>],
+        changed: &mut Vec<Change>,
+    ) -> LinoDocument {
         let mut state = self.sessions.remove(&session).unwrap_or(Session {
             subject: self.subject,
             created: HashSet::new(),
         });
-        let reply = self.execute_as(&mut state, document);
+        let reply = self.execute_as(&mut state, document, changed);
         self.sessions.insert(session, state);
         reply
     }
 
-    fn execute_as(&mut self, session: &mut Session, document: &[LiNo<String>]) -> LinoDocument {
+    /// Whether the subject of `session` may read `link`: always, without
+    /// permissions; a session that is not open is a guest.
+    pub fn can_read(&mut self, session: SessionId, link: &Link) -> bool {
+        let view = match &mut self.store {
+            Store::Plain(_) => return true,
+            Store::Permitted(view) => view,
+        };
+        let (subject, created) = match self.sessions.get_mut(&session) {
+            Some(state) => (state.subject, std::mem::take(&mut state.created)),
+            None => (self.subject, HashSet::new()),
+        };
+        view.set_subject(subject);
+        let created = view.replace_created(created);
+        let readable = view.can_read(link);
+        let created = view.replace_created(created);
+        if let Some(state) = self.sessions.get_mut(&session) {
+            state.created = created;
+        }
+        readable
+    }
+
+    fn execute_as(
+        &mut self,
+        session: &mut Session,
+        document: &[LiNo<String>],
+        changed: &mut Vec<Change>,
+    ) -> LinoDocument {
         if let [LiNo::Link {
             id: Some(id),
             values,
@@ -224,7 +265,9 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
             }
         }
         let view = match &mut self.store {
-            Store::Plain(store) => return execute_request(store, &self.processor, document),
+            Store::Plain(store) => {
+                return execute_observed_request(store, &self.processor, document, changed)
+            }
             Store::Permitted(view) => view,
         };
         view.set_subject(session.subject);
@@ -244,6 +287,23 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
                         _ => None,
                     })
                     .collect();
+                let changes = view
+                    .inner()
+                    .log()
+                    .changes()
+                    .iter()
+                    .map(|(before, after)| {
+                        (
+                            before.unwrap_or_else(Link::null),
+                            after.unwrap_or_else(Link::null),
+                        )
+                    })
+                    .collect();
+                changed.extend(
+                    simplify_changes(changes)
+                        .into_iter()
+                        .filter(|(before, after)| before != after),
+                );
                 view.inner_mut().commit();
                 // The links are gone: no other session owns them any more.
                 for other in self.sessions.values_mut() {

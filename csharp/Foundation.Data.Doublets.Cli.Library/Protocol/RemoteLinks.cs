@@ -106,6 +106,31 @@ public sealed class RemoteLinks : INamedTypesLinks<uint>, IDisposable
     /// <inheritdoc/>
     public void RemoveName(uint link) => Execute(new LinksOperation.RemoveName(link));
 
+    /// <summary>
+    /// Asks the server to push the changes other connections make to the links matching <paramref name="restriction"/>
+    /// and returns the number of the subscription, which <see cref="ReceiveNotification"/> reports with them.
+    /// </summary>
+    public uint Subscribe(LinksRestriction restriction)
+    {
+        ArgumentNullException.ThrowIfNull(restriction);
+        return LinksOperation.ParseSubscription(Execute(new LinksOperation.Subscribe(restriction)));
+    }
+
+    /// <summary>Stops a subscription; changes already pushed for it are still received.</summary>
+    public void Unsubscribe(uint subscription) => Execute(new LinksOperation.Unsubscribe(subscription));
+
+    /// <summary>
+    /// The next change pushed for a subscription of this store, waiting up to <paramref name="timeout"/> for one;
+    /// null when none arrived in time.
+    /// </summary>
+    public LinksNotification? ReceiveNotification(TimeSpan timeout)
+    {
+        lock (_clientLock)
+        {
+            return _client.ReceiveNotification(timeout) is { } document ? LinksOperation.ParseNotification(document) : null;
+        }
+    }
+
     /// <summary>Closes the connection.</summary>
     public void Dispose() => _client.Dispose();
 

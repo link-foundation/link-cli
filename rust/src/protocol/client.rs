@@ -1,16 +1,27 @@
 //! A TCP client for [`LinksServer`](super::LinksServer).
 
 use super::error::{ProtocolError, ProtocolResult};
+use super::links_operations::is_notification;
 use super::protocols::{LinoConnection, LinoProtocol};
 use super::server::error_message;
 use links_notation::binary::{format_document, parse_document, LinoDocument};
 use links_notation::LiNo;
+use std::collections::VecDeque;
+use std::io;
 use std::net::{TcpStream, ToSocketAddrs};
+use std::time::Duration;
 
 /// Sends substitution queries to a LiNo server over any [`LinoProtocol`].
+///
+/// A server pushes the changes a connection subscribed to between its
+/// replies; a pushed document starts with `(notify: N)`.
+/// [`request`](Self::request) sets the pushes it meets aside for
+/// [`receive_notification`](Self::receive_notification), so replies and
+/// pushes never get mixed up.
 #[derive(Debug)]
 pub struct LinksClient {
     connection: LinoConnection<TcpStream, Box<dyn LinoProtocol>>,
+    notifications: VecDeque<LinoDocument>,
 }
 
 impl LinksClient {
@@ -23,6 +34,7 @@ impl LinksClient {
         let _ = stream.set_nodelay(true);
         Ok(Self {
             connection: LinoConnection::new(stream, Box::new(protocol)),
+            notifications: VecDeque::new(),
         })
     }
 
@@ -30,11 +42,58 @@ impl LinksClient {
     ///
     /// An `(error: 'message')` reply becomes [`ProtocolError::Remote`].
     pub fn request(&mut self, document: &LinoDocument) -> ProtocolResult<LinoDocument> {
-        let reply = self.connection.request(document)?;
-        if let Some(message) = error_message(&reply) {
-            return Err(ProtocolError::Remote(message.to_string()));
+        self.connection.send(document)?;
+        loop {
+            let reply = self
+                .connection
+                .receive()?
+                .ok_or_else(|| ProtocolError::malformed("connection closed before the reply"))?;
+            if is_notification(&reply) {
+                self.notifications.push_back(reply);
+                continue;
+            }
+            if let Some(message) = error_message(&reply) {
+                return Err(ProtocolError::Remote(message.to_string()));
+            }
+            return Ok(reply);
         }
-        Ok(reply)
+    }
+
+    /// The number of pushes received and not yet taken by
+    /// [`receive_notification`](Self::receive_notification).
+    pub fn pending_notifications(&self) -> usize {
+        self.notifications.len()
+    }
+
+    /// The next document the server pushed, `(notify: N)` and its changes,
+    /// waiting up to `timeout` for one; `Ok(None)` when none arrived in time.
+    ///
+    /// Fails when the connection closed, or when the server sent something
+    /// other than a push while no request was waiting.
+    pub fn receive_notification(
+        &mut self,
+        timeout: Duration,
+    ) -> ProtocolResult<Option<LinoDocument>> {
+        if let Some(queued) = self.notifications.pop_front() {
+            return Ok(Some(queued));
+        }
+        if !self.connection.wait_for_message(timeout)? {
+            return Ok(None);
+        }
+        let document = self.connection.receive()?.ok_or_else(|| {
+            ProtocolError::Io(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "connection closed",
+            ))
+        })?;
+        if is_notification(&document) {
+            Ok(Some(document))
+        } else {
+            Err(ProtocolError::malformed(format!(
+                "the server sent a reply nobody asked for: {}",
+                format_document(&document)
+            )))
+        }
     }
 
     /// Runs a LiNo substitution query; the empty query reads every link.

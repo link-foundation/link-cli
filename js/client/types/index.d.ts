@@ -57,7 +57,8 @@ export type Guarantee =
   | 'pagination'
   | 'persistent'
   | 'rawTcp'
-  | 'sharding';
+  | 'sharding'
+  | 'subscriptions';
 export const GUARANTEES: readonly Guarantee[];
 export const MAX_U32_ADDRESS: bigint;
 
@@ -76,6 +77,8 @@ export interface Capabilities {
   readonly persistent: boolean;
   readonly rawTcp: boolean;
   readonly sharding: boolean;
+  /** Whether other connections' writes are pushed to subscriptions (a server connection). */
+  readonly subscriptions: boolean;
   /** Whether equal links stay apart (true), merge (false) or it is unknown (null). */
   readonly duplicateLinks: boolean | null;
   readonly bulk: 'pipelined-non-atomic' | 'sequential-non-atomic' | string;
@@ -101,8 +104,22 @@ export interface Transport {
   readonly capabilities: Capabilities;
   send(text: string, scope: Scope): Promise<string>;
   close?(): Promise<void>;
-  readonly stats?: { requests: number; bytesSent: number; bytesReceived: number };
+  readonly stats?: { requests: number; bytesSent: number; bytesReceived: number; pushes?: number };
+  /** Transports that receive pushes (TCP): the text of the next one. */
+  receivePush?(scope: Scope): Promise<string>;
+  /** Transports that receive pushes (TCP): every push from now on, instead of `receivePush`. */
+  onPush?(listener: (text: string) => void): () => void;
+  readonly pendingPushes?: number;
 }
+
+/** A push of a subscription: the changes of another connection's write it may see. */
+export interface Notification {
+  subscription: number;
+  changes: Change[];
+}
+/** Whether a document is a push: its first link is `(notify: N)`. */
+export function isNotification(document: LinoDocument): boolean;
+export function parseNotification(document: LinoDocument): Notification;
 
 export type Operation =
   | { op: 'count'; restriction?: Restriction }
@@ -151,6 +168,14 @@ export interface Links {
   query(text: string, options?: RequestOptions): Promise<Change<NamedLink>[]>;
   exportLinks(options?: RequestOptions): Promise<NamedLink[]>;
   batch(operations: Operation[], options?: RequestOptions & { window?: number }): Promise<BatchResult>;
+  /** Resolves to the subscription's number; needs `capabilities.subscriptions`. */
+  subscribe(restriction?: Restriction, options?: RequestOptions): Promise<number>;
+  unsubscribe(subscription: number | bigint, options?: RequestOptions): Promise<void>;
+  /** Null when the deadline or timeout passes before a notification arrives. */
+  receiveNotification(options?: RequestOptions): Promise<Notification | null>;
+  /** Returns the function that removes the listener. */
+  onNotification(listener: (notification: Notification) => void): () => void;
+  readonly pendingNotifications: number;
   close(): Promise<void>;
   [Symbol.asyncDispose](): Promise<void>;
 }

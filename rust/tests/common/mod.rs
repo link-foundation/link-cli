@@ -23,7 +23,18 @@ pub struct RunningServer {
 
 impl RunningServer {
     pub fn start(options: ServerOptions, named: bool) -> Self {
-        Self::start_with(options, move |server, path| {
+        Self::start_with(options, named, |server| server)
+    }
+
+    /// Like [`start`](Self::start), letting `configure` set the server up
+    /// before it serves.
+    pub fn start_with(
+        options: ServerOptions,
+        named: bool,
+        configure: impl FnOnce(LinksServer) -> LinksServer + Send + 'static,
+    ) -> Self {
+        Self::start_serving(options, move |server, path| {
+            let server = configure(server);
             if named {
                 let mut storage = NamedTypesDecorator::new(path, false).unwrap();
                 server.serve(&mut storage).unwrap();
@@ -35,7 +46,7 @@ impl RunningServer {
     }
 
     /// Lets `serve` serve the temporary store at the path it is given.
-    pub fn start_with(
+    pub fn start_serving(
         options: ServerOptions,
         serve: impl FnOnce(LinksServer, &Path) + Send + 'static,
     ) -> Self {

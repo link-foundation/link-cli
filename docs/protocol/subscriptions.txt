@@ -1,0 +1,71 @@
+# Two connections, A and B, to one fresh links server: subscriptions.
+#
+# Both ports replay it against their own server, in the text protocol and in
+# the binary protocol with every option (csharp: SubscriptionsTests, rust:
+# subscriptions_tests), and so does the JavaScript client
+# (js/client/test/conformance).
+#
+# `A> request` is a request on connection A; the lines up to the next `A>`,
+# `B>`, `A<` or `B<` are its reply, and `! message` is an error reply.
+# `A< (notify: n)` is a document the server pushed to A without being asked:
+# `(notify: n)` and the lines after it, one `(before) (after)` change each.
+#
+# Every push is written before any later reply on its connection, so after the
+# reply to a request on a connection, that connection has no push left to read
+# that this conversation does not list before the request.
+
+# A asks for every change of every link.
+A> (subscribe: (* * *))
+(subscription: 1)
+B> (create: (0 0))
+() ((1: 0 0))
+A< (notify: 1)
+() ((1: 0 0))
+# Subscriptions are numbered per connection, from 1.
+B> (subscribe: (2))
+(subscription: 1)
+# A connection is not told about its own writes.
+A> (create: (1 1))
+() ((2: 1 1))
+B< (notify: 1)
+() ((2: 1 1))
+# The restriction is a pattern, like the one of (each: ...); a change is
+# pushed once per subscription it fits, in the order of the subscriptions.
+A> (subscribe: (* 1 *))
+(subscription: 2)
+B> (update: (1 1 2))
+((1: 0 0)) ((1: 1 2))
+A< (notify: 1)
+((1: 0 0)) ((1: 1 2))
+# Each side is kept only when it fits the subscription: a link that comes
+# into the pattern arrives as a creation...
+A< (notify: 2)
+() ((1: 1 2))
+B> (update: (1 2 2))
+((1: 1 2)) ((1: 2 2))
+A< (notify: 1)
+((1: 1 2)) ((1: 2 2))
+# ...and a link that leaves it as a deletion.
+A< (notify: 2)
+((1: 1 2)) ()
+# Substitution queries notify like operations do.
+B> () ((1 2))
+() ((3: 1 2))
+A< (notify: 1)
+() ((3: 1 2))
+A< (notify: 2)
+() ((3: 1 2))
+# Unsubscribing answers nothing, even for a number that is not subscribed.
+A> (unsubscribe: 2)
+A> (unsubscribe: 7)
+B> (update: (2 2 1))
+((2: 1 1)) ((2: 2 1))
+A< (notify: 1)
+((2: 1 1)) ((2: 2 1))
+A> (unsubscribe: 1)
+B> (unsubscribe: 1)
+# Nobody is subscribed any more: nothing is pushed.
+B> (update: (2 0 0))
+((2: 2 1)) ((2: 0 0))
+A> (count: ())
+(count: 3)

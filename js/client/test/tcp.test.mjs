@@ -215,3 +215,103 @@ test('close waits for answers, then ends only an owned connection', async () => 
   socket.destroy();
   await server.close();
 });
+
+/** A fake server that answers subscribe and writes `pushes` around the replies it is told to. */
+function pushingServer() {
+  return fakeServer((text, connection) => {
+    if (text === '(count: (0))') return '(count: 0)';
+    if (text === '(subscribe: ())') return '(subscription: 1)';
+    if (text === '(unsubscribe: 1)') return '';
+    // `(count: (N))` asks for N pushes ahead of its reply.
+    const many = /^\(count: \(\((\d+)\)\)\)$/.exec(text);
+    if (many) {
+      for (let i = 1; i <= Number(many[1]); i += 1) connection.socket.write(encodeMessage(`(notify: 1)\n() ((${i}: 0 0))`));
+      return `(count: ${many[1]})`;
+    }
+    return undefined;
+  });
+}
+
+test('pushes are told from replies and wait to be received', async () => {
+  const server = await pushingServer();
+  const client = await connectTcp(server.address);
+  assert.equal(client.capabilities.subscriptions, true);
+  assert.equal(await client.subscribe(), 1);
+  // Three pushes arrive ahead of the reply; the reply still matches its request.
+  assert.deepEqual(await Promise.all([client.count([3]), client.count([1])]), [3n, 1n]);
+  assert.equal(client.pendingNotifications, 4);
+  assert.equal(client.transport.stats.pushes, 4);
+  const received = [];
+  for (let i = 0; i < 4; i += 1) received.push(await client.receiveNotification({ timeout: 1000 }));
+  assert.deepEqual(
+    received.map(({ subscription, changes }) => [subscription, changes[0].before, changes[0].after.index]),
+    [
+      [1, null, 1n],
+      [1, null, 2n],
+      [1, null, 3n],
+      [1, null, 1n],
+    ],
+  );
+  // Nothing more is pending: the deadline ends the wait with null.
+  assert.equal(await client.receiveNotification({ timeout: 20 }), null);
+  await client.unsubscribe(1);
+  await client.close();
+  await server.close();
+});
+
+test('a waiting receiver gets the next push; listeners take them instead', async () => {
+  const server = await pushingServer();
+  const client = await connectTcp(server.address);
+  await client.subscribe();
+  const waiting = client.receiveNotification();
+  await client.count([1]);
+  assert.equal((await waiting).changes[0].after.index, 1n);
+
+  const seen = [];
+  const stop = client.onNotification((notification) => seen.push(notification.changes[0].after.index));
+  await client.count([2]);
+  assert.deepEqual(seen, [1n, 2n]);
+  assert.equal(client.pendingNotifications, 0);
+  stop();
+  await client.count([1]);
+  assert.equal(client.pendingNotifications, 1);
+
+  const controller = new AbortController();
+  const aborted = client.transport.receivePush({ signal: controller.signal });
+  client.transport.receivePush({ signal: controller.signal }).catch(() => {});
+  controller.abort();
+  // The queued push is taken first; the waiter after it is aborted.
+  assert.match(await aborted, /^\(notify: 1\)/);
+  await client.close();
+  await server.close();
+});
+
+test('receivers end when the connection does; too many pushes break it', async () => {
+  const server = await pushingServer();
+  const client = await connectTcp(server.address);
+  const waiting = client.receiveNotification();
+  for (const connection of server.connections) connection.socket.destroy();
+  await assert.rejects(waiting, { name: 'ConnectionClosedError' });
+  await assert.rejects(client.receiveNotification({ timeout: 1000 }), { name: 'ConnectionClosedError' });
+
+  const bounded = await connectTcp(server.address, { maxPendingPushes: 2 });
+  await assert.rejects(bounded.count([3]), { name: 'LimitExceededError', outcome: 'unknown' });
+  // The two that fit are still there to read.
+  assert.equal(bounded.pendingNotifications, 2);
+  assert.notEqual(await bounded.receiveNotification(), null);
+  await bounded.close();
+  await server.close();
+});
+
+test('a reply nobody asked for that is no push breaks the connection', async () => {
+  const server = await pushingServer();
+  const client = await connectTcp(server.address);
+  const waiting = client.receiveNotification();
+  for (const connection of server.connections) connection.socket.write(encodeMessage('(count: 7)'));
+  const error = await waiting.then(() => assert.fail('no push came'), (failure) => failure);
+  assert.equal(error.name, 'ConnectionClosedError');
+  assert.equal(error.cause.name, 'MalformedMessageError');
+  assert.match(error.message, /nobody asked for: \(count: 7\)/);
+  await client.close();
+  await server.close();
+});

@@ -29,7 +29,10 @@ export class ProcessTransport implements Transport {
   readonly transport: TcpTransport;
   readonly server: ServerProcess;
   readonly capabilities: Capabilities;
+  readonly pendingPushes: number;
   send(text: string, scope?: Scope): Promise<string>;
+  receivePush(scope?: Scope): Promise<string>;
+  onPush(listener: (text: string) => void): () => void;
   close(): Promise<void>;
 }
 export function connectProcess(options: ServerOptions & TcpOptions): Promise<LinksClient>;
