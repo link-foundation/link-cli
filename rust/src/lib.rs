@@ -23,6 +23,8 @@
 //! - `named_type_links` - The storage interface every layer is written against
 //! - `named_types`, `pinned_types` - Named and pinned type decorators
 //! - `persistent_transformations` - Persistent transformation triggers
+//! - `permissions` - An optional permission layer with rules stored in links
+//! - `undoable_links` - Writes kept to be undone, so a failed request leaves nothing
 //! - `types` - A type hierarchy with sub-types and multiple inheritance
 //! - `transactions`, `version_control` - Reversible transitions, branches and tags
 //! - `cli` - Argument parsing, so a custom tool can accept the same options
@@ -50,6 +52,7 @@ pub mod named_links;
 pub mod named_type_links;
 pub mod named_types;
 pub mod parser;
+pub mod permissions;
 pub mod persistent_transformations;
 pub mod pinned_types;
 pub mod protocol;
@@ -62,6 +65,7 @@ pub mod sequences;
 pub mod storage;
 pub mod transactions;
 pub mod types;
+pub mod undoable_links;
 pub mod unicode_string_storage;
 pub mod version_control;
 
@@ -85,6 +89,10 @@ pub use named_links::NamedLinks;
 pub use named_type_links::NamedTypeLinks;
 pub use named_types::{NamedTypes, NamedTypesDecorator};
 pub use parser::Parser;
+pub use permissions::{
+    AccessPolicy, Forbidden, LinksTokenTable, PermissionAccess, PermissionMarkers,
+    PermissionPolicy, PermissionsDecorator,
+};
 pub use persistent_transformations::{
     make_triggers_database_filename, PersistentTransformation, PersistentTransformationDecorator,
     PersistentTransformationKind, PersistentTransformationQuery, TriggerStore,
@@ -107,5 +115,6 @@ pub use transactions::{
     TransitionKind, TransitionLogStore,
 };
 pub use types::{ensure_point, TypeMarkers, Types, TypesDecorator, EXTENDS_NAME, ROOT_TYPE_NAME};
+pub use undoable_links::{LinkChange, LinksUndoLog, UndoableLinksDecorator};
 pub use unicode_string_storage::UnicodeStringStorage;
 pub use version_control::{BranchInfo, VersionControlDecorator, DEFAULT_BRANCH_NAME};

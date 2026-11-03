@@ -88,7 +88,7 @@ where
             bail!("Top-level LiNo import links must have an index or name");
         }
 
-        return Ok(storage.get_or_create(source, target));
+        return storage.try_get_or_create(source, target);
     }
 
     let index = resolve_index(storage, &identifier)?;
@@ -128,7 +128,7 @@ where
 {
     if let Some(id) = parse_reference_number(identifier, false) {
         if !storage.exists(id) {
-            storage.ensure_created(id);
+            storage.try_ensure_created(id)?;
         }
 
         return Ok(id);
@@ -142,7 +142,7 @@ where
     T: NamedTypeLinks,
 {
     if !storage.exists(index) {
-        storage.ensure_created(index);
+        storage.try_ensure_created(index)?;
     }
 
     if let Some(current) = storage.get_link(index) {

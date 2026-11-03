@@ -33,6 +33,7 @@ doublets = "0.17.0"
 links-notation = "0.30.0"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.5.0"
+sha2 = "0.10"
 
 [dev-dependencies]
 tempfile = "3.27.0"

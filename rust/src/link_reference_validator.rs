@@ -258,7 +258,9 @@ impl LinkReferenceValidator {
         pattern_type: &'static str,
     ) -> Result<()> {
         if let Ok(link_id) = identifier.parse::<u32>() {
-            if !storage.reference_exists(link_id) && !plan.numeric_ids_to_be_created.contains(&link_id) {
+            if !storage.reference_exists(link_id)
+                && !plan.numeric_ids_to_be_created.contains(&link_id)
+            {
                 plan.add_missing_reference(MissingLinkReference {
                     identifier: identifier.to_string(),
                     pattern_type,
