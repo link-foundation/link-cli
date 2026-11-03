@@ -308,9 +308,9 @@ fn refuses_a_delete_that_would_take_a_hidden_link_with_it() -> Result<()> {
     let (t, v) = (w.t.clone(), w.v.clone());
     // The secret refers to alice's note: deleting the note deletes it.
     let mut boss = w.as_(v["boss"]);
-    let secret_use = boss.try_create(0, 0)?;
-    boss.update(secret_use, t["Secret"], v["note"])?;
-    NamedTypeLinks::set_name(&mut w.links, secret_use, "use")?;
+    let hidden_use = boss.try_create(0, 0)?;
+    boss.update(hidden_use, t["Secret"], v["note"])?;
+    NamedTypeLinks::set_name(&mut w.links, hidden_use, "use")?;
     let before = all(&mut w.links);
     let mut view = w.as_(v["alice"]);
     assert_eq!(Some("forbidden"), error_of(view.delete(v["note"])));
@@ -321,11 +321,11 @@ fn refuses_a_delete_that_would_take_a_hidden_link_with_it() -> Result<()> {
     );
     assert_eq!(
         Some("use".to_string()),
-        NamedTypeLinks::get_name(&mut w.links, secret_use)?
+        NamedTypeLinks::get_name(&mut w.links, hidden_use)?
     );
     // Boss may delete both.
     w.as_(v["boss"]).delete(v["note"])?;
-    assert!(!w.links.exists(secret_use));
+    assert!(!w.links.exists(hidden_use));
     assert!(!w.links.exists(v["note"]));
     Ok(())
 }
@@ -338,8 +338,8 @@ fn refuses_a_merge_that_would_repoint_a_hidden_link() -> Result<()> {
     // Two equal notes but for their targets; the secret refers to one.
     let other = boss.try_create(0, 0)?;
     boss.update(other, t["Note"], v["shared"])?;
-    let secret_use = boss.try_create(0, 0)?;
-    boss.update(secret_use, t["Secret"], other)?;
+    let hidden_use = boss.try_create(0, 0)?;
+    boss.update(hidden_use, t["Secret"], other)?;
     let before = all(&mut w.links);
     // Making `other` equal to the note merges it into the note, repointing
     // the secret.
@@ -357,8 +357,8 @@ fn refuses_a_merge_that_would_repoint_a_hidden_link() -> Result<()> {
     w.as_(v["boss"]).update(other, t["Note"], v["note"])?;
     assert!(!w.links.exists(other));
     assert_eq!(
-        Link::new(secret_use, t["Secret"], v["note"]),
-        w.link(secret_use)
+        Link::new(hidden_use, t["Secret"], v["note"]),
+        w.link(hidden_use)
     );
     Ok(())
 }
