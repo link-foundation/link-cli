@@ -22,7 +22,11 @@ links database.
 | `rust/scripts/` | Rust release, changelog, crate publication, and repository validation helpers. |
 | `rust/wasm/` | `wasm-bindgen` wrapper crate around the Rust query processor. |
 | `js/` | React/Vite browser workbench and JavaScript package lockfile. |
-| `.github/workflows/` | Split C#, Rust, and WebAssembly CI workflows. |
+| `js/client/` | `@link-foundation/link-cli-client`: the links contract in JavaScript and TypeScript over TCP, a `clink --serve` process or WebAssembly, plus the union, remap and external-id layers. |
+| `docs/protocol/` | The links protocol: binary links notation, links operations and subscriptions, with test vectors. |
+| `docs/case-studies/` | Research notes per issue, with evidence. |
+| `examples/` | Runnable examples, one folder per feature (TCP, permissions, composition, transactions, version control, type hierarchy, archives, embedding). |
+| `.github/workflows/` | CI per part of the repository; see [CI Workflows](#ci-workflows). |
 
 ## C# Implementation
 
@@ -32,7 +36,43 @@ Key files:
 
 - `csharp/Foundation.Data.Doublets.Cli/Program.cs`: command-line surface and
   command orchestration.
-- `AdvancedMixedQueryProcessor.cs`: LiNo restriction/substitution processing.
+- `csharp/Foundation.Data.Doublets.Cli/CliPermissions.cs`: the parts of
+  `clink` behind `--permissions`, `--subject` and the token options.
+
+The library files below are in `csharp/Foundation.Data.Doublets.Cli.Library/`.
+
+Queries:
+
+- `AdvancedMixedQueryProcessor.cs`: LiNo restriction/substitution processing,
+  split by concern into `.Matching.cs` (patterns against the store),
+  `.Mutations.cs` (creates, updates and deletes) and `.References.cs` (the ids
+  and names a substitution defines).
+- `MixedQueryProcessor.cs` and `BasicQueryProcessor.cs`: the earlier, simpler
+  query processors, which only the library API and their tests use; the CLI
+  and the server use `AdvancedMixedQueryProcessor`.
+- `QueryParser.cs`: keeps reference kinds (names, addresses, variables,
+  wildcards) across the notation parser, whose string model drops them.
+- `QueryConstants.cs`: the constants of query patterns.
+- `ChangesSimplifier.cs`: reduces the raw changes of a query to one change per
+  link.
+- `LinksUniquenessAndUsagesRepointingResolver.cs`: keeps every doublet unique;
+  an update that would duplicate a link merges into it and repoints its usages.
+- `Exceptions.cs`: the exceptions of malformed links and queries.
+
+Storage and names:
+
+- `NamedLinks.cs`, `NamedLinksDecorator.cs`: names stored as Unicode sequences
+  in links; `INamedTypes.cs` declares `INamedTypes<T>` and
+  `INamedTypesLinks<T>`, the contract every layer implements.
+- `UnicodeStringStorage.cs`: Unicode strings as doublet sequences.
+- `PinnedTypes.cs`: the pinned type addresses behind `PinnedTypesDecorator`.
+- `SimpleLinksDecorator.cs`: a links file with automatic uniqueness and a
+  names file beside it, without the named-types layer.
+- `LinksExtensions.cs`: helpers over `ILinks<T>`, including `EnsureCreated`,
+  which asks a composed network where an address belongs.
+- `LinksFacadeDisposer.cs`: releases every disposable facade of a decorator
+  chain.
+- `EnumerableExtensions.cs`: deconstruction of short sequences.
 - `NamedTypesDecorator.cs`: names layered over links with a sidecar names
   database.
 - `PinnedTypesDecorator.cs`: pinned type support composed into named types.
@@ -68,6 +108,13 @@ Key files:
 - `LinksTokenTable.cs`: the token table of `(auth: token)`, stored as links.
 - `Protocol/LinksSessions.cs`: a store served to many sessions, each with its
   subject; `LinksServer` gives every connection one.
+- `UnionLinksDecorator.cs`, `RemapLinksDecorator.cs`, `AddressMaps.cs`
+  (`IComposedLinks`, `IAddressMap`, `OffsetAddressMap`, `AddressTable`) and
+  `LinksExternalIds.cs`: the composing layers of #149; see
+  [Composing Links Networks](#composing-links-networks).
+- `Protocol/LinksConnection.cs`: one server connection, with its
+  subscriptions and pending documents. `Protocol/LinoProtocolException.cs`:
+  protocol errors and their kinds.
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
 
@@ -88,10 +135,33 @@ Key files:
 
 - `rust/src/main.rs`: native `clink` entry point.
 - `rust/src/cli.rs`: argument parser and help text.
-- `rust/src/query_processor.rs`: LiNo query execution.
+- `rust/src/lib.rs`: the public surface of the `link_cli` crate.
+- `rust/src/error.rs`: `LinkError`.
+- `rust/src/link.rs`, `rust/src/lino_link.rs`, `rust/src/parser.rs`: the
+  doublet, the parsed LiNo link, and the LiNo parser.
+- `rust/src/query_processor.rs`: LiNo query execution, with
+  `query_processor/matching.rs` and `query_processor/mutations.rs`.
+- `rust/src/query_parser.rs`, `rust/src/query_types.rs`,
+  `rust/src/query_options.rs`: reference kinds over the notation parser, the
+  patterns a query passes through, and the options it runs with.
+- `rust/src/changes_simplifier.rs`: the net change of every link of a query.
 - `rust/src/query_processor_substitution.rs`: substitution preservation helpers.
 - `rust/src/link_reference_validator.rs`: reference validation and auto-create.
 - `rust/src/named_types.rs`: names sidecar storage.
+- `rust/src/named_type_links.rs`: `NamedTypeLinks`, the interface every layer
+  is written against, with `claims` for composed networks.
+- `rust/src/named_links.rs`, `rust/src/unicode_string_storage.rs`: names
+  stored as Unicode sequences in links, as C# `NamedLinks`.
+- `rust/src/link_storage.rs`: `LinkStorage`, the CLI's store, in memory or in
+  a file; `rust/src/link_storage_doublets.rs` bridges it to the `doublets`
+  traits.
+- `rust/src/pinned_types.rs`, `rust/src/hybrid_reference.rs`: pinned types and
+  the `Hybrid<uint>` reference encoding, compatible with C#.
+- `rust/src/persistent_transformations.rs`: stored triggers.
+- `rust/src/union_links.rs`, `rust/src/remap_links.rs`,
+  `rust/src/external_ids.rs`: `UnionLinks`, `RemapLinks` with `AddressMap`,
+  `OffsetAddressMap` and `AddressTable`, and `LinksExternalIds` (#149); see
+  [Composing Links Networks](#composing-links-networks).
 - `rust/src/types.rs`: the `Types` trait and `TypesDecorator`, the type
   hierarchy layer of `TypesDecorator.cs`, over any `NamedTypeLinks`, with the
   same test cases in `rust/tests/types_decorator_tests.rs`.
@@ -103,7 +173,9 @@ Key files:
 - `rust/src/sequences/`: Unicode sequence conversion and related parity code.
 - `rust/src/storage/`: the `LinksStorage` trait the transactions layer is
   written against, the doublets-backed `DoubletsStorage`, the
-  `PersistentFileMapped` backing memory, and the advisory-locking helpers.
+  `PersistentFileMapped` backing memory, the advisory-locking helpers, and
+  `NamedLinksStorage`, which makes any `NamedTypeLinks` layer (a permissions
+  view, a union, a remap) a `LinksStorage` so transactions stack over it.
 - `rust/src/transactions/`: optional transactions decorator and the
   transitions-log, retention-policy, and commit-mode types.
 - `rust/src/version_control/`: optional version-control decorator with
@@ -121,12 +193,13 @@ Key files:
 - `rust/src/permissions.rs`: the optional permission layer (#149):
   `PermissionPolicy`, `PermissionsDecorator`, `LinksTokenTable` and
   `Forbidden`, with the same test cases as C# in
-  `rust/tests/permissions_decorator_tests.rs`.
+  `rust/tests/permissions_decorator_tests.rs`, and with the other layers in
+  `rust/tests/permissions_integration_tests.rs`.
 - `rust/src/undoable_links.rs`: `UndoableLinksDecorator` and `LinksUndoLog`.
 
 Main Rust dependencies:
 
-- `doublets = "0.18.0"` for links storage foundations.
+- `doublets = "0.19.0"` for links storage foundations.
 - `links-notation = "0.30.0"` for LiNo parsing and binary links notation.
 - `lino-arguments = "0.5.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
@@ -158,6 +231,34 @@ Runtime flow:
 5. React renders the snapshot and mirrors it into `doublets-web` `UnitedLinks`.
 
 The committed lockfile currently pins `doublets-web` to `0.1.3`.
+
+## JavaScript Client
+
+`js/client` is `@link-foundation/link-cli-client`, one links contract over
+interchangeable backends, the JS counterpart of `INamedTypesLinks` /
+`NamedTypeLinks`. See [js/client/README.md](../js/client/README.md).
+
+- `src/client.js`: the client over a transport; `src/tcp.js` (Node.js, Bun,
+  Deno), `src/process.js` (a `clink --serve` child process) and `src/wasm.js`
+  (the in-process `clink-wasm` store) are the transports.
+- `src/framing.js`, `src/lino.js`, `src/operations.js`: the text protocol
+  framing, canonical LiNo text, and the LinksOperation documents, with every
+  address a `BigInt`.
+- `src/capabilities.js`, `src/errors.js`, `src/deadline.js`: what each backend
+  guarantees, the errors with their outcomes, and cancellation.
+- `src/composed.js`, `src/union.js`, `src/remap.js`, `src/external-ids.js`:
+  `UnionLinks`, `RemapLinks`, `OffsetAddressMap`, `AddressTable`,
+  `LinksExternalIds` and `ExternalIdMap` (#149).
+- `types/index.d.ts`: the TypeScript declarations.
+
+## Composing Links Networks
+
+Every layer is a links network over another one, so the layers stack in any
+order: permissions over a union restrict every member, permissions under it
+one member, a remap moves a network out of the way of another, and external
+ids keep the ids of other systems in links. [COMPOSITION.md](COMPOSITION.md)
+describes each layer in C#, Rust and JavaScript, what each order does, where
+rules and type roots may come from, and the scenarios they serve.
 
 ## Data Files
 
@@ -401,6 +502,11 @@ message, not a links operation.
 | `.github/workflows/csharp.yml` | .NET restore, build, tests, package, and release. |
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
+| `.github/workflows/js-client.yml` | `@link-foundation/link-cli-client` unit tests and type declarations, conformance against the Rust, C# and WebAssembly backends on Node.js, Bun and Deno, the composition example, and npm release with trusted publishing. |
+| `.github/workflows/docs.yml` | Builds the C# (DocFX), Rust (rustdoc) and workbench documentation into one site. |
+| `.github/workflows/links.yml` | Checks the links of every Markdown and HTML file with lychee, falling back to the Web Archive. |
+| `.github/workflows/security.yml` | CodeQL, dependency review, `cargo audit` of every committed `Cargo.lock`, and `npm audit`. |
+| `.github/workflows/workflows.yml` | actionlint, zizmor, and the workflow policy tests. |
 | `.github/workflows/dependencies.yml` | Fails while any Cargo, NuGet or npm dependency, lock file entry, GitHub Action, or the Node.js or .NET version declared in any tracked manifest is behind its latest release, unless a comment on its manifest line links an open issue that blocks the update. Runs on pull requests and daily; `.github/dependabot.yml` opens the update pull requests. |
 
 Path filters keep most workflows focused on the parts of the repository they
