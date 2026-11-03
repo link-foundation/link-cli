@@ -1,0 +1,10 @@
+# a token of alice, kept as links in a file of its own
+Token granted to subject 11: 3
+# a guest connection
+(count: 0)
+# alice, after (auth: alice-secret)
+(count: 2)
+(note: Note note)
+(news: Public news)
+# a wrong token
+Error: server error: Forbidden: authentication failed
