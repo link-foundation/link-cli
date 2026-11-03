@@ -493,7 +493,7 @@ rootCommand.SetAction(
 
       try
       {
-          if (!string.IsNullOrWhiteSpace(subjectText) && !TryResolveSubject(decoratedLinks, subjectText, out subject))
+          if (!string.IsNullOrWhiteSpace(subjectText) && !CliPermissions.TryResolveSubject(decoratedLinks, subjectText, out subject))
           {
               Console.Error.WriteLine($"Unknown subject '{subjectText}'.");
               return 1;
@@ -656,7 +656,7 @@ rootCommand.SetAction(
 
           if (grantToken is not null || revokeToken is not null)
           {
-              return RunTokens();
+              return CliPermissions.RunTokens(new LinksTokenTable(tokensStore ?? storeLinks), subject, grantToken, revokeToken);
           }
 
           if (serveAddress is not null)
@@ -703,27 +703,6 @@ rootCommand.SetAction(
           Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
           Console.Out.Flush();
           server.Serve(decoratedLinks);
-          return 0;
-      }
-
-      // `--grant-token` and `--revoke-token`: write the token table and exit.
-      int RunTokens()
-      {
-          var table = new LinksTokenTable(tokensStore ?? storeLinks);
-          if (grantToken is not null)
-          {
-              if (subject == 0)
-              {
-                  Console.Error.WriteLine("--grant-token needs a --subject.");
-                  return 1;
-              }
-              var link = table.Grant(grantToken, subject);
-              Console.WriteLine($"Token granted to subject {subject}: {link}");
-          }
-          if (revokeToken is not null)
-          {
-              Console.WriteLine(table.Revoke(revokeToken) ? "Token revoked." : "Unknown token.");
-          }
           return 0;
       }
 
@@ -815,29 +794,8 @@ rootCommand.SetAction(
 
               try
               {
-                  if (undoableLinks is null)
-                  {
-                      QueryProcessor.ProcessQuery(decoratedLinks, options);
-                  }
-                  else
-                  {
-                      // With --permissions a query is atomic: a failed one is
-                      // undone whole, even where the store changed links the
-                      // subject cannot see.
-                      options.References = undoableLinks;
-                      undoableLinks.Begin();
-                      try
-                      {
-                          QueryProcessor.ProcessQuery(decoratedLinks, options);
-                          undoableLinks.Commit();
-                      }
-                      catch
-                      {
-                          undoableLinks.Rollback();
-                          changesList.Clear();
-                          throw;
-                      }
-                  }
+                  // With --permissions a query is atomic: a failed one is undone whole.
+                  CliPermissions.ProcessQuery(decoratedLinks, undoableLinks, options, changesList.Clear);
               }
               catch (Exception error) when (error is ParseException or InvalidOperationException
                   || (undoableLinks is not null && error is ArgumentException))
@@ -892,16 +850,6 @@ return rootCommand.Parse(args).Invoke();
 
 // `--connect`: sends the query to a server and prints the reply.
 // Any binary option implies `--protocol binary`.
-static bool TryResolveSubject(INamedTypesLinks<uint> links, string text, out uint subject)
-{
-    if (uint.TryParse(text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out subject))
-    {
-        return true;
-    }
-    subject = links.GetByName(text);
-    return subject != links.Constants.Null;
-}
-
 static int RunClient(string address, string? protocolName, BinaryLinoOptions binaryOptions, string query, string? token)
 {
     ILinoProtocol protocol;
