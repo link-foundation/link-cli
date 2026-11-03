@@ -126,7 +126,7 @@ Key files:
 
 Main Rust dependencies:
 
-- `doublets = "0.17.0"` for links storage foundations.
+- `doublets = "0.18.0"` for links storage foundations.
 - `links-notation = "0.30.0"` for LiNo parsing and binary links notation.
 - `lino-arguments = "0.5.0"` for argument initialization compatibility.
 - `anyhow` and `thiserror` for error handling.
