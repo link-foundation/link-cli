@@ -55,6 +55,11 @@ the core CLI behavior and is also used by the WebAssembly browser workbench.
 | Take binary links notation from links-notation. | #104 | Both ports use the binary links notation that `links-notation` 0.23.0 ships (`links_notation::binary` in Rust, `Link.Foundation.Links.Notation.Binary` in C#) instead of a copy of it. link-cli keeps only the transport: text framing, protocol detection, server, client, remote links and the store archive. The golden vectors in `docs/protocol/` still pass byte for byte. |
 | Keep every dependency at its latest release. | #98, #104 | The `Dependencies` workflow reads every manifest git tracks (Cargo, NuGet, npm, GitHub Actions, the Node.js and .NET versions, and every `Cargo.lock` through `cargo update --dry-run`) and fails while any of them is behind its latest release. A dependency that cannot be updated yet is held back by a comment on its manifest line that links the blocking issue; the check holds it back only while that issue is open. Dependabot watches the same directories. |
 | Type hierarchy with multiple inheritance. | #148 | C# `TypesDecorator<TLinkAddress>` (`ITypes<TLinkAddress>`) and Rust `TypesDecorator` (`Types`) keep `Type -> SubType -> … -> Value` in plain links: the type of a link is its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)`, and extra parents are pairs `(p: S T2)` marked by `(m: Extends p)`. `TypeOf`, `IsType`, `ParentsOf`, `AncestorsOf`, `IsA` and `IsOf` terminate on cycles; `Define`, `Extend` and `Instance` write. Pinned types are sub-types of the root. Both ports pass the same tests, including depth, diamonds and cycles. |
+| Optional permission layer with rules stored in links. | #149 | C# and Rust `PermissionsDecorator` over any store, with `PermissionPolicy` reading rules `(g: Subject Object)` marked by `AllowRead` / `AllowWrite`, matched through the type hierarchy (#148). `--permissions self` keeps the rules in the data, `--permissions rules.links` in a file of their own, and every test runs both ways. `--subject` picks the subject; refused writes fail with `Forbidden` and undo the whole query through `UndoableLinksDecorator`. A served store authenticates each connection with `(auth: token)` against a `--tokens` table of links. Without the option nothing changes. |
+| Roots of the permission rules defined in any way. | #149 (PR #157 review) | The type root and the markers may be named points created on first use, any unnamed links at any address, a type system of the caller's own (C# `IsSubject`/`IsObject` overrides, Rust `AccessPolicy` with `PermissionPolicy::granted`), or no rules at all (`IPermissionPolicy<T>` / `AccessPolicy`). One test per option in both ports. |
+| Permissions restrict the data flow of every other layer. | #149 (PR #157 review) | Tests in both ports put permissions over and under a union, under a remap, over and under transactions, and over version control, and check that only what the rules allow flows through (`PermissionsIntegrationTests.cs`, `rust/tests/permissions_integration_tests.rs`). [COMPOSITION.md](COMPOSITION.md#over-or-under-another-layer) maps each order to its test. |
+| Join several links networks into one. | #149 (PR #157 review) | C# `UnionLinksDecorator<T>`, Rust `UnionLinks` and JS `UnionLinks` read many networks as one: the first member shadows the rest, new links go to the first member, writes go to the member that holds the link, and links may refer across members. The union does not depend on permissions and composes with them. The same cases run in all three languages. |
+| Remap other systems' ids to local addresses and back. | #149 (PR #157 review) | C# `RemapLinksDecorator<T>`, Rust `RemapLinks` and JS `RemapLinks` translate addresses both ways through an offset, an address table or a custom map. `LinksExternalIds` keeps the ids of other systems (UUIDs) as links in the data or a store of its own, and the JS `ExternalIdMap` reads a whole network under UUIDs. [`examples/composition`](../examples/composition) joins a client and a served store with permissions, under UUIDs, and CI runs it against both CLIs. |
 | Separate code by implementation language. | #63, #64, #77, #79 | C# code and release helpers live under `csharp/`; Rust code, release helpers, and the WebAssembly wrapper crate live under `rust/`; the browser app and JavaScript lockfile live under `js/`. |
 | Provide Rust parity for core behavior. | #63, #67, #68 | Rust mirrors query processing, names, import/export, structure formatting, and Unicode sequence support. |
 | Run in a browser. | #12, #52, #69, #70 | The Rust query processor is wrapped with `wasm-bindgen` and surfaced through a React/Vite workbench. |
@@ -96,6 +101,8 @@ The README should remain the quick-start document and show:
 - Variables, wildcard/deep patterns, and deduplication behavior.
 - Import, export, structure formatting, output flags, and storage files.
 - Trigger options, which both implementations support.
+- Transactions, version control, the type hierarchy, permissions, serving
+  over TCP, and joining and remapping networks.
 - Links to deeper architecture and behavior documentation.
 
 The deeper docs should explain:
@@ -105,3 +112,10 @@ The deeper docs should explain:
 - How names, pinned types, imports, exports, and triggers are implemented.
 - Which dependencies are used and why.
 - Which requirements are implemented versus planned.
+- How the type hierarchy, permissions, union, remap and external ids work,
+  and how each layer composes with the others
+  ([COMPOSITION.md](COMPOSITION.md)).
+
+Every source file, public layer and CI workflow should be listed in
+[ARCHITECTURE.md](ARCHITECTURE.md), and every package (C#, Rust, the
+JavaScript client) should document its public API in its own README.
