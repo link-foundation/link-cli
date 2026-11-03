@@ -60,6 +60,14 @@ Key files:
   - `LinksServer` and `LinksClient`
   - `RemoteLinks` and `LinksOperation`
   - `StoreArchive`
+- `Permissions.cs`, `PermissionsDecorator.cs`: the optional permission layer
+  (#149), `PermissionPolicy` over rules stored as links and the
+  `PermissionsDecorator` view of a subject; see [Permissions](#permissions).
+- `LinksUndoLog.cs`: `UndoableLinksDecorator`, which makes a request atomic
+  under permissions.
+- `LinksTokenTable.cs`: the token table of `(auth: token)`, stored as links.
+- `Protocol/LinksSessions.cs`: a store served to many sessions, each with its
+  subject; `LinksServer` gives every connection one.
 - `LinksFileLock.cs`: advisory locking of a database's `.lock` sidecar plus the
   `StorageRevision` fingerprint used to detect writes by other processes.
 
@@ -109,6 +117,12 @@ Key files:
   - `remote_links.rs`
   - `links_operations.rs`
   - `archive.rs`
+  - `sessions.rs`: `LinksSessions`, the counterpart of `LinksSessions.cs`.
+- `rust/src/permissions.rs`: the optional permission layer (#149):
+  `PermissionPolicy`, `PermissionsDecorator`, `LinksTokenTable` and
+  `Forbidden`, with the same test cases as C# in
+  `rust/tests/permissions_decorator_tests.rs`.
+- `rust/src/undoable_links.rs`: `UndoableLinksDecorator` and `LinksUndoLog`.
 
 Main Rust dependencies:
 
@@ -312,6 +326,73 @@ Trigger storage can be:
 - A default sidecar file derived from the primary database.
 - A custom file selected by `--triggers-file`.
 - The main database itself when `--embed-triggers` is enabled.
+
+## Permissions
+
+The permission layer (#149) is optional: without `--permissions`, or without
+`Permissions` in the server options, nothing is checked and nothing changes.
+It ports `createPolicy` and `withPermissions` of `@link-foundation/ui-links`
+and replays its permission tests in both ports
+(`PermissionsDecoratorTests.cs`, `rust/tests/permissions_decorator_tests.rs`).
+
+Rules are links. A rule is a pair `(g: Subject Object)` marked by
+`(r: AllowRead g)` or `(r: AllowWrite g)`, where `AllowRead`, `AllowWrite` and
+`Anything` are named points:
+
+- a subject matches `Subject` when it is that link or a link of that type
+  (types of the `TypesDecorator` hierarchy, #148);
+- a link matches `Object` when it is a value or sub-type of `Object`;
+  `Anything` matches every subject or every link;
+- write implies read.
+
+The rules live in the data (`--permissions self`) or in a links file of their
+own (`--permissions rules.links`); the markers are always points of the data,
+so both places behave the same. Rules in the data are links like any other:
+whoever may write them may change the rules.
+
+`PermissionsDecorator` is the store as a subject sees it:
+
+- Reads skip what the subject may not read, so a hidden link is as missing as
+  a deleted one, to reads and writes alike (`Link not found`).
+- Create, update and delete the subject may not make fail with `Forbidden`
+  (`Forbidden: update 14`) and leave the store unchanged. An update needs the
+  right to write the link before and after it. The store below may change
+  more than asked (cascading deletes, merges); every link a write changes must
+  be the subject's to change, or the write is undone and refused whole.
+- Ownership: a link the subject created through the view is its own while
+  its source is 0 (it has no type yet), so it can give it one.
+- Names are references, not links: a subject may refer to a type it cannot
+  read by name; naming a link needs the right to write it.
+- References of a query are checked in the store below the view
+  (`AdvancedMixedQueryProcessor.Options.References` in C#,
+  `NamedTypeLinks::reference_exists` in Rust), so a query may refer to a link
+  its subject cannot read, such as the type of its own link. A hidden link is
+  still not found by reads and writes, and its address stays taken, so a
+  query cannot probe which addresses are taken by creating links there. This
+  is the decision #149 asked to document.
+
+Requests are atomic. `UndoableLinksDecorator` records every write under the
+view in an undo log; `clink --permissions` and every served request begin it,
+commit on success and roll back on any error, undoing writes the store made
+on its own, names included, even on links the subject cannot see. Triggers
+(`--always`, `--once`, `--never`) run below the view, as the store itself, so
+they are refused together with `--permissions`.
+
+The server gives every connection a session (`LinksSessions`) with the
+default subject (`--subject`, 0 is a guest). `(auth: token)` replies
+`(subject: i)` and switches the session to the subject the authenticator
+gives; an unknown token, or no authenticator, replies
+`(error: 'Forbidden: authentication failed')`. The authenticator is a
+callback (`LinksServerOptions.Authenticate` in C#,
+`LinksSessions::with_authenticator` in Rust). `LinksTokenTable` is the one
+`clink --tokens` uses: a subject `s` has a pair `(p: Token s)`, and each token
+is a link `(t: p t)` named `sha256:<hex>` after the token's SHA-256, so the
+store never holds a token itself. The table lives in the data
+(`--tokens self`) or a file of its own; `--grant-token` and `--revoke-token`
+write it, and `clink --connect --token` sends `(auth: token)` first.
+
+`docs/protocol/links-operations.txt` is unchanged: `(auth:)` is a session
+message, not a links operation.
 
 ## CI Workflows
 

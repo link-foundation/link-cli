@@ -209,6 +209,33 @@ default that reads and writes through the implementing layer, so a layer that
 wraps `TypesDecorator` can reuse or override any of it. Run
 `cargo run --example type_hierarchy` for a complete walk-through.
 
+### Permissions
+
+`--permissions self|<rules.links>` runs queries as `--subject` (an index or a
+name; a guest by default) and checks every read and write against rules stored
+as links (#149); see [Permissions](../README.md#permissions) and
+[`examples/permissions`](../examples/permissions). In the library:
+
+```rust
+use link_cli::{NamedTypesDecorator, PermissionAccess, PermissionMarkers, PermissionPolicy, PermissionsDecorator};
+
+let mut data = NamedTypesDecorator::new("data.links", false)?;
+let markers = PermissionMarkers::ensure(&mut data)?;
+PermissionPolicy::allow(&mut data, markers, PermissionAccess::Read, user, public)?;
+let policy = PermissionPolicy::in_data(&mut data)?; // or with_rules(&mut data, Box::new(rules))
+let mut alice = PermissionsDecorator::new(&mut data, policy, alice_link);
+// Reads skip what alice may not read; a forbidden write fails with
+// Forbidden ("Forbidden: update 14") and changes nothing.
+```
+
+`UndoableLinksDecorator` (`begin`, `commit`, `rollback`) makes a request atomic
+under the view, writes the store made on its own included.
+`LinksSessions::with_permissions(store, policy)`, `with_subject` and
+`with_authenticator` give every connection of `LinksServer::serve_sessions` a
+session of its own; `(auth: token)` answers `(subject: i)`. The authenticator
+is any callback; `LinksTokenTable` keeps the tokens as links named after their
+SHA-256.
+
 ## Develop
 
 ```bash

@@ -181,6 +181,30 @@ decorated links and writes go through the decorator, so a derived decorator
 that checks writes sees them. With `new TypesDecorator<uint>(links, root,
 extends)` the pinned types `(1: 1 1)`, `(2: 1 2)`, … are sub-types of root `1`.
 
+### Permissions
+
+`--permissions self|<rules.links>` runs queries as `--subject` (an index or a
+name; a guest by default) and checks every read and write against rules stored
+as links (#149); see [Permissions](../README.md#permissions) and
+[`examples/permissions`](../examples/permissions). In the library:
+
+```csharp
+using var data = new NamedTypesDecorator<uint>("data.links");
+var markers = PermissionPolicy<uint>.EnsureMarkers(data, data);
+PermissionPolicy<uint>.Allow(data, markers, PermissionAccess.Read, user, @public);
+var policy = new PermissionPolicy<uint>(data, data); // or a rules store of its own
+var alice = new PermissionsDecorator<uint>(data, policy, aliceLink);
+// Reads skip what alice may not read; a forbidden write throws
+// ForbiddenException ("Forbidden: update 14") and changes nothing.
+```
+
+`UndoableLinksDecorator<uint>` (`Begin`, `Commit`, `Rollback`) makes a request
+atomic under the view, writes the store made on its own included.
+`LinksServerOptions.Permissions`, `Subject` and `Authenticate` give every
+connection of a `LinksServer` a session of its own (`LinksSessions`);
+`(auth: token)` answers `(subject: i)`. `Authenticate` is any callback;
+`LinksTokenTable` keeps the tokens as links named after their SHA-256.
+
 ## Develop
 
 ```bash
