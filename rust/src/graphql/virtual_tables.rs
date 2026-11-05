@@ -232,6 +232,8 @@ impl Exec<'_, '_> {
                     }
                 }
             }
+            // The rows do not depend on the order the includes were hashed in.
+            parents.values_mut().for_each(|list| list.sort_unstable());
             let mut nodes: Vec<i64> = members.into_iter().collect();
             nodes.sort_unstable();
             push_paths(&mut rows, tree, nodes, &parents);

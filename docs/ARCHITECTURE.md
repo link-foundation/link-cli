@@ -515,6 +515,14 @@ write it, and `clink --connect --token` sends `(auth: token)` first.
 `docs/protocol/links-operations.txt` is unchanged: `(auth:)` is a session
 message, not a links operation.
 
+## GraphQL for Deep
+
+`clink --serve --graphql` (`rust/src/graphql/`,
+`csharp/Foundation.Data.Doublets.Cli/Graphql/`) is a transport and a store over
+the same stack: `DeepStore` reads and writes through triplets over the undoable
+decorator, under `PermissionsDecorator` when a policy is given. See
+[GRAPHQL.md](GRAPHQL.md).
+
 ## CI Workflows
 
 | Workflow | Scope |
@@ -523,6 +531,7 @@ message, not a links operation.
 | `.github/workflows/rust.yml` | Rust formatting, clippy, file-size gate, tests, package, and release. |
 | `.github/workflows/wasm.yml` | Rust core tests, wasm-pack tests, Vite build, artifact upload, and manual Pages deployment. |
 | `.github/workflows/js-client.yml` | `@link-foundation/link-cli-client` unit tests and type declarations, conformance against the Rust, C# and WebAssembly backends on Node.js, Bun and Deno, the composition example, and npm release with trusted publishing. |
+| `.github/workflows/deep-client.yml` | The real `DeepClient` against the Rust and C# `clink --serve --graphql`. |
 | `.github/workflows/docs.yml` | Builds the C# (DocFX), Rust (rustdoc) and workbench documentation into one site. |
 | `.github/workflows/links.yml` | Checks the links of every Markdown and HTML file with lychee, falling back to the Web Archive. |
 | `.github/workflows/security.yml` | CodeQL, dependency review, `cargo audit` of every committed `Cargo.lock`, and `npm audit`. |

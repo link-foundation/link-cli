@@ -41,6 +41,7 @@ package built from `doublets-rs`.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
 - [docs/COMPOSITION.md](docs/COMPOSITION.md): how the permission, union, remap and external-id layers compose with each other and the other layers, in C#, Rust and JavaScript, with scenarios.
 - [docs/TRIPLETS.md](docs/TRIPLETS.md): triplets `(index: type from to)` stored in doublets, the encoding, the alternatives and the cost of every operation.
+- [docs/GRAPHQL.md](docs/GRAPHQL.md): the Hasura-compatible GraphQL server for Deep, `clink --serve --graphql`.
 - [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
 - [examples/](examples): runnable examples, one folder per feature.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
@@ -749,6 +750,12 @@ const link = await links.create(1n, 1n);
 await links.setName(link.index, 'a pair');
 await links.close();
 ```
+
+### Serve GraphQL for Deep
+
+`clink --db deep.links --serve 127.0.0.1:3006 --graphql --deep-package fresh.json`
+answers as Hasura does for Deep, so `DeepClient` and DeepCase connect to it. See
+[docs/GRAPHQL.md](docs/GRAPHQL.md).
 
 ## Permissions
 

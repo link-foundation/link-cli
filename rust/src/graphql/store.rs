@@ -317,11 +317,10 @@ impl<'s> DeepStore<'s> {
         if self.to_triplet.contains_key(&id) {
             bail!("Uniqueness violation: duplicate key value violates unique constraint \"links_pkey\": {id}.");
         }
-        let triplet = if type_id == id || from_id == id || to_id == id {
+        if type_id == id || from_id == id || to_id == id {
             let point = self.view(subject, |view| view.create_triplet_point())?;
             self.install(id, point)?;
             self.update_link(subject, id, type_id, from_id, to_id)?;
-            point
         } else {
             let (type_address, from, to) = (
                 self.type_address(type_id)?,
@@ -330,9 +329,7 @@ impl<'s> DeepStore<'s> {
             );
             let triplet = self.view(subject, |view| view.create_triplet(type_address, from, to))?;
             self.install(id, triplet)?;
-            triplet
-        };
-        let _ = triplet;
+        }
         Ok(id)
     }
 

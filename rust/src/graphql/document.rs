@@ -302,7 +302,7 @@ impl Parser {
                 self.expect('$')?;
                 let variable = self.name()?;
                 self.expect(':')?;
-                self.skip_type()?;
+                self.skip_type(0)?;
                 let default = if self.eat('=') {
                     Some(self.value(0)?)
                 } else {
@@ -321,9 +321,12 @@ impl Parser {
         })
     }
 
-    fn skip_type(&mut self) -> Result<()> {
+    fn skip_type(&mut self, depth: usize) -> Result<()> {
+        if depth > MAX_DEPTH {
+            bail!("The type is nested too deeply.");
+        }
         if self.eat('[') {
-            self.skip_type()?;
+            self.skip_type(depth + 1)?;
             self.expect(']')?;
         } else {
             self.name()?;
