@@ -228,6 +228,8 @@ public abstract record LinksOperation<T>
     /// <exception cref="ArgumentException">An update or delete names a link that does not exist.</exception>
     public IReadOnlyList<LinoLink> Execute(INamedTypesLinks<T> links)
     {
+        if (this is Subscribe or Unsubscribe)
+            throw new InvalidOperationException("Subscriptions need a server.");
         ArgumentNullException.ThrowIfNull(links);
         var limits = links.QueryLimits;
         limits?.Document(ToDocument());
