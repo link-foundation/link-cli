@@ -617,4 +617,68 @@ public sealed class TripletsProtocolTests
             File.Delete(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(database));
         }
     }
+
+    [Fact]
+    public void APartItMayNotReferToAnswersAsAMissingOne()
+    {
+        const uint missing = 9999u;
+        WithPermittedServer((w, port) =>
+        {
+            var (noteType, secret) = (w.T["Note"], w.V["secret"]);
+            using var alice = Authenticated(w, port, "alice");
+            var own = Created(alice.Query($"(create: ({noteType} 0 0))")).Index;
+
+            var requests = new Func<uint, string>[]
+            {
+                part => $"(create: ({noteType} {part} 0))",
+                part => $"(create: ({noteType} 0 {part}))",
+                part => $"(update: ({own} {noteType} {part} 0))",
+                part => $"() (({part}: {noteType} 0 0))",
+            };
+            foreach (var request in requests)
+            {
+                var hidden = Assert.Throws<LinoProtocolException>(() => alice.QueryText(request(secret)));
+                var absent = Assert.Throws<LinoProtocolException>(() => alice.QueryText(request(missing)));
+                Assert.Equal(
+                    hidden.Message.Replace(secret.ToString(), "N", StringComparison.Ordinal),
+                    absent.Message.Replace(missing.ToString(), "N", StringComparison.Ordinal));
+            }
+            // The write check runs first: a type it may not write is forbidden, hidden or missing.
+            foreach (var type in new[] { w.T["Secret"], missing })
+            {
+                AssertRefused(alice, $"(update: ({own} {type} 0 0))", "Forbidden");
+            }
+        });
+    }
+
+    [Fact]
+    public void TheRightToReferToATripletDoesNotAllowReadingIt()
+    {
+        WithPermittedServer((w, port) =>
+        {
+            PermissionPolicy<uint>.Allow(w.Rules, w.Markers, PermissionAccess.Reference, w.T["User"], w.T["Secret"]);
+            var (noteType, secret) = (w.T["Note"], w.V["secret"]);
+            using var alice = Authenticated(w, port, "alice");
+            Assert.Equal(secret, Created(alice.Query($"(create: ({noteType} {secret} 0))")).From);
+            Assert.Equal("", alice.QueryText($"(each: ({secret}))"));
+            // A missing address stays missing.
+            AssertRefused(alice, $"(create: ({noteType} 9999 0))", "is not a triplet");
+        });
+    }
+
+    [Fact]
+    public void APartATripletHoldsMayStayButCannotBePutBack()
+    {
+        WithPermittedServer((w, port) =>
+        {
+            var (noteType, secret, note) = (w.T["Note"], w.V["secret"], w.V["note"]);
+            using var alice = Authenticated(w, port, "alice");
+            using var boss = Authenticated(w, port, "boss");
+            var held = Created(boss.Query($"(create: ({noteType} {secret} 0))")).Index;
+
+            alice.QueryText($"(update: ({held} {noteType} {secret} {note}))");
+            alice.QueryText($"(update: ({held} {noteType} 0 {note}))");
+            AssertRefused(alice, $"(update: ({held} {noteType} {secret} {note}))", "is not a triplet");
+        });
+    }
 }
