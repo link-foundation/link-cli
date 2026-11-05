@@ -198,7 +198,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             // A root of its own, not the point named Type: any link may be one.
             var root = Make(data, 1u, 1u);
             var types = new TypesDecorator<uint>(data, root);
-            var markers = new PermissionMarkers<uint>(Make(data, 2u, 2u), Make(data, 3u, 3u), Make(data, 4u, 4u));
+            var markers = new PermissionMarkers<uint>(Make(data, 2u, 2u), Make(data, 3u, 3u), Make(data, 4u, 4u), Make(data, 5u, 5u));
             var user = types.Define();
             var note = types.Define();
             var alice = types.Instance(user);
@@ -248,7 +248,9 @@ namespace Foundation.Data.Doublets.Cli.Tests
             // The type of posts is a post too: it starts at itself.
             Assert.Equal(new[] { post, mine }, Indices(view));
             Assert.Equal("not-found", ErrorOf(() => view.Delete(other)));
-            var draft = Make(view, post, person);
+            // This policy says nothing of references: only what it reads may be referred to.
+            Assert.Equal("not-found", ErrorOf(() => Make(view, post, person)));
+            var draft = Make(view, post, mine);
             Assert.Equal("forbidden", ErrorOf(() => view.Update(draft, person, post)));
         }
 

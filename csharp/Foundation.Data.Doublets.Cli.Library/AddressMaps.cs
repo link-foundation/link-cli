@@ -24,6 +24,21 @@ namespace Foundation.Data.Doublets.Cli
     }
 
     /// <summary>
+    /// A store that answers for a reference apart from reading (issue #161): under a
+    /// <see cref="PermissionsDecorator{TLinkAddress}"/> a subject may refer to a link it may not read,
+    /// and a link it may not refer to is as missing as a deleted one.
+    /// </summary>
+    public interface IReferencedLinks<TLinkAddress>
+        where TLinkAddress : IUnsignedNumber<TLinkAddress>
+    {
+        /// <summary>Whether a reference of a query to <paramref name="address"/> names a link that exists.</summary>
+        bool ReferenceExists(TLinkAddress address);
+
+        /// <summary>Refuses to create a link at <paramref name="address"/> when the address may not be chosen.</summary>
+        void RequireAddress(TLinkAddress address);
+    }
+
+    /// <summary>
     /// How the addresses of a network below a <see cref="RemapLinksDecorator{TLinkAddress}"/>
     /// read above it (issue #149). Only addresses of links are mapped: the null
     /// link, <c>Any</c> and the other constants of the store read the same on

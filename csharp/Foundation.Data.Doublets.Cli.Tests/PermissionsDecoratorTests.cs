@@ -150,7 +150,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             WithWorld(w =>
             {
                 var m = w.Markers;
-                foreach (var (marker, name) in new[] { (m.AllowRead, "AllowRead"), (m.AllowWrite, "AllowWrite"), (m.Anything, "Anything") })
+                foreach (var (marker, name) in new[] { (m.AllowRead, "AllowRead"), (m.AllowWrite, "AllowWrite"), (m.Anything, "Anything"), (m.AllowReference, "AllowReference") })
                 {
                     Assert.Equal(new DoubletLink(marker, marker, marker), new DoubletLink(w.Links.GetLink(marker)));
                     Assert.Equal(marker, w.Links.GetByName(name));
@@ -235,6 +235,7 @@ namespace Foundation.Data.Doublets.Cli.Tests
             WithWorld(w =>
             {
                 var (t, v) = (w.T, w.V);
+                PermissionPolicy<uint>.Allow(w.Rules, w.Markers, PermissionAccess.Reference, t["User"], t["Admin"]);
                 var view = w.As(v["alice"]);
                 var pair = w.Links.SearchOrDefault(t["Shared"], t["Public"]);
                 Assert.NotEqual(0u, pair);
@@ -259,6 +260,8 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var m = w.Markers;
                 Assert.Equal("bad-request", ErrorOf(() => PermissionPolicy<uint>.Allow(w.Rules, m, PermissionAccess.Read, m.AllowRead, 1)));
                 Assert.Equal("bad-request", ErrorOf(() => PermissionPolicy<uint>.Allow(w.Rules, m, PermissionAccess.Write, m.AllowWrite, 1)));
+                Assert.Equal("bad-request", ErrorOf(() => PermissionPolicy<uint>.Allow(w.Rules, m, PermissionAccess.Reference, m.AllowReference, 1)));
+                Assert.Equal(PermissionAccess.Reference, PermissionPolicy<uint>.ParseAccess("reference"));
                 Assert.Equal("bad-request", ErrorOf(() => PermissionPolicy<uint>.ParseAccess("own")));
                 Assert.Throws<ArgumentOutOfRangeException>(() => PermissionPolicy<uint>.Allow(w.Rules, m, (PermissionAccess)7, 1, 1));
             });
@@ -386,7 +389,8 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 var (t, v) = (w.T, w.V);
                 var view = w.As(v["alice"]);
                 // Names are references: any name resolves.
-                Assert.Equal(v["secret"], view.GetByName("secret"));
+                // Names follow references: the name of a hidden link is an unknown name.
+                Assert.Equal(0u, view.GetByName("secret"));
                 Assert.Equal("Note", view.GetName(t["Note"]));
                 view.SetName(v["note"], "my note");
                 Assert.Equal("my note", w.Links.GetName(v["note"]));

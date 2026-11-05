@@ -116,6 +116,12 @@ namespace Foundation.Data.Doublets.Cli
         bool IsTriplet(TLinkAddress index);
 
         /// <summary>
+        /// Whether a reference to <paramref name="index"/> names a triplet: the same as <see cref="IsTriplet"/>,
+        /// but for a view that hides triplets, where one the subject may refer to counts as well (issue #161).
+        /// </summary>
+        bool ReferenceIsTriplet(TLinkAddress index) => IsTriplet(index);
+
+        /// <summary>
         /// Creates <c>(i: type from to)</c> and returns <c>i</c>. <paramref name="type"/>
         /// must be a triplet; <paramref name="from"/> and <paramref name="to"/> triplets or the null link.
         /// </summary>

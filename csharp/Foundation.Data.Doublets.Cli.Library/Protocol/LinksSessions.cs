@@ -169,7 +169,7 @@ public sealed class LinksSession : IDisposable
             {
                 return _host.Triplets is { } triplets
                     ? TripletsOperation.ExecuteRequest(triplets, document, tripletsChanged)
-                    : LinksServer.ExecuteRequest(_host.Links, document, _host.Options.AutoCreateMissingReferences, null, changed);
+                    : LinksServer.ExecuteRequest(_host.Links, document, _host.Options.AutoCreateMissingReferences, changed);
             }
             var store = _host.Undoable!;
             store.Begin();
@@ -184,7 +184,7 @@ public sealed class LinksSession : IDisposable
             {
                 reply = View is TripletsPermissionsDecorator<uint> view
                     ? TripletsRequest(view, document, tripletsChanged)
-                    : Request(View, document, () => LinksServer.ExecuteRequest(View, document, _host.Options.AutoCreateMissingReferences, store));
+                    : Request(View, document, () => LinksServer.ExecuteRequest(View, document, _host.Options.AutoCreateMissingReferences));
             }
             catch
             {

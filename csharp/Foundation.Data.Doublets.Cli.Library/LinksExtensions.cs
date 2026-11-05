@@ -6,8 +6,22 @@ namespace Foundation.Data.Doublets.Cli
 {
     public static class LinksExtensions
     {
+        /// <summary>Whether a reference of a query to <paramref name="address"/> names a link that exists: a view that hides links answers for itself.</summary>
+        public static bool ReferenceExists<TLinkAddress>(this ILinks<TLinkAddress> links, TLinkAddress address) where TLinkAddress : IUnsignedNumber<TLinkAddress> =>
+            links is IReferencedLinks<TLinkAddress> referenced ? referenced.ReferenceExists(address) : links.Exists(address);
+
         public static void EnsureCreated<TLinkAddress>(this ILinks<TLinkAddress> links, params TLinkAddress[] addresses) where TLinkAddress : IUnsignedNumber<TLinkAddress>
         {
+            if (links is IReferencedLinks<TLinkAddress> referenced)
+            {
+                foreach (var address in addresses)
+                {
+                    if (!links.Exists(address))
+                    {
+                        referenced.RequireAddress(address);
+                    }
+                }
+            }
             if (links is IComposedLinks<TLinkAddress> composed)
             {
                 // A union or a remap creates a link in the network its address is of.

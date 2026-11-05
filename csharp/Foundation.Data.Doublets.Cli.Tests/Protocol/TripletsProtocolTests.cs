@@ -516,11 +516,10 @@ public sealed class TripletsProtocolTests
             boss.QueryText($"(update: ({index} {index} {note} 0))");
             Assert.Equal("", alice.QueryText($"(each: ({index}))"));
 
-            // A substitution query reserves the point at the address it names, and reads what it refers to: the type
-            // she may write yet not read is not there for it, unlike for a create.
-            Assert.Equal("() ((900: 900 0 0))", alice.QueryText("() ((900: 900 0 0))"));
-            AssertRefused(alice, $"() ((901: {w.T["Note"]} 0 0))", "is not a triplet");
-            Assert.Equal("((900: 900 0 0)) ()", alice.QueryText("(delete: 900)"));
+            // Choosing an address is a reference, which she has no right to here: a free address answers as a
+            // hidden link does.
+            AssertRefused(alice, "() ((900: 900 0 0))", "Link not found: 900");
+            AssertRefused(alice, $"() ((901: {w.T["Note"]} 0 0))", "Link not found: 901");
 
             using var guest = LinksClient.Connect("127.0.0.1", port, new TextLinoProtocol());
             foreach (var request in new[] { "(create: (0 0 0))", $"(create: ({w.T["Note"]} 0 0))", "() ((901: 901 0 0))" })

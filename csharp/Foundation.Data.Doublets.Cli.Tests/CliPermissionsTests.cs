@@ -55,8 +55,8 @@ public sealed class CliPermissionsTests : IDisposable
         Assert.Contains("(shared: Shared shared)", aliceSees);
         Assert.DoesNotContain(aliceSees, line => line.Contains("secret", StringComparison.Ordinal));
 
-        // A note of alice's may become another note, not a secret.
-        var refused = await Clink.RunAsync(Permissions(separateRules, "--subject", "alice", "--changes", "((note: Note note)) ((note: Secret note))"));
+        // A note of alice's may become another note, not what she only reads.
+        var refused = await Clink.RunAsync(Permissions(separateRules, "--subject", "alice", "--changes", "((note: Note note)) ((note: Public note))"));
         Assert.Equal(1, refused.ExitCode);
         Assert.Contains($"Forbidden: update {v["note"]}", refused.Stderr, StringComparison.Ordinal);
         var after = await Clink.RunAsync("--db", Data, "--after");
@@ -64,8 +64,8 @@ public sealed class CliPermissionsTests : IDisposable
 
         // A secret is as missing to alice as a deleted link.
         var hidden = await Clink.RunAsync(Permissions(separateRules, "--subject", v["alice"].ToString(), "--changes", "((secret: * *)) ()"));
-        Clink.AssertSucceeded(hidden);
-        Assert.Equal("", hidden.Stdout);
+        Assert.Equal(1, hidden.ExitCode);
+        Assert.Contains("Invalid reference to non-existent link 'secret'", hidden.Stderr, StringComparison.Ordinal);
         Assert.Equal(all, Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout));
 
         // The boss writes anything.
@@ -82,9 +82,16 @@ public sealed class CliPermissionsTests : IDisposable
         var seen = await Clink.RunAsync(Permissions(false, "--after"));
         Clink.AssertSucceeded(seen);
         Assert.Equal("", seen.Stdout);
-        var refused = await Clink.RunAsync(Permissions(false, "() ((1 2))"));
-        Assert.Equal(1, refused.ExitCode);
-        Assert.Contains("Forbidden: create", refused.Stderr, StringComparison.Ordinal);
+        // A guest creates nothing, so whether 1 exists makes no difference to the answer.
+        foreach (var request in new[] { "() ((1 2))", "() ((99999 2))" })
+        {
+            var refused = await Clink.RunAsync(Permissions(false, request));
+            Assert.Equal(1, refused.ExitCode);
+            Assert.Contains("Forbidden: create", refused.Stderr, StringComparison.Ordinal);
+        }
+        var autoCreating = await Clink.RunAsync(Permissions(false, "--auto-create-missing-references", "() ((1 2))"));
+        Assert.Equal(1, autoCreating.ExitCode);
+        Assert.Contains("Forbidden: create", autoCreating.Stderr, StringComparison.Ordinal);
         var unknown = await Clink.RunAsync(Permissions(false, "--subject", "nobody", "--after"));
         Assert.Equal(1, unknown.ExitCode);
         Assert.Contains("Unknown subject 'nobody'", unknown.Stderr, StringComparison.Ordinal);
