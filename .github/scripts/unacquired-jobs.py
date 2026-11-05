@@ -82,6 +82,13 @@ def fetch_unacquired(repository, run_id, attempt):
     pages = gh_json('api', '--paginate', '--slurp',
                     f'repos/{repository}/actions/runs/{run_id}/attempts/{attempt}/jobs?per_page=100')
     jobs = [job for page in pages or [] for job in page.get('jobs', [])]
+    # --failed also reruns ordinary failed tests. Never turn a mixed failure
+    # into a passing retry; only the terminal gate may have failed as a result.
+    if any(job.get('conclusion') in ('failure', 'cancelled', 'timed_out')
+           and not never_started(job)
+           and not job.get('name', '').startswith('Pipeline Status (') for job in jobs):
+        trace('ordinary failure present; no automatic retry')
+        return []
     annotations = {}
     for job in jobs:
         if never_started(job):
@@ -127,8 +134,8 @@ def command_rerun(options):
     listed = ', '.join(names)
     manual = f'gh run rerun {options.run_id} --failed --repo {options.repository}'
     if verdict == 'nothing':
-        print(f'Attempt {options.attempt}: every job reached a runner, so the failure is not '
-              'infrastructure; leaving the run as it is.')
+        print(f'Attempt {options.attempt}: no isolated hosted-runner acquisition failure; '
+              'leaving the run as it is.')
     elif verdict == 'superseded':
         print(f'::notice title=Hosted runner not acquired::{listed} (attempt {options.attempt}); '
               'a newer run of this workflow exists for the same branch, so this run is not rerun.')

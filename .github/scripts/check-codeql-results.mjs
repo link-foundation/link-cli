@@ -32,9 +32,16 @@ export function checkCodeqlResults(directory) {
       for (const invocation of run.invocations) {
         for (const key of ['toolExecutionNotifications', 'toolConfigurationNotifications']) {
           const diagnostics = invocation[key] ?? [];
-          if (!Array.isArray(diagnostics) || diagnostics.some((item) =>
-            !item || !['note', 'none'].includes(item.level))) {
-            throw new Error(`CodeQL warning/error or malformed diagnostic: ${context}, ${key}`);
+          if (!Array.isArray(diagnostics)) {
+            throw new Error(`Malformed CodeQL diagnostics: ${context}, ${key}`);
+          }
+          for (const item of diagnostics) {
+            if (!item || !['note', 'none'].includes(item.level)) {
+              const location = item?.locations?.[0]?.physicalLocation;
+              throw new Error(`CodeQL warning/error or malformed diagnostic: ${context}, ${key}: ` +
+                `${item?.descriptor?.id ?? '?'} ${location?.artifactLocation?.uri ?? '?'}:` +
+                `${location?.region?.startLine ?? '?'}: ${item?.message?.text ?? 'missing diagnostic message'}`);
+            }
           }
         }
       }

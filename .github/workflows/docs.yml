@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 20
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -194,7 +194,7 @@ jobs:
     name: Deploy to GitHub Pages
     # Single writer for GitHub Pages: never cancel a deployment mid-flight.
     concurrency:
-      group: github-pages-${{ github.repository }}
+      group: main-writer-${{ github.repository }}
       cancel-in-progress: false
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     needs: build

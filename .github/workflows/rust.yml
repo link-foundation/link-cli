@@ -96,7 +96,7 @@ jobs:
       id-token: write
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - name: Authenticate with crates.io (trusted publishing)
         id: auth
@@ -116,7 +116,7 @@ jobs:
     timeout-minutes: 15
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     if: github.event_name != 'workflow_dispatch'
     outputs:
       rs-changed: ${{ steps.changes.outputs.rs-changed }}
@@ -156,7 +156,7 @@ jobs:
     timeout-minutes: 15
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-changelog
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     needs: [detect-changes]
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
     steps:
@@ -187,7 +187,7 @@ jobs:
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     needs: [detect-changes, release-preflight]
     if: |
       !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
@@ -254,6 +254,11 @@ jobs:
       # A dependency bump in Cargo.toml without the matching Cargo.lock update
       # otherwise passes CI while every job silently re-resolves the graph
       # (issue #96). --locked turns that drift into a failure.
+      - name: Deny Cargo manifest warnings
+        run: |
+          bash .github/scripts/check-cargo-warnings.sh --manifest-path rust/Cargo.toml
+          bash .github/scripts/check-cargo-warnings.sh --manifest-path rust/wasm/Cargo.toml
+
       - name: Verify Cargo.lock is up to date
         run: |
           cargo metadata --locked --format-version 1 --manifest-path rust/Cargo.toml > /dev/null
@@ -276,9 +281,9 @@ jobs:
     timeout-minutes: 45
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-    needs: [detect-changes, changelog, release-preflight]
-    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+      cancel-in-progress: true
+    needs: [detect-changes, changelog, release-preflight, lint]
+    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -324,9 +329,9 @@ jobs:
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     if: github.event_name == 'pull_request'
-    needs: [detect-changes]
+    needs: [detect-changes, lint, release-preflight]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -366,7 +371,7 @@ jobs:
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     needs: [lint, test]
     if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
     steps:

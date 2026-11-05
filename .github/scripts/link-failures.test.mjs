@@ -13,7 +13,7 @@ test('missing or incomplete link evidence never turns a failed checker green', (
   }
   const root = mkdtempSync(join(tmpdir(), 'missing-lychee-'));
   try {
-    const result = spawnSync(process.execPath, ['.github/scripts/check-web-archive.mjs'], {
+    const result = spawnSync(process.execPath, [new URL('./check-web-archive.mjs', import.meta.url).pathname], {
       env: { ...process.env, LYCHEE_OUTPUT: join(root, 'missing.md') }, encoding: 'utf8',
     });
     assert.equal(result.status, 1);

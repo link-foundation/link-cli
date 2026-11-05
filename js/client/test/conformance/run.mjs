@@ -141,7 +141,7 @@ async function fresh(store, previous) {
   return store.open();
 }
 
-async function using(store, body) {
+async function withClient(store, body) {
   let client = await store.open();
   try {
     return await body(client, async () => {
@@ -161,7 +161,7 @@ const scenarios = [
     async run(store, backend) {
       const conversation = await goldenConversation();
       assert.equal(conversation.length, 19);
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         for (const { request, reply } of conversation) {
           const actual = (await client.requestText(request)).trimEnd();
           if (reply.startsWith('! ')) {
@@ -299,7 +299,7 @@ const scenarios = [
     name: 'triplets: a server without --triplets keeps refusing them',
     processOnly: true,
     async run(store) {
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         assert.equal((await client.create(0, 0)).index, 1n);
         await assert.rejects(client.createTriplet(1, 0, 0), { name: 'RemoteError' });
         await assert.rejects(client.eachTriplets([1, 2, 3, 4]), { name: 'RemoteError' });
@@ -342,7 +342,7 @@ const scenarios = [
   {
     name: 'addresses: the whole u32 range as BigInt, nothing beyond it',
     async run(store) {
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         assert.equal(client.capabilities.maxAddress, MAX_U32_ADDRESS);
         const link = await client.create(MAX_U32_ADDRESS, 1n);
         assert.deepEqual(link, { index: 1n, source: MAX_U32_ADDRESS, target: 1n });
@@ -359,7 +359,7 @@ const scenarios = [
   {
     name: 'duplicates: as the backend states in capabilities.duplicateLinks',
     async run(store) {
-      await using(store, async (client, reopen) => {
+      await withClient(store, async (client, reopen) => {
         const first = await client.create(1n, 1n);
         assert.deepEqual(first, { index: 1n, source: 1n, target: 1n });
         const second = await client.create(1n, 1n);
@@ -383,7 +383,7 @@ const scenarios = [
   {
     name: 'holes: deletion cascades, frees addresses, and misses are errors',
     async run(store) {
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         const a = await client.create(0n, 0n);
         const b = await client.create(a.index, a.index);
         const c = await client.create(b.index, 0n);
@@ -465,7 +465,7 @@ const scenarios = [
       assert.equal(result.failed, 0);
       assert.ok(result.ok >= 32 && result.notSent > 0, JSON.stringify({ ...result, results: undefined }));
       // Verified with a client that shares nothing with the aborted one.
-      await using(store, async (reader) => {
+      await withClient(store, async (reader) => {
         const links = await reader.each();
         const stored = new Set(links.map((link) => link.source));
         const count = BigInt(links.length);
@@ -500,7 +500,7 @@ const scenarios = [
         await client.close();
         await server.exited;
         acknowledged += result.ok;
-        await using(store, async (reader) => {
+        await withClient(store, async (reader) => {
           const count = await reader.count();
           assert.ok(count >= BigInt(acknowledged), `round ${round}: ${count} links after ${acknowledged} acknowledged writes`);
         });
@@ -524,7 +524,7 @@ const scenarios = [
         '  spaces around  ',
         'x'.repeat(2000),
       ];
-      await using(store, async (client, reopen) => {
+      await withClient(store, async (client, reopen) => {
         const links = [];
         for (const [i, name] of names.entries()) {
           const link = await client.create(BigInt(1000 + i), BigInt(1000 + i));
@@ -547,7 +547,7 @@ const scenarios = [
   {
     name: 'empty names, renaming and moving names',
     async run(store) {
-      await using(store, async (client, reopen) => {
+      await withClient(store, async (client, reopen) => {
         const a = await client.create(5n, 5n);
         const b = await client.create(6n, 6n);
         await client.setName(a.index, '');

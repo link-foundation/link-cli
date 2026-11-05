@@ -19,62 +19,71 @@ using Foundation.Data.Doublets.Cli;
 using Platform.Data;
 using Platform.Data.Doublets;
 
-var directory = args.Length > 0
-  ? args[0]
-  : Path.Combine(Path.GetTempPath(), "clink-embedded-store");
-if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
-Directory.CreateDirectory(directory);
+namespace Clink.Examples.EmbeddedStore;
 
-var database = Path.Combine(directory, "db.links");
-var log = Path.Combine(directory, "db.transitions.links");
-
-static Scope Open(string database, string log) => new(database, log);
-
-// -- 1. Commit one write, then abandon another --------------------------
-ulong committed;
-ulong abandoned;
-using (var scope = Open(database, log))
+// Explicit entry points keep independent examples analyzable together by CodeQL.
+internal static class Program
 {
-    committed = scope.Transactions.CreateAndUpdate(
-      scope.Transactions.Constants.Null, scope.Transactions.Constants.Null);
-    Console.WriteLine($"committed link {committed}");
+    private static void Main(string[] args)
+    {
+        var directory = args.Length > 0
+          ? args[0]
+          : Path.Combine(Path.GetTempPath(), "clink-embedded-store");
+        if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        Directory.CreateDirectory(directory);
 
-    // Beginning a transaction and never committing it is what a crash
-    // looks like to the next process that opens the store.
-    var abandonedTransaction = scope.Transactions.BeginTransaction();
-    abandoned = scope.Transactions.CreateAndUpdate(
-      scope.Transactions.Constants.Null, scope.Transactions.Constants.Null);
-    Console.WriteLine($"wrote link {abandoned} inside a transaction that never commits");
-    GC.KeepAlive(abandonedTransaction);
+        var database = Path.Combine(directory, "db.links");
+        var log = Path.Combine(directory, "db.transitions.links");
+
+        static Scope Open(string database, string log) => new(database, log);
+
+        // -- 1. Commit one write, then abandon another --------------------------
+        ulong committed;
+        ulong abandoned;
+        using (var scope = Open(database, log))
+        {
+            committed = scope.Transactions.CreateAndUpdate(
+              scope.Transactions.Constants.Null, scope.Transactions.Constants.Null);
+            Console.WriteLine($"committed link {committed}");
+
+            // Beginning a transaction and never committing it is what a crash
+            // looks like to the next process that opens the store.
+            var abandonedTransaction = scope.Transactions.BeginTransaction();
+            abandoned = scope.Transactions.CreateAndUpdate(
+              scope.Transactions.Constants.Null, scope.Transactions.Constants.Null);
+            Console.WriteLine($"wrote link {abandoned} inside a transaction that never commits");
+            GC.KeepAlive(abandonedTransaction);
+        }
+
+        // -- 2. Reopen: recovery runs in the constructor ------------------------
+        StorageRevision revision;
+        using (var scope = Open(database, log))
+        {
+            Console.WriteLine(
+              $"after recovery: {committed} is present = {scope.Transactions.Exists(committed)}, " +
+              $"{abandoned} is present = {scope.Transactions.Exists(abandoned)}");
+            revision = StorageRevision.Of(database);
+        }
+
+        // -- 3. Advisory locking ------------------------------------------------
+        var lockPath = LinksFileLock.LockFilePath(database);
+        using (LinksFileLock.Acquire(lockPath, LockMode.Exclusive))
+        {
+            var second = LinksFileLock.TryAcquire(lockPath, LockMode.Exclusive);
+            Console.WriteLine($"a second writer is locked out: {second is null}");
+            second?.Dispose();
+        }
+
+        // -- 4. Notice a write by somebody else ---------------------------------
+        using (var scope = Open(database, log))
+        {
+            var extra = scope.Transactions.CreateAndUpdate(committed, committed);
+            Console.WriteLine($"another holder committed link {extra}");
+        }
+
+        Console.WriteLine($"revision changed: {revision.HasChanged(database)}");
+    }
 }
-
-// -- 2. Reopen: recovery runs in the constructor ------------------------
-StorageRevision revision;
-using (var scope = Open(database, log))
-{
-    Console.WriteLine(
-      $"after recovery: {committed} is present = {scope.Transactions.Exists(committed)}, " +
-      $"{abandoned} is present = {scope.Transactions.Exists(abandoned)}");
-    revision = StorageRevision.Of(database);
-}
-
-// -- 3. Advisory locking ------------------------------------------------
-var lockPath = LinksFileLock.LockFilePath(database);
-using (LinksFileLock.Acquire(lockPath, LockMode.Exclusive))
-{
-    var second = LinksFileLock.TryAcquire(lockPath, LockMode.Exclusive);
-    Console.WriteLine($"a second writer is locked out: {second is null}");
-    second?.Dispose();
-}
-
-// -- 4. Notice a write by somebody else ---------------------------------
-using (var scope = Open(database, log))
-{
-    var extra = scope.Transactions.CreateAndUpdate(committed, committed);
-    Console.WriteLine($"another holder committed link {extra}");
-}
-
-Console.WriteLine($"revision changed: {revision.HasChanged(database)}");
 
 /// <summary>Owns the data store, the sidecar log and the decorator over them.</summary>
 internal sealed class Scope : IDisposable

@@ -77,7 +77,6 @@ jobs:
       - name: Prove authentication before builds or version writes
         working-directory: .
         env:
-          RELEASE_MODE: ${{ inputs.release_mode }}
           NPM_PACKAGE: '@link-foundation/link-cli-client'
         run: node .github/scripts/release-preflight.mjs npm
 
@@ -91,7 +90,7 @@ jobs:
       id-token: write
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -112,7 +111,7 @@ jobs:
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-unit
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: js/client
@@ -138,14 +137,14 @@ jobs:
         run: npm run typecheck
 
   conformance:
-    needs: [release-preflight]
+    needs: [release-preflight, unit]
     if: inputs.verify_trusted_publishing != true
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-conformance
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     env:
       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
       CLINK_CSHARP: ${{ github.workspace }}/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
@@ -242,7 +241,7 @@ jobs:
     timeout-minutes: 10
     # Writer group: never cancel a publish that may already be under way.
     concurrency:
-      group: npm-writer-${{ github.repository }}
+      group: main-writer-${{ github.repository }}
       cancel-in-progress: false
     permissions:
       contents: read

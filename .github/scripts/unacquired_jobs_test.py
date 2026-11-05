@@ -27,6 +27,13 @@ class RecoveryTests(unittest.TestCase):
             self.assertIn('--paginate', call.args)
             self.assertIn('--slurp', call.args)
 
+    def test_mixed_code_and_capacity_failure_is_not_retried(self):
+        jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+                dict(id=2, name='Tests', conclusion='failure', steps=[{}], runner_name='hosted')]
+        with patch.object(recovery, 'gh_json', return_value=[{'jobs': jobs}]) as api:
+            self.assertEqual(recovery.fetch_unacquired('owner/repo', 10, 1), [])
+        self.assertEqual(api.call_count, 1)
+
     def test_bounded_retries_never_retry_superseded_or_code_failures(self):
         self.assertEqual(recovery.decide([], 1, True), 'nothing')
         self.assertEqual(recovery.decide(['macOS'], 1, False), 'superseded')
