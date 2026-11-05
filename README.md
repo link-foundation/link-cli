@@ -13,7 +13,7 @@
 
 `clink` (`CLInk` `cLINK`), a CLI tool to manipulate links using single substitution operation.
 
-It is based on [associative theory](https://habr.com/ru/articles/895896) (also in [ru](https://habr.com/ru/articles/804617)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
+It is based on [associative theory](https://github.com/link-foundation/meta-theory/blob/main/archive/0.0.2/article.md) (also in [ru](https://github.com/link-foundation/meta-theory/blob/main/archive/0.0.1/article.md)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
 It includes a production C# CLI/library pair on NuGet, a Rust CLI/library
 crate on Crates.io, and a Rust-powered WebAssembly browser workbench built on

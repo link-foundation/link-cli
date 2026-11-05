@@ -101,22 +101,22 @@ Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.4321475Z ##[group]Checking out the ref
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.4325831Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/164/merge
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5517511Z Note: switching to 'refs/remotes/pull/164/merge'.
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5518658Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5518658Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5519569Z You are in 'detached HEAD' state. You can look around, make experimental
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5522289Z changes and commit them, and you can discard any commits you make in this
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5524135Z state without impacting any branches by switching back to a branch.
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5525194Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5525194Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5526080Z If you want to create a new branch to retain commits you create, you may
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5527835Z do so (now or later) by using -c with the switch command. Example:
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5528768Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5528768Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5529458Z   git switch -c <new-branch-name>
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5530585Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5530585Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5531341Z Or undo this operation with:
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5532191Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5532191Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5532853Z   git switch -
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5533616Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5533616Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5534613Z Turn off this advice by setting config variable advice.detachedHead to false
-Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5535809Z 
+Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5535809Z
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5537000Z HEAD is now at fac1a11 Merge 0e0abb71f9520a18408b184310a433a5c02963ba into 482eabc11ec8c769ac15664801d89189b02bb728
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5543872Z ##[endgroup]
 Dependencies are on their latest versions	Run actions/checkout@v7	2026-11-05T14:48:19.5604836Z [command]/usr/bin/git log -1 --format=%H
@@ -180,14 +180,14 @@ Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:25.8460336
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:25.8460629Z   GIT_CONFIG_VALUE_0: main
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:25.8460859Z ##[endgroup]
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.0831061Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
-Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.1946545Z 
+Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.1946545Z
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2037651Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
-Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2038457Z 
+Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2038457Z
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2120990Z info: using existing install for stable-x86_64-unknown-linux-gnu
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2130150Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
-Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2130580Z 
+Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2130580Z
 Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2216645Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
-Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2217394Z 
+Dependencies are on their latest versions	Setup Rust	2026-11-05T14:48:26.2217394Z
 Dependencies are on their latest versions	Compare every dependency with its registry	﻿2026-11-05T14:48:26.2277617Z ##[group]Run node .github/scripts/check-latest-dependencies.mjs
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:26.2278146Z ^[[36;1mnode .github/scripts/check-latest-dependencies.mjs^[[0m
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:26.2303261Z shell: /usr/bin/bash -e {0}
@@ -198,9 +198,9 @@ Dependencies are on their latest versions	Compare every dependency with its regi
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:26.2307635Z   GITHUB_TOKEN: ***
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:26.2307885Z ##[endgroup]
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8706419Z Checked 108 declared versions and the Cargo.lock files.
-Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8790769Z 
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8790769Z
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8791794Z 3 dependencies are behind their latest release:
-Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8792662Z 
+Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8792662Z
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8793019Z | File | Dependency | Used | Latest |
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8793530Z |---|---|---|---|
 Dependencies are on their latest versions	Compare every dependency with its registry	2026-11-05T14:48:29.8794085Z | rust/Cargo.lock | links-notation | 0.30.0 | 0.30.1 |

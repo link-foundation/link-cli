@@ -95,3 +95,14 @@ The previously committed [DeepCase screenshot](../../screenshots/deepcase-clink.
 shows the fresh database served by the Rust port. Shared GraphQL fixtures and
 the real DeepClient CI cover both ports. This audit changes query semantics,
 with no visual UI changes.
+
+## CI investigation
+
+The Dependencies check passes at `3affcfd` after the notation update.
+The Broken Link Checker run `42051550337` at that same commit fails on two
+pre-existing Habr URLs in the README (downloaded log lines 311–312): HTTP 502,
+with no Wayback fallback for article 804617 (line 363). Both articles exist
+in the foundation's `meta-theory` repository, under `archive/0.0.2/article.md`
+(English) and `archive/0.0.1/article.md` (Russian). The README now links those
+author-maintained copies of the same texts. Link validation stays enabled.
+Only trailing whitespace is trimmed from the committed CI log copies.
