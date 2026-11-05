@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.0] - 2026-11-05
+
+Serve Hasura-compatible GraphQL for Deep with `clink --serve <address> --graphql`, with `--jwt-secret`, `--graphql-admin-secret` and `--deep-package`; add `TripletsQueryProcessor.MatchQuery` (#153).
+
 ## [5.0.0] - 2026-11-05
 
 A reference to an unreadable link needs its own right (#161). Without it an unreadable address answers exactly as a missing one, in the view, in operations and in queries, and the name of a link the subject may not refer to is an unknown name that cannot be taken over. A subject may refer to a link it may read, to itself, to what a rule `(r: AllowReference (g: Subject Object))` covers (`Object` and the links of type `Object`), and to the `Object` of its own `AllowRead` and `AllowWrite` rules. `AllowReference` does not allow reading; a reference a link already holds may stay; choosing the address of a new link is a reference; the write check runs first. Breaking: a subject that referred to an unreadable link needs a rule now, and a rule `Anything` to `Anything` brings the previous behaviour back. `PermissionMarkers<T>` has a fourth parameter `AllowReference`, `PermissionAccess` a new value `Reference`, `IPermissionPolicy<T>` a method `CanReference` that defaults to `false`, and `ITriplets<T>` a method `ReferenceIsTriplet`. `AdvancedMixedQueryProcessor.Options.References` and the `references` parameter of `LinksServer.ExecuteRequest` are gone, as a query checks its references through the store it runs on; a store may implement the new `IReferencedLinks<T>` to answer them.
