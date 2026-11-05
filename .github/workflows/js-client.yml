@@ -12,6 +12,7 @@ on:
       - main
     paths:
       - '.github/workflows/js-client.yml'
+      - '.github/scripts/**'
       - '.github/scripts/verify-npm-trust*'
       - 'js/client/**'
       - 'examples/composition/**'
@@ -23,6 +24,7 @@ on:
       - main
     paths:
       - '.github/workflows/js-client.yml'
+      - '.github/scripts/**'
       - '.github/scripts/verify-npm-trust*'
       - 'js/client/**'
       - 'examples/composition/**'
@@ -54,6 +56,31 @@ env:
   GIT_CONFIG_VALUE_0: main
 
 jobs:
+  release-preflight:
+    name: Release authentication preflight
+    if: inputs.verify_trusted_publishing != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Prove authentication before builds or version writes
+        working-directory: .
+        env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+          NPM_PACKAGE: '@link-foundation/link-cli-client'
+        run: node .github/scripts/release-preflight.mjs npm
+
   verify-trusted-publishing:
     name: Verify npm trusted publishing
     if: github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing
@@ -78,6 +105,7 @@ jobs:
         run: node .github/scripts/verify-npm-trust.mjs
 
   unit:
+    needs: [release-preflight]
     if: inputs.verify_trusted_publishing != true
     name: Unit tests and types
     runs-on: ubuntu-24.04
@@ -110,6 +138,7 @@ jobs:
         run: npm run typecheck
 
   conformance:
+    needs: [release-preflight]
     if: inputs.verify_trusted_publishing != true
     name: Conformance on Node.js, Bun and Deno
     runs-on: ubuntu-24.04
@@ -284,3 +313,30 @@ jobs:
           fi
           echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-client $VERSION could not be published. Check the js-client.yml trusted publisher policy on npmjs.com (including permission to publish directly), then run the authentication-only verification dispatch and retry."
           exit 1
+
+  pipeline-status:
+    name: Pipeline Status (js-client)
+    needs:
+      - release-preflight
+      - verify-trusted-publishing
+      - unit
+      - conformance
+      - release
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

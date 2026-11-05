@@ -37,6 +37,14 @@ import {
 
 const execFileAsync = promisify(execFile);
 
+test('NuGet release lookup rejects an incomplete provider response', async () => {
+  for (const payload of [{}, { versions: null }, { versions: [123] }]) {
+    await assert.rejects(fetchNugetVersions('Example', async () => ({
+      ok: true, status: 200, json: async () => payload,
+    })), /Malformed NuGet version index/);
+  }
+});
+
 const repoRoot = new URL('../..', import.meta.url).pathname;
 
 // execFileSync forwards a child's stderr to ours unless `stdio` is set. On a

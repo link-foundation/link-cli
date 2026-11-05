@@ -10,6 +10,7 @@ on:
       - 'csharp/**'
       - 'csharp/scripts/**'
       - '.github/workflows/csharp.yml'
+      - '.github/scripts/**'
       - '.github/scripts/coverage*'
   workflow_dispatch:
     inputs:
@@ -65,6 +66,39 @@ defaults:
     working-directory: csharp
 
 jobs:
+  release-preflight:
+    name: Release authentication preflight
+    if: inputs.release_mode != 'verify-trusted-publishing'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Authenticate preflight with NuGet
+        if: vars.NUGET_USER != '' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
+        id: preflight_nuget
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Prove authentication before builds or version writes
+        working-directory: .
+        env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+          NUGET_OIDC_OUTCOME: ${{ steps.preflight_nuget.outcome }}
+          NUGET_OIDC_KEY: ${{ steps.preflight_nuget.outputs.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ github.event_name != 'pull_request' && secrets.NUGET_API_KEY || '' }}
+        run: node .github/scripts/release-preflight.mjs nuget
+
   # Authenticate without a version commit, tag, or package upload. The input
   # allows verification before setting NUGET_USER (which enables OIDC releases).
   verify-trusted-publishing:
@@ -190,9 +224,9 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-lint
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-    needs: [detect-changes]
+    needs: [detect-changes, release-preflight]
     if: |
-      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
+      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
         github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
         needs.detect-changes.outputs.cs-changed == 'true' ||
@@ -247,15 +281,15 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-    needs: [detect-changes, changeset-check]
-    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+    needs: [detect-changes, changeset-check, release-preflight]
+    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
     permissions:
       contents: read
       id-token: write
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-26, windows-2025]
+        os: [ubuntu-24.04, macos-26-intel, windows-2025]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -383,6 +417,7 @@ jobs:
         with:
           name: nuget-package
           path: csharp/artifacts/*.nupkg
+          if-no-files-found: error
 
   # === AUTOMATIC RELEASE ===
   release:
@@ -394,7 +429,7 @@ jobs:
     # Writer group: never cancel a release that may already have pushed a
     # package or a version commit.
     concurrency:
-      group: csharp-writer-${{ github.repository }}
+      group: main-writer-${{ github.repository }}
       cancel-in-progress: false
     permissions:
       contents: write
@@ -619,7 +654,7 @@ jobs:
     # Writer group: never cancel a release that may already have pushed a
     # package or a version commit.
     concurrency:
-      group: csharp-writer-${{ github.repository }}
+      group: main-writer-${{ github.repository }}
       cancel-in-progress: false
     permissions:
       contents: write
@@ -774,7 +809,7 @@ jobs:
     timeout-minutes: 10
     # Writer group: never cancel a run that may already have pushed a branch.
     concurrency:
-      group: csharp-writer-${{ github.repository }}
+      group: main-writer-${{ github.repository }}
       cancel-in-progress: false
     permissions:
       contents: write
@@ -827,3 +862,36 @@ jobs:
             1. Review the changeset in this PR
             2. Merge this PR to main
             3. The automated release workflow will version, publish, and create a GitHub release
+
+  pipeline-status:
+    name: Pipeline Status (csharp)
+    needs:
+      - release-preflight
+      - verify-trusted-publishing
+      - detect-changes
+      - changeset-check
+      - lint
+      - test
+      - fresh-merge
+      - build
+      - release
+      - instant-release
+      - changeset-pr
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

@@ -184,7 +184,7 @@ fn main() {
     // Detect workflow changes
     let workflow_changed = changed_files
         .iter()
-        .any(|f| f.starts_with(".github/workflows/"));
+        .any(|f| f.starts_with(".github/"));
     set_output(
         "workflow-changed",
         if workflow_changed { "true" } else { "false" },

@@ -169,7 +169,10 @@ export async function fetchNugetVersions(packageId, fetchImpl = fetch, retry = {
     throw new Error(`NuGet flat-container index returned HTTP ${response.status} for ${packageId}`);
   }
   const payload = await response.json();
-  return Array.isArray(payload.versions) ? payload.versions : [];
+  if (!Array.isArray(payload?.versions) || payload.versions.some((version) => typeof version !== 'string')) {
+    throw new Error(`Malformed NuGet version index for ${packageId}`);
+  }
+  return payload.versions;
 }
 
 /**

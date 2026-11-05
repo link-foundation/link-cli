@@ -104,6 +104,36 @@ function extractBrokenLinks(content) {
   return { urls, others };
 }
 
+export function splitRecoveredUrls(urls, recoveredText) {
+  const recoveredSet = new Set(
+    (recoveredText || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+  );
+
+  return {
+    remaining: urls.filter((url) => !recoveredSet.has(url)),
+    recovered: urls.filter((url) => recoveredSet.has(url)),
+  };
+}
+
+
+/** Validate before either archive or recovery code emits a successful verdict. */
+export function validateLycheeReport(content, exitCode = process.env.LYCHEE_EXIT_CODE) {
+  const section = extractErrorsSection(content);
+  const entries = [...section.matchAll(/^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?[^\s>|)]+>?/gim)];
+  const bullets = [...section.matchAll(/^\s*(?:\*|-)\s+\[/gm)];
+  const reported = /\|[^|\n]*Errors\s*\|\s*(\d+)\s*\|/.exec(content);
+  const failed = exitCode !== undefined && exitCode !== '0';
+  if (!content.trim() || entries.length !== bullets.length ||
+      (reported && Number(reported[1]) !== entries.length) ||
+      (entries.length === 0 && (failed || !reported || Number(reported[1]) !== 0))) {
+    throw new Error('Missing, empty, malformed or incomplete lychee report; re-run the link checker');
+  }
+}
+
+
 /**
  * Check if a URL has an archived version in the Wayback Machine
  * Uses the Wayback Machine Availability API:
@@ -208,14 +238,15 @@ async function main() {
   console.log(`Reading lychee output from: ${lycheeOutput}\n`);
 
   if (!existsSync(lycheeOutput)) {
-    console.log('No lychee output file found. Skipping web archive check.');
-    setOutput('all_archived', 'true');
-    process.exit(0);
+    throw new Error(`Missing lychee report: ${lycheeOutput}`);
   }
 
   const content = readFileSync(lycheeOutput, 'utf-8');
-  const { urls: brokenUrls, others: unarchivableLinks } =
-    extractBrokenLinks(content);
+  validateLycheeReport(content);
+  const { urls, others: unarchivableLinks } = extractBrokenLinks(content);
+  const recoveredFile = process.env.RECOVERED_URLS || 'lychee/recovered.txt';
+  const { remaining: brokenUrls } = splitRecoveredUrls(urls,
+    existsSync(recoveredFile) ? readFileSync(recoveredFile, 'utf8') : '');
 
   if (unarchivableLinks.length > 0) {
     // Local files and unresolvable root-relative links have no Wayback

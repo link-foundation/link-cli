@@ -81,6 +81,23 @@ jobs:
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4
+        with:
+          output: codeql-results
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      - name: Require complete analysis without unresolved findings
+        run: node .github/scripts/check-codeql-results.mjs codeql-results
+
+      - name: Preserve SARIF for investigation
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: codeql-${{ matrix.language }}
+          path: codeql-results/**/*.sarif
+          if-no-files-found: error
 
   dependency-review:
     name: Dependency Review
@@ -135,11 +152,15 @@ jobs:
         run: cargo audit --file "$MANIFEST/Cargo.lock" --deny warnings
 
   npm-audit:
-    name: Audit npm lock
+    strategy:
+      fail-fast: false
+      matrix:
+        directory: [js, js/client]
+    name: Audit npm lock (${{ matrix.directory }})
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit
+      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit-${{ matrix.directory }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
@@ -151,8 +172,35 @@ jobs:
           node-version: '26.x'
 
       - name: Audit current lock
-        working-directory: js
+        working-directory: ${{ matrix.directory }}
         run: npm audit --package-lock-only --audit-level=high
+
+  nuget-audit:
+    name: Audit every NuGet dependency graph
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-nuget-audit
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Audit direct and transitive packages and validate the complete result
+        run: node .github/scripts/audit-nuget-dependencies.mjs
+      - name: Preserve dependency graphs and diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-audit
+          path: artifacts/security
+          if-no-files-found: error
 
   # === COMMITTED SECRETS ===
   # CodeQL and the audit jobs look at code and dependencies; nothing looked at
@@ -179,3 +227,31 @@ jobs:
 
       - name: Run secretlint
         run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+
+  pipeline-status:
+    name: Pipeline Status (security)
+    needs:
+      - codeql
+      - dependency-review
+      - cargo-audit
+      - npm-audit
+      - nuget-audit
+      - secrets-scan
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

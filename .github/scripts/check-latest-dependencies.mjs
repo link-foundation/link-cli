@@ -33,6 +33,8 @@
  *
  * Usage:
  *   node .github/scripts/check-latest-dependencies.mjs [--skip-lockfiles]
+ * CHECK_DEPENDENCIES_MODE=report reports new releases without failing main.
+ * Lookup failures still fail: an unavailable registry is not a clean audit.
  *
  * Registry lookups that fail on the network, or answer 429 or 5xx, are
  * retried with backoff. Set CHECK_DEPENDENCIES_DEBUG=1 to log each retry.
@@ -284,7 +286,7 @@ export async function fetchJson(url, headers = {}, { fetchImpl = fetch, ...retry
   return withRetries(async () => {
     let response;
     try {
-      response = await fetchImpl(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers } });
+      response = await fetchImpl(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers }, signal: AbortSignal.timeout(30_000) });
     } catch (error) {
       const cause = error.cause ? `: ${error.cause.code ?? error.cause.message ?? error.cause}` : '';
       throw new Error(`${url}: ${error.message}${cause}`);
@@ -338,7 +340,12 @@ function read(path) {
 
 /** Files git tracks, relative to the repository root. */
 function trackedFiles() {
-  return execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0').filter(Boolean);
+  return dependencyFiles(execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0').filter(Boolean));
+}
+
+/** Evidence snapshots are immutable inputs, not dependencies of this project. */
+export function dependencyFiles(files) {
+  return files.filter((file) => !file.startsWith('dev/log/'));
 }
 
 /** Everything to check, as `{ registry, name, version, source[, blocker] }`. */
@@ -372,14 +379,24 @@ function collectDependencies(files) {
   });
 }
 
-function checkLockfiles(files) {
+export function checkLockfiles(files, { run = spawnSync, root = repoRoot } = {}) {
   const outdated = [];
+  const failures = [];
   for (const directory of files.filter((file) => /(^|\/)Cargo\.lock$/.test(file)).map(dirname)) {
     // cargo reports the updates on stderr.
-    const { stderr } = spawnSync('cargo', ['update', '--dry-run'], { cwd: join(repoRoot, directory), encoding: 'utf8' });
+    const { status, error, stdout, stderr } = run('cargo', ['update', '--dry-run'], { cwd: join(root, directory), encoding: 'utf8' });
+    if (error || status !== 0) {
+      failures.push(`${directory}/Cargo.lock: cargo update failed (${error?.message ?? `exit ${status}`}): ${stderr || stdout || 'no diagnostic'}`);
+      continue;
+    }
     for (const update of parseCargoUpdates(stderr ?? '')) outdated.push({ source: `${directory}/Cargo.lock`, ...update });
   }
-  return outdated;
+  return { outdated, failures };
+}
+
+export function checkExitCode({ outdated, failures, mode = 'enforce' }) {
+  if (!['enforce', 'report'].includes(mode)) throw Error(`Unknown dependency check mode: ${mode}`);
+  return failures.length || (outdated.length && mode === 'enforce') ? 1 : 0;
 }
 
 /** A Markdown table of dependencies, the `blocker` column only when asked for. */
@@ -430,7 +447,11 @@ async function main() {
       }
     }),
   );
-  if (!process.argv.includes('--skip-lockfiles')) outdated.push(...checkLockfiles(files));
+  if (!process.argv.includes('--skip-lockfiles')) {
+    const locked = checkLockfiles(files);
+    outdated.push(...locked.outdated);
+    failures.push(...locked.failures);
+  }
 
   console.log(`Checked ${entries.length} declared versions${process.argv.includes('--skip-lockfiles') ? '' : ' and the Cargo.lock files'}.`);
   if (held.length > 0) report(`${held.length} dependencies are held back by open issues`, table(held, true));
@@ -438,7 +459,10 @@ async function main() {
   if (closed.length > 0) report(`${closed.length} dependencies were held back by issues that are closed now, so they must be updated`, table(closed, true));
   if (outdated.length > 0) report(`${outdated.length} dependencies are behind their latest release`, table(outdated, false));
   for (const failure of failures) console.error(`Could not check ${failure}`);
-  process.exitCode = outdated.length > 0 || failures.length > 0 ? 1 : 0;
+  if (outdated.length && process.env.CHECK_DEPENDENCIES_MODE === 'report') {
+    console.log('::warning::New dependency releases are available; update them in a pull request.');
+  }
+  process.exitCode = checkExitCode({ outdated, failures, mode: process.env.CHECK_DEPENDENCIES_MODE || 'enforce' });
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

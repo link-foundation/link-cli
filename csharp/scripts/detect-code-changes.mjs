@@ -211,7 +211,7 @@ function detectChanges() {
 
   // Detect workflow changes
   const workflowChanged = changedFiles.some((file) =>
-    file.startsWith('.github/workflows/')
+    file.startsWith('.github/')
   );
   setOutput('workflow-changed', workflowChanged ? 'true' : 'false');
 
