@@ -171,33 +171,33 @@ public static class Planner
         switch (key)
         {
             case "_or":
-            {
-                var items = value.AsList().Select(item => Compile(item, mapping)).ToList();
-                return items.Count == 0
-                    ? (null, false)
-                    : (Plan.Union(items.Select(item => item.Plan).ToList()), items.All(item => item.Exact));
-            }
-            case "_and":
-            {
-                var items = value.AsList().Select(item => Compile(item, mapping)).ToList();
-                return (Plan.Intersect(items.Select(item => item.Plan).ToList()), items.All(item => item.Exact));
-            }
-            case "_not":
-            {
-                var inner = Compile(value, mapping);
-                return inner.Exact ? (Plan.Minus(inner.Plan), true) : (null, false);
-            }
-            default:
-            {
-                if (SlotOf(key) < 0 || IdList(value) is not { } ids)
                 {
-                    return (null, false);
+                    var items = value.AsList().Select(item => Compile(item, mapping)).ToList();
+                    return items.Count == 0
+                        ? (null, false)
+                        : (Plan.Union(items.Select(item => item.Plan).ToList()), items.All(item => item.Exact));
                 }
-                var branches = ids
-                    .Select(id => Compile(Json.Object((key, Json.Object(("_eq", Json.Int(id))))), mapping).Plan)
-                    .ToList();
-                return (Plan.Union(branches), true);
-            }
+            case "_and":
+                {
+                    var items = value.AsList().Select(item => Compile(item, mapping)).ToList();
+                    return (Plan.Intersect(items.Select(item => item.Plan).ToList()), items.All(item => item.Exact));
+                }
+            case "_not":
+                {
+                    var inner = Compile(value, mapping);
+                    return inner.Exact ? (Plan.Minus(inner.Plan), true) : (null, false);
+                }
+            default:
+                {
+                    if (SlotOf(key) < 0 || IdList(value) is not { } ids)
+                    {
+                        return (null, false);
+                    }
+                    var branches = ids
+                        .Select(id => Compile(Json.Object((key, Json.Object(("_eq", Json.Int(id))))), mapping).Plan)
+                        .ToList();
+                    return (Plan.Union(branches), true);
+                }
         }
     }
 

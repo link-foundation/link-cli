@@ -128,38 +128,38 @@ public sealed class GraphqlServer : IDisposable
             switch (job)
             {
                 case HttpJob http:
-                {
-                    var (query, operation, variables) = RequestParts(http.Body);
-                    var before = store.Generation;
-                    var (response, _) = Exec.Execute(store, settings, query, operation, variables, http.Auth);
-                    http.Reply.TrySetResult(response);
-                    if (store.Generation != before)
                     {
-                        Refresh(store, settings, subscriptions);
+                        var (query, operation, variables) = RequestParts(http.Body);
+                        var before = store.Generation;
+                        var (response, _) = Exec.Execute(store, settings, query, operation, variables, http.Auth);
+                        http.Reply.TrySetResult(response);
+                        if (store.Generation != before)
+                        {
+                            Refresh(store, settings, subscriptions);
+                        }
+                        break;
                     }
-                    break;
-                }
                 case SubscribeJob subscribe:
-                {
-                    var (query, operation, variables) = RequestParts(subscribe.Payload);
-                    var before = store.Generation;
-                    var (response, _) = Exec.Execute(store, settings, query, operation, variables, subscribe.Auth);
-                    if (response.Get("errors") is not null)
                     {
-                        Quietly(() => SendError(subscribe.Socket, subscribe.Id, response, subscribe.Legacy));
+                        var (query, operation, variables) = RequestParts(subscribe.Payload);
+                        var before = store.Generation;
+                        var (response, _) = Exec.Execute(store, settings, query, operation, variables, subscribe.Auth);
+                        if (response.Get("errors") is not null)
+                        {
+                            Quietly(() => SendError(subscribe.Socket, subscribe.Id, response, subscribe.Legacy));
+                        }
+                        else
+                        {
+                            var last = response.Write();
+                            Quietly(() => SendData(subscribe.Socket, subscribe.Id, last, subscribe.Legacy));
+                            subscriptions.Add(new Subscription(subscribe, query, operation, variables, last));
+                        }
+                        if (store.Generation != before)
+                        {
+                            Refresh(store, settings, subscriptions);
+                        }
+                        break;
                     }
-                    else
-                    {
-                        var last = response.Write();
-                        Quietly(() => SendData(subscribe.Socket, subscribe.Id, last, subscribe.Legacy));
-                        subscriptions.Add(new Subscription(subscribe, query, operation, variables, last));
-                    }
-                    if (store.Generation != before)
-                    {
-                        Refresh(store, settings, subscriptions);
-                    }
-                    break;
-                }
                 case StopJob stop:
                     subscriptions.RemoveAll(each =>
                         each.Job.Connection == stop.Connection && (stop.Id is null || stop.Id == each.Job.Id));

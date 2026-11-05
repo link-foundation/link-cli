@@ -196,15 +196,15 @@ public sealed class Document
                     at = NumberToken(text, at, tokens);
                     break;
                 case '_' or (>= 'a' and <= 'z') or (>= 'A' and <= 'Z'):
-                {
-                    var start = at;
-                    while (at < text.Length && (text[at] == '_' || char.IsAsciiLetterOrDigit(text[at])))
                     {
-                        at++;
+                        var start = at;
+                        while (at < text.Length && (text[at] == '_' || char.IsAsciiLetterOrDigit(text[at])))
+                        {
+                            at++;
+                        }
+                        tokens.Add(new Token(TokenKind.Name, text[start..at]));
+                        break;
                     }
-                    tokens.Add(new Token(TokenKind.Name, text[start..at]));
-                    break;
-                }
                 default:
                     var shown = Rune.TryGetRuneAt(text, at, out var rune) ? rune.ToString() : character.ToString();
                     throw new FormatException($"Unexpected character '{shown}' in the document.");
