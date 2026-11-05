@@ -39,5 +39,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Foundation.Data.Doublets.Cli.Tests" />
+    <InternalsVisibleTo Include="clink" />
   </ItemGroup>
 </Project>

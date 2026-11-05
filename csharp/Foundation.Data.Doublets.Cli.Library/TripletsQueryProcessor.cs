@@ -43,6 +43,30 @@ namespace Foundation.Data.Doublets.Cli
 
         private static readonly string[] PartNames = { "type", "from", "to" };
 
+        /// <summary>The distinct values of a variable over the matches of one link of patterns, in the order found.</summary>
+        public static IReadOnlyList<TLinkAddress> MatchQuery<TLinkAddress>(ITriplets<TLinkAddress> triplets, string restriction, string variable)
+            where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
+        {
+            ArgumentNullException.ThrowIfNull(triplets);
+            var parsed = new LinoParser().Parse(restriction ?? string.Empty);
+            if (parsed.Count != 1)
+            {
+                throw new ArgumentException($"A restriction is one link of patterns: {restriction}");
+            }
+            var solutions = new List<(Dictionary<string, TLinkAddress> Bindings, List<TLinkAddress> Matched)>();
+            Solve(triplets, PatternsOf(parsed[0]), 0, new Dictionary<string, TLinkAddress>(), new List<TLinkAddress>(), solutions);
+            var seen = new HashSet<TLinkAddress>();
+            var found = new List<TLinkAddress>();
+            foreach (var (bindings, _) in solutions)
+            {
+                if (bindings.TryGetValue(variable, out var value) && seen.Add(value))
+                {
+                    found.Add(value);
+                }
+            }
+            return found;
+        }
+
         /// <summary>
         /// Runs a substitution query and returns the changes it made, in order:
         /// creations and updates as the substitution lists them, then deletions.

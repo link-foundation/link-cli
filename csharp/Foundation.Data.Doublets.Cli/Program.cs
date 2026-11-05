@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
+using Foundation.Data.Doublets.Cli.Graphql;
 using Foundation.Data.Doublets.Cli.Protocol;
 using Link.Foundation.Links.Notation;
 using Link.Foundation.Links.Notation.Binary;
@@ -221,6 +222,28 @@ var packedWidthsOption = new Option<bool>("--packed-widths")
     DefaultValueFactory = _ => false
 };
 
+var graphqlOption = new Option<bool>("--graphql")
+{
+    Description = "With --serve: serve Hasura-compatible GraphQL for Deep over HTTP and WebSocket instead of the links protocol",
+    DefaultValueFactory = _ => false
+};
+
+var jwtSecretOption = new Option<string?>("--jwt-secret")
+{
+    Description = "With --graphql: the HS256 secret of tokens; without it a random one lasts as long as the process"
+};
+
+var graphqlAdminSecretOption = new Option<string?>("--graphql-admin-secret")
+{
+    Description = "With --graphql: the value of x-hasura-admin-secret that bypasses permissions"
+};
+
+var deepPackageOption = new Option<string[]>("--deep-package")
+{
+    Description = "With --graphql: a JSON file of rows {id, type_id, from_id, to_id, string?, number?, object?} to load when starting; may be repeated",
+    AllowMultipleArgumentsPerToken = false
+};
+
 var tripletsOption = new Option<bool>("--triplets")
 {
     Description = "With --serve: read every request as triplets, (create: (type from to)), (each: (index type from to)) and three-part substitutions, over this store of doublets; without it, every request is about doublets",
@@ -296,6 +319,10 @@ rootCommand.Options.Add(protocolOption);
 rootCommand.Options.Add(externalReferencesOption);
 rootCommand.Options.Add(arityOption);
 rootCommand.Options.Add(packedWidthsOption);
+rootCommand.Options.Add(graphqlOption);
+rootCommand.Options.Add(jwtSecretOption);
+rootCommand.Options.Add(graphqlAdminSecretOption);
+rootCommand.Options.Add(deepPackageOption);
 rootCommand.Options.Add(tripletsOption);
 rootCommand.Options.Add(permissionsOption);
 rootCommand.Options.Add(subjectOption);
@@ -682,6 +709,10 @@ rootCommand.SetAction(
               Console.Error.WriteLine("--serve does not take a query; send queries with --connect.");
               return 1;
           }
+          if (parseResult.GetValue(graphqlOption))
+          {
+              return RunGraphqlServer();
+          }
           AcceptedProtocols accept;
           switch (protocolName?.ToLowerInvariant())
           {
@@ -711,6 +742,38 @@ rootCommand.SetAction(
           Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
           Console.Out.Flush();
           server.Serve(decoratedLinks);
+          return 0;
+      }
+
+      int RunGraphqlServer()
+      {
+          var store = new DeepStore(decoratedLinks, permissionPolicy);
+          foreach (var file in parseResult.GetValue(deepPackageOption) ?? [])
+          {
+              try
+              {
+                  store.LoadPackage(Json.Parse(File.ReadAllText(file)));
+              }
+              catch (FormatException error)
+              {
+                  throw new InvalidOperationException($"{file}: {error.Message}", error);
+              }
+          }
+          var jwtSecret = parseResult.GetValue(jwtSecretOption);
+          var settings = new Settings(
+              jwtSecret is null ? Settings.RandomSecret() : System.Text.Encoding.UTF8.GetBytes(jwtSecret),
+              parseResult.GetValue(graphqlAdminSecretOption));
+          var (host, port) = LinksServer.ParseEndPoint(serveAddress!);
+          var bound = System.Net.IPAddress.TryParse(host, out var parsedHost) ? parsedHost : System.Net.Dns.GetHostAddresses(host).First();
+          using var server = new GraphqlServer(new System.Net.IPEndPoint(bound, port));
+          Console.CancelKeyPress += (_, eventArgs) =>
+          {
+              eventArgs.Cancel = true;
+              server.Stop();
+          };
+          Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");
+          Console.Out.Flush();
+          server.Serve(store, settings);
           return 0;
       }
 
