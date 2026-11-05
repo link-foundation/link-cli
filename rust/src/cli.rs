@@ -48,6 +48,8 @@ pub struct Cli {
     pub external_references: bool,
     pub arity: ArityRange,
     pub packed_widths: bool,
+    /// `--triplets`: `--serve` reads every request as triplets (issue #152).
+    pub triplets: bool,
     /// `--permissions`: `self` or a links file of permission rules (issue #149).
     pub permissions: Option<String>,
     /// `--subject`: the link index or name queries run as.
@@ -102,6 +104,7 @@ impl Default for Cli {
             external_references: false,
             arity: ArityRange::DOUBLETS,
             packed_widths: false,
+            triplets: false,
             permissions: None,
             subject: None,
             tokens: None,
@@ -339,6 +342,10 @@ impl Cli {
                 cli.packed_widths = parse_bool("--packed-widths", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--triplets"]) {
+                cli.triplets = parse_bool("--triplets", value)?;
+                continue;
+            }
             if let Some(value) = inline_value(&arg, &["--permissions"]) {
                 cli.permissions = Some(value.to_string());
                 continue;
@@ -483,6 +490,9 @@ impl Cli {
                 "--packed-widths" => {
                     cli.packed_widths = next_bool_value(&mut args, true)?;
                 }
+                "--triplets" => {
+                    cli.triplets = next_bool_value(&mut args, true)?;
+                }
                 "--permissions" => {
                     cli.permissions = Some(next_value(&mut args, &arg)?);
                 }
@@ -620,6 +630,10 @@ impl Cli {
             "      --packed-widths\n",
             "          Binary protocol: give each section of links the narrowest reference\n",
             "          width it needs instead of one width for the whole packet\n",
+            "      --triplets\n",
+            "          With --serve: read every request as triplets, (create: (type from to)),\n",
+            "          (each: (index type from to)) and three-part substitutions, over this\n",
+            "          store of doublets; without it, every request is about doublets\n",
             "      --permissions <RULES>\n",
             "          Check every read and write against permission rules stored as links:\n",
             "          'self' (rules in the data) or a links file of rules; without it,\n",

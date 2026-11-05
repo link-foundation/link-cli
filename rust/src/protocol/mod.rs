@@ -46,8 +46,10 @@ mod error;
 pub mod links_operations;
 mod protocols;
 mod remote_links;
+mod remote_triplets;
 mod server;
 mod sessions;
+pub mod triplets_operations;
 
 pub use archive::{export_store, export_store_file, import_store, import_store_file};
 pub use client::LinksClient;
@@ -69,3 +71,4 @@ pub use server::{
     ServerOptions, ShutdownHandle, DEFAULT_MAX_PENDING_NOTIFICATIONS,
 };
 pub use sessions::{Authenticator, LinksSessions, SessionId};
+pub use triplets_operations::{execute_triplets_request, TripletsNotification, TripletsOperation};

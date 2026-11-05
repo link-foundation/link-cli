@@ -658,6 +658,7 @@ where
         trace: cli.trace,
         auto_create_missing_references: cli.auto_create_missing_references,
         accept,
+        triplets: cli.triplets,
         ..ServerOptions::default()
     };
     let sessions = match policy {

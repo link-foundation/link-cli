@@ -25,6 +25,9 @@
 //! cannot return an error panic when the connection fails, the way a local
 //! store panics when its file does; the inherent methods return every failure
 //! as a [`ProtocolError`].
+//!
+//! Over a server in triplet mode it is a [`Triplets`](crate::Triplets) store;
+//! see `remote_triplets.rs`.
 
 use super::client::LinksClient;
 use super::error::{ProtocolError, ProtocolResult};
@@ -37,11 +40,12 @@ use crate::link::Link;
 use crate::link_storage::ChangeObserver;
 use crate::link_storage_doublets::link_storage_constants;
 use crate::named_type_links::NamedTypeLinks;
+use crate::triplets::TripletMarkers;
 use doublets::data::{Flow, LinksConstants, ReadHandler, WriteHandler};
 use doublets::{Doublets, Error, Link as DoubletsLink, Links};
 use links_notation::binary::LinoDocument;
 use std::net::ToSocketAddrs;
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 use std::time::Duration;
 
 /// A links store served by a [`LinksServer`](super::LinksServer), usable
@@ -49,6 +53,8 @@ use std::time::Duration;
 #[derive(Debug)]
 pub struct RemoteLinks {
     client: Mutex<LinksClient>,
+    /// What the server names `Pair` and `Nothing`, once asked.
+    pub(super) triplet_markers: OnceLock<TripletMarkers>,
 }
 
 impl RemoteLinks {
@@ -64,6 +70,7 @@ impl RemoteLinks {
     pub fn new(client: LinksClient) -> Self {
         Self {
             client: Mutex::new(client),
+            triplet_markers: OnceLock::new(),
         }
     }
 
@@ -97,7 +104,7 @@ impl RemoteLinks {
             .transpose()
     }
 
-    fn client(&self) -> MutexGuard<'_, LinksClient> {
+    pub(super) fn client(&self) -> MutexGuard<'_, LinksClient> {
         self.client.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
@@ -160,7 +167,7 @@ impl RemoteLinks {
 
 /// Unwraps the result of a call whose interface has no way to report a
 /// failure.
-fn connected<T>(result: ProtocolResult<T>) -> T {
+pub(super) fn connected<T>(result: ProtocolResult<T>) -> T {
     result.unwrap_or_else(|error| panic!("remote links store failed: {error}"))
 }
 
@@ -282,8 +289,10 @@ impl NamedTypeLinks for RemoteLinks {
         connected(self.link(id))
     }
 
+    /// Counts, so it also holds on a server in triplet mode, where a link
+    /// does not read as a doublet.
     fn exists(&mut self, id: u32) -> bool {
-        connected(self.link(id)).is_some()
+        connected(self.count_matching(&[Some(id)])) > 0
     }
 
     fn update_observed(

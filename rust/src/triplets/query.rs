@@ -357,8 +357,7 @@ pub(super) fn substitute<T: Triplets + ?Sized>(
             Target::Existing(index) => index,
             Target::Address(address) => {
                 if !triplets.is_triplet(address) {
-                    triplets.try_ensure_created(address)?;
-                    triplets.update(address, address, address)?;
+                    triplets.create_triplet_point_at(address)?;
                     created.insert(address);
                 }
                 address

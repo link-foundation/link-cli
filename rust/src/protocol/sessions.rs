@@ -13,11 +13,13 @@ use links_notation::LiNo;
 
 use super::links_operations::{Change, LinksOperation};
 use super::server::{error_document, error_message, execute_observed_request, execute_request};
+use super::triplets_operations::{execute_observed_triplets_request, TripletsOperation};
 use crate::changes_simplifier::simplify_changes;
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
 use crate::permissions::{AccessPolicy, PermissionPolicy, PermissionsDecorator};
 use crate::query_processor::QueryProcessor;
+use crate::triplets::{TripletChange, TripletMarkers, TripletsOverDoublets};
 use crate::undoable_links::UndoableLinksDecorator;
 
 /// The subject of a token, or `None` when the token is not valid: answers
@@ -61,10 +63,15 @@ enum Store<S: NamedTypeLinks, P: AccessPolicy> {
 /// token, or sessions without an authenticator, answer
 /// `(error: 'Forbidden: authentication failed')`.
 ///
+/// With [`with_triplets`](Self::with_triplets) the sessions read every request
+/// as triplets (issue #152; see [`TripletsOperation`]), and permissions judge
+/// each triplet as a whole, not the wrappers and pairs that store it.
+///
 /// Requests run one at a time, as `&mut self` already demands.
 pub struct LinksSessions<S: NamedTypeLinks, P: AccessPolicy = PermissionPolicy> {
     store: Store<S, P>,
     processor: QueryProcessor,
+    triplets: Option<TripletMarkers>,
     authenticate: Option<Authenticator>,
     subject: u32,
     sessions: HashMap<SessionId, Session>,
@@ -92,6 +99,7 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
         Self {
             store,
             processor: QueryProcessor::new(false),
+            triplets: None,
             authenticate: None,
             subject: 0,
             sessions: HashMap::new(),
@@ -119,6 +127,29 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
     pub fn with_auto_create_missing_references(mut self, enabled: bool) -> Self {
         self.processor = QueryProcessor::new(false).with_auto_create_missing_references(enabled);
         self
+    }
+
+    /// Reads every request as triplets; the markers of the encoding are
+    /// created in the store when they are missing, whatever the subject of a
+    /// session may do.
+    pub fn with_triplets(mut self) -> Result<Self> {
+        self.ensure_triplets()?;
+        Ok(self)
+    }
+
+    /// Like [`with_triplets`](Self::with_triplets), on sessions already built.
+    pub fn ensure_triplets(&mut self) -> Result<TripletMarkers> {
+        if let Some(markers) = self.triplets {
+            return Ok(markers);
+        }
+        let markers = TripletMarkers::ensure(self.store_mut())?;
+        self.triplets = Some(markers);
+        Ok(markers)
+    }
+
+    /// Whether the sessions read every request as triplets.
+    pub fn has_triplets(&self) -> bool {
+        self.triplets.is_some()
     }
 
     /// Whether the sessions see the store through permissions.
@@ -219,11 +250,34 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
         document: &[LiNo<String>],
         changed: &mut Vec<Change>,
     ) -> LinoDocument {
+        self.run(session, document, changed, &mut Vec::new())
+    }
+
+    /// Like [`execute`](Self::execute) on sessions that read requests as
+    /// triplets, adding every triplet the request changed to `changed`, with
+    /// plain numbers: those it took along too, even where the subject cannot
+    /// see them. A request undone for failing changed nothing.
+    pub fn execute_triplets_observed(
+        &mut self,
+        session: SessionId,
+        document: &[LiNo<String>],
+        changed: &mut Vec<TripletChange>,
+    ) -> LinoDocument {
+        self.run(session, document, &mut Vec::new(), changed)
+    }
+
+    fn run(
+        &mut self,
+        session: SessionId,
+        document: &[LiNo<String>],
+        changed: &mut Vec<Change>,
+        triplets_changed: &mut Vec<TripletChange>,
+    ) -> LinoDocument {
         let mut state = self.sessions.remove(&session).unwrap_or(Session {
             subject: self.subject,
             created: HashSet::new(),
         });
-        let reply = self.execute_as(&mut state, document, changed);
+        let reply = self.execute_as(&mut state, document, changed, triplets_changed);
         self.sessions.insert(session, state);
         reply
     }
@@ -254,6 +308,7 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
         session: &mut Session,
         document: &[LiNo<String>],
         changed: &mut Vec<Change>,
+        triplets_changed: &mut Vec<TripletChange>,
     ) -> LinoDocument {
         if let [LiNo::Link {
             id: Some(id),
@@ -264,9 +319,17 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
                 return self.authenticate(session, values);
             }
         }
+        let markers = self.triplets;
         let view = match &mut self.store {
             Store::Plain(store) => {
-                return execute_observed_request(store, &self.processor, document, changed)
+                return match markers {
+                    Some(markers) => execute_observed_triplets_request(
+                        &mut TripletsOverDoublets::with_markers(store, markers),
+                        document,
+                        triplets_changed,
+                    ),
+                    None => execute_observed_request(store, &self.processor, document, changed),
+                };
             }
             Store::Permitted(view) => view,
         };
@@ -274,7 +337,13 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
         view.replace_created(std::mem::take(&mut session.created));
         view.inner_mut().begin();
         let processor = &self.processor;
-        let outcome = panic::catch_unwind(AssertUnwindSafe(|| request(view, processor, document)));
+        let observed = triplets_changed.len();
+        let outcome = panic::catch_unwind(AssertUnwindSafe(|| match markers {
+            Some(markers) => triplets_request(view, markers, document, triplets_changed),
+            None => request(view, document, |view, document| {
+                execute_request(view, processor, document)
+            }),
+        }));
         let reply = match outcome {
             Ok(reply) if error_message(&reply).is_none() => {
                 let deleted: HashSet<u32> = view
@@ -312,7 +381,10 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
                 reply
             }
             Ok(reply) => match undo(view) {
-                Ok(()) => reply,
+                Ok(()) => {
+                    triplets_changed.truncate(observed);
+                    reply
+                }
                 Err(error) => error_document(&format!(
                     "{}; undoing it failed: {error:#}",
                     error_message(&reply).unwrap_or_default()
@@ -363,11 +435,11 @@ fn undo<S: NamedTypeLinks, P: AccessPolicy>(
 }
 
 /// A request as the subject sees the store: names of links it cannot read
-/// are not found, and references are checked in the store below.
+/// are not found, and `run` answers everything else.
 fn request<L: NamedTypeLinks, P: AccessPolicy>(
     view: &mut PermissionsDecorator<L, P>,
-    processor: &QueryProcessor,
     document: &[LiNo<String>],
+    run: impl FnOnce(&mut PermissionsDecorator<L, P>, &[LiNo<String>]) -> LinoDocument,
 ) -> LinoDocument {
     let operation = match LinksOperation::from_document(document) {
         Ok(operation) => operation,
@@ -376,12 +448,42 @@ fn request<L: NamedTypeLinks, P: AccessPolicy>(
     match operation {
         Some(LinksOperation::GetName(link)) if !view.exists(link) => Vec::new(),
         Some(LinksOperation::GetByName(name)) => match view.get_by_name(&name) {
-            Ok(Some(link)) if link != 0 && view.exists(link) => {
-                execute_request(view, processor, document)
-            }
+            Ok(Some(link)) if link != 0 && view.exists(link) => run(view, document),
             Ok(_) => Vec::new(),
             Err(error) => error_document(&format!("{error:#}")),
         },
-        _ => execute_request(view, processor, document),
+        _ => run(view, document),
     }
+}
+
+/// A request over triplets as the subject sees the store: the permissions move
+/// above the triplets, which write their wrappers and pairs straight to the
+/// store below, still inside the transaction of the request.
+fn triplets_request<S: NamedTypeLinks, P: AccessPolicy>(
+    view: &mut PermissionsDecorator<UndoableLinksDecorator<S>, P>,
+    markers: TripletMarkers,
+    document: &[LiNo<String>],
+    changed: &mut Vec<TripletChange>,
+) -> LinoDocument {
+    let subject = view.subject();
+    let created = view.replace_created(HashSet::new());
+    let (links, policy) = view.parts_mut();
+    let mut layer = PermissionsDecorator::new(
+        TripletsOverDoublets::with_markers(links, markers),
+        policy,
+        subject,
+    )
+    .with_created(created);
+    // A triplet operation holds four parts where one over doublets holds three:
+    // only what is left, the names, is for `request` to look at.
+    let reply = if matches!(TripletsOperation::from_document(document), Ok(None)) {
+        request(&mut layer, document, |layer, document| {
+            execute_observed_triplets_request(layer, document, changed)
+        })
+    } else {
+        execute_observed_triplets_request(&mut layer, document, changed)
+    };
+    let created = layer.replace_created(HashSet::new());
+    view.replace_created(created);
+    reply
 }

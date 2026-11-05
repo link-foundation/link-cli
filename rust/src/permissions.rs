@@ -413,9 +413,10 @@ impl<L: NamedTypeLinks, P: AccessPolicy> PermissionsDecorator<L, P> {
     }
 
     /// Whether `link` is the subject's own: created through this view and
-    /// still without a type.
+    /// still without a type, or a point that is only its own type.
     pub fn owns(&self, link: &Link) -> bool {
-        link.source == 0 && self.created.contains(&link.index)
+        let untyped = link.source == 0 || (link.source == link.index && link.target == link.index);
+        untyped && self.created.contains(&link.index)
     }
 
     /// Whether the subject may read `link`.
@@ -429,12 +430,23 @@ impl<L: NamedTypeLinks, P: AccessPolicy> PermissionsDecorator<L, P> {
     }
 
     /// Whether the policy lets the subject write `link`, ownership aside.
-    fn policy_can_write(&mut self, link: &Link) -> bool {
+    pub(crate) fn policy_can_write(&mut self, link: &Link) -> bool {
         self.policy.can_write(&mut self.links, self.subject, link)
     }
 
-    fn policy_can_create(&mut self) -> bool {
+    pub(crate) fn policy_can_create(&mut self) -> bool {
         self.policy.can_create(&mut self.links, self.subject)
+    }
+
+    /// The link at `index` is one the subject made on the store below.
+    pub(crate) fn remember(&mut self, index: u32) {
+        self.created.insert(index);
+    }
+
+    /// The store below and the policy, to judge a request on a layer over the
+    /// same store.
+    pub(crate) fn parts_mut(&mut self) -> (&mut L, &mut P) {
+        (&mut self.links, &mut self.policy)
     }
 
     /// The link at `index` is gone: a new one there is not the subject's own.
