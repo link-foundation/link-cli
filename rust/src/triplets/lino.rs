@@ -11,7 +11,7 @@ use anyhow::{bail, Result};
 
 use super::query::{pattern_of, substitute, Reference};
 use super::{Triplet, TripletQuery, Triplets};
-use crate::parser::Parser;
+use crate::query_parser;
 
 /// Every triplet as a line `(index: type from to)`, in the order of the
 /// addresses.
@@ -39,7 +39,10 @@ fn reference<T: Triplets + ?Sized>(triplets: &mut T, id: u32) -> Result<String> 
     if id == 0 {
         return Ok("0".to_string());
     }
-    triplets.format_reference(id)
+    Ok(match triplets.get_name(id)? {
+        Some(name) => query_parser::format_identifier(&format!("\"{name}\"")),
+        None => id.to_string(),
+    })
 }
 
 /// Writes the triplets of `text` and returns their indices, one per line.
@@ -47,7 +50,7 @@ pub fn import_triplets_lino<T: Triplets + ?Sized>(
     triplets: &mut T,
     text: &str,
 ) -> Result<Vec<u32>> {
-    let parsed = Parser::new().parse(text)?;
+    let parsed = query_parser::parse(text)?;
     let mut patterns = Vec::with_capacity(parsed.len());
     for line in &parsed {
         // A document of one line is that line wrapped once more.

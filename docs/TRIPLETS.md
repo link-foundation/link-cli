@@ -27,7 +27,7 @@ it composes with `TypesDecorator` (#148), transactions, permissions and the
 file-backed stores. Every member is virtual (C#) or a default trait method
 (Rust), so a decorator over it can reuse or override any of it. The tests,
 `csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs` and
-`rust/tests/triplets_over_doublets_tests.rs`, are the same 18 cases in both
+`rust/tests/triplets_over_doublets_tests.rs`, cover the same scenarios in both
 languages.
 
 ## The encoding
@@ -202,6 +202,12 @@ both are updated in place. A query that refers to an unknown name, an unbound
 variable, a `*` where a value is needed, or a part that is not a triplet is
 refused before anything is written; a restriction by an unknown name matches
 nothing.
+
+Quoting a reference makes it a name: `'0'` names a triplet, while bare `0`
+means an empty part. The same distinction applies to `'*'` and `'$name'`. All
+three notation quote delimiters and reference literals preserve names in
+indices and parts. Exports quote or encode names when needed so importing
+them cannot turn a name into an address, wildcard or variable.
 
 ## Links Notation
 

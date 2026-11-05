@@ -7,10 +7,10 @@
 - [x] Check the prepared branch, working tree and relationship to `main`.
 - [x] Inventory acceptance criteria and existing implementation/test evidence.
 - [x] Restore the missing roadmap, including dependency order and links.
-- [ ] Reproduce and fix any gaps found in the audit, with matching regression
+- [x] Reproduce and fix any gaps found in the audit, with matching regression
   tests in C# and Rust.
-- [ ] Refresh the stale notation dependency and include patch release notes.
-- [ ] Run focused local checks within the container resource budget.
+- [x] Refresh the stale notation dependency and include patch release notes.
+- [x] Run focused local checks within the container resource budget.
 - [ ] Inspect current-commit CI, preserve failure logs and resolve failures.
 - [ ] Review the PR diff, merge current `main` if needed, update the PR text,
   verify a clean tree and mark PR #164 ready without merging.
@@ -43,5 +43,55 @@ in both ports. The fix reuses the existing reference-preserving query parser.
 
 The initial Dependencies run, `42048542376` (2026-11-05 14:48:13 UTC, head
 `0e0abb7`), fails because links-notation 0.30.1 superseded 0.30.0. Downloaded
-log lines 208–210 identify the manifest and both lockfiles. No checks need
+log lines 206–208 identify the manifest and both lockfiles. No checks need
 to be weakened.
+
+## Reproduction and fix
+
+Import these lines into a new triplets store with `TripletsLino.Import` or
+`import_triplets_lino`:
+
+```text
+(Type: Type 0 0)
+('0': Type 0 0)
+(r: '0' '0' '0')
+```
+
+Before the fix both ports reject the named definition with
+`A triplet cannot be at address 0.` Other quoted numeric names silently
+become addresses, while quoted wildcards and variables are rejected as
+query syntax. Export also loses the distinction for syntax-like names.
+
+The triplet entry points now use the existing reference-preserving query
+parser, and export uses its matching formatter. Bare addresses, variables
+and wildcards retain their meaning. Both ports exercise 14 reference forms
+through imports, export/reimport, query matching, creation and in-place
+substitution, including all quote delimiters, reference literals, numeric
+names, wildcards, variables, whitespace, controls and mixed quotes. Existing
+orphan checks run after the writes.
+
+The baseline Rust test fails and the original nine C# cases give six failures
+and three passes before the production fix. Preserved logs:
+[Rust](../../../dev/log/issues/147/pulls/164/rust-before.log),
+[C#](../../../dev/log/issues/147/pulls/164/csharp-before.log), and
+[initial dependency CI](../../../dev/log/issues/147/pulls/164/dependencies-42048542376.log).
+
+## Focused local verification
+
+- Rust triplet suite: 19 passed, including the new regression and the
+  1000-triplet reference-store comparison.
+- Rust triplet protocol: 20 passed; shared GraphQL vectors: 1 passed.
+- C# triplet, triplet-protocol and GraphQL suites: 59 passed.
+- JavaScript, repository-layout and workflow/release policy checks:
+  `npm --prefix js run test:js`, 230 passed; this does not build WebAssembly.
+- Rust formatting and whitespace checks pass.
+
+Rust builds use one job, disabled debug information and a per-process virtual
+memory limit of 1,900,000 KiB. C# uses one build worker, disabled shared
+compilation and a 1 GiB managed heap limit. Full cross-platform suites,
+WebAssembly, release checks and the real DeepClient run use existing CI.
+
+The previously committed [DeepCase screenshot](../../screenshots/deepcase-clink.png)
+shows the fresh database served by the Rust port. Shared GraphQL fixtures and
+the real DeepClient CI cover both ports. This audit changes query semantics,
+with no visual UI changes.

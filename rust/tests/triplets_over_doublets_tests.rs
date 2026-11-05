@@ -679,6 +679,74 @@ fn lino_import_refuses_what_is_not_a_triplet() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn quoted_triplet_references_remain_names_in_imports_and_queries() -> Result<()> {
+    for (reference, name) in [
+        ("'0'", "0"),
+        ("\"1\"", "1"),
+        ("`9999`", "9999"),
+        ("'*'", "*"),
+        ("'$item'", "$item"),
+        ("~1{30}", "0"),
+        ("'\"0\"'", "\"0\""),
+        ("'x\\y'", "x\\y"),
+        ("'a\nb'", "a\nb"),
+        ("'#tag'", "#tag"),
+        ("'~value'", "~value"),
+        ("'  '", "  "),
+        ("\"a'b`c\"", "a'b`c"),
+        ("`a'b\"c`", "a'b\"c"),
+    ] {
+        let mut triplets = store()?;
+        import_triplets_lino(
+            &mut triplets,
+            &format!("(Type: Type 0 0)\n({reference}: Type 0 0)\n(r: {reference} {reference} {reference})\n"),
+        )?;
+        let named_id = id(&mut triplets, name);
+        let r = id(&mut triplets, "r");
+        let before = Triplet::new(r, named_id, named_id, named_id);
+        assert_eq!(Some(before), triplets.get_triplet(r), "{reference}");
+
+        let text = triplets_to_lino(&mut triplets)?;
+        let mut copy = store()?;
+        import_triplets_lino(&mut copy, &text)?;
+        assert_eq!(text, triplets_to_lino(&mut copy)?, "{reference}");
+        assert!(copy.get_by_name(name)?.is_some(), "{reference}");
+
+        let mut created = store()?;
+        process_triplets_query(
+            &mut created,
+            &format!("() ((Type: Type 0 0) ({reference}: Type 0 0) (r: {reference} {reference} {reference}))"),
+        )?;
+        assert_eq!(text, triplets_to_lino(&mut created)?, "{reference}");
+        assert_no_orphans(&mut created, false);
+
+        let matches = link_cli::triplets::match_triplets_query(
+            &mut triplets,
+            &format!("(($r: {reference} {reference} {reference}))"),
+            "$r",
+        )?;
+        assert_eq!(vec![r], matches, "{reference}");
+        let changes = process_triplets_query(
+            &mut triplets,
+            &format!("((r: {reference} {reference} {reference})) ((r: {reference} 0 {reference}))"),
+        )?;
+        assert_eq!(
+            vec![TripletChange {
+                before: Some(before),
+                after: Some(Triplet::new(r, named_id, 0, named_id)),
+            }],
+            changes,
+            "{reference}"
+        );
+        // Quoted names used as substitution indices are looked up too.
+        process_triplets_query(&mut triplets, &format!("() (({reference}: Type 0 0))"))?;
+        assert_eq!(named_id, id(&mut triplets, name));
+        assert_no_orphans(&mut triplets, false);
+    }
+    Ok(())
+}
+
 fn query(triplets: &mut Store, text: &str) -> Result<Vec<TripletChange>> {
     let changes = process_triplets_query(triplets, text)?;
     assert_no_orphans(triplets, false);

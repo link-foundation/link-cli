@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using Platform.Data;
 using LinoLink = Link.Foundation.Links.Notation.Link<string>;
-using LinoParser = Link.Foundation.Links.Notation.Parser;
 
 namespace Foundation.Data.Doublets.Cli
 {
@@ -48,7 +47,7 @@ namespace Foundation.Data.Doublets.Cli
             where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
         {
             ArgumentNullException.ThrowIfNull(triplets);
-            var parsed = new LinoParser().Parse(restriction ?? string.Empty);
+            var parsed = QueryParser.Parse(restriction ?? string.Empty);
             if (parsed.Count != 1)
             {
                 throw new ArgumentException($"A restriction is one link of patterns: {restriction}");
@@ -75,7 +74,7 @@ namespace Foundation.Data.Doublets.Cli
             where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
         {
             ArgumentNullException.ThrowIfNull(triplets);
-            var parsed = new LinoParser().Parse(query ?? string.Empty);
+            var parsed = QueryParser.Parse(query ?? string.Empty);
             LinoLink restriction;
             LinoLink substitution;
             if (parsed.Count == 0)
@@ -151,6 +150,11 @@ namespace Foundation.Data.Doublets.Cli
         {
             public static Reference Parse(string text)
             {
+                var name = QueryParser.Name(text);
+                if (name != text)
+                {
+                    return new Reference(ReferenceKind.Name, name);
+                }
                 if (text == "*")
                 {
                     return new Reference(ReferenceKind.Any, text);

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-using LinoParser = Link.Foundation.Links.Notation.Parser;
 
 namespace Foundation.Data.Doublets.Cli
 {
@@ -42,7 +41,7 @@ namespace Foundation.Data.Doublets.Cli
             where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
         {
             ArgumentNullException.ThrowIfNull(triplets);
-            var parsed = new LinoParser().Parse(text ?? string.Empty);
+            var parsed = QueryParser.Parse(text ?? string.Empty);
             var patterns = new List<TripletsQueryProcessor.Pattern>(parsed.Count);
             foreach (var parsedLine in parsed)
             {
@@ -78,7 +77,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 return "0";
             }
-            return triplets.GetName(id) is { } name ? LinoDatabaseOutput.EscapeReference(name) : id.ToString()!;
+            return triplets.GetName(id) is { } name ? QueryParser.FormatIdentifier("\"" + name + "\"") : id.ToString()!;
         }
     }
 }
