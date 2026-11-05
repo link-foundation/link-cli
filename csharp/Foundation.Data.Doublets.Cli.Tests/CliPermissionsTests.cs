@@ -144,6 +144,46 @@ public sealed class CliPermissionsTests : IDisposable
         Assert.Equal("Token revoked.\n", revoked.Stdout);
     }
 
+    /// <summary>
+    /// Issue #161: a subject without the right gets the same answer for an unreadable address
+    /// and a missing one, and the store does not change.
+    /// </summary>
+    [Theory]
+    [InlineData("() ((Note <address>))")]
+    [InlineData("() ((<address>: Note Note))")]
+    [InlineData("((<address>: * *)) ()")]
+    [InlineData("((<address>: * *)) ((<address>: Note Note))")]
+    public async Task AnUnreadableAddressAnswersAsAMissingOne(string query)
+    {
+        const uint missing = 9999;
+        var (_, v, _, _) = MakeWorld(separateRules: false);
+        Clink.AssertSucceeded(await Clink.RunAsync(Permissions(false, "--subject", "alice", "--after")));
+        var before = Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout);
+
+        async Task<(int, string)> AnswerAt(uint address)
+        {
+            var answer = await Clink.RunAsync(Permissions(false, "--subject", "alice", "--changes", query.Replace("<address>", address.ToString())));
+            return (answer.ExitCode, (answer.Stdout + answer.Stderr).Replace(address.ToString(), "<address>"));
+        }
+
+        Assert.Equal(await AnswerAt(missing), await AnswerAt(v["secret"]));
+        Assert.Equal(before, Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout));
+    }
+
+    /// <summary>The name of a hidden link answers as an unknown name.</summary>
+    [Fact]
+    public async Task TheNameOfAnUnreadableLinkAnswersAsAnUnknownName()
+    {
+        MakeWorld(separateRules: false);
+        Clink.AssertSucceeded(await Clink.RunAsync(Permissions(false, "--subject", "alice", "--after")));
+        var before = Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout);
+        var hidden = await Clink.RunAsync(Permissions(false, "--subject", "alice", "() ((Note secret))"));
+        var unknown = await Clink.RunAsync(Permissions(false, "--subject", "alice", "() ((Note nothing))"));
+        Assert.Equal(unknown.ExitCode, hidden.ExitCode);
+        Assert.Equal(unknown.Stderr.Replace("nothing", "<name>"), hidden.Stderr.Replace("secret", "<name>"));
+        Assert.Equal(before, Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout));
+    }
+
     private async Task<RunningClink> StartServerAsync(params string[] extra)
     {
         var process = Process.Start(Clink.StartInfo(new[] { "--db", Data, "--serve", "127.0.0.1:0" }.Concat(extra)))!;

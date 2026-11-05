@@ -385,3 +385,47 @@ impl Drop for Server {
         let _ = self.child.wait();
     }
 }
+
+/// What `clink --subject alice` answers for `query`, with the address it holds
+/// written as `<address>`, so two addresses can be compared.
+fn answer_of(fixture: &Fixture, query: &str, address: u32) -> (Option<i32>, String) {
+    let output = fixture.permitted(false, &["--subject", "alice", "--changes", query]);
+    let answer = format!("{}{}", stdout(&output), stderr(&output));
+    (
+        output.status.code(),
+        answer.replace(&address.to_string(), "<address>"),
+    )
+}
+
+/// Issue #161: a subject without the right gets the same answer for an
+/// unreadable address and a missing one, and the store does not change.
+#[test]
+fn an_unreadable_address_answers_as_a_missing_one() {
+    const MISSING: u32 = 9999;
+    let fixture = Fixture::new();
+    let Made { v, .. } = fixture.make_world(false);
+    // The first permitted run may add a marker; the store is compared from here.
+    succeeded(fixture.permitted(false, &["--subject", "alice", "--after"]));
+    let before = fixture.after();
+    for query in [
+        "() ((Note <address>))",
+        "() ((<address>: Note Note))",
+        "((<address>: * *)) ()",
+        "((<address>: * *)) ((<address>: Note Note))",
+    ] {
+        let at = |address: u32| query.replace("<address>", &address.to_string());
+        let hidden = answer_of(&fixture, &at(v["secret"]), v["secret"]);
+        let missing = answer_of(&fixture, &at(MISSING), MISSING);
+        assert_eq!(hidden, missing, "{query}");
+        assert_eq!(fixture.after(), before, "{query}");
+    }
+    // The same through a name: the name of a hidden link is an unknown name.
+    let hidden = fixture.permitted(false, &["--subject", "alice", "() ((Note secret))"]);
+    let missing = fixture.permitted(false, &["--subject", "alice", "() ((Note nothing))"]);
+    assert_eq!(hidden.status.code(), missing.status.code());
+    assert_eq!(
+        stderr(&hidden).replace("secret", "<name>"),
+        stderr(&missing).replace("nothing", "<name>")
+    );
+    assert_eq!(fixture.after(), before);
+}
