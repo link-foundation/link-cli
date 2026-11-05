@@ -37,6 +37,7 @@ package built from `doublets-rs`.
 
 ## Documentation
 
+- [docs/ROADMAP.md](docs/ROADMAP.md): the dependency order and verification of the associative architecture in doublets and triplets.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
 - [docs/COMPOSITION.md](docs/COMPOSITION.md): how the permission, union, remap and external-id layers compose with each other and the other layers, in C#, Rust and JavaScript, with scenarios.
