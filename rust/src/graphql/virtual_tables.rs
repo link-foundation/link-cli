@@ -1,49 +1,60 @@
 //! Tables Deep derives from links with triggers and views. Here they are
 //! computed from the links when asked, for as long as nothing is written:
 //! values and `can` always, `tree` and `selectors` from the `Tree*` and
-//! `Selector*` links. `handlers` and `mp` are empty, as Deep's handlers do
-//! not run here, and `tree` is what is read instead of `mp`.
+//! `Selector*` links, `mp` the same paths under its own column names.
+//! `handlers` is empty, as Deep's handlers do not run here.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use super::execute::{Exec, GqlResult};
 use super::json::Json;
 use super::store::{LinkRow, ValueRow};
 use crate::triplets::TripletQuery;
 
-/// How a link of an included type places what it touches in a tree, as
-/// `(child, parent)` over its `from`, itself and its `to`.
-#[derive(Clone, Copy, PartialEq)]
-enum End {
-    From,
-    Link,
-    To,
-}
-
-const RULES: [(&str, &[(End, End)]); 10] = [
-    ("TreeIncludeNode", &[]),
+/// Which `(parent, child)` edges a link of an included type makes, over its
+/// `from`, itself and its `to`. These are the groups of include types Deep's
+/// `isAllowSpread*` conditions test, in `1621815803572-materialized-path.ts`.
+const SPREADS: [(&str, [&str; 4]); 4] = [
     (
-        "TreeIncludeDown",
-        &[(End::Link, End::From), (End::To, End::Link)],
+        "from-link",
+        [
+            "TreeIncludeDown",
+            "TreeIncludeIn",
+            "TreeIncludeFromCurrent",
+            "TreeIncludeFromCurrentTo",
+        ],
     ),
     (
-        "TreeIncludeUp",
-        &[(End::Link, End::To), (End::From, End::Link)],
-    ),
-    ("TreeIncludeFromCurrent", &[(End::Link, End::From)]),
-    ("TreeIncludeToCurrent", &[(End::Link, End::To)]),
-    ("TreeIncludeCurrentFrom", &[(End::From, End::Link)]),
-    ("TreeIncludeCurrentTo", &[(End::To, End::Link)]),
-    (
-        "TreeIncludeFromCurrentTo",
-        &[(End::Link, End::From), (End::To, End::Link)],
+        "to-link",
+        [
+            "TreeIncludeUp",
+            "TreeIncludeIn",
+            "TreeIncludeToCurrent",
+            "TreeIncludeToCurrentFrom",
+        ],
     ),
     (
-        "TreeIncludeToCurrentFrom",
-        &[(End::Link, End::To), (End::From, End::Link)],
+        "link-to",
+        [
+            "TreeIncludeDown",
+            "TreeIncludeOut",
+            "TreeIncludeCurrentTo",
+            "TreeIncludeFromCurrentTo",
+        ],
     ),
-    ("TreeIncludeOut", &[(End::Link, End::From)]),
+    (
+        "link-from",
+        [
+            "TreeIncludeUp",
+            "TreeIncludeOut",
+            "TreeIncludeCurrentFrom",
+            "TreeIncludeToCurrentFrom",
+        ],
+    ),
 ];
+
+/// Every other include type: it only makes a link a member of its tree.
+const MEMBERSHIP_ONLY: [&str; 1] = ["TreeIncludeNode"];
 
 impl Exec<'_, '_> {
     pub fn value_json(row: u32, value: &ValueRow) -> Json {
@@ -104,15 +115,33 @@ impl Exec<'_, '_> {
                 out
             }
             "can" => self.can_rows(),
-            "tree" => self.tree_rows(),
-            "selectors" => self.selector_rows(),
+            "tree" => self.derived("tree", Self::tree_rows),
+            "selectors" => self.derived("selectors", Self::selector_rows),
+            "mp" => self.mp_rows(),
             "healthz" => vec![Json::object(vec![("status", Json::str("ok"))])],
             _ => Vec::new(),
         })
     }
 
-    /// The policy's grants as Deep's `can`: a rule on `Anything` is one row for
-    /// each link it reaches is not listed, but stands as the id `0`.
+    /// A table computed from the links, kept until the next write.
+    fn derived(&mut self, table: &'static str, compute: fn(&mut Self) -> Vec<Json>) -> Vec<Json> {
+        let generation = self.store.generation;
+        if !self.store.in_mutation {
+            if let Some((at, rows)) = self.store.derived.get(table) {
+                if *at == generation {
+                    return rows.clone();
+                }
+            }
+        }
+        let rows = compute(self);
+        if !self.store.in_mutation {
+            self.store.derived.insert(table, (generation, rows.clone()));
+        }
+        rows
+    }
+
+    /// The policy's grants as Deep's `can`: a rule on `Anything` stands as the
+    /// id `0` rather than one row for each link it reaches.
     fn can_rows(&mut self) -> Vec<Json> {
         let (select, update) = (self.core_id("AllowSelect"), self.core_id("AllowUpdate"));
         let mut rows = Vec::new();
@@ -128,90 +157,112 @@ impl Exec<'_, '_> {
         rows
     }
 
-    /// Whether `link` is of `type_id`, `Any` taking every link.
+    /// `tree`: every path from a root to a link, one row per link on it, as
+    /// Deep's materialized path stores them. `typesTree` is built in: a link's
+    /// parent is its type.
     fn tree_rows(&mut self) -> Vec<Json> {
         let links = self.all_links();
         let any = self.core_id("Any");
-        let mut rule_of: HashMap<i64, &'static [(End, End)]> = HashMap::new();
-        for (name, rule) in RULES {
-            if let Some(id) = self.core_id(name) {
-                rule_of.insert(id, rule);
+        let types_tree = self.core_id("typesTree");
+        let mut spreads: HashMap<i64, Vec<&'static str>> = HashMap::new();
+        for (spread, names) in SPREADS {
+            for name in names {
+                if let Some(id) = self.core_id(name) {
+                    spreads.entry(id).or_default().push(spread);
+                }
             }
         }
-        let mut by_tree: HashMap<i64, Vec<(i64, &'static [(End, End)])>> = HashMap::new();
+        for name in MEMBERSHIP_ONLY {
+            if let Some(id) = self.core_id(name) {
+                spreads.entry(id).or_default();
+            }
+        }
+        // tree -> included type -> the edges its links make.
+        let mut trees: BTreeMap<i64, HashMap<i64, HashSet<&'static str>>> = BTreeMap::new();
         for link in &links {
-            if let Some(rule) = rule_of.get(&link.type_id) {
-                by_tree
+            if Some(link.from_id) == types_tree {
+                continue;
+            }
+            if let Some(made) = spreads.get(&link.type_id) {
+                trees
                     .entry(link.from_id)
                     .or_default()
-                    .push((link.to_id, rule));
+                    .entry(link.to_id)
+                    .or_default()
+                    .extend(made.iter().copied());
             }
         }
-        let mut trees: Vec<_> = by_tree.into_iter().collect();
-        trees.sort_by_key(|(tree, _)| *tree);
         let mut rows = Vec::new();
+        if let Some(tree) = types_tree {
+            let parents = links
+                .iter()
+                .filter(|link| link.type_id != link.id && link.type_id != 0)
+                .map(|link| (link.id, link.type_id))
+                .fold(HashMap::<i64, Vec<i64>>::new(), |mut all, (id, parent)| {
+                    all.entry(id).or_default().push(parent);
+                    all
+                });
+            let nodes: Vec<i64> = links.iter().map(|link| link.id).collect();
+            push_paths(&mut rows, tree, nodes, &parents);
+        }
         for (tree, includes) in trees {
-            let mut nodes = HashSet::new();
+            let wanted = |type_id: i64| {
+                includes.contains_key(&type_id) || any.is_some_and(|a| includes.contains_key(&a))
+            };
+            let members: HashSet<i64> = links
+                .iter()
+                .filter(|link| wanted(link.type_id))
+                .map(|link| link.id)
+                .collect();
             let mut parents: HashMap<i64, Vec<i64>> = HashMap::new();
-            for link in &links {
-                for (included, rule) in &includes {
-                    if *included != link.type_id && Some(*included) != any {
-                        continue;
-                    }
-                    nodes.insert(link.id);
-                    let end = |which: End| match which {
-                        End::From => link.from_id,
-                        End::Link => link.id,
-                        End::To => link.to_id,
+            for link in links.iter().filter(|link| members.contains(&link.id)) {
+                let made = includes.get(&link.type_id);
+                for spread in made.into_iter().flatten() {
+                    let (parent, child) = match *spread {
+                        "from-link" => (link.from_id, link.id),
+                        "to-link" => (link.to_id, link.id),
+                        "link-to" => (link.id, link.to_id),
+                        _ => (link.id, link.from_id),
                     };
-                    for (child, parent) in rule.iter() {
-                        let (child, parent) = (end(*child), end(*parent));
-                        if child != 0 && parent != 0 && child != parent {
-                            parents.entry(child).or_default().push(parent);
-                            nodes.insert(child);
-                            nodes.insert(parent);
+                    if parent != child && members.contains(&parent) && members.contains(&child) {
+                        let list = parents.entry(child).or_default();
+                        if !list.contains(&parent) {
+                            list.push(parent);
                         }
                     }
                 }
             }
-            let mut ordered: Vec<i64> = nodes.into_iter().collect();
-            ordered.sort_unstable();
-            for node in ordered {
-                let mut seen = HashSet::from([node]);
-                let mut level = vec![node];
-                let mut climbed = vec![(node, 0)];
-                let mut depth = 0;
-                while !level.is_empty() {
-                    depth += 1;
-                    let mut next = Vec::new();
-                    for at in &level {
-                        for parent in parents.get(at).into_iter().flatten() {
-                            if seen.insert(*parent) {
-                                next.push(*parent);
-                                climbed.push((*parent, depth));
-                            }
-                        }
-                    }
-                    level = next;
-                }
-                let root = climbed.last().map_or(node, |(top, _)| *top);
-                let total = climbed.last().map_or(0, |(_, depth)| *depth);
-                for (parent, up) in climbed {
-                    let id = rows.len() as i64 + 1;
-                    rows.push(Json::object(vec![
-                        ("id", Json::Int(id)),
-                        ("link_id", Json::Int(node)),
-                        ("tree_id", Json::Int(tree)),
-                        ("root_id", Json::Int(root)),
-                        ("parent_id", Json::Int(parent)),
-                        ("depth", Json::Int(total - up)),
-                        ("position_id", Json::String(format!("{tree}-{root}"))),
-                        ("self", Json::Bool(up == 0)),
-                    ]));
-                }
-            }
+            let mut nodes: Vec<i64> = members.into_iter().collect();
+            nodes.sort_unstable();
+            push_paths(&mut rows, tree, nodes, &parents);
         }
         rows
+    }
+
+    /// `mp`: the rows of `tree`, as Deep's own table names their columns.
+    fn mp_rows(&mut self) -> Vec<Json> {
+        let renamed = [
+            ("id", "id"),
+            ("item_id", "link_id"),
+            ("path_item_id", "parent_id"),
+            ("path_item_depth", "depth"),
+            ("root_id", "root_id"),
+            ("position_id", "position_id"),
+            ("group_id", "tree_id"),
+        ];
+        self.derived("tree", Self::tree_rows)
+            .iter()
+            .map(|row| {
+                Json::object(
+                    renamed
+                        .iter()
+                        .map(|(name, column)| {
+                            (*name, row.get(column).cloned().unwrap_or(Json::Null))
+                        })
+                        .collect(),
+                )
+            })
+            .collect()
     }
 
     /// `selectors`: what a `SelectorInclude` reaches down its tree.
@@ -222,27 +273,91 @@ impl Exec<'_, '_> {
         ) else {
             return Vec::new();
         };
+        let filter = self.core_id("SelectorFilter");
         let links = self.all_links();
-        let tree_rows = self.tree_rows();
+        let tree_rows = self.derived("tree", Self::tree_rows);
+        let mut reached: HashMap<(i64, i64), Vec<i64>> = HashMap::new();
         let int = |row: &Json, key: &str| row.get(key).and_then(Json::as_i64).unwrap_or(0);
+        for row in &tree_rows {
+            reached
+                .entry((int(row, "tree_id"), int(row, "parent_id")))
+                .or_default()
+                .push(int(row, "link_id"));
+        }
+        let mut trees_of: HashMap<i64, Vec<i64>> = HashMap::new();
+        let mut query_of: HashMap<i64, i64> = HashMap::new();
+        for link in &links {
+            if link.type_id == tree_link {
+                trees_of.entry(link.from_id).or_default().push(link.to_id);
+            } else if Some(link.type_id) == filter {
+                query_of.insert(link.from_id, link.to_id);
+            }
+        }
         let mut rows = Vec::new();
         for link in links.iter().filter(|link| link.type_id == include) {
-            let trees = links
-                .iter()
-                .filter(|other| other.type_id == tree_link && other.from_id == link.id);
-            for tree in trees {
-                for row in tree_rows.iter().filter(|row| {
-                    int(row, "tree_id") == tree.to_id && int(row, "parent_id") == link.to_id
-                }) {
+            for tree in trees_of.get(&link.id).into_iter().flatten() {
+                for item in reached.get(&(*tree, link.to_id)).into_iter().flatten() {
                     rows.push(Json::object(vec![
-                        ("item_id", Json::Int(int(row, "link_id"))),
+                        ("item_id", Json::Int(*item)),
                         ("selector_id", Json::Int(link.from_id)),
                         ("selector_include_id", Json::Int(link.id)),
-                        ("query_id", Json::Int(0)),
+                        (
+                            "query_id",
+                            Json::Int(query_of.get(&link.from_id).copied().unwrap_or(0)),
+                        ),
                     ]));
                 }
             }
         }
         rows
+    }
+}
+
+/// The rows of every path to each of `nodes`. Deep refuses cycles when they are
+/// written; here a link already on a path ends it.
+fn push_paths(rows: &mut Vec<Json>, tree: i64, nodes: Vec<i64>, parents: &HashMap<i64, Vec<i64>>) {
+    fn walk(
+        node: i64,
+        parents: &HashMap<i64, Vec<i64>>,
+        path: &mut Vec<i64>,
+        out: &mut Vec<Vec<i64>>,
+    ) {
+        path.push(node);
+        let above: Vec<i64> = parents
+            .get(&node)
+            .into_iter()
+            .flatten()
+            .copied()
+            .filter(|parent| !path.contains(parent))
+            .collect();
+        if above.is_empty() {
+            out.push(path.iter().rev().copied().collect());
+        }
+        for parent in above {
+            walk(parent, parents, path, out);
+        }
+        path.pop();
+    }
+    for node in nodes {
+        let mut paths = Vec::new();
+        walk(node, parents, &mut Vec::new(), &mut paths);
+        for (position, path) in paths.iter().enumerate() {
+            for (depth, parent) in path.iter().enumerate() {
+                let id = rows.len() as i64 + 1;
+                rows.push(Json::object(vec![
+                    ("id", Json::Int(id)),
+                    ("link_id", Json::Int(node)),
+                    ("tree_id", Json::Int(tree)),
+                    ("root_id", Json::Int(path[0])),
+                    ("parent_id", Json::Int(*parent)),
+                    ("depth", Json::Int(depth as i64)),
+                    (
+                        "position_id",
+                        Json::String(format!("{tree}-{node}-{position}")),
+                    ),
+                    ("self", Json::Bool(*parent == node)),
+                ]));
+            }
+        }
     }
 }

@@ -109,6 +109,10 @@ pub struct DeepStore<'s> {
     pub admin: bool,
     /// Bumped by every committed write, for what is derived from the rows.
     pub generation: u64,
+    /// Derived tables by name, for the `generation` they were computed at.
+    pub derived: HashMap<&'static str, (u64, Vec<Json>)>,
+    /// Inside a mutation what is derived is not kept: it may yet change.
+    pub in_mutation: bool,
 }
 
 fn named_point<T: Triplets + NamedTypeLinks>(triplets: &mut T, name: &str) -> Result<u32> {
@@ -146,6 +150,8 @@ impl<'s> DeepStore<'s> {
             next_id: 1,
             admin: false,
             generation: 0,
+            derived: HashMap::new(),
+            in_mutation: false,
         };
         store.reload()?;
         Ok(store)
@@ -268,16 +274,19 @@ impl<'s> DeepStore<'s> {
     }
 
     pub fn begin(&mut self) {
+        self.in_mutation = true;
         self.triplets.links_mut().begin();
     }
 
     pub fn commit(&mut self) -> Result<()> {
+        self.in_mutation = false;
         self.triplets.links_mut().commit();
         self.generation += 1;
         self.triplets.save()
     }
 
     pub fn rollback(&mut self) -> Result<()> {
+        self.in_mutation = false;
         self.triplets.links_mut().rollback()?;
         self.reload()
     }

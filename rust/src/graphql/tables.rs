@@ -108,6 +108,7 @@ pub fn columns(table: &str) -> &'static [&'static str] {
             "parent_id",
             "depth",
             "position_id",
+            "self",
         ],
         "selectors" => &["item_id", "selector_id", "selector_include_id", "query_id"],
         "handlers" => &[

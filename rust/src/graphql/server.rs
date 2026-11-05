@@ -295,12 +295,15 @@ fn header<'h>(headers: &'h HashMap<String, String>, name: &str) -> Option<&'h st
     headers.get(name).map(String::as_str)
 }
 
-const CORS: &str = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET, POST, OPTIONS\r\nAccess-Control-Allow-Headers: authorization, content-type, x-hasura-admin-secret, x-hasura-role, x-hasura-user-id\r\n";
+const CORS: &str =
+    "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
+/// Headers allowed when a preflight does not name any; Hasura echoes the ones it is asked about.
+const CORS_HEADERS: &str = "authorization, content-type, x-hasura-admin-secret, x-hasura-client, x-hasura-role, x-hasura-user-id";
 
 fn respond(stream: &mut TcpStream, status: &str, body: &str) -> std::io::Result<()> {
     write!(
         stream,
-        "HTTP/1.1 {status}\r\nContent-Type: application/json; charset=utf-8\r\n{CORS}Content-Length: {}\r\n\r\n{body}",
+        "HTTP/1.1 {status}\r\nContent-Type: application/json; charset=utf-8\r\n{CORS}Access-Control-Allow-Headers: {CORS_HEADERS}\r\nContent-Length: {}\r\n\r\n{body}",
         body.len()
     )
 }
@@ -357,7 +360,8 @@ fn handle(
         match (method.as_str(), path.as_str()) {
             ("OPTIONS", _) => write!(
                 writer,
-                "HTTP/1.1 204 No Content\r\n{CORS}Content-Length: 0\r\n\r\n"
+                "HTTP/1.1 204 No Content\r\n{CORS}Access-Control-Allow-Headers: {}\r\nContent-Length: 0\r\n\r\n",
+                header(&headers, "access-control-request-headers").unwrap_or(CORS_HEADERS)
             )?,
             ("GET", "/healthz" | "/api/healthz" | "/v1/healthz") => {
                 respond(&mut writer, "200 OK", "{\"status\":\"ok\"}")?

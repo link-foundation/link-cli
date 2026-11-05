@@ -355,6 +355,23 @@ fn other(key: &str, value: &Json, mapping: Mapping) -> (Option<Plan>, bool) {
     }
 }
 
+/// A plan as text, for tests and `--trace`.
+pub fn render(plan: &Plan) -> String {
+    let list = |items: &[Plan]| items.iter().map(render).collect::<Vec<_>>().join(" ");
+    match plan {
+        Plan::All => "all".to_string(),
+        Plan::Empty => "empty".to_string(),
+        Plan::Match(text) => text.clone(),
+        Plan::Ids(ids) => format!(
+            "(ids {})",
+            ids.iter().map(i64::to_string).collect::<Vec<_>>().join(" ")
+        ),
+        Plan::Union(items) => format!("(union {})", list(items)),
+        Plan::Intersect(items) => format!("(intersect {})", list(items)),
+        Plan::Minus(item) => format!("(minus {})", render(item)),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -412,26 +429,5 @@ mod tests {
         let joined = plan(r#"{"from":{"type_id":{"_eq":5}}}"#);
         assert!(joined.exact);
         assert_eq!(joined.plan, matched("(($v1: 105 * *) ($i: * $v1 *))"));
-    }
-
-    fn render(plan: &Plan) -> String {
-        super::render(plan)
-    }
-}
-
-/// A plan as text, for tests and `--trace`.
-pub fn render(plan: &Plan) -> String {
-    let list = |items: &[Plan]| items.iter().map(render).collect::<Vec<_>>().join(" ");
-    match plan {
-        Plan::All => "all".to_string(),
-        Plan::Empty => "empty".to_string(),
-        Plan::Match(text) => text.clone(),
-        Plan::Ids(ids) => format!(
-            "(ids {})",
-            ids.iter().map(i64::to_string).collect::<Vec<_>>().join(" ")
-        ),
-        Plan::Union(items) => format!("(union {})", list(items)),
-        Plan::Intersect(items) => format!("(intersect {})", list(items)),
-        Plan::Minus(item) => format!("(minus {})", render(item)),
     }
 }

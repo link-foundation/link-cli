@@ -27,7 +27,7 @@ impl GqlError {
 
     pub fn write(message: impl std::fmt::Display) -> Self {
         let message = message.to_string();
-        let code = if message.contains("Forbidden") || message.contains("orbidden") {
+        let code = if message.contains("Forbidden") {
             "permission-error"
         } else if message.contains("violation") {
             "constraint-violation"
@@ -246,11 +246,10 @@ impl<'a> Exec<'a, '_> {
                 .iter()
                 .find(|(name, _)| name == "if")
                 .map(|(_, value)| value.resolve(self.variables));
-            match (directive.name.as_str(), condition) {
-                ("skip", Some(Json::Bool(true))) => false,
-                ("include", Some(Json::Bool(false))) => false,
-                _ => true,
-            }
+            !matches!(
+                (directive.name.as_str(), condition),
+                ("skip", Some(Json::Bool(true))) | ("include", Some(Json::Bool(false)))
+            )
         })
     }
 
@@ -512,8 +511,6 @@ impl<'a> Exec<'a, '_> {
             .collect();
         contains.into_iter().find_map(|contain| {
             let triplet = self.store.triplet_of(contain)?;
-            let raw = self.store.view(0, |_| ()); // keeps the borrow local
-            let _ = raw;
             let row = self.raw_row(triplet)?;
             let (_, parent) = self.store.value_of_owner(ValueKind::String, row.from_id)?;
             (parent.value.as_str() == Some(package)).then_some(row.to_id)
