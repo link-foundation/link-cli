@@ -151,6 +151,17 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 Assert.Equal(new DoubletLink(id, 0u, 0u), new DoubletLink(w.Links.GetLink(id)));
             });
 
+        /// <summary>A guest creates nothing, so it chooses no address, hidden or missing.</summary>
+        [Fact]
+        public void AGuestChoosesNoAddress() =>
+            PermissionsDecoratorTests.WithWorld(w =>
+            {
+                foreach (var address in new[] { w.V["secret"], Missing })
+                {
+                    Assert.Equal("forbidden", ErrorOf(() => LinksExtensions.EnsureCreated(w.As(0u), address)));
+                }
+            });
+
         [Fact]
         public void ARuleCoversItsObjectAndTheLinksOfItsType() =>
             PermissionsDecoratorTests.WithWorld(w =>

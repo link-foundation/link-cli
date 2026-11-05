@@ -44,17 +44,17 @@ fn ask(w: &mut World, subject: u32, request: &str) -> String {
 fn answers_alike(reply_of: impl Fn(u32, u32, u32) -> String, not_found: bool) -> Result<()> {
     let mut w = World::new(false)?;
     let own = own_note(&mut w)?;
-    let (note, secret, alice) = (w.t["Note"], w.v["secret"], w.v["alice"]);
+    let (note, unreadable, alice) = (w.t["Note"], w.v["secret"], w.v["alice"]);
     let before = all(&mut w.links);
-    let hidden = ask(&mut w, alice, &reply_of(note, secret, own));
+    let hidden = ask(&mut w, alice, &reply_of(note, unreadable, own));
     let missing = ask(&mut w, alice, &reply_of(note, MISSING, own));
     assert!(hidden.starts_with("(error: "), "{hidden}");
     assert_eq!(
-        hidden.replace(&secret.to_string(), "N"),
+        hidden.replace(&unreadable.to_string(), "N"),
         missing.replace(&MISSING.to_string(), "N")
     );
     if not_found {
-        assert_eq!(format!("(error: 'Link not found: {secret}')"), hidden);
+        assert_eq!(format!("(error: 'Link not found: {unreadable}')"), hidden);
     }
     assert_eq!(before, all(&mut w.links));
     Ok(())
@@ -99,9 +99,9 @@ fn a_type_it_may_not_write_is_forbidden_for_hidden_and_missing_alike() -> Result
 #[test]
 fn the_name_of_an_unreadable_link_is_an_unknown_name() -> Result<()> {
     let mut w = World::new(false)?;
-    let (note, secret, alice) = (w.t["Note"], w.v["secret"], w.v["alice"]);
+    let (note, unreadable, alice) = (w.t["Note"], w.v["secret"], w.v["alice"]);
     assert_eq!(None, w.as_(alice).get_by_name("secret")?);
-    assert_eq!(None, w.as_(alice).get_name(secret)?);
+    assert_eq!(None, w.as_(alice).get_name(unreadable)?);
     for request in [
         format!("() (({note} NAME))"),
         "((NAME: * *)) ()".to_string(),
@@ -120,12 +120,12 @@ fn the_name_of_an_unreadable_link_is_an_unknown_name() -> Result<()> {
 #[test]
 fn the_name_of_an_unreadable_link_cannot_be_taken() -> Result<()> {
     let mut w = World::new(false)?;
-    let (note, secret, alice) = (w.v["note"], w.v["secret"], w.v["alice"]);
+    let (note, unreadable, alice) = (w.v["note"], w.v["secret"], w.v["alice"]);
     let reply = ask(&mut w, alice, &format!("(set-name: ({note} 'secret'))"));
     assert!(reply.starts_with("(error: 'Forbidden: "), "{reply}");
     let reply = ask(&mut w, alice, &format!("() ((secret: {note} {note}))"));
     assert!(reply.starts_with("(error: 'Forbidden: "), "{reply}");
-    assert_eq!(Some(secret), w.links.get_by_name("secret"));
+    assert_eq!(Some(unreadable), w.links.get_by_name("secret"));
     assert_eq!(Some("note".to_string()), w.links.get_name(note).cloned());
     Ok(())
 }
@@ -133,10 +133,10 @@ fn the_name_of_an_unreadable_link_cannot_be_taken() -> Result<()> {
 #[test]
 fn the_view_refuses_it_alone() -> Result<()> {
     let mut w = World::new(false)?;
-    let (note, secret, alice) = (w.t["Note"], w.v["secret"], w.v["alice"]);
+    let (note, unreadable, alice) = (w.t["Note"], w.v["secret"], w.v["alice"]);
     let mut view = w.as_(alice);
     let id = view.try_create(0, 0)?;
-    for address in [secret, MISSING] {
+    for address in [unreadable, MISSING] {
         assert_eq!(Some("not-found"), error_of(view.update(id, note, address)));
         assert_eq!(Some("not-found"), error_of(view.update(id, 0, address)));
         assert_eq!(Some("not-found"), error_of(view.try_create(note, address)));
@@ -181,16 +181,16 @@ fn the_right_does_not_allow_reading() -> Result<()> {
     let mut w = World::new(false)?;
     let (t, v) = (w.t.clone(), w.v.clone());
     w.allow(PermissionAccess::Reference, t["User"], t["Secret"])?;
-    let (alice, secret) = (v["alice"], v["secret"]);
+    let (alice, unreadable) = (v["alice"], v["secret"]);
     {
         let mut view = w.as_(alice);
-        assert!(view.can_reference(secret));
-        assert!(!view.can_read(&Link::new(secret, t["Secret"], 0)));
-        assert_eq!(None, view.get_link(secret));
-        assert!(!view.all_links().iter().any(|link| link.index == secret));
-        assert_eq!(Some("not-found"), error_of(view.delete(secret)));
+        assert!(view.can_reference(unreadable));
+        assert!(!view.can_read(&Link::new(unreadable, t["Secret"], 0)));
+        assert_eq!(None, view.get_link(unreadable));
+        assert!(!view.all_links().iter().any(|link| link.index == unreadable));
+        assert_eq!(Some("not-found"), error_of(view.delete(unreadable)));
     }
-    assert_eq!("", ask(&mut w, alice, &format!("(each: ({secret}))")));
+    assert_eq!("", ask(&mut w, alice, &format!("(each: ({unreadable}))")));
     assert_eq!("", ask(&mut w, alice, "(get-by-name: 'secret')"));
     Ok(())
 }
@@ -204,6 +204,20 @@ fn a_rule_applies_to_its_subjects_only() -> Result<()> {
     assert!(w.as_(v["boss"]).can_reference(v["secret"]));
     assert!(!w.as_(v["alice"]).can_reference(v["secret"]));
     assert!(!w.as_(0).can_reference(v["secret"]));
+    Ok(())
+}
+
+/// A guest creates nothing, so it chooses no address, hidden or missing.
+#[test]
+fn a_guest_chooses_no_address() -> Result<()> {
+    let mut w = World::new(false)?;
+    let unreadable = w.v["secret"];
+    for address in [unreadable, MISSING] {
+        assert_eq!(
+            Some("forbidden"),
+            error_of(w.as_(0).try_ensure_created(address))
+        );
+    }
     Ok(())
 }
 
@@ -251,22 +265,22 @@ fn anything_to_anything_restores_the_previous_behaviour_as_a_choice() -> Result<
     let mut w = World::new(false)?;
     let (t, v, m) = (w.t.clone(), w.v.clone(), w.markers);
     w.allow(PermissionAccess::Reference, m.anything, m.anything)?;
-    let (alice, secret) = (v["alice"], v["secret"]);
+    let (alice, unreadable) = (v["alice"], v["secret"]);
     let mut view = w.as_(alice);
-    view.try_create(t["Note"], secret)?;
-    assert_eq!(Some(secret), view.get_by_name("secret")?);
+    view.try_create(t["Note"], unreadable)?;
+    assert_eq!(Some(unreadable), view.get_by_name("secret")?);
     // The address of a hidden link is taken, a free one is not.
     assert_eq!(
-        format!("Link {secret} exists"),
-        view.try_ensure_created(secret).unwrap_err().to_string()
+        format!("Link {unreadable} exists"),
+        view.try_ensure_created(unreadable).unwrap_err().to_string()
     );
     // A query tells them apart: the link exists, the other one does not.
-    assert!(view.reference_exists(secret));
+    assert!(view.reference_exists(unreadable));
     assert!(!view.reference_exists(MISSING));
     view.try_ensure_created(MISSING)?;
     assert!(view.exists(MISSING));
     // It reads no more than it did.
-    assert_eq!(None, view.get_link(secret));
+    assert_eq!(None, view.get_link(unreadable));
     // A query refers to it by name, here to the link made above.
     let reply = ask(&mut w, alice, &format!("() (({} secret))", t["Note"]));
     assert!(!reply.starts_with("(error"), "{reply}");

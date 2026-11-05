@@ -869,8 +869,8 @@ fn a_part_it_may_not_refer_to_answers_as_a_missing_one() {
 #[test]
 fn the_right_to_refer_to_a_triplet_does_not_allow_reading_it() {
     let (server, t, v) = permitted_server_with(|w| {
-        let (user, secret) = (w.t["User"], w.t["Secret"]);
-        w.allow(link_cli::PermissionAccess::Reference, user, secret)
+        let (user, unreadable) = (w.t["User"], w.t["Secret"]);
+        w.allow(link_cli::PermissionAccess::Reference, user, unreadable)
             .unwrap();
     });
     let (note_type, classified) = (t["Note"], v["secret"]);
@@ -892,6 +892,15 @@ fn the_right_to_refer_to_a_triplet_does_not_allow_reading_it() {
         .unwrap_err()
         .to_string();
     assert!(error.contains("is not a triplet"), "{error}");
+    // Its address stays taken: no point lands on it.
+    let error = alice
+        .query_text(&format!("() (({classified}: {note_type} 0 0))"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(&format!("Link {classified} exists")),
+        "{error}"
+    );
 }
 
 #[test]

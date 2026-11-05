@@ -663,6 +663,8 @@ public sealed class TripletsProtocolTests
             Assert.Equal("", alice.QueryText($"(each: ({secret}))"));
             // A missing address stays missing.
             AssertRefused(alice, $"(create: ({noteType} 9999 0))", "is not a triplet");
+            // Its address stays taken: no point lands on it.
+            AssertRefused(alice, $"() (({secret}: {noteType} 0 0))", $"Link {secret} exists");
         });
     }
 
