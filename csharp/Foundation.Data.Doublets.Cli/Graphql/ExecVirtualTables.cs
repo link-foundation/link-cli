@@ -208,6 +208,11 @@ public sealed partial class Exec
                     }
                 }
             }
+            // The rows do not depend on the order the includes were hashed in.
+            foreach (var list in parents.Values)
+            {
+                list.Sort();
+            }
             PushPaths(rows, tree, members.Order(), parents);
         }
         return rows;
