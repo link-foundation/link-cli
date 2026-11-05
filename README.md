@@ -40,6 +40,7 @@ package built from `doublets-rs`.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
 - [docs/COMPOSITION.md](docs/COMPOSITION.md): how the permission, union, remap and external-id layers compose with each other and the other layers, in C#, Rust and JavaScript, with scenarios.
+- [docs/TRIPLETS.md](docs/TRIPLETS.md): triplets `(index: type from to)` stored in doublets, the encoding, the alternatives and the cost of every operation.
 - [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
 - [examples/](examples): runnable examples, one folder per feature.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
@@ -502,6 +503,30 @@ The pinned types `(1: 1 1)`, `(2: 1 2)`, `(3: 1 3)`, … are sub-types of the
 root `1`, so a store with pinned types is already such a hierarchy. Runnable
 scripts for both CLIs and a Rust example live in
 [`examples/type-hierarchy/`](examples/type-hierarchy).
+
+## Triplets
+
+deep-foundation's links are triplets `(index: type from to)`. Both libraries
+keep them in any doublets store with `TripletsOverDoublets` (C#
+`TripletsOverDoublets<TLinkAddress>`, which implements `ITriplets<TLinkAddress>`;
+Rust `link_cli::TripletsOverDoublets`, which implements `Triplets`). A node
+`(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is
+`(i: T ((Pair f) t))`, so the type stays the source and the
+[type hierarchy](#type-hierarchy) reads triplets as values of their types.
+Updates keep the address, deletes cascade like doublet deletes, and wrappers
+and pairs nothing uses are collected.
+
+```csharp
+var triplets = new TripletsOverDoublets<uint>(namedLinks); // finds or creates Pair and Nothing
+TripletsLino.Import(triplets, "(knows: Type 0 0)\n(alice: Type 0 0)\n(bob: Type 0 0)\n(carol: Type 0 0)\n(Type: Type 0 0)\n(r: knows alice bob)");
+TripletsQueryProcessor.ProcessQuery(triplets, "((($r: knows alice bob)) (($r: knows alice carol)))");
+triplets.EachTriplet(TripletQuery<uint>.ByType(triplets.GetByName("knows"))); // [(r: knows alice carol)]
+Console.Write(TripletsLino.Export(triplets));
+```
+
+The encoding, the alternatives that were measured and the cost of `Each` by
+type, from and to and of deletion are in [docs/TRIPLETS.md](docs/TRIPLETS.md);
+the Rust example is in [`examples/triplets/`](examples/triplets).
 
 ## Persistent transformation triggers
 

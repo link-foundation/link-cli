@@ -209,6 +209,33 @@ default that reads and writes through the implementing layer, so a layer that
 wraps `TypesDecorator` can reuse or override any of it. Run
 `cargo run --example type_hierarchy` for a complete walk-through.
 
+### Triplets
+
+`TripletsOverDoublets` wraps any `NamedTypeLinks` and keeps triplets
+`(index: type from to)` in its doublets (#151): a node `(i: T 0 0)` is
+`(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points
+`Pair` and `Nothing` found or created by name.
+
+```rust
+use link_cli::{process_triplets_query, triplets_to_lino, LinkStorage, TripletQuery, Triplets, TripletsOverDoublets};
+
+let mut triplets = TripletsOverDoublets::with_named_markers(LinkStorage::in_memory(false).with_indexed_lookups())?;
+let root = triplets.create_triplet_point()?;          // (root: root 0 0)
+let person = triplets.create_triplet(root, 0, 0)?;
+let alice = triplets.create_triplet(person, 0, 0)?;
+let bob = triplets.create_triplet(person, 0, 0)?;
+let knows = triplets.create_triplet(root, alice, bob)?;
+triplets.update_triplet(knows, root, bob, alice)?;   // the address stays
+assert_eq!(1, triplets.count_triplets(TripletQuery::by_from(bob)));
+assert_eq!(2, triplets.delete_triplet(alice)?.len()); // alice and knows
+process_triplets_query(&mut triplets, &format!("(() (({root} {bob} {bob})))"))?; // a create
+print!("{}", triplets_to_lino(&mut triplets)?);
+```
+
+The `Triplets` trait needs only `triplet_markers()`; every read and write has
+a default over `NamedTypeLinks`. Run `cargo run --example triplets` and see
+[docs/TRIPLETS.md](../docs/TRIPLETS.md) for the encoding and its costs.
+
 ### Permissions
 
 `--permissions self|<rules.links>` runs queries as `--subject` (an index or a

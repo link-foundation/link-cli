@@ -26,6 +26,7 @@
 //! - `permissions` - An optional permission layer with rules stored in links
 //! - `undoable_links` - Writes kept to be undone, so a failed request leaves nothing
 //! - `types` - A type hierarchy with sub-types and multiple inheritance
+//! - `triplets` - Triplets `(index: type from to)` stored in doublets, with substitution and LiNo
 //! - `transactions`, `version_control` - Reversible transitions, branches and tags
 //! - `union_links` - Many networks seen as one, the first member shadowing the rest
 //! - `remap_links` - A network under other addresses: an offset or a table
@@ -69,6 +70,7 @@ pub mod remap_links;
 pub mod sequences;
 pub mod storage;
 pub mod transactions;
+pub mod triplets;
 pub mod types;
 pub mod undoable_links;
 pub mod unicode_string_storage;
@@ -121,6 +123,11 @@ pub use transactions::{
     CommitMode, DoubletLink, FileTransitionLog, GenericDoubletLink, GenericTransactionsDecorator,
     GenericTransition, LogRetentionPolicy, TransactionHandle, TransactionsDecorator, Transition,
     TransitionKind, TransitionLogStore,
+};
+pub use triplets::{
+    import_triplets_lino, process_triplets_query, triplets_to_lino, DoubletRole, Triplet,
+    TripletChange, TripletMarkers, TripletQuery, Triplets, TripletsOverDoublets,
+    NOTHING_MARKER_NAME, PAIR_MARKER_NAME,
 };
 pub use types::{ensure_point, TypeMarkers, Types, TypesDecorator, EXTENDS_NAME, ROOT_TYPE_NAME};
 pub use undoable_links::{LinkChange, LinksUndoLog, UndoableLinksDecorator};

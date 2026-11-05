@@ -82,6 +82,14 @@ Storage and names:
   `(m: Extends p)`, and writes with `Define`, `Extend` and `Instance`. It wraps
   any `ILinks`, is not sealed, and its members are virtual; pinned types are
   sub-types of its root.
+- `TripletsOverDoublets.cs`: optional triplets layer (#151). `ITriplets` keeps
+  `(index: type from to)` in doublets, a node as `(i: T i)` and a link as
+  `(i: T ((Pair f) t))`, and answers `GetTriplet`, `EachTriplet` and
+  `CountTriplets` by index, type, from and to; `CreateTriplet`,
+  `UpdateTriplet` (in place) and `DeleteTriplet` (cascading) collect the
+  wrappers and pairs nothing uses. `TripletsQueryProcessor.cs` runs
+  substitution queries with three parts and `TripletsLino.cs` imports and
+  exports `(index: type from to)` lines. See [TRIPLETS.md](TRIPLETS.md).
 - `LinoDatabaseInput.cs`: `.lino` import.
 - `LinoDatabaseOutput.cs`: database export, change formatting, and structure
   formatting.
@@ -165,6 +173,11 @@ Key files:
 - `rust/src/types.rs`: the `Types` trait and `TypesDecorator`, the type
   hierarchy layer of `TypesDecorator.cs`, over any `NamedTypeLinks`, with the
   same test cases in `rust/tests/types_decorator_tests.rs`.
+- `rust/src/triplets/`: the `Triplets` trait and `TripletsOverDoublets`
+  (`mod.rs`), substitution queries with three parts (`query.rs`) and Links
+  Notation import and export (`lino.rs`), the triplets layer of
+  `TripletsOverDoublets.cs`, with the same test cases in
+  `rust/tests/triplets_over_doublets_tests.rs`.
 - `rust/src/indexed_links.rs`: optional `IndexedLinksDecorator`, composed by
   `with_indexed_lookups()` / Rust `--indexed-lookups` under local data and names
   stores. It maintains pair/source/target indexes at raw mutation boundaries;
