@@ -19,8 +19,8 @@ use link_cli::protocol::{
     TripletsOperation,
 };
 use link_cli::{
-    process_triplets_query, NamedTypeLinks, NamedTypesDecorator, Triplet, TripletChange,
-    TripletQuery, Triplets, TripletsOverDoublets,
+    process_triplets_query, DoubletRole, NamedTypeLinks, NamedTypesDecorator, Triplet,
+    TripletChange, TripletQuery, Triplets, TripletsOverDoublets,
 };
 use std::io::Write;
 use std::net::TcpStream;
@@ -461,6 +461,32 @@ fn names_stay_available_through_remote_links() {
 }
 
 #[test]
+fn a_remote_store_knows_markers_and_triplets_but_not_their_doublets() {
+    let server = triplet_server();
+    let mut remote = RemoteLinks::new(server.client(TextLinoProtocol::new()));
+    let person = remote.create_triplet_point().unwrap();
+    let alice = remote.create_triplet(person, 0, 0).unwrap();
+    let knows = remote.create_triplet(person, alice, alice).unwrap();
+    // The address before `knows` is one of its wrappers or pairs.
+    let doublet = knows - 1;
+
+    assert!(remote.role_of(0).is_none());
+    assert!(matches!(remote.role_of(1), Some(DoubletRole::Marker)));
+    assert!(matches!(remote.role_of(2), Some(DoubletRole::Marker)));
+    assert!(matches!(
+        remote.role_of(person),
+        Some(DoubletRole::Triplet(_))
+    ));
+    assert!(remote.role_of(doublet).is_none());
+    assert!(remote.role_of(999).is_none());
+
+    // How many other triplets use it, each counted once.
+    assert_eq!(remote.doublet_usages(person), 2);
+    assert_eq!(remote.doublet_usages(alice), 1);
+    assert_eq!(remote.doublet_usages(knows), 0);
+}
+
+#[test]
 fn a_remote_subscriber_is_told_about_another_connections_triplets() {
     for (first, second) in protocols().into_iter().zip(protocols()) {
         let server = triplet_server();
@@ -542,7 +568,7 @@ fn authenticated(server: &RunningServer, name: &str, id: u32) -> LinksClient {
 #[test]
 fn a_subject_reads_and_writes_only_the_triplets_it_may() {
     let (server, t, v) = permitted_server();
-    let (alice, boss, note, shared, secret) =
+    let (alice, boss, note, shared, classified) =
         (v["alice"], v["boss"], v["note"], v["shared"], v["secret"]);
     let mut alice_client = authenticated(&server, "alice", alice);
     let mut boss_client = authenticated(&server, "boss", boss);
@@ -550,15 +576,15 @@ fn a_subject_reads_and_writes_only_the_triplets_it_may() {
     // boss writes anything, so reads anything.
     assert_eq!(
         boss_client
-            .query_text(&format!("(each: ({secret}))"))
+            .query_text(&format!("(each: ({classified}))"))
             .unwrap(),
-        format!("({secret}: {} 0 0)", t["Secret"])
+        format!("({classified}: {} 0 0)", t["Secret"])
     );
     // alice reads the notes she may write and what is public; a secret is not
     // there at all.
     assert_eq!(
         alice_client
-            .query_text(&format!("(each: ({secret}))"))
+            .query_text(&format!("(each: ({classified}))"))
             .unwrap(),
         ""
     );
@@ -582,7 +608,7 @@ fn a_subject_reads_and_writes_only_the_triplets_it_may() {
     );
     assert_eq!(
         alice_client
-            .query_text(&format!("(count: ({secret}))"))
+            .query_text(&format!("(count: ({classified}))"))
             .unwrap(),
         "(count: 0)"
     );
@@ -617,9 +643,9 @@ fn a_subject_reads_and_writes_only_the_triplets_it_may() {
     }
     // What she cannot read is not a triplet to her.
     for hidden in [
-        format!("(delete: {secret})"),
-        format!("(update: ({secret} {} 0 0))", t["Note"]),
-        format!("(create: ({} {secret} 0))", t["Note"]),
+        format!("(delete: {classified})"),
+        format!("(update: ({classified} {} 0 0))", t["Note"]),
+        format!("(create: ({} {classified} 0))", t["Note"]),
     ] {
         let error = alice_client.query_text(&hidden).unwrap_err().to_string();
         assert!(error.contains("is not a triplet"), "{hidden}: {error}");
@@ -709,14 +735,17 @@ fn a_subject_keeps_the_points_it_created_and_a_guest_writes_nothing() {
 #[test]
 fn a_subscriber_is_pushed_only_the_triplets_its_subject_may_read() {
     let (server, t, v) = permitted_server();
-    let (alice, boss, note, secret) = (v["alice"], v["boss"], v["note"], v["secret"]);
+    let (alice, boss, note, classified) = (v["alice"], v["boss"], v["note"], v["secret"]);
     let subscriber = RemoteLinks::new(authenticated(&server, "alice", alice));
     let mut writer = authenticated(&server, "boss", boss);
     subscriber.subscribe_triplets(&[]).unwrap();
 
     // A change she cannot see is not pushed to her at all...
     writer
-        .query(&format!("(update: ({secret} {} {alice} 0))", t["Secret"]))
+        .query(&format!(
+            "(update: ({classified} {} {alice} 0))",
+            t["Secret"]
+        ))
         .unwrap();
     // ...while one to a note she may read is.
     writer

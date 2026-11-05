@@ -345,6 +345,30 @@ public sealed class TripletsProtocolTests
     }
 
     [Fact]
+    public void ARemoteStoreKnowsMarkersAndTripletsButNotTheirDoublets()
+    {
+        using var server = TripletServer();
+        using var remote = server.Remote(new TextLinoProtocol());
+        var person = remote.CreateTripletPoint();
+        var alice = remote.CreateTriplet(person, 0, 0);
+        var knows = remote.CreateTriplet(person, alice, alice);
+        // The address before `knows` is one of its wrappers or pairs.
+        var doublet = knows - 1;
+
+        Assert.Null(remote.RoleOf(0));
+        Assert.Equal(DoubletRole.Marker, remote.RoleOf(1));
+        Assert.Equal(DoubletRole.Marker, remote.RoleOf(2));
+        Assert.Equal(DoubletRole.Triplet, remote.RoleOf(person));
+        Assert.Null(remote.RoleOf(doublet));
+        Assert.Null(remote.RoleOf(999));
+
+        // How many other triplets use it, each counted once.
+        Assert.Equal(2, remote.DoubletUsages(person));
+        Assert.Equal(1, remote.DoubletUsages(alice));
+        Assert.Equal(0, remote.DoubletUsages(knows));
+    }
+
+    [Fact]
     public void ARemoteSubscriberIsToldAboutAnotherConnectionsTriplets()
     {
         foreach (var (first, second) in RunningServer.Protocols().Zip(RunningServer.Protocols()))
