@@ -24,8 +24,9 @@ namespace Foundation.Data.Doublets.Cli
     /// </para>
     /// <para>
     /// A link the subject created through this view is its own while it has no
-    /// type (its source is 0), so it can give it one, and undoing the update
-    /// that typed it makes it its own again. <see cref="Forget"/> drops that
+    /// type (its source is 0, or it is a point that is only its own type), so it
+    /// can give it one, and undoing the update that typed it makes it its own
+    /// again. <see cref="Forget"/> drops that
     /// claim when the link is gone, so a later link at the same address is not
     /// the subject's.
     /// </para>
@@ -77,11 +78,14 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>The subject the store is seen as.</summary>
         public TLinkAddress Subject => _subject();
 
-        /// <summary>Whether <paramref name="link"/> is the subject's own: created through this view and still without a type.</summary>
+        /// <summary>Whether <paramref name="link"/> is the subject's own: created through this view and still without a type, or a point that is only its own type.</summary>
         public virtual bool Owns(IList<TLinkAddress> link)
         {
             ArgumentNullException.ThrowIfNull(link);
-            return link[_constants.SourcePart] == _constants.Null && _created.Contains(link[_constants.IndexPart]);
+            var index = link[_constants.IndexPart];
+            var source = link[_constants.SourcePart];
+            var untyped = source == _constants.Null || (source == index && link[_constants.TargetPart] == index);
+            return untyped && _created.Contains(index);
         }
 
         /// <summary>Whether the subject may read <paramref name="link"/>.</summary>
@@ -92,6 +96,9 @@ namespace Foundation.Data.Doublets.Cli
 
         /// <summary>The link at <paramref name="index"/> is gone: a new one there is not the subject's own.</summary>
         public virtual void Forget(TLinkAddress index) => _created.Remove(index);
+
+        /// <summary>The link at <paramref name="index"/> is one the subject made on the store below.</summary>
+        protected void Remember(TLinkAddress index) => _created.Add(index);
 
         public override TLinkAddress Count(IList<TLinkAddress>? restriction)
         {

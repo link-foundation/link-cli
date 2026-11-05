@@ -59,7 +59,8 @@ public sealed record LinksServerOptions
     /// <remarks>
     /// A side of a change the subscriber may not read is left out of its push, so a link that becomes unreadable
     /// arrives as a deletion and one that becomes readable as a creation. <see cref="Permissions"/> plug in here
-    /// too: with them, a subscriber sees only what its subject may read, and what this lets it see.
+    /// too: with them, a subscriber sees only what its subject may read, and what this lets it see. On a server in
+    /// triplet mode it judges the outer doublet of a triplet, as <c>(index: type index)</c>.
     /// </remarks>
     public Func<DoubletLink, bool>? Readable { get; init; }
 
@@ -67,6 +68,12 @@ public sealed record LinksServerOptions
     /// Pushes a connection may have waiting before the server closes it as too slow to read them.
     /// </summary>
     public int MaxPendingNotifications { get; init; } = 1024;
+
+    /// <summary>
+    /// Read every request as triplets (issue #152): <c>(create: (type from to))</c> and the rest of
+    /// <see cref="TripletsOperation"/>, over a store of doublets. A server without it answers as it always did.
+    /// </summary>
+    public bool Triplets { get; init; }
 }
 
 /// <summary>
@@ -85,6 +92,10 @@ public sealed record LinksServerOptions
 /// </para>
 /// <para>
 /// Every connection is a <see cref="LinksSession"/>, with a subject of its own (issue #149).
+/// </para>
+/// <para>
+/// With <see cref="LinksServerOptions.Triplets"/> the same requests and pushes are about triplets; see
+/// <see cref="TripletsOperation"/>.
 /// </para>
 /// </remarks>
 public sealed class LinksServer : IDisposable
@@ -349,15 +360,21 @@ public sealed class LinksServer : IDisposable
             }
             Trace($"request: {LinoFormat.FormatDocument(document)}");
             var changes = new List<(DoubletLink Before, DoubletLink After)>();
+            var tripletChanges = new List<TripletChange<uint>>();
             var reply = (connection is null ? null : ExecuteSubscription(connection, document, format))
-                ?? session.Execute(document, changes);
+                ?? session.Execute(document, changes, tripletChanges);
             Trace($"reply: {LinoFormat.FormatDocument(reply)}");
+            if (_options.Triplets)
+            {
+                reply = TripletsOperation.Pack(reply, format);
+            }
             connection?.Reply(reply, format);
-            if (changes.Count > 0)
+            if (changes.Count > 0 || tripletChanges.Count > 0)
             {
                 foreach (var other in _connections.Where(other => other.Connection != connection).ToList())
                 {
                     other.Connection.Notify(changes, Readable(other.Session));
+                    other.Connection.NotifyTriplets(tripletChanges, Readable(other.Session));
                 }
             }
             return reply;
@@ -377,10 +394,22 @@ public sealed class LinksServer : IDisposable
     }
 
     /// <summary>The reply to a <c>subscribe</c> or an <c>unsubscribe</c>; null for any other request.</summary>
-    private static IReadOnlyList<LinoLink>? ExecuteSubscription(LinksConnection connection, IReadOnlyList<LinoLink> document, MessageFormat format)
+    private IReadOnlyList<LinoLink>? ExecuteSubscription(LinksConnection connection, IReadOnlyList<LinoLink> document, MessageFormat format)
     {
         try
         {
+            if (_options.Triplets)
+            {
+                switch (TripletsOperation.FromDocument(document))
+                {
+                    case TripletsOperation.Subscribe subscribe:
+                        return LinksOperation.SubscriptionDocument(connection.Subscribe(subscribe.Restriction, format));
+                    case null:
+                        break;
+                    default:
+                        return null;
+                }
+            }
             switch (LinksOperation.FromDocument(document))
             {
                 case LinksOperation.Subscribe subscribe:
@@ -394,7 +423,8 @@ public sealed class LinksServer : IDisposable
         }
         catch (LinoProtocolException error)
         {
-            return ErrorDocument(error.Message);
+            // In triplet mode the session reports it, as any other failed request.
+            return _options.Triplets ? null : ErrorDocument(error.Message);
         }
     }
 
@@ -504,6 +534,6 @@ public sealed class LinksServer : IDisposable
             LinoFormat.Reference(ReferenceName(links, link.Target)),
         });
 
-    private static string ReferenceName(INamedTypesLinks<uint> links, uint id) =>
+    internal static string ReferenceName(INamedTypesLinks<uint> links, uint id) =>
         links.GetName(id) ?? id.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }

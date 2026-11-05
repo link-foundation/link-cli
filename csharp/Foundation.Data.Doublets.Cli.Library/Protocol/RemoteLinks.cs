@@ -28,8 +28,12 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 /// write touched, not the steps the store behind the server took. A failure of the connection or of the server is a
 /// <see cref="LinoProtocolException"/>. The calls are serialised, so one instance may be shared between threads.
 /// </para>
+/// <para>
+/// It is a <see cref="ITriplets{TLinkAddress}"/> store too, behind a server in triplet mode (issue #152); each kind
+/// of call needs the server of its kind.
+/// </para>
 /// </remarks>
-public sealed class RemoteLinks : INamedTypesLinks<uint>, IDisposable
+public sealed partial class RemoteLinks : ITriplets<uint>, IDisposable
 {
     private readonly LinksClient _client;
     private readonly object _clientLock = new();

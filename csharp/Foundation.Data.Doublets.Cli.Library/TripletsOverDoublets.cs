@@ -124,6 +124,9 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>Creates a triplet <c>(i: i 0 0)</c> that is its own type.</summary>
         TLinkAddress CreateTripletPoint();
 
+        /// <summary>Makes the free address <paramref name="address"/> a triplet <c>(address: address 0 0)</c> that is its own type.</summary>
+        void CreateTripletPointAt(TLinkAddress address);
+
         /// <summary>
         /// Makes the triplet at <paramref name="index"/> <c>(index: type from to)</c>,
         /// keeping its address, and returns the triplet as it was. The pair it no
@@ -145,6 +148,36 @@ namespace Foundation.Data.Doublets.Cli
 
         /// <summary>How many other doublets use the doublet <paramref name="id"/> as their source or target.</summary>
         int DoubletUsages(TLinkAddress id);
+    }
+
+    /// <summary>What deleting a triplet takes along.</summary>
+    internal static class TripletsCascade
+    {
+        /// <summary><paramref name="first"/> and every triplet that uses a deleted one as its type, from or to, <paramref name="first"/> first.</summary>
+        public static List<Triplet<TLinkAddress>> Of<TLinkAddress>(ITriplets<TLinkAddress> triplets, Triplet<TLinkAddress> first)
+            where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
+        {
+            var deleted = new List<Triplet<TLinkAddress>> { first };
+            var seen = new HashSet<TLinkAddress> { first.Index };
+            for (var at = 0; at < deleted.Count; at++)
+            {
+                var index = deleted[at].Index;
+                var users = triplets.EachTriplet(TripletQuery<TLinkAddress>.ByType(index))
+                    .Concat(triplets.EachTriplet(TripletQuery<TLinkAddress>.ByFrom(index)))
+                    .Concat(triplets.EachTriplet(TripletQuery<TLinkAddress>.ByTo(index)))
+                    .Where(user => user.Index != index)
+                    .Distinct()
+                    .Order();
+                foreach (var user in users)
+                {
+                    if (seen.Add(user.Index))
+                    {
+                        deleted.Add(user);
+                    }
+                }
+            }
+            return deleted;
+        }
     }
 
     /// <summary>
@@ -267,6 +300,12 @@ namespace Foundation.Data.Doublets.Cli
             return index;
         }
 
+        public virtual void CreateTripletPointAt(TLinkAddress address)
+        {
+            this.EnsureCreated(address);
+            this.Update(new[] { address }, new[] { address, address, address }, null);
+        }
+
         public virtual Triplet<TLinkAddress> UpdateTriplet(TLinkAddress index, TLinkAddress type, TLinkAddress from, TLinkAddress to)
         {
             if (GetTriplet(index) is not { } before)
@@ -311,18 +350,7 @@ namespace Foundation.Data.Doublets.Cli
             {
                 throw new InvalidOperationException($"Link {index} is not a triplet.");
             }
-            var deleted = new List<Triplet<TLinkAddress>> { first };
-            var seen = new HashSet<TLinkAddress> { index };
-            for (var at = 0; at < deleted.Count; at++)
-            {
-                foreach (var user in UsersOf(deleted[at].Index))
-                {
-                    if (seen.Add(user.Index))
-                    {
-                        deleted.Add(user);
-                    }
-                }
-            }
+            var deleted = TripletsCascade.Of(this, first);
             // The wrappers and pairs that touch a deleted triplet, as they are now:
             // a store that deletes what uses a deleted doublet may take some of
             // them along, and their sources must still be collected.
@@ -521,11 +549,11 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (type == Null)
             {
-                throw new ArgumentException("The type of a triplet cannot be 0.", nameof(type));
+                throw new ArgumentException("The type of a triplet cannot be 0.");
             }
             if (!(itself is { } self && self == type) && !IsTriplet(type))
             {
-                throw new ArgumentException($"The type {type} is not a triplet.", nameof(type));
+                throw new ArgumentException($"The type {type} is not a triplet.");
             }
         }
 
@@ -533,7 +561,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             if (part != Null && !(itself is { } self && self == part) && !IsTriplet(part))
             {
-                throw new ArgumentException($"The {name} part {part} is not a triplet.", name);
+                throw new ArgumentException($"The {name} part {part} is not a triplet.");
             }
         }
 
@@ -572,17 +600,6 @@ namespace Foundation.Data.Doublets.Cli
                 }
             }
             return found;
-        }
-
-        /// <summary>The triplets other than <paramref name="index"/> whose type, from or to is <paramref name="index"/>.</summary>
-        private IEnumerable<Triplet<TLinkAddress>> UsersOf(TLinkAddress index)
-        {
-            return EachTriplet(TripletQuery<TLinkAddress>.ByType(index))
-                .Concat(EachTriplet(TripletQuery<TLinkAddress>.ByFrom(index)))
-                .Concat(EachTriplet(TripletQuery<TLinkAddress>.ByTo(index)))
-                .Where(user => user.Index != index)
-                .Distinct()
-                .Order();
         }
 
         /// <summary>

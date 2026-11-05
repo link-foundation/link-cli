@@ -112,10 +112,27 @@ public sealed class CliTcpIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task TripletsAreServedWithTheTripletsFlagOnly()
+    {
+        using (var server = await Server.StartAsync(Path.Combine(_directory, "triplets.links"), "--triplets"))
+        {
+            Assert.Equal("() ((3: 3 0 0))\n", await server.StdoutAsync("(create: (0 0 0))"));
+            Assert.Equal("() ((4: (3 0 0)))\n", await server.StdoutAsync("--protocol", "binary", "--arity", "2..3", "(create: (3 0 0))"));
+            Assert.Equal("(3: 3 0 0)\n(4: 3 0 0)\n", await server.StdoutAsync("(each: (* 3))"));
+            Assert.Equal("(count: 2)\n", await server.StdoutAsync("--protocol", "binary", "(count: (* 3))"));
+            Assert.Equal("((3: 3 0 0)) ()\n((4: 3 0 0)) ()\n", await server.StdoutAsync("(delete: 3)"));
+        }
+
+        using var doublets = await Server.StartAsync(Path.Combine(_directory, "doublets.links"));
+        var (exitCode, _, _) = await Clink.RunAsync("--connect", doublets.Address, "(create: (0 0 0))");
+        Assert.NotEqual(0, exitCode);
+    }
+
+    [Fact]
     public async Task HelpListsTheTcpOptions()
     {
         var (_, stdout, _) = await Clink.RunAsync("--help");
-        foreach (var option in new[] { "--serve", "--connect", "--protocol", "--external-references", "--arity", "--packed-widths" })
+        foreach (var option in new[] { "--serve", "--connect", "--protocol", "--external-references", "--arity", "--packed-widths", "--triplets" })
         {
             Assert.Contains(option, stdout, StringComparison.Ordinal);
         }

@@ -84,6 +84,35 @@ internal sealed class LinksConnection
         }
     }
 
+    /// <summary>
+    /// <see cref="Notify"/> on a server in triplet mode: every subscription is matched part by part against the
+    /// triplets, and <paramref name="readable"/> judges the outer doublet of each, as <c>(index: type index)</c>.
+    /// </summary>
+    public void NotifyTriplets(IReadOnlyList<TripletChange<uint>> changes, Func<DoubletLink, bool>? readable)
+    {
+        if (changes.Count == 0)
+        {
+            return;
+        }
+        foreach (var (subscription, (restriction, format)) in _subscriptions)
+        {
+            Triplet<uint>? Seen(Triplet<uint>? side) =>
+                side is { } triplet
+                && TripletsOperation.Matches(triplet, restriction)
+                && (readable?.Invoke(new DoubletLink(triplet.Index, triplet.Type, triplet.Index)) ?? true)
+                    ? side
+                    : null;
+            var seen = changes
+                .Select(change => new TripletChange<uint>(Seen(change.Before), Seen(change.After)))
+                .Where(change => change.Before is not null || change.After is not null)
+                .ToList();
+            if (seen.Count > 0 && !Push(TripletsOperation.Pack(TripletsOperation.NotificationDocument(subscription, seen), format), format))
+            {
+                return;
+            }
+        }
+    }
+
     /// <summary>Queues a reply; <see cref="WaitForReplies"/> waits until it is written.</summary>
     public void Reply(IReadOnlyList<LinoLink> document, MessageFormat format)
     {
