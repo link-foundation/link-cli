@@ -22,7 +22,7 @@
 // reference) or a NotFoundError (the link written), before anything is sent.
 
 import { LinksDecorator } from './client.js';
-import { byIndex, checkRestriction, COMPOSED_OPERATIONS, isAny, isNullAddress, requireGuarantees, runBatch, untranslatable } from './composed.js';
+import { byIndex, checkRestriction, COMPOSED_OPERATIONS, isAny, isNullAddress, refuseTriplets, requireGuarantees, runBatch, untranslatable } from './composed.js';
 import { AddressRangeError, NotFoundError } from './errors.js';
 import { toAddress } from './operations.js';
 
@@ -148,6 +148,7 @@ export class RemapLinks extends LinksDecorator {
       operations: inner.operations.filter((operation) => REMAPPED_OPERATIONS.includes(operation)),
       maxAddress: typeof this.map.maxAddress === 'function' ? this.map.maxAddress(inner.maxAddress) : inner.maxAddress,
       bulk: 'sequential-non-atomic',
+      triplets: false,
     });
   }
 
@@ -303,3 +304,5 @@ export class RemapLinks extends LinksDecorator {
     });
   }
 }
+
+refuseTriplets(RemapLinks, 'a remap');

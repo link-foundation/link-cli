@@ -4,7 +4,7 @@
 // cannot translate (LiNo text that names addresses of one store) they refuse
 // up front rather than send to the wrong store.
 
-import { GUARANTEES } from './capabilities.js';
+import { GUARANTEES, TRIPLET_OPERATIONS } from './capabilities.js';
 import { scopeOf } from './deadline.js';
 import { LinksError, UnsupportedError } from './errors.js';
 import { ANY } from './operations.js';
@@ -48,6 +48,24 @@ export function untranslatable(layer, what) {
   );
 }
 
+function tripletsRefused(layer) {
+  return new UnsupportedError(`${layer} does not translate triplets: send them to the store below (\`links\` or \`members[i]\`)`);
+}
+
+/**
+ * Makes every triplet call of a composed layer refuse, as `layer` (a union, a
+ * remap) only knows how to translate doublets; forwarded, a triplet would come
+ * back under the addresses of the store below.
+ */
+export function refuseTriplets(Layer, layer) {
+  for (const operation of TRIPLET_OPERATIONS) {
+    const refuse = () => {
+      throw tripletsRefused(layer);
+    };
+    Layer.prototype[operation] = operation.startsWith('on') ? refuse : async () => refuse();
+  }
+}
+
 /** Whether a value is the null link. */
 export function isNullAddress(value) {
   if (typeof value === 'bigint') return value === 0n;
@@ -80,6 +98,7 @@ export async function runBatch(links, operations, { signal, deadline, timeout } 
     const argumentsOf = ARGUMENTS[operation?.op];
     if (!argumentsOf) {
       if (operation?.op === 'query') throw untranslatable(links.capabilities.backend, `operation ${position} (query)`);
+      if (TRIPLET_OPERATIONS.includes(operation?.op)) throw tripletsRefused(links.capabilities.backend);
       throw new TypeError(`operation ${position}: unknown op "${operation?.op}"`);
     }
     return { op: operation.op, args: argumentsOf(operation) };

@@ -79,6 +79,7 @@ as its last argument:
 | `subscribe(restriction?)` / `unsubscribe(n)` | the subscription number (from 1 on each connection) / nothing |
 | `receiveNotification()` | the next `{ subscription, changes }` pushed, or `null` when the deadline passes first |
 | `onNotification(listener)` | the function that removes the listener |
+| `countTriplets`, `eachTriplets`, `createTriplet`, `updateTriplet`, `deleteTriplet`, ... | the same over a server in [triplet mode](#triplets), each triplet `{ index, type, from, to }` |
 | `requestText(text)` / `request(document)` | raw protocol access |
 | `require(...guarantees)` | throws `UnsupportedError` unless the backend offers them all |
 | `close()` / `[Symbol.asyncDispose]()` | releases what this client owns |
@@ -162,6 +163,57 @@ socket (`new TcpTransport(socket, { owned: false })`), a server you started
 yourself (`startServer`), and a `Clink` passed without `{ owned: true }` all
 outlive the client.
 
+## Triplets
+
+A server started with `--triplets` (`clink --serve --triplets`) serves triplets
+instead of doublets, as [docs/TRIPLETS.md](../../docs/TRIPLETS.md) stores them.
+The operations keep their names, so the mode decides how a request is read:
+a `(delete: i)` or a `(count: ())` cannot say by its shape which one it means.
+A doublet server keeps refusing triplet requests, and the doublet calls are
+refused or malformed on a triplet server.
+
+| Method | Sends | Resolves to |
+| --- | --- | --- |
+| `countTriplets(restriction?)` | `(count: (i T f t))` | `bigint` |
+| `eachTriplets(restriction?)` | `(each: (i T f t))` | `{ index, type, from, to }[]` in address order |
+| `createTriplet(type, from, to)` | `(create: (T f t))` | the created triplet |
+| `createTripletPoint()` | `(create: (0 0 0))` | the created triplet, which is its own type |
+| `updateTriplet(index, type, from, to)` / `deleteTriplet(index)` | `(update: (i T f t))` / `(delete: i)` | the net change of every triplet touched, `{ before, after }[]` |
+| `queryTriplets(text)` | a substitution query with three-part links | its changes, references as the backend wrote them |
+| `exportTriplets()` | the empty request | every triplet, references as the backend wrote them |
+| `subscribeTriplets(restriction?)` | `(subscribe: (i T f t))` | the subscription number |
+| `receiveTripletNotification()` | | the next `{ subscription, changes }` pushed, or `null` when the deadline passes first |
+| `onTripletNotification(listener)` | | the function that removes the listener |
+
+A restriction has up to four parts, `[index, type, from, to]`: those left out
+and `ANY` match anything, and `0` matches an empty part. Names and `unsubscribe`
+are the usual calls. The batch operations are `countTriplets`, `eachTriplets`,
+`createTriplet`, `updateTriplet`, `deleteTriplet` and `queryTriplets`.
+
+```js
+const server = await startServer({ command: 'clink', db: 'facts.links', args: ['--triplets'] });
+const links = await connectTcp(server.address, { capabilities: { triplets: true } });
+const person = await links.createTripletPoint();
+const knows = await links.createTripletPoint();
+const alice = await links.createTriplet(person.index, 0, 0);
+const bob = await links.createTriplet(person.index, 0, 0);
+await links.createTriplet(knows.index, alice.index, bob.index);
+await links.eachTriplets([ANY, knows.index]); // every Knows, and Knows itself
+```
+
+The protocol does not say which mode a server runs, so `capabilities.triplets`
+stays `null` (unknown) unless you state it, as above. `require('triplets')`
+needs it stated. The WebAssembly store holds doublets, so it refuses these
+calls (`triplets: false`). `UnionLinks` and `RemapLinks` refuse them too:
+forwarded unchanged, a triplet would read under the addresses of the store
+below, so send them to `union.members[i]` or `remap.links`.
+
+This client speaks the text protocol. A triplet may also arrive as
+`(i: (T f t))`, the form a binary reply has under `--arity 2..3`, and reads the
+same ([docs/protocol/binary-links-notation.md](../../docs/protocol/binary-links-notation.md)).
+The conversation these calls speak is
+[docs/protocol/triplets.txt](../../docs/protocol/triplets.txt).
+
 ## Permissions
 
 A server started with `--permissions` (and `--tokens` for authentication)
@@ -187,7 +239,7 @@ or each other. The C# and Rust ports have the same layers;
 
 | Export | What it does |
 | --- | --- |
-| `UnionLinks([a, b, ...])` | Many networks seen as one. The first member that has an address shadows the rest, a new link goes to the first member, and a write goes to the member that has the link (`ownerOf(index)`). Names are found in member order. Raw text, queries and subscriptions go to a member: `union.members[i]`. |
+| `UnionLinks([a, b, ...])` | Many networks seen as one. The first member that has an address shadows the rest, a new link goes to the first member, and a write goes to the member that has the link (`ownerOf(index)`). Names are found in member order. Raw text, queries, subscriptions and triplets go to a member: `union.members[i]`. |
 | `RemapLinks(links, map)` | A network under other addresses, both ways. A read of a foreign address finds nothing; a write naming one rejects before sending. `toOuter(inner)` and `toInner(outer)` translate by hand. |
 | `OffsetAddressMap(offset)` | Moves a network by `offset`, so a union of remapped networks shadows nothing. |
 | `AddressTable({ first, newId })` | Gives addresses (from `first`) or ids (from `newId()`) in the order they are seen. It lives in memory. |
@@ -229,6 +281,7 @@ rather than letting a batch look atomic.
 | `bulk` | `pipelined-non-atomic` | `pipelined-non-atomic` | `sequential-non-atomic` |
 | `sharding` | no: one store per server | no | no |
 | `subscriptions` | yes: `(notify: N)` pushes | yes | no: an in-process store has no other connection |
+| `triplets` | `null` unless stated: with `--triplets` | `null` unless stated: with `--triplets` | `false` |
 | `duplicateLinks` | `true`: equal links stay apart | `false`: equal links merge, so `create` resolves to `null` | `true` |
 | set-name answers | the names-store link (`(link: 102)`) | the names-store link | the named link |
 
@@ -269,8 +322,9 @@ npm run benchmark -- --backend rust --records 300
 ```
 
 The conformance runner replays `docs/protocol/links-operations.txt` and, over
-two connections, `docs/protocol/subscriptions.txt`, the golden conversations
-that the Rust and C# test suites also replay. It covers
+two connections, `docs/protocol/subscriptions.txt` and
+`docs/protocol/triplets.txt`, the golden conversations that the Rust and C#
+test suites also replay. It covers
 u32 addresses, duplicates, holes and reuse, append and restart through a fresh
 server process, aborted batches read back by a fresh client, a server stopped
 in the middle of a write, Unicode and LiNo quoting of names, size limits, a
