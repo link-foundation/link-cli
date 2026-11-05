@@ -43,6 +43,14 @@ pub struct Cli {
     pub list_tags: bool,
     pub show_log: bool,
     pub serve: Option<String>,
+    /// `--graphql`: `--serve` speaks Hasura's GraphQL for Deep (issue #153).
+    pub graphql: bool,
+    /// `--jwt-secret`: signs the tokens of `--graphql`; random when absent.
+    pub jwt_secret: Option<String>,
+    /// `--graphql-admin-secret`: what `x-hasura-admin-secret` must be.
+    pub graphql_admin_secret: Option<String>,
+    /// `--deep-package`: Deep links, as JSON rows, to load before serving.
+    pub deep_packages: Vec<String>,
     pub connect: Option<String>,
     pub protocol: Option<String>,
     pub external_references: bool,
@@ -99,6 +107,10 @@ impl Default for Cli {
             list_tags: false,
             show_log: false,
             serve: None,
+            graphql: false,
+            jwt_secret: None,
+            graphql_admin_secret: None,
+            deep_packages: Vec::new(),
             connect: None,
             protocol: None,
             external_references: false,
@@ -318,6 +330,18 @@ impl Cli {
                 cli.show_log = parse_bool("--log", value)?;
                 continue;
             }
+            if let Some(value) = inline_value(&arg, &["--jwt-secret"]) {
+                cli.jwt_secret = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--graphql-admin-secret"]) {
+                cli.graphql_admin_secret = Some(value.to_string());
+                continue;
+            }
+            if let Some(value) = inline_value(&arg, &["--deep-package"]) {
+                cli.deep_packages.push(value.to_string());
+                continue;
+            }
             if let Some(value) = inline_value(&arg, &["--serve"]) {
                 cli.serve = Some(value.to_string());
                 continue;
@@ -472,6 +496,18 @@ impl Cli {
                 "--log" => {
                     cli.show_log = next_bool_value(&mut args, true)?;
                 }
+                "--graphql" => {
+                    cli.graphql = next_bool_value(&mut args, true)?;
+                }
+                "--jwt-secret" => {
+                    cli.jwt_secret = Some(next_value(&mut args, &arg)?);
+                }
+                "--graphql-admin-secret" => {
+                    cli.graphql_admin_secret = Some(next_value(&mut args, &arg)?);
+                }
+                "--deep-package" => {
+                    cli.deep_packages.push(next_value(&mut args, &arg)?);
+                }
                 "--serve" => {
                     cli.serve = Some(next_value(&mut args, &arg)?);
                 }
@@ -616,6 +652,14 @@ impl Cli {
             "      --serve <ADDR>\n",
             "          Serve the database over TCP (e.g. 127.0.0.1:7878) until stopped;\n",
             "          each message may use the text or the binary LiNo protocol\n",
+            "      --graphql\n",
+            "          With --serve: speak Hasura's GraphQL over HTTP and WebSocket for Deep\n",
+            "      --jwt-secret <SECRET>\n",
+            "          Signs the tokens of --graphql (default: random for each run)\n",
+            "      --graphql-admin-secret <SECRET>\n",
+            "          The x-hasura-admin-secret that bypasses --permissions in --graphql\n",
+            "      --deep-package <FILE>\n",
+            "          Load a Deep package (JSON rows of links) before --graphql serves\n",
             "      --connect <ADDR>\n",
             "          Send the query to a clink server instead of opening a database;\n",
             "          an empty query reads every link\n",

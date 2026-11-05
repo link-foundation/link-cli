@@ -218,6 +218,35 @@ fn bind(bindings: &mut Bindings, reference: &Reference, value: u32) -> bool {
     }
 }
 
+/// The values of `$variable` under which every pattern of `restriction` matches
+/// a triplet, each once, in the order found: a read-only substitution query,
+/// as the GraphQL layer asks them (issue #153).
+pub fn match_triplets_query<T: Triplets + ?Sized>(
+    triplets: &mut T,
+    restriction: &str,
+    variable: &str,
+) -> Result<Vec<u32>> {
+    let parsed = Parser::new().parse(restriction)?;
+    let [link] = parsed.as_slice() else {
+        bail!("A restriction is one link of patterns: {restriction}");
+    };
+    let patterns = patterns_of(link)?;
+    let mut solutions = Vec::new();
+    solve(
+        triplets,
+        &patterns,
+        Bindings::new(),
+        &mut Vec::new(),
+        &mut solutions,
+    );
+    let mut seen = HashSet::new();
+    Ok(solutions
+        .iter()
+        .filter_map(|(bindings, _)| bindings.get(variable).copied())
+        .filter(|value| seen.insert(*value))
+        .collect())
+}
+
 /// Every assignment of the variables under which each restriction pattern
 /// matches a triplet, with the triplets they matched.
 fn solve<T: Triplets + ?Sized>(

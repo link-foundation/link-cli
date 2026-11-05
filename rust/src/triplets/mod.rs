@@ -50,7 +50,7 @@ use crate::named_type_links::NamedTypeLinks;
 use crate::types::ensure_point;
 
 pub use lino::{import_triplets_lino, triplets_to_lino};
-pub use query::{process_triplets_query, TripletChange};
+pub use query::{match_triplets_query, process_triplets_query, TripletChange};
 
 /// The name of the marker point of wrappers.
 pub const PAIR_MARKER_NAME: &str = "Pair";
@@ -632,7 +632,7 @@ fn users_of<T: Triplets + ?Sized>(triplets: &mut T, index: u32) -> Vec<Triplet> 
 
 /// `first` and every triplet that uses it, directly or through another one of
 /// them: what deleting `first` deletes, `first` first.
-fn cascade_of<T: Triplets + ?Sized>(triplets: &mut T, first: Triplet) -> Vec<Triplet> {
+pub(crate) fn cascade_of<T: Triplets + ?Sized>(triplets: &mut T, first: Triplet) -> Vec<Triplet> {
     let mut deleted = vec![first];
     let mut seen = HashSet::from([first.index]);
     let mut at = 0;
@@ -847,5 +847,49 @@ impl<L: NamedTypeLinks> NamedTypeLinks for TripletsOverDoublets<L> {
 
     fn get_or_create_named(&mut self, name: &str) -> Result<u32> {
         self.links.get_or_create_named(name)
+    }
+}
+
+/// A store lent to a layer above stays a store of triplets, as it stays
+/// [`NamedTypeLinks`].
+impl<T: Triplets + ?Sized> Triplets for &mut T {
+    fn triplet_markers(&self) -> TripletMarkers {
+        (**self).triplet_markers()
+    }
+
+    fn role_of(&mut self, id: u32) -> Option<DoubletRole> {
+        (**self).role_of(id)
+    }
+
+    fn get_triplet(&mut self, index: u32) -> Option<Triplet> {
+        (**self).get_triplet(index)
+    }
+
+    fn is_triplet(&mut self, index: u32) -> bool {
+        (**self).is_triplet(index)
+    }
+
+    fn create_triplet(&mut self, type_id: u32, from: u32, to: u32) -> Result<u32> {
+        (**self).create_triplet(type_id, from, to)
+    }
+
+    fn create_triplet_point(&mut self) -> Result<u32> {
+        (**self).create_triplet_point()
+    }
+
+    fn create_triplet_point_at(&mut self, address: u32) -> Result<()> {
+        (**self).create_triplet_point_at(address)
+    }
+
+    fn update_triplet(&mut self, index: u32, type_id: u32, from: u32, to: u32) -> Result<Triplet> {
+        (**self).update_triplet(index, type_id, from, to)
+    }
+
+    fn delete_triplet(&mut self, index: u32) -> Result<Vec<Triplet>> {
+        (**self).delete_triplet(index)
+    }
+
+    fn each_triplet(&mut self, query: TripletQuery) -> Vec<Triplet> {
+        (**self).each_triplet(query)
     }
 }
