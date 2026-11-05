@@ -130,3 +130,49 @@ cargo test --manifest-path rust/Cargo.toml --test permissions_references_tests
 dotnet test csharp/Foundation.Data.Doublets.Cli.Tests --filter FullyQualifiedName~PermissionsReferencesTests
 examples/permissions/clink-queries.sh rust/target/debug/clink | diff examples/permissions/expected-output.txt -
 ```
+
+## The clink contract in link-foundation/ui
+
+Checked against both CLIs of this branch, with link-foundation/ui at `293d829`:
+
+- `packages/ui-links/tests/clink.test.js`, with `CLINK` set, passes on Rust and C#.
+  It does not send a reference request yet, so its pass only shows that nothing
+  it relies on broke.
+- `experiments/issue-161/clink-references-contract.mjs` sends the requests of
+  `packages/ui-links/tests/references.test.js` to real servers, using that
+  repository's `world()` and `startClink`. All 38 checks pass on both CLIs:
+
+  ```sh
+  (cd ../ui && npm ci --ignore-scripts)
+  CLINK=rust/target/debug/clink node experiments/issue-161/clink-references-contract.mjs ../ui
+  ```
+
+The contract can therefore cover the right. Adding it there, and removing the
+difference from the `ui-links` README, belongs to that repository and needs a
+released clink.
+
+A contract written from `references.test.js` has to expect these differences, none
+of which tells a hidden link from a missing one:
+
+| Request | `ui-links` | clink |
+|---|---|---|
+| A query naming a hidden or missing address | `Link not found: N` | `Invalid reference to non-existent link 'N'...` |
+| `(create:)` or `(each:)` with a name | `Link not found: name` | `malformed message: expected a number...`, as the protocol takes numbers |
+| Taking a hidden name | `Forbidden: hidden name` | `Forbidden: set-name N` |
+| `(create: (Note 9999))` under `Anything` to `Anything` | `Link not found: 9999` | Stored, see above |
+
+`allow(links, markers, 'reference', markers.anything, markers.anything)` also cannot
+reach clink through `--import` today. `ui-links` stores `(Anything Anything)` as a
+link of its own, while a clink store is unique by `(source target)`, so the import
+merges it into the point `Anything` and leaves the later mark pointing at nothing:
+
+```
+(1: 1 1)
+(2: 1 1)
+(3: 2 2)
+```
+
+imports as `(1: 1 1)` and `(3: 2 2)` in both CLIs. The rule is then absent, so
+nothing is granted. The importer behaved this way before this issue and it is not
+part of it. The replay writes the mark on the point instead, `(AllowReference
+Anything)`, which is how a clink store holds this rule.
