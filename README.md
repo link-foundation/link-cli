@@ -528,6 +528,9 @@ The encoding, the alternatives that were measured and the cost of `Each` by
 type, from and to and of deletion are in [docs/TRIPLETS.md](docs/TRIPLETS.md);
 the Rust example is in [`examples/triplets/`](examples/triplets).
 
+`clink --serve --triplets` serves them over the
+[text and binary protocol](#serving-triplets).
+
 ## Persistent transformation triggers
 
 Store a query as a trigger with `--always` to apply it after later write operations:
@@ -632,6 +635,31 @@ The server detects the protocol of each message and replies in the same one.
 C# and Rust servers and clients work with each other: see
 [`examples/tcp/`](examples/tcp) and
 [docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
+
+### Serving triplets
+
+`--triplets` makes a server read every request as
+[triplets](docs/TRIPLETS.md#protocol), with subscriptions and `--permissions`
+applying to them too. A server without it keeps serving doublets, because a
+request such as `(delete: 3)` cannot say by its shape which one it means.
+
+```bash
+clink --db db.links --serve 127.0.0.1:7777 --triplets       # terminal 1
+clink --connect 127.0.0.1:7777 '(create: (0 0 0))'          # terminal 2: a point
+() ((3: 3 0 0))
+clink --connect 127.0.0.1:7777 '(create: (3 0 0))'
+() ((4: 3 0 0))
+clink --connect 127.0.0.1:7777 '(each: (* 3))'              # each by type
+(3: 3 0 0)
+(4: 3 0 0)
+```
+
+With `--protocol binary --arity 2..3`, a triplet travels as one link of three
+references ([binary links notation](docs/protocol/binary-links-notation.md#73-triplets)).
+In the libraries, `RemoteLinks` is a `Triplets` store (`ITriplets` in C#) behind
+such a server, and
+[`@link-foundation/link-cli-client`](js/client/README.md#triplets) has the same
+calls.
 
 ### Use a served database as a store
 
@@ -990,6 +1018,7 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
 | `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |
 | `--packed-widths`       | bool    | `false`        | _None_                              | Binary protocol: give each section the narrowest reference width          |
+| `--triplets`            | bool    | `false`        | _None_                              | With `--serve`: read every request as triplets, see [Serving triplets](#serving-triplets) |
 | `--permissions`         | string  | _None_         | _None_                              | Check reads and writes against rules stored as links: `self` or a rules file |
 | `--subject`             | string  | `0` (guest)    | _None_                              | The subject (link index or name) of queries and of served connections     |
 | `--tokens`              | string  | _None_         | _None_                              | The token table of `(auth: token)`: `self` or a links file                 |

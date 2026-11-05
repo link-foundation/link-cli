@@ -89,7 +89,8 @@ Storage and names:
   `UpdateTriplet` (in place) and `DeleteTriplet` (cascading) collect the
   wrappers and pairs nothing uses. `TripletsQueryProcessor.cs` runs
   substitution queries with three parts and `TripletsLino.cs` imports and
-  exports `(index: type from to)` lines. See [TRIPLETS.md](TRIPLETS.md).
+  exports `(index: type from to)` lines. `TripletsPermissionsDecorator.cs`
+  judges triplets under permissions. See [TRIPLETS.md](TRIPLETS.md).
 - `LinoDatabaseInput.cs`: `.lino` import.
 - `LinoDatabaseOutput.cs`: database export, change formatting, and structure
   formatting.
@@ -107,6 +108,9 @@ Storage and names:
   - `TextLinoProtocol` and `BinaryLinoProtocol` (`LinoProtocols.cs`)
   - `LinksServer` and `LinksClient`
   - `RemoteLinks` and `LinksOperation`
+  - `TripletsOperation` and `RemoteTriplets.cs`, where `RemoteLinks` is an
+    `ITriplets` store: triplets over the protocol (#152), which a server reads
+    with `LinksServerOptions.Triplets` (`--triplets`)
   - `StoreArchive`
 - `Permissions.cs`, `PermissionsDecorator.cs`: the optional permission layer
   (#149), `PermissionPolicy` over rules stored as links and the
@@ -175,7 +179,8 @@ Key files:
   same test cases in `rust/tests/types_decorator_tests.rs`.
 - `rust/src/triplets/`: the `Triplets` trait and `TripletsOverDoublets`
   (`mod.rs`), substitution queries with three parts (`query.rs`) and Links
-  Notation import and export (`lino.rs`), the triplets layer of
+  Notation import and export (`lino.rs`), permissions (`permissions.rs`), the
+  triplets layer of
   `TripletsOverDoublets.cs`, with the same test cases in
   `rust/tests/triplets_over_doublets_tests.rs`.
 - `rust/src/indexed_links.rs`: optional `IndexedLinksDecorator`, composed by
@@ -201,6 +206,8 @@ Key files:
   - `client.rs`
   - `remote_links.rs`
   - `links_operations.rs`
+  - `triplets_operations.rs` and `remote_triplets.rs`, where `RemoteLinks` is a
+    `Triplets` store
   - `archive.rs`
   - `sessions.rs`: `LinksSessions`, the counterpart of `LinksSessions.cs`.
 - `rust/src/permissions.rs`: the optional permission layer (#149):
@@ -255,8 +262,8 @@ interchangeable backends, the JS counterpart of `INamedTypesLinks` /
   Deno), `src/process.js` (a `clink --serve` child process) and `src/wasm.js`
   (the in-process `clink-wasm` store) are the transports.
 - `src/framing.js`, `src/lino.js`, `src/operations.js`: the text protocol
-  framing, canonical LiNo text, and the LinksOperation documents, with every
-  address a `BigInt`.
+  framing, canonical LiNo text, and the LinksOperation documents, triplets
+  included, with every address a `BigInt`.
 - `src/capabilities.js`, `src/errors.js`, `src/deadline.js`: what each backend
   guarantees, the errors with their outcomes, and cancellation.
 - `src/composed.js`, `src/union.js`, `src/remap.js`, `src/external-ids.js`:
