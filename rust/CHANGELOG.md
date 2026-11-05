@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [2.1.0] - 2026-11-05
+
+Added `clink --serve <address> --graphql`: a Hasura-compatible GraphQL server implementing the Deep Standard, so `DeepClient` from `@deep-foundation/deeplinks` and DeepCase connect to link-cli. See `docs/GRAPHQL.md`.
+
 ## [2.0.0] - 2026-11-05
 
 A reference to an unreadable link needs its own right (#161). Without it an unreadable address answers exactly as a missing one, in the view, in operations and in queries, and the name of a link the subject may not refer to is an unknown name that cannot be taken over. A subject may refer to a link it may read, to itself, to what a rule `(r: AllowReference (g: Subject Object))` covers (`Object` and the links of type `Object`), and to the `Object` of its own `AllowRead` and `AllowWrite` rules. `AllowReference` does not allow reading; a reference a link already holds may stay; choosing the address of a new link is a reference; the write check runs first. Breaking: a subject that referred to an unreadable link needs a rule now, and a rule `Anything` to `Anything` brings the previous behaviour back. `PermissionMarkers` has a new field `allow_reference`, `PermissionAccess` a new variant `Reference`, `AccessPolicy` a method `can_reference` that defaults to `false`, and `Triplets` a method `reference_is_triplet`.
