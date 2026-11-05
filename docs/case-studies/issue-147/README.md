@@ -11,8 +11,8 @@
   tests in C# and Rust.
 - [x] Refresh the stale notation dependency and include patch release notes.
 - [x] Run focused local checks within the container resource budget.
-- [ ] Inspect current-commit CI, preserve failure logs and resolve failures.
-- [ ] Review the PR diff, merge current `main` if needed, update the PR text,
+- [x] Inspect current-commit CI, preserve failure logs and resolve failures.
+- [x] Review the PR diff, merge current `main` if needed, update the PR text,
   verify a clean tree and mark PR #164 ready without merging.
 
 ## Requirement inventory
@@ -106,3 +106,18 @@ in the foundation's `meta-theory` repository, under `archive/0.0.2/article.md`
 (English) and `archive/0.0.1/article.md` (Russian). The README now links those
 author-maintained copies of the same texts. Link validation stays enabled.
 Only trailing whitespace is trimmed from the committed CI log copies.
+
+The repaired link check [passes at `26c12a3`](https://github.com/link-foundation/link-cli/actions/runs/42052061060).
+The real DeepClient [passes against both ports at `3affcfd`](https://github.com/link-foundation/link-cli/actions/runs/42051550035),
+the last source-code change. Final validation is gated by every check on the
+[current PR head](https://github.com/link-foundation/link-cli/pull/164/checks).
+
+## Review
+
+The PR diff retains all existing public operations, decorators and protocol
+fixtures. Only the prepared branch's empty `.gitkeep` placeholder is removed;
+it is outside the repository's allowed root layout. `main` at `482eabc` is
+already an ancestor, so no merge commit is needed. C# and Rust include patch
+release fragments, and both regression tests are part of their existing CI
+targets. The PR description includes reproduction, verification and closing
+references for the parent and all required issues. The branch is left unmerged.
