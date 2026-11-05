@@ -160,7 +160,7 @@ fn a_subject_sees_what_its_rules_allow_and_writes_nothing_else(separate_rules: b
             "--subject",
             "alice",
             "--changes",
-            "((note: Note note)) ((note: Secret note))",
+            "((note: Note note)) ((note: Public note))",
         ],
     );
     failed_with(&refused, &format!("Forbidden: update {}", v["note"]));
@@ -168,11 +168,13 @@ fn a_subject_sees_what_its_rules_allow_and_writes_nothing_else(separate_rules: b
 
     // A secret is as missing to alice as a deleted link.
     let alice = v["alice"].to_string();
-    let hidden = succeeded(fixture.permitted(
-        separate_rules,
-        &["--subject", &alice, "--changes", "((secret: * *)) ()"],
-    ));
-    assert_eq!(hidden, "");
+    failed_with(
+        &fixture.permitted(
+            separate_rules,
+            &["--subject", &alice, "--changes", "((secret: * *)) ()"],
+        ),
+        "Invalid reference to non-existent link 'secret'",
+    );
     assert_eq!(fixture.after(), all);
 
     // The boss writes anything.
@@ -208,8 +210,13 @@ fn a_guest_reads_nothing_and_creates_nothing() {
     fixture.make_world(false);
     let seen = succeeded(fixture.permitted(false, &["--after"]));
     assert_eq!(seen, "");
+    // Whether 1 exists is hidden from a guest, as for any other reference.
     failed_with(
         &fixture.permitted(false, &["() ((1 2))"]),
+        "Invalid reference to non-existent link '1'",
+    );
+    failed_with(
+        &fixture.permitted(false, &["--auto-create-missing-references", "() ((1 2))"]),
         "Forbidden: create",
     );
     failed_with(

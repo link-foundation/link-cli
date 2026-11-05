@@ -337,7 +337,7 @@ pub(super) fn substitute<T: Triplets + ?Sized>(
                 }
                 Reference::Address(0) => position > 0,
                 Reference::Address(address) => {
-                    triplets.is_triplet(*address) || defined_addresses.contains(address)
+                    triplets.reference_is_triplet(*address) || defined_addresses.contains(address)
                 }
             };
             if !known {

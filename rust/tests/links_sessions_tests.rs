@@ -95,7 +95,9 @@ fn serves_each_subject_what_its_permissions_allow() -> Result<()> {
         "",
         sessions.request(alice, &format!("(get-name: {secret})"))
     );
-    assert_eq!("", sessions.request(alice, "((secret: * *)) ()"));
+    assert!(sessions
+        .request(alice, "((secret: * *)) ()")
+        .contains("Invalid reference to non-existent link 'secret'"));
     assert_eq!(
         "(name: secret)",
         sessions.request(boss, &format!("(get-name: {secret})"))
@@ -189,13 +191,14 @@ fn undoes_every_part_of_a_failed_substitution_including_hidden_ones() -> Result<
     let (t, v) = (w.t.clone(), w.v.clone());
     let mut sessions = LinksSessions::with_permissions(&mut w.links, &mut w.policy);
     let alice = sessions.open(Some(v["alice"]));
-    let (note, secret_type) = (t["Note"], t["Secret"]);
+    // Public is a type she may refer to, as she reads it, yet not write.
+    let (note, public_type) = (t["Note"], t["Public"]);
     let mut before = all(sessions.store_mut());
     let names = names_of(sessions.store_mut(), &before);
     // The first change is allowed, the second is not: neither stays.
     let reply = sessions.request(
         alice,
-        &format!("() (({note} {note}) ({secret_type} {secret_type}))"),
+        &format!("() (({note} {note}) ({public_type} {public_type}))"),
     );
     assert!(reply.starts_with("(error: 'Forbidden: "), "{reply}");
     assert_eq!(before, all(sessions.store_mut()));
@@ -211,7 +214,7 @@ fn undoes_every_part_of_a_failed_substitution_including_hidden_ones() -> Result<
     );
     before = all(sessions.store_mut());
     let request =
-        format!("(({note_link}: * *) ({shared}: * *)) (({shared}: {secret_type} {shared}))");
+        format!("(({note_link}: * *) ({shared}: * *)) (({shared}: {public_type} {shared}))");
     assert_eq!(
         format!("(error: 'Forbidden: update {shared}')"),
         sessions.request(alice, &request)
@@ -271,7 +274,9 @@ fn serves_rules_in_a_store_of_their_own_alike() -> Result<()> {
         format!("(count: {expected})"),
         sessions.request(alice, "(count: ())")
     );
-    assert_eq!("", sessions.request(alice, "((secret: * *)) ()"));
+    assert!(sessions
+        .request(alice, "((secret: * *)) ()")
+        .contains("Invalid reference to non-existent link 'secret'"));
     // set-name answers where the names store keeps the name.
     assert!(sessions
         .request(alice, &format!("(set-name: ({} 'mine'))", v["note"]))

@@ -703,22 +703,15 @@ fn a_subject_keeps_the_points_it_created_and_a_guest_writes_nothing() {
     assert!(other.is_ok(), "{other:?}");
     assert_eq!(alice.query_text(&format!("(each: ({index}))")).unwrap(), "");
 
-    // A substitution query reserves the point at the address it names, and
-    // reads what it refers to: the type she may write yet not read is not there
-    // for it, unlike for a create.
-    assert_eq!(
-        alice.query_text("() ((900: 900 0 0))").unwrap(),
-        "() ((900: 900 0 0))"
-    );
-    let error = alice
-        .query_text(&format!("() ((901: {} 0 0))", t["Note"]))
-        .unwrap_err()
-        .to_string();
-    assert!(error.contains("is not a triplet"), "{error}");
-    assert_eq!(
-        alice.query_text("(delete: 900)").unwrap(),
-        "((900: 900 0 0)) ()"
-    );
+    // Choosing an address is a reference, which she has no right to here:
+    // a free address answers as a hidden link does.
+    for request in [
+        "() ((900: 900 0 0))".to_string(),
+        format!("() ((901: {} 0 0))", t["Note"]),
+    ] {
+        let error = alice.query_text(&request).unwrap_err().to_string();
+        assert!(error.contains("Link not found: 90"), "{request}: {error}");
+    }
 
     let mut guest = server.client(TextLinoProtocol::new());
     for request in [
