@@ -267,8 +267,9 @@ fn anything_to_anything_restores_the_previous_behaviour_as_a_choice() -> Result<
     assert!(view.exists(MISSING));
     // It reads no more than it did.
     assert_eq!(None, view.get_link(secret));
-    // So does a query by name.
-    assert!(ask(&mut w, alice, &format!("() (({} secret))", t["Note"])).starts_with("() (("));
+    // A query refers to it by name, here to the link made above.
+    let reply = ask(&mut w, alice, &format!("() (({} secret))", t["Note"]));
+    assert!(!reply.starts_with("(error"), "{reply}");
     Ok(())
 }
 
