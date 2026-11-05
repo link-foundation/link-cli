@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [1.4.0] - 2026-11-05
+
+Add the `Triplets` trait and `TripletsOverDoublets` (#151): triplets `(index: type from to)` stored in any `NamedTypeLinks` with an associative API, the twin of the C# `TripletsOverDoublets` with the same tests. A node `(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points `Pair` and `Nothing` found or created by name, so the type stays the source and `TypesDecorator` reads triplets as values of their types. `create_triplet`, `update_triplet` (the address stays), `delete_triplet` (cascading) and `each_triplet` / `count_triplets` by index, type, from and to leave no unused wrapper or pair behind. `process_triplets_query` runs substitution queries with three parts and `triplets_to_lino` / `import_triplets_lino` export and import `(index: type from to)` lines. The encoding and its costs are in `docs/TRIPLETS.md`; `cargo run --example triplets` walks through it.
+
 ## [1.3.0] - 2026-11-03
 
 Add an optional permission layer with permissions stored in links (#149), the port of the C# one with the same tests, which replay those of `@link-foundation/ui-links`. A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or `(r: AllowWrite g)`; `Anything` matches everything and write implies read. `PermissionPolicy` reads the rules from the data (`in_data`) or from a store of their own (`with_rules`), and `PermissionsDecorator` is the store as a subject sees it: reads skip what it may not read, and a create, update or delete it may not make fails with `Forbidden` (`Forbidden: update 14`) and changes nothing. A link the subject created is its own while its source is 0. `UndoableLinksDecorator` makes a request atomic, and `NamedTypeLinks` gains `reference_exists`, so references are checked in the store below the view.
