@@ -607,6 +607,53 @@ namespace Foundation.Data.Doublets.Cli.Tests
             Assert.Equal(before, TripletsLino.Export(triplets));
         }
 
+        [Theory]
+        [InlineData("'0'", "0")]
+        [InlineData("\"1\"", "1")]
+        [InlineData("`9999`", "9999")]
+        [InlineData("'*'", "*")]
+        [InlineData("'$item'", "$item")]
+        [InlineData("~1{30}", "0")]
+        [InlineData("'\"0\"'", "\"0\"")]
+        [InlineData("'x\\y'", "x\\y")]
+        [InlineData("'a\nb'", "a\nb")]
+        [InlineData("'#tag'", "#tag")]
+        [InlineData("'~value'", "~value")]
+        [InlineData("'  '", "  ")]
+        [InlineData("\"a'b`c\"", "a'b`c")]
+        [InlineData("`a'b\"c`", "a'b\"c")]
+        public void Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(string reference, string name)
+        {
+            using var store = new Store();
+            var triplets = store.Triplets;
+            TripletsLino.Import(triplets, $"(Type: Type 0 0)\n({reference}: Type 0 0)\n(r: {reference} {reference} {reference})\n");
+            var namedId = Id(triplets, name);
+            var r = Id(triplets, "r");
+            var before = T(r, namedId, namedId, namedId);
+            Assert.Equal(before, triplets.GetTriplet(r));
+
+            var text = TripletsLino.Export(triplets);
+            using var copyStore = new Store();
+            TripletsLino.Import(copyStore.Triplets, text);
+            Assert.Equal(text, TripletsLino.Export(copyStore.Triplets));
+            Assert.NotEqual(0u, copyStore.Triplets.GetByName(name));
+
+            using var createdStore = new Store();
+            TripletsQueryProcessor.ProcessQuery(createdStore.Triplets,
+                $"() ((Type: Type 0 0) ({reference}: Type 0 0) (r: {reference} {reference} {reference}))");
+            Assert.Equal(text, TripletsLino.Export(createdStore.Triplets));
+            AssertNoOrphans(createdStore.Triplets, false);
+
+            Assert.Equal(new[] { r }, TripletsQueryProcessor.MatchQuery(triplets,
+                $"(($r: {reference} {reference} {reference}))", "$r"));
+            var changes = TripletsQueryProcessor.ProcessQuery(triplets,
+                $"((r: {reference} {reference} {reference})) ((r: {reference} 0 {reference}))");
+            Assert.Equal(new[] { new TripletChange<uint>(before, T(r, namedId, 0, namedId)) }, changes);
+            TripletsQueryProcessor.ProcessQuery(triplets, $"() (({reference}: Type 0 0))");
+            Assert.Equal(namedId, Id(triplets, name));
+            AssertNoOrphans(triplets, false);
+        }
+
         private static IReadOnlyList<TripletChange<uint>> Query(ITriplets<uint> triplets, string text)
         {
             var changes = TripletsQueryProcessor.ProcessQuery(triplets, text);

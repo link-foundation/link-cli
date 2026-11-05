@@ -21,7 +21,7 @@ use anyhow::{bail, Result};
 
 use super::{Triplet, TripletQuery, Triplets};
 use crate::lino_link::LinoLink;
-use crate::parser::Parser;
+use crate::query_parser;
 
 /// One change a query made: a creation has no `before`, a deletion no
 /// `after`, and a read reports the same triplet on both sides.
@@ -42,7 +42,10 @@ pub(super) enum Reference {
 
 impl Reference {
     fn parse(text: &str) -> Self {
-        if text == "*" {
+        let name = query_parser::name(text);
+        if name != text {
+            Self::Name(name.to_string())
+        } else if text == "*" {
             Self::Any
         } else if text.starts_with('$') {
             Self::Variable(text.to_string())
@@ -131,7 +134,7 @@ pub fn process_triplets_query<T: Triplets + ?Sized>(
     triplets: &mut T,
     query: &str,
 ) -> Result<Vec<TripletChange>> {
-    let parsed = Parser::new().parse(query)?;
+    let parsed = query_parser::parse(query)?;
     let (restriction, substitution) = match parsed.as_slice() {
         [] => return Ok(Vec::new()),
         [only] => match only.values.as_deref() {
@@ -226,7 +229,7 @@ pub fn match_triplets_query<T: Triplets + ?Sized>(
     restriction: &str,
     variable: &str,
 ) -> Result<Vec<u32>> {
-    let parsed = Parser::new().parse(restriction)?;
+    let parsed = query_parser::parse(restriction)?;
     let [link] = parsed.as_slice() else {
         bail!("A restriction is one link of patterns: {restriction}");
     };

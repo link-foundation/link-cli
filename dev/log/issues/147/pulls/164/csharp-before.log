@@ -1,0 +1,69 @@
+  Foundation.Data.Doublets.Cli.Library -> /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.dll
+  Foundation.Data.Doublets.Cli -> /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli/bin/Debug/net10.0/clink.dll
+  Foundation.Data.Doublets.Cli.Tests -> /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll
+Test run for /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/bin/Debug/net10.0/Foundation.Data.Doublets.Cli.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.07]     Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "'$item'", name: "$item") [FAIL]
+[xUnit.net 00:00:01.10]     Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "~1{30}", name: "0") [FAIL]
+[xUnit.net 00:00:01.28]     Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "'0'", name: "0") [FAIL]
+[xUnit.net 00:00:01.33]     Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "'*'", name: "*") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "'$item'", name: "$item") [339 ms]
+  Error Message:
+   System.ArgumentException : A triplet in Links Notation has no variables or wildcards. (Parameter 'text')
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.TripletsLino.Import[TLinkAddress](ITriplets`1 triplets, String text) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsLino.cs:line 65
+   at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(String reference, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 624
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "~1{30}", name: "0") [27 ms]
+  Error Message:
+   System.ArgumentException : A triplet cannot be at address 0.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.TripletsQueryProcessor.Substitute[TLinkAddress](ITriplets`1 triplets, List`1 patterns, Dictionary`2 bindings, List`1 changes) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsQueryProcessor.cs:line 383
+   at Foundation.Data.Doublets.Cli.TripletsLino.Import[TLinkAddress](ITriplets`1 triplets, String text) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsLino.cs:line 71
+   at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(String reference, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 624
+   at InvokeStub_TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "'0'", name: "0") [8 ms]
+  Error Message:
+   System.ArgumentException : A triplet cannot be at address 0.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.TripletsQueryProcessor.Substitute[TLinkAddress](ITriplets`1 triplets, List`1 patterns, Dictionary`2 bindings, List`1 changes) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsQueryProcessor.cs:line 383
+   at Foundation.Data.Doublets.Cli.TripletsLino.Import[TLinkAddress](ITriplets`1 triplets, String text) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsLino.cs:line 71
+   at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(String reference, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 624
+   at InvokeStub_TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "'*'", name: "*") [16 ms]
+  Error Message:
+   System.ArgumentException : A triplet in Links Notation has no variables or wildcards. (Parameter 'text')
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.TripletsLino.Import[TLinkAddress](ITriplets`1 triplets, String text) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsLino.cs:line 65
+   at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(String reference, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 624
+   at InvokeStub_TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.45]     Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "`9999`", name: "9999") [FAIL]
+[xUnit.net 00:00:01.49]     Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "\"1\"", name: "1") [FAIL]
+  Failed Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "`9999`", name: "9999") [109 ms]
+  Error Message:
+   Assert.NotEqual() Failure: Values are equal
+Expected: Not 0
+Actual:       0
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Id(ITriplets`1 triplets, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 533
+   at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(String reference, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 625
+   at InvokeStub_TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(reference: "\"1\"", name: "1") [12 ms]
+  Error Message:
+   System.InvalidOperationException : Link 1 is a doublet, not a triplet.
+  Stack Trace:
+     at Foundation.Data.Doublets.Cli.TripletsQueryProcessor.Substitute[TLinkAddress](ITriplets`1 triplets, List`1 patterns, Dictionary`2 bindings, List`1 changes) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsQueryProcessor.cs:line 391
+   at Foundation.Data.Doublets.Cli.TripletsLino.Import[TLinkAddress](ITriplets`1 triplets, String text) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Library/TripletsLino.cs:line 71
+   at Foundation.Data.Doublets.Cli.Tests.TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(String reference, String name) in /tmp/gh-issue-solver-1793890074181/csharp/Foundation.Data.Doublets.Cli.Tests/TripletsOverDoubletsTests.cs:line 624
+   at InvokeStub_TripletsOverDoubletsTests.Quoted_Triplet_References_Remain_Names_In_Imports_And_Queries(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     6, Passed:     3, Skipped:     0, Total:     9, Duration: 806 ms - Foundation.Data.Doublets.Cli.Tests.dll (net10.0)
