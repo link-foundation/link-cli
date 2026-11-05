@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [2.0.0] - 2026-11-05
+
+A reference to an unreadable link needs its own right (#161). Without it an unreadable address answers exactly as a missing one, in the view, in operations and in queries, and the name of a link the subject may not refer to is an unknown name that cannot be taken over. A subject may refer to a link it may read, to itself, to what a rule `(r: AllowReference (g: Subject Object))` covers (`Object` and the links of type `Object`), and to the `Object` of its own `AllowRead` and `AllowWrite` rules. `AllowReference` does not allow reading; a reference a link already holds may stay; choosing the address of a new link is a reference; the write check runs first. Breaking: a subject that referred to an unreadable link needs a rule now, and a rule `Anything` to `Anything` brings the previous behaviour back. `PermissionMarkers` has a new field `allow_reference`, `PermissionAccess` a new variant `Reference`, `AccessPolicy` a method `can_reference` that defaults to `false`, and `Triplets` a method `reference_is_triplet`.
+
 ## [1.5.0] - 2026-11-05
 
 Serve triplets over the Links Notation text and binary protocol (#152). `clink --serve --triplets` (`ServerOptions::triplets`) answers `(count: (i T f t))`, `(each: (i T f t))`, `(create: (T f t))`, `(update: (i T f t))`, `(delete: i)` and three-part substitution queries with `(i: T f t)` triplets, keeps names and `(auth: token)`, and leaves a server without the flag as it was. Subscriptions push triplet changes and permissions judge them through the triplets view of `PermissionsDecorator`. A binary client whose packet asks for `--arity 2..3` gets each triplet as one link of three references, `(i: (T f t))`, and every parser reads both forms. `RemoteLinks` implements `Triplets` and adds `subscribe_triplets` and `receive_triplet_notification`, `triplets_operations` holds the requests and replies, and `docs/protocol/triplets.txt` is the conversation both ports replay.
