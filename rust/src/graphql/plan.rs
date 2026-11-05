@@ -332,9 +332,9 @@ fn other(key: &str, value: &Json, mapping: Mapping) -> (Option<Plan>, bool) {
             }
         }
         column => {
-            let Some(slot) = slot_of(column) else {
+            if slot_of(column).is_none() {
                 return (None, false);
-            };
+            }
             let ids = match id_list(value) {
                 Some(ids) => ids,
                 None => return (None, false),
@@ -346,7 +346,6 @@ fn other(key: &str, value: &Json, mapping: Mapping) -> (Option<Plan>, bool) {
                         column.to_string(),
                         Json::object(vec![("_eq", Json::Int(id))]),
                     )];
-                    let _ = slot;
                     compile(&Json::Object(std::mem::take(&mut single)), mapping).plan
                 })
                 .collect();
