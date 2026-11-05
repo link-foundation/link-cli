@@ -202,7 +202,7 @@ impl<'a> Exec<'a, '_> {
             Plan::Match(text) => {
                 let found = self
                     .store
-                    .view(subject, |view| match_triplets_query(view, text, "i"))
+                    .view(subject, |view| match_triplets_query(view, text, "$i"))
                     .map_err(GqlError::write)?;
                 found
                     .into_iter()

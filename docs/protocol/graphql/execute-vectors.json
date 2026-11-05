@@ -1,0 +1,496 @@
+{
+ "seed": [
+  {
+   "id": 1,
+   "type_id": 1,
+   "from_id": 0,
+   "to_id": 0,
+   "string": "Type"
+  },
+  {
+   "id": 2,
+   "type_id": 1,
+   "from_id": 0,
+   "to_id": 0,
+   "string": "Other"
+  },
+  {
+   "id": 3,
+   "type_id": 1,
+   "from_id": 1,
+   "to_id": 2
+  },
+  {
+   "id": 4,
+   "type_id": 2,
+   "from_id": 1,
+   "to_id": 2,
+   "number": 7
+  },
+  {
+   "id": 5,
+   "type_id": 2,
+   "from_id": 1,
+   "to_id": 2
+  },
+  {
+   "id": 6,
+   "type_id": 3,
+   "from_id": 4,
+   "to_id": 5,
+   "object": {
+    "a": 1
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "typename and alias",
+   "query": "{a: links(where:{id:{_eq:1}}){id __typename} __typename}",
+   "variables": {},
+   "data": {
+    "a": [
+     {
+      "id": 1,
+      "__typename": "links"
+     }
+    ],
+    "__typename": "query_root"
+   }
+  },
+  {
+   "name": "_eq with variable",
+   "query": "query Q($w:links_bool_exp!){links(where:$w){id}}",
+   "variables": {
+    "w": {
+     "type_id": {
+      "_eq": 1
+     },
+     "from_id": {
+      "_eq": 1
+     }
+    }
+   },
+   "data": {
+    "links": [
+     {
+      "id": 3
+     }
+    ]
+   }
+  },
+  {
+   "name": "_in",
+   "query": "{links(where:{id:{_in:[2,5,99]}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 2
+     },
+     {
+      "id": 5
+     }
+    ]
+   }
+  },
+  {
+   "name": "_and",
+   "query": "{links(where:{_and:[{type_id:{_eq:2}},{id:{_gt:4}}]}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 5
+     }
+    ]
+   }
+  },
+  {
+   "name": "_or",
+   "query": "{links(where:{_or:[{id:{_eq:1}},{type_id:{_eq:3}}]}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 1
+     },
+     {
+      "id": 6
+     }
+    ]
+   }
+  },
+  {
+   "name": "_not",
+   "query": "{links(where:{_not:{type_id:{_eq:1}}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 4
+     },
+     {
+      "id": 5
+     },
+     {
+      "id": 6
+     }
+    ]
+   }
+  },
+  {
+   "name": "from relation",
+   "query": "{links(where:{from:{string:{value:{_eq:\"Type\"}}},type_id:{_eq:2}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 4
+     },
+     {
+      "id": 5
+     }
+    ]
+   }
+  },
+  {
+   "name": "to relation",
+   "query": "{links(where:{to:{type_id:{_eq:2},id:{_eq:5}}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 6
+     }
+    ]
+   }
+  },
+  {
+   "name": "type relation",
+   "query": "{links(where:{type:{string:{value:{_eq:\"Other\"}}}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 4
+     },
+     {
+      "id": 5
+     }
+    ]
+   }
+  },
+  {
+   "name": "in relation",
+   "query": "{links(where:{in:{id:{_eq:6}}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 5
+     }
+    ]
+   }
+  },
+  {
+   "name": "out relation",
+   "query": "{links(where:{out:{id:{_eq:6}}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "typed relation",
+   "query": "{links(where:{typed:{id:{_eq:6}}}){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 3
+     }
+    ]
+   }
+  },
+  {
+   "name": "nested selection",
+   "query": "{links(where:{id:{_eq:6}}){from{id type{string{value}}} to{id} type{id} in{id} out{id}}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "from": {
+       "id": 4,
+       "type": {
+        "string": {
+         "value": "Other"
+        }
+       }
+      },
+      "to": {
+       "id": 5
+      },
+      "type": {
+       "id": 3
+      },
+      "in": [],
+      "out": []
+     }
+    ]
+   }
+  },
+  {
+   "name": "order limit offset",
+   "query": "{links(order_by:{id:desc},limit:2,offset:1){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 5
+     },
+     {
+      "id": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "distinct_on",
+   "query": "{links(distinct_on:[type_id],order_by:[{type_id:asc},{id:asc}]){id}}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 1
+     },
+     {
+      "id": 4
+     },
+     {
+      "id": 6
+     }
+    ]
+   }
+  },
+  {
+   "name": "by_pk",
+   "query": "{links_by_pk(id:3){from_id to_id}}",
+   "variables": {},
+   "data": {
+    "links_by_pk": {
+     "from_id": 1,
+     "to_id": 2
+    }
+   }
+  },
+  {
+   "name": "aggregate",
+   "query": "{links_aggregate(where:{type_id:{_eq:2}}){aggregate{count max{id} min{id}} nodes{id}}}",
+   "variables": {},
+   "data": {
+    "links_aggregate": {
+     "aggregate": {
+      "count": 2,
+      "max": {
+       "id": 5
+      },
+      "min": {
+       "id": 4
+      }
+     },
+     "nodes": [
+      {
+       "id": 4
+      },
+      {
+       "id": 5
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "strings table",
+   "query": "{strings(where:{value:{_like:\"T%\"}}){link_id value}}",
+   "variables": {},
+   "data": {
+    "strings": [
+     {
+      "link_id": 1,
+      "value": "Type"
+     }
+    ]
+   }
+  },
+  {
+   "name": "numbers table",
+   "query": "{numbers{link_id value}}",
+   "variables": {},
+   "data": {
+    "numbers": [
+     {
+      "link_id": 4,
+      "value": 7
+     }
+    ]
+   }
+  },
+  {
+   "name": "objects table",
+   "query": "{objects{link_id value}}",
+   "variables": {},
+   "data": {
+    "objects": [
+     {
+      "link_id": 6,
+      "value": {
+       "a": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "fragments and directives",
+   "query": "query{links(where:{id:{_eq:1}}){...F to_id @skip(if:true)}} fragment F on links{id}",
+   "variables": {},
+   "data": {
+    "links": [
+     {
+      "id": 1
+     }
+    ]
+   }
+  },
+  {
+   "name": "introspection",
+   "query": "{__schema{queryType{name}} __type(name:\"links\"){name kind}}",
+   "variables": {},
+   "data": {
+    "__schema": {
+     "queryType": {
+      "name": "query_root"
+     }
+    },
+    "__type": {
+     "name": "links",
+     "kind": "OBJECT"
+    }
+   }
+  },
+  {
+   "name": "insert with nested value",
+   "query": "mutation{insert_links(objects:[{type_id:1,string:{data:{value:\"n\"}}}]){affected_rows returning{id type_id string{value}}}}",
+   "variables": {},
+   "data": {
+    "insert_links": {
+     "affected_rows": 1,
+     "returning": [
+      {
+       "id": 7,
+       "type_id": 1,
+       "string": {
+        "value": "n"
+       }
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "update value",
+   "query": "mutation{update_strings(where:{link_id:{_eq:7}},_set:{value:\"m\"}){returning{value}}}",
+   "variables": {},
+   "data": {
+    "update_strings": {
+     "returning": [
+      {
+       "value": "m"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "update link",
+   "query": "mutation{update_links(where:{id:{_eq:7}},_set:{from_id:1,to_id:2}){returning{id from_id to_id}}}",
+   "variables": {},
+   "data": {
+    "update_links": {
+     "returning": [
+      {
+       "id": 7,
+       "from_id": 1,
+       "to_id": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "duplicate triple is allowed",
+   "query": "mutation{insert_links_one(object:{type_id:1,from_id:1,to_id:2}){id}}",
+   "variables": {},
+   "data": {
+    "insert_links_one": {
+     "id": 8
+    }
+   }
+  },
+  {
+   "name": "delete returns what it deleted",
+   "query": "mutation{delete_links(where:{id:{_in:[7,8]}}){affected_rows returning{id}}}",
+   "variables": {},
+   "data": {
+    "delete_links": {
+     "affected_rows": 2,
+     "returning": [
+      {
+       "id": 7
+      },
+      {
+       "id": 8
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "value goes with its link",
+   "query": "{strings(where:{value:{_eq:\"m\"}}){id}}",
+   "variables": {},
+   "data": {
+    "strings": []
+   }
+  },
+  {
+   "name": "a failed mutation changes nothing",
+   "query": "mutation{a:insert_links_one(object:{type_id:1}){id} b:insert_links_one(object:{type_id:99999}){id}}",
+   "variables": {},
+   "error": "constraint-violation"
+  },
+  {
+   "name": "after the failure",
+   "query": "{links_aggregate{aggregate{count}}}",
+   "variables": {},
+   "data": {
+    "links_aggregate": {
+     "aggregate": {
+      "count": 6
+     }
+    }
+   }
+  },
+  {
+   "name": "unknown root field",
+   "query": "{nope{id}}",
+   "variables": {},
+   "error": "validation-failed"
+  }
+ ]
+}

@@ -79,7 +79,7 @@ fn parse_retention(raw: Option<&str>) -> Result<LogRetentionPolicy> {
 
 fn open_named_storage(path: impl AsRef<std::path::Path>, cli: &Cli) -> Result<NamedTypesDecorator> {
     let storage = NamedTypesDecorator::new(path, cli.trace)?;
-    Ok(if cli.indexed_lookups {
+    Ok(if cli.indexed_lookups || cli.graphql {
         storage.with_indexed_lookups()
     } else {
         storage
