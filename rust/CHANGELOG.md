@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [2.1.1] - 2026-11-05
+
+Update links-notation to 0.30.1 while auditing the associative architecture roadmap.
+
+Preserve quoted names in triplet imports and substitution queries, and export names without turning numeric names, wildcards or variables into query syntax.
+
 ## [2.1.0] - 2026-11-05
 
 Added `clink --serve <address> --graphql`: a Hasura-compatible GraphQL server implementing the Deep Standard, so `DeepClient` from `@deep-foundation/deeplinks` and DeepCase connect to link-cli. See `docs/GRAPHQL.md`.
