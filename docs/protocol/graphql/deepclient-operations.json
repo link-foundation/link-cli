@@ -1,0 +1,240 @@
+[
+ {
+  "auth": false,
+  "operationName": "GUEST",
+  "query": "query GUEST {\n  guest {\n    linkId\n    token\n    __typename\n  }\n}\n",
+  "variables": {},
+  "status": 200,
+  "response": "{\"data\":{\"guest\":{\"linkId\":2748,\"token\":\"<jwt>\",\"__typename\":\"GuestOutput\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [links_select_column!], $limit0: Int, $offset0: Int, $order_by0: [links_order_by!], $where0: links_bool_exp!) {\n  q0: links(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    id\n    type_id\n    from_id\n    to_id\n    value\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "id": {
+     "_lte": 5
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":[{\"id\":1,\"type_id\":1,\"from_id\":8,\"to_id\":8,\"value\":null,\"__typename\":\"links\"}, {\"id\":2,\"type_id\":1,\"from_id\":0,\"to_id\":0,\"value\":null,\"__typename\":\"links\"}, {\"id\":3,\"type_id\":1,\"from_id\":8,\"to_id\":8,\"value\":null,\"__typename\":\"links\"}, {\"id\":4,\"type_id\":1,\"from_id\":8,\"to_id\":1,\"value\":null,\"__typename\":\"links\"}, {\"id\":5,\"type_id\":1,\"from_id\":0,\"to_id\":0,\"value\":null,\"__typename\":\"links\"}]}}"
+ },
+ {
+  "websocket": "/v1/graphql",
+  "protocol": "graphql-ws"
+ },
+ {
+  "auth": true,
+  "operationName": "INS",
+  "query": "mutation INS($objects0: [links_insert_input!]!) {\n  m0: insert_links(objects: $objects0) {\n    returning {\n      id\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "objects0": {
+    "type_id": 1,
+    "from_id": 0,
+    "to_id": 0
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"m0\":{\"returning\" : [{\"id\":2763,\"__typename\":\"links\"}], \"__typename\" : \"links_mutation_response\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "INSV",
+  "query": "mutation INSV($objects0: [links_insert_input!]!) {\n  m0: insert_links(objects: $objects0) {\n    returning {\n      id\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "objects0": {
+    "type_id": 1,
+    "string": {
+     "data": {
+      "value": "hello"
+     }
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"m0\":{\"returning\" : [{\"id\":2764,\"__typename\":\"links\"}], \"__typename\" : \"links_mutation_response\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [links_select_column!], $limit0: Int, $offset0: Int, $order_by0: [links_order_by!], $where0: links_bool_exp!) {\n  q0: links(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    id\n    value\n    string {\n      value\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "id": {
+     "_eq": 2764
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":[]}}"
+ },
+ {
+  "auth": true,
+  "operationName": "UPDATE",
+  "query": "mutation UPDATE($_set0: strings_set_input, $where0: strings_bool_exp!) {\n  m0: update_strings(_set: $_set0, where: $where0) {\n    returning {\n      id\n      value\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "link_id": {
+     "_eq": 2764
+    }
+   },
+   "_set0": {
+    "value": "bye"
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"m0\":{\"returning\" : [], \"__typename\" : \"strings_mutation_response\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "DELETE",
+  "query": "mutation DELETE($where0: links_bool_exp!) {\n  m0: delete_links(where: $where0) {\n    returning {\n      id\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "id": {
+     "_eq": 2764
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"m0\":{\"returning\" : [], \"__typename\" : \"links_mutation_response\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [links_select_column!], $limit0: Int, $offset0: Int, $order_by0: [links_order_by!], $where0: links_bool_exp!) {\n  q0: links(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    id\n    to_id\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "type_id": {
+     "_eq": 3
+    },
+    "from": {
+     "type_id": {
+      "_eq": 2
+     },
+     "string": {
+      "value": {
+       "_eq": "@deep-foundation/core"
+      }
+     }
+    },
+    "string": {
+     "value": {
+      "_eq": "Type"
+     }
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":[{\"id\":185,\"to_id\":1,\"__typename\":\"links\"}]}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [links_select_column!], $limit0: Int, $offset0: Int, $order_by0: [links_order_by!], $where0: links_bool_exp!) {\n  q0: links(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    id\n    type_id\n    from_id\n    to_id\n    value\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "in": {
+     "type_id": {
+      "_eq": 3
+     },
+     "string": {
+      "value": {
+       "_eq": "Package"
+      }
+     },
+     "from": {
+      "type_id": {
+       "_eq": 2
+      },
+      "string": {
+       "value": {
+        "_eq": "@deep-foundation/core"
+       }
+      }
+     }
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":[{\"id\":2,\"type_id\":1,\"from_id\":0,\"to_id\":0,\"value\":null,\"__typename\":\"links\"}]}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [links_select_column!], $limit0: Int, $offset0: Int, $order_by0: [links_order_by!], $where0: links_bool_exp!) {\n  q0: links_aggregate(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    aggregate {\n      count\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "id": {
+     "_lte": 5
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":{\"aggregate\" : {\"count\" : 5, \"__typename\" : \"links_aggregate_fields\"}, \"__typename\" : \"links_aggregate\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [can_select_column!], $limit0: Int, $offset0: Int, $order_by0: [can_order_by!], $where0: can_bool_exp!) {\n  q0: can(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    rule_id\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "object_id": {
+     "_eq": 2763
+    },
+    "subject_id": {
+     "_eq": 2748
+    },
+    "action_id": {
+     "_eq": 1
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":[]}}"
+ },
+ {
+  "auth": true,
+  "operationName": "Name",
+  "query": "mutation Name($objects0: [links_insert_input!]!) {\n  m0: insert_links(objects: $objects0) {\n    returning {\n      id\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "objects0": [
+    {
+     "type_id": 1
+    }
+   ]
+  },
+  "status": 200,
+  "response": "{\"data\":{\"m0\":{\"returning\" : [{\"id\":2765,\"__typename\":\"links\"}], \"__typename\" : \"links_mutation_response\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "DELETE",
+  "query": "mutation DELETE($where0: links_bool_exp!) {\n  m0: delete_links(where: $where0) {\n    returning {\n      id\n      __typename\n    }\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "id": {
+     "_eq": 2763
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"m0\":{\"returning\" : [], \"__typename\" : \"links_mutation_response\"}}}"
+ },
+ {
+  "auth": true,
+  "operationName": "SELECT",
+  "query": "query SELECT($distinct_on0: [links_select_column!], $limit0: Int, $offset0: Int, $order_by0: [links_order_by!], $where0: links_bool_exp!) {\n  q0: links(\n    distinct_on: $distinct_on0\n    limit: $limit0\n    offset: $offset0\n    order_by: $order_by0\n    where: $where0\n  ) {\n    id\n    type_id\n    from_id\n    to_id\n    value\n    __typename\n  }\n}\n",
+  "variables": {
+   "where0": {
+    "id": {
+     "_eq": 2763
+    }
+   }
+  },
+  "status": 200,
+  "response": "{\"data\":{\"q0\":[]}}"
+ }
+]

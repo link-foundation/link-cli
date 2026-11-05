@@ -79,7 +79,7 @@ fn parse_retention(raw: Option<&str>) -> Result<LogRetentionPolicy> {
 
 fn open_named_storage(path: impl AsRef<std::path::Path>, cli: &Cli) -> Result<NamedTypesDecorator> {
     let storage = NamedTypesDecorator::new(path, cli.trace)?;
-    Ok(if cli.indexed_lookups {
+    Ok(if cli.indexed_lookups || cli.graphql {
         storage.with_indexed_lookups()
     } else {
         storage
@@ -208,6 +208,9 @@ where
     if cli.grant_token.is_some() || cli.revoke_token.is_some() {
         // `tokens` is `Some` here: the check above bails otherwise.
         return run_tokens(cli, storage, tokens.flatten(), subject);
+    }
+    if let (Some(address), true) = (&cli.serve, cli.graphql) {
+        return run_graphql_server(cli, address, storage, policy);
     }
     if let Some(address) = &cli.serve {
         return run_server(cli, address, storage, policy, subject, tokens);
@@ -631,6 +634,36 @@ fn run_client(cli: &Cli, address: &str) -> Result<()> {
 /// With `policy` every connection sees the store as its subject does: the
 /// one of `--subject` until `(auth: token)` finds another in the token
 /// table of `--tokens` (`tokens`, or the data when `None`).
+fn run_graphql_server<S>(
+    cli: &Cli,
+    address: &str,
+    storage: &mut S,
+    policy: Option<PermissionPolicy>,
+) -> Result<()>
+where
+    S: NamedTypeLinks,
+{
+    use link_cli::graphql::{DeepStore, GraphqlServer, Json, Settings};
+    let mut store = DeepStore::open(&mut *storage, policy)?;
+    for file in &cli.deep_packages {
+        let text = std::fs::read_to_string(file)?;
+        let rows = Json::parse(&text).map_err(|error| anyhow::anyhow!("{file}: {error}"))?;
+        store.load_package(&rows)?;
+    }
+    let secret = match &cli.jwt_secret {
+        Some(secret) => secret.clone().into_bytes(),
+        None => Settings::random_secret(),
+    };
+    let settings = Settings::new(secret, cli.graphql_admin_secret.clone());
+    let server = GraphqlServer::bind(address)?;
+    println!("clink GraphQL server listening on {}", server.local_addr()?);
+    std::io::Write::flush(&mut std::io::stdout())?;
+    server.serve(&mut store, settings)?;
+    drop(store);
+    storage.save()?;
+    Ok(())
+}
+
 fn run_server<S>(
     cli: &Cli,
     address: &str,

@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Foundation.Data.Doublets.Cli;
+using Foundation.Data.Doublets.Cli.Graphql;
 using Foundation.Data.Doublets.Cli.Protocol;
 using Link.Foundation.Links.Notation;
 using Link.Foundation.Links.Notation.Binary;
@@ -221,6 +222,8 @@ var packedWidthsOption = new Option<bool>("--packed-widths")
     DefaultValueFactory = _ => false
 };
 
+var graphql = new GraphqlCommand();
+
 var tripletsOption = new Option<bool>("--triplets")
 {
     Description = "With --serve: read every request as triplets, (create: (type from to)), (each: (index type from to)) and three-part substitutions, over this store of doublets; without it, every request is about doublets",
@@ -296,6 +299,7 @@ rootCommand.Options.Add(protocolOption);
 rootCommand.Options.Add(externalReferencesOption);
 rootCommand.Options.Add(arityOption);
 rootCommand.Options.Add(packedWidthsOption);
+graphql.AddTo(rootCommand);
 rootCommand.Options.Add(tripletsOption);
 rootCommand.Options.Add(permissionsOption);
 rootCommand.Options.Add(subjectOption);
@@ -681,6 +685,10 @@ rootCommand.SetAction(
           {
               Console.Error.WriteLine("--serve does not take a query; send queries with --connect.");
               return 1;
+          }
+          if (graphql.Enabled(parseResult))
+          {
+              return graphql.Run(parseResult, serveAddress, decoratedLinks, permissionPolicy);
           }
           AcceptedProtocols accept;
           switch (protocolName?.ToLowerInvariant())

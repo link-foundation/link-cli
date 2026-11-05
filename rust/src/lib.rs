@@ -31,6 +31,7 @@
 //! - `union_links` - Many networks seen as one, the first member shadowing the rest
 //! - `remap_links` - A network under other addresses: an offset or a table
 //! - `external_ids` - The ids of other systems (UUIDs, URLs) bound to links
+//! - `graphql` - A Hasura-compatible GraphQL server for the Deep standard
 //! - `cli` - Argument parsing, so a custom tool can accept the same options
 //!
 //! # Extending
@@ -45,6 +46,7 @@ pub mod changes_simplifier;
 pub mod cli;
 pub mod error;
 pub mod external_ids;
+pub mod graphql;
 pub mod hybrid_reference;
 pub mod indexed_links;
 pub mod link;
