@@ -27,6 +27,13 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 /// <c>(subject: i)</c>; an unknown token, or a server without an authenticator,
 /// answers <c>(error: 'Forbidden: authentication failed')</c>.
 /// </para>
+/// <para>
+/// With <see cref="LinksServerOptions.Triplets"/> every request is about triplets
+/// (<see cref="TripletsOperation"/>), and the permissions move above the triplets
+/// (<see cref="TripletsPermissionsDecorator{TLinkAddress}"/>): the wrappers and pairs
+/// that store a triplet are written straight to the store below, still inside the
+/// transaction of the request.
+/// </para>
 /// </remarks>
 public sealed class LinksSessions
 {
@@ -40,9 +47,16 @@ public sealed class LinksSessions
         ArgumentNullException.ThrowIfNull(links);
         Options = options ?? new LinksServerOptions();
         Links = links;
+        // The markers are the store's, whatever the subject of a session may write.
+        var markers = Options.Triplets ? TripletsOverDoublets<uint>.EnsureMarkers(links, links) : default;
         if (Options.Permissions is not null)
         {
             Undoable = new UndoableLinksDecorator<uint>(links);
+        }
+        if (Options.Triplets)
+        {
+            INamedTypesLinks<uint> store = Undoable is null ? links : Undoable;
+            Triplets = new TripletsOverDoublets<uint>(store, store, markers);
         }
     }
 
@@ -54,6 +68,9 @@ public sealed class LinksSessions
 
     /// <summary>The store as the sessions write it when there are permissions: every write kept until the request ends.</summary>
     internal UndoableLinksDecorator<uint>? Undoable { get; }
+
+    /// <summary>The triplets of the store, over <see cref="Undoable"/> when there are permissions; null unless in triplet mode.</summary>
+    internal TripletsOverDoublets<uint>? Triplets { get; }
 
     internal object Lock => _lock;
 
@@ -115,7 +132,9 @@ public sealed class LinksSession : IDisposable
         Subject = subject;
         if (host.Options.Permissions is { } policy)
         {
-            View = new PermissionsDecorator<uint>(host.Undoable!, policy, () => Subject);
+            View = host.Triplets is { } triplets
+                ? new TripletsPermissionsDecorator<uint>(triplets, policy, () => Subject)
+                : new PermissionsDecorator<uint>(host.Undoable!, policy, () => Subject);
         }
     }
 
@@ -130,9 +149,14 @@ public sealed class LinksSession : IDisposable
 
     /// <summary>
     /// Answers one request document and adds the net change of every link it changed in the store to
-    /// <paramref name="changed"/>; a request undone for failing changed nothing.
+    /// <paramref name="changed"/>; a request undone for failing changed nothing. In triplet mode the triplets it
+    /// changed go to <paramref name="tripletsChanged"/> instead, with plain numbers: those it took along too, even
+    /// where the subject cannot see them.
     /// </summary>
-    internal IReadOnlyList<LinoLink> Execute(IReadOnlyList<LinoLink> document, List<(DoubletLink Before, DoubletLink After)>? changed)
+    internal IReadOnlyList<LinoLink> Execute(
+        IReadOnlyList<LinoLink> document,
+        List<(DoubletLink Before, DoubletLink After)>? changed,
+        List<TripletChange<uint>>? tripletsChanged = null)
     {
         ArgumentNullException.ThrowIfNull(document);
         lock (_host.Lock)
@@ -143,23 +167,33 @@ public sealed class LinksSession : IDisposable
             }
             if (View is null)
             {
-                return LinksServer.ExecuteRequest(_host.Links, document, _host.Options.AutoCreateMissingReferences, null, changed);
+                return _host.Triplets is { } triplets
+                    ? TripletsOperation.ExecuteRequest(triplets, document, tripletsChanged)
+                    : LinksServer.ExecuteRequest(_host.Links, document, _host.Options.AutoCreateMissingReferences, null, changed);
             }
             var store = _host.Undoable!;
             store.Begin();
+            var observed = tripletsChanged?.Count ?? 0;
+            void Undone()
+            {
+                tripletsChanged?.RemoveRange(observed, tripletsChanged.Count - observed);
+                Undo(store);
+            }
             IReadOnlyList<LinoLink> reply;
             try
             {
-                reply = Request(View, store, document);
+                reply = View is TripletsPermissionsDecorator<uint> view
+                    ? TripletsRequest(view, document, tripletsChanged)
+                    : Request(View, document, () => LinksServer.ExecuteRequest(View, document, _host.Options.AutoCreateMissingReferences, store));
             }
             catch
             {
-                Undo(store);
+                Undone();
                 throw;
             }
             if (LinksServer.ErrorMessage(reply) is not null)
             {
-                Undo(store);
+                Undone();
                 return reply;
             }
             var deleted = store.Log.Changes
@@ -167,10 +201,13 @@ public sealed class LinksSession : IDisposable
                 .Select(change => change.Before!.Value.Index)
                 .ToHashSet();
             // The changes of the store below the view: the cascades and merges a write led to as well.
-            changed?.AddRange(ChangesSimplifier.SimplifyChanges(store.Log.Changes
-                .Select(change => (change.Before ?? default, change.After ?? default))
-                .ToList())
-                .Where(change => !change.Before.Equals(change.After)));
+            if (_host.Triplets is null)
+            {
+                changed?.AddRange(ChangesSimplifier.SimplifyChanges(store.Log.Changes
+                    .Select(change => (change.Before ?? default, change.After ?? default))
+                    .ToList())
+                    .Where(change => !change.Before.Equals(change.After)));
+            }
             store.Commit();
             _host.Forget(this, deleted);
             return reply;
@@ -221,10 +258,29 @@ public sealed class LinksSession : IDisposable
     }
 
     /// <summary>
-    /// A request as the subject sees the store: names of links it cannot read are
-    /// not found, and references are checked in the store below.
+    /// A request over triplets as the subject sees the store. A triplet operation holds four parts where one over
+    /// doublets holds three: only what is left, the names, is for the requests about doublets to look at.
     /// </summary>
-    private IReadOnlyList<LinoLink> Request(PermissionsDecorator<uint> view, INamedTypesLinks<uint> store, IReadOnlyList<LinoLink> document)
+    private static IReadOnlyList<LinoLink> TripletsRequest(TripletsPermissionsDecorator<uint> view, IReadOnlyList<LinoLink> document, List<TripletChange<uint>>? changed)
+    {
+        IReadOnlyList<LinoLink> Run() => TripletsOperation.ExecuteRequest(view, document, changed);
+        TripletsOperation? operation;
+        try
+        {
+            operation = TripletsOperation.FromDocument(document);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            return LinksServer.ErrorDocument(error.Message);
+        }
+        return operation is null ? Request(view, document, Run) : Run();
+    }
+
+    /// <summary>
+    /// A request as the subject sees the store: names of links it cannot read are not found;
+    /// <paramref name="run"/> answers anything else, with references checked in the store below.
+    /// </summary>
+    private static IReadOnlyList<LinoLink> Request(PermissionsDecorator<uint> view, IReadOnlyList<LinoLink> document, Func<IReadOnlyList<LinoLink>> run)
     {
         LinksOperation? operation;
         try
@@ -243,7 +299,7 @@ public sealed class LinksSession : IDisposable
                 var link = view.GetByName(find.Name);
                 return link != 0 && view.Exists(link) ? find.Execute(view) : Array.Empty<LinoLink>();
             default:
-                return LinksServer.ExecuteRequest(view, document, _host.Options.AutoCreateMissingReferences, store);
+                return run();
         }
     }
 }

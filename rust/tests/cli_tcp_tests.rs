@@ -14,6 +14,13 @@ fn parse_run(args: &[&str]) -> Cli {
 }
 
 #[test]
+fn parses_the_triplets_flag() {
+    assert!(!parse_run(&["--serve", "127.0.0.1:0"]).triplets);
+    assert!(parse_run(&["--serve", "127.0.0.1:0", "--triplets"]).triplets);
+    assert!(parse_run(&["--serve", "127.0.0.1:0", "--triplets=true"]).triplets);
+}
+
+#[test]
 fn parses_tcp_options() {
     let cli = parse_run(&[
         "clink",
@@ -132,6 +139,41 @@ fn clients_query_a_served_database_over_both_protocols() {
 
     let conflicting = server.connect(&["--protocol", "text", "--arity", "2..3", ""]);
     assert!(!conflicting.status.success());
+}
+
+#[test]
+fn triplets_are_served_with_the_triplets_flag_only() {
+    let directory = TempDir::new().unwrap();
+    let server = Server::start(&directory, &["--triplets"]);
+
+    assert_eq!(server.stdout(&["(create: (0 0 0))"]), "() ((3: 3 0 0))\n");
+    assert_eq!(
+        server.stdout(&[
+            "--protocol",
+            "binary",
+            "--arity",
+            "2..3",
+            "(create: (3 0 0))"
+        ]),
+        "() ((4: (3 0 0)))\n"
+    );
+    assert_eq!(
+        server.stdout(&["(each: (* 3))"]),
+        "(3: 3 0 0)\n(4: 3 0 0)\n"
+    );
+    assert_eq!(
+        server.stdout(&["--protocol", "binary", "(count: (* 3))"]),
+        "(count: 2)\n"
+    );
+    assert_eq!(
+        server.stdout(&["(delete: 3)"]),
+        "((3: 3 0 0)) ()\n((4: 3 0 0)) ()\n"
+    );
+    drop(server);
+
+    let directory = TempDir::new().unwrap();
+    let server = Server::start(&directory, &[]);
+    assert!(!server.connect(&["(create: (0 0 0))"]).status.success());
 }
 
 #[test]

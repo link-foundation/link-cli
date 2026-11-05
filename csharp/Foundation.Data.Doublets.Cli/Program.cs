@@ -221,6 +221,12 @@ var packedWidthsOption = new Option<bool>("--packed-widths")
     DefaultValueFactory = _ => false
 };
 
+var tripletsOption = new Option<bool>("--triplets")
+{
+    Description = "With --serve: read every request as triplets, (create: (type from to)), (each: (index type from to)) and three-part substitutions, over this store of doublets; without it, every request is about doublets",
+    DefaultValueFactory = _ => false
+};
+
 var permissionsOption = new Option<string?>("--permissions")
 {
     Description = "Check every read and write against permission rules stored as links: 'self' (rules in the data) or a links file of rules; without it, nothing is checked"
@@ -290,6 +296,7 @@ rootCommand.Options.Add(protocolOption);
 rootCommand.Options.Add(externalReferencesOption);
 rootCommand.Options.Add(arityOption);
 rootCommand.Options.Add(packedWidthsOption);
+rootCommand.Options.Add(tripletsOption);
 rootCommand.Options.Add(permissionsOption);
 rootCommand.Options.Add(subjectOption);
 rootCommand.Options.Add(tokensOption);
@@ -694,6 +701,7 @@ rootCommand.SetAction(
               Permissions = permissionPolicy,
               Subject = subject,
               Authenticate = tokenTable is null ? null : tokenTable.Authenticate,
+              Triplets = parseResult.GetValue(tripletsOption),
           });
           Console.CancelKeyPress += (_, eventArgs) =>
           {

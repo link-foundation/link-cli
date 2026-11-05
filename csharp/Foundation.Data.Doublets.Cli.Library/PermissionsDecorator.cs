@@ -93,6 +93,12 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>The link at <paramref name="index"/> is gone: a new one there is not the subject's own.</summary>
         public virtual void Forget(TLinkAddress index) => _created.Remove(index);
 
+        /// <summary>The link at <paramref name="index"/> is one the subject made on the store below.</summary>
+        protected void Remember(TLinkAddress index) => _created.Add(index);
+
+        /// <summary>Whether the link at <paramref name="index"/> is one the subject made through this view.</summary>
+        protected bool Remembers(TLinkAddress index) => _created.Contains(index);
+
         public override TLinkAddress Count(IList<TLinkAddress>? restriction)
         {
             var count = TLinkAddress.Zero;

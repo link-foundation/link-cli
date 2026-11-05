@@ -17,6 +17,9 @@
 //! Every connection is a session of a [`LinksSessions`], with a subject of
 //! its own (issue #149); a subscriber is pushed only what its subject may
 //! read.
+//!
+//! With [`ServerOptions::triplets`] the same requests and pushes are about
+//! triplets; see [`TripletsOperation`].
 
 use super::error::ProtocolResult;
 use super::links_operations::{
@@ -25,15 +28,19 @@ use super::links_operations::{
 };
 use super::protocols::{read_any_document, MessageFormat, ProtocolLimits};
 use super::sessions::{LinksSessions, SessionId};
+use super::triplets_operations::{
+    matches_triplet, pack_triplets, triplet_notification_document, TripletsOperation,
+};
 use crate::link::Link;
 use crate::named_type_links::NamedTypeLinks;
 use crate::permissions::AccessPolicy;
 use crate::query_processor::QueryProcessor;
+use crate::triplets::{Triplet, TripletChange};
 use links_notation::binary::{format_document, LinoDocument};
 use links_notation::LiNo;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
-use std::io::{BufReader, BufWriter, Write};
+use std::io::{self, BufReader, BufWriter, Write};
 use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -77,6 +84,10 @@ pub struct ServerOptions {
     /// Pushes a connection may have waiting before the server closes it as
     /// too slow to read them.
     pub max_pending_notifications: usize,
+    /// Read every request as triplets (issue #152): `(create: (type from to))`
+    /// and the rest of [`TripletsOperation`], over a store of doublets. A server
+    /// without it answers as it always did.
+    pub triplets: bool,
 }
 
 /// The default of [`ServerOptions::max_pending_notifications`].
@@ -90,6 +101,7 @@ impl Default for ServerOptions {
             accept: AcceptedProtocols::default(),
             limits: ProtocolLimits::default(),
             max_pending_notifications: DEFAULT_MAX_PENDING_NOTIFICATIONS,
+            triplets: false,
         }
     }
 }
@@ -172,6 +184,8 @@ impl LinksServer {
     /// A side of a change the subscriber may not read is left out of its push,
     /// so a link that becomes unreadable arrives as a deletion and one that
     /// becomes readable as a creation. This is where a permission layer plugs in.
+    /// On a server in triplet mode `readable` judges the outer doublet of a
+    /// triplet, as `(index: type index)`.
     pub fn with_readable(mut self, readable: impl Fn(&Link) -> bool + Send + 'static) -> Self {
         self.readable = Some(Box::new(readable));
         self
@@ -215,6 +229,11 @@ impl LinksServer {
             queue,
             stopping,
         } = self;
+        if options.triplets {
+            sessions
+                .ensure_triplets()
+                .map_err(|error| io::Error::other(format!("{error:#}")))?;
+        }
         let acceptor = {
             let stopping = Arc::clone(&stopping);
             thread::spawn(move || accept_loop(listener, jobs, stopping, options))
@@ -277,22 +296,42 @@ impl Dispatcher {
                     .connections
                     .entry(connection)
                     .or_insert_with(|| Connection::new(outbox, sessions.open(None)));
+                let triplets = sessions.has_triplets();
                 let mut changes = Vec::new();
-                let reply = current.execute(&document, format).unwrap_or_else(|| {
-                    sessions.execute_observed(current.session, &document, &mut changes)
-                });
+                let mut triplet_changes = Vec::new();
+                let reply = current
+                    .execute(&document, format, triplets)
+                    .unwrap_or_else(|| {
+                        if triplets {
+                            sessions.execute_triplets_observed(
+                                current.session,
+                                &document,
+                                &mut triplet_changes,
+                            )
+                        } else {
+                            sessions.execute_observed(current.session, &document, &mut changes)
+                        }
+                    });
                 if self.options.trace {
                     eprintln!("[server] reply: {}", format_document(&reply));
                 }
+                let reply = if triplets {
+                    pack_triplets(reply, format)
+                } else {
+                    reply
+                };
                 current.outbox.reply(reply, format);
-                if !changes.is_empty() {
-                    let readable = self.readable.as_ref();
-                    for (_, other) in self.connections.iter().filter(|(id, _)| **id != connection) {
+                let readable = self.readable.as_ref();
+                let others = self.connections.iter().filter(|(id, _)| **id != connection);
+                if !changes.is_empty() || !triplet_changes.is_empty() {
+                    for (_, other) in others {
                         let session = other.session;
-                        other.notify(&changes, &mut |link: &Link| {
+                        let mut can_read = |link: &Link| {
                             readable.is_none_or(|readable| readable(link))
                                 && sessions.can_read(session, link)
-                        });
+                        };
+                        other.notify(&changes, &mut can_read);
+                        other.notify_triplets(&triplet_changes, &mut can_read);
                     }
                 }
                 let _ = done.send(());
@@ -337,14 +376,20 @@ impl Connection {
         &mut self,
         document: &[LiNo<String>],
         format: MessageFormat,
+        triplets: bool,
     ) -> Option<LinoDocument> {
+        if triplets {
+            match TripletsOperation::from_document(document) {
+                Ok(Some(TripletsOperation::Subscribe(restriction))) => {
+                    return Some(self.subscribe(restriction, format));
+                }
+                Ok(None) => {}
+                Ok(Some(_)) | Err(_) => return None,
+            }
+        }
         match LinksOperation::from_document(document) {
             Ok(Some(LinksOperation::Subscribe(restriction))) => {
-                let subscription = self.next_subscription;
-                self.next_subscription = self.next_subscription.wrapping_add(1);
-                self.subscriptions
-                    .insert(subscription, (restriction, format));
-                Some(subscription_document(subscription))
+                Some(self.subscribe(restriction, format))
             }
             Ok(Some(LinksOperation::Unsubscribe(subscription))) => {
                 // An unknown number is ignored.
@@ -353,6 +398,14 @@ impl Connection {
             }
             _ => None,
         }
+    }
+
+    fn subscribe(&mut self, restriction: Vec<Part>, format: MessageFormat) -> LinoDocument {
+        let subscription = self.next_subscription;
+        self.next_subscription = self.next_subscription.wrapping_add(1);
+        self.subscriptions
+            .insert(subscription, (restriction, format));
+        subscription_document(subscription)
     }
 
     /// Pushes `changes` to every subscription they fit, one `(notify: N)`
@@ -376,6 +429,39 @@ impl Connection {
                 && !self
                     .outbox
                     .push(notification_document(*subscription, &seen), *format)
+            {
+                return;
+            }
+        }
+    }
+}
+
+impl Connection {
+    /// [`notify`](Self::notify) for the changes of a server in triplet mode.
+    fn notify_triplets(&self, changes: &[TripletChange], readable: &mut dyn FnMut(&Link) -> bool) {
+        if changes.is_empty() {
+            return;
+        }
+        for (subscription, (restriction, format)) in &self.subscriptions {
+            let mut side = |triplet: Option<Triplet>| {
+                triplet.filter(|triplet| {
+                    matches_triplet(triplet, restriction)
+                        && readable(&Link::new(triplet.index, triplet.type_id, triplet.index))
+                })
+            };
+            let seen: Vec<TripletChange> = changes
+                .iter()
+                .map(|change| TripletChange {
+                    before: side(change.before),
+                    after: side(change.after),
+                })
+                .filter(|change| change.before.is_some() || change.after.is_some())
+                .collect();
+            if !seen.is_empty()
+                && !self.outbox.push(
+                    pack_triplets(triplet_notification_document(*subscription, &seen), *format),
+                    *format,
+                )
             {
                 return;
             }
@@ -753,7 +839,10 @@ fn change_side<S: NamedTypeLinks>(
     Ok(LiNo::Link { id: None, values })
 }
 
-fn reference_name<S: NamedTypeLinks>(storage: &mut S, id: u32) -> anyhow::Result<String> {
+pub(super) fn reference_name<S: NamedTypeLinks + ?Sized>(
+    storage: &mut S,
+    id: u32,
+) -> anyhow::Result<String> {
     Ok(storage.get_name(id)?.unwrap_or_else(|| id.to_string()))
 }
 

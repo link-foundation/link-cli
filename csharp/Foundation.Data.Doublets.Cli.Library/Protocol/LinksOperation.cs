@@ -407,11 +407,11 @@ public abstract record LinksOperation
 
     internal static LinoLink Group(IEnumerable<LinoLink> values) => LinoFormat.Link(null, values.ToList());
 
-    private static LinoLink Named(string name, params LinoLink[] values) => LinoFormat.Link(name, values.ToList());
+    internal static LinoLink Named(string name, params LinoLink[] values) => LinoFormat.Link(name, values.ToList());
 
-    private static LinoLink Numbers(params uint[] numbers) => Group(numbers.Select(Number));
+    internal static LinoLink Numbers(params uint[] numbers) => Group(numbers.Select(Number));
 
-    private static LinoLink RestrictionLino(LinksRestriction restriction) => Group(restriction.Parts.Select(LinksRestriction.PartLino));
+    internal static LinoLink RestrictionLino(LinksRestriction restriction) => Group(restriction.Parts.Select(LinksRestriction.PartLino));
 
     private static IReadOnlyList<LinoLink> LinkReply(uint link) =>
         link == 0 ? Array.Empty<LinoLink>() : new[] { Named("link", Number(link)) };
@@ -465,10 +465,10 @@ public abstract record LinksOperation
         ? new DoubletLink(ParseNumber(index), ParseNumber(source), ParseNumber(target))
         : throw LinoProtocolException.Malformed($"expected (index: source target), found {LinoFormat.FormatLink(link)}");
 
-    private static LinksRestriction ParseRestriction(LinoLink argument)
+    internal static LinksRestriction ParseRestriction(LinoLink argument, int maxParts = 3)
     {
         var parts = Parts(argument);
-        if (parts.Count > 3)
+        if (parts.Count > maxParts)
         {
             throw MalformedArgument("restriction", argument);
         }
@@ -477,7 +477,7 @@ public abstract record LinksOperation
             .ToList());
     }
 
-    private static uint[] ParseNumbers(LinoLink argument, int count)
+    internal static uint[] ParseNumbers(LinoLink argument, int count)
     {
         var numbers = Parts(argument).Select(ParseNumber).ToArray();
         return numbers.Length == count ? numbers : throw MalformedArgument($"{count} numbers", argument);
@@ -487,25 +487,25 @@ public abstract record LinksOperation
     /// The values of an unnamed group; a lone reference is a group of one, since the canonical document model
     /// unwraps <c>(x)</c> to <c>x</c>.
     /// </summary>
-    private static IReadOnlyList<LinoLink> Parts(LinoLink argument) =>
+    internal static IReadOnlyList<LinoLink> Parts(LinoLink argument) =>
         argument is { Id: null, Values: { } values } ? values.ToList() : new[] { argument };
 
-    private static uint ParseNumber(LinoLink value) => value is { Values: null, Id: { } text }
+    internal static uint ParseNumber(LinoLink value) => value is { Values: null, Id: { } text }
         ? ParseNumber(text)
         : throw LinoProtocolException.Malformed($"expected a number, found {LinoFormat.FormatLink(value)}");
 
-    private static uint ParseNumber(string text) =>
+    internal static uint ParseNumber(string text) =>
         uint.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var number)
             ? number
             : throw LinoProtocolException.Malformed($"expected a number, found '{text}'");
 
-    private static InvalidOperationException NeedsServer() =>
+    internal static InvalidOperationException NeedsServer() =>
         new("subscriptions belong to a connection to a links server");
 
-    private static LinoProtocolException MalformedArgument(string expected, LinoLink argument) =>
+    internal static LinoProtocolException MalformedArgument(string expected, LinoLink argument) =>
         LinoProtocolException.Malformed($"expected {expected}, found {LinoFormat.FormatLink(argument)}");
 
-    private static LinoProtocolException MalformedReply(string expected, IReadOnlyList<LinoLink> document) =>
+    internal static LinoProtocolException MalformedReply(string expected, IReadOnlyList<LinoLink> document) =>
         LinoProtocolException.Malformed($"expected a {expected} reply, found {LinoFormat.FormatDocument(document)}");
 }
 

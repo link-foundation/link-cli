@@ -20,6 +20,17 @@ async function main(links: Links) {
   if (note) for (const { before, after } of note.changes) void [before?.source, after?.target];
   await c.unsubscribe(subscription);
   void c.pendingNotifications;
+  const point = await c.createTripletPoint();
+  const triplet = await c.createTriplet(point.index, 0, 0n);
+  const typed: bigint = await c.countTriplets([ANY, triplet.type, triplet.from, triplet.to]);
+  for (const { before, after } of await c.updateTriplet(triplet.index, point.index, 0, 0)) void [before?.type, after?.to];
+  const named = await c.queryTriplets('() ((1 0 0))');
+  void [typed, named[0]?.after?.from.length, (await c.eachTriplets())[0]?.from, (await c.exportTriplets())[0]?.type.length, (await c.deleteTriplet(1))[0]?.before];
+  await c.subscribeTriplets([ANY, point.index]);
+  const tripletNote = await c.receiveTripletNotification({ timeout: 10 });
+  if (tripletNote) for (const { after } of tripletNote.changes) void after?.type;
+  c.onTripletNotification(({ changes }) => void changes[0]?.after?.from)();
+  await c.batch([{ op: 'createTriplet', type: 1, from: 0, to: 0 }, { op: 'eachTriplets', restriction: [ANY, 1, 0, 0] }]);
   const union: Links = new UnionLinks([w, new RemapLinks(c, new OffsetAddressMap(1n << 24n))]);
   const owner: number | null = await (union as UnionLinks).ownerOf(1n);
   const table = new AddressTable<string>({ newId: () => crypto.randomUUID() });

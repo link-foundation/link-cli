@@ -25,4 +25,4 @@ export {
 } from './errors.js';
 export { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './framing.js';
 export { formatDocument, formatReference, group, named, parseDocument } from './lino.js';
-export { ANY, isNotification, parseNotification, toAddress } from './operations.js';
+export { ANY, isNotification, parseNotification, parseTripletNotification, toAddress } from './operations.js';

@@ -37,6 +37,7 @@
 //! the cost of every operation.
 
 mod lino;
+mod permissions;
 mod query;
 
 use std::collections::HashSet;
@@ -215,9 +216,10 @@ impl DoubletRole {
 ///
 /// Only [`triplet_markers`](Self::triplet_markers) is required; everything
 /// else is a default method that reads and writes through `Self`, so a layer
-/// that wraps a [`TripletsOverDoublets`] -- a permission check, say --
-/// implements this trait by forwarding the markers and sees every doublet
-/// the encoding writes. Any default can be overridden.
+/// that wraps a [`TripletsOverDoublets`] can implement this trait by forwarding
+/// the markers and see every doublet the encoding writes. Any default can be
+/// overridden: [`PermissionsDecorator`](crate::PermissionsDecorator) checks a
+/// triplet as a whole, above the wrappers and pairs it is stored in.
 ///
 /// The names end in `triplet` because a triplet store is still a doublet
 /// store: `create`, `update` and `delete` of [`NamedTypeLinks`] keep working
@@ -279,6 +281,14 @@ pub trait Triplets: NamedTypeLinks {
         Ok(index)
     }
 
+    /// Creates the point `(address: address 0 0)` at an address nothing uses,
+    /// the way a substitution query defines a triplet at an address it names.
+    fn create_triplet_point_at(&mut self, address: u32) -> Result<()> {
+        self.try_ensure_created(address)?;
+        self.update(address, address, address)?;
+        Ok(())
+    }
+
     /// Makes the triplet at `index` `(index: type from to)`, keeping its
     /// address, and returns the triplet as it was.
     ///
@@ -331,18 +341,7 @@ pub trait Triplets: NamedTypeLinks {
         let Some(first) = self.get_triplet(index) else {
             bail!("Link {index} is not a triplet.");
         };
-        let mut deleted = vec![first];
-        let mut seen = HashSet::from([index]);
-        let mut at = 0;
-        while at < deleted.len() {
-            let used = deleted[at].index;
-            for user in users_of(self, used) {
-                if seen.insert(user.index) {
-                    deleted.push(user);
-                }
-            }
-            at += 1;
-        }
+        let deleted = cascade_of(self, first);
         // The wrappers and pairs that touch a deleted triplet, as they are now:
         // a store that deletes what uses a deleted doublet may take some of
         // them along, and their sources must still be collected.
@@ -629,6 +628,24 @@ fn users_of<T: Triplets + ?Sized>(triplets: &mut T, index: u32) -> Vec<Triplet> 
     users.sort_unstable();
     users.dedup();
     users
+}
+
+/// `first` and every triplet that uses it, directly or through another one of
+/// them: what deleting `first` deletes, `first` first.
+fn cascade_of<T: Triplets + ?Sized>(triplets: &mut T, first: Triplet) -> Vec<Triplet> {
+    let mut deleted = vec![first];
+    let mut seen = HashSet::from([first.index]);
+    let mut at = 0;
+    while at < deleted.len() {
+        let used = deleted[at].index;
+        for user in users_of(triplets, used) {
+            if seen.insert(user.index) {
+                deleted.push(user);
+            }
+        }
+        at += 1;
+    }
+    deleted
 }
 
 /// Writes the outer doublet `(index: source target)`, refusing to merge it

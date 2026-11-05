@@ -301,6 +301,9 @@ namespace Foundation.Data.Doublets.Cli.Tests
                 // Undoing the update that typed it makes it its own again.
                 w.Links.Update(id, 0u, 0u);
                 Assert.True(view.Owns(w.Links.GetLink(id)!));
+                // A self-reference has a type, itself, so the policy judges it (#152: only
+                // a store read as triplets has points of its own).
+                Assert.False(view.Owns(new Link<uint>(id, id, id)));
                 view.Forget(id);
                 Assert.False(view.Exists(id));
                 Assert.Equal("forbidden", ErrorOf(() => w.As(0).Create()));

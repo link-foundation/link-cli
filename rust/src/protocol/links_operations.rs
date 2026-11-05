@@ -311,7 +311,7 @@ pub fn is_notification(document: &[LiNo<String>]) -> bool {
     notification_number(document).is_some()
 }
 
-fn notification_number(document: &[LiNo<String>]) -> Option<u32> {
+pub(super) fn notification_number(document: &[LiNo<String>]) -> Option<u32> {
     match document.first()? {
         LiNo::Link {
             id: Some(id),
@@ -456,7 +456,7 @@ fn parse_link(link: &LiNo<String>) -> ProtocolResult<Link> {
     }
 }
 
-fn restriction_lino(restriction: &[Part]) -> LiNo<String> {
+pub(super) fn restriction_lino(restriction: &[Part]) -> LiNo<String> {
     group(
         restriction
             .iter()
@@ -466,8 +466,16 @@ fn restriction_lino(restriction: &[Part]) -> LiNo<String> {
 }
 
 fn parse_restriction(argument: &LiNo<String>) -> ProtocolResult<Vec<Part>> {
+    parse_restriction_of(argument, 3)
+}
+
+/// A restriction of at most `longest` parts.
+pub(super) fn parse_restriction_of(
+    argument: &LiNo<String>,
+    longest: usize,
+) -> ProtocolResult<Vec<Part>> {
     let parts = parts(argument);
-    if parts.len() > 3 {
+    if parts.len() > longest {
         return Err(malformed_argument("restriction", argument));
     }
     parts
@@ -479,11 +487,11 @@ fn parse_restriction(argument: &LiNo<String>) -> ProtocolResult<Vec<Part>> {
         .collect()
 }
 
-fn numbers_lino(numbers: &[u32]) -> LiNo<String> {
+pub(super) fn numbers_lino(numbers: &[u32]) -> LiNo<String> {
     group(numbers.iter().copied().map(number).collect())
 }
 
-fn parse_numbers<const N: usize>(argument: &LiNo<String>) -> ProtocolResult<[u32; N]> {
+pub(super) fn parse_numbers<const N: usize>(argument: &LiNo<String>) -> ProtocolResult<[u32; N]> {
     let numbers = parts(argument)
         .iter()
         .map(parse_number)
@@ -495,14 +503,14 @@ fn parse_numbers<const N: usize>(argument: &LiNo<String>) -> ProtocolResult<[u32
 
 /// The values of an unnamed group; a lone reference is a group of one, since
 /// the canonical document model unwraps `(x)` to `x`.
-fn parts(argument: &LiNo<String>) -> &[LiNo<String>] {
+pub(super) fn parts(argument: &LiNo<String>) -> &[LiNo<String>] {
     match argument {
         LiNo::Link { id: None, values } => values,
         reference => std::slice::from_ref(reference),
     }
 }
 
-fn parse_number(value: &LiNo<String>) -> ProtocolResult<u32> {
+pub(super) fn parse_number(value: &LiNo<String>) -> ProtocolResult<u32> {
     match value {
         LiNo::Ref(text) => parse_text_number(text),
         _ => Err(ProtocolError::malformed(format!(
@@ -512,34 +520,34 @@ fn parse_number(value: &LiNo<String>) -> ProtocolResult<u32> {
     }
 }
 
-fn parse_text_number(text: &str) -> ProtocolResult<u32> {
+pub(super) fn parse_text_number(text: &str) -> ProtocolResult<u32> {
     text.parse()
         .map_err(|_| ProtocolError::malformed(format!("expected a number, found '{text}'")))
 }
 
-fn number(value: u32) -> LiNo<String> {
+pub(super) fn number(value: u32) -> LiNo<String> {
     LiNo::Ref(value.to_string())
 }
 
-fn named(id: &str, values: Vec<LiNo<String>>) -> LiNo<String> {
+pub(super) fn named(id: &str, values: Vec<LiNo<String>>) -> LiNo<String> {
     LiNo::Link {
         id: Some(id.to_string()),
         values,
     }
 }
 
-fn group(values: Vec<LiNo<String>>) -> LiNo<String> {
+pub(super) fn group(values: Vec<LiNo<String>>) -> LiNo<String> {
     LiNo::Link { id: None, values }
 }
 
-fn malformed_argument(expected: &str, argument: &LiNo<String>) -> ProtocolError {
+pub(super) fn malformed_argument(expected: &str, argument: &LiNo<String>) -> ProtocolError {
     ProtocolError::malformed(format!(
         "expected {expected}, found {}",
         format_link(argument)
     ))
 }
 
-fn malformed_reply(expected: &str, document: &[LiNo<String>]) -> ProtocolError {
+pub(super) fn malformed_reply(expected: &str, document: &[LiNo<String>]) -> ProtocolError {
     ProtocolError::malformed(format!(
         "expected a {expected} reply, found {}",
         format_document(document)

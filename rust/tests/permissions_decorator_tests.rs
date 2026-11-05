@@ -296,6 +296,9 @@ fn owns_what_it_created_while_untyped() -> Result<()> {
     view.inner_mut().update(id, 0, 0)?;
     let link = view.inner_mut().get_link(id).unwrap();
     assert!(view.owns(&link));
+    // A self-reference has a type, itself, so the policy judges it (#152: only
+    // a store read as triplets has points of its own).
+    assert!(!view.owns(&Link::new(id, id, id)));
     view.forget(id);
     assert!(!view.exists(id));
     assert_eq!(Some("forbidden"), error_of(w.as_(0).try_create(0, 0)));

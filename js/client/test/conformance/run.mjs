@@ -44,14 +44,15 @@ async function goldenConversation() {
 }
 
 const subscriptionsGolden = new URL('../../../../docs/protocol/subscriptions.txt', import.meta.url);
+const tripletsGolden = new URL('../../../../docs/protocol/triplets.txt', import.meta.url);
 
 /**
- * `[{ connection, kind, text, reply }]` of the subscriptions conversation:
+ * `[{ connection, kind, text, reply }]` of a conversation over two connections:
  * `kind` is `'request'` (`A> text`, then its reply lines) or `'push'`
  * (`A< (notify: n)`, then its change lines, all in `reply`).
  */
-async function subscriptionsConversation() {
-  const lines = (await readFile(subscriptionsGolden, 'utf8')).split('\n').filter((line) => line !== '' && !line.startsWith('#'));
+async function twoConnectionConversation(file) {
+  const lines = (await readFile(file, 'utf8')).split('\n').filter((line) => line !== '' && !line.startsWith('#'));
   const steps = [];
   for (const line of lines) {
     const step = /^([AB])([<>]) (.*)$/.exec(line);
@@ -180,7 +181,7 @@ const scenarios = [
     name: 'subscriptions conversation (docs/protocol/subscriptions.txt) over two connections',
     processOnly: true,
     async run(store) {
-      const conversation = await subscriptionsConversation();
+      const conversation = await twoConnectionConversation(subscriptionsGolden);
       assert.equal(conversation.length, 24);
       const server = await store.start();
       const connections = {};
@@ -215,6 +216,96 @@ const scenarios = [
         await connections.B?.close();
         await server.close();
       }
+    },
+  },
+  {
+    name: 'triplets conversation (docs/protocol/triplets.txt) over two connections to a server with --triplets',
+    processOnly: true,
+    async run(store) {
+      const conversation = await twoConnectionConversation(tripletsGolden);
+      assert.equal(conversation.length, 48);
+      const server = await store.start({ args: [...store.options.args, '--triplets'] });
+      const connections = {};
+      try {
+        connections.A = await connectTcp(server.address);
+        connections.B = await connectTcp(server.address);
+        for (const [position, { connection, kind, text, reply }] of conversation.entries()) {
+          const client = connections[connection];
+          const label = `step ${position + 1}: ${connection}${kind === 'push' ? '<' : '>'} ${text}`;
+          if (kind === 'push') {
+            assert.equal((await client.transport.receivePush({ timeout: 10_000 })).trimEnd(), reply, label);
+            continue;
+          }
+          const actual = (await client.requestText(text)).trimEnd();
+          if (reply.startsWith('! ')) {
+            assert.match(actual, /^\(error: /, label);
+            assert.ok(actual.includes(reply.slice(2)), `${label}: ${actual}`);
+          } else {
+            assert.equal(actual, reply, label);
+          }
+          assert.equal(client.pendingNotifications, 0, `${label}: a push the conversation does not list`);
+        }
+      } finally {
+        await connections.A?.close();
+        await connections.B?.close();
+        await server.close();
+      }
+    },
+  },
+  {
+    name: 'triplets through the typed API: create, each by type, update, delete, query, subscribe',
+    processOnly: true,
+    async run(store) {
+      const server = await store.start({ args: [...store.options.args, '--triplets'] });
+      const [writer, watcher] = [await connectTcp(server.address, { capabilities: { triplets: true } }), await connectTcp(server.address)];
+      try {
+        assert.equal(writer.require('triplets').capabilities.triplets, true);
+        const person = await writer.createTripletPoint();
+        assert.equal(person.type, person.index);
+        const knows = await writer.createTripletPoint();
+        const [alice, bob] = [await writer.createTriplet(person.index, 0, 0), await writer.createTriplet(person.index, 0, 0)];
+        assert.notEqual(alice.index, bob.index);
+        assert.deepEqual([alice.type, alice.from, alice.to], [person.index, 0n, 0n]);
+        assert.equal(await writer.setName(person.index, 'Person') > 0n, true);
+        const subscription = await watcher.subscribeTriplets([ANY, knows.index]);
+        const fact = await writer.createTriplet(knows.index, alice.index, bob.index);
+        assert.deepEqual(await writer.eachTriplets([ANY, knows.index, alice.index, bob.index]), [fact]);
+        assert.equal(await writer.countTriplets([ANY, person.index]), 3n);
+        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), { subscription, changes: [{ before: null, after: fact }] });
+        const moved = { ...fact, from: bob.index, to: alice.index };
+        assert.deepEqual(await writer.updateTriplet(fact.index, knows.index, bob.index, alice.index), [{ before: fact, after: moved }]);
+        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), { subscription, changes: [{ before: fact, after: moved }] });
+        const [query] = await writer.queryTriplets('() ((Person 0 0))');
+        assert.deepEqual([query.before, query.after.type, query.after.from, query.after.to], [null, 'Person', '0', '0']);
+        const everything = await writer.exportTriplets();
+        assert.ok(everything.some(({ index, type }) => index === String(query.after.index) && type === 'Person'));
+        const batch = await writer.batch([{ op: 'createTriplet', type: person.index, from: 0, to: 0 }, { op: 'countTriplets', restriction: [ANY, knows.index] }], { window: 1 });
+        assert.equal(batch.completed, true);
+        assert.equal(batch.results[1].value, 2n);
+        const deleted = await writer.deleteTriplet(alice.index);
+        assert.deepEqual(deleted, [{ before: alice, after: null }, { before: moved, after: null }]);
+        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), { subscription, changes: [{ before: moved, after: null }] });
+        await watcher.unsubscribe(subscription);
+        await assert.rejects(writer.createTriplet(99, 0, 0), { name: 'RemoteError', message: /The type 99 is not a triplet/ });
+        await assert.rejects(writer.deleteTriplet(99), { name: 'RemoteError' });
+      } finally {
+        await writer.close();
+        await watcher.close();
+        await server.close();
+      }
+    },
+  },
+  {
+    name: 'triplets: a server without --triplets keeps refusing them',
+    processOnly: true,
+    async run(store) {
+      await using(store, async (client) => {
+        assert.equal((await client.create(0, 0)).index, 1n);
+        await assert.rejects(client.createTriplet(1, 0, 0), { name: 'RemoteError' });
+        await assert.rejects(client.eachTriplets([1, 2, 3, 4]), { name: 'RemoteError' });
+        await assert.rejects(client.eachTriplets(), { name: 'MalformedMessageError' });
+        assert.equal(await client.count(), 1n);
+      });
     },
   },
   {

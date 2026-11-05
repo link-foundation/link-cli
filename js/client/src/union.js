@@ -21,7 +21,7 @@
 // LiNo text, queries and subscriptions belong to one store, so they go to a
 // member (`union.members[i]`), never to the wrong one.
 
-import { byIndex, COMPOSED_OPERATIONS, requireGuarantees, runBatch, untranslatable } from './composed.js';
+import { byIndex, COMPOSED_OPERATIONS, refuseTriplets, requireGuarantees, runBatch, untranslatable } from './composed.js';
 import { AddressRangeError, NotFoundError, UnsupportedError } from './errors.js';
 import { toAddress } from './operations.js';
 
@@ -62,6 +62,7 @@ export class UnionLinks {
       // The one guarantee a union adds: stores merged behind one contract.
       sharding: true,
       subscriptions: false,
+      triplets: false,
       duplicateLinks: all[0].duplicateLinks,
       bulk: 'sequential-non-atomic',
     });
@@ -234,6 +235,8 @@ export class UnionLinks {
     await this.close();
   }
 }
+
+refuseTriplets(UnionLinks, 'a union');
 
 function unsubscribable() {
   return new UnsupportedError('a union does not subscribe: subscribe to the member whose changes you want (union.members[i])');

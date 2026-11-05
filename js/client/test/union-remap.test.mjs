@@ -268,6 +268,12 @@ test('composed layers state what they translate and refuse the rest up front', a
   await assert.rejects(union.subscribe([]), UnsupportedError);
   assert.throws(() => union.onNotification(() => {}), UnsupportedError);
   await assert.rejects(union.batch([{ op: 'query', text: '()' }]), UnsupportedError);
+  // Triplets belong to one store: forwarded, they would read under its addresses.
+  assert.equal(union.capabilities.triplets, false);
+  await assert.rejects(union.createTriplet(1, 0, 0), UnsupportedError);
+  await assert.rejects(union.eachTriplets(), UnsupportedError);
+  assert.throws(() => union.onTripletNotification(() => {}), UnsupportedError);
+  await assert.rejects(union.batch([{ op: 'createTriplet', type: 1, from: 0, to: 0 }]), UnsupportedError);
   const batch = await union.batch([
     { op: 'create', source: 0, target: 0 },
     { op: 'update', index: 1, source: 1, target: 1 },
@@ -283,6 +289,13 @@ test('composed layers state what they translate and refuse the rest up front', a
   assert.equal(remap.capabilities.maxAddress, local.capabilities.maxAddress + 10n);
   assert.equal(remap.capabilities.operations.includes('query'), false);
   await assert.rejects(remap.query('() ((1 1))'), UnsupportedError);
+  assert.equal(remap.capabilities.triplets, false);
+  assert.equal(remap.capabilities.operations.includes('eachTriplets'), false);
+  await assert.rejects(remap.createTripletPoint(), UnsupportedError);
+  await assert.rejects(remap.eachTriplets(), UnsupportedError);
+  await assert.rejects(remap.subscribeTriplets([]), UnsupportedError);
+  assert.throws(() => remap.onTripletNotification(() => {}), UnsupportedError);
+  await assert.rejects(remap.batch([{ op: 'deleteTriplet', index: 1 }]), UnsupportedError);
   assert.equal((await remap.batch([{ op: 'count', restriction: [11n] }])).results[0].value, 1n);
   await union[Symbol.asyncDispose]();
   assert.equal(local.closed, 1);

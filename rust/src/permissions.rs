@@ -428,13 +428,41 @@ impl<L: NamedTypeLinks, P: AccessPolicy> PermissionsDecorator<L, P> {
         self.owns(link) || self.policy.can_write(&mut self.links, self.subject, link)
     }
 
+    /// [`owns`](Self::owns) when the store is read as triplets, where a point
+    /// that is only its own type has no type yet either.
+    pub(crate) fn owns_triplet(&self, link: &Link) -> bool {
+        let point = link.source == link.index && link.target == link.index;
+        self.owns(link) || (point && self.created.contains(&link.index))
+    }
+
+    /// [`can_read`](Self::can_read) when the store is read as triplets.
+    pub(crate) fn can_read_triplet(&mut self, link: &Link) -> bool {
+        self.owns_triplet(link) || self.policy.can_read(&mut self.links, self.subject, link)
+    }
+
+    /// [`can_write`](Self::can_write) when the store is read as triplets.
+    pub(crate) fn can_write_triplet(&mut self, link: &Link) -> bool {
+        self.owns_triplet(link) || self.policy.can_write(&mut self.links, self.subject, link)
+    }
+
     /// Whether the policy lets the subject write `link`, ownership aside.
-    fn policy_can_write(&mut self, link: &Link) -> bool {
+    pub(crate) fn policy_can_write(&mut self, link: &Link) -> bool {
         self.policy.can_write(&mut self.links, self.subject, link)
     }
 
-    fn policy_can_create(&mut self) -> bool {
+    pub(crate) fn policy_can_create(&mut self) -> bool {
         self.policy.can_create(&mut self.links, self.subject)
+    }
+
+    /// The link at `index` is one the subject made on the store below.
+    pub(crate) fn remember(&mut self, index: u32) {
+        self.created.insert(index);
+    }
+
+    /// The store below and the policy, to judge a request on a layer over the
+    /// same store.
+    pub(crate) fn parts_mut(&mut self) -> (&mut L, &mut P) {
+        (&mut self.links, &mut self.policy)
     }
 
     /// The link at `index` is gone: a new one there is not the subject's own.

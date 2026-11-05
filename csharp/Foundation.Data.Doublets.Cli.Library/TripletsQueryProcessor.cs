@@ -63,7 +63,7 @@ namespace Foundation.Data.Doublets.Cli
                 var only = parsed[0];
                 if (only.Id is not null || only.Values is not { Count: 2 })
                 {
-                    throw new ArgumentException(QueryShape, nameof(query));
+                    throw new ArgumentException(QueryShape);
                 }
                 restriction = only.Values[0];
                 substitution = only.Values[1];
@@ -75,7 +75,7 @@ namespace Foundation.Data.Doublets.Cli
             }
             else
             {
-                throw new ArgumentException(QueryShape, nameof(query));
+                throw new ArgumentException(QueryShape);
             }
             var restrictions = PatternsOf(restriction);
             var substitutions = PatternsOf(substitution);
@@ -413,8 +413,7 @@ namespace Foundation.Data.Doublets.Cli
                     index = target.Index;
                     if (!triplets.IsTriplet(index))
                     {
-                        triplets.EnsureCreated(index);
-                        triplets.Update(new[] { index }, new[] { index, index, index }, null);
+                        triplets.CreateTripletPointAt(index);
                         created.Add(index);
                     }
                 }

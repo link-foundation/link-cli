@@ -110,6 +110,9 @@ clink --connect 127.0.0.1:7777 '() ((1 1))'                  # text protocol
 clink --connect 127.0.0.1:7777 --protocol binary --arity 1.. # binary protocol, list all links
 ```
 
+With `--triplets`, the server reads every request as triplets instead, as
+described in [docs/TRIPLETS.md](../docs/TRIPLETS.md#protocol).
+
 In the library, `link_cli::protocol::LinksServer` serves any `NamedTypeLinks` store, and
 `LinksClient` queries a server through either `TextLinoProtocol` or
 `BinaryLinoProtocol`. The wire formats are described in

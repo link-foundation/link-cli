@@ -36,6 +36,13 @@ export type Restriction =
   | [index: AddressInput | '*']
   | [index: AddressInput | '*', sourceOrTarget: AddressInput | '*']
   | [index: AddressInput | '*', source: AddressInput | '*', target: AddressInput | '*'];
+/** Parts of `[index, type, from, to]` left out match anything, as `'*'` does. */
+export type TripletRestriction =
+  | []
+  | [index: AddressInput | '*']
+  | [index: AddressInput | '*', type: AddressInput | '*']
+  | [index: AddressInput | '*', type: AddressInput | '*', from: AddressInput | '*']
+  | [index: AddressInput | '*', type: AddressInput | '*', from: AddressInput | '*', to: AddressInput | '*'];
 export function toAddress(value: AddressInput, what?: string): bigint;
 
 export interface Link {
@@ -63,7 +70,8 @@ export type Guarantee =
   | 'persistent'
   | 'rawTcp'
   | 'sharding'
-  | 'subscriptions';
+  | 'subscriptions'
+  | 'triplets';
 export const GUARANTEES: readonly Guarantee[];
 export const MAX_U32_ADDRESS: bigint;
 
@@ -84,6 +92,8 @@ export interface Capabilities {
   readonly sharding: boolean;
   /** Whether other connections' writes are pushed to subscriptions (a server connection). */
   readonly subscriptions: boolean;
+  /** Whether triplets are served (true), are not (false) or it is unknown (null): a server has them with `--triplets`. */
+  readonly triplets: boolean | null;
   /** Whether equal links stay apart (true), merge (false) or it is unknown (null). */
   readonly duplicateLinks: boolean | null;
   readonly bulk: 'pipelined-non-atomic' | 'sequential-non-atomic' | string;
@@ -126,6 +136,27 @@ export interface Notification {
 export function isNotification(document: LinoDocument): boolean;
 export function parseNotification(document: LinoDocument): Notification;
 
+/** A triplet of a server in triplet mode (`clink --serve --triplets`). */
+export interface Triplet {
+  index: bigint;
+  type: bigint;
+  from: bigint;
+  to: bigint;
+}
+/** A triplet with every reference as the backend wrote it: a number, or a name. */
+export interface NamedTriplet {
+  index: string;
+  type: string;
+  from: string;
+  to: string;
+}
+/** A push of a subscription on a server in triplet mode. */
+export interface TripletNotification {
+  subscription: number;
+  changes: Change<Triplet>[];
+}
+export function parseTripletNotification(document: LinoDocument): TripletNotification;
+
 export type Operation =
   | { op: 'count'; restriction?: Restriction }
   | { op: 'each'; restriction?: Restriction }
@@ -136,7 +167,13 @@ export type Operation =
   | { op: 'setName'; index: AddressInput; name: string }
   | { op: 'getByName'; name: string }
   | { op: 'removeName'; index: AddressInput }
-  | { op: 'query'; text: string };
+  | { op: 'query'; text: string }
+  | { op: 'countTriplets'; restriction?: TripletRestriction }
+  | { op: 'eachTriplets'; restriction?: TripletRestriction }
+  | { op: 'createTriplet'; type: AddressInput; from: AddressInput; to: AddressInput }
+  | { op: 'updateTriplet'; index: AddressInput; type: AddressInput; from: AddressInput; to: AddressInput }
+  | { op: 'deleteTriplet'; index: AddressInput }
+  | { op: 'queryTriplets'; text: string };
 
 export type OperationResult =
   | { status: 'ok'; value: unknown }
@@ -181,6 +218,21 @@ export interface Links {
   /** Returns the function that removes the listener. */
   onNotification(listener: (notification: Notification) => void): () => void;
   readonly pendingNotifications: number;
+  /** Up to four parts `[index, type, from, to]`; this and the calls below need a server with `--triplets`. */
+  countTriplets(restriction?: TripletRestriction, options?: RequestOptions): Promise<bigint>;
+  eachTriplets(restriction?: TripletRestriction, options?: RequestOptions): Promise<Triplet[]>;
+  createTriplet(type: AddressInput, from: AddressInput, to: AddressInput, options?: RequestOptions): Promise<Triplet>;
+  /** Creates a triplet that is its own type. */
+  createTripletPoint(options?: RequestOptions): Promise<Triplet>;
+  updateTriplet(index: AddressInput, type: AddressInput, from: AddressInput, to: AddressInput, options?: RequestOptions): Promise<Change<Triplet>[]>;
+  deleteTriplet(index: AddressInput, options?: RequestOptions): Promise<Change<Triplet>[]>;
+  queryTriplets(text: string, options?: RequestOptions): Promise<Change<NamedTriplet>[]>;
+  exportTriplets(options?: RequestOptions): Promise<NamedTriplet[]>;
+  subscribeTriplets(restriction?: TripletRestriction, options?: RequestOptions): Promise<number>;
+  /** Null when the deadline or timeout passes before a notification arrives. */
+  receiveTripletNotification(options?: RequestOptions): Promise<TripletNotification | null>;
+  /** Returns the function that removes the listener. */
+  onTripletNotification(listener: (notification: TripletNotification) => void): () => void;
   close(): Promise<void>;
   [Symbol.asyncDispose](): Promise<void>;
 }
@@ -201,8 +253,9 @@ export class LinksDecorator implements Links {
 /**
  * Many links networks seen as one: the first member that has an address
  * shadows the rest, new links go to the primary (first) member, writes and
- * names to the member that has the link. Raw text, queries, exports and
- * subscriptions belong to one store: they reject with an UnsupportedError.
+ * names to the member that has the link. Raw text, queries, exports,
+ * subscriptions and triplets belong to one store: they reject with an
+ * UnsupportedError.
  */
 export interface UnionLinks extends Links {}
 export class UnionLinks implements Links {

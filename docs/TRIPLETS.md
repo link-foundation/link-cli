@@ -227,6 +227,68 @@ are not triplets are refused. Export, import into a new store and export again
 gives the same text, names and addresses included (the test
 `Lino_Round_Trip_Keeps_Names_And_Addresses`).
 
+## Protocol
+
+`clink --serve --triplets` (`ServerOptions.triplets` in Rust,
+`LinksServerOptions.Triplets` in C#) serves the triplets of the store over the
+text and the binary protocol. `RemoteLinks` in both ports is a `Triplets` store
+(`ITriplets` in C#) behind such a server, and the `*Triplet*` calls of
+`@link-foundation/link-cli-client` are its JavaScript client.
+
+| Request | Reply |
+|---|---|
+| `(count: (i T f t))` | `(count: N)` |
+| `(each: (i T f t))` | one `(i: T f t)` per match, by address |
+| `(create: (T f t))` | `() ((i: T f t))` |
+| `(create: (0 0 0))` | `() ((i: i 0 0))`, a point |
+| `(update: (i T f t))` | `((i: T0 f0 t0)) ((i: T f t))` |
+| `(delete: i)` | `((i: T f t)) ()` per removed triplet, `i` first |
+| `(subscribe: (i T f t))` | `(subscription: N)`, then `(notify: N)` pushes |
+| a substitution query, `() ((T f t))` | its changes, naming what has a name |
+| an empty document (`clink --connect` with no query) | every triplet |
+
+A restriction holds zero to four parts, matched part by part: those left out and
+`*` match anything, and `0` is an empty from or to. Names, `(unsubscribe: N)`
+and `(auth: token)` are the same as without triplets. The wrappers and pairs
+never appear, so the addresses of triplets are not consecutive. The recorded
+conversation is [protocol/triplets.txt](protocol/triplets.txt); both ports
+replay it in text and in binary with every option, and the JavaScript client
+replays it in text against both servers. The doublet conversation
+([protocol/links-operations.txt](protocol/links-operations.txt)) is unchanged.
+
+**A mode, not a request form.** `(delete: i)`, `(count: ())`, restrictions of up
+to three parts and substitution queries read the same for doublets and for
+triplets, so their shape cannot say which one is meant, and a per-request form
+would change those requests for every client. A server without `--triplets`
+answers exactly as before and refuses `(create: (T f t))`. In triplet mode every
+request is read as triplets, so `(create: (1 2))` is refused, and the doublet
+calls of `RemoteLinks` are refused or fail like a lost connection, except
+`exists` and the names.
+
+**Subscriptions.** `(subscribe: ...)` takes a triplet restriction and pushes
+triplet changes. A side that does not fit is empty, so a triplet that stops being
+of the type asked for is gone for the subscriber and one that becomes it is new.
+
+**Permissions.** `--permissions` works in this mode: the permission layer sits
+above `TripletsOverDoublets` (C# `TripletsPermissionsDecorator`, Rust
+`triplets/permissions.rs`) and judges the outer doublet of every triplet, the
+one that holds its type. Writing a triplet also writes its wrappers and pairs
+inside the same transaction, below the check. Creating needs the right to create
+and to write the type, not to read it; a substitution query does read it,
+because it has to match. Deleting needs the right to write every triplet the
+delete takes along, or nothing is deleted.
+
+**`auto_create_missing_references`** does not apply: a triplet query creates no
+reference it cannot find.
+
+**Binary replies.** Under the default arity, a triplet travels as doublets, like
+any other link. `(i: T f t)` is a link with an id, and in the binary mapping that
+is `(Identified i T f t)`, five references, so a reply under `--arity 2..3`
+would get no benefit from the arity. A reply or push whose arity holds three
+but not five therefore carries `(i: (T f t))`, whose `(T f t)` is **one link of
+three references**; see
+[protocol/binary-links-notation.md](protocol/binary-links-notation.md#73-triplets).
+
 ## Limits
 
 - Restricting only by an empty from or to (`ByFrom(0)`, `ByTo(0)`) reads
@@ -235,5 +297,7 @@ gives the same text, names and addresses included (the test
 - `TripletsOverDoublets` adds no index of its own: the costs above assume the
   store indexes sources and targets, as the united and split memory stores of
   C# and the indexed Rust stores (`with_indexed_lookups`) do.
-- The text and binary protocol for triplets (#152) and GraphQL (#153) are
-  separate issues.
+- GraphQL over triplets (#153) is a separate issue.
+- A union or a remap does not translate triplets over the protocol: the
+  JavaScript `UnionLinks` and `RemapLinks` refuse those calls, so send them to a
+  member or to the store below.
