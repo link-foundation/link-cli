@@ -275,8 +275,10 @@ above `TripletsOverDoublets` (C# `TripletsPermissionsDecorator`, Rust
 one that holds its type. Writing a triplet also writes its wrappers and pairs
 inside the same transaction, below the check. Creating needs the right to create
 and to write the type, not to read it; a substitution query does read it,
-because it has to match. Deleting needs the right to write every triplet the
-delete takes along, or nothing is deleted.
+because it has to match. Every part needs the right to refer to it (#161): a type
+it may write is enough, a part it may not refer to answers as a missing one, and
+a part the triplet already holds may stay. Deleting needs the right to write every
+triplet the delete takes along, or nothing is deleted.
 
 **`auto_create_missing_references`** does not apply: a triplet query creates no
 reference it cannot find.

@@ -26,6 +26,10 @@ namespace Foundation.Data.Doublets.Cli
     /// <item>a triplet the subject may not read does not exist for the subject,
     /// and neither does anything that is not a triplet;</item>
     /// <item>creating needs the right to create and to write the type;</item>
+    /// <item>every part needs the right to refer to it (issue #161): without it an unreadable
+    /// part answers as a missing one, after the write check, and a part the triplet already
+    /// holds may stay;</item>
+    /// <item>choosing the address of a new point is a reference too;</item>
     /// <item>updating needs the right to write the triplet as it is and as it will be;</item>
     /// <item>deleting needs the right to write every triplet the delete takes
     /// along, or nothing is deleted;</item>
@@ -71,6 +75,9 @@ namespace Foundation.Data.Doublets.Cli
 
         public virtual bool IsTriplet(TLinkAddress index) => GetTriplet(index) is not null;
 
+        public virtual bool ReferenceIsTriplet(TLinkAddress index) =>
+            IsTriplet(index) || (CanReference(index) && _triplets.IsTriplet(index));
+
         public virtual TLinkAddress CreateTriplet(TLinkAddress type, TLinkAddress from, TLinkAddress to)
         {
             var zero = TLinkAddress.Zero;
@@ -78,10 +85,14 @@ namespace Foundation.Data.Doublets.Cli
             {
                 throw new ForbiddenException("create");
             }
-            // A subject that may write a type need not read it, which leaves the
-            // layer below to judge that the type exists.
-            EnsurePart(from, null, "from");
-            EnsurePart(to, null, "to");
+            // A subject that may write a type need not read it: the rule that says
+            // so names it. That it exists is left to the layer below.
+            if (type != zero && !CanReference(type))
+            {
+                throw new ArgumentException($"Link not found: {type}");
+            }
+            CheckPart(from, null, "from");
+            CheckPart(to, null, "to");
             var index = _triplets.CreateTriplet(type, from, to);
             Remember(index);
             return index;
@@ -104,11 +115,16 @@ namespace Foundation.Data.Doublets.Cli
             {
                 throw new ForbiddenException("create");
             }
-            // A hidden link is not found, yet its address is taken: the point must
-            // not land on it.
-            if (OuterOf(address) is not null)
+            // Choosing an address is a reference: without the right a hidden link
+            // and a free address answer alike.
+            if (!CanReference(address))
             {
                 throw new ArgumentException($"Link not found: {address}");
+            }
+            // The subject may refer to this hidden link: the point must not land on it.
+            if (OuterOf(address) is not null)
+            {
+                throw new InvalidOperationException($"Link {address} exists");
             }
             _triplets.CreateTripletPointAt(address);
             Remember(address);
@@ -126,8 +142,12 @@ namespace Foundation.Data.Doublets.Cli
             {
                 throw new ForbiddenException($"update {index}");
             }
-            EnsurePart(from, index, "from");
-            EnsurePart(to, index, "to");
+            if (type != TLinkAddress.Zero && !Holds(before, type) && !CanReference(type))
+            {
+                throw new ArgumentException($"Link not found: {type}");
+            }
+            CheckPart(from, before, "from");
+            CheckPart(to, before, "to");
             return _triplets.UpdateTriplet(index, type, from, to);
         }
 
@@ -168,12 +188,20 @@ namespace Foundation.Data.Doublets.Cli
 
         private bool Writable(Triplet<TLinkAddress> triplet) => OuterOf(triplet.Index) is { } outer && CanWrite(outer);
 
-        private void EnsurePart(TLinkAddress part, TLinkAddress? itself, string name)
+        /// <summary>
+        /// <paramref name="part"/> must be the null link, a part <paramref name="before"/> holds or a
+        /// triplet the subject may refer to; a hidden one answers as a missing one.
+        /// </summary>
+        private void CheckPart(TLinkAddress part, Triplet<TLinkAddress>? before, string name)
         {
-            if (part != TLinkAddress.Zero && !(itself is { } self && self == part) && !IsTriplet(part))
+            if (part != TLinkAddress.Zero && !(before is { } held && Holds(held, part)) && !ReferenceIsTriplet(part))
             {
                 throw new ArgumentException($"The {name} part {part} is not a triplet.");
             }
         }
+
+        /// <summary>Whether <paramref name="part"/> is <paramref name="triplet"/> or one of its parts.</summary>
+        private static bool Holds(Triplet<TLinkAddress> triplet, TLinkAddress part) =>
+            part == triplet.Index || part == triplet.Type || part == triplet.From || part == triplet.To;
     }
 }

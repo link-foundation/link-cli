@@ -516,11 +516,10 @@ public sealed class TripletsProtocolTests
             boss.QueryText($"(update: ({index} {index} {note} 0))");
             Assert.Equal("", alice.QueryText($"(each: ({index}))"));
 
-            // A substitution query reserves the point at the address it names, and reads what it refers to: the type
-            // she may write yet not read is not there for it, unlike for a create.
-            Assert.Equal("() ((900: 900 0 0))", alice.QueryText("() ((900: 900 0 0))"));
-            AssertRefused(alice, $"() ((901: {w.T["Note"]} 0 0))", "is not a triplet");
-            Assert.Equal("((900: 900 0 0)) ()", alice.QueryText("(delete: 900)"));
+            // Choosing an address is a reference, which she has no right to here: a free address answers as a
+            // hidden link does.
+            AssertRefused(alice, "() ((900: 900 0 0))", "Link not found: 900");
+            AssertRefused(alice, $"() ((901: {w.T["Note"]} 0 0))", "Link not found: 901");
 
             using var guest = LinksClient.Connect("127.0.0.1", port, new TextLinoProtocol());
             foreach (var request in new[] { "(create: (0 0 0))", $"(create: ({w.T["Note"]} 0 0))", "() ((901: 901 0 0))" })
@@ -617,5 +616,71 @@ public sealed class TripletsProtocolTests
             File.Delete(database);
             File.Delete(NamedTypesDecorator<uint>.MakeNamesDatabaseFilename(database));
         }
+    }
+
+    [Fact]
+    public void APartItMayNotReferToAnswersAsAMissingOne()
+    {
+        const uint missing = 9999u;
+        WithPermittedServer((w, port) =>
+        {
+            var (noteType, secret) = (w.T["Note"], w.V["secret"]);
+            using var alice = Authenticated(w, port, "alice");
+            var own = Created(alice.Query($"(create: ({noteType} 0 0))")).Index;
+
+            var requests = new Func<uint, string>[]
+            {
+                part => $"(create: ({noteType} {part} 0))",
+                part => $"(create: ({noteType} 0 {part}))",
+                part => $"(update: ({own} {noteType} {part} 0))",
+                part => $"() (({part}: {noteType} 0 0))",
+            };
+            foreach (var request in requests)
+            {
+                var hidden = Assert.Throws<LinoProtocolException>(() => alice.QueryText(request(secret)));
+                var absent = Assert.Throws<LinoProtocolException>(() => alice.QueryText(request(missing)));
+                Assert.Equal(
+                    hidden.Message.Replace(secret.ToString(), "N", StringComparison.Ordinal),
+                    absent.Message.Replace(missing.ToString(), "N", StringComparison.Ordinal));
+            }
+            // The write check runs first: a type it may not write is forbidden, hidden or missing.
+            foreach (var type in new[] { w.T["Secret"], missing })
+            {
+                AssertRefused(alice, $"(update: ({own} {type} 0 0))", "Forbidden");
+            }
+        });
+    }
+
+    [Fact]
+    public void TheRightToReferToATripletDoesNotAllowReadingIt()
+    {
+        WithPermittedServer((w, port) =>
+        {
+            PermissionPolicy<uint>.Allow(w.Rules, w.Markers, PermissionAccess.Reference, w.T["User"], w.T["Secret"]);
+            var (noteType, secret) = (w.T["Note"], w.V["secret"]);
+            using var alice = Authenticated(w, port, "alice");
+            Assert.Equal(secret, Created(alice.Query($"(create: ({noteType} {secret} 0))")).From);
+            Assert.Equal("", alice.QueryText($"(each: ({secret}))"));
+            // A missing address stays missing.
+            AssertRefused(alice, $"(create: ({noteType} 9999 0))", "is not a triplet");
+            // Its address stays taken: no point lands on it.
+            AssertRefused(alice, $"() (({secret}: {noteType} 0 0))", $"Link {secret} exists");
+        });
+    }
+
+    [Fact]
+    public void APartATripletHoldsMayStayButCannotBePutBack()
+    {
+        WithPermittedServer((w, port) =>
+        {
+            var (noteType, secret, note) = (w.T["Note"], w.V["secret"], w.V["note"]);
+            using var alice = Authenticated(w, port, "alice");
+            using var boss = Authenticated(w, port, "boss");
+            var held = Created(boss.Query($"(create: ({noteType} {secret} 0))")).Index;
+
+            alice.QueryText($"(update: ({held} {noteType} {secret} {note}))");
+            alice.QueryText($"(update: ({held} {noteType} 0 {note}))");
+            AssertRefused(alice, $"(update: ({held} {noteType} {secret} {note}))", "is not a triplet");
+        });
     }
 }

@@ -258,6 +258,10 @@ let mut alice = PermissionsDecorator::new(&mut data, policy, alice_link);
 // Forbidden ("Forbidden: update 14") and changes nothing.
 ```
 
+A link alice may not refer to answers as a missing one and its name as an unknown
+one (#161). `PermissionAccess::Reference` grants the reference without the read;
+see [the case study](../docs/case-studies/issue-161/README.md).
+
 `UndoableLinksDecorator` (`begin`, `commit`, `rollback`) makes a request atomic
 under the view, writes the store made on its own included.
 `LinksSessions::with_permissions(store, policy)`, `with_subject` and

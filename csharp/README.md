@@ -226,6 +226,10 @@ var alice = new PermissionsDecorator<uint>(data, policy, aliceLink);
 // ForbiddenException ("Forbidden: update 14") and changes nothing.
 ```
 
+A link alice may not refer to answers as a missing one and its name as an unknown
+one (#161). `PermissionAccess.Reference` grants the reference without the read;
+see [the case study](../docs/case-studies/issue-161/README.md).
+
 `UndoableLinksDecorator<uint>` (`Begin`, `Commit`, `Rollback`) makes a request
 atomic under the view, writes the store made on its own included.
 `LinksServerOptions.Permissions`, `Subject` and `Authenticate` give every

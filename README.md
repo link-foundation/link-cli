@@ -757,10 +757,10 @@ The rules live in the data (`--permissions self`) or in a links file of their
 own (`--permissions rules.links`); both behave the same. Without the option
 nothing is checked and clink works exactly as before.
 
-- A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or
-  `(r: AllowWrite g)`. `Subject` and `Object` are types of the
-  [type hierarchy](#type-hierarchy), or single links. `Anything` stands for
-  every subject or every link. Write implies read.
+- A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)`,
+  `(r: AllowWrite g)` or `(r: AllowReference g)`. `Subject` and `Object` are
+  types of the [type hierarchy](#type-hierarchy), or single links. `Anything`
+  stands for every subject or every link. Write implies read.
 - `--subject` names the subject queries run as, by index or by name. Without
   it the subject is `0`, a guest, which only rules about `Anything` let in.
 - A link the subject created is its own while its source is the null link,
@@ -768,9 +768,17 @@ nothing is checked and clink works exactly as before.
 - A link the subject may not read is missing to it. A create, update or
   delete it may not do fails with `Forbidden: <operation> <link>`, and the
   whole query is undone, including the writes the store made on its own.
+- A reference is a right of its own: a link the subject may not refer to answers
+  exactly as a missing one, and its name as an unknown name. A subject may refer
+  to a link it may read, to itself, to what an `AllowReference` rule covers
+  (`Object` and the links of type `Object`), and to the `Object` of its own
+  `AllowRead` and `AllowWrite` rules, so `User writes Note` is enough to type a
+  link as `Note`. `AllowReference` does not allow reading. A reference a link
+  already holds may stay, and choosing the address of a new link is a reference
+  too. A rule `Anything` to `Anything` lets every subject refer to everything.
 
 ```bash
-clink --db data.links --auto-create-missing-references '() ((Type: Type Type) (Extends: Extends Extends) (AllowRead: AllowRead AllowRead) (AllowWrite: AllowWrite AllowWrite) (Anything: Anything Anything) (User: Type User) (Admin: User Admin) (Doc: Type Doc) (Public: Type Public) (Note: Doc Note) (Secret: Doc Secret) (alice: User alice) (boss: Admin boss) (note: Note note) (secret: Secret secret) (news: Public news) (AllowWrite (Admin Anything)) (AllowWrite (User Note)) (AllowRead (User Public)))'
+clink --db data.links --auto-create-missing-references '() ((Type: Type Type) (Extends: Extends Extends) (AllowRead: AllowRead AllowRead) (AllowWrite: AllowWrite AllowWrite) (AllowReference: AllowReference AllowReference) (Anything: Anything Anything) (User: Type User) (Admin: User Admin) (Doc: Type Doc) (Public: Type Public) (Note: Doc Note) (Secret: Doc Secret) (alice: User alice) (boss: Admin boss) (note: Note note) (secret: Secret secret) (news: Public news) (AllowWrite (Admin Anything)) (AllowWrite (User Note)) (AllowRead (User Public)))'
 clink --db data.links --permissions self --subject alice --after
 ```
 →

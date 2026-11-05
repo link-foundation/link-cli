@@ -160,7 +160,7 @@ fn a_subject_sees_what_its_rules_allow_and_writes_nothing_else(separate_rules: b
             "--subject",
             "alice",
             "--changes",
-            "((note: Note note)) ((note: Secret note))",
+            "((note: Note note)) ((note: Public note))",
         ],
     );
     failed_with(&refused, &format!("Forbidden: update {}", v["note"]));
@@ -168,11 +168,13 @@ fn a_subject_sees_what_its_rules_allow_and_writes_nothing_else(separate_rules: b
 
     // A secret is as missing to alice as a deleted link.
     let alice = v["alice"].to_string();
-    let hidden = succeeded(fixture.permitted(
-        separate_rules,
-        &["--subject", &alice, "--changes", "((secret: * *)) ()"],
-    ));
-    assert_eq!(hidden, "");
+    failed_with(
+        &fixture.permitted(
+            separate_rules,
+            &["--subject", &alice, "--changes", "((secret: * *)) ()"],
+        ),
+        "Invalid reference to non-existent link 'secret'",
+    );
     assert_eq!(fixture.after(), all);
 
     // The boss writes anything.
@@ -208,8 +210,13 @@ fn a_guest_reads_nothing_and_creates_nothing() {
     fixture.make_world(false);
     let seen = succeeded(fixture.permitted(false, &["--after"]));
     assert_eq!(seen, "");
+    // Whether 1 exists is hidden from a guest, as for any other reference.
     failed_with(
         &fixture.permitted(false, &["() ((1 2))"]),
+        "Invalid reference to non-existent link '1'",
+    );
+    failed_with(
+        &fixture.permitted(false, &["--auto-create-missing-references", "() ((1 2))"]),
         "Forbidden: create",
     );
     failed_with(
@@ -384,4 +391,48 @@ impl Drop for Server {
         let _ = self.child.kill();
         let _ = self.child.wait();
     }
+}
+
+/// What `clink --subject alice` answers for `query`, with the address it holds
+/// written as `<address>`, so two addresses can be compared.
+fn answer_of(fixture: &Fixture, query: &str, address: u32) -> (Option<i32>, String) {
+    let output = fixture.permitted(false, &["--subject", "alice", "--changes", query]);
+    let answer = format!("{}{}", stdout(&output), stderr(&output));
+    (
+        output.status.code(),
+        answer.replace(&address.to_string(), "<address>"),
+    )
+}
+
+/// Issue #161: a subject without the right gets the same answer for an
+/// unreadable address and a missing one, and the store does not change.
+#[test]
+fn an_unreadable_address_answers_as_a_missing_one() {
+    const MISSING: u32 = 9999;
+    let fixture = Fixture::new();
+    let Made { v, .. } = fixture.make_world(false);
+    // The first permitted run may add a marker; the store is compared from here.
+    succeeded(fixture.permitted(false, &["--subject", "alice", "--after"]));
+    let before = fixture.after();
+    for query in [
+        "() ((Note <address>))",
+        "() ((<address>: Note Note))",
+        "((<address>: * *)) ()",
+        "((<address>: * *)) ((<address>: Note Note))",
+    ] {
+        let at = |address: u32| query.replace("<address>", &address.to_string());
+        let hidden = answer_of(&fixture, &at(v["secret"]), v["secret"]);
+        let missing = answer_of(&fixture, &at(MISSING), MISSING);
+        assert_eq!(hidden, missing, "{query}");
+        assert_eq!(fixture.after(), before, "{query}");
+    }
+    // The same through a name: the name of a hidden link is an unknown name.
+    let hidden = fixture.permitted(false, &["--subject", "alice", "() ((Note secret))"]);
+    let missing = fixture.permitted(false, &["--subject", "alice", "() ((Note nothing))"]);
+    assert_eq!(hidden.status.code(), missing.status.code());
+    assert_eq!(
+        stderr(&hidden).replace("secret", "<name>"),
+        stderr(&missing).replace("nothing", "<name>")
+    );
+    assert_eq!(fixture.after(), before);
 }
