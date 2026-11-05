@@ -324,7 +324,7 @@ Pass `--permissions self` (rules in the data) or `--permissions rules.links`
 by index or name. Without the option nothing is checked.
 
 1. The rules are links: a pair `(g: Subject Object)` marked by
-   `(r: AllowRead g)` or `(r: AllowWrite g)`. A subject matches `Subject`
+   `(r: AllowRead g)`, `(r: AllowWrite g)` or `(r: AllowReference g)`. A subject matches `Subject`
    when it is that link or of that type; a link matches `Object` when it is
    of that type or that link. `Anything` matches everything, and write
    implies read.
@@ -336,7 +336,13 @@ by index or name. Without the option nothing is checked.
    it a type.
 4. The store may change more than asked (merges, cascading deletes). Every
    link a write changed must be the subject's to change.
-5. `UndoableLinksDecorator` records the writes of the whole query. A
+5. A reference is a right of its own (#161). A subject may refer to a link it
+   may read, to itself, to what a rule `(r: AllowReference g)` covers, and to
+   the `Object` of its own `AllowRead` and `AllowWrite` rules. Any other address
+   answers as a missing one, and any other name as an unknown one, after the
+   write check. A reference a link already holds may stay, and choosing the
+   address of a new link is a reference.
+6. `UndoableLinksDecorator` records the writes of the whole query. A
    `Forbidden: <operation> <link>` error, or any other error, rolls them all
    back, names included.
 
