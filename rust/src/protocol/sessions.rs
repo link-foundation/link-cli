@@ -384,16 +384,16 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
                 }
                 reply
             }
-            Ok(reply) => match undo(view) {
-                Ok(()) => {
-                    triplets_changed.truncate(observed);
-                    reply
+            Ok(reply) => {
+                triplets_changed.truncate(observed);
+                match undo(view) {
+                    Ok(()) => reply,
+                    Err(error) => error_document(&format!(
+                        "{}; undoing it failed: {error:#}",
+                        error_message(&reply).unwrap_or_default()
+                    )),
                 }
-                Err(error) => error_document(&format!(
-                    "{}; undoing it failed: {error:#}",
-                    error_message(&reply).unwrap_or_default()
-                )),
-            },
+            }
             Err(panicked) => {
                 let _ = undo(view);
                 session.created = view.replace_created(HashSet::new());

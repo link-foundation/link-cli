@@ -176,8 +176,8 @@ public sealed class LinksSession : IDisposable
             var observed = tripletsChanged?.Count ?? 0;
             void Undone()
             {
-                Undo(store);
                 tripletsChanged?.RemoveRange(observed, tripletsChanged.Count - observed);
+                Undo(store);
             }
             IReadOnlyList<LinoLink> reply;
             try
