@@ -49,6 +49,16 @@ namespace Foundation.Data.Doublets.Cli
 
         public TripletMarkers<TLinkAddress> Markers => _triplets.Markers;
 
+        /// <inheritdoc/>
+        /// <remarks>Read as triplets, a point that is only its own type has no type yet either.</remarks>
+        public override bool Owns(IList<TLinkAddress> link)
+        {
+            ArgumentNullException.ThrowIfNull(link);
+            var index = link[Constants.IndexPart];
+            var point = link[Constants.SourcePart] == index && link[Constants.TargetPart] == index;
+            return base.Owns(link) || (point && Remembers(index));
+        }
+
         public virtual DoubletRole? RoleOf(TLinkAddress id)
         {
             return OuterOf(id) is { } link && CanRead(link) ? _triplets.RoleOf(id) : null;

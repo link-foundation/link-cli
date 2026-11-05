@@ -413,10 +413,9 @@ impl<L: NamedTypeLinks, P: AccessPolicy> PermissionsDecorator<L, P> {
     }
 
     /// Whether `link` is the subject's own: created through this view and
-    /// still without a type, or a point that is only its own type.
+    /// still without a type.
     pub fn owns(&self, link: &Link) -> bool {
-        let untyped = link.source == 0 || (link.source == link.index && link.target == link.index);
-        untyped && self.created.contains(&link.index)
+        link.source == 0 && self.created.contains(&link.index)
     }
 
     /// Whether the subject may read `link`.
@@ -427,6 +426,23 @@ impl<L: NamedTypeLinks, P: AccessPolicy> PermissionsDecorator<L, P> {
     /// Whether the subject may write `link` as it is.
     pub fn can_write(&mut self, link: &Link) -> bool {
         self.owns(link) || self.policy.can_write(&mut self.links, self.subject, link)
+    }
+
+    /// [`owns`](Self::owns) when the store is read as triplets, where a point
+    /// that is only its own type has no type yet either.
+    pub(crate) fn owns_triplet(&self, link: &Link) -> bool {
+        let point = link.source == link.index && link.target == link.index;
+        self.owns(link) || (point && self.created.contains(&link.index))
+    }
+
+    /// [`can_read`](Self::can_read) when the store is read as triplets.
+    pub(crate) fn can_read_triplet(&mut self, link: &Link) -> bool {
+        self.owns_triplet(link) || self.policy.can_read(&mut self.links, self.subject, link)
+    }
+
+    /// [`can_write`](Self::can_write) when the store is read as triplets.
+    pub(crate) fn can_write_triplet(&mut self, link: &Link) -> bool {
+        self.owns_triplet(link) || self.policy.can_write(&mut self.links, self.subject, link)
     }
 
     /// Whether the policy lets the subject write `link`, ownership aside.

@@ -34,12 +34,12 @@ impl<L: Triplets, P: AccessPolicy> PermissionsDecorator<L, P> {
 
     fn triplet_readable(&mut self, triplet: &Triplet) -> bool {
         self.outer_of(triplet.index)
-            .is_some_and(|outer| self.can_read(&outer))
+            .is_some_and(|outer| self.can_read_triplet(&outer))
     }
 
     fn triplet_writable(&mut self, triplet: &Triplet) -> bool {
         self.outer_of(triplet.index)
-            .is_some_and(|outer| self.can_write(&outer))
+            .is_some_and(|outer| self.can_write_triplet(&outer))
     }
 }
 
@@ -50,7 +50,7 @@ impl<L: Triplets, P: AccessPolicy> Triplets for PermissionsDecorator<L, P> {
 
     fn role_of(&mut self, id: u32) -> Option<DoubletRole> {
         let link = self.outer_of(id)?;
-        if !self.can_read(&link) {
+        if !self.can_read_triplet(&link) {
             return None;
         }
         self.inner_mut().role_of(id)
@@ -100,7 +100,9 @@ impl<L: Triplets, P: AccessPolicy> Triplets for PermissionsDecorator<L, P> {
         };
         // Only an empty triplet has itself as its target.
         let target = if from == 0 && to == 0 { index } else { 0 };
-        if !self.triplet_writable(&before) || !self.can_write(&Link::new(index, type_id, target)) {
+        if !self.triplet_writable(&before)
+            || !self.can_write_triplet(&Link::new(index, type_id, target))
+        {
             return Err(Forbidden::new(format!("update {index}")).into());
         }
         ensure_part(self, from, Some(index), "from")?;

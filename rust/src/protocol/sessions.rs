@@ -295,7 +295,11 @@ impl<S: NamedTypeLinks, P: AccessPolicy> LinksSessions<S, P> {
         };
         view.set_subject(subject);
         let created = view.replace_created(created);
-        let readable = view.can_read(link);
+        let readable = if self.triplets.is_some() {
+            view.can_read_triplet(link)
+        } else {
+            view.can_read(link)
+        };
         let created = view.replace_created(created);
         if let Some(state) = self.sessions.get_mut(&session) {
             state.created = created;
