@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [1.5.0] - 2026-11-05
+
+Serve triplets over the Links Notation text and binary protocol (#152). `clink --serve --triplets` (`ServerOptions::triplets`) answers `(count: (i T f t))`, `(each: (i T f t))`, `(create: (T f t))`, `(update: (i T f t))`, `(delete: i)` and three-part substitution queries with `(i: T f t)` triplets, keeps names and `(auth: token)`, and leaves a server without the flag as it was. Subscriptions push triplet changes and permissions judge them through the triplets view of `PermissionsDecorator`. A binary client whose packet asks for `--arity 2..3` gets each triplet as one link of three references, `(i: (T f t))`, and every parser reads both forms. `RemoteLinks` implements `Triplets` and adds `subscribe_triplets` and `receive_triplet_notification`, `triplets_operations` holds the requests and replies, and `docs/protocol/triplets.txt` is the conversation both ports replay.
+
 ## [1.4.0] - 2026-11-05
 
 Add the `Triplets` trait and `TripletsOverDoublets` (#151): triplets `(index: type from to)` stored in any `NamedTypeLinks` with an associative API, the twin of the C# `TripletsOverDoublets` with the same tests. A node `(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points `Pair` and `Nothing` found or created by name, so the type stays the source and `TypesDecorator` reads triplets as values of their types. `create_triplet`, `update_triplet` (the address stays), `delete_triplet` (cascading) and `each_triplet` / `count_triplets` by index, type, from and to leave no unused wrapper or pair behind. `process_triplets_query` runs substitution queries with three parts and `triplets_to_lino` / `import_triplets_lino` export and import `(index: type from to)` lines. The encoding and its costs are in `docs/TRIPLETS.md`; `cargo run --example triplets` walks through it.
