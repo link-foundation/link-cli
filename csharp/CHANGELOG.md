@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-11-05
+
+Add `TripletsOverDoublets<TLinkAddress>` and `ITriplets<TLinkAddress>` (#151): triplets `(index: type from to)` stored in any doublets store with an associative API. A node `(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points `Pair` and `Nothing` found or created by name, so the type stays the source and `TypesDecorator` reads triplets as values of their types. `CreateTriplet`, `UpdateTriplet` (the address stays), `DeleteTriplet` (cascading) and `EachTriplet` / `CountTriplets` by index, type, from and to leave no unused wrapper or pair behind. `TripletsQueryProcessor.ProcessQuery` runs substitution queries with three parts, such as `((($r: knows alice bob)) (($r: knows alice carol)))`, and `TripletsLino` imports and exports `(index: type from to)` lines. The encoding and its costs are in `docs/TRIPLETS.md`.
+
+Also updates `Platform.Data.Doublets` to 0.18.8.
+
 ## [4.3.0] - 2026-11-03
 
 Add an optional permission layer with permissions stored in links (#149), the port of `createPolicy` and `withPermissions` of `@link-foundation/ui-links` with its tests. A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or `(r: AllowWrite g)`; `Anything` matches everything and write implies read. `PermissionPolicy<TLinkAddress>` reads the rules from the data or from a store of their own, and `PermissionsDecorator<TLinkAddress>` is the store as a subject sees it: reads skip what it may not read, and a create, update or delete it may not make throws `ForbiddenException` (`Forbidden: update 14`) and changes nothing. A link the subject created is its own while its source is 0. `UndoableLinksDecorator<TLinkAddress>` makes a request atomic, and the query processor checks references in the store below the view (`Options.References`).
