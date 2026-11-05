@@ -10,6 +10,16 @@
 //! `Anything` in either place matches every subject or every link. Types are
 //! those of [`Types`](crate::types::Types) (issue #148).
 //!
+//! Referring to a link is a right of its own (issue #161). Without it an
+//! address the subject may not read answers `Link not found`, exactly as a
+//! missing one. A subject may refer to an address when it may read the link
+//! there, when it is that link, when a rule `(r: AllowReference (g: Subject
+//! Object))` covers it (`Object` itself and the links of type `Object`), or
+//! when it is the `Object` of an `AllowRead` or `AllowWrite` rule of the
+//! subject, so `User writes Note` is enough to type a link as `Note`.
+//! `AllowReference` does not allow reading. A rule from `Anything` to
+//! `Anything` lets every subject refer to every link.
+//!
 //! The markers are points of the data, so every address a rule holds is an
 //! address of the data. The rules live in the data itself or in a store of
 //! their own. Rules in the data are links like any other: a subject that may
@@ -50,27 +60,31 @@ pub enum PermissionAccess {
     Read,
     /// Reading and writing: the link may be created, updated, deleted and named.
     Write,
+    /// Referring: the link may be used in another link, not seen.
+    Reference,
 }
 
 impl PermissionAccess {
-    /// Parses `read` or `write`.
+    /// Parses `read`, `write` or `reference`.
     pub fn parse(access: &str) -> Result<Self> {
         match access {
             "read" => Ok(Self::Read),
             "write" => Ok(Self::Write),
+            "reference" => Ok(Self::Reference),
             _ => bail!("Unknown access: {access}"),
         }
     }
 }
 
-/// The three points of the data permission rules are made of: the markers
-/// `AllowRead` and `AllowWrite` of rules and `Anything`, which matches every
-/// subject or every link.
+/// The four points of the data permission rules are made of: the markers
+/// `AllowRead`, `AllowWrite` and `AllowReference` of rules and `Anything`, which
+/// matches every subject or every link.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PermissionMarkers {
     pub allow_read: u32,
     pub allow_write: u32,
     pub anything: u32,
+    pub allow_reference: u32,
 }
 
 impl PermissionMarkers {
@@ -80,14 +94,19 @@ impl PermissionMarkers {
     pub const ALLOW_WRITE_NAME: &'static str = "AllowWrite";
     /// The name of the marker that matches every subject or link.
     pub const ANYTHING_NAME: &'static str = "Anything";
+    /// The name of the marker of reference rules.
+    pub const ALLOW_REFERENCE_NAME: &'static str = "AllowReference";
 
-    /// The points named `AllowRead`, `AllowWrite` and `Anything`, each created
-    /// as a point `(x: x x)` and named when missing.
+    /// The points named `AllowRead`, `AllowWrite`, `Anything` and
+    /// `AllowReference`, each created as a point `(x: x x)` and named when
+    /// missing. `AllowReference` comes last, so the others keep their addresses
+    /// in a store made before it was added.
     pub fn ensure<L: NamedTypeLinks + ?Sized>(links: &mut L) -> Result<Self> {
         Ok(Self {
             allow_read: ensure_point(links, Self::ALLOW_READ_NAME)?,
             allow_write: ensure_point(links, Self::ALLOW_WRITE_NAME)?,
             anything: ensure_point(links, Self::ANYTHING_NAME)?,
+            allow_reference: ensure_point(links, Self::ALLOW_REFERENCE_NAME)?,
         })
     }
 
@@ -96,11 +115,12 @@ impl PermissionMarkers {
         match access {
             PermissionAccess::Read => self.allow_read,
             PermissionAccess::Write => self.allow_write,
+            PermissionAccess::Reference => self.allow_reference,
         }
     }
 }
 
-/// Who may read and write what.
+/// Who may read, write and refer to what.
 ///
 /// A subject is a link address; the null link (0) is a guest, which no rule
 /// but one for `Anything` matches. A link is given as `(index, source,
@@ -118,6 +138,18 @@ pub trait AccessPolicy {
 
     /// Whether `subject` may write anything at all, and so create links.
     fn can_create(&mut self, data: &mut dyn NamedTypeLinks, subject: u32) -> bool;
+
+    /// Whether `subject` may refer to `link` although it need not read it. A
+    /// missing address is asked about as an untyped link. A policy without
+    /// this right allows references to readable links only.
+    fn can_reference(
+        &mut self,
+        _data: &mut dyn NamedTypeLinks,
+        _subject: u32,
+        _link: &Link,
+    ) -> bool {
+        false
+    }
 }
 
 impl<P: AccessPolicy + ?Sized> AccessPolicy for &mut P {
@@ -136,6 +168,10 @@ impl<P: AccessPolicy + ?Sized> AccessPolicy for &mut P {
     fn can_create(&mut self, data: &mut dyn NamedTypeLinks, subject: u32) -> bool {
         (**self).can_create(data, subject)
     }
+
+    fn can_reference(&mut self, data: &mut dyn NamedTypeLinks, subject: u32, link: &Link) -> bool {
+        (**self).can_reference(data, subject, link)
+    }
 }
 
 impl<P: AccessPolicy + ?Sized> AccessPolicy for Box<P> {
@@ -153,6 +189,10 @@ impl<P: AccessPolicy + ?Sized> AccessPolicy for Box<P> {
 
     fn can_create(&mut self, data: &mut dyn NamedTypeLinks, subject: u32) -> bool {
         (**self).can_create(data, subject)
+    }
+
+    fn can_reference(&mut self, data: &mut dyn NamedTypeLinks, subject: u32, link: &Link) -> bool {
+        (**self).can_reference(data, subject, link)
     }
 }
 
@@ -179,8 +219,8 @@ impl PermissionPolicy {
     }
 
     /// The policy of the rules in `data`, whose points named `Type`,
-    /// `Extends`, `AllowRead`, `AllowWrite` and `Anything` are created when
-    /// missing.
+    /// `Extends`, `AllowRead`, `AllowWrite`, `Anything` and `AllowReference`
+    /// are created when missing.
     pub fn in_data<L: NamedTypeLinks + ?Sized>(data: &mut L) -> Result<Self> {
         let types = TypeMarkers::ensure(data)?;
         let markers = PermissionMarkers::ensure(data)?;
@@ -272,7 +312,10 @@ impl PermissionPolicy {
         subject: u32,
         object: u32,
     ) -> Result<u32> {
-        if subject == markers.allow_read || subject == markers.allow_write {
+        if subject == markers.allow_read
+            || subject == markers.allow_write
+            || subject == markers.allow_reference
+        {
             // A pair from a marker would read as a mark.
             bail!("A marker cannot be a subject");
         }
@@ -283,7 +326,7 @@ impl PermissionPolicy {
         Ok(rule)
     }
 
-    /// Parses `read` or `write`.
+    /// Parses `read`, `write` or `reference`.
     pub fn parse_access(access: &str) -> Result<PermissionAccess> {
         PermissionAccess::parse(access)
     }
@@ -319,6 +362,31 @@ impl AccessPolicy for PermissionPolicy {
             .into_iter()
             .any(|(rule_subject, _)| is_subject(&mut types, anything, subject, rule_subject))
     }
+
+    fn can_reference(&mut self, data: &mut dyn NamedTypeLinks, subject: u32, link: &Link) -> bool {
+        let markers = self.markers;
+        if (subject != 0 && link.index == subject)
+            || self.allows(data, markers.allow_reference, subject, link)
+        {
+            return true;
+        }
+        // The object of a rule of the subject is named by that rule: a readable
+        // link of that type shows its address anyway.
+        [
+            markers.allow_read,
+            markers.allow_write,
+            markers.allow_reference,
+        ]
+        .into_iter()
+        .any(|marker| {
+            let granted = self.granted(data, marker);
+            let mut types = TypesDecorator::with_markers(&mut *data, self.types);
+            granted.into_iter().any(|(rule_subject, rule_object)| {
+                rule_object == link.index
+                    && is_subject(&mut types, markers.anything, subject, rule_subject)
+            })
+        })
+    }
 }
 
 /// The store as one subject sees it; see the [module documentation](self).
@@ -340,15 +408,21 @@ impl AccessPolicy for PermissionPolicy {
 /// must be the subject's to change; when one is not, the write is undone and
 /// refused as a whole.
 ///
-/// Names are references, not links: [`get_name`](NamedTypeLinks::get_name)
-/// and [`get_by_name`](NamedTypeLinks::get_by_name) answer for every link, so
-/// a subject may refer to a type it cannot read. Naming or unnaming a link
-/// needs the right to write it.
+/// A reference needs [`can_reference`](Self::can_reference): without the right
+/// an unreadable address answers as a missing one, to
+/// [`reference_exists`](NamedTypeLinks::reference_exists), to a create and to
+/// an update. The write check runs first, so a type the subject may not write
+/// stays [`Forbidden`] for hidden and missing alike. A reference a link already
+/// holds may stay; once replaced, it cannot be put back without the right.
+/// Choosing the address of a new link
+/// ([`try_ensure_created`](NamedTypeLinks::try_ensure_created)) is a reference
+/// too, so a limited subject cannot choose addresses.
 ///
-/// A reference of a query is checked in the store below
-/// ([`reference_exists`](NamedTypeLinks::reference_exists)): a hidden link is
-/// not found, yet its address is taken, so a query cannot learn that it is
-/// taken by trying to create a link there.
+/// Names follow references: [`get_name`](NamedTypeLinks::get_name) and
+/// [`get_by_name`](NamedTypeLinks::get_by_name) answer only for a link the
+/// subject may refer to, so any other name is an unknown name. Naming or
+/// unnaming a link needs the right to write it, and taking a name needs the
+/// right to write the link that holds it.
 pub struct PermissionsDecorator<L: NamedTypeLinks, P: AccessPolicy = PermissionPolicy> {
     links: L,
     policy: P,
@@ -426,6 +500,32 @@ impl<L: NamedTypeLinks, P: AccessPolicy> PermissionsDecorator<L, P> {
     /// Whether the subject may write `link` as it is.
     pub fn can_write(&mut self, link: &Link) -> bool {
         self.owns(link) || self.policy.can_write(&mut self.links, self.subject, link)
+    }
+
+    /// Whether the subject may refer to the address `id`, which may hold no
+    /// link: a missing address is judged as an untyped link, so only a rule
+    /// for `Anything` covers it.
+    pub fn can_reference(&mut self, id: u32) -> bool {
+        let link = self.links.get_link(id).unwrap_or(Link::new(id, 0, 0));
+        self.owns_triplet(&link)
+            || self.can_read(&link)
+            || self
+                .policy
+                .can_reference(&mut self.links, self.subject, &link)
+    }
+
+    /// The references `before` does not hold yet need the right: without it
+    /// the address answers as a missing one.
+    fn check_references(&mut self, before: Option<&Link>, source: u32, target: u32) -> Result<()> {
+        for part in [source, target] {
+            let held = before.is_some_and(|link| {
+                part == link.index || part == link.source || part == link.target
+            });
+            if part != 0 && !held && !self.can_reference(part) {
+                return Err(LinkError::not_found(part).into());
+            }
+        }
+        Ok(())
     }
 
     /// [`owns`](Self::owns) when the store is read as triplets, where a point
@@ -605,18 +705,24 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
     }
 
     fn try_ensure_created(&mut self, id: u32) -> Result<u32> {
-        if id != 0 && self.visible(id)?.is_some() {
+        if id != 0 && self.exists(id) {
             return Ok(id);
         }
         if !self.policy_can_create() {
             return Err(Forbidden::new("create").into());
         }
-        let missing = id != 0 && !self.links.exists(id);
-        let id = self.links.try_ensure_created(id)?;
-        if missing {
-            self.created.insert(id);
+        if id != 0 && !self.can_reference(id) {
+            return Err(LinkError::not_found(id).into());
         }
-        Ok(id)
+        if id != 0 && self.links.exists(id) {
+            // The subject may refer to this hidden link: the point must not land on it.
+            bail!("Link {id} exists");
+        }
+        let created = self.links.try_ensure_created(id)?;
+        if id != 0 {
+            self.created.insert(created);
+        }
+        Ok(created)
     }
 
     fn get_link(&mut self, id: u32) -> Option<Link> {
@@ -630,13 +736,15 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
 
     fn try_create(&mut self, source: u32, target: u32) -> Result<u32> {
         self.require_create(source, target)?;
+        self.check_references(None, source, target)?;
         let id = self.links.try_create(source, target)?;
         self.created.insert(id);
         Ok(id)
     }
 
+    /// A link the subject may not refer to is as missing as a deleted one.
     fn reference_exists(&mut self, id: u32) -> bool {
-        self.links.reference_exists(id)
+        self.links.reference_exists(id) && self.can_reference(id)
     }
 
     fn claims(&mut self, id: u32) -> Option<bool> {
@@ -663,6 +771,7 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
         {
             return Err(Forbidden::new(format!("update {id}")).into());
         }
+        self.check_references(Some(&before), source, target)?;
         let mut log = LinksUndoLog::new();
         keep_names_before_update(&mut log, &mut self.links, id, source, target)?;
         self.checked(
@@ -724,8 +833,11 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
         Self::panic_on(self.try_get_or_create(source, target))
     }
 
-    /// The name of any link: names are references.
+    /// The name of a link the subject may refer to; any other has none.
     fn get_name(&mut self, id: u32) -> Result<Option<String>> {
+        if !self.can_reference(id) {
+            return Ok(None);
+        }
         self.links.get_name(id)
     }
 
@@ -744,9 +856,11 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
         self.links.set_name(id, name)
     }
 
-    /// The link of any name: names are references.
+    /// The link of a name, when the subject may refer to it; any other name
+    /// is an unknown name.
     fn get_by_name(&mut self, name: &str) -> Result<Option<u32>> {
-        self.links.get_by_name(name)
+        let found = self.links.get_by_name(name)?;
+        Ok(found.filter(|&id| id == 0 || self.can_reference(id)))
     }
 
     fn remove_name(&mut self, id: u32) -> Result<()> {

@@ -227,7 +227,8 @@ console.log(await links.requestText('(auth: alice-secret)')); // (subject: 11)
 
 From then on, reads skip what the subject may not read, and writes it may not
 make reject with `RemoteError` (`Forbidden: update 14`). `getByName` of a link
-the subject cannot read resolves to `null`. The package has no permission
+the subject may not refer to resolves to `null`, and such an address answers as a
+missing one. The package has no permission
 layer of its own: the rules are the server's. See
 [examples/permissions](../../examples/permissions).
 

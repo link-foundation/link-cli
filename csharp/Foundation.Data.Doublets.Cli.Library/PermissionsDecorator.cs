@@ -37,13 +37,20 @@ namespace Foundation.Data.Doublets.Cli
     /// and refused as a whole.
     /// </para>
     /// <para>
-    /// Names are references, not links: <see cref="GetName"/> and
-    /// <see cref="GetByName"/> answer for every link, so a subject may refer to
-    /// a type it cannot read, as it does when it types its own link. Naming or
-    /// unnaming a link needs the right to write it.
+    /// A reference needs <see cref="CanReference(TLinkAddress)"/>: without the right an unreadable
+    /// address answers as a missing one, to <see cref="ReferenceExists"/> and to an update. The write
+    /// check runs first, so a type the subject may not write stays <see cref="ForbiddenException"/>
+    /// for hidden and missing alike. A reference a link already holds may stay; once replaced, it
+    /// cannot be put back without the right. Choosing the address of a new link
+    /// (<see cref="RequireAddress"/>) is a reference too, so a limited subject cannot choose addresses.
+    /// </para>
+    /// <para>
+    /// Names follow references: <see cref="GetName"/> and <see cref="GetByName"/> answer only for a
+    /// link the subject may refer to, so any other name is an unknown name. Naming or unnaming a link
+    /// needs the right to write it, and taking a name needs the right to write the link that holds it.
     /// </para>
     /// </remarks>
-    public class PermissionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>
+    public class PermissionsDecorator<TLinkAddress> : LinksDecoratorBase<TLinkAddress>, INamedTypesLinks<TLinkAddress>, IReferencedLinks<TLinkAddress>
         where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
     {
         private readonly INamedTypesLinks<TLinkAddress> _named;
@@ -89,6 +96,37 @@ namespace Foundation.Data.Doublets.Cli
 
         /// <summary>Whether the subject may write <paramref name="link"/> as it is.</summary>
         public virtual bool CanWrite(IList<TLinkAddress> link) => Owns(link) || Policy.CanWrite(Subject, link);
+
+        /// <summary>
+        /// Whether the subject may refer to the address <paramref name="address"/>, which may hold no link:
+        /// a missing address is judged as an untyped link, so only a rule for <c>Anything</c> covers it.
+        /// </summary>
+        public virtual bool CanReference(TLinkAddress address)
+        {
+            var link = _links.Exists(address) ? new Link<TLinkAddress>(_links.GetLink(address)) : new Link<TLinkAddress>(address, _constants.Null, _constants.Null);
+            return CanRead(link) || Policy.CanReference(Subject, link);
+        }
+
+        /// <summary>A link the subject may not refer to is as missing as a deleted one.</summary>
+        public virtual bool ReferenceExists(TLinkAddress address) => _links.Exists(address) && CanReference(address);
+
+        /// <summary>Choosing the address of a new link is a reference: refuses one the subject may not choose.</summary>
+        public virtual void RequireAddress(TLinkAddress address)
+        {
+            if (!Policy.CanCreate(Subject))
+            {
+                throw new ForbiddenException("create");
+            }
+            if (!CanReference(address))
+            {
+                throw new ArgumentException($"Link not found: {address}");
+            }
+            if (_links.Exists(address) && !CanRead(new Link<TLinkAddress>(_links.GetLink(address))))
+            {
+                // The subject may refer to this hidden link: nothing may land on it.
+                throw new InvalidOperationException($"Link {address} exists");
+            }
+        }
 
         /// <summary>The link at <paramref name="index"/> is gone: a new one there is not the subject's own.</summary>
         public virtual void Forget(TLinkAddress index) => _created.Remove(index);
@@ -153,6 +191,8 @@ namespace Foundation.Data.Doublets.Cli
             {
                 throw new ForbiddenException($"update {index}");
             }
+            CheckReference(after.Source, before.Value);
+            CheckReference(after.Target, before.Value);
             var log = new LinksUndoLog<TLinkAddress>();
             UndoableLinksDecorator<TLinkAddress>.KeepNamesBeforeUpdate(log, _named, index, substitution);
             return Checked($"update {index}", index, log, recorder => _links.Update(restriction, substitution, recorder), handler);
@@ -175,11 +215,15 @@ namespace Foundation.Data.Doublets.Cli
             return Checked($"delete {index}", index, log, recorder => _links.Delete(restriction, recorder), handler);
         }
 
-        /// <summary>The name of any link: names are references.</summary>
-        public virtual string? GetName(TLinkAddress link) => _named.GetName(link);
+        /// <summary>The name of a link the subject may refer to; any other has none.</summary>
+        public virtual string? GetName(TLinkAddress link) => CanReference(link) ? _named.GetName(link) : null;
 
-        /// <summary>The link of any name: names are references.</summary>
-        public virtual TLinkAddress GetByName(string name) => _named.GetByName(name);
+        /// <summary>The link of a name, when the subject may refer to it; any other name is an unknown name.</summary>
+        public virtual TLinkAddress GetByName(string name)
+        {
+            var found = _named.GetByName(name);
+            return found == _constants.Null || CanReference(found) ? found : _constants.Null;
+        }
 
         public virtual TLinkAddress SetName(TLinkAddress link, string name)
         {
@@ -205,6 +249,15 @@ namespace Foundation.Data.Doublets.Cli
                 RequireWritable(link, "remove-name");
             }
             _named.RemoveName(link);
+        }
+
+        /// <summary>A reference <paramref name="before"/> does not hold yet needs the right: without it the address answers as a missing one.</summary>
+        private void CheckReference(TLinkAddress part, Link<TLinkAddress> before)
+        {
+            if (part != _constants.Null && part != before.Index && part != before.Source && part != before.Target && !CanReference(part))
+            {
+                throw new ArgumentException($"Link not found: {part}");
+            }
         }
 
         private void RequireWritable(TLinkAddress index, string what)

@@ -55,8 +55,8 @@ public sealed class CliPermissionsTests : IDisposable
         Assert.Contains("(shared: Shared shared)", aliceSees);
         Assert.DoesNotContain(aliceSees, line => line.Contains("secret", StringComparison.Ordinal));
 
-        // A note of alice's may become another note, not a secret.
-        var refused = await Clink.RunAsync(Permissions(separateRules, "--subject", "alice", "--changes", "((note: Note note)) ((note: Secret note))"));
+        // A note of alice's may become another note, not what she only reads.
+        var refused = await Clink.RunAsync(Permissions(separateRules, "--subject", "alice", "--changes", "((note: Note note)) ((note: Public note))"));
         Assert.Equal(1, refused.ExitCode);
         Assert.Contains($"Forbidden: update {v["note"]}", refused.Stderr, StringComparison.Ordinal);
         var after = await Clink.RunAsync("--db", Data, "--after");
@@ -64,8 +64,8 @@ public sealed class CliPermissionsTests : IDisposable
 
         // A secret is as missing to alice as a deleted link.
         var hidden = await Clink.RunAsync(Permissions(separateRules, "--subject", v["alice"].ToString(), "--changes", "((secret: * *)) ()"));
-        Clink.AssertSucceeded(hidden);
-        Assert.Equal("", hidden.Stdout);
+        Assert.Equal(1, hidden.ExitCode);
+        Assert.Contains("Invalid reference to non-existent link 'secret'", hidden.Stderr, StringComparison.Ordinal);
         Assert.Equal(all, Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout));
 
         // The boss writes anything.
@@ -82,9 +82,16 @@ public sealed class CliPermissionsTests : IDisposable
         var seen = await Clink.RunAsync(Permissions(false, "--after"));
         Clink.AssertSucceeded(seen);
         Assert.Equal("", seen.Stdout);
-        var refused = await Clink.RunAsync(Permissions(false, "() ((1 2))"));
-        Assert.Equal(1, refused.ExitCode);
-        Assert.Contains("Forbidden: create", refused.Stderr, StringComparison.Ordinal);
+        // A guest creates nothing, so whether 1 exists makes no difference to the answer.
+        foreach (var request in new[] { "() ((1 2))", "() ((99999 2))" })
+        {
+            var refused = await Clink.RunAsync(Permissions(false, request));
+            Assert.Equal(1, refused.ExitCode);
+            Assert.Contains("Forbidden: create", refused.Stderr, StringComparison.Ordinal);
+        }
+        var autoCreating = await Clink.RunAsync(Permissions(false, "--auto-create-missing-references", "() ((1 2))"));
+        Assert.Equal(1, autoCreating.ExitCode);
+        Assert.Contains("Forbidden: create", autoCreating.Stderr, StringComparison.Ordinal);
         var unknown = await Clink.RunAsync(Permissions(false, "--subject", "nobody", "--after"));
         Assert.Equal(1, unknown.ExitCode);
         Assert.Contains("Unknown subject 'nobody'", unknown.Stderr, StringComparison.Ordinal);
@@ -142,6 +149,46 @@ public sealed class CliPermissionsTests : IDisposable
         var revoked = await Clink.RunAsync("--db", Data, "--tokens", tokens, "--revoke-token", "alice-secret");
         Clink.AssertSucceeded(revoked);
         Assert.Equal("Token revoked.\n", revoked.Stdout);
+    }
+
+    /// <summary>
+    /// Issue #161: a subject without the right gets the same answer for an unreadable address
+    /// and a missing one, and the store does not change.
+    /// </summary>
+    [Theory]
+    [InlineData("() ((Note <address>))")]
+    [InlineData("() ((<address>: Note Note))")]
+    [InlineData("((<address>: * *)) ()")]
+    [InlineData("((<address>: * *)) ((<address>: Note Note))")]
+    public async Task AnUnreadableAddressAnswersAsAMissingOne(string query)
+    {
+        const uint missing = 9999;
+        var (_, v, _, _) = MakeWorld(separateRules: false);
+        Clink.AssertSucceeded(await Clink.RunAsync(Permissions(false, "--subject", "alice", "--after")));
+        var before = Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout);
+
+        async Task<(int, string)> AnswerAt(uint address)
+        {
+            var answer = await Clink.RunAsync(Permissions(false, "--subject", "alice", "--changes", query.Replace("<address>", address.ToString())));
+            return (answer.ExitCode, (answer.Stdout + answer.Stderr).Replace(address.ToString(), "<address>"));
+        }
+
+        Assert.Equal(await AnswerAt(missing), await AnswerAt(v["secret"]));
+        Assert.Equal(before, Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout));
+    }
+
+    /// <summary>The name of a hidden link answers as an unknown name.</summary>
+    [Fact]
+    public async Task TheNameOfAnUnreadableLinkAnswersAsAnUnknownName()
+    {
+        MakeWorld(separateRules: false);
+        Clink.AssertSucceeded(await Clink.RunAsync(Permissions(false, "--subject", "alice", "--after")));
+        var before = Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout);
+        var hidden = await Clink.RunAsync(Permissions(false, "--subject", "alice", "() ((Note secret))"));
+        var unknown = await Clink.RunAsync(Permissions(false, "--subject", "alice", "() ((Note nothing))"));
+        Assert.Equal(unknown.ExitCode, hidden.ExitCode);
+        Assert.Equal(unknown.Stderr.Replace("nothing", "<name>"), hidden.Stderr.Replace("secret", "<name>"));
+        Assert.Equal(before, Lines((await Clink.RunAsync("--db", Data, "--after")).Stdout));
     }
 
     private async Task<RunningClink> StartServerAsync(params string[] extra)

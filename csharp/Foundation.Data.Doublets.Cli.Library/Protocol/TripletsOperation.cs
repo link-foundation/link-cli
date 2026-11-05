@@ -188,7 +188,7 @@ public abstract record TripletsOperation
 
     /// <summary>
     /// Answers one request of a server in triplet mode against <paramref name="triplets"/>; failures produce an
-    /// <see cref="LinksServer.ErrorDocument"/>. The counterpart of <see cref="LinksServer.ExecuteRequest(INamedTypesLinks{uint}, IReadOnlyList{LinoLink}, bool, INamedTypesLinks{uint}?)"/>.
+    /// <see cref="LinksServer.ErrorDocument"/>. The counterpart of <see cref="LinksServer.ExecuteRequest(INamedTypesLinks{uint}, IReadOnlyList{LinoLink}, bool)"/>.
     /// </summary>
     public static IReadOnlyList<LinoLink> ExecuteRequest(ITriplets<uint> triplets, IReadOnlyList<LinoLink> document) =>
         ExecuteRequest(triplets, document, null);

@@ -77,6 +77,7 @@ fn markers_are_named_points() -> Result<()> {
         (m.allow_read, "AllowRead"),
         (m.allow_write, "AllowWrite"),
         (m.anything, "Anything"),
+        (m.allow_reference, "AllowReference"),
     ] {
         assert_eq!(Link::new(marker, marker, marker), w.link(marker));
         assert_eq!(
@@ -201,6 +202,7 @@ fn keeps_the_hierarchy_from_who_may_write_its_values() -> Result<()> {
     let (t, v) = (w.t.clone(), w.v.clone());
     let extends = w.types.extends.expect("an Extends marker");
     let pair = w.links.search(t["Shared"], t["Public"]).expect("the pair");
+    w.allow(PermissionAccess::Reference, t["User"], t["Admin"])?;
     let mut view = w.as_(v["alice"]);
     // The link of Note itself is of type Doc.
     assert_eq!(
@@ -238,12 +240,20 @@ fn refuses_a_marker_as_a_subject() -> Result<()> {
     );
     assert_eq!(
         Some("bad-request"),
+        error_of(w.allow(PermissionAccess::Reference, m.allow_reference, 1))
+    );
+    assert_eq!(
+        Some("bad-request"),
         error_of(PermissionPolicy::parse_access("own"))
     );
-    // An access other than read or write cannot be written in Rust.
+    // An access other than these cannot be written in Rust.
     assert_eq!(
         PermissionAccess::Write,
         PermissionPolicy::parse_access("write")?
+    );
+    assert_eq!(
+        PermissionAccess::Reference,
+        PermissionPolicy::parse_access("reference")?
     );
     Ok(())
 }
@@ -388,8 +398,8 @@ fn names_need_the_right_to_write() -> Result<()> {
     let mut w = World::new(false)?;
     let (t, v) = (w.t.clone(), w.v.clone());
     let mut view = w.as_(v["alice"]);
-    // Names are references: any name resolves.
-    assert_eq!(Some(v["secret"]), view.get_by_name("secret")?);
+    // Names follow references: the name of a hidden link is an unknown name.
+    assert_eq!(None, view.get_by_name("secret")?);
     assert_eq!(Some("Note".to_string()), view.get_name(t["Note"])?);
     view.set_name(v["note"], "my note")?;
     assert_eq!(

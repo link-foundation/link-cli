@@ -330,6 +330,7 @@ fn roots_and_markers_may_be_unnamed_links_of_any_address() -> Result<()> {
         allow_read: make(&mut data, 2, 2)?,
         allow_write: make(&mut data, 3, 3)?,
         anything: make(&mut data, 4, 4)?,
+        allow_reference: make(&mut data, 5, 5)?,
     };
     let mut types = TypesDecorator::new(&mut data, root, None);
     let user = types.define_root()?;
@@ -429,7 +430,9 @@ fn a_policy_may_bring_a_type_system_of_its_own() -> Result<()> {
     // The type of posts is a post too: it starts at itself.
     assert_eq!(vec![post, mine], indices(&mut view));
     assert_eq!(Some("not-found"), error_of(view.delete(other)));
-    let draft = make(&mut view, post, person)?;
+    // This policy says nothing of references: only what it reads may be referred to.
+    assert_eq!(Some("not-found"), error_of(make(&mut view, post, person)));
+    let draft = make(&mut view, post, mine)?;
     assert_eq!(
         Some("forbidden"),
         error_of(view.update(draft, person, post))
@@ -447,6 +450,7 @@ impl AccessPolicy for OwnerPolicy {
             allow_read: 0,
             allow_write: 0,
             anything: 0,
+            allow_reference: 0,
         }
     }
 

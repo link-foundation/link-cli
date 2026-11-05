@@ -49,7 +49,6 @@ internal static class CliPermissions
             QueryProcessor.ProcessQuery(links, options);
             return;
         }
-        options.References = undoableLinks;
         undoableLinks.Begin();
         try
         {

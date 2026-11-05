@@ -414,7 +414,7 @@ namespace Foundation.Data.Doublets.Cli
                         ReferenceKind.Name => NameOf(triplets, part.Text) is not null || definedNames.Contains(part.Text),
                         _ => part.Address<TLinkAddress>() is var address && (address == zero
                             ? position > 0
-                            : triplets.IsTriplet(address) || definedAddresses.Contains(address)),
+                            : triplets.ReferenceIsTriplet(address) || definedAddresses.Contains(address)),
                     };
                     if (!known)
                     {

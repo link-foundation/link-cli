@@ -150,12 +150,12 @@ the subject may see.
 A policy needs a way to tell what type a link has. It can get that in four
 ways:
 
-1. **The default.** Points named `Type`, `Extends`, `AllowRead`, `AllowWrite`
-   and `Anything` are created on first use (`EnsureMarkers`,
+1. **The default.** Points named `Type`, `Extends`, `AllowRead`, `AllowWrite`,
+   `AllowReference` and `Anything` are created on first use (`EnsureMarkers`,
    `PermissionMarkers::ensure`, `TypeMarkers::ensure`). The policy uses the
    `TypesDecorator` hierarchy (#148).
 2. **Explicit roots and markers.** Pass any links as the markers and the type
-   root: `new PermissionMarkers<uint>(read, write, anything)`,
+   root: `new PermissionMarkers<uint>(read, write, anything, reference)`,
    `new TypesDecorator<uint>(data, root)`, and the Rust `PermissionPolicy::new`
    with `TypeMarkers`. The links may be unnamed and at any address, and the
    store never gets a point named `Type`
@@ -168,7 +168,8 @@ ways:
    uses a type system where a link's type is simply its source.
 4. **No rules at all.** Implement `IPermissionPolicy<T>` / `AccessPolicy`
    directly, for example as owner-writes / everyone-reads
-   (`APolicyMayKeepNoRulesAtAll`). The decorator still provides filtering,
+   (`APolicyMayKeepNoRulesAtAll`). A policy that does not implement
+   `CanReference` / `can_reference` allows references to readable links only. The decorator still provides filtering,
    `Forbidden` errors, atomic writes and ownership of new links.
 
 ## Scenarios

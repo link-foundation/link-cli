@@ -248,6 +248,13 @@ pub trait Triplets: NamedTypeLinks {
         self.get_triplet(index).is_some()
     }
 
+    /// Whether a reference to `index` names a triplet: the same as
+    /// [`Self::is_triplet`], but for a view that hides triplets, where one the
+    /// subject may refer to counts as well (issue #161).
+    fn reference_is_triplet(&mut self, index: u32) -> bool {
+        self.is_triplet(index)
+    }
+
     /// Creates `(i: type from to)` and returns `i`.
     ///
     /// `type` must be a triplet; `from` and `to` must be triplets or `0`.

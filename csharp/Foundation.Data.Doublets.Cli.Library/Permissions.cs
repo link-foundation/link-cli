@@ -31,14 +31,16 @@ namespace Foundation.Data.Doublets.Cli
         Read,
         /// <summary>Reading and writing: the link may be created, updated, deleted and named.</summary>
         Write,
+        /// <summary>Referring: the link may be used in another link, not seen.</summary>
+        Reference,
     }
 
     /// <summary>
-    /// The three points of the data permission rules are made of: the markers
-    /// <c>AllowRead</c> and <c>AllowWrite</c> of rules and <c>Anything</c>, which
-    /// matches every subject or every link.
+    /// The four points of the data permission rules are made of: the markers
+    /// <c>AllowRead</c>, <c>AllowWrite</c> and <c>AllowReference</c> of rules and
+    /// <c>Anything</c>, which matches every subject or every link.
     /// </summary>
-    public readonly record struct PermissionMarkers<TLinkAddress>(TLinkAddress AllowRead, TLinkAddress AllowWrite, TLinkAddress Anything)
+    public readonly record struct PermissionMarkers<TLinkAddress>(TLinkAddress AllowRead, TLinkAddress AllowWrite, TLinkAddress Anything, TLinkAddress AllowReference)
         where TLinkAddress : struct, IUnsignedNumber<TLinkAddress>
     {
         /// <summary>The name of the marker of read rules.</summary>
@@ -50,11 +52,19 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>The name of the marker that matches every subject or link.</summary>
         public const string AnythingName = "Anything";
 
+        /// <summary>The name of the marker of reference rules.</summary>
+        public const string AllowReferenceName = "AllowReference";
+
         /// <summary>The marker of the rules of <paramref name="access"/>.</summary>
-        public TLinkAddress Of(PermissionAccess access) => access == PermissionAccess.Write ? AllowWrite : AllowRead;
+        public TLinkAddress Of(PermissionAccess access) => access switch
+        {
+            PermissionAccess.Write => AllowWrite,
+            PermissionAccess.Reference => AllowReference,
+            _ => AllowRead,
+        };
     }
 
-    /// <summary>Who may read and write what.</summary>
+    /// <summary>Who may read, write and refer to what.</summary>
     /// <remarks>
     /// A subject is a link address; the null link (0) is a guest, which no rule
     /// but one for <c>Anything</c> matches. A link is given as
@@ -75,6 +85,13 @@ namespace Foundation.Data.Doublets.Cli
 
         /// <summary>Whether <paramref name="subject"/> may write anything at all, and so create links.</summary>
         bool CanCreate(TLinkAddress subject);
+
+        /// <summary>
+        /// Whether <paramref name="subject"/> may refer to <paramref name="link"/> although it need not
+        /// read it. A missing address is asked about as an untyped link. A policy without this right
+        /// allows references to readable links only.
+        /// </summary>
+        bool CanReference(TLinkAddress subject, IList<TLinkAddress> link) => false;
     }
 
     /// <summary>
@@ -100,6 +117,16 @@ namespace Foundation.Data.Doublets.Cli
     /// itself or in a store of their own. Rules in the data are links like any
     /// other: a subject that may write them may change the rules, so give
     /// <c>Anything</c> writes to administrators only, or keep the rules apart.
+    /// </para>
+    /// <para>
+    /// Referring to a link is a right of its own (issue #161). Without it an address the
+    /// subject may not read answers <c>Link not found</c>, exactly as a missing one. A subject
+    /// may refer to an address when it may read the link there, when it is that link, when a
+    /// rule <c>(r: AllowReference (g: Subject Object))</c> covers it (<c>Object</c> itself and
+    /// the links of type <c>Object</c>), or when it is the <c>Object</c> of an <c>AllowRead</c>
+    /// or <c>AllowWrite</c> rule of the subject, so <c>User writes Note</c> is enough to type a
+    /// link as <c>Note</c>. <c>AllowReference</c> does not allow reading. A rule from
+    /// <c>Anything</c> to <c>Anything</c> lets every subject refer to every link.
     /// </para>
     /// </remarks>
     public class PermissionPolicy<TLinkAddress> : IPermissionPolicy<TLinkAddress>
@@ -128,7 +155,7 @@ namespace Foundation.Data.Doublets.Cli
         /// <summary>
         /// The policy of the rules in <paramref name="rules"/> over <paramref name="data"/>,
         /// whose points named <c>Type</c>, <c>Extends</c>, <c>AllowRead</c>,
-        /// <c>AllowWrite</c> and <c>Anything</c> are created when missing.
+        /// <c>AllowWrite</c>, <c>Anything</c> and <c>AllowReference</c> are created when missing.
         /// </summary>
         public PermissionPolicy(INamedTypesLinks<TLinkAddress> data, ILinks<TLinkAddress> rules)
             : this(rules, EnsureMarkers(data, data), new TypesDecorator<TLinkAddress>(data))
@@ -136,8 +163,10 @@ namespace Foundation.Data.Doublets.Cli
         }
 
         /// <summary>
-        /// The points named <c>AllowRead</c>, <c>AllowWrite</c> and <c>Anything</c>
-        /// in the data, each created as a point <c>(x: x x)</c> and named when missing.
+        /// The points named <c>AllowRead</c>, <c>AllowWrite</c>, <c>Anything</c> and
+        /// <c>AllowReference</c> in the data, each created as a point <c>(x: x x)</c> and named
+        /// when missing. <c>AllowReference</c> comes last, so the others keep their addresses in
+        /// a store made before it was added.
         /// </summary>
         public static PermissionMarkers<TLinkAddress> EnsureMarkers(ILinks<TLinkAddress> links, INamedTypes<TLinkAddress> names)
         {
@@ -146,7 +175,8 @@ namespace Foundation.Data.Doublets.Cli
             return new PermissionMarkers<TLinkAddress>(
                 TypesDecorator<TLinkAddress>.EnsurePoint(links, names, PermissionMarkers<TLinkAddress>.AllowReadName),
                 TypesDecorator<TLinkAddress>.EnsurePoint(links, names, PermissionMarkers<TLinkAddress>.AllowWriteName),
-                TypesDecorator<TLinkAddress>.EnsurePoint(links, names, PermissionMarkers<TLinkAddress>.AnythingName));
+                TypesDecorator<TLinkAddress>.EnsurePoint(links, names, PermissionMarkers<TLinkAddress>.AnythingName),
+                TypesDecorator<TLinkAddress>.EnsurePoint(links, names, PermissionMarkers<TLinkAddress>.AllowReferenceName));
         }
 
         public PermissionMarkers<TLinkAddress> Markers { get; }
@@ -195,6 +225,20 @@ namespace Foundation.Data.Doublets.Cli
         public virtual bool CanCreate(TLinkAddress subject) =>
             Granted(Markers.AllowWrite).Any(rule => IsSubject(subject, rule.Subject));
 
+        public virtual bool CanReference(TLinkAddress subject, IList<TLinkAddress> link)
+        {
+            ArgumentNullException.ThrowIfNull(link);
+            var index = link[_rules.Constants.IndexPart];
+            if ((subject != _rules.Constants.Null && index == subject) || Allows(Markers.AllowReference, subject, link))
+            {
+                return true;
+            }
+            // The object of a rule of the subject is named by that rule: a readable
+            // link of that type shows its address anyway.
+            return new[] { Markers.AllowRead, Markers.AllowWrite, Markers.AllowReference }
+                .Any(marker => Granted(marker).Any(rule => rule.Object == index && IsSubject(subject, rule.Subject)));
+        }
+
         /// <summary>Whether a rule of <paramref name="marker"/> lets <paramref name="subject"/> at <paramref name="link"/>.</summary>
         protected virtual bool Allows(TLinkAddress marker, TLinkAddress subject, IList<TLinkAddress> link)
         {
@@ -223,11 +267,11 @@ namespace Foundation.Data.Doublets.Cli
             TLinkAddress @object)
         {
             ArgumentNullException.ThrowIfNull(rules);
-            if (access is not (PermissionAccess.Read or PermissionAccess.Write))
+            if (access is not (PermissionAccess.Read or PermissionAccess.Write or PermissionAccess.Reference))
             {
                 throw new ArgumentOutOfRangeException(nameof(access), access, $"Unknown access: {access}");
             }
-            if (subject == markers.AllowRead || subject == markers.AllowWrite)
+            if (subject == markers.AllowRead || subject == markers.AllowWrite || subject == markers.AllowReference)
             {
                 // A pair from a marker would read as a mark.
                 throw new ArgumentException("A marker cannot be a subject", nameof(subject));
@@ -257,6 +301,7 @@ namespace Foundation.Data.Doublets.Cli
         {
             "read" => PermissionAccess.Read,
             "write" => PermissionAccess.Write,
+            "reference" => PermissionAccess.Reference,
             _ => throw new ArgumentException($"Unknown access: {access}", nameof(access)),
         };
     }

@@ -64,7 +64,7 @@ public sealed class LinksSessionsTests
             Assert.Equal("mine", w.Links.GetName(w.V["note"]));
             Assert.Equal("", alice.Request("(get-by-name: 'secret')"));
             Assert.Equal("", alice.Request($"(get-name: {secret})"));
-            Assert.Equal("", alice.Request("((secret: * *)) ()"));
+            Assert.Contains("Invalid reference to non-existent link 'secret'", alice.Request("((secret: * *)) ()"), StringComparison.Ordinal);
             Assert.Equal("(name: secret)", boss.Request($"(get-name: {secret})"));
             Assert.Equal($"(link: {secret})", boss.Request("(get-by-name: 'secret')"));
             Assert.Equal(
@@ -126,7 +126,7 @@ public sealed class LinksSessionsTests
             var before = w.All(w.Links);
             var names = before.ToDictionary(link => link.Index, link => w.Links.GetName(link.Index));
             // The first change is allowed, the second is not: neither stays.
-            var reply = alice.Request($"() (({note} {note}) ({S(w.T["Secret"])} {S(w.T["Secret"])}))");
+            var reply = alice.Request($"() (({note} {note}) ({S(w.T["Public"])} {S(w.T["Public"])}))");
             Assert.StartsWith("(error: 'Forbidden: ", reply, StringComparison.Ordinal);
             Assert.Equal(before, w.All(w.Links));
             Assert.Equal(names, before.ToDictionary(link => link.Index, link => w.Links.GetName(link.Index)));
@@ -139,14 +139,14 @@ public sealed class LinksSessionsTests
             var sharedType = S(w.T["Shared"]);
             Assert.Equal($"() (({k}: {sharedType} {noteLink}))", alice.Request($"(create: ({sharedType} {noteLink}))"));
             before = w.All(w.Links);
-            reply = alice.Request($"(({noteLink}: * *) ({shared}: * *)) (({shared}: {S(w.T["Secret"])} {shared}))");
+            reply = alice.Request($"(({noteLink}: * *) ({shared}: * *)) (({shared}: {S(w.T["Public"])} {shared}))");
             Assert.Equal($"(error: 'Forbidden: update {shared}')", reply);
             Assert.Equal(before, w.All(w.Links));
             Assert.Equal("note", w.Links.GetName(w.V["note"]));
             Assert.Equal("shared", w.Links.GetName(w.V["shared"]));
             // Allowed, the same request deletes both and the name.
             using var boss = sessions.Open(w.V["boss"]);
-            boss.Request($"(({noteLink}: * *) ({shared}: * *)) (({shared}: {S(w.T["Secret"])} {shared}))");
+            boss.Request($"(({noteLink}: * *) ({shared}: * *)) (({shared}: {S(w.T["Public"])} {shared}))");
             Assert.False(w.Links.Exists(w.V["note"]));
             Assert.False(w.Links.Exists(uint.Parse(k, CultureInfo.InvariantCulture)));
             Assert.Null(w.Links.GetName(w.V["note"]));
@@ -180,7 +180,7 @@ public sealed class LinksSessionsTests
             using var alice = sessions.Open(w.V["alice"]);
             var expected = w.As(w.V["alice"]).Count(Array.Empty<uint>());
             Assert.Equal($"(count: {S(expected)})", alice.Request("(count: ())"));
-            Assert.Equal("", alice.Request("((secret: * *)) ()"));
+            Assert.Contains("Invalid reference to non-existent link 'secret'", alice.Request("((secret: * *)) ()"), StringComparison.Ordinal);
             // set-name answers where the names store keeps the name.
             Assert.StartsWith("(link: ", alice.Request($"(set-name: ({S(w.V["note"])} 'mine'))"), StringComparison.Ordinal);
             Assert.Equal("mine", w.Links.GetName(w.V["note"]));

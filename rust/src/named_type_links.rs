@@ -47,9 +47,9 @@ pub trait NamedTypeLinks {
     /// Whether a reference of a query to `id` names a link that exists.
     ///
     /// The same as [`Self::exists`], but for a view that hides links: a
-    /// reference to a link the subject cannot see is checked in the store
-    /// below, so a query cannot learn that a hidden address is taken by
-    /// trying to create a link there (issue #149).
+    /// reference is a right of its own, so a link the subject cannot read
+    /// exists for a reference when the subject may refer to it, and otherwise
+    /// answers as a missing one (issue #161).
     fn reference_exists(&mut self, id: u32) -> bool {
         self.exists(id)
     }

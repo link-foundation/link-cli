@@ -5,8 +5,8 @@ are ordinary links, kept in the data (`--permissions self`) or in a links
 file of their own (`--permissions rules.links`). Without the option nothing
 is checked, exactly as before.
 
-- A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or
-  `(r: AllowWrite g)`. `Subject` and `Object` are types of the
+- A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)`,
+  `(r: AllowWrite g)` or `(r: AllowReference g)`. `Subject` and `Object` are types of the
   [type hierarchy](../type-hierarchy) (or single links); `Anything` stands
   for every subject or every link.
 - Write implies read.
@@ -15,10 +15,14 @@ is checked, exactly as before.
 - A link the subject may not read is missing to it: queries do not match it
   and `--after` does not print it. A create, update or delete it may not do
   fails with `Forbidden: <operation> <link>`, and the whole query is undone.
+- A reference needs a right (issue #161): a link the subject may not refer to
+  answers as a missing one, and its name as an unknown name. Its own rules let
+  it refer to their objects, so `User writes Note` is enough to type a link as
+  `Note`. `AllowReference` lets it refer to more, and does not let it read.
 
 `clink-queries.sh` writes a small world (users and admins, notes, secrets and
 public links) with three rules, then reads and writes it as `alice`, as a
-guest and as `boss`:
+guest and as `boss`, and grants `alice` a reference to the secrets:
 
 ```sh
 cargo build --manifest-path rust/Cargo.toml

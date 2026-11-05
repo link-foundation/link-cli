@@ -195,10 +195,9 @@ namespace Foundation.Data.Doublets.Cli
             string patternType,
             Options options)
         {
-            var references = options.References ?? links;
             if (uint.TryParse(identifier, out var linkId))
             {
-                if (!references.Exists(linkId) && !plan.NumericIdsToBeCreated.Contains(linkId))
+                if (!LinksExtensions.ReferenceExists(links, linkId) && !plan.NumericIdsToBeCreated.Contains(linkId))
                 {
                     plan.AddMissingReference(new MissingLinkReference
                     {
@@ -212,7 +211,7 @@ namespace Foundation.Data.Doublets.Cli
                 return;
             }
 
-            if (references.GetByName(QueryParser.Name(identifier)) == links.Constants.Null && !plan.NamesToBeCreated.Contains(identifier))
+            if (links.GetByName(QueryParser.Name(identifier)) == links.Constants.Null && !plan.NamesToBeCreated.Contains(identifier))
             {
                 plan.AddMissingReference(new MissingLinkReference
                 {
@@ -234,7 +233,7 @@ namespace Foundation.Data.Doublets.Cli
             foreach (var missing in plan.MissingReferences.Where(reference => reference.NumericId.HasValue).OrderBy(reference => reference.NumericId!.Value))
             {
                 var linkId = missing.NumericId!.Value;
-                if ((options.References ?? links).Exists(linkId))
+                if (LinksExtensions.ReferenceExists(links, linkId))
                 {
                     continue;
                 }

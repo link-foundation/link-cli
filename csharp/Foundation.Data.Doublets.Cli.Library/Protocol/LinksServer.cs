@@ -456,14 +456,12 @@ public sealed class LinksServer : IDisposable
     /// query; the reply holds one <c>(before) (after)</c> line per change, exactly
     /// like <c>clink --changes</c>. The empty document asks for every link, one
     /// <c>(index: source target)</c> per line. Failures produce an <see cref="ErrorDocument"/>.
-    /// The references of a query are checked in <paramref name="references"/>, by default <paramref name="links"/>.
     /// </remarks>
     public static IReadOnlyList<LinoLink> ExecuteRequest(
         INamedTypesLinks<uint> links,
         IReadOnlyList<LinoLink> document,
-        bool autoCreateMissingReferences = false,
-        INamedTypesLinks<uint>? references = null) =>
-        ExecuteRequest(links, document, autoCreateMissingReferences, references, null);
+        bool autoCreateMissingReferences = false) =>
+        ExecuteRequest(links, document, autoCreateMissingReferences, null);
 
     /// <summary>
     /// Executes one request and adds the net change of every link it changed to <paramref name="changed"/>, with
@@ -473,7 +471,6 @@ public sealed class LinksServer : IDisposable
         INamedTypesLinks<uint> links,
         IReadOnlyList<LinoLink> document,
         bool autoCreateMissingReferences,
-        INamedTypesLinks<uint>? references,
         List<(DoubletLink Before, DoubletLink After)>? changed)
     {
         ArgumentNullException.ThrowIfNull(links);
@@ -504,7 +501,6 @@ public sealed class LinksServer : IDisposable
             {
                 Query = LinoFormat.FormatDocument(document),
                 AutoCreateMissingReferences = autoCreateMissingReferences,
-                References = references,
                 ChangesHandler = (before, after) =>
                 {
                     changes.Add((new DoubletLink(before), new DoubletLink(after)));

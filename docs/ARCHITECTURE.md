@@ -457,14 +457,19 @@ and replays its permission tests in both ports
 (`PermissionsDecoratorTests.cs`, `rust/tests/permissions_decorator_tests.rs`).
 
 Rules are links. A rule is a pair `(g: Subject Object)` marked by
-`(r: AllowRead g)` or `(r: AllowWrite g)`, where `AllowRead`, `AllowWrite` and
-`Anything` are named points:
+`(r: AllowRead g)`, `(r: AllowWrite g)` or `(r: AllowReference g)`, where
+`AllowRead`, `AllowWrite`, `AllowReference` and `Anything` are named points:
 
 - a subject matches `Subject` when it is that link or a link of that type
   (types of the `TypesDecorator` hierarchy, #148);
 - a link matches `Object` when it is a value or sub-type of `Object`;
   `Anything` matches every subject or every link;
-- write implies read.
+- write implies read;
+- a reference is a right of its own (#161): a subject may refer to a link it may
+  read, to itself, to what an `AllowReference` rule covers (`Object` itself and
+  the links of type `Object`), and to the `Object` of its own `AllowRead` and
+  `AllowWrite` rules. Anything else answers as a missing link, after the write
+  check, and `AllowReference` does not allow reading.
 
 The rules live in the data (`--permissions self`) or in a links file of their
 own (`--permissions rules.links`); the markers are always points of the data,
