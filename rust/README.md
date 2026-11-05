@@ -118,6 +118,9 @@ clink --connect 127.0.0.1:7777 '() ((1 1))'                  # text protocol
 clink --connect 127.0.0.1:7777 --protocol binary --arity 1.. # binary protocol, list all links
 ```
 
+With `--triplets`, the server reads every request as triplets instead, as
+described in [docs/TRIPLETS.md](../docs/TRIPLETS.md#protocol).
+
 In the library, `link_cli::protocol::LinksServer` serves any `NamedTypeLinks` store, and
 `LinksClient` queries a server through either `TextLinoProtocol` or
 `BinaryLinoProtocol`. The wire formats are described in
@@ -203,6 +206,117 @@ A runnable, self-checking version of this is
   the release that stabilised `std::fs::File::lock`.
 - **Typed errors and paths.** Public entry points take `AsRef<Path>` and return
   `LinkError`, not `anyhow::Error`.
+
+### Type hierarchy
+
+`TypesDecorator` wraps any `NamedTypeLinks` and keeps a type hierarchy with
+multiple inheritance in plain links (#148): the type of a link is its source,
+the root is `(Type: Type Type)`, a sub-type is `(S: T S)`, and an extra parent
+is a pair `(p: S T2)` marked by `(m: Extends p)`. Its queries stop on cycles.
+
+```rust
+use link_cli::{LinkStorage, Types, TypesDecorator};
+
+let mut types = TypesDecorator::with_named_markers(LinkStorage::in_memory(false))?;
+let root = types.root();
+let doc = types.define(root, &[])?;
+let public = types.define(root, &[])?;
+let note = types.define(doc, &[])?;
+let news = types.define(note, &[doc, public])?;
+let today = types.instance(news)?;
+assert!(types.is_a(today, public));
+assert_eq!(vec![note, doc, public], types.parents_of(news));
+```
+
+The `Types` trait needs only `root()` and `extends()`; everything else has a
+default that reads and writes through the implementing layer, so a layer that
+wraps `TypesDecorator` can reuse or override any of it. Run
+`cargo run --example type_hierarchy` for a complete walk-through.
+
+### Triplets
+
+`TripletsOverDoublets` wraps any `NamedTypeLinks` and keeps triplets
+`(index: type from to)` in its doublets (#151): a node `(i: T 0 0)` is
+`(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points
+`Pair` and `Nothing` found or created by name.
+
+```rust
+use link_cli::{process_triplets_query, triplets_to_lino, LinkStorage, TripletQuery, Triplets, TripletsOverDoublets};
+
+let mut triplets = TripletsOverDoublets::with_named_markers(LinkStorage::in_memory(false).with_indexed_lookups())?;
+let root = triplets.create_triplet_point()?;          // (root: root 0 0)
+let person = triplets.create_triplet(root, 0, 0)?;
+let alice = triplets.create_triplet(person, 0, 0)?;
+let bob = triplets.create_triplet(person, 0, 0)?;
+let knows = triplets.create_triplet(root, alice, bob)?;
+triplets.update_triplet(knows, root, bob, alice)?;   // the address stays
+assert_eq!(1, triplets.count_triplets(TripletQuery::by_from(bob)));
+assert_eq!(2, triplets.delete_triplet(alice)?.len()); // alice and knows
+process_triplets_query(&mut triplets, &format!("(() (({root} {bob} {bob})))"))?; // a create
+print!("{}", triplets_to_lino(&mut triplets)?);
+```
+
+The `Triplets` trait needs only `triplet_markers()`; every read and write has
+a default over `NamedTypeLinks`. Run `cargo run --example triplets` and see
+[docs/TRIPLETS.md](../docs/TRIPLETS.md) for the encoding and its costs.
+
+### Permissions
+
+`--permissions self|<rules.links>` runs queries as `--subject` (an index or a
+name; a guest by default) and checks every read and write against rules stored
+as links (#149); see [Permissions](../README.md#permissions) and
+[`examples/permissions`](../examples/permissions). In the library:
+
+```rust
+use link_cli::{NamedTypesDecorator, PermissionAccess, PermissionMarkers, PermissionPolicy, PermissionsDecorator};
+
+let mut data = NamedTypesDecorator::new("data.links", false)?;
+let markers = PermissionMarkers::ensure(&mut data)?;
+PermissionPolicy::allow(&mut data, markers, PermissionAccess::Read, user, public)?;
+let policy = PermissionPolicy::in_data(&mut data)?; // or with_rules(&mut data, Box::new(rules))
+let mut alice = PermissionsDecorator::new(&mut data, policy, alice_link);
+// Reads skip what alice may not read; a forbidden write fails with
+// Forbidden ("Forbidden: update 14") and changes nothing.
+```
+
+A link alice may not refer to answers as a missing one and its name as an unknown
+one (#161). `PermissionAccess::Reference` grants the reference without the read;
+see [the case study](../docs/case-studies/issue-161/README.md).
+
+`UndoableLinksDecorator` (`begin`, `commit`, `rollback`) makes a request atomic
+under the view, writes the store made on its own included.
+`LinksSessions::with_permissions(store, policy)`, `with_subject` and
+`with_authenticator` give every connection of `LinksServer::serve_sessions` a
+session of its own; `(auth: token)` answers `(subject: i)`. The authenticator
+is any callback; `LinksTokenTable` keeps the tokens as links named after their
+SHA-256.
+
+### Composing networks
+
+`UnionLinks` joins links networks into one, `RemapLinks` reads one under other
+addresses (`OffsetAddressMap`, `AddressTable` or any `AddressMap`), and
+`LinksExternalIds` keeps the ids of other systems (UUIDs, URLs) as links
+(#149). None of them depends on permissions or on each other; a
+`PermissionsDecorator` over a union restricts every member, one under it a
+single member. `NamedLinksStorage` puts the transactions layer over any of
+them. See [docs/COMPOSITION.md](../docs/COMPOSITION.md).
+
+```rust
+use link_cli::{LinksExternalIds, OffsetAddressMap, PermissionPolicy, PermissionsDecorator, RemapLinks, UnionLinks};
+
+let mut union = UnionLinks::new(vec![
+    Box::new(&mut client),
+    Box::new(RemapLinks::new(&mut server, OffsetAddressMap::new(1 << 24))),
+])?;
+let draft = union.try_create(0, 0)?;        // in client, the primary member
+union.update(draft, server_note, draft)?;   // may refer to the server's links
+assert_eq!(Some(0), union.owner_of(draft));
+let policy = PermissionPolicy::in_data(&mut union)?;
+let mut alice = PermissionsDecorator::new(&mut union, policy, alice_link);
+
+let ids = LinksExternalIds::new("uuid")?;
+let link = ids.ensure(&mut ids_store, Some(&mut data), "6f1c...")?; // bound, or a new point
+```
 
 ## Develop
 

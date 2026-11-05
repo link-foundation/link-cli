@@ -6,10 +6,16 @@ using LinoLink = Link.Foundation.Links.Notation.Link<string>;
 namespace Foundation.Data.Doublets.Cli.Protocol;
 
 /// <summary>Sends substitution queries to a LiNo server over any <see cref="ILinoProtocol"/>.</summary>
+/// <remarks>
+/// A server pushes the changes a connection subscribed to between its replies; a pushed document starts with
+/// <c>(notify: N)</c>. <see cref="Request"/> sets the pushes it meets aside for <see cref="ReceiveNotification"/>, so
+/// replies and pushes never get mixed up. The client is not thread safe.
+/// </remarks>
 public sealed class LinksClient : IDisposable
 {
     private readonly TcpClient _client;
     private readonly LinoConnection _connection;
+    private readonly Queue<IReadOnlyList<LinoLink>> _notifications = new();
 
     private LinksClient(TcpClient client, ILinoProtocol protocol)
     {
@@ -51,12 +57,48 @@ public sealed class LinksClient : IDisposable
     /// </summary>
     public IReadOnlyList<LinoLink> Request(IReadOnlyList<LinoLink> document)
     {
-        var reply = _connection.Request(document);
-        if (LinksServer.ErrorMessage(reply) is { } message)
+        _connection.Send(document);
+        while (true)
         {
-            throw new LinoProtocolException(LinoProtocolErrorKind.Remote, message);
+            var reply = _connection.Receive() ?? throw LinoProtocolException.Malformed("connection closed before the reply");
+            if (LinksOperation.IsNotification(reply))
+            {
+                _notifications.Enqueue(reply);
+                continue;
+            }
+            if (LinksServer.ErrorMessage(reply) is { } message)
+            {
+                throw new LinoProtocolException(LinoProtocolErrorKind.Remote, message);
+            }
+            return reply;
         }
-        return reply;
+    }
+
+    /// <summary>The number of pushes received and not yet taken by <see cref="ReceiveNotification"/>.</summary>
+    public int PendingNotifications => _notifications.Count;
+
+    /// <summary>
+    /// The next document the server pushed, <c>(notify: N)</c> and its changes, waiting up to
+    /// <paramref name="timeout"/> for one; null when none arrived in time.
+    /// </summary>
+    /// <exception cref="LinoProtocolException">
+    /// The connection closed, or the server sent something other than a push while no request was waiting.
+    /// </exception>
+    public IReadOnlyList<LinoLink>? ReceiveNotification(TimeSpan timeout)
+    {
+        if (_notifications.TryDequeue(out var queued))
+        {
+            return queued;
+        }
+        if (!_connection.WaitForMessage(timeout))
+        {
+            return null;
+        }
+        var document = _connection.Receive()
+            ?? throw new LinoProtocolException(LinoProtocolErrorKind.Io, "connection closed");
+        return LinksOperation.IsNotification(document)
+            ? document
+            : throw LinoProtocolException.Malformed($"the server sent a reply nobody asked for: {LinoFormat.FormatDocument(document)}");
     }
 
     /// <summary>Runs a LiNo substitution query; the empty query reads every link.</summary>
@@ -69,6 +111,21 @@ public sealed class LinksClient : IDisposable
 
     /// <summary>Like <see cref="Query"/>, returning the reply as canonical text.</summary>
     public string QueryText(string query) => LinoFormat.FormatDocument(Query(query));
+
+    /// <summary>
+    /// Sends <c>(auth: token)</c>: every later request of the connection runs as the subject the server gives
+    /// the token, which this returns (issue #149). A token the server does not know raises a
+    /// <see cref="LinoProtocolErrorKind.Remote"/> error.
+    /// </summary>
+    public uint Authenticate(string token)
+    {
+        ArgumentNullException.ThrowIfNull(token);
+        var reply = Request(new[] { LinoFormat.Link("auth", new List<LinoLink> { LinoFormat.Reference(token) }) });
+        return reply is [{ Id: "subject", Values: [{ Values: null, Id: { } subject }] }]
+            && uint.TryParse(subject, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var index)
+            ? index
+            : throw LinoProtocolException.Malformed($"expected a subject reply, found {LinoFormat.FormatDocument(reply)}");
+    }
 
     /// <inheritdoc/>
     public void Dispose()

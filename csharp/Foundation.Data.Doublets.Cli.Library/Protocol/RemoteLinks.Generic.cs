@@ -32,8 +32,8 @@ namespace Foundation.Data.Doublets.Cli.Protocol;
 public class RemoteLinks<T> : INamedTypesLinks<T>, IDisposable
     where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
 {
-    private readonly LinksClient _client;
-    private readonly object _clientLock = new();
+    private protected readonly LinksClient _client;
+    private protected readonly object _clientLock = new();
 
     /// <summary>Uses an existing connection, which the store then owns.</summary>
     public RemoteLinks(LinksClient client) : this(client, new((T.One, T.MaxValue))) { }

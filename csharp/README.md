@@ -170,6 +170,9 @@ clink --connect 127.0.0.1:7777 '() ((1 1))'                  # text protocol
 clink --connect 127.0.0.1:7777 --protocol binary --arity 1.. # binary protocol, list all links
 ```
 
+With `--triplets`, the server reads every request as triplets instead, as
+described in [docs/TRIPLETS.md](../docs/TRIPLETS.md#protocol).
+
 In the library, `LinksServer` serves any `INamedTypesLinks<uint>`, and
 `LinksClient` queries a server through either `TextLinoProtocol` or
 `BinaryLinoProtocol`. The wire formats are described in
@@ -226,6 +229,104 @@ A runnable version of this is
   looked?" without reparsing the database. The lock file path and the
   shared/exclusive semantics match the Rust `storage::lock` module, so both
   implementations can guard the same database.
+
+### Type hierarchy
+
+`TypesDecorator<TLinkAddress>` wraps any `ILinks<TLinkAddress>` and keeps a type
+hierarchy with multiple inheritance in plain links (#148): the type of a link is
+its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)`, and an
+extra parent is a pair `(p: S T2)` marked by `(m: Extends p)`. Its queries stop
+on cycles.
+
+```csharp
+using var named = new NamedTypesDecorator<uint>("db.links");
+var types = new TypesDecorator<uint>(named); // finds or creates Type and Extends
+var doc = types.Define(types.Root);
+var @public = types.Define(types.Root);
+var note = types.Define(doc);
+var news = types.Define(note, doc, @public);
+var isPublic = types.IsA(types.Instance(news), @public); // true
+var parents = types.ParentsOf(news); // [note, doc, public]
+```
+
+The class is not sealed and every member is virtual. Queries read the
+decorated links and writes go through the decorator, so a derived decorator
+that checks writes sees them. With `new TypesDecorator<uint>(links, root,
+extends)` the pinned types `(1: 1 1)`, `(2: 1 2)`, … are sub-types of root `1`.
+
+### Triplets
+
+`TripletsOverDoublets<TLinkAddress>` wraps any `INamedTypesLinks<TLinkAddress>`
+and keeps triplets `(index: type from to)` in its doublets (#151): a node
+`(i: T 0 0)` is `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`,
+with the points `Pair` and `Nothing` found or created by name.
+
+```csharp
+using var named = new NamedTypesDecorator<uint>("db.links");
+var triplets = new TripletsOverDoublets<uint>(named);
+var type = triplets.CreateTripletPoint();               // (type: type 0 0)
+var person = triplets.CreateTriplet(type, 0, 0);
+var alice = triplets.CreateTriplet(person, 0, 0);
+var bob = triplets.CreateTriplet(person, 0, 0);
+var knows = triplets.CreateTriplet(type, alice, bob);   // (knows: type alice bob)
+triplets.UpdateTriplet(knows, type, bob, alice);        // the address stays
+var fromBob = triplets.EachTriplet(TripletQuery<uint>.ByFrom(bob));
+var deleted = triplets.DeleteTriplet(alice);            // alice and knows
+TripletsQueryProcessor.ProcessQuery(triplets, $"(() (({type} {bob} {bob})))"); // a create
+Console.Write(TripletsLino.Export(triplets));           // (index: type from to) lines
+```
+
+The class is not sealed and every member is virtual. See
+[docs/TRIPLETS.md](../docs/TRIPLETS.md) for the encoding and its costs.
+
+### Permissions
+
+`--permissions self|<rules.links>` runs queries as `--subject` (an index or a
+name; a guest by default) and checks every read and write against rules stored
+as links (#149); see [Permissions](../README.md#permissions) and
+[`examples/permissions`](../examples/permissions). In the library:
+
+```csharp
+using var data = new NamedTypesDecorator<uint>("data.links");
+var markers = PermissionPolicy<uint>.EnsureMarkers(data, data);
+PermissionPolicy<uint>.Allow(data, markers, PermissionAccess.Read, user, @public);
+var policy = new PermissionPolicy<uint>(data, data); // or a rules store of its own
+var alice = new PermissionsDecorator<uint>(data, policy, aliceLink);
+// Reads skip what alice may not read; a forbidden write throws
+// ForbiddenException ("Forbidden: update 14") and changes nothing.
+```
+
+A link alice may not refer to answers as a missing one and its name as an unknown
+one (#161). `PermissionAccess.Reference` grants the reference without the read;
+see [the case study](../docs/case-studies/issue-161/README.md).
+
+`UndoableLinksDecorator<uint>` (`Begin`, `Commit`, `Rollback`) makes a request
+atomic under the view, writes the store made on its own included.
+`LinksServerOptions.Permissions`, `Subject` and `Authenticate` give every
+connection of a `LinksServer` a session of its own (`LinksSessions`);
+`(auth: token)` answers `(subject: i)`. `Authenticate` is any callback;
+`LinksTokenTable` keeps the tokens as links named after their SHA-256.
+
+### Composing networks
+
+`UnionLinksDecorator<uint>` joins links networks into one,
+`RemapLinksDecorator<uint>` reads one under other addresses
+(`OffsetAddressMap<uint>`, `AddressTable<uint>` or any `IAddressMap<uint>`), and
+`LinksExternalIds` keeps the ids of other systems (UUIDs, URLs) as links
+(#149). None of them depends on permissions or on each other; a
+`PermissionsDecorator` over a union restricts every member, one under it a
+single member. See [docs/COMPOSITION.md](../docs/COMPOSITION.md).
+
+```csharp
+var union = new UnionLinksDecorator<uint>(client, new RemapLinksDecorator<uint>(server, new OffsetAddressMap<uint>(1u << 24)));
+var draft = union.Create();              // in client, the primary member
+union.Update(draft, serverNote, draft);  // may refer to the server's links
+var owner = union.OwnerOf(draft);        // 0: the member that has the link
+var alice = new PermissionsDecorator<uint>(union, new PermissionPolicy<uint>(union, union), aliceLink);
+
+var ids = new LinksExternalIds(idsStore, "uuid");     // or the data itself
+var link = ids.Ensure("6f1c...", data);               // bound, or a new point
+```
 
 ## Develop
 

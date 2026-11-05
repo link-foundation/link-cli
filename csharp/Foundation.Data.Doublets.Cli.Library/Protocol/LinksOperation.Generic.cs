@@ -209,6 +209,19 @@ public abstract record LinksOperation<T>
     }
 
     /// <summary>The operation name and its one argument.</summary>
+    /// <summary>Requests connection-owned change notifications.</summary>
+    public sealed record Subscribe(LinksRestriction<T> Restriction) : LinksOperation<T>
+    {
+        private protected override (string, LinoLink) Request => ("subscribe", RestrictionLino(Restriction));
+        private protected override IReadOnlyList<LinoLink> ExecuteCore(INamedTypesLinks<T> links) => throw LinksOperation.NeedsServer();
+    }
+    /// <summary>Stops a connection-owned subscription.</summary>
+    public sealed record Unsubscribe(T Subscription) : LinksOperation<T>
+    {
+        private protected override (string, LinoLink) Request => ("unsubscribe", Number(Subscription));
+        private protected override IReadOnlyList<LinoLink> ExecuteCore(INamedTypesLinks<T> links) => throw LinksOperation.NeedsServer();
+    }
+
     private protected abstract (string Name, LinoLink Argument) Request { get; }
 
     /// <summary>Runs the operation against <paramref name="links"/> and returns the reply document.</summary>
@@ -222,6 +235,8 @@ public abstract record LinksOperation<T>
         {
             Count operation => operation.Restriction.Parts.OfType<T>(),
             Each operation => operation.Restriction.Parts.OfType<T>(),
+            Subscribe operation => operation.Restriction.Parts.OfType<T>(),
+            Unsubscribe operation => [operation.Subscription],
             Create operation => [operation.Source, operation.Target],
             Update operation => [operation.Index, operation.Source, operation.Target],
             Delete operation => [operation.Index],
@@ -280,6 +295,10 @@ public abstract record LinksOperation<T>
                 return argument is { Values: null, Id: { } wanted }
                     ? new GetByName(wanted)
                     : throw MalformedArgument("get-by-name", argument);
+            case "subscribe":
+                return new Subscribe(ParseRestriction(argument));
+            case "unsubscribe":
+                return new Unsubscribe(ParseNumber(argument));
             case "remove-name":
                 return new RemoveName(ParseNumber(argument));
             default:

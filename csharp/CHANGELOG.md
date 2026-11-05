@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.0] - 2026-11-05
+
+Serve Hasura-compatible GraphQL for Deep with `clink --serve <address> --graphql`, with `--jwt-secret`, `--graphql-admin-secret` and `--deep-package`; add `TripletsQueryProcessor.MatchQuery` (#153).
+
+## [5.0.0] - 2026-11-05
+
+A reference to an unreadable link needs its own right (#161). Without it an unreadable address answers exactly as a missing one, in the view, in operations and in queries, and the name of a link the subject may not refer to is an unknown name that cannot be taken over. A subject may refer to a link it may read, to itself, to what a rule `(r: AllowReference (g: Subject Object))` covers (`Object` and the links of type `Object`), and to the `Object` of its own `AllowRead` and `AllowWrite` rules. `AllowReference` does not allow reading; a reference a link already holds may stay; choosing the address of a new link is a reference; the write check runs first. Breaking: a subject that referred to an unreadable link needs a rule now, and a rule `Anything` to `Anything` brings the previous behaviour back. `PermissionMarkers<T>` has a fourth parameter `AllowReference`, `PermissionAccess` a new value `Reference`, `IPermissionPolicy<T>` a method `CanReference` that defaults to `false`, and `ITriplets<T>` a method `ReferenceIsTriplet`. `AdvancedMixedQueryProcessor.Options.References` and the `references` parameter of `LinksServer.ExecuteRequest` are gone, as a query checks its references through the store it runs on; a store may implement the new `IReferencedLinks<T>` to answer them.
+
+## [4.5.0] - 2026-11-05
+
+Serve triplets over the Links Notation text and binary protocol (#152). `clink --serve --triplets` (`LinksServerOptions.Triplets`) answers `(count: (i T f t))`, `(each: (i T f t))`, `(create: (T f t))`, `(update: (i T f t))`, `(delete: i)` and three-part substitution queries with `(i: T f t)` triplets, keeps names and `(auth: token)`, and leaves a server without the flag as it was. Subscriptions push triplet changes and permissions judge them through the new `TripletsPermissionsDecorator`. A binary client whose packet asks for `--arity 2..3` gets each triplet as one link of three references, `(i: (T f t))`, and every parser reads both forms. `RemoteLinks` implements `ITriplets<uint>` and adds `SubscribeTriplets` and `ReceiveTripletNotification`, `TripletsOperation` holds the requests and replies, and `docs/protocol/triplets.txt` is the conversation both ports replay.
+
+## [4.4.0] - 2026-11-05
+
+Add `TripletsOverDoublets<TLinkAddress>` and `ITriplets<TLinkAddress>` (#151): triplets `(index: type from to)` stored in any doublets store with an associative API. A node `(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points `Pair` and `Nothing` found or created by name, so the type stays the source and `TypesDecorator` reads triplets as values of their types. `CreateTriplet`, `UpdateTriplet` (the address stays), `DeleteTriplet` (cascading) and `EachTriplet` / `CountTriplets` by index, type, from and to leave no unused wrapper or pair behind. `TripletsQueryProcessor.ProcessQuery` runs substitution queries with three parts, such as `((($r: knows alice bob)) (($r: knows alice carol)))`, and `TripletsLino` imports and exports `(index: type from to)` lines. The encoding and its costs are in `docs/TRIPLETS.md`.
+
+Also updates `Platform.Data.Doublets` to 0.18.8.
+
+## [4.3.0] - 2026-11-03
+
+Add an optional permission layer with permissions stored in links (#149), the port of `createPolicy` and `withPermissions` of `@link-foundation/ui-links` with its tests. A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or `(r: AllowWrite g)`; `Anything` matches everything and write implies read. `PermissionPolicy<TLinkAddress>` reads the rules from the data or from a store of their own, and `PermissionsDecorator<TLinkAddress>` is the store as a subject sees it: reads skip what it may not read, and a create, update or delete it may not make throws `ForbiddenException` (`Forbidden: update 14`) and changes nothing. A link the subject created is its own while its source is 0. `UndoableLinksDecorator<TLinkAddress>` makes a request atomic, and the query processor checks references in the store below the view (`Options.References`).
+
+`clink` gains `--permissions self|<rules.links>`, `--subject`, `--tokens`, `--grant-token`, `--revoke-token` and `--token`. A server with `LinksServerOptions.Permissions` gives every connection a session (`LinksSessions`); `(auth: token)` replies `(subject: i)` through `LinksServerOptions.Authenticate`, any callback, or `LinksTokenTable`, a token table stored as links named after the SHA-256 of each token. Without `--permissions` nothing changes.
+
+The dependency `Platform.Data.Doublets` is updated to 0.18.7.
+
+Add layers that compose with it and with each other, none depending on another. `UnionLinksDecorator<TLinkAddress>` shows many links networks as one (a client's links joined with a server's, a cache with its source): the first member that has an address shadows the rest, a new link is created in the first member, and an update, a delete or a name goes to the member that has the link. `RemapLinksDecorator<TLinkAddress>` shows a network under other addresses through an `IAddressMap<TLinkAddress>`: `OffsetAddressMap<TLinkAddress>` moves it out of the way of another one, and `AddressTable<TLinkAddress>` gives addresses in the order they are seen. `LinksExternalIds` binds the ids of other systems (UUIDs, ObjectIds, URLs) to links, in the data or in a store of its own, in the layout the Rust and JavaScript ports share. `IComposedLinks<TLinkAddress>` (`Claims`, `EnsureCreated`) lets the undo of a request recreate a link in the member it came from, so a `PermissionsDecorator<TLinkAddress>` over a union restricts every member at once and one under it a single member.
+
+## [4.2.0] - 2026-11-03
+
+Added subscriptions to the LiNo protocol server (#150). `(subscribe: (index source target))` answers
+`(subscription: N)`, and every later change another connection makes to a link matching the pattern is pushed to the
+subscriber as `(notify: N)` followed by its `(before) (after)` changes; `(unsubscribe: N)` answers nothing, and closing
+the connection drops its subscriptions. `LinksServerOptions.Readable` hides links from subscribers (a link that becomes
+unreadable arrives as a deletion) and `LinksServerOptions.MaxPendingNotifications` disconnects a subscriber that stops
+reading. `LinksClient` sets pushes aside for `ReceiveNotification`, and `RemoteLinks` gains `Subscribe`, `Unsubscribe`
+and `ReceiveNotification`.
+
+Updated Platform.Data.Doublets to 0.18.7.
+
+## [4.1.0] - 2026-11-02
+
+Add `TypesDecorator<TLinkAddress>` and `ITypes<TLinkAddress>` (#148): a type hierarchy `Type -> SubType -> … -> Value` with multiple inheritance kept in plain links. The type of a link is its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)` and extra parents are pairs `(p: S T2)` marked by `(m: Extends p)`. `TypeOf`, `IsType`, `ParentsOf`, `AncestorsOf`, `IsA` and `IsOf` terminate on cycles, and `Define`, `Extend` and `Instance` write. The decorator is not sealed, and pinned types are sub-types of its root.
+
+Update Platform.Data.Doublets to 0.18.6 and System.CommandLine to 2.0.14. Counting `(* point)` now visits a self-referencing point once. Since 0.18.6 a merging update also ends by reporting the link it merged into, unchanged; `LinksUniquenessAndUsagesRepointingResolver` does not pass that notice on, so `clink --changes` and the protocol server still report only the links a write changed, as the Rust port does (creating a duplicate replies with no change).
+
 ## [4.0.6] - 2026-10-24
 
 Harden the C# release automation (issue #134): the release commit is rebased

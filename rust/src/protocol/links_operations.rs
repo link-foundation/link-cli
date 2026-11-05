@@ -18,6 +18,8 @@
 //! | `(set-name: (link 'text'))`      | `(link: N)`                            |
 //! | `(get-by-name: 'text')`          | `(link: N)`, or nothing                |
 //! | `(remove-name: link)`            | nothing                                |
+//! | `(subscribe: (index source target))` | `(subscription: N)`; later pushes of `(notify: N)` and its changes |
+//! | `(unsubscribe: N)`               | nothing                                |
 //!
 //! A restriction holds up to three parts, matched like the raw links
 //! interface matches a query: none matches every link, `(index)` one link,
@@ -30,6 +32,12 @@
 //! delete is one `((index: source target)) ()` per removed link, without the
 //! intermediate steps by which the store behind the server got there, which
 //! differ between the C# and the Rust stores.
+//!
+//! A subscription belongs to the connection that made it: once a connection
+//! sent `(subscribe: restriction)`, the server pushes it every later change
+//! another connection makes to a matching link, as `(notify: N)` followed by
+//! the `(before) (after)` lines of the change. A side that does not match is
+//! left empty, so a link that leaves the subscription arrives as a deletion.
 
 use super::error::{ProtocolError, ProtocolResult};
 use crate::changes_simplifier::simplify_generic_changes;
@@ -67,6 +75,31 @@ pub enum GenericLinksOperation<T> {
     GetByName(String),
     /// Removes the name of a link.
     RemoveName(T),
+    /// Asks a [`LinksServer`](super::LinksServer) to push the changes other
+    /// connections make to the links matching the restriction; the reply is
+    /// `(subscription: N)` and every later push a [`notification_document`].
+    ///
+    /// A subscription belongs to the connection that made it: only the server
+    /// can run it, so [`execute`](Self::execute) on a store fails.
+    Subscribe(Vec<Part<T>>),
+    /// Stops a subscription of this connection; the reply is empty, even for
+    /// an unknown number.
+    Unsubscribe(T),
+}
+
+/// A change a [`LinksServer`](super::LinksServer) pushed to a subscriber: the
+/// subscription it fits and its changes, a missing side being [`Link::null`].
+///
+/// Each side is the link as the subscription sees it: a side that does not fit
+/// the restriction (or that the subscriber may not read) is the null link, so a
+/// link that leaves the subscription arrives as a deletion and one that comes
+/// into it as a creation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LinksNotification {
+    /// The number the `subscribe` reply gave.
+    pub subscription: u32,
+    /// The `(before, after)` changes.
+    pub changes: Vec<Change>,
 }
 
 /// A `(before, after)` change; a missing side is [`GenericLink::null`].
@@ -95,6 +128,8 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
             ),
             Self::GetByName(name) => ("get-by-name", LiNo::Ref(name.clone())),
             Self::RemoveName(index) => ("remove-name", number(*index)),
+            Self::Subscribe(restriction) => ("subscribe", restriction_lino(restriction)),
+            Self::Unsubscribe(subscription) => ("unsubscribe", number(*subscription)),
         };
         vec![named(name, vec![argument])]
     }
@@ -116,11 +151,11 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
             "count" => Self::Count(parse_restriction(argument)?),
             "each" => Self::Each(parse_restriction(argument)?),
             "create" => {
-                let [source, target] = parse_numbers::<T, 2>(argument)?;
+                let [source, target] = parse_numbers_for::<T, 2>(argument)?;
                 Self::Create { source, target }
             }
             "update" => {
-                let [index, source, target] = parse_numbers::<T, 3>(argument)?;
+                let [index, source, target] = parse_numbers_for::<T, 3>(argument)?;
                 Self::Update {
                     index,
                     source,
@@ -138,6 +173,8 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
                 _ => return Err(malformed_argument("get-by-name", argument)),
             },
             "remove-name" => Self::RemoveName(parse_number(argument)?),
+            "subscribe" => Self::Subscribe(parse_restriction(argument)?),
+            "unsubscribe" => Self::Unsubscribe(parse_number(argument)?),
             _ => return Ok(None),
         };
         Ok(Some(operation))
@@ -150,7 +187,7 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
     ) -> anyhow::Result<LinoDocument> {
         if let Some(limits) = storage.query_limits() {
             match self {
-                Self::Count(parts) | Self::Each(parts) => {
+                Self::Count(parts) | Self::Each(parts) | Self::Subscribe(parts) => {
                     anyhow::ensure!(parts.len() <= 3, "expected at most three restriction parts")
                 }
                 Self::SetName(_, name) | Self::GetByName(name) => anyhow::ensure!(
@@ -160,7 +197,9 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
                 _ => {}
             }
             let addresses: Vec<T> = match self {
-                Self::Count(parts) | Self::Each(parts) => parts.iter().flatten().copied().collect(),
+                Self::Count(parts) | Self::Each(parts) | Self::Subscribe(parts) => {
+                    parts.iter().flatten().copied().collect()
+                }
                 Self::Create { source, target } => vec![*source, *target],
                 Self::Update {
                     index,
@@ -170,7 +209,8 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
                 Self::Delete(index)
                 | Self::GetName(index)
                 | Self::SetName(index, _)
-                | Self::RemoveName(index) => vec![*index],
+                | Self::RemoveName(index)
+                | Self::Unsubscribe(index) => vec![*index],
                 Self::GetByName(_) => Vec::new(),
             };
             anyhow::ensure!(
@@ -236,6 +276,9 @@ impl<T: QueryAddress> GenericLinksOperation<T> {
                 storage.save()?;
                 Vec::new()
             }
+            Self::Subscribe(_) | Self::Unsubscribe(_) => {
+                anyhow::bail!("subscriptions belong to a connection to a links server")
+            }
         })
     }
 }
@@ -282,6 +325,68 @@ pub fn parse_count(document: &[LiNo<String>]) -> ProtocolResult<u32> {
         },
         _ => Err(malformed_reply("count", document)),
     }
+}
+
+/// The number of a `(subscription: N)` reply.
+pub fn parse_subscription(document: &[LiNo<String>]) -> ProtocolResult<u32> {
+    match document {
+        [LiNo::Link {
+            id: Some(id),
+            values,
+        }] if id == "subscription" => match values.as_slice() {
+            [subscription] => parse_number(subscription),
+            _ => Err(malformed_reply("subscription", document)),
+        },
+        _ => Err(malformed_reply("subscription", document)),
+    }
+}
+
+/// The reply to a [`LinksOperation::Subscribe`]: `(subscription: N)`.
+pub fn subscription_document(subscription: u32) -> LinoDocument {
+    vec![named("subscription", vec![number(subscription)])]
+}
+
+/// Whether `document` is a push rather than a reply: its first link is
+/// `(notify: N)`.
+///
+/// No reply starts that way: the replies to operations name their first link
+/// after the operation's result or leave it unnamed, and the links a server
+/// lists are `(index: source target)`, with two values.
+pub fn is_notification(document: &[LiNo<String>]) -> bool {
+    notification_number(document).is_some()
+}
+
+pub(super) fn notification_number(document: &[LiNo<String>]) -> Option<u32> {
+    match document.first()? {
+        LiNo::Link {
+            id: Some(id),
+            values,
+        } if id == "notify" => match values.as_slice() {
+            [LiNo::Ref(text)] if text.bytes().all(|byte| byte.is_ascii_digit()) => {
+                text.parse().ok()
+            }
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// A push: `(notify: N)` followed by one `(before) (after)` line per change,
+/// with plain numbers.
+pub fn notification_document(subscription: u32, changes: &[Change]) -> LinoDocument {
+    let mut document = vec![named("notify", vec![number(subscription)])];
+    document.extend(changes_document(changes));
+    document
+}
+
+/// The subscription and the changes of a [`notification_document`].
+pub fn parse_notification(document: &[LiNo<String>]) -> ProtocolResult<LinksNotification> {
+    let subscription =
+        notification_number(document).ok_or_else(|| malformed_reply("notify", document))?;
+    Ok(LinksNotification {
+        subscription,
+        changes: parse_changes(&document[1..])?,
+    })
 }
 
 /// The links of an `each` reply.
@@ -402,7 +507,7 @@ fn parse_link<T: QueryAddress>(link: &LiNo<String>) -> ProtocolResult<GenericLin
     }
 }
 
-fn restriction_lino<T: QueryAddress>(restriction: &[Part<T>]) -> LiNo<String> {
+pub(super) fn restriction_lino<T: QueryAddress>(restriction: &[Part<T>]) -> LiNo<String> {
     group(
         restriction
             .iter()
@@ -411,9 +516,18 @@ fn restriction_lino<T: QueryAddress>(restriction: &[Part<T>]) -> LiNo<String> {
     )
 }
 
-fn parse_restriction<T: QueryAddress>(argument: &LiNo<String>) -> ProtocolResult<Vec<Part<T>>> {
+pub(super) fn parse_restriction<T: QueryAddress>(
+    argument: &LiNo<String>,
+) -> ProtocolResult<Vec<Part<T>>> {
+    parse_restriction_of(argument, 3)
+}
+
+pub(super) fn parse_restriction_of<T: QueryAddress>(
+    argument: &LiNo<String>,
+    longest: usize,
+) -> ProtocolResult<Vec<Part<T>>> {
     let parts = parts(argument);
-    if parts.len() > 3 {
+    if parts.len() > longest {
         return Err(malformed_argument("restriction", argument));
     }
     parts
@@ -425,11 +539,11 @@ fn parse_restriction<T: QueryAddress>(argument: &LiNo<String>) -> ProtocolResult
         .collect()
 }
 
-fn numbers_lino<T: QueryAddress>(numbers: &[T]) -> LiNo<String> {
+pub(super) fn numbers_lino<T: QueryAddress>(numbers: &[T]) -> LiNo<String> {
     group(numbers.iter().copied().map(number).collect())
 }
 
-fn parse_numbers<T: QueryAddress, const N: usize>(
+fn parse_numbers_for<T: QueryAddress, const N: usize>(
     argument: &LiNo<String>,
 ) -> ProtocolResult<[T; N]> {
     let numbers = parts(argument)
@@ -443,14 +557,14 @@ fn parse_numbers<T: QueryAddress, const N: usize>(
 
 /// The values of an unnamed group; a lone reference is a group of one, since
 /// the canonical document model unwraps `(x)` to `x`.
-fn parts(argument: &LiNo<String>) -> &[LiNo<String>] {
+pub(super) fn parts(argument: &LiNo<String>) -> &[LiNo<String>] {
     match argument {
         LiNo::Link { id: None, values } => values,
         reference => std::slice::from_ref(reference),
     }
 }
 
-fn parse_number<T: QueryAddress>(value: &LiNo<String>) -> ProtocolResult<T> {
+pub(super) fn parse_number<T: QueryAddress>(value: &LiNo<String>) -> ProtocolResult<T> {
     match value {
         LiNo::Ref(text) => parse_text_number(text),
         _ => Err(ProtocolError::malformed(format!(
@@ -460,34 +574,34 @@ fn parse_number<T: QueryAddress>(value: &LiNo<String>) -> ProtocolResult<T> {
     }
 }
 
-fn parse_text_number<T: QueryAddress>(text: &str) -> ProtocolResult<T> {
+pub(super) fn parse_text_number<T: QueryAddress>(text: &str) -> ProtocolResult<T> {
     text.parse()
         .map_err(|_| ProtocolError::malformed(format!("expected a number, found '{text}'")))
 }
 
-fn number<T: QueryAddress>(value: T) -> LiNo<String> {
+pub(super) fn number<T: QueryAddress>(value: T) -> LiNo<String> {
     LiNo::Ref(value.to_string())
 }
 
-fn named(id: &str, values: Vec<LiNo<String>>) -> LiNo<String> {
+pub(super) fn named(id: &str, values: Vec<LiNo<String>>) -> LiNo<String> {
     LiNo::Link {
         id: Some(id.to_string()),
         values,
     }
 }
 
-fn group(values: Vec<LiNo<String>>) -> LiNo<String> {
+pub(super) fn group(values: Vec<LiNo<String>>) -> LiNo<String> {
     LiNo::Link { id: None, values }
 }
 
-fn malformed_argument(expected: &str, argument: &LiNo<String>) -> ProtocolError {
+pub(super) fn malformed_argument(expected: &str, argument: &LiNo<String>) -> ProtocolError {
     ProtocolError::malformed(format!(
         "expected {expected}, found {}",
         format_link(argument)
     ))
 }
 
-fn malformed_reply(expected: &str, document: &[LiNo<String>]) -> ProtocolError {
+pub(super) fn malformed_reply(expected: &str, document: &[LiNo<String>]) -> ProtocolError {
     ProtocolError::malformed(format!(
         "expected a {expected} reply, found {}",
         format_document(document)
@@ -512,4 +626,8 @@ pub fn parse_link_reply(document: &[LiNo<String>]) -> ProtocolResult<Option<u32>
 /// A change document using the existing u32 facade.
 pub fn changes_document(changes: &[Change]) -> LinoDocument {
     changes_document_for(changes)
+}
+
+pub(super) fn parse_numbers<const N: usize>(argument: &LiNo<String>) -> ProtocolResult<[u32; N]> {
+    parse_numbers_for::<u32, N>(argument)
 }

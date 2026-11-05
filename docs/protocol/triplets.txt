@@ -1,0 +1,142 @@
+# Two connections, A and B, to one fresh links server in triplet mode
+# (`clink --serve --triplets`, `ServerOptions.triplets`).
+#
+# Both ports replay it against their own server, in the text protocol and in
+# the binary protocol with every option (csharp: TripletsProtocolTests, rust:
+# triplets_protocol_tests), and so does the JavaScript client
+# (js/client/test/conformance).
+#
+# `A> request` is a request on connection A; the lines up to the next `A>`,
+# `B>`, `A<` or `B<` are its reply, and `! message` is an error reply.
+# `A< (notify: n)` is a document the server pushed to A without being asked.
+#
+# A triplet is written `(index: type from to)`. A binary reply or push whose
+# arity holds three references but not five, like `--arity 2..3`, carries it as
+# `(index: (type from to))` instead, which travels as one link of three
+# references (docs/protocol/binary-links-notation.md); the replay reads that
+# form as the one written here.
+#
+# Addresses 1 and 2 are the markers Pair and Nothing, which are not triplets.
+# The wrappers and pairs that store a triplet in doublets take addresses too,
+# so the addresses of triplets are not consecutive, and never appear.
+
+A> (count: ())
+(count: 0)
+# (create: (0 0 0)) makes a point: a triplet that is its own type.
+A> (create: (0 0 0))
+() ((3: 3 0 0))
+A> (create: (0 0 0))
+() ((4: 4 0 0))
+A> (each: (3))
+(3: 3 0 0)
+# Names work as without triplets.
+A> (set-name: (3 Person))
+(link: 119)
+A> (get-by-name: Person)
+(link: 3)
+A> (get-name: 3)
+(name: Person)
+# Typed triplets without parts.
+A> (create: (3 0 0))
+() ((5: 3 0 0))
+A> (create: (3 0 0))
+() ((6: 3 0 0))
+A> (create: (3 0 0))
+() ((7: 3 0 0))
+# Knows: the type and both parts of a triplet are other triplets.
+A> (create: (4 5 6))
+() ((10: 4 5 6))
+A> (count: ())
+(count: 6)
+A> (each: (10))
+(10: 4 5 6)
+# Each by type: restrictions are matched part by part, those left out and `*`
+# match anything, and an empty part is 0.
+A> (each: (* 4))
+(4: 4 0 0)
+(10: 4 5 6)
+A> (each: (* 3))
+(3: 3 0 0)
+(5: 3 0 0)
+(6: 3 0 0)
+(7: 3 0 0)
+A> (count: (* 3))
+(count: 4)
+A> (each: (* 3 0 0))
+(3: 3 0 0)
+(5: 3 0 0)
+(6: 3 0 0)
+(7: 3 0 0)
+A> (each: (* * 5))
+(10: 4 5 6)
+A> (each: (* * * 6))
+(10: 4 5 6)
+A> (each: (* * 5 7))
+# Two triplets may hold the same three parts; their addresses tell them apart.
+A> (create: (4 5 6))
+() ((11: 4 5 6))
+A> (each: (* 4 5 6))
+(10: 4 5 6)
+(11: 4 5 6)
+# A subscription with a restriction by type: only Knows triplets are pushed.
+B> (subscribe: (* 4))
+(subscription: 1)
+A> (create: (3 0 0))
+() ((13: 3 0 0))
+A> (create: (4 6 7))
+() ((16: 4 6 7))
+B< (notify: 1)
+() ((16: 4 6 7))
+# The side that does not fit the restriction is empty, so a triplet that stops
+# being a Knows is gone for B and one that becomes a Knows is new.
+A> (update: (10 4 6 5))
+((10: 4 5 6)) ((10: 4 6 5))
+B< (notify: 1)
+((10: 4 5 6)) ((10: 4 6 5))
+A> (update: (10 3 0 0))
+((10: 4 6 5)) ((10: 3 0 0))
+B< (notify: 1)
+((10: 4 6 5)) ()
+A> (update: (10 4 5 7))
+((10: 3 0 0)) ((10: 4 5 7))
+B< (notify: 1)
+() ((10: 4 5 7))
+# Own writes are not pushed: B reads this one in its reply only.
+B> (create: (4 7 5))
+() ((20: 4 7 5))
+B> (unsubscribe: 1)
+A> (update: (10 4 7 7))
+((10: 4 5 7)) ((10: 4 7 7))
+# A substitution query over triplets; its reply names what has a name.
+A> () ((Person 0 0))
+() ((17: Person 0 0))
+A> ((10: 4 7 7)) ((10: 4 7 6))
+((10: 4 7 7)) ((10: 4 7 6))
+A> ((10: 4 7 6)) ()
+((10: 4 7 6)) ()
+# Deleting a triplet deletes those that use it, and those that use them, first
+# the one asked for.
+A> (delete: 5)
+((5: 3 0 0)) ()
+((11: 4 5 6)) ()
+((20: 4 7 5)) ()
+A> (each: (* 4))
+(4: 4 0 0)
+(16: 4 6 7)
+A> (count: ())
+(count: 7)
+# Errors are replies, and they change nothing.
+A> (create: (1 2))
+! expected 3 numbers, found (1 2)
+A> (create: (99 0 0))
+! The type 99 is not a triplet.
+A> (create: (0 5 5))
+! The type of a triplet cannot be 0.
+A> (update: (99 4 0 0))
+! Link 99 is not a triplet.
+A> (delete: 99)
+! Link 99 is not a triplet.
+A> (delete: 1)
+! Link 1 is not a triplet.
+A> (each: (1 2 3 4 5))
+! expected restriction, found (1 2 3 4 5)

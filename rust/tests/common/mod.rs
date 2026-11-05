@@ -5,6 +5,7 @@
 use link_cli::protocol::{LinksClient, LinksServer, LinoProtocol, ServerOptions};
 use link_cli::{LinkStorage, NamedTypesDecorator};
 use std::net::SocketAddr;
+use std::path::Path;
 use std::thread::{self, JoinHandle};
 use tempfile::NamedTempFile;
 
@@ -19,20 +20,39 @@ pub struct RunningServer {
 
 impl RunningServer {
     pub fn start(options: ServerOptions, named: bool) -> Self {
+        Self::start_with(options, named, |server| server)
+    }
+
+    /// Like [`start`](Self::start), letting `configure` set the server up
+    /// before it serves.
+    pub fn start_with(
+        options: ServerOptions,
+        named: bool,
+        configure: impl FnOnce(LinksServer) -> LinksServer + Send + 'static,
+    ) -> Self {
+        Self::start_serving(options, move |server, path| {
+            let server = configure(server);
+            if named {
+                let mut storage = NamedTypesDecorator::new(path, false).unwrap();
+                server.serve(&mut storage).unwrap();
+            } else {
+                let mut storage = LinkStorage::new(path, false).unwrap();
+                server.serve(&mut storage).unwrap();
+            }
+        })
+    }
+
+    /// Lets `serve` serve the temporary store at the path it is given.
+    pub fn start_serving(
+        options: ServerOptions,
+        serve: impl FnOnce(LinksServer, &Path) + Send + 'static,
+    ) -> Self {
         let database = NamedTempFile::new().unwrap();
         let path = database.path().to_path_buf();
         let server = LinksServer::bind("127.0.0.1:0", options).unwrap();
         let address = server.local_addr().unwrap();
         let shutdown = server.shutdown_handle().unwrap();
-        let thread = thread::spawn(move || {
-            if named {
-                let mut storage = NamedTypesDecorator::new(&path, false).unwrap();
-                server.serve(&mut storage).unwrap();
-            } else {
-                let mut storage = LinkStorage::new(&path, false).unwrap();
-                server.serve(&mut storage).unwrap();
-            }
-        });
+        let thread = thread::spawn(move || serve(server, &path));
         Self {
             address,
             shutdown,

@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [2.1.1] - 2026-11-05
+
+Update links-notation to 0.30.1 while auditing the associative architecture roadmap.
+
+Preserve quoted names in triplet imports and substitution queries, and export names without turning numeric names, wildcards or variables into query syntax.
+
+## [2.1.0] - 2026-11-05
+
+Added `clink --serve <address> --graphql`: a Hasura-compatible GraphQL server implementing the Deep Standard, so `DeepClient` from `@deep-foundation/deeplinks` and DeepCase connect to link-cli. See `docs/GRAPHQL.md`.
+
+## [2.0.0] - 2026-11-05
+
+A reference to an unreadable link needs its own right (#161). Without it an unreadable address answers exactly as a missing one, in the view, in operations and in queries, and the name of a link the subject may not refer to is an unknown name that cannot be taken over. A subject may refer to a link it may read, to itself, to what a rule `(r: AllowReference (g: Subject Object))` covers (`Object` and the links of type `Object`), and to the `Object` of its own `AllowRead` and `AllowWrite` rules. `AllowReference` does not allow reading; a reference a link already holds may stay; choosing the address of a new link is a reference; the write check runs first. Breaking: a subject that referred to an unreadable link needs a rule now, and a rule `Anything` to `Anything` brings the previous behaviour back. `PermissionMarkers` has a new field `allow_reference`, `PermissionAccess` a new variant `Reference`, `AccessPolicy` a method `can_reference` that defaults to `false`, and `Triplets` a method `reference_is_triplet`.
+
+## [1.5.0] - 2026-11-05
+
+Serve triplets over the Links Notation text and binary protocol (#152). `clink --serve --triplets` (`ServerOptions::triplets`) answers `(count: (i T f t))`, `(each: (i T f t))`, `(create: (T f t))`, `(update: (i T f t))`, `(delete: i)` and three-part substitution queries with `(i: T f t)` triplets, keeps names and `(auth: token)`, and leaves a server without the flag as it was. Subscriptions push triplet changes and permissions judge them through the triplets view of `PermissionsDecorator`. A binary client whose packet asks for `--arity 2..3` gets each triplet as one link of three references, `(i: (T f t))`, and every parser reads both forms. `RemoteLinks` implements `Triplets` and adds `subscribe_triplets` and `receive_triplet_notification`, `triplets_operations` holds the requests and replies, and `docs/protocol/triplets.txt` is the conversation both ports replay.
+
+## [1.4.0] - 2026-11-05
+
+Add the `Triplets` trait and `TripletsOverDoublets` (#151): triplets `(index: type from to)` stored in any `NamedTypeLinks` with an associative API, the twin of the C# `TripletsOverDoublets` with the same tests. A node `(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is `(i: T ((Pair f) t))`, with the points `Pair` and `Nothing` found or created by name, so the type stays the source and `TypesDecorator` reads triplets as values of their types. `create_triplet`, `update_triplet` (the address stays), `delete_triplet` (cascading) and `each_triplet` / `count_triplets` by index, type, from and to leave no unused wrapper or pair behind. `process_triplets_query` runs substitution queries with three parts and `triplets_to_lino` / `import_triplets_lino` export and import `(index: type from to)` lines. The encoding and its costs are in `docs/TRIPLETS.md`; `cargo run --example triplets` walks through it.
+
+## [1.3.0] - 2026-11-03
+
+Add an optional permission layer with permissions stored in links (#149), the port of the C# one with the same tests, which replay those of `@link-foundation/ui-links`. A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)` or `(r: AllowWrite g)`; `Anything` matches everything and write implies read. `PermissionPolicy` reads the rules from the data (`in_data`) or from a store of their own (`with_rules`), and `PermissionsDecorator` is the store as a subject sees it: reads skip what it may not read, and a create, update or delete it may not make fails with `Forbidden` (`Forbidden: update 14`) and changes nothing. A link the subject created is its own while its source is 0. `UndoableLinksDecorator` makes a request atomic, and `NamedTypeLinks` gains `reference_exists`, so references are checked in the store below the view.
+
+`clink` gains `--permissions self|<rules.links>`, `--subject`, `--tokens`, `--grant-token`, `--revoke-token` and `--token`. `LinksSessions` (`with_permissions`, `with_subject`, `with_authenticator`) gives every connection of `LinksServer::serve_sessions` a session; `(auth: token)` replies `(subject: i)` through any authenticator callback or `LinksTokenTable`, a token table stored as links named after the SHA-256 of each token. Without `--permissions` nothing changes.
+
+Add layers that compose with it and with each other, none depending on another. `UnionLinks` shows many links networks as one (a client's links joined with a server's, a cache with its source): the first member that has an address shadows the rest, a new link is created in the first member, and an update, a delete or a name goes to the member that has the link. `RemapLinks` shows a network under other addresses through an `AddressMap`: `OffsetAddressMap` moves it out of the way of another one, and `AddressTable` gives addresses in the order they are seen. `LinksExternalIds` binds the ids of other systems (UUIDs, ObjectIds, URLs) to links, in the data or in a store of its own, in the layout the C# and JavaScript ports share. `NamedTypeLinks` gains `claims`, so the undo of a request recreates a link in the member it came from, and `NamedLinksStorage` lets the transactions and version control layers sit over any of these views: a `PermissionsDecorator` over a union restricts every member at once, and one under it a single member.
+
+Update `doublets` to 0.19.0 and `sha2` to 0.11.1, with the lock files.
+
+## [1.2.0] - 2026-11-03
+
+The LiNo protocol server now supports subscriptions (#150).
+
+- `(subscribe: (index source target))` replies `(subscription: N)`.
+- Later changes that other connections make to matching links are pushed as `(notify: N)` followed by their `(before) (after)` lines. Pushes and replies arrive in the order the store changed.
+- `(unsubscribe: N)` replies nothing, and closing a connection drops its subscriptions.
+- `LinksServer::with_readable` hides links from subscribers, so a link that becomes unreadable arrives as a deletion.
+- `ServerOptions::max_pending_notifications` disconnects subscribers that fall too far behind.
+- `LinksClient` sets pushes aside for `receive_notification`.
+- `RemoteLinks` gains `subscribe`, `unsubscribe` and `receive_notification`.
+
+Both ports replay the shared conversation in `docs/protocol/subscriptions.txt`.
+
+Updated `doublets` to 0.18.0.
+
+## [1.1.0] - 2026-11-02
+
+Add the `Types` trait and `TypesDecorator` (#148): a type hierarchy `Type -> SubType -> … -> Value` with multiple inheritance kept in plain links, the port of the C# `TypesDecorator` with the same tests. The type of a link is its source, the root is `(Type: Type Type)`, a sub-type is `(S: T S)` and extra parents are pairs `(p: S T2)` marked by `(m: Extends p)`. `type_of`, `is_type`, `parents_of`, `ancestors_of`, `is_a` and `is_of` terminate on cycles, and `define`, `extend` and `instance` write. `NamedTypeLinks` gains `query_links`, which finds links by a pattern.
+
+Update `doublets` to 0.17.0, `links-notation` to 0.30.0 and the WebAssembly `wasm-bindgen` family to their latest releases, with the lock files. With doublets 0.17 a cascading delete resets every usage to `(0 0)` before deleting it, as C# does; the net change reported for each link is unchanged.
+
 ## [1.0.9] - 2026-10-24
 
 Expanded Rust query processor parity with the C# implementation, including unwrapped query pairs, structural and wildcard deletes, variable-driven updates, named composite rename behavior, direct Rust basis dependencies on doublets, links-notation, and lino-arguments without a direct clap dependency, and a doublet-backed Rust port of the C# Unicode string storage path with explicit Data.Doublets.Sequences-style converter abstractions.

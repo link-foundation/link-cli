@@ -25,6 +25,13 @@ test('the WebAssembly adapter states that it has no raw TCP', () => {
   assert.throws(() => client.require('rawTcp'), { name: 'UnsupportedError' });
   assert.throws(() => client.require('atomicTransactions'), { name: 'UnsupportedError' });
   assert.throws(() => new WasmTransport({}), TypeError);
+  // No other connection writes to an in-process store: nothing to push.
+  assert.equal(client.capabilities.subscriptions, false);
+  assert.throws(() => client.require('subscriptions'), { name: 'UnsupportedError' });
+  assert.throws(() => client.onNotification(() => {}), { name: 'UnsupportedError' });
+  assert.equal(client.capabilities.triplets, false);
+  assert.throws(() => client.require('triplets'), { name: 'UnsupportedError' });
+  assert.throws(() => client.onTripletNotification(() => {}), { name: 'UnsupportedError' });
 });
 
 test('requests run in order and a create equal to nothing new resolves to null', async () => {

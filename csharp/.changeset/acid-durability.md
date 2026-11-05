@@ -397,3 +397,7 @@ and atomic fence comparisons alongside ordinary data publications. Retrying a
 superseded owner token cannot reclaim ownership; inner providers stay caller-owned.
 Admit canonical ASCII ownership records before JSON parsing so the declared
 byte budget also bounds malformed UTF-8 records.
+
+Preserve checked query admission and allocation reservation capabilities through
+permission and undo sessions. Keep original-query envelopes observable by
+subscriptions and use the released Platform.Data.Doublets 0.18.9.

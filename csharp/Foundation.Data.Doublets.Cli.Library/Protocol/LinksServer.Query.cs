@@ -43,11 +43,14 @@ public sealed partial class LinksServer
         => ExecuteRequestCore(links, document, autoCreateMissingReferences, null);
 
     private static IReadOnlyList<LinoLink> ExecuteRequestCore<T>(INamedTypesLinks<T> links,
-        IReadOnlyList<LinoLink> document, bool autoCreateMissingReferences, Action<string>? trace)
+        IReadOnlyList<LinoLink> document, bool autoCreateMissingReferences, Action<string>? trace,
+        List<(Link<T> Before, Link<T> After)>? changed = null)
         where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
     {
         ArgumentNullException.ThrowIfNull(links);
         ArgumentNullException.ThrowIfNull(document);
+        var changes = new List<(Link<T> Before, Link<T> After)>();
+        IReadOnlyList<(Link<T> Before, Link<T> After)>? net = null;
         try
         {
             var limits = links.QueryLimits;
@@ -61,7 +64,12 @@ public sealed partial class LinksServer
                 original = text;
             }
             if (original is null && LinksOperation<T>.FromDocument(document) is { } operation)
-                return operation.Execute(links);
+            {
+                var operationReply = operation.Execute(links);
+                if (operation is LinksOperation<T>.Create or LinksOperation<T>.Update or LinksOperation<T>.Delete)
+                    net = LinksOperation<T>.ParseChanges(operationReply);
+                return operationReply;
+            }
             IReadOnlyList<LinoLink> reply;
             if (document.Count == 0 || original is not null && string.IsNullOrWhiteSpace(original))
             {
@@ -72,7 +80,6 @@ public sealed partial class LinksServer
             }
             else
             {
-                var changes = new List<(Link<T> Before, Link<T> After)>();
                 AdvancedMixedQueryProcessor<T>.ProcessQuery(links, new()
                 {
                     Query = original ?? LinoFormat.FormatDocument(document),
@@ -83,7 +90,8 @@ public sealed partial class LinksServer
                         return links.Constants.Continue;
                     }
                 });
-                reply = ChangesSimplifier.SimplifyChanges(changes)
+                net = ChangesSimplifier.SimplifyChanges(changes).ToList();
+                reply = net
                     .Select(change => LinksOperation<T>.ChangeLino(change.Before, change.After, row => LinkLino(links, row))).ToList();
             }
             limits?.DecodedReply(reply);
@@ -92,6 +100,10 @@ public sealed partial class LinksServer
         catch (Exception error) when (error is not OutOfMemoryException)
         {
             return ErrorDocument(error.Message);
+        }
+        finally
+        {
+            changed?.AddRange(net ?? ChangesSimplifier.SimplifyChanges(changes).ToList());
         }
     }
 

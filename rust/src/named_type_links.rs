@@ -52,6 +52,45 @@ pub trait NamedTypeLinks<T: QueryAddress = u32> {
         validate_ensure_address(id)?;
         Ok(self.ensure_created(id))
     }
+    /// Whether a reference of a query to `id` names a link that exists.
+    ///
+    /// The same as [`Self::exists`], but for a view that hides links: a
+    /// reference is a right of its own, so a link the subject cannot read
+    /// exists for a reference when the subject may refer to it, and otherwise
+    /// answers as a missing one (issue #161).
+    fn reference_exists(&mut self, id: T) -> bool {
+        self.exists(id)
+    }
+    /// Whether `id` is an address of this store, so a link created there
+    /// ([`Self::ensure_created`], the undo of a delete) belongs in it; `None`
+    /// for a plain store, which has no addresses of its own.
+    ///
+    /// A store made of others answers: a [`RemapLinks`](crate::RemapLinks)
+    /// claims the addresses of its map, and a [`UnionLinks`](crate::UnionLinks)
+    /// creates a link at an address in the first member that claims it, the
+    /// primary one when none does, so a union recreates a link in the member
+    /// its address is of (issue #149). The C# twin is `IComposedLinks.Claims`.
+    fn claims(&mut self, id: T) -> Option<bool> {
+        let _ = id;
+        None
+    }
+    /// The addresses the next `count` links created in the store get.
+    ///
+    /// A store reuses the address freed last first, so the lowest free one is
+    /// not necessarily next. Creating the links and deleting them again in
+    /// reverse leaves the store exactly as it was, and is the one way to ask
+    /// any store, a remote one included. A view that may not create asks the
+    /// store below.
+    fn next_created_addresses(&mut self, count: usize) -> Result<Vec<T>> {
+        let mut addresses = Vec::with_capacity(count);
+        for _ in 0..count {
+            addresses.push(self.try_create(T::from_byte(0), T::from_byte(0))?);
+        }
+        for &address in addresses.iter().rev() {
+            self.delete(address)?;
+        }
+        Ok(addresses)
+    }
     fn get_link(&mut self, id: T) -> Option<GenericLink<T>>;
     fn exists(&mut self, id: T) -> bool;
     fn update(&mut self, id: T, source: T, target: T) -> Result<GenericLink<T>> {
@@ -91,6 +130,29 @@ pub trait NamedTypeLinks<T: QueryAddress = u32> {
     fn delete_observed(&mut self, id: T, observer: ChangeObserver<'_, T>)
         -> Result<GenericLink<T>>;
     fn all_links(&mut self) -> Vec<GenericLink<T>>;
+    /// The links that match a pattern, where `None` matches any value, in
+    /// the order of their addresses.
+    ///
+    /// The default filters [`Self::all_links`]; a store with a lookup index
+    /// overrides it.
+    fn query_links(
+        &mut self,
+        index: Option<T>,
+        source: Option<T>,
+        target: Option<T>,
+    ) -> Vec<GenericLink<T>> {
+        let mut links: Vec<GenericLink<T>> = self
+            .all_links()
+            .into_iter()
+            .filter(|link| {
+                index.is_none_or(|index| link.index == index)
+                    && source.is_none_or(|source| link.source == source)
+                    && target.is_none_or(|target| link.target == target)
+            })
+            .collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
+    }
     fn search(&mut self, source: T, target: T) -> Option<T>;
     fn get_or_create(&mut self, source: T, target: T) -> T;
     /// Fallible pair lookup/allocation for composable query and decorator writes.
@@ -149,7 +211,10 @@ pub trait NamedTypeLinks<T: QueryAddress = u32> {
             .collect::<Result<Vec<_>>>()
     }
 
-    fn write_lino_output<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+    fn write_lino_output<P: AsRef<Path>>(&mut self, path: P) -> Result<()>
+    where
+        Self: Sized,
+    {
         let path = path.as_ref();
         let file = OpenOptions::new()
             .write(true)
@@ -251,6 +316,20 @@ impl NamedTypeLinks for LinkStorage {
         self.all().into_iter().copied().collect()
     }
 
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        let mut links: Vec<Link> = LinkStorage::query(self, index, source, target)
+            .into_iter()
+            .copied()
+            .collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
+    }
+
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
         LinkStorage::search(self, source, target)
     }
@@ -328,6 +407,20 @@ impl NamedTypeLinks for NamedTypesDecorator {
 
     fn all_links(&mut self) -> Vec<Link> {
         self.all().into_iter().copied().collect()
+    }
+
+    fn query_links(
+        &mut self,
+        index: Option<u32>,
+        source: Option<u32>,
+        target: Option<u32>,
+    ) -> Vec<Link> {
+        let mut links: Vec<Link> = NamedTypesDecorator::query(self, index, source, target)
+            .into_iter()
+            .copied()
+            .collect();
+        links.sort_unstable_by_key(|link| link.index);
+        links
     }
 
     fn search(&mut self, source: u32, target: u32) -> Option<u32> {
@@ -572,6 +665,125 @@ fn preview_recycling_query(
             .map(|row| row.index)
             .collect(),
     ))
+}
+
+/// A borrowed store is a store: a layer can wrap `&mut store` and leave the
+/// store with its owner, as the permission policy does when it reads the
+/// types of the data through a [`TypesDecorator`](crate::types::TypesDecorator).
+impl<T: QueryAddress, L: NamedTypeLinks<T> + ?Sized> NamedTypeLinks<T> for &mut L {
+    fn query_limits(&self) -> Option<crate::query_options::QueryLimits> {
+        (**self).query_limits()
+    }
+    fn reserve_query_allocations(
+        &mut self,
+        processor: &crate::query_processor::GenericQueryProcessor<T>,
+        restriction: &crate::lino_link::LinoLink,
+        substitution: &crate::lino_link::LinoLink,
+    ) -> Result<Option<HashSet<T>>> {
+        (**self).reserve_query_allocations(processor, restriction, substitution)
+    }
+    fn create(&mut self, source: T, target: T) -> T {
+        (**self).create(source, target)
+    }
+
+    fn ensure_created(&mut self, id: T) -> T {
+        (**self).ensure_created(id)
+    }
+
+    fn try_ensure_created(&mut self, id: T) -> Result<T> {
+        (**self).try_ensure_created(id)
+    }
+
+    fn get_link(&mut self, id: T) -> Option<GenericLink<T>> {
+        (**self).get_link(id)
+    }
+
+    fn exists(&mut self, id: T) -> bool {
+        (**self).exists(id)
+    }
+
+    fn try_create(&mut self, source: T, target: T) -> Result<T> {
+        (**self).try_create(source, target)
+    }
+
+    fn try_get_or_create(&mut self, source: T, target: T) -> Result<T> {
+        (**self).try_get_or_create(source, target)
+    }
+
+    fn reference_exists(&mut self, id: T) -> bool {
+        (**self).reference_exists(id)
+    }
+
+    fn claims(&mut self, id: T) -> Option<bool> {
+        (**self).claims(id)
+    }
+
+    fn next_created_addresses(&mut self, count: usize) -> Result<Vec<T>> {
+        (**self).next_created_addresses(count)
+    }
+
+    fn update_observed(
+        &mut self,
+        id: T,
+        source: T,
+        target: T,
+        observer: ChangeObserver<'_, T>,
+    ) -> Result<GenericLink<T>> {
+        (**self).update_observed(id, source, target, observer)
+    }
+
+    fn delete_observed(
+        &mut self,
+        id: T,
+        observer: ChangeObserver<'_, T>,
+    ) -> Result<GenericLink<T>> {
+        (**self).delete_observed(id, observer)
+    }
+
+    fn all_links(&mut self) -> Vec<GenericLink<T>> {
+        (**self).all_links()
+    }
+
+    fn query_links(
+        &mut self,
+        index: Option<T>,
+        source: Option<T>,
+        target: Option<T>,
+    ) -> Vec<GenericLink<T>> {
+        (**self).query_links(index, source, target)
+    }
+
+    fn search(&mut self, source: T, target: T) -> Option<T> {
+        (**self).search(source, target)
+    }
+
+    fn get_or_create(&mut self, source: T, target: T) -> T {
+        (**self).get_or_create(source, target)
+    }
+
+    fn get_name(&mut self, id: T) -> Result<Option<String>> {
+        (**self).get_name(id)
+    }
+
+    fn set_name(&mut self, id: T, name: &str) -> Result<T> {
+        (**self).set_name(id, name)
+    }
+
+    fn get_by_name(&mut self, name: &str) -> Result<Option<T>> {
+        (**self).get_by_name(name)
+    }
+
+    fn remove_name(&mut self, id: T) -> Result<()> {
+        (**self).remove_name(id)
+    }
+
+    fn save(&mut self) -> Result<()> {
+        (**self).save()
+    }
+
+    fn get_or_create_named(&mut self, name: &str) -> Result<T> {
+        (**self).get_or_create_named(name)
+    }
 }
 
 pub fn escape_lino_reference(reference: &str) -> String {

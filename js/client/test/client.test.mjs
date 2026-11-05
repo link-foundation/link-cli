@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LinksClient, LinksDecorator, tcpServerCapabilities, wasmCapabilities } from '../src/index.js';
+import { ANY, DeadlineExceededError, isNotification, LinksClient, LinksDecorator, parseDocument, parseNotification, parseTripletNotification, tcpServerCapabilities, wasmCapabilities } from '../src/index.js';
 
 /** A transport answering from a script: `answer(text) => reply text`. */
 function scripted(answer, capabilities = tcpServerCapabilities()) {
@@ -179,4 +179,205 @@ test('a decorator is a drop-in client over any backend', async () => {
   assert.equal(batch.completed, true);
   await decorated[Symbol.asyncDispose]();
   assert.equal(transport.closed, 1);
+});
+
+test('subscriptions: requests, replies and pushes', async () => {
+  const transport = scripted((text) => (text.startsWith('(subscribe:') ? '(subscription: 3)' : ''));
+  const client = new LinksClient(transport);
+  // A transport without pushes cannot subscribe.
+  await assert.rejects(client.subscribe([]), { name: 'UnsupportedError', outcome: 'not-sent' });
+  assert.throws(() => client.onNotification(() => {}), { name: 'UnsupportedError' });
+  assert.equal(transport.sent.length, 0);
+
+  const pushes = ['(notify: 3)\n() ((1: 0 0))'];
+  transport.receivePush = async (scope) => {
+    if (pushes.length > 0) return pushes.shift();
+    throw new DeadlineExceededError('late', { outcome: 'not-sent' });
+  };
+  transport.onPush = (listener) => {
+    listener('(notify: 4)\n((1: 0 0)) ((1: 1 1))\n((2: 1 1)) ()');
+    return () => {};
+  };
+  assert.equal(await client.subscribe([ANY, 1n, ANY]), 3);
+  await client.unsubscribe(3);
+  assert.deepEqual(transport.sent, ['(subscribe: (* 1 *))', '(unsubscribe: 3)']);
+  assert.deepEqual(await client.receiveNotification(), {
+    subscription: 3,
+    changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }],
+  });
+  // The deadline passing is no error: nothing arrived in time.
+  assert.equal(await client.receiveNotification({ timeout: 0 }), null);
+  const seen = [];
+  client.onNotification((notification) => seen.push(notification));
+  assert.deepEqual(seen, [
+    {
+      subscription: 4,
+      changes: [
+        { before: { index: 1n, source: 0n, target: 0n }, after: { index: 1n, source: 1n, target: 1n } },
+        { before: { index: 2n, source: 1n, target: 1n }, after: null },
+      ],
+    },
+  ]);
+  await assert.rejects(client.unsubscribe(2n ** 32n), { name: 'AddressRangeError' });
+  await assert.rejects(client.subscribe([1, 2, 3, 4]), TypeError);
+});
+
+test('a push is told from a reply by its first link, (notify: N)', () => {
+  const push = parseDocument('(notify: 1)\n() ((1: 0 0))');
+  assert.equal(isNotification(push), true);
+  assert.equal(isNotification(parseDocument('(notify: 12)')), true);
+  for (const text of ['(count: 1)', '(notify: 1 1)', '(notify: x)', '(notify: (1 2))', '() ((1: 0 0))', '']) {
+    assert.equal(isNotification(parseDocument(text)), false, JSON.stringify(text));
+  }
+  assert.deepEqual(parseNotification(push), { subscription: 1, changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }] });
+  assert.throws(() => parseNotification(parseDocument('(count: 1)')), { name: 'MalformedMessageError' });
+  assert.throws(() => parseNotification(parseDocument('(notify: 1)\n(1: 0 0)')), { name: 'MalformedMessageError' });
+});
+
+test('triplets: requests and replies of every operation', async () => {
+  const answers = {
+    '(count: (* 4))': '(count: 2)',
+    '(each: (* 4 5 6))': '(10: 4 5 6)\n(11: 4 5 6)',
+    '(create: (0 0 0))': '() ((3: 3 0 0))',
+    '(create: (4 5 6))': '() ((10: 4 5 6))',
+    '(update: (10 4 6 5))': '((10: 4 5 6)) ((10: 4 6 5))',
+    '(delete: 5)': '((5: 3 0 0)) ()\n((11: 4 5 6)) ()',
+    '() ((Person 0 0))': '() ((17: Person 0 0))',
+    '': '(3: Person 0 0)',
+  };
+  const transport = scripted((text) => answers[text]);
+  const client = new LinksClient(transport);
+  assert.equal(await client.countTriplets([ANY, 4]), 2n);
+  assert.deepEqual(await client.eachTriplets([null, 4, 5, 6]), [
+    { index: 10n, type: 4n, from: 5n, to: 6n },
+    { index: 11n, type: 4n, from: 5n, to: 6n },
+  ]);
+  assert.deepEqual(await client.createTripletPoint(), { index: 3n, type: 3n, from: 0n, to: 0n });
+  assert.deepEqual(await client.createTriplet(4, 5, 6), { index: 10n, type: 4n, from: 5n, to: 6n });
+  assert.deepEqual(await client.updateTriplet(10, 4, 6, 5), [
+    { before: { index: 10n, type: 4n, from: 5n, to: 6n }, after: { index: 10n, type: 4n, from: 6n, to: 5n } },
+  ]);
+  assert.deepEqual(await client.deleteTriplet(5), [
+    { before: { index: 5n, type: 3n, from: 0n, to: 0n }, after: null },
+    { before: { index: 11n, type: 4n, from: 5n, to: 6n }, after: null },
+  ]);
+  assert.deepEqual(await client.queryTriplets('() ((Person 0 0))'), [{ before: null, after: { index: '17', type: 'Person', from: '0', to: '0' } }]);
+  assert.deepEqual(await client.exportTriplets(), [{ index: '3', type: 'Person', from: '0', to: '0' }]);
+  const batch = await client.batch([
+    { op: 'countTriplets', restriction: [ANY, 4] },
+    { op: 'createTriplet', type: 4, from: 5, to: 6 },
+    { op: 'updateTriplet', index: 10, type: 4, from: 6, to: 5 },
+    { op: 'deleteTriplet', index: 5 },
+    { op: 'eachTriplets', restriction: [ANY, 4, 5, 6] },
+    { op: 'queryTriplets', text: '() ((Person 0 0))' },
+  ]);
+  assert.equal(batch.completed, true);
+  assert.equal(batch.results[0].value, 2n);
+  assert.equal(batch.results[1].value.type, 4n);
+  assert.equal(batch.results[5].value[0].after.type, 'Person');
+});
+
+test('triplets: a part is checked before sending and a reply is checked after', async () => {
+  const transport = scripted(() => '(1: 2 3)');
+  const client = new LinksClient(transport);
+  await assert.rejects(client.eachTriplets([1, 2, 3, 4, 5]), TypeError);
+  await assert.rejects(client.countTriplets('1'), TypeError);
+  await assert.rejects(client.createTriplet(2n ** 32n, 0, 0), { name: 'AddressRangeError', outcome: 'not-sent' });
+  await assert.rejects(client.updateTriplet(1, 1, -1n, 0), { name: 'AddressRangeError' });
+  await assert.rejects(client.queryTriplets(' '), TypeError);
+  assert.equal(transport.sent.length, 0);
+  // A doublet server's reply is no triplet: the mismatch is not read as one.
+  await assert.rejects(client.eachTriplets(), { name: 'MalformedMessageError' });
+  const noChange = new LinksClient(scripted(() => ''));
+  await assert.rejects(noChange.createTriplet(1, 0, 0), { name: 'MalformedMessageError' });
+  const error = new LinksClient(scripted(() => "(error: 'The type 99 is not a triplet.')"));
+  await assert.rejects(error.createTriplet(99, 0, 0), { name: 'RemoteError', message: /The type 99 is not a triplet/ });
+});
+
+test('triplets: a reply packed with --arity 2..3 reads as the canonical form', async () => {
+  const client = new LinksClient(scripted(() => '(10: (4 5 6))\n(11: 4 5 6)'));
+  assert.deepEqual(await client.eachTriplets(), [
+    { index: 10n, type: 4n, from: 5n, to: 6n },
+    { index: 11n, type: 4n, from: 5n, to: 6n },
+  ]);
+  const changes = new LinksClient(scripted(() => '((10: (4 5 6))) ((10: (4 6 5)))'));
+  assert.deepEqual(await changes.updateTriplet(10, 4, 6, 5), [
+    { before: { index: 10n, type: 4n, from: 5n, to: 6n }, after: { index: 10n, type: 4n, from: 6n, to: 5n } },
+  ]);
+  const notification = parseTripletNotification(parseDocument('(notify: 1)\n() ((16: (4 6 7)))'));
+  assert.deepEqual(notification, { subscription: 1, changes: [{ before: null, after: { index: 16n, type: 4n, from: 6n, to: 7n } }] });
+  for (const text of ['(1: (2 3))', '(1: (2 3 4 5))', '(1: 2 3 4 5)', '(2 3 4)', '(1: (2: 3 4 5))', '(1: 2 (3 5) 4)']) {
+    await assert.rejects(new LinksClient(scripted(() => text)).eachTriplets(), { name: 'MalformedMessageError' }, text);
+  }
+});
+
+test('triplets: subscriptions, and a backend stated not to serve them', async () => {
+  const transport = scripted((text) => (text.startsWith('(subscribe:') ? '(subscription: 3)' : ''));
+  const client = new LinksClient(transport);
+  await assert.rejects(client.subscribeTriplets([]), { name: 'UnsupportedError', outcome: 'not-sent' });
+  await assert.rejects(client.receiveTripletNotification(), { name: 'UnsupportedError' });
+  assert.throws(() => client.onTripletNotification(() => {}), { name: 'UnsupportedError' });
+  const pushes = ['(notify: 3)\n() ((16: 4 6 7))'];
+  transport.receivePush = async () => {
+    if (pushes.length > 0) return pushes.shift();
+    throw new DeadlineExceededError('late', { outcome: 'not-sent' });
+  };
+  transport.onPush = (listener) => {
+    listener('(notify: 4)\n((16: 4 6 7)) ()');
+    return () => {};
+  };
+  assert.equal(await client.subscribeTriplets([ANY, 4n, ANY, 7n]), 3);
+  assert.equal(transport.sent[0], '(subscribe: (* 4 * 7))');
+  assert.deepEqual(await client.receiveTripletNotification(), { subscription: 3, changes: [{ before: null, after: { index: 16n, type: 4n, from: 6n, to: 7n } }] });
+  assert.equal(await client.receiveTripletNotification({ timeout: 0 }), null);
+  const seen = [];
+  client.onTripletNotification((notification) => seen.push(notification));
+  assert.deepEqual(seen, [{ subscription: 4, changes: [{ before: { index: 16n, type: 4n, from: 6n, to: 7n }, after: null }] }]);
+  assert.throws(() => client.onTripletNotification('no'), TypeError);
+
+  assert.equal(client.capabilities.triplets, null);
+  assert.throws(() => client.require('triplets'), { name: 'UnsupportedError' });
+  assert.equal(new LinksClient(scripted(() => ''), { capabilities: { triplets: true } }).require('triplets').capabilities.triplets, true);
+
+  const noTriplets = scripted(() => '(count: 0)', wasmCapabilities());
+  const wasm = new LinksClient(noTriplets);
+  await assert.rejects(wasm.countTriplets(), { name: 'UnsupportedError', outcome: 'not-sent' });
+  await assert.rejects(wasm.createTripletPoint(), { name: 'UnsupportedError' });
+  await assert.rejects(wasm.batch([{ op: 'createTriplet', type: 0, from: 0, to: 0 }]), { name: 'UnsupportedError' });
+  assert.throws(() => wasm.onTripletNotification(() => {}), { name: 'UnsupportedError' });
+  assert.equal(noTriplets.sent.length, 0);
+});
+
+test('a decorator forwards every triplet call', async () => {
+  const called = [];
+  const links = Object.fromEntries(
+    ['countTriplets', 'eachTriplets', 'createTriplet', 'createTripletPoint', 'updateTriplet', 'deleteTriplet', 'queryTriplets', 'exportTriplets', 'subscribeTriplets', 'receiveTripletNotification', 'onTripletNotification'].map(
+      (name) => [name, (...args) => called.push([name, ...args])],
+    ),
+  );
+  const decorated = new LinksDecorator(links);
+  decorated.countTriplets([1], 'o');
+  decorated.eachTriplets([1], 'o');
+  decorated.createTriplet(1, 2, 3, 'o');
+  decorated.createTripletPoint('o');
+  decorated.updateTriplet(1, 2, 3, 4, 'o');
+  decorated.deleteTriplet(1, 'o');
+  decorated.queryTriplets('q', 'o');
+  decorated.exportTriplets('o');
+  decorated.subscribeTriplets([1], 'o');
+  decorated.receiveTripletNotification('o');
+  decorated.onTripletNotification('l');
+  assert.deepEqual(called, [
+    ['countTriplets', [1], 'o'],
+    ['eachTriplets', [1], 'o'],
+    ['createTriplet', 1, 2, 3, 'o'],
+    ['createTripletPoint', 'o'],
+    ['updateTriplet', 1, 2, 3, 4, 'o'],
+    ['deleteTriplet', 1, 'o'],
+    ['queryTriplets', 'q', 'o'],
+    ['exportTriplets', 'o'],
+    ['subscribeTriplets', [1], 'o'],
+    ['receiveTripletNotification', 'o'],
+    ['onTripletNotification', 'l'],
+  ]);
 });

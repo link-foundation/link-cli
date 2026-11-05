@@ -13,7 +13,7 @@
 
 `clink` (`CLInk` `cLINK`), a CLI tool to manipulate links using single substitution operation.
 
-It is based on [associative theory](https://habr.com/ru/articles/895896) (also in [ru](https://habr.com/ru/articles/804617)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
+It is based on [associative theory](https://github.com/link-foundation/meta-theory/blob/main/archive/0.0.2/article.md) (also in [ru](https://github.com/link-foundation/meta-theory/blob/main/archive/0.0.1/article.md)) and [Links Notation](https://github.com/linksplatform/Protocols.Lino) (also in [ru](https://github.com/linksplatform/Protocols.Lino/blob/main/README.ru.md))
 
 It includes a production C# CLI/library pair on NuGet, a Rust CLI/library
 crate on Crates.io, and a Rust-powered WebAssembly browser workbench built on
@@ -37,8 +37,14 @@ package built from `doublets-rs`.
 
 ## Documentation
 
+- [docs/ROADMAP.md](docs/ROADMAP.md): the dependency order and verification of the associative architecture in doublets and triplets.
 - [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md): implemented and planned requirements collected from issues and PR comments.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): repository layout, major components, dependencies, storage files, and CI.
+- [docs/COMPOSITION.md](docs/COMPOSITION.md): how the permission, union, remap and external-id layers compose with each other and the other layers, in C#, Rust and JavaScript, with scenarios.
+- [docs/TRIPLETS.md](docs/TRIPLETS.md): triplets `(index: type from to)` stored in doublets, the encoding, the alternatives and the cost of every operation.
+- [docs/GRAPHQL.md](docs/GRAPHQL.md): the Hasura-compatible GraphQL server for Deep, `clink --serve --graphql`.
+- [docs/protocol/](docs/protocol): the links protocol, binary links notation and subscriptions, with the golden conversations every port replays.
+- [examples/](examples): runnable examples, one folder per feature.
 - [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md): deeper explanation of query processing, references, import/export, triggers, and the WebAssembly workbench.
 - [docs/case-studies/issue-71/README.md](docs/case-studies/issue-71/README.md): evidence and analysis behind the original documentation refresh.
 - [docs/case-studies/issue-92/README.md](docs/case-studies/issue-92/README.md): evidence and analysis behind the dual CLI + library packaging and unified API documentation site.
@@ -425,6 +431,108 @@ Both ports write and read the same bytes, so an archive written by the Rust
 CLI can be read by the C# CLI and the other way around
 ([examples/archive](examples/archive/README.md)).
 
+## Type hierarchy
+
+A type hierarchy `Type -> SubType -> … -> Value` of any depth, with multiple
+inheritance, is kept in ordinary links, so the CLI needs no new syntax:
+
+- the type of a link is its source: `(v: S x)` is a value of type `S`;
+- the root is the point `(Type: Type Type)`;
+- a sub-type of `T` is `(S: T S)`, a value of `T` that points at itself;
+- an extra parent is a pair `(p: S T2)` marked by `(m: Extends p)`, where
+  `Extends` is a type too.
+
+Build `Type -> Doc -> Note -> News`, make `News` extend `Public` as well, and
+add a value `today` of `News`:
+
+```bash
+clink --db types.links --auto-create-missing-references '() ((Type: Type Type) (Extends: Extends Extends) (User: Type User) (Doc: Type Doc) (Public: Type Public) (Note: Doc Note) (News: Note News) (Extends (News Public)) (today: News today))' --after
+```
+→
+```
+(Type: Type Type)
+(Extends: Extends Extends)
+(User: Type User)
+(Doc: Type Doc)
+(Public: Type Public)
+(Note: Doc Note)
+(News: Note News)
+(8: News Public)
+(9: Extends 8)
+(today: News today)
+```
+
+The links that point at themselves are the types (`today` is one too: a
+value `(v: T v)` can be sub-typed further), and the links whose source is
+`News` are its values and its extra parents:
+
+```bash
+clink --db types.links '((($t: $p $t)) (($t: $p $t)))' --changes
+clink --db types.links '((($v: News $x)) (($v: News $x)))' --changes
+```
+→
+```
+((Type: Type Type)) ((Type: Type Type))
+((Extends: Extends Extends)) ((Extends: Extends Extends))
+((User: Type User)) ((User: Type User))
+((Doc: Type Doc)) ((Doc: Type Doc))
+((Public: Type Public)) ((Public: Type Public))
+((Note: Doc Note)) ((Note: Doc Note))
+((News: Note News)) ((News: Note News))
+((today: News today)) ((today: News today))
+((8: News Public)) ((8: News Public))
+((today: News today)) ((today: News today))
+```
+
+Walking the hierarchy is the job of `TypesDecorator`, a decorator over the
+links in both libraries (C# `TypesDecorator<TLinkAddress>`, which implements
+`ITypes<TLinkAddress>`; Rust `link_cli::TypesDecorator`, which implements the
+`Types` trait). It answers `TypeOf`, `IsType`, `ParentsOf`, `AncestorsOf`,
+`IsA` (the type itself or of it) and `IsOf` (strictly of it) through any
+depth, diamonds and cycles, and writes with `Define(parent, more…)`,
+`Extend(type, parent)` and `Instance(type[, target])`:
+
+```csharp
+var types = new TypesDecorator<uint>(namedLinks); // finds or creates Type and Extends
+var doc = types.Define(types.Root);
+var @public = types.Define(types.Root);
+var note = types.Define(doc);
+var news = types.Define(note, doc, @public);
+types.IsA(types.Instance(news), @public); // true
+```
+
+The pinned types `(1: 1 1)`, `(2: 1 2)`, `(3: 1 3)`, … are sub-types of the
+root `1`, so a store with pinned types is already such a hierarchy. Runnable
+scripts for both CLIs and a Rust example live in
+[`examples/type-hierarchy/`](examples/type-hierarchy).
+
+## Triplets
+
+deep-foundation's links are triplets `(index: type from to)`. Both libraries
+keep them in any doublets store with `TripletsOverDoublets` (C#
+`TripletsOverDoublets<TLinkAddress>`, which implements `ITriplets<TLinkAddress>`;
+Rust `link_cli::TripletsOverDoublets`, which implements `Triplets`). A node
+`(i: T 0 0)` is the doublet `(i: T i)` and a link `(i: T f t)` is
+`(i: T ((Pair f) t))`, so the type stays the source and the
+[type hierarchy](#type-hierarchy) reads triplets as values of their types.
+Updates keep the address, deletes cascade like doublet deletes, and wrappers
+and pairs nothing uses are collected.
+
+```csharp
+var triplets = new TripletsOverDoublets<uint>(namedLinks); // finds or creates Pair and Nothing
+TripletsLino.Import(triplets, "(knows: Type 0 0)\n(alice: Type 0 0)\n(bob: Type 0 0)\n(carol: Type 0 0)\n(Type: Type 0 0)\n(r: knows alice bob)");
+TripletsQueryProcessor.ProcessQuery(triplets, "((($r: knows alice bob)) (($r: knows alice carol)))");
+triplets.EachTriplet(TripletQuery<uint>.ByType(triplets.GetByName("knows"))); // [(r: knows alice carol)]
+Console.Write(TripletsLino.Export(triplets));
+```
+
+The encoding, the alternatives that were measured and the cost of `Each` by
+type, from and to and of deletion are in [docs/TRIPLETS.md](docs/TRIPLETS.md);
+the Rust example is in [`examples/triplets/`](examples/triplets).
+
+`clink --serve --triplets` serves them over the
+[text and binary protocol](#serving-triplets).
+
 ## Persistent transformation triggers
 
 Store a query as a trigger with `--always` to apply it after later write operations:
@@ -530,6 +638,31 @@ C# and Rust servers and clients work with each other: see
 [`examples/tcp/`](examples/tcp) and
 [docs/case-studies/issue-105](docs/case-studies/issue-105/README.md).
 
+### Serving triplets
+
+`--triplets` makes a server read every request as
+[triplets](docs/TRIPLETS.md#protocol), with subscriptions and `--permissions`
+applying to them too. A server without it keeps serving doublets, because a
+request such as `(delete: 3)` cannot say by its shape which one it means.
+
+```bash
+clink --db db.links --serve 127.0.0.1:7777 --triplets       # terminal 1
+clink --connect 127.0.0.1:7777 '(create: (0 0 0))'          # terminal 2: a point
+() ((3: 3 0 0))
+clink --connect 127.0.0.1:7777 '(create: (3 0 0))'
+() ((4: 3 0 0))
+clink --connect 127.0.0.1:7777 '(each: (* 3))'              # each by type
+(3: 3 0 0)
+(4: 3 0 0)
+```
+
+With `--protocol binary --arity 2..3`, a triplet travels as one link of three
+references ([binary links notation](docs/protocol/binary-links-notation.md#73-triplets)).
+In the libraries, `RemoteLinks` is a `Triplets` store (`ITriplets` in C#) behind
+such a server, and
+[`@link-foundation/link-cli-client`](js/client/README.md#triplets) has the same
+calls.
+
 ### Use a served database as a store
 
 In both libraries, `RemoteLinks` is a links store whose links live behind a
@@ -566,6 +699,46 @@ original query text to supporting peers; use a checked causal `QueryLinks`
 adapter to stage full-u64 edits before explicit session publication. See
 [ordinary causal sessions](docs/ENGINE-CAUSAL-SESSIONS.md) for bounds and costs.
 
+### Subscribe to changes
+
+A connection can ask the server to push it every change that fits a
+pattern. `(subscribe: (* * *))` replies `(subscription: 1)`. After that,
+whenever another connection changes a link that fits, the server sends the
+subscriber `(notify: 1)` followed by one `(before) (after)` line for each
+change, without being asked:
+
+```
+A> (subscribe: (* * *))
+A< (subscription: 1)
+B> (create: (0 0))
+B< () ((1: 0 0))
+A< (notify: 1)
+A< () ((1: 0 0))
+```
+
+- **Numbering.** Subscription numbers count from 1 on each connection.
+- **Patterns.** The restriction is the same kind of pattern as in
+  `(each: ...)`.
+- **Own writes.** A connection is not told about its own writes.
+- **Partial matches.** A side of a change that does not fit the pattern is
+  left out, so a link that stops matching arrives as a deletion.
+- **Hidden links.** The server's readable predicate hides links from
+  subscribers in the same way: `LinksServerOptions.Readable` in C#,
+  `LinksServer::with_readable` in Rust.
+- **Stopping.** `(unsubscribe: 1)` replies nothing, and closing the
+  connection drops its subscriptions.
+- **Slow readers.** A subscriber that lets more than 1024 pushes pile up is
+  disconnected. Change the limit with `MaxPendingNotifications` or
+  `max_pending_notifications`.
+
+`RemoteLinks` (`Subscribe`, `Unsubscribe` and `ReceiveNotification`) and the JS
+client (`subscribe`, `unsubscribe`, `receiveNotification` and
+`onNotification`) keep pushes apart from replies.
+[`docs/protocol/subscriptions.txt`](docs/protocol/subscriptions.txt) records a
+whole conversation over two connections, and C#, Rust and the JS client replay
+it. To see it run, use
+[`examples/tcp/watch-changes.mjs`](examples/tcp/watch-changes.mjs).
+
 ### Use a served database from JavaScript or TypeScript
 
 [`@link-foundation/link-cli-client`](js/client/README.md) is the JS/TS
@@ -583,6 +756,109 @@ const link = await links.create(1n, 1n);
 await links.setName(link.index, 'a pair');
 await links.close();
 ```
+
+### Serve GraphQL for Deep
+
+`clink --db deep.links --serve 127.0.0.1:3006 --graphql --deep-package fresh.json`
+answers as Hasura does for Deep, so `DeepClient` and DeepCase connect to it. See
+[docs/GRAPHQL.md](docs/GRAPHQL.md).
+
+## Permissions
+
+`--permissions` checks every read and write against rules stored as links.
+The rules live in the data (`--permissions self`) or in a links file of their
+own (`--permissions rules.links`); both behave the same. Without the option
+nothing is checked and clink works exactly as before.
+
+- A rule is a pair `(g: Subject Object)` marked by `(r: AllowRead g)`,
+  `(r: AllowWrite g)` or `(r: AllowReference g)`. `Subject` and `Object` are
+  types of the [type hierarchy](#type-hierarchy), or single links. `Anything`
+  stands for every subject or every link. Write implies read.
+- `--subject` names the subject queries run as, by index or by name. Without
+  it the subject is `0`, a guest, which only rules about `Anything` let in.
+- A link the subject created is its own while its source is the null link,
+  so it can still be given a type it may not read.
+- A link the subject may not read is missing to it. A create, update or
+  delete it may not do fails with `Forbidden: <operation> <link>`, and the
+  whole query is undone, including the writes the store made on its own.
+- A reference is a right of its own: a link the subject may not refer to answers
+  exactly as a missing one, and its name as an unknown name. A subject may refer
+  to a link it may read, to itself, to what an `AllowReference` rule covers
+  (`Object` and the links of type `Object`), and to the `Object` of its own
+  `AllowRead` and `AllowWrite` rules, so `User writes Note` is enough to type a
+  link as `Note`. `AllowReference` does not allow reading. A reference a link
+  already holds may stay, and choosing the address of a new link is a reference
+  too. A rule `Anything` to `Anything` lets every subject refer to everything.
+
+```bash
+clink --db data.links --auto-create-missing-references '() ((Type: Type Type) (Extends: Extends Extends) (AllowRead: AllowRead AllowRead) (AllowWrite: AllowWrite AllowWrite) (AllowReference: AllowReference AllowReference) (Anything: Anything Anything) (User: Type User) (Admin: User Admin) (Doc: Type Doc) (Public: Type Public) (Note: Doc Note) (Secret: Doc Secret) (alice: User alice) (boss: Admin boss) (note: Note note) (secret: Secret secret) (news: Public news) (AllowWrite (Admin Anything)) (AllowWrite (User Note)) (AllowRead (User Public)))'
+clink --db data.links --permissions self --subject alice --after
+```
+→
+```
+(note: Note note)
+(news: Public news)
+```
+
+```bash
+clink --db data.links --permissions self --subject alice '((note: Note note)) ((note: Secret note))'
+```
+→
+```
+Error: Query error: Forbidden: update 14
+```
+
+A served store checks the subject of each connection. A connection starts as
+`--subject` (a guest by default). `(auth: token)` switches it to the subject
+the token table of `--tokens` gives the token, and the reply is
+`(subject: i)`. The token table is made of links, kept in the data
+(`--tokens self`) or in a links file of its own. `--grant-token` and
+`--revoke-token` write it, and `--connect --token` authenticates before
+sending the query:
+
+```bash
+clink --db data.links --tokens tokens.links --subject alice --grant-token alice-secret
+clink --db data.links --serve 127.0.0.1:7777 --permissions self --tokens tokens.links   # terminal 1
+clink --connect 127.0.0.1:7777 '(count: ())'                          # (count: 0), a guest
+clink --connect 127.0.0.1:7777 --token alice-secret '(count: ())'     # (count: 2)
+```
+
+In both libraries the layer is `PermissionsDecorator` over any store, with
+`PermissionPolicy` reading the rules. The server's sessions take the
+authentication as a callback, so a token table in links (`LinksTokenTable`)
+is only one choice. Runnable scripts for both CLIs live in
+[`examples/permissions/`](examples/permissions), and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#permissions) explains the design.
+
+## Join and remap networks
+
+Several links networks can be read as one, and a network can be read under
+other addresses. Each of these layers is a links network itself, so it wraps
+a local store, a served one, or another layer, in C#, Rust and JavaScript:
+
+- **Union** (`UnionLinksDecorator`, `UnionLinks`) joins networks, for example a
+  client's links with a server's. The first member that has an address
+  shadows the rest. A new link goes to the first member, and a write goes to
+  the member that has the link.
+- **Remap** (`RemapLinksDecorator`, `RemapLinks`) maps addresses both ways. An
+  offset moves a server's links out of the client's way, and a table gives
+  another system's ids addresses of our own. In JavaScript, a network can be
+  read under UUIDs.
+- **External ids** (`LinksExternalIds`) keep the ids other systems give our
+  links as links, in the data or in a store of their own.
+- **Permissions** compose with all of them. Over a union, the rules restrict
+  every member. Under it, they restrict one member, such as a server that
+  enforces its own rules.
+
+```js
+const links = new UnionLinks([local, new RemapLinks(server, new OffsetAddressMap(1n << 24n))]);
+const byUuid = new RemapLinks(links, new ExternalIdMap(ids, 'uuid'));
+```
+
+[`examples/composition/`](examples/composition) runs a client joined to a
+server with `--permissions`, under UUIDs, with both CLIs.
+[docs/COMPOSITION.md](docs/COMPOSITION.md) shows how the layers compose and
+the scenarios they serve.
 
 ## Update single link
 
@@ -763,6 +1039,13 @@ Both the C# NuGet tool and the Rust CLI support the options below unless marked 
 | `--external-references` | bool    | `false`        | _None_                              | Binary protocol: send numbers and characters as external references       |
 | `--arity`               | string  | `2`            | _None_                              | Binary protocol: link lengths to use, `n`, `min..max` or `min..`          |
 | `--packed-widths`       | bool    | `false`        | _None_                              | Binary protocol: give each section the narrowest reference width          |
+| `--triplets`            | bool    | `false`        | _None_                              | With `--serve`: read every request as triplets, see [Serving triplets](#serving-triplets) |
+| `--permissions`         | string  | _None_         | _None_                              | Check reads and writes against rules stored as links: `self` or a rules file |
+| `--subject`             | string  | `0` (guest)    | _None_                              | The subject (link index or name) of queries and of served connections     |
+| `--tokens`              | string  | _None_         | _None_                              | The token table of `(auth: token)`: `self` or a links file                 |
+| `--grant-token`         | string  | _None_         | _None_                              | Let a token authenticate as `--subject` in the `--tokens` table, then exit |
+| `--revoke-token`        | string  | _None_         | _None_                              | Forget a token of the `--tokens` table, then exit                          |
+| `--token`               | string  | _None_         | _None_                              | With `--connect`: authenticate with `(auth: token)` before the query       |
 
 The query can be passed as the first positional argument or through `--query`,
 `--apply`, or `--do`. In the Rust CLI, `--query` takes precedence when both

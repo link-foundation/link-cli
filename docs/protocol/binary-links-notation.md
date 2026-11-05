@@ -256,6 +256,31 @@ With `--arity 1..`, the two lists become single links and the packet becomes
 fixed-arity sections: doublets 6 and 7 after the gap of 5, the one-element
 list `8 = (7)`, the doublet `9 = (0 8)` and the document `10 = (9)`.
 
+### 7.3 Triplets
+
+A server in triplet mode (`clink --serve --triplets`,
+[triplets.txt](triplets.txt)) answers with `(i: T f t)`. By the mapping above
+that is the typed value `(Identified i T f t)` of five references, so under
+`--arity 2..3` it does not fit one link and becomes a chain of doublets, even
+though a triplet is three references.
+
+So a server packs its reply: when the format of a reply or push is binary and
+its arity contains `3` but not `5`, every triplet in it is written
+`(i: (T f t))`, and `(T f t)` is one link of three references. Any other
+format, text and arities like `1..` included, carries the canonical
+`(i: T f t)`.
+
+| Reply | Under `2` | Under `2..3` | Under `1..` |
+|---|---|---|---|
+| LiNo | `(i: T f t)` | `(i: (T f t))` | `(i: T f t)` |
+| Links | chains of doublets | `(T f t)` is one link | `(Identified i T f t)` is one link |
+
+As §7.1 says, the arity of a binary reply comes from the request, so a client
+asks for this form by sending its request with `--arity 2..3`: `(each: (* 3))`
+is then `(Identified each list)`, a link of three references, and the server
+answers in that arity. Requests are not transformed. Every parser, in both ports
+and in the JavaScript client, reads both forms as the same triplet.
+
 ## 8. Decoding untrusted input
 
 A packet must be read whole. Bytes after it, or a packet that ends early,

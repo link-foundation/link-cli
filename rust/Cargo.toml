@@ -1,6 +1,6 @@
 [package]
 name = "link-cli"
-version = "1.0.9"
+version = "2.1.1"
 edition = "2021"
 # `std::fs::File::lock` (used by the advisory locking in `storage::lock`)
 # was stabilised in Rust 1.89.
@@ -40,15 +40,17 @@ rpds = "1.2.1"
 lru = { version = "0.19.0", default-features = false }
 # Issue 67 Rust basis crates:
 # Source: http://github.com/linksplatform/doublets-rs
-doublets = "0.9.0"
+doublets = "0.20.0"
 # Source: http://github.com/link-foundation/links-notation
-links-notation = "0.27.1"
+links-notation = "0.30.2"
 # Source: http://github.com/link-foundation/lino-arguments
 lino-arguments = "0.5.0"
-ureq = { version = "3.5.0", features = ["json"], optional = true }
+ureq = { version = "3.5.1", features = ["json"], optional = true }
 base64 = { version = "0.23.1", optional = true }
 serde_json = { version = "1.0.154", optional = true }
-sha2 = { version = "0.11.1", default-features = false, optional = true }
+sha2 = { version = "0.11.1", default-features = false }
+# `_regex` and `_iregex` of Hasura comparison expressions.
+regex-lite = "0.1.9"
 
 [dev-dependencies]
 tempfile = "3.27.0"
@@ -57,7 +59,7 @@ serde_json = "1.0.154"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Selected physical pager/WAL component; absent from default/native and WASM builds.
 getrandom = { version = "0.4.3", optional = true }
-rusqlite = { version = "0.41.0", default-features = false, features = ["bundled"], optional = true }
+rusqlite = { version = "0.41.1", default-features = false, features = ["bundled"], optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2.191", optional = true }
@@ -73,7 +75,7 @@ causal = ["dep:serde_json"]
 causal-batches = ["causal"]
 causal-sessions = ["causal-batches", "causal-projection"]
 causal-projection = ["causal"]
-causal-merkle = ["causal", "dep:sha2"]
+causal-merkle = ["causal"]
 etcd = ["dep:ureq", "dep:base64", "dep:serde_json"]
 sqlite = ["dep:rusqlite"]
 native-pages = ["dep:getrandom", "dep:libc", "dep:errno"]

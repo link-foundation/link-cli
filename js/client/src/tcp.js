@@ -9,7 +9,7 @@ import { scopeError, scopeOf, watchScope } from './deadline.js';
 import { ConnectionClosedError, LimitExceededError, LinksError, MalformedMessageError, ProtocolMismatchError } from './errors.js';
 import { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './framing.js';
 import { parseDocument } from './lino.js';
-import { errorMessage } from './operations.js';
+import { errorMessage, isNotificationText } from './operations.js';
 
 /** Parses `host:port`, `[v6]:port` or `{ host, port }`. */
 export function parseAddress(address) {
@@ -36,6 +36,10 @@ export function parseAddress(address) {
  *   one the server may be running leaves no way to skip its reply (the
  *   protocol has no request ids), so the connection is closed and every
  *   in-flight request ends `unknown`.
+ * - Pushes: a message starting with `(notify: N)` is a push of a
+ *   subscription, not a reply. It goes to the `onPush` listeners, or, while
+ *   there are none, waits for `receivePush`; more than `maxPendingPushes`
+ *   waiting break the connection rather than grow without bound.
  */
 export class TcpTransport {
   #socket;
@@ -47,15 +51,22 @@ export class TcpTransport {
   #closedError = null;
   #closed;
   #idleWaiters = [];
+  #pushes = [];
+  #pushWaiters = [];
+  #pushListeners = new Set();
 
-  constructor(socket, { owned = true, maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES, maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES, maxInFlight = 64, capabilities } = {}) {
+  constructor(
+    socket,
+    { owned = true, maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES, maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES, maxInFlight = 64, maxPendingPushes = 1024, capabilities } = {},
+  ) {
     this.#socket = socket;
     this.#owned = owned;
     this.maxRequestBytes = maxRequestBytes;
     this.maxInFlight = maxInFlight;
+    this.maxPendingPushes = maxPendingPushes;
     this.#reader = new MessageReader({ maxBytes: maxReplyBytes });
-    this.capabilities = tcpServerCapabilities({ ...capabilities, limits: { maxRequestBytes, maxReplyBytes, maxInFlight } });
-    this.stats = { requests: 0, bytesSent: 0, bytesReceived: 0 };
+    this.capabilities = tcpServerCapabilities({ ...capabilities, limits: { maxRequestBytes, maxReplyBytes, maxInFlight, maxPendingPushes } });
+    this.stats = { requests: 0, bytesSent: 0, bytesReceived: 0, pushes: 0 };
     this.#closed = new Promise((resolve) => socket.once('close', resolve));
     this.onData = (chunk) => this.#receive(chunk);
     this.onDrain = () => {
@@ -144,9 +155,21 @@ export class TcpTransport {
       return;
     }
     for (const message of messages) {
+      let push;
+      try {
+        push = isNotificationText(message);
+      } catch (error) {
+        this.#fail(error instanceof LinksError ? error : new MalformedMessageError(error.message));
+        return;
+      }
+      if (push) {
+        this.#push(message);
+        if (this.#closedError) return;
+        continue;
+      }
       const entry = this.#inFlight.shift();
       if (!entry) {
-        this.#fail(new MalformedMessageError('the server sent a reply nobody asked for'));
+        this.#fail(new MalformedMessageError(`the server sent a reply nobody asked for: ${message}`));
         return;
       }
       entry.stop();
@@ -154,6 +177,79 @@ export class TcpTransport {
     }
     this.#pump();
     this.#notifyIdle();
+  }
+
+  #push(text) {
+    this.stats.pushes += 1;
+    if (this.#pushListeners.size > 0) {
+      for (const listener of [...this.#pushListeners]) {
+        try {
+          listener(text);
+        } catch (error) {
+          // A listener's failure is its own; the connection carries on.
+          queueMicrotask(() => {
+            throw error;
+          });
+        }
+      }
+      return;
+    }
+    const waiter = this.#pushWaiters.shift();
+    if (waiter) {
+      waiter.stop();
+      waiter.resolve(text);
+      return;
+    }
+    if (this.#pushes.length >= this.maxPendingPushes) {
+      this.#fail(new LimitExceededError(`more than ${this.maxPendingPushes} pushes are waiting to be received`));
+      return;
+    }
+    this.#pushes.push(text);
+  }
+
+  /**
+   * Calls `listener(text)` with every push from now on, instead of keeping it
+   * for {@link receivePush}; returns the function that removes the listener.
+   */
+  onPush(listener) {
+    if (typeof listener !== 'function') throw new TypeError('a push listener is a function');
+    this.#pushListeners.add(listener);
+    return () => {
+      this.#pushListeners.delete(listener);
+    };
+  }
+
+  /** The number of pushes received and not taken yet. */
+  get pendingPushes() {
+    return this.#pushes.length;
+  }
+
+  /**
+   * Resolves to the text of the next push, waiting for one until the scope
+   * ends (rejecting with its AbortError or DeadlineExceededError); rejects
+   * with ConnectionClosedError once the connection is closed and no push is
+   * left.
+   */
+  receivePush(scope = {}) {
+    if (this.#pushes.length > 0) return Promise.resolve(this.#pushes.shift());
+    if (this.#closedError) return Promise.reject(new ConnectionClosedError(this.#closedError.message, { outcome: 'not-sent', cause: this.#closedError }));
+    const early = scopeError(scope, 'not-sent');
+    if (early) return Promise.reject(early);
+    return new Promise((resolve, reject) => {
+      const waiter = { resolve, reject, stop: () => {} };
+      waiter.stop = watchScope(scope, (errorOf) => {
+        this.#pushWaiters.splice(this.#pushWaiters.indexOf(waiter), 1);
+        reject(errorOf('not-sent'));
+      });
+      this.#pushWaiters.push(waiter);
+    });
+  }
+
+  #endPushWaiters() {
+    for (const waiter of this.#pushWaiters.splice(0)) {
+      waiter.stop();
+      waiter.reject(new ConnectionClosedError(this.#closedError.message, { outcome: 'not-sent', cause: this.#closedError }));
+    }
   }
 
   /** Ends the connection: every request in flight ends `unknown`, the queued ones `not-sent`. */
@@ -170,6 +266,7 @@ export class TcpTransport {
     }
     this.#inFlight = [];
     this.#queue = [];
+    this.#endPushWaiters();
     this.#detach();
     // A socket handed in unowned stays its owner's to close.
     if (this.#owned) this.#socket.destroy();
@@ -207,6 +304,7 @@ export class TcpTransport {
       return;
     }
     this.#closedError = new ConnectionClosedError('the client closed the connection', { outcome: 'not-sent' });
+    this.#endPushWaiters();
     this.#detach();
     if (!this.#owned) return;
     this.#socket.end();
@@ -256,7 +354,7 @@ export async function verifyProtocol(transport, scope) {
  *
  * Options: `signal`, `deadline`, `timeout` (for connecting and the protocol
  * check), `verify` (default true), `maxRequestBytes`, `maxReplyBytes`,
- * `maxInFlight`, `capabilities` (overrides, e.g. for a server built with
+ * `maxInFlight`, `maxPendingPushes`, `capabilities` (overrides, e.g. for a server built with
  * wider addresses).
  */
 export async function connectTcp(address, options = {}) {

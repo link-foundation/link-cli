@@ -132,6 +132,11 @@ export class ConnectionClosedError extends LinksError {}
 export class AbortError extends LinksError {}
 export class DeadlineExceededError extends LinksError {}
 export class UnsupportedError extends LinksError {}
+/** No link has the address a write names; nothing was sent. */
+export class NotFoundError extends LinksError {
+  constructor(index: unknown);
+  readonly index: unknown;
+}
 
 /** A bigint, a safe-integer number, or a string of digits. */
 export type AddressInput = bigint | number | string;
@@ -142,6 +147,13 @@ export type Restriction =
   | [index: AddressInput | '*']
   | [index: AddressInput | '*', sourceOrTarget: AddressInput | '*']
   | [index: AddressInput | '*', source: AddressInput | '*', target: AddressInput | '*'];
+/** Parts of `[index, type, from, to]` left out match anything, as `'*'` does. */
+export type TripletRestriction =
+  | []
+  | [index: AddressInput | '*']
+  | [index: AddressInput | '*', type: AddressInput | '*']
+  | [index: AddressInput | '*', type: AddressInput | '*', from: AddressInput | '*']
+  | [index: AddressInput | '*', type: AddressInput | '*', from: AddressInput | '*', to: AddressInput | '*'];
 export function toAddress(value: AddressInput, what?: string): bigint;
 
 export interface Link {
@@ -168,7 +180,9 @@ export type Guarantee =
   | 'pagination'
   | 'persistent'
   | 'rawTcp'
-  | 'sharding';
+  | 'sharding'
+  | 'subscriptions'
+  | 'triplets';
 export const GUARANTEES: readonly Guarantee[];
 export const MAX_U32_ADDRESS: bigint;
 
@@ -189,6 +203,10 @@ export interface Capabilities {
   readonly persistent: boolean;
   readonly rawTcp: boolean;
   readonly sharding: boolean;
+  /** Whether other connections' writes are pushed to subscriptions (a server connection). */
+  readonly subscriptions: boolean;
+  /** Whether triplets are served (true), are not (false) or it is unknown (null): a server has them with `--triplets`. */
+  readonly triplets: boolean | null;
   /** Whether equal links stay apart (true), merge (false) or it is unknown (null). */
   readonly duplicateLinks: boolean | null;
   readonly bulk: 'pipelined-non-atomic' | 'sequential-non-atomic' | string;
@@ -214,8 +232,43 @@ export interface Transport {
   readonly capabilities: Capabilities;
   send(text: string, scope: Scope): Promise<string>;
   close?(): Promise<void>;
-  readonly stats?: { requests: number; bytesSent: number; bytesReceived: number };
+  readonly stats?: { requests: number; bytesSent: number; bytesReceived: number; pushes?: number };
+  /** Transports that receive pushes (TCP): the text of the next one. */
+  receivePush?(scope: Scope): Promise<string>;
+  /** Transports that receive pushes (TCP): every push from now on, instead of `receivePush`. */
+  onPush?(listener: (text: string) => void): () => void;
+  readonly pendingPushes?: number;
 }
+
+/** A push of a subscription: the changes of another connection's write it may see. */
+export interface Notification {
+  subscription: number;
+  changes: Change[];
+}
+/** Whether a document is a push: its first link is `(notify: N)`. */
+export function isNotification(document: LinoDocument): boolean;
+export function parseNotification(document: LinoDocument): Notification;
+
+/** A triplet of a server in triplet mode (`clink --serve --triplets`). */
+export interface Triplet {
+  index: bigint;
+  type: bigint;
+  from: bigint;
+  to: bigint;
+}
+/** A triplet with every reference as the backend wrote it: a number, or a name. */
+export interface NamedTriplet {
+  index: string;
+  type: string;
+  from: string;
+  to: string;
+}
+/** A push of a subscription on a server in triplet mode. */
+export interface TripletNotification {
+  subscription: number;
+  changes: Change<Triplet>[];
+}
+export function parseTripletNotification(document: LinoDocument): TripletNotification;
 
 export type Operation =
   | { op: 'count'; restriction?: Restriction }
@@ -227,7 +280,13 @@ export type Operation =
   | { op: 'setName'; index: AddressInput; name: string }
   | { op: 'getByName'; name: string }
   | { op: 'removeName'; index: AddressInput }
-  | { op: 'query'; text: string };
+  | { op: 'query'; text: string }
+  | { op: 'countTriplets'; restriction?: TripletRestriction }
+  | { op: 'eachTriplets'; restriction?: TripletRestriction }
+  | { op: 'createTriplet'; type: AddressInput; from: AddressInput; to: AddressInput }
+  | { op: 'updateTriplet'; index: AddressInput; type: AddressInput; from: AddressInput; to: AddressInput }
+  | { op: 'deleteTriplet'; index: AddressInput }
+  | { op: 'queryTriplets'; text: string };
 
 export type OperationResult =
   | { status: 'ok'; value: unknown }
@@ -264,6 +323,29 @@ export interface Links {
   query(text: string, options?: RequestOptions): Promise<Change<NamedLink>[]>;
   exportLinks(options?: RequestOptions): Promise<NamedLink[]>;
   batch(operations: Operation[], options?: RequestOptions & { window?: number }): Promise<BatchResult>;
+  /** Resolves to the subscription's number; needs `capabilities.subscriptions`. */
+  subscribe(restriction?: Restriction, options?: RequestOptions): Promise<number>;
+  unsubscribe(subscription: number | bigint, options?: RequestOptions): Promise<void>;
+  /** Null when the deadline or timeout passes before a notification arrives. */
+  receiveNotification(options?: RequestOptions): Promise<Notification | null>;
+  /** Returns the function that removes the listener. */
+  onNotification(listener: (notification: Notification) => void): () => void;
+  readonly pendingNotifications: number;
+  /** Up to four parts `[index, type, from, to]`; this and the calls below need a server with `--triplets`. */
+  countTriplets(restriction?: TripletRestriction, options?: RequestOptions): Promise<bigint>;
+  eachTriplets(restriction?: TripletRestriction, options?: RequestOptions): Promise<Triplet[]>;
+  createTriplet(type: AddressInput, from: AddressInput, to: AddressInput, options?: RequestOptions): Promise<Triplet>;
+  /** Creates a triplet that is its own type. */
+  createTripletPoint(options?: RequestOptions): Promise<Triplet>;
+  updateTriplet(index: AddressInput, type: AddressInput, from: AddressInput, to: AddressInput, options?: RequestOptions): Promise<Change<Triplet>[]>;
+  deleteTriplet(index: AddressInput, options?: RequestOptions): Promise<Change<Triplet>[]>;
+  queryTriplets(text: string, options?: RequestOptions): Promise<Change<NamedTriplet>[]>;
+  exportTriplets(options?: RequestOptions): Promise<NamedTriplet[]>;
+  subscribeTriplets(restriction?: TripletRestriction, options?: RequestOptions): Promise<number>;
+  /** Null when the deadline or timeout passes before a notification arrives. */
+  receiveTripletNotification(options?: RequestOptions): Promise<TripletNotification | null>;
+  /** Returns the function that removes the listener. */
+  onTripletNotification(listener: (notification: TripletNotification) => void): () => void;
   close(): Promise<void>;
   [Symbol.asyncDispose](): Promise<void>;
 }
@@ -279,6 +361,90 @@ export interface LinksDecorator extends Links {}
 export class LinksDecorator implements Links {
   constructor(links: Links);
   readonly links: Links;
+}
+
+/**
+ * Many links networks seen as one: the first member that has an address
+ * shadows the rest, new links go to the primary (first) member, writes and
+ * names to the member that has the link. Raw text, queries, exports,
+ * subscriptions and triplets belong to one store: they reject with an
+ * UnsupportedError.
+ */
+export interface UnionLinks extends Links {}
+export class UnionLinks implements Links {
+  constructor(members: Links[]);
+  readonly members: readonly Links[];
+  readonly primary: Links;
+  /** The position of the member that has the link at `index`, null when none has it. */
+  ownerOf(index: AddressInput, options?: RequestOptions): Promise<number | null>;
+}
+
+/** How the addresses of a network below a RemapLinks read above it; either method may return a promise. */
+export interface AddressMap<Outer = bigint> {
+  /** The address below of `outer`, null when it is no address of the network below. */
+  toInner(outer: Outer): bigint | null | Promise<bigint | null>;
+  /** The address above of `inner`, given one when it has none yet. */
+  toOuter(inner: bigint): Outer | Promise<Outer>;
+  /** The largest address above, given the largest one below. */
+  maxAddress?(innerMaxAddress: bigint): bigint;
+}
+/** Every address moved by `offset`: the network below reads at `offset + 1` and up. */
+export class OffsetAddressMap implements AddressMap<bigint> {
+  constructor(offset: AddressInput);
+  readonly offset: bigint;
+  toInner(outer: AddressInput): bigint | null;
+  toOuter(inner: AddressInput): bigint;
+  maxAddress(innerMaxAddress: bigint): bigint;
+}
+/** Addresses given from `first` on, or ids of another kind from `newId()` (UUIDs). */
+export class AddressTable<Outer = bigint> implements AddressMap<Outer> {
+  constructor(options: Outer extends bigint ? { first: AddressInput } : { newId: () => Outer });
+  readonly numeric: boolean;
+  toInner(outer: Outer): bigint | null;
+  toOuter(inner: AddressInput): Outer;
+  add(outer: Outer, inner: AddressInput): void;
+  pairs(): [Outer, bigint][];
+}
+/** A link above a remap whose ids are not addresses (UUID strings). */
+export interface RemappedLink<Outer> {
+  index: Outer;
+  source: Outer | bigint;
+  target: Outer | bigint;
+}
+/**
+ * `links` under the addresses of `map`. With a map of BigInt addresses it is a
+ * links client like any other (and a member of a union); with ids of another
+ * kind its links read under those ids, the null link staying `0n`.
+ */
+export interface RemapLinks<Outer = bigint> extends Links {}
+export class RemapLinks<Outer = bigint> extends LinksDecorator {
+  constructor(links: Links, map: AddressMap<Outer>);
+  readonly map: AddressMap<Outer>;
+  toOuter(inner: AddressInput): Promise<Outer | bigint>;
+  toInner(outer: Outer | AddressInput): Promise<bigint | null>;
+}
+
+/** The name of the point every scheme of external ids starts from. */
+export const EXTERNAL_ID_NAME: 'ExternalId';
+/** The ids of one scheme (such as `uuid`) bound to links, stored as links; every method takes the store of the table. */
+export class LinksExternalIds {
+  constructor(scheme: string);
+  readonly scheme: string;
+  nameOf(id: string): string;
+  find(store: Links, id: string, options?: RequestOptions): Promise<bigint | null>;
+  idOf(store: Links, link: AddressInput, options?: RequestOptions): Promise<string | null>;
+  bind(store: Links, id: string, link: AddressInput, options?: RequestOptions): Promise<bigint>;
+  /** `data` is null when the table is in the data. */
+  ensure(store: Links, data: Links | null, id: string, options?: RequestOptions): Promise<bigint>;
+  unbind(store: Links, id: string, options?: RequestOptions): Promise<boolean>;
+}
+/** External ids kept in `table` (a store apart from the network remapped) as the map of a RemapLinks. */
+export class ExternalIdMap implements AddressMap<string> {
+  constructor(table: Links, scheme: string | LinksExternalIds, options?: { newId?: () => string });
+  readonly table: Links;
+  readonly ids: LinksExternalIds;
+  toInner(outer: string): Promise<bigint | null> | null;
+  toOuter(inner: bigint): Promise<string>;
 }
 
 /** The `Clink` class of `rust/wasm` (or anything answering LinksOperation text). */

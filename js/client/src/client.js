@@ -2,11 +2,12 @@
 // JS counterpart of `INamedTypesLinks` / `NamedTypeLinks` behind which the C#
 // and Rust `RemoteLinks` swap a local store for a server.
 
-import { GUARANTEES } from './capabilities.js';
+import { TRIPLET_OPERATIONS } from './capabilities.js';
+import { requireGuarantees } from './composed.js';
 import { scopeError, scopeOf } from './deadline.js';
-import { LinksError, MalformedMessageError, RemoteError, UnsupportedError } from './errors.js';
+import { DeadlineExceededError, LinksError, MalformedMessageError, RemoteError, UnsupportedError } from './errors.js';
 import { formatDocument, parseDocument } from './lino.js';
-import { errorMessage, replies, requests } from './operations.js';
+import { errorMessage, parseNotification, parseTripletNotification, replies, requests } from './operations.js';
 
 /**
  * A links store behind a transport. Every address it takes or returns is a
@@ -15,7 +16,9 @@ import { errorMessage, replies, requests } from './operations.js';
  * {@link LinksError} whose `outcome` says whether the request may have run.
  *
  * A transport is `{ capabilities, send(text, { signal, deadline }), close() }`
- * where `send` resolves to the LiNo text of the reply.
+ * where `send` resolves to the LiNo text of the reply. A transport that
+ * receives pushes (TCP) also has `receivePush(scope)`, `onPush(listener)` and
+ * `pendingPushes`, which subscriptions need.
  */
 export class LinksClient {
   constructor(transport, { capabilities } = {}) {
@@ -26,13 +29,7 @@ export class LinksClient {
 
   /** Throws an UnsupportedError unless the backend offers every guarantee named. */
   require(...guarantees) {
-    const missing = guarantees.filter((guarantee) => {
-      if (!GUARANTEES.includes(guarantee)) throw new TypeError(`unknown guarantee "${guarantee}"; known: ${GUARANTEES.join(', ')}`);
-      return this.capabilities[guarantee] !== true;
-    });
-    if (missing.length > 0) {
-      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not offer ${missing.join(', ')}; nothing is emulated`);
-    }
+    requireGuarantees(this.capabilities, guarantees);
     return this;
   }
 
@@ -131,6 +128,158 @@ export class LinksClient {
   }
 
   /**
+   * Subscribes to the changes other connections make to the links matching a
+   * restriction (the same patterns as `each`) and resolves to the number of
+   * the subscription, counted from 1 on every connection. Each later write
+   * of another connection that touches a matching link is pushed as one
+   * notification per subscription; this connection's own writes are not.
+   */
+  async subscribe(restriction = [], options) {
+    this.#requirePushes();
+    return replies.subscription(await this.request(requests.subscribe(restriction, this.maxAddress), options));
+  }
+
+  /** Ends a subscription; an unknown number is ignored. Pushes already received stay receivable. */
+  async unsubscribe(subscription, options) {
+    this.#requirePushes();
+    replies.empty(await this.request(requests.unsubscribe(subscription), options));
+  }
+
+  /**
+   * The next notification, `{ subscription, changes }`, where each change is
+   * `{ before, after }` and a side the subscription does not see is null.
+   * Waits until one arrives; resolves to null when the `deadline` or
+   * `timeout` passes first, rejects with an AbortError when `signal` aborts
+   * and with a ConnectionClosedError once the connection is closed.
+   */
+  async receiveNotification(options = {}) {
+    this.#requirePushes();
+    let text;
+    try {
+      text = await this.transport.receivePush(scopeOf(options));
+    } catch (error) {
+      if (error instanceof DeadlineExceededError) return null;
+      throw error;
+    }
+    return parseNotification(parseDocument(text));
+  }
+
+  /**
+   * Calls `listener({ subscription, changes })` with every notification from
+   * now on; while a listener is registered, notifications are not kept for
+   * `receiveNotification`. Returns the function that removes the listener.
+   */
+  onNotification(listener) {
+    this.#requirePushes();
+    if (typeof listener !== 'function') throw new TypeError('a notification listener is a function');
+    return this.transport.onPush((text) => listener(parseNotification(parseDocument(text))));
+  }
+
+  /** The number of notifications received and not taken yet. */
+  get pendingNotifications() {
+    return this.transport.pendingPushes ?? 0;
+  }
+
+  #requirePushes() {
+    if (typeof this.transport.receivePush !== 'function' || typeof this.transport.onPush !== 'function') {
+      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not push changes: subscriptions need a connection to a server`);
+    }
+  }
+
+  // The calls below speak to a server in triplet mode (`clink --serve --triplets`,
+  // docs/protocol/triplets.txt). Every triplet is `{ index, type, from, to }`.
+  // Names and `unsubscribe` are the same calls as above.
+
+  #requireTriplets() {
+    if (this.capabilities.triplets === false) {
+      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not serve triplets: they need a server started with --triplets`);
+    }
+  }
+
+  /** The number of triplets matching up to four parts `[index, type, from, to]`. */
+  async countTriplets(restriction = [], options) {
+    this.#requireTriplets();
+    return replies.count(await this.request(requests.countTriplets(restriction, this.maxAddress), options));
+  }
+
+  /** Every triplet matching up to four parts `[index, type, from, to]`, by address. */
+  async eachTriplets(restriction = [], options) {
+    this.#requireTriplets();
+    return replies.triplets(await this.request(requests.eachTriplets(restriction, this.maxAddress), options));
+  }
+
+  /**
+   * Creates a triplet and resolves to it. The type is a triplet; `from` and
+   * `to` are triplets or 0. Two triplets may hold the same three parts.
+   */
+  async createTriplet(type, from, to, options) {
+    this.#requireTriplets();
+    return createdTriplet(await this.request(requests.createTriplet(type, from, to, this.maxAddress), options));
+  }
+
+  /** Creates a point, a triplet that is its own type (`(i: i 0 0)`), and resolves to it. */
+  createTripletPoint(options) {
+    return this.createTriplet(0n, 0n, 0n, options);
+  }
+
+  /** Updates a triplet; resolves to the net change of every triplet touched. */
+  async updateTriplet(index, type, from, to, options) {
+    this.#requireTriplets();
+    return replies.tripletChanges(await this.request(requests.updateTriplet(index, type, from, to, this.maxAddress), options));
+  }
+
+  /** Deletes a triplet and every triplet using it; resolves to their changes. */
+  async deleteTriplet(index, options) {
+    this.#requireTriplets();
+    return replies.tripletChanges(await this.request(requests.delete(index, this.maxAddress), options));
+  }
+
+  /**
+   * Runs a substitution query with three-part links (`() ((1 0 0))`) and
+   * resolves to its changes, references as the backend wrote them.
+   */
+  async queryTriplets(text, options) {
+    this.#requireTriplets();
+    if (typeof text !== 'string' || text.trim() === '') throw new TypeError('a query is non-empty LiNo text');
+    return replies.namedTripletChanges(await this.request(parseDocument(text), options));
+  }
+
+  /** Every triplet, references as the backend wrote them (the empty request). */
+  async exportTriplets(options) {
+    this.#requireTriplets();
+    return replies.namedTriplets(await this.request([], options));
+  }
+
+  /** `subscribe` with up to four parts; read its pushes with the two calls below. */
+  async subscribeTriplets(restriction = [], options) {
+    this.#requireTriplets();
+    this.#requirePushes();
+    return replies.subscription(await this.request(requests.subscribeTriplets(restriction, this.maxAddress), options));
+  }
+
+  /** `receiveNotification` with changes of triplets. */
+  async receiveTripletNotification(options = {}) {
+    this.#requireTriplets();
+    this.#requirePushes();
+    let text;
+    try {
+      text = await this.transport.receivePush(scopeOf(options));
+    } catch (error) {
+      if (error instanceof DeadlineExceededError) return null;
+      throw error;
+    }
+    return parseTripletNotification(parseDocument(text));
+  }
+
+  /** `onNotification` with changes of triplets. */
+  onTripletNotification(listener) {
+    this.#requireTriplets();
+    this.#requirePushes();
+    if (typeof listener !== 'function') throw new TypeError('a notification listener is a function');
+    return this.transport.onPush((text) => listener(parseTripletNotification(parseDocument(text))));
+  }
+
+  /**
    * Runs operations as separate requests, up to `window` at a time (pipelined
    * over TCP), and stops sending after the first failure. This is not a
    * transaction: what ran stays applied. The result tells, per operation,
@@ -142,7 +291,11 @@ export class LinksClient {
    * source, target }`, `{ op: 'delete', index }`, `{ op: 'setName', index,
    * name }`, `{ op: 'getName', index }`, `{ op: 'getByName', name }`,
    * `{ op: 'removeName', index }`, `{ op: 'count', restriction }`,
-   * `{ op: 'each', restriction }`, `{ op: 'query', text }`.
+   * `{ op: 'each', restriction }`, `{ op: 'query', text }`. A server in triplet
+   * mode also takes `{ op: 'countTriplets', restriction }`, `{ op: 'eachTriplets',
+   * restriction }`, `{ op: 'createTriplet', type, from, to }`, `{ op:
+   * 'updateTriplet', index, type, from, to }`, `{ op: 'deleteTriplet', index }`
+   * and `{ op: 'queryTriplets', text }`.
    */
   async batch(operations, { window = 32, signal, deadline, timeout } = {}) {
     if (!Number.isInteger(window) || window < 1) throw new TypeError('window is a positive integer');
@@ -191,13 +344,20 @@ export class LinksClient {
       setName: ({ index, name }) => [requests.setName(index, name, max), replies.link],
       getByName: ({ name }) => [requests.getByName(name), replies.link],
       removeName: ({ index }) => [requests.removeName(index, max), replies.empty],
-      query: ({ text }) => [this.#queryDocument(text), replies.namedChanges],
+      query: ({ text }) => [parseDocument(text), replies.namedChanges],
+      countTriplets: ({ restriction = [] }) => [requests.countTriplets(restriction, max), replies.count],
+      eachTriplets: ({ restriction = [] }) => [requests.eachTriplets(restriction, max), replies.triplets],
+      createTriplet: ({ type, from, to }) => [requests.createTriplet(type, from, to, max), createdTriplet],
+      updateTriplet: ({ index, type, from, to }) => [requests.updateTriplet(index, type, from, to, max), replies.tripletChanges],
+      deleteTriplet: ({ index }) => [requests.delete(index, max), replies.tripletChanges],
+      queryTriplets: ({ text }) => [parseDocument(text), replies.namedTripletChanges],
     };
     const build = documentOf[operation?.op];
     if (!build) throw new TypeError(`operation ${position}: unknown op "${operation?.op}"`);
     let request;
     let parse;
     try {
+      if (TRIPLET_OPERATIONS.includes(operation.op)) this.#requireTriplets();
       [request, parse] = build(operation);
     } catch (error) {
       error.message = `operation ${position} (${operation.op}): ${error.message}`;
@@ -222,6 +382,13 @@ function createdLink(reply) {
   if (changes.length === 0) return null;
   const created = changes.find((change) => change.before === null && change.after !== null);
   if (!created) throw new MalformedMessageError('the create reply holds changes but no created link');
+  return created.after;
+}
+
+/** The triplet a create reply holds. */
+function createdTriplet(reply) {
+  const created = replies.tripletChanges(reply).find((change) => change.before === null && change.after !== null);
+  if (!created) throw new MalformedMessageError('the create reply holds no created triplet');
   return created.after;
 }
 
@@ -300,6 +467,70 @@ export class LinksDecorator {
 
   batch(operations, options) {
     return this.links.batch(operations, options);
+  }
+
+  subscribe(restriction, options) {
+    return this.links.subscribe(restriction, options);
+  }
+
+  unsubscribe(subscription, options) {
+    return this.links.unsubscribe(subscription, options);
+  }
+
+  receiveNotification(options) {
+    return this.links.receiveNotification(options);
+  }
+
+  onNotification(listener) {
+    return this.links.onNotification(listener);
+  }
+
+  get pendingNotifications() {
+    return this.links.pendingNotifications;
+  }
+
+  countTriplets(restriction, options) {
+    return this.links.countTriplets(restriction, options);
+  }
+
+  eachTriplets(restriction, options) {
+    return this.links.eachTriplets(restriction, options);
+  }
+
+  createTriplet(type, from, to, options) {
+    return this.links.createTriplet(type, from, to, options);
+  }
+
+  createTripletPoint(options) {
+    return this.links.createTripletPoint(options);
+  }
+
+  updateTriplet(index, type, from, to, options) {
+    return this.links.updateTriplet(index, type, from, to, options);
+  }
+
+  deleteTriplet(index, options) {
+    return this.links.deleteTriplet(index, options);
+  }
+
+  queryTriplets(text, options) {
+    return this.links.queryTriplets(text, options);
+  }
+
+  exportTriplets(options) {
+    return this.links.exportTriplets(options);
+  }
+
+  subscribeTriplets(restriction, options) {
+    return this.links.subscribeTriplets(restriction, options);
+  }
+
+  receiveTripletNotification(options) {
+    return this.links.receiveTripletNotification(options);
+  }
+
+  onTripletNotification(listener) {
+    return this.links.onTripletNotification(listener);
   }
 
   close() {

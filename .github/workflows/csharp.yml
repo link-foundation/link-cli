@@ -140,7 +140,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Detect changes
         id: changes
@@ -170,7 +170,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Validate changeset
         working-directory: .
@@ -226,7 +226,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Run release script tests
         working-directory: .
@@ -312,7 +312,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Write coverage summary
         if: ${{ !cancelled() }}
@@ -450,7 +450,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Check for changesets
         id: check_changesets
@@ -676,7 +676,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Version and commit
         id: version

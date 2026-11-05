@@ -1,0 +1,13 @@
+# the server's connection authenticates: (subject: 11)
+# what alice sees of the server, read through the union
+  (16777228: 16777225 16777228) named note
+  (16777230: 16777224 16777230) named news
+# a draft of the client that refers to the server's news
+  created in member 0: (1: 1 16777230) named draft
+# a write the server's rules refuse, through the union
+  Forbidden: update 14
+# the same links under UUIDs, kept in ids.links
+  (00000000-0000-4000-8000-000000000001: 00000000-0000-4000-8000-000000000001 00000000-0000-4000-8000-000000000002) named draft
+  (00000000-0000-4000-8000-000000000003: 00000000-0000-4000-8000-000000000004 00000000-0000-4000-8000-000000000003) named note
+  (00000000-0000-4000-8000-000000000002: 00000000-0000-4000-8000-000000000005 00000000-0000-4000-8000-000000000002) named news
+  the draft is 00000000-0000-4000-8000-000000000001; ids.links holds 7 links, local.links 1

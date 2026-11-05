@@ -1,0 +1,70 @@
+# types, values and rules, written without --permissions
+(Type: Type Type)
+(Extends: Extends Extends)
+(AllowRead: AllowRead AllowRead)
+(AllowWrite: AllowWrite AllowWrite)
+(AllowReference: AllowReference AllowReference)
+(Anything: Anything Anything)
+(User: Type User)
+(Admin: User Admin)
+(Doc: Type Doc)
+(Public: Type Public)
+(Note: Doc Note)
+(Secret: Doc Secret)
+(alice: User alice)
+(boss: Admin boss)
+(note: Note note)
+(secret: Secret secret)
+(news: Public news)
+(18: Admin Anything)
+(19: AllowWrite 18)
+(20: User Note)
+(21: AllowWrite 20)
+(22: User Public)
+(23: AllowRead 22)
+# what alice sees: notes (write implies read) and public links
+(note: Note note)
+(news: Public news)
+# a guest sees nothing
+# alice may not turn her note into a public link
+Error: Query error: Forbidden: update 15
+exit code 1
+# a secret is as missing to alice as a link that never was: its name is unknown
+Error: Query error: Invalid reference to non-existent link 'secret' in restriction pattern. Link 'secret' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+exit code 1
+Error: Query error: Invalid reference to non-existent link 'secret' in substitution pattern. Link 'secret' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+exit code 1
+Error: Query error: Invalid reference to non-existent link 'nothing' in substitution pattern. Link 'nothing' does not exist and will not be created by this operation. Use --auto-create-missing-references to create missing references as point links.
+exit code 1
+# the boss writes anything
+((news: Public news)) ((news: Note news))
+# the store is unchanged but for the boss's update
+(Type: Type Type)
+(Extends: Extends Extends)
+(AllowRead: AllowRead AllowRead)
+(AllowWrite: AllowWrite AllowWrite)
+(AllowReference: AllowReference AllowReference)
+(Anything: Anything Anything)
+(User: Type User)
+(Admin: User Admin)
+(Doc: Type Doc)
+(Public: Type Public)
+(Note: Doc Note)
+(Secret: Doc Secret)
+(alice: User alice)
+(boss: Admin boss)
+(note: Note note)
+(secret: Secret secret)
+(news: Note news)
+(18: Admin Anything)
+(19: AllowWrite 18)
+(20: User Note)
+(21: AllowWrite 20)
+(22: User Public)
+(23: AllowRead 22)
+# a rule lets alice refer to the secrets
+() ((26: Note secret))
+# she still may not read them
+(note: Note note)
+(news: Note news)
+(26: Note secret)

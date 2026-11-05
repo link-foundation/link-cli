@@ -1,0 +1,19 @@
+   Compiling link-cli v2.1.0 (/tmp/gh-issue-solver-1793890074181/rust)
+    Finished `test` profile [unoptimized] target(s) in 2.01s
+     Running tests/triplets_over_doublets_tests.rs (rust/target/debug/deps/triplets_over_doublets_tests-26d8147b3f6bfa2b)
+
+running 1 test
+test quoted_triplet_references_remain_names_in_imports_and_queries ... FAILED
+
+failures:
+
+---- quoted_triplet_references_remain_names_in_imports_and_queries stdout ----
+Error: A triplet cannot be at address 0.
+
+
+failures:
+    quoted_triplet_references_remain_names_in_imports_and_queries
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test triplets_over_doublets_tests`

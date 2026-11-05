@@ -103,6 +103,10 @@ as its last argument:
 | `query(text)` | changes of a LiNo substitution query, references as the backend wrote them |
 | `exportLinks()` | every link, with names in place of named references |
 | `batch(operations, { window })` | per operation `ok`, `failed`, `unknown` or `not-sent`, and `completed` |
+| `subscribe(restriction?)` / `unsubscribe(n)` | the subscription number (from 1 on each connection) / nothing |
+| `receiveNotification()` | the next `{ subscription, changes }` pushed, or `null` when the deadline passes first |
+| `onNotification(listener)` | the function that removes the listener |
+| `countTriplets`, `eachTriplets`, `createTriplet`, `updateTriplet`, `deleteTriplet`, ... | the same over a server in [triplet mode](#triplets), each triplet `{ index, type, from, to }` |
 | `requestText(text)` / `request(document)` | raw protocol access |
 | `require(...guarantees)` | throws `UnsupportedError` unless the backend offers them all |
 | `close()` / `[Symbol.asyncDispose]()` | releases what this client owns |
@@ -131,7 +135,9 @@ you what you can know about the request:
 
 Other subclasses: `ProtocolMismatchError` (the peer is not a links server, or
 it refuses the text protocol), `MalformedMessageError`, `LimitExceededError`,
-`ConnectionClosedError`, `AbortError` and `DeadlineExceededError`.
+`ConnectionClosedError`, `AbortError`, `DeadlineExceededError`, and
+`NotFoundError` (a composing layer was asked to write a link it has not got,
+`not-sent`).
 
 **Cancellation.** `signal` is an `AbortSignal`. `deadline` is absolute (a
 `Date` or epoch milliseconds), and `timeout` becomes `Date.now() + timeout`;
@@ -148,6 +154,31 @@ connection instead of buffering without end. `maxInFlight` (default 64) caps
 pipelined requests on a connection, the rest wait in a queue, and writes wait
 for the socket to drain.
 
+**Subscriptions** (`capabilities.subscriptions`, servers only).
+`subscribe(restriction)` asks the server to push the changes that *other*
+connections make to the links matching the restriction (the same patterns as
+`each`). The server pushes one `(notify: N)` document per subscription per
+write, followed by its `(before) (after)` changes. A side that does not match
+the restriction is `null`, so a link that moves into the pattern arrives as a
+creation and one that leaves it as a deletion. The transport tells pushes from
+replies by their first link, `(notify: N)`. Pipelined requests still match
+their replies. Pushes wait in a queue for `receiveNotification()`, or go to the
+`onNotification` listeners while any are registered. The server writes every
+push before any later reply on the connection, so once a reply arrives, every
+push from earlier writes is already received. A connection with more than
+`maxPendingPushes` (default 1024) unread pushes is closed, just as the server
+disconnects a subscriber that falls too far behind. Closing the connection ends
+its subscriptions.
+
+```js
+const watcher = await connectTcp('127.0.0.1:8080');
+const subscription = await watcher.subscribe([ANY, ANY, ANY]);
+// ... another connection runs create(0, 0) ...
+const { changes } = await watcher.receiveNotification({ timeout: 5000 });
+// changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }]
+await watcher.unsubscribe(subscription);
+```
+
 **Batches** pipeline up to `window` requests and stop sending after the first
 failure. A batch is **not a transaction**: what ran stays applied. A batch is
 verified when `completed` is `true`, or when a fresh client reads the result
@@ -158,6 +189,106 @@ connection, and the server process it started (`connectProcess`). A borrowed
 socket (`new TcpTransport(socket, { owned: false })`), a server you started
 yourself (`startServer`), and a `Clink` passed without `{ owned: true }` all
 outlive the client.
+
+## Triplets
+
+A server started with `--triplets` (`clink --serve --triplets`) serves triplets
+instead of doublets, as [docs/TRIPLETS.md](../../docs/TRIPLETS.md) stores them.
+The operations keep their names, so the mode decides how a request is read:
+a `(delete: i)` or a `(count: ())` cannot say by its shape which one it means.
+A doublet server keeps refusing triplet requests, and the doublet calls are
+refused or malformed on a triplet server.
+
+| Method | Sends | Resolves to |
+| --- | --- | --- |
+| `countTriplets(restriction?)` | `(count: (i T f t))` | `bigint` |
+| `eachTriplets(restriction?)` | `(each: (i T f t))` | `{ index, type, from, to }[]` in address order |
+| `createTriplet(type, from, to)` | `(create: (T f t))` | the created triplet |
+| `createTripletPoint()` | `(create: (0 0 0))` | the created triplet, which is its own type |
+| `updateTriplet(index, type, from, to)` / `deleteTriplet(index)` | `(update: (i T f t))` / `(delete: i)` | the net change of every triplet touched, `{ before, after }[]` |
+| `queryTriplets(text)` | a substitution query with three-part links | its changes, references as the backend wrote them |
+| `exportTriplets()` | the empty request | every triplet, references as the backend wrote them |
+| `subscribeTriplets(restriction?)` | `(subscribe: (i T f t))` | the subscription number |
+| `receiveTripletNotification()` | | the next `{ subscription, changes }` pushed, or `null` when the deadline passes first |
+| `onTripletNotification(listener)` | | the function that removes the listener |
+
+A restriction has up to four parts, `[index, type, from, to]`: those left out
+and `ANY` match anything, and `0` matches an empty part. Names and `unsubscribe`
+are the usual calls. The batch operations are `countTriplets`, `eachTriplets`,
+`createTriplet`, `updateTriplet`, `deleteTriplet` and `queryTriplets`.
+
+```js
+const server = await startServer({ command: 'clink', db: 'facts.links', args: ['--triplets'] });
+const links = await connectTcp(server.address, { capabilities: { triplets: true } });
+const person = await links.createTripletPoint();
+const knows = await links.createTripletPoint();
+const alice = await links.createTriplet(person.index, 0, 0);
+const bob = await links.createTriplet(person.index, 0, 0);
+await links.createTriplet(knows.index, alice.index, bob.index);
+await links.eachTriplets([ANY, knows.index]); // every Knows, and Knows itself
+```
+
+The protocol does not say which mode a server runs, so `capabilities.triplets`
+stays `null` (unknown) unless you state it, as above. `require('triplets')`
+needs it stated. The WebAssembly store holds doublets, so it refuses these
+calls (`triplets: false`). `UnionLinks` and `RemapLinks` refuse them too:
+forwarded unchanged, a triplet would read under the addresses of the store
+below, so send them to `union.members[i]` or `remap.links`.
+
+This client speaks the text protocol. A triplet may also arrive as
+`(i: (T f t))`, the form a binary reply has under `--arity 2..3`, and reads the
+same ([docs/protocol/binary-links-notation.md](../../docs/protocol/binary-links-notation.md)).
+The conversation these calls speak is
+[docs/protocol/triplets.txt](../../docs/protocol/triplets.txt).
+
+## Permissions
+
+A server started with `--permissions` (and `--tokens` for authentication)
+serves every connection as a subject: the default `--subject`, or the one a
+token authenticates as. Send the token first, as raw protocol text:
+
+```js
+const links = await connectTcp('127.0.0.1:7878');
+console.log(await links.requestText('(auth: alice-secret)')); // (subject: 11)
+```
+
+From then on, reads skip what the subject may not read, and writes it may not
+make reject with `RemoteError` (`Forbidden: update 14`). `getByName` of a link
+the subject may not refer to resolves to `null`, and such an address answers as a
+missing one. The package has no permission
+layer of its own: the rules are the server's. See
+[examples/permissions](../../examples/permissions).
+
+## Composing networks
+
+These layers are links clients over links clients, so they wrap any backend
+or each other. The C# and Rust ports have the same layers;
+[docs/COMPOSITION.md](../../docs/COMPOSITION.md) describes how they compose.
+
+| Export | What it does |
+| --- | --- |
+| `UnionLinks([a, b, ...])` | Many networks seen as one. The first member that has an address shadows the rest, a new link goes to the first member, and a write goes to the member that has the link (`ownerOf(index)`). Names are found in member order. Raw text, queries, subscriptions and triplets go to a member: `union.members[i]`. |
+| `RemapLinks(links, map)` | A network under other addresses, both ways. A read of a foreign address finds nothing; a write naming one rejects before sending. `toOuter(inner)` and `toInner(outer)` translate by hand. |
+| `OffsetAddressMap(offset)` | Moves a network by `offset`, so a union of remapped networks shadows nothing. |
+| `AddressTable({ first, newId })` | Gives addresses (from `first`) or ids (from `newId()`) in the order they are seen. It lives in memory. |
+| `LinksExternalIds(scheme)` | The ids of another system bound to links, stored as links: `find`, `idOf`, `bind`, `ensure`, `unbind`, each taking the store of the table. |
+| `ExternalIdMap(table, scheme, { newId })` | A `RemapLinks` map that reads a network under those ids (random UUIDs by default) and keeps them in `table`. |
+
+```js
+import { ExternalIdMap, OffsetAddressMap, RemapLinks, UnionLinks } from '@link-foundation/link-cli-client';
+
+// The client's own links first, the server's moved out of their way.
+const links = new UnionLinks([local, new RemapLinks(server, new OffsetAddressMap(1n << 24n))]);
+const draft = (await links.create(0n, 0n)).index;     // in local
+await links.update(draft, draft, await links.getByName('news')); // refers to the server
+
+// The same network under UUIDs, kept in a store of their own.
+const byUuid = new RemapLinks(links, new ExternalIdMap(ids, 'uuid'));
+console.log(await byUuid.each([]));                   // indexes are UUID strings
+```
+
+[examples/composition](../../examples/composition) runs this against a server
+with permissions, with both CLIs.
 
 ## Capabilities
 
@@ -177,6 +308,8 @@ rather than letting a batch look atomic.
 | `pagination` | no: `each`/`exportLinks` return every match in one reply | no | no |
 | `bulk` | `pipelined-non-atomic` | `pipelined-non-atomic` | `sequential-non-atomic` |
 | `sharding` | no: one store per server | no | no |
+| `subscriptions` | yes: `(notify: N)` pushes | yes | no: an in-process store has no other connection |
+| `triplets` | `null` unless stated: with `--triplets` | `null` unless stated: with `--triplets` | `false` |
 | `duplicateLinks` | `true`: equal links stay apart | `false`: equal links merge, so `create` resolves to `null` | `true` |
 | set-name answers | the names-store link (`(link: 102)`) | the names-store link | the named link |
 
@@ -216,8 +349,10 @@ CLINK_WASM=../pkg \
 npm run benchmark -- --backend rust --records 300
 ```
 
-The conformance runner replays `docs/protocol/links-operations.txt`, the
-golden conversation that the Rust and C# test suites also replay. It covers
+The conformance runner replays `docs/protocol/links-operations.txt` and, over
+two connections, `docs/protocol/subscriptions.txt` and
+`docs/protocol/triplets.txt`, the golden conversations that the Rust and C#
+test suites also replay. It covers
 u32 addresses, duplicates, holes and reuse, append and restart through a fresh
 server process, aborted batches read back by a fresh client, a server stopped
 in the middle of a write, Unicode and LiNo quoting of names, size limits, a

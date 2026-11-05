@@ -13,7 +13,9 @@ use links_notation::binary::{
 };
 use links_notation::LiNo;
 use std::fmt::Debug;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{self, BufRead, BufReader, Read, Write};
+use std::net::TcpStream;
+use std::time::Duration;
 
 /// Reads and writes whole LiNo documents on a byte stream.
 pub trait LinoProtocol: Debug + Send + Sync {
@@ -367,5 +369,36 @@ impl<S: Read + Write, P: LinoProtocol> LinoConnection<S, P> {
     /// Unwraps the underlying stream.
     pub fn into_inner(self) -> S {
         self.stream.into_inner()
+    }
+}
+
+impl<P: LinoProtocol> LinoConnection<TcpStream, P> {
+    /// Waits up to `timeout` for the next message to start arriving; false
+    /// when none did in time. True as well when the peer closed the stream,
+    /// which the next [`receive`](Self::receive) reports.
+    pub fn wait_for_message(&mut self, timeout: Duration) -> ProtocolResult<bool> {
+        if !self.stream.buffer().is_empty() {
+            return Ok(true);
+        }
+        let stream = self.stream.get_ref();
+        let previous = stream.read_timeout()?;
+        // A zero timeout is refused by the socket; the shortest one waits 1 ms.
+        stream.set_read_timeout(Some(timeout.max(Duration::from_millis(1))))?;
+        let arrived = self.stream.fill_buf().map(|_| ());
+        self.stream.get_ref().set_read_timeout(previous)?;
+        match arrived {
+            Ok(()) => Ok(true),
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    io::ErrorKind::WouldBlock
+                        | io::ErrorKind::TimedOut
+                        | io::ErrorKind::Interrupted
+                ) =>
+            {
+                Ok(false)
+            }
+            Err(error) => Err(error.into()),
+        }
     }
 }

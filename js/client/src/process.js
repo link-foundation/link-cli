@@ -169,6 +169,18 @@ export class ProcessTransport {
     return this.transport.send(text, scope);
   }
 
+  onPush(listener) {
+    return this.transport.onPush(listener);
+  }
+
+  receivePush(scope) {
+    return this.transport.receivePush(scope);
+  }
+
+  get pendingPushes() {
+    return this.transport.pendingPushes;
+  }
+
   async close() {
     let failure = null;
     try {

@@ -8,12 +8,13 @@ use link_cli::cli::{Cli, CliCommand};
 use link_cli::import_lino_file;
 use link_cli::protocol::{
     export_store_file, import_store_file, AcceptedProtocols, BinaryLinoOptions, BinaryLinoProtocol,
-    LinksClient, LinksServer, LinoProtocol, ServerOptions, TextLinoProtocol,
+    LinksClient, LinksServer, LinksSessions, LinoProtocol, ServerOptions, TextLinoProtocol,
 };
 use link_cli::{
-    make_triggers_database_filename, CommitMode, LogRetentionPolicy, NamedTypeLinks,
-    NamedTypesDecorator, PersistentTransformationDecorator, PersistentTransformationKind,
-    QueryProcessor, TransactionsDecorator, TriggerStore, VersionControlDecorator,
+    make_triggers_database_filename, CommitMode, LinkError, LinksTokenTable, LogRetentionPolicy,
+    NamedTypeLinks, NamedTypesDecorator, PermissionPolicy, PermissionsDecorator,
+    PersistentTransformationDecorator, PersistentTransformationKind, QueryProcessor,
+    TransactionsDecorator, TriggerStore, UndoableLinksDecorator, VersionControlDecorator,
 };
 use std::path::PathBuf;
 
@@ -78,7 +79,7 @@ fn parse_retention(raw: Option<&str>) -> Result<LogRetentionPolicy> {
 
 fn open_named_storage(path: impl AsRef<std::path::Path>, cli: &Cli) -> Result<NamedTypesDecorator> {
     let storage = NamedTypesDecorator::new(path, cli.trace)?;
-    Ok(if cli.indexed_lookups {
+    Ok(if cli.indexed_lookups || cli.graphql {
         storage.with_indexed_lookups()
     } else {
         storage
@@ -120,12 +121,7 @@ where
 {
     if !persistent_transformations_enabled(cli) {
         let mut storage = storage;
-        if let Some(address) = &cli.serve {
-            return run_server(cli, address, &mut storage);
-        }
-        run_query_pipeline(cli, &mut storage)?;
-        storage.save()?;
-        return Ok(());
+        return run(cli, &mut storage, |_, _, _| Ok(false));
     }
 
     let trigger_store = if cli.embed_triggers {
@@ -135,13 +131,163 @@ where
     };
     let mut storage = PersistentTransformationDecorator::new(storage, trigger_store, cli.trace)
         .with_auto_create_missing_references(cli.auto_create_missing_references);
+    run(cli, &mut storage, run_trigger_command)
+}
 
-    if let Some(address) = &cli.serve {
-        return run_server(cli, address, &mut storage);
+/// The store a `--tokens` or `--permissions` value names: the data itself
+/// (`self`, `None` here) or a links file of its own.
+fn open_side_store(cli: &Cli, source: &str) -> Result<Option<NamedTypesDecorator>> {
+    if source == "self" {
+        Ok(None)
+    } else {
+        Ok(Some(open_named_storage(source, cli)?))
     }
-    run_query_pipeline_with(cli, &mut storage, run_trigger_command)?;
+}
+
+/// `--subject`: a link index, or the name of a link.
+fn resolve_subject<S: NamedTypeLinks>(cli: &Cli, storage: &mut S) -> Result<u32> {
+    let Some(text) = cli
+        .subject
+        .as_deref()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+    else {
+        return Ok(0);
+    };
+    if text.bytes().all(|byte| byte.is_ascii_digit()) {
+        if let Ok(subject) = text.parse::<u32>() {
+            return Ok(subject);
+        }
+    }
+    match storage.get_by_name(text)? {
+        Some(subject) if subject != 0 => Ok(subject),
+        _ => bail!("Unknown subject '{text}'."),
+    }
+}
+
+/// Runs the invocation over `storage`: the token commands, the server, or
+/// the query pipeline, as the subject sees the store when `--permissions`
+/// is given (issue #149).
+fn run<S, F>(cli: &Cli, storage: &mut S, trigger_stage: F) -> Result<()>
+where
+    S: NamedTypeLinks,
+    F: FnOnce(&Cli, &mut S, Option<&str>) -> Result<bool>,
+{
+    let subject = resolve_subject(cli, storage)?;
+    let tokens_source = cli
+        .tokens
+        .as_deref()
+        .map(str::trim)
+        .filter(|source| !source.is_empty());
+    let tokens = match tokens_source {
+        Some(source) => Some(open_side_store(cli, source)?),
+        None if cli.grant_token.is_some() || cli.revoke_token.is_some() => {
+            bail!("--grant-token and --revoke-token need --tokens.")
+        }
+        None => None,
+    };
+    let policy = match cli
+        .permissions
+        .as_deref()
+        .map(str::trim)
+        .filter(|source| !source.is_empty())
+    {
+        Some(source) => {
+            if cli.trigger_command_count() > 0 {
+                // Triggers run below the view, as the store itself.
+                bail!("--always, --once and --never cannot be used with --permissions.");
+            }
+            Some(match open_side_store(cli, source)? {
+                None => PermissionPolicy::in_data(storage)?,
+                Some(rules) => PermissionPolicy::with_rules(storage, Box::new(rules))?,
+            })
+        }
+        None => None,
+    };
+
+    if cli.grant_token.is_some() || cli.revoke_token.is_some() {
+        // `tokens` is `Some` here: the check above bails otherwise.
+        return run_tokens(cli, storage, tokens.flatten(), subject);
+    }
+    if let (Some(address), true) = (&cli.serve, cli.graphql) {
+        return run_graphql_server(cli, address, storage, policy);
+    }
+    if let Some(address) = &cli.serve {
+        return run_server(cli, address, storage, policy, subject, tokens);
+    }
+    match policy {
+        None => run_query_pipeline_with(cli, storage, trigger_stage)?,
+        Some(policy) => run_permitted_query(cli, storage, policy, subject)?,
+    }
     storage.save()?;
     Ok(())
+}
+
+/// `--grant-token` and `--revoke-token`: writes the token table of
+/// `--tokens`, in `tokens` or in the data when `None`.
+fn run_tokens<S: NamedTypeLinks>(
+    cli: &Cli,
+    storage: &mut S,
+    tokens: Option<NamedTypesDecorator>,
+    subject: u32,
+) -> Result<()> {
+    if cli.grant_token.is_some() && subject == 0 {
+        bail!("--grant-token needs a --subject.");
+    }
+    match tokens {
+        Some(mut tokens) => {
+            write_tokens(cli, &mut tokens, subject)?;
+            tokens.save()?;
+        }
+        None => write_tokens(cli, &mut *storage, subject)?,
+    }
+    // The data holds the points the token table names, even with a
+    // table of its own.
+    storage.save()?;
+    Ok(())
+}
+
+fn write_tokens<T: NamedTypeLinks>(cli: &Cli, tokens: T, subject: u32) -> Result<()> {
+    let mut table = LinksTokenTable::new(tokens);
+    if let Some(token) = &cli.grant_token {
+        let link = table.grant(token, subject)?;
+        println!("Token granted to subject {subject}: {link}");
+    }
+    if let Some(token) = &cli.revoke_token {
+        if table.revoke(token)? {
+            println!("Token revoked.");
+        } else {
+            println!("Unknown token.");
+        }
+    }
+    Ok(())
+}
+
+/// The query pipeline as `subject` sees the store. The query is atomic: a
+/// failed one is undone whole, even where the store changed links the
+/// subject cannot see.
+fn run_permitted_query<S: NamedTypeLinks>(
+    cli: &Cli,
+    storage: &mut S,
+    policy: PermissionPolicy,
+    subject: u32,
+) -> Result<()> {
+    let mut view = PermissionsDecorator::new(UndoableLinksDecorator::new(storage), policy, subject);
+    view.inner_mut().begin();
+    match run_query_pipeline(cli, &mut view) {
+        Ok(()) => {
+            view.inner_mut().commit();
+            Ok(())
+        }
+        Err(error) => {
+            view.inner_mut().rollback()?;
+            if error.downcast_ref::<LinkError>().is_some() {
+                Err(error)
+            } else {
+                Err(LinkError::QueryError(format!("{error:#}")).into())
+            }
+        }
+    }
 }
 
 /// Handles `--always`, `--once` and `--never`.
@@ -475,6 +621,9 @@ fn run_client(cli: &Cli, address: &str) -> Result<()> {
     };
     let query = cli.query.as_deref().or(cli.query_arg.as_deref());
     let mut client = LinksClient::connect(address, protocol)?;
+    if let Some(token) = &cli.token {
+        client.authenticate(token)?;
+    }
     let reply = client.query_text(query.unwrap_or_default())?;
     if !reply.is_empty() {
         println!("{reply}");
@@ -483,7 +632,48 @@ fn run_client(cli: &Cli, address: &str) -> Result<()> {
 }
 
 /// `--serve`: serves `storage` until the process is stopped.
-fn run_server<S>(cli: &Cli, address: &str, storage: &mut S) -> Result<()>
+///
+/// With `policy` every connection sees the store as its subject does: the
+/// one of `--subject` until `(auth: token)` finds another in the token
+/// table of `--tokens` (`tokens`, or the data when `None`).
+fn run_graphql_server<S>(
+    cli: &Cli,
+    address: &str,
+    storage: &mut S,
+    policy: Option<PermissionPolicy>,
+) -> Result<()>
+where
+    S: NamedTypeLinks,
+{
+    use link_cli::graphql::{DeepStore, GraphqlServer, Json, Settings};
+    let mut store = DeepStore::open(&mut *storage, policy)?;
+    for file in &cli.deep_packages {
+        let text = std::fs::read_to_string(file)?;
+        let rows = Json::parse(&text).map_err(|error| anyhow::anyhow!("{file}: {error}"))?;
+        store.load_package(&rows)?;
+    }
+    let secret = match &cli.jwt_secret {
+        Some(secret) => secret.clone().into_bytes(),
+        None => Settings::random_secret(),
+    };
+    let settings = Settings::new(secret, cli.graphql_admin_secret.clone());
+    let server = GraphqlServer::bind(address)?;
+    println!("clink GraphQL server listening on {}", server.local_addr()?);
+    std::io::Write::flush(&mut std::io::stdout())?;
+    server.serve(&mut store, settings)?;
+    drop(store);
+    storage.save()?;
+    Ok(())
+}
+
+fn run_server<S>(
+    cli: &Cli,
+    address: &str,
+    storage: &mut S,
+    policy: Option<PermissionPolicy>,
+    subject: u32,
+    tokens: Option<Option<NamedTypesDecorator>>,
+) -> Result<()>
 where
     S: NamedTypeLinks,
 {
@@ -503,12 +693,34 @@ where
         trace: cli.trace,
         auto_create_missing_references: cli.auto_create_missing_references,
         accept,
+        triplets: cli.triplets,
         ..ServerOptions::default()
     };
+    let sessions = match policy {
+        Some(policy) => LinksSessions::with_permissions(&mut *storage, policy),
+        None => LinksSessions::new(&mut *storage),
+    };
+    let mut sessions = sessions
+        .with_subject(subject)
+        .with_auto_create_missing_references(cli.auto_create_missing_references);
+    sessions = match tokens {
+        None => sessions,
+        Some(None) => sessions
+            .with_authenticator(|store, token| LinksTokenTable::new(store).authenticate(token)),
+        Some(Some(mut tokens)) => sessions.with_authenticator(move |_, token| {
+            LinksTokenTable::new(&mut tokens).authenticate(token)
+        }),
+    };
     let server = LinksServer::bind(address, options)?;
+    print_banner(&server)?;
+    server.serve_sessions(&mut sessions)?;
+    drop(sessions);
+    storage.save()?;
+    Ok(())
+}
+
+fn print_banner(server: &LinksServer) -> Result<()> {
     println!("clink server listening on {}", server.local_addr()?);
     std::io::Write::flush(&mut std::io::stdout())?;
-    server.serve(storage)?;
-    storage.save()?;
     Ok(())
 }

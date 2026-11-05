@@ -46,7 +46,10 @@ mod error;
 pub mod links_operations;
 mod protocols;
 mod remote_links;
+mod remote_triplets;
 mod server;
+mod sessions;
+pub mod triplets_operations;
 
 pub use archive::{export_store, export_store_file, import_store, import_store_file};
 pub use client::LinksClient;
@@ -57,7 +60,7 @@ pub use links_notation::binary::{
     format_reference, parse_document, ArityRange, BinaryError, BinaryLinoOptions, DecodeLimits,
     LinksPacket, LinoDocument, Reference, Section,
 };
-pub use links_operations::{GenericLinksOperation, LinksOperation};
+pub use links_operations::{GenericLinksOperation, LinksNotification, LinksOperation};
 pub use protocols::{
     is_binary_start, read_any_document, BinaryLinoProtocol, LinoConnection, LinoProtocol,
     MessageFormat, ProtocolLimits, TextLinoProtocol, DEFAULT_MAX_TEXT_BYTES,
@@ -65,6 +68,8 @@ pub use protocols::{
 pub use remote_links::RemoteLinks;
 pub use server::{
     error_document, error_message, execute_request, execute_request_for,
-    parse_document_with_limits, query_document, AcceptedProtocols, LinksServer, ServerOptions,
-    ShutdownHandle,
+    parse_document_with_limits, query_document, AcceptedProtocols, LinksServer, Readable,
+    ServerOptions, ShutdownHandle, DEFAULT_MAX_PENDING_NOTIFICATIONS,
 };
+pub use sessions::{Authenticator, LinksSessions, SessionId};
+pub use triplets_operations::{execute_triplets_request, TripletsNotification, TripletsOperation};

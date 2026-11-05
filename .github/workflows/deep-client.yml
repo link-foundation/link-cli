@@ -1,0 +1,65 @@
+name: DeepClient CI
+
+# Issue #153: the real DeepClient of @deep-foundation/deeplinks against the
+# Rust and C# `clink --serve --graphql`.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deep-client.yml'
+      - 'examples/deep-client/**'
+      - 'docs/protocol/graphql/**'
+      - 'rust/**'
+      - 'csharp/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deep-client.yml'
+      - 'examples/deep-client/**'
+      - 'docs/protocol/graphql/**'
+      - 'rust/**'
+      - 'csharp/**'
+
+permissions:
+  contents: read
+
+# Provide Git config to actions/checkout itself.
+env:
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: init.defaultBranch
+  GIT_CONFIG_VALUE_0: main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  deep-client:
+    name: DeepClient (${{ matrix.implementation }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        implementation: [rust, csharp]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run against Rust
+        if: matrix.implementation == 'rust'
+        run: |
+          cargo build --release --manifest-path rust/Cargo.toml
+          examples/deep-client/run.sh "$PWD/rust/target/release/clink"
+      - name: Set up .NET
+        if: matrix.implementation == 'csharp'
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403' # Exact version uses the public builds feed; channel redirect returns HTTP 409.
+      - name: Run against C#
+        if: matrix.implementation == 'csharp'
+        run: |
+          dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
+          examples/deep-client/run.sh "$PWD/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink"

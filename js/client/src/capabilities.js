@@ -18,8 +18,28 @@ const common = {
   pagination: false,
   bulk: 'pipelined-non-atomic',
   // One store per server; nothing shards or merges stores behind the client.
+  // A UnionLinks over clients does merge them, and its capabilities say so.
   sharding: false,
 };
+
+// Subscriptions belong to a connection to a server: another connection's
+// writes are pushed to it as `(notify: N)` documents.
+const SUBSCRIPTION_OPERATIONS = ['subscribe', 'unsubscribe', 'receiveNotification', 'onNotification'];
+
+/** The calls that only a server in triplet mode (`clink --serve --triplets`) answers. */
+export const TRIPLET_OPERATIONS = [
+  'countTriplets',
+  'eachTriplets',
+  'createTriplet',
+  'createTripletPoint',
+  'updateTriplet',
+  'deleteTriplet',
+  'queryTriplets',
+  'exportTriplets',
+  'subscribeTriplets',
+  'receiveTripletNotification',
+  'onTripletNotification',
+];
 
 /** A `clink --serve` server (Rust or C#) reached over TCP. */
 export function tcpServerCapabilities(overrides = {}) {
@@ -27,6 +47,11 @@ export function tcpServerCapabilities(overrides = {}) {
     ...common,
     backend: 'clink-server',
     transport: 'tcp',
+    operations: [...common.operations, ...SUBSCRIPTION_OPERATIONS, ...TRIPLET_OPERATIONS],
+    subscriptions: true,
+    // Whether the server runs with `--triplets`: the protocol does not say, so
+    // this stays null (unknown) unless the caller states it.
+    triplets: null,
     rawTcp: true,
     addressBits: 32,
     maxAddress: MAX_U32_ADDRESS,
@@ -55,6 +80,10 @@ export function wasmCapabilities(overrides = {}) {
     transport: 'in-process',
     // Browsers have no raw sockets; this backend never pretends to.
     rawTcp: false,
+    // One caller, no other connection whose writes it could be told about.
+    subscriptions: false,
+    // The in-process store holds doublets; triplets are served by `--triplets`.
+    triplets: false,
     bulk: 'sequential-non-atomic',
     addressBits: 32,
     maxAddress: MAX_U32_ADDRESS,
@@ -68,4 +97,4 @@ export function wasmCapabilities(overrides = {}) {
 }
 
 /** Names of the boolean guarantees `require` understands. */
-export const GUARANTEES = ['atomicTransactions', 'rollback', 'crashConsistency', 'durableFlush', 'pagination', 'persistent', 'rawTcp', 'sharding'];
+export const GUARANTEES = ['atomicTransactions', 'rollback', 'crashConsistency', 'durableFlush', 'pagination', 'persistent', 'rawTcp', 'sharding', 'subscriptions', 'triplets'];
