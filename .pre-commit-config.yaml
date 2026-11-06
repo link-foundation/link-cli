@@ -9,6 +9,9 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
+    # Preserve verbatim investigation inputs, including large compressed logs.
+    # The separate secrets hook still checks all tracked evidence.
+    exclude: ^(dev/log/|docs/case-studies/)
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

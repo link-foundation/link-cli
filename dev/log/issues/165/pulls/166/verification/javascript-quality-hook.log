@@ -1,0 +1,8 @@
+
+/tmp/gh-issue-solver-1793920673713/.github/scripts/workflow-policy.test.mjs
+  23:32  error  Spaces are hard to count. Use {6}  no-regex-spaces
+
+✖ 1 problem (1 error, 0 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
+JavaScript quality: 80 files, 1 formatting/lint findings
