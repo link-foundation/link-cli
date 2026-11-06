@@ -1,0 +1,4 @@
+[issue-165-a5206aa5b4c0 3433097] fix(ci): resolve extraction diagnostics and cover warning edge cases
+ 22 files changed, 314 insertions(+), 198 deletions(-)
+ create mode 100644 .github/scripts/cargo-warnings.test.mjs
+ create mode 100644 .github/scripts/check-cargo-warnings.sh

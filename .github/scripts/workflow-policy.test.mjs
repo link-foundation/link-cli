@@ -11,6 +11,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { dependencyFiles } from './check-latest-dependencies.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const workflowsDir = join(repoRoot, '.github', 'workflows');
@@ -556,10 +557,12 @@ test('Dependabot watches every directory the dependency check reads', () => {
       ([, directory]) => directory,
     );
   };
-  const tracked = execFileSync('git', ['ls-files', '-z'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  }).split('\0');
+  const tracked = dependencyFiles(
+    execFileSync('git', ['ls-files', '-z'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).split('\0'),
+  );
   const directoriesOf = (pattern, needs) =>
     tracked
       .filter(
@@ -570,6 +573,7 @@ test('Dependabot watches every directory the dependency check reads', () => {
     cargo: directoriesOf(/(^|\/)Cargo\.toml$/, /^\[(?:.*\.)?(?:dev-|build-)?dependencies/m),
     nuget: directoriesOf(/\.csproj$/, /<PackageReference /),
     npm: directoriesOf(/(^|\/)package\.json$/, /"(?:dev)?[dD]ependencies"/),
+    pip: directoriesOf(/(^|\/)requirements[^/]*\.txt$/, /==/),
   };
   for (const [ecosystem, directories] of Object.entries(expectations)) {
     for (const directory of directories) {

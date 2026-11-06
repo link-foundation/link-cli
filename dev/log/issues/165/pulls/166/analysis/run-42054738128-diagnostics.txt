@@ -1,0 +1,10 @@
+1035: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4484285Z ##[warning]File has 982 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+1036: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4491857Z WARNING: rust/src/permissions.rs has 982 lines (approaching limit of 1000, warning threshold: 900)
+1037: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4493980Z ##[warning]File has 902 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+1038: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4495485Z WARNING: rust/src/triplets/mod.rs has 902 lines (approaching limit of 1000, warning threshold: 900)
+1039: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4497672Z ##[warning]File has 937 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+1040: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4499338Z WARNING: rust/src/protocol/server.rs has 937 lines (approaching limit of 1000, warning threshold: 900)
+1041: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4501311Z ##[warning]File has 905 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+1042: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4502799Z WARNING: rust/tests/triplets_over_doublets_tests.rs has 905 lines (approaching limit of 1000, warning threshold: 900)
+1043: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4504497Z ##[warning]File has 935 lines (approaching limit of 1000). Consider extracting code to keep at or below 900 lines and prevent concurrent PR merge limit violations.
+1044: Lint and Format Check	UNKNOWN STEP	2026-11-05T15:27:02.4505811Z WARNING: rust/tests/triplets_protocol_tests.rs has 935 lines (approaching limit of 1000, warning threshold: 900)

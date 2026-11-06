@@ -1,0 +1,30 @@
+[issue-165-a5206aa5b4c0 f2d6054] fix(ci): fail closed on incomplete checks and recover hosted runner outages
+ 56 files changed, 2444 insertions(+), 564 deletions(-)
+ create mode 100644 .github/scripts/audit-nuget-dependencies.mjs
+ create mode 100644 .github/scripts/check-codeql-results.mjs
+ create mode 100644 .github/scripts/check-codeql-results.test.mjs
+ create mode 100644 .github/scripts/crates-publish-preflight.mjs
+ create mode 100644 .github/scripts/crates-publish-preflight.test.mjs
+ create mode 100644 .github/scripts/dependency-failures.test.mjs
+ create mode 100644 .github/scripts/link-failures.test.mjs
+ create mode 100644 .github/scripts/nuget-audit.mjs
+ create mode 100644 .github/scripts/nuget-audit.test.mjs
+ create mode 100644 .github/scripts/nuget-auth.mjs
+ create mode 100644 .github/scripts/nuget-auth.test.mjs
+ create mode 100644 .github/scripts/pipeline-status.mjs
+ create mode 100644 .github/scripts/pipeline-status.test.mjs
+ create mode 100644 .github/scripts/recheck-broken-links.mjs
+ create mode 100644 .github/scripts/release-preflight.mjs
+ create mode 100644 .github/scripts/release-preflight.test.mjs
+ create mode 100644 .github/scripts/runner-recovery.test.mjs
+ create mode 100644 .github/scripts/unacquired-jobs.py
+ create mode 100644 .github/scripts/unacquired_jobs_test.py
+ create mode 100644 .github/workflows/rerun-infrastructure-failures.yml
+ delete mode 100644 .gitkeep
+ create mode 100644 csharp/.changeset/issue-165-ci-audit.md
+ create mode 100644 rust/changelog.d/20261105_165_ci_audit.md
+ create mode 100644 rust/src/permissions/tokens.rs
+ create mode 100644 rust/src/protocol/server/tests.rs
+ create mode 100644 rust/src/triplets/restriction.rs
+ create mode 100644 rust/tests/triplets_over_doublets_tests/substitution.rs
+ create mode 100644 rust/tests/triplets_protocol_tests/references.rs

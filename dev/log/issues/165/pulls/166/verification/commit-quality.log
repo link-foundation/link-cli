@@ -1,0 +1,18 @@
+[issue-165-a5206aa5b4c0 fd17aa4] fix(ci): validate current source and lint all maintained helpers
+ 103 files changed, 5964 insertions(+), 1348 deletions(-)
+ create mode 100644 .github/scripts/check-javascript-quality.mjs
+ create mode 100644 .github/scripts/check-python-quality.py
+ create mode 100644 .github/scripts/check-secrets.mjs
+ create mode 100644 .github/scripts/python-quality.toml
+ create mode 100644 .github/scripts/requirements-quality.txt
+ mode change 100644 => 100755 .github/scripts/unacquired-jobs.py
+ mode change 100644 => 100755 examples/named-import/run-scaling.py
+ mode change 100644 => 100755 examples/quoted-query-names/run.py
+ create mode 100644 experiments/issue-165/codeql-using-repro.mjs.txt
+ create mode 100644 experiments/issue-165/collect-runs.py
+ create mode 100644 experiments/issue-165/collect-template-tooling.py
+ create mode 100644 experiments/issue-165/prepare-upstream-reports.py
+ create mode 100644 experiments/issue-165/reproduce-ignored-secret.mjs
+ create mode 100644 experiments/issue-165/reproduce-template-gaps.mjs
+ create mode 100644 experiments/issue-165/wrap-example-entry-points.py
+ create mode 100644 js/eslint.config.mjs

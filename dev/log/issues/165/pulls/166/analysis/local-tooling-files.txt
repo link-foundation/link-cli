@@ -1,0 +1,15 @@
+examples/quoted-query-names/run.py
+examples/named-import/run-scaling.py
+.github/scripts/unacquired_jobs_test.py
+.github/scripts/unacquired-jobs.py
+docs/case-studies/issue-86/templates/python-ai-driven-development-pipeline-template/version_and_commit.py
+docs/case-studies/issue-86/templates/python-ai-driven-development-pipeline-template/publish_to_pypi.py
+docs/case-studies/issue-86/templates/python-ai-driven-development-pipeline-template/create_github_release.py
+js/src/main.jsx
+js/src/App.jsx
+experiments/issue-165/wrap-example-entry-points.py
+experiments/issue-165/collect-runs.py
+experiments/compare-implementations.py
+experiments/issue-151/encodings.py
+experiments/compare-derived-tables.py
+experiments/issue-152/converse.py

@@ -1,0 +1,33 @@
+Audit every NuGet dependency graph	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607628	
+Audit npm lock (js)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607589	
+Audit npm lock (js/client)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621608188	
+Build documentation	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244476/job/127621606864	
+Cargo audit (docs/case-studies/issue-100/evidence/external-range/rust)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607816	
+Cargo audit (rust)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607969	
+Cargo audit (rust/wasm)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621608164	
+Check Links	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244420/job/127621606966	
+CodeQL (actions)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621608073	
+CodeQL (csharp)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621608107	
+CodeQL (javascript-typescript)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621608001	
+CodeQL (python)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621608240	
+CodeQL (rust)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607991	
+DeepClient (csharp)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244516/job/127621607247	
+DeepClient (rust)	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244516/job/127621607600	
+Dependencies are on their latest versions	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244375/job/127621607148	
+Dependency Review	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607657	
+Detect Changes	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244392/job/127621607605	
+Detect Changes	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244645/job/127621608459	
+JavaScript and Python lint and formatting	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244384/job/127621607365	
+Lint Workflows	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244384/job/127621607043	
+Release authentication preflight	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244392/job/127621608168	
+Release authentication preflight	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244406/job/127621607453	
+Release authentication preflight	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244645/job/127621608891	
+Scan for committed secrets	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244367/job/127621607271	
+Test	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244558/job/127621606953	
+Create Changeset PR	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42135244392/job/127621609483	
+Verify NuGet trusted publishing	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42135244392/job/127621609305	
+Workflow Policy Tests	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244384/job/127621607448	
+zizmor	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42135244384/job/127621607338	
+Create Changelog PR	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42135244645/job/127621656597	
+Verify crates.io trusted publishing	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42135244645/job/127621609589	
+Verify npm trusted publishing	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42135244406/job/127621609854	

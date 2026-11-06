@@ -1,0 +1,50 @@
+[
+  {
+    "repository": "link-foundation/rust-ai-driven-development-pipeline-template",
+    "title": "CI gates drop adjacent lychee failures and accept CodeQL extraction errors",
+    "body_file": "dev/log/issues/165/pulls/166/analysis/upstream-reports/rust-template.md",
+    "returncode": 0,
+    "url": "https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/228",
+    "error": ""
+  },
+  {
+    "repository": "link-foundation/js-ai-driven-development-pipeline-template",
+    "title": "CI gates drop adjacent lychee failures and accept CodeQL extraction errors",
+    "body_file": "dev/log/issues/165/pulls/166/analysis/upstream-reports/js-template.md",
+    "returncode": 0,
+    "url": "https://github.com/link-foundation/js-ai-driven-development-pipeline-template/issues/286",
+    "error": ""
+  },
+  {
+    "repository": "link-foundation/csharp-ai-driven-development-pipeline-template",
+    "title": "Lychee parser consumes adjacent failure records",
+    "body_file": "dev/log/issues/165/pulls/166/analysis/upstream-reports/csharp-template.md",
+    "returncode": 0,
+    "url": "https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/98",
+    "error": ""
+  },
+  {
+    "repository": "link-foundation/python-ai-driven-development-pipeline-template",
+    "title": "SARIF gate accepts CodeQL extraction errors with successful invocation",
+    "body_file": "dev/log/issues/165/pulls/166/analysis/upstream-reports/python-template.md",
+    "returncode": 0,
+    "url": "https://github.com/link-foundation/python-ai-driven-development-pipeline-template/issues/137",
+    "error": ""
+  },
+  {
+    "repository": "github/codeql",
+    "title": "JavaScript parser treats awaited using(...) call as await-using declaration",
+    "body_file": "dev/log/issues/165/pulls/166/analysis/upstream-reports/codeql-await-using.md",
+    "returncode": 0,
+    "url": "https://github.com/github/codeql/issues/23036",
+    "error": ""
+  },
+  {
+    "repository": "github/codeql",
+    "title": "C# buildless extraction reports CS8802 for independent top-level example programs",
+    "body_file": "dev/log/issues/165/pulls/166/analysis/upstream-reports/codeql-csharp-buildless.md",
+    "returncode": 0,
+    "url": "https://github.com/github/codeql/issues/23037",
+    "error": ""
+  }
+]

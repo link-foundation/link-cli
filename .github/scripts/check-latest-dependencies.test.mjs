@@ -15,6 +15,7 @@ import {
   parseCsproj,
   parsePackageJson,
   parsePackageLock,
+  parseRequirements,
   parseWorkflowActions,
   parsePinnedWorkflowActions,
   parseWorkflowTools,
@@ -22,6 +23,14 @@ import {
   versionParts,
   withRetries,
 } from './check-latest-dependencies.mjs';
+
+test('pinned Python tooling participates in freshness checks instead of disappearing', () => {
+  assert.deepEqual(parseRequirements('# CI tools\nruff==0.17.4\nmypy==2.4.1\n'), [
+    { name: 'ruff', version: '0.17.4' },
+    { name: 'mypy', version: '2.4.1' },
+  ]);
+  assert.throws(() => parseRequirements('ruff>=0.17'), /Unsupported/);
+});
 
 test('versions compare numerically, not as text', () => {
   assert.deepEqual(versionParts('v24.21.0'), [24, 21, 0]);

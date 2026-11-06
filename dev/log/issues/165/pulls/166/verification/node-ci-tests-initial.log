@@ -1,0 +1,303 @@
+✔ SARIF gate rejects missing/invalid reports and checks every file/run/severity (2607.472076ms)
+✔ versions compare numerically, not as text (3.844228ms)
+✔ a declared version is compared only as far as it is written (0.483032ms)
+✔ pre-releases are never the latest version (0.350995ms)
+✔ every Cargo dependency form is found, path-only ones are skipped (2.388691ms)
+✔ NuGet package references are found (0.645827ms)
+✔ npm ranges lose their operator, and locked versions come from the lock file (1.032727ms)
+✔ actions pinned to a major tag are found once per repository (0.693214ms)
+✔ runtimes and installed tools are found (1.210179ms)
+✔ actions pinned to a commit, a digest or an exact tag are found (1.062344ms)
+✔ only real updates of cargo update --dry-run count (0.643351ms)
+✔ a manifest comment links the issue that holds a dependency back (0.399765ms)
+✔ Cargo comments hold back the dependency on their line only (1.498437ms)
+✔ csproj comments hold back the package reference on their line (0.183993ms)
+✔ workflow comments hold back actions, runtimes and tools (0.268641ms)
+✔ only an open issue holds an outdated dependency back (0.70172ms)
+✔ a dropped connection to a registry is retried instead of failing the check (32.040767ms)
+✔ a lookup that keeps failing reports the network cause and the attempts (5.05548ms)
+✔ an answer a retry cannot change fails at once (0.692644ms)
+✔ retries wait longer each time and stop after the last attempt (64.468827ms)
+  Retrying the Wayback API (attempt 2 of 3) after: fetch failed: ECONNRESET
+✔ the errors section stops at the next top-level heading (3.11723ms)
+✔ a report without an errors section yields nothing (0.454689ms)
+✔ redirected links are not reported as broken (1.44601ms)
+✔ every http error is extracted exactly once (1.165306ms)
+✔ errors that the Wayback Machine cannot answer are still reported (0.555136ms)
+✔ the parsed error count matches the count lychee reports (0.462604ms)
+  Retrying the Wayback API (attempt 3 of 3) after: HTTP 503
+  Retrying the Wayback API (attempt 2 of 2) after: fetch failed: ECONNRESET
+✔ transient Wayback failures are retried before a snapshot is reported (25.805696ms)
+✔ a Wayback lookup that keeps failing is reported as failed, not as unarchived (2.653885ms)
+✔ a definite Wayback answer is not retried (0.831522ms)
+✔ only inactive or missing Codecov repositories make uploading optional (68.204633ms)
+✔ Codecov lookup failures and malformed responses do not silently disable upload checks (8.920315ms)
+✔ Cobertura totals remain visible in the summary without Codecov (1.427175ms)
+✔ missing and invalid coverage reports fail instead of publishing misleading totals (1.087782ms)
+✔ summary command finds nested Cobertura files and appends the Actions summary (93.250489ms)
+✔ publish body has valid metadata and no archive length or archive bytes (6.433834ms)
+✔ only the exact missing tarball response proves scoped API credentials (2.377259ms)
+✔ HTTP 200 cannot pass credential preflight (0.604027ms)
+✔ HTTP 401 cannot pass credential preflight (0.280164ms)
+✔ HTTP 403 cannot pass credential preflight (3.880597ms)
+✔ HTTP 404 cannot pass credential preflight (0.465719ms)
+✔ HTTP 429 cannot pass credential preflight (0.225481ms)
+✔ HTTP 500 cannot pass credential preflight (0.349222ms)
+✔ HTTP 503 cannot pass credential preflight (0.992624ms)
+✔ an unrelated HTTP 400 is unverified: [{"detail":"invalid metadata length"}] (0.741975ms)
+✔ an unrelated HTTP 400 is unverified: [{"detail":"invalid tarball length for remaining payload"}] (2.762108ms)
+✔ an unrelated HTTP 400 is unverified: [] (0.180697ms)
+✔ an unrelated HTTP 400 is unverified: [{"detail":"invalid tarball length"},{"detail":"denied"}] (0.191817ms)
+✔ network and malformed JSON errors stay unknown without leaking secrets (0.753908ms)
+✖ a failed Cargo lookup is unknown, even when it prints updates (3.254467ms)
+✔ successful dry runs report the locked updates (1.976841ms)
+✔ archived template manifests are excluded while runnable examples stay audited (0.378938ms)
+✔ missing or incomplete link evidence never turns a failed checker green (104.43947ms)
+✖ transient recovery preserves permanent errors and cannot claim partial recovery as complete (7.108022ms)
+✔ a permanent response terminates retries immediately (1.461779ms)
+✔ npm release validation uses the actual registry lookup result (3.306314ms)
+✔ npm release validation succeeds when published=true (28.389269ms)
+✔ npm release validation succeeds when published=false (35.313258ms)
+✔ a successful dotnet exit is insufficient without a complete, clean audit graph (2.818333ms)
+node:internal/modules/esm/load:191
+    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+          ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:191:11)
+    at defaultLoadSync (node:internal/modules/esm/load:144:3)
+    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:809:12)
+    at #loadSync (node:internal/modules/esm/loader:841:53)
+    at ModuleLoader.load (node:internal/modules/esm/loader:790:26)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:501:31)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:567:36)
+    at afterResolve (node:internal/modules/esm/loader:614:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+Node.js v26.13.0
+✖ .github/scripts/nuget-auth.test.mjs (88.124337ms)
+✔ terminal gate fails on cancelled, timed out, failed, missing and wholly skipped prerequisites (3.914619ms)
+✔ every workflow terminal gate depends on every other job and executes after failed prerequisites (8.238592ms)
+✔ PRs and metadata dispatches are advisory without touching credentials or registries (4.186147ms)
+✔ main fails on denied or unknown authentication and validates both NuGet packages (2.455305ms)
+✔ release helper check compiles every executable, denies warnings, and propagates failures (158.870825ms)
+✔ runner recovery verifies annotations, pagination and retry limits offline (577.514051ms)
+✔ npm trust verification exchanges OIDC credentials without publishing or using a secret (68.364441ms)
+✔ npm trust verification fails clearly when OIDC or the registry policy is missing (5.31266ms)
+✔ there is at least one workflow to inspect (5.451819ms)
+✔ no workflow reacts to both pull_request and non-main push branches (3.698035ms)
+✔ the JavaScript unit tests are executed by a workflow (1.005678ms)
+✔ csharp.yml: every job declares timeout-minutes (2.317918ms)
+✔ csharp.yml: declares a top-level permissions block (0.745553ms)
+✔ csharp.yml: every job is covered by a concurrency group (1.391228ms)
+✔ csharp.yml: writer jobs own a never-cancelled concurrency group (6.935411ms)
+✔ csharp.yml: does not mask failures with continue-on-error (6.160183ms)
+✔ csharp.yml: crates.io trusted publishing runs only when enabled (7.487991ms)
+✔ csharp.yml: single-line if expressions do not start with ! (4.54658ms)
+✔ csharp.yml: every release_mode option is handled by a job (1.089004ms)
+✔ csharp.yml: publish steps do not silently skip on missing credentials (2.044939ms)
+✔ csharp.yml: npm lookups tell "not published" apart from a failure (1.379937ms)
+✔ csharp.yml: required choice inputs declare a default (1.053287ms)
+✔ csharp.yml: hosted runners use pinned OS labels (3.689158ms)
+✔ csharp.yml: provides init.defaultBranch to actions/checkout (0.461742ms)
+✔ deep-client.yml: every job declares timeout-minutes (0.138889ms)
+✔ deep-client.yml: declares a top-level permissions block (0.092222ms)
+✔ deep-client.yml: every job is covered by a concurrency group (0.143718ms)
+✔ deep-client.yml: writer jobs own a never-cancelled concurrency group (0.185366ms)
+✔ deep-client.yml: does not mask failures with continue-on-error (4.206686ms)
+✔ deep-client.yml: crates.io trusted publishing runs only when enabled (0.500384ms)
+✔ deep-client.yml: single-line if expressions do not start with ! (0.226432ms)
+✔ deep-client.yml: every release_mode option is handled by a job (0.147386ms)
+✔ deep-client.yml: publish steps do not silently skip on missing credentials (0.1021ms)
+✔ deep-client.yml: npm lookups tell "not published" apart from a failure (0.109835ms)
+✔ deep-client.yml: required choice inputs declare a default (0.08572ms)
+✔ deep-client.yml: hosted runners use pinned OS labels (0.200985ms)
+✔ deep-client.yml: provides init.defaultBranch to actions/checkout (0.179425ms)
+✔ dependencies.yml: every job declares timeout-minutes (0.117018ms)
+✔ dependencies.yml: declares a top-level permissions block (0.099406ms)
+✔ dependencies.yml: every job is covered by a concurrency group (0.118441ms)
+✔ dependencies.yml: writer jobs own a never-cancelled concurrency group (0.148478ms)
+✔ dependencies.yml: does not mask failures with continue-on-error (0.136155ms)
+✔ dependencies.yml: crates.io trusted publishing runs only when enabled (0.127689ms)
+✔ dependencies.yml: single-line if expressions do not start with ! (0.087253ms)
+✔ dependencies.yml: every release_mode option is handled by a job (0.087404ms)
+✔ dependencies.yml: publish steps do not silently skip on missing credentials (0.106099ms)
+✔ dependencies.yml: npm lookups tell "not published" apart from a failure (0.23056ms)
+✔ dependencies.yml: required choice inputs declare a default (0.09665ms)
+✔ dependencies.yml: hosted runners use pinned OS labels (0.42338ms)
+✔ dependencies.yml: provides init.defaultBranch to actions/checkout (0.113853ms)
+✔ docs.yml: every job declares timeout-minutes (0.411278ms)
+✔ docs.yml: declares a top-level permissions block (0.15555ms)
+✔ docs.yml: every job is covered by a concurrency group (0.373849ms)
+✔ docs.yml: writer jobs own a never-cancelled concurrency group (0.367215ms)
+✔ docs.yml: does not mask failures with continue-on-error (0.248905ms)
+✔ docs.yml: crates.io trusted publishing runs only when enabled (0.381753ms)
+✔ docs.yml: single-line if expressions do not start with ! (0.22485ms)
+✔ docs.yml: every release_mode option is handled by a job (0.156883ms)
+✔ docs.yml: publish steps do not silently skip on missing credentials (0.538756ms)
+✔ docs.yml: npm lookups tell "not published" apart from a failure (0.419303ms)
+✔ docs.yml: required choice inputs declare a default (0.147335ms)
+✔ docs.yml: hosted runners use pinned OS labels (0.245799ms)
+✔ docs.yml: provides init.defaultBranch to actions/checkout (0.207217ms)
+✔ js-client.yml: every job declares timeout-minutes (0.173073ms)
+✔ js-client.yml: declares a top-level permissions block (0.082053ms)
+✔ js-client.yml: every job is covered by a concurrency group (2.578545ms)
+✔ js-client.yml: writer jobs own a never-cancelled concurrency group (0.341067ms)
+✔ js-client.yml: does not mask failures with continue-on-error (0.142866ms)
+✔ js-client.yml: crates.io trusted publishing runs only when enabled (0.291064ms)
+✔ js-client.yml: single-line if expressions do not start with ! (0.153116ms)
+✔ js-client.yml: every release_mode option is handled by a job (0.21398ms)
+✔ js-client.yml: publish steps do not silently skip on missing credentials (0.208139ms)
+✔ js-client.yml: npm lookups tell "not published" apart from a failure (0.539738ms)
+✔ js-client.yml: required choice inputs declare a default (0.129422ms)
+✔ js-client.yml: hosted runners use pinned OS labels (0.179135ms)
+✔ js-client.yml: provides init.defaultBranch to actions/checkout (0.073378ms)
+✔ links.yml: every job declares timeout-minutes (0.170599ms)
+✔ links.yml: declares a top-level permissions block (0.110526ms)
+✔ links.yml: every job is covered by a concurrency group (0.6374ms)
+✔ links.yml: writer jobs own a never-cancelled concurrency group (0.163675ms)
+✔ links.yml: does not mask failures with continue-on-error (0.111689ms)
+✔ links.yml: crates.io trusted publishing runs only when enabled (0.19806ms)
+✔ links.yml: single-line if expressions do not start with ! (0.096951ms)
+✔ links.yml: every release_mode option is handled by a job (0.085159ms)
+✔ links.yml: publish steps do not silently skip on missing credentials (0.205563ms)
+✔ links.yml: npm lookups tell "not published" apart from a failure (0.166661ms)
+✔ links.yml: required choice inputs declare a default (0.092673ms)
+✔ links.yml: hosted runners use pinned OS labels (0.124512ms)
+✔ links.yml: provides init.defaultBranch to actions/checkout (0.066443ms)
+✔ rerun-infrastructure-failures.yml: every job declares timeout-minutes (0.081251ms)
+✔ rerun-infrastructure-failures.yml: declares a top-level permissions block (0.061756ms)
+✔ rerun-infrastructure-failures.yml: every job is covered by a concurrency group (0.252321ms)
+✔ rerun-infrastructure-failures.yml: writer jobs own a never-cancelled concurrency group (0.116337ms)
+✔ rerun-infrastructure-failures.yml: does not mask failures with continue-on-error (0.104586ms)
+✔ rerun-infrastructure-failures.yml: crates.io trusted publishing runs only when enabled (0.112249ms)
+✔ rerun-infrastructure-failures.yml: single-line if expressions do not start with ! (0.08104ms)
+✔ rerun-infrastructure-failures.yml: every release_mode option is handled by a job (0.081102ms)
+✔ rerun-infrastructure-failures.yml: publish steps do not silently skip on missing credentials (0.13926ms)
+✔ rerun-infrastructure-failures.yml: npm lookups tell "not published" apart from a failure (0.102311ms)
+✔ rerun-infrastructure-failures.yml: required choice inputs declare a default (0.083385ms)
+✔ rerun-infrastructure-failures.yml: hosted runners use pinned OS labels (0.16045ms)
+✔ rerun-infrastructure-failures.yml: provides init.defaultBranch to actions/checkout (0.204563ms)
+✔ rust.yml: every job declares timeout-minutes (2.081877ms)
+✔ rust.yml: declares a top-level permissions block (0.093063ms)
+✔ rust.yml: every job is covered by a concurrency group (0.186337ms)
+✔ rust.yml: writer jobs own a never-cancelled concurrency group (0.296774ms)
+✔ rust.yml: does not mask failures with continue-on-error (0.166851ms)
+✔ rust.yml: crates.io trusted publishing runs only when enabled (3.115207ms)
+✔ rust.yml: single-line if expressions do not start with ! (0.231993ms)
+✔ rust.yml: every release_mode option is handled by a job (0.459488ms)
+✔ rust.yml: publish steps do not silently skip on missing credentials (0.339373ms)
+✔ rust.yml: npm lookups tell "not published" apart from a failure (2.010273ms)
+✔ rust.yml: required choice inputs declare a default (1.058497ms)
+✔ rust.yml: hosted runners use pinned OS labels (1.441982ms)
+✔ rust.yml: provides init.defaultBranch to actions/checkout (0.138118ms)
+✔ security.yml: every job declares timeout-minutes (0.148578ms)
+✔ security.yml: declares a top-level permissions block (0.066223ms)
+✔ security.yml: every job is covered by a concurrency group (0.147556ms)
+✔ security.yml: writer jobs own a never-cancelled concurrency group (0.19282ms)
+✔ security.yml: does not mask failures with continue-on-error (0.145652ms)
+✔ security.yml: crates.io trusted publishing runs only when enabled (0.234268ms)
+✔ security.yml: single-line if expressions do not start with ! (0.116868ms)
+✔ security.yml: every release_mode option is handled by a job (0.118211ms)
+✔ security.yml: publish steps do not silently skip on missing credentials (0.164837ms)
+✔ security.yml: npm lookups tell "not published" apart from a failure (0.147255ms)
+✔ security.yml: required choice inputs declare a default (0.146273ms)
+✔ security.yml: hosted runners use pinned OS labels (0.150671ms)
+✔ security.yml: provides init.defaultBranch to actions/checkout (0.153826ms)
+✔ wasm.yml: every job declares timeout-minutes (0.099285ms)
+✔ wasm.yml: declares a top-level permissions block (0.081852ms)
+✔ wasm.yml: every job is covered by a concurrency group (0.170157ms)
+✔ wasm.yml: writer jobs own a never-cancelled concurrency group (0.127989ms)
+✔ wasm.yml: does not mask failures with continue-on-error (0.116908ms)
+✔ wasm.yml: crates.io trusted publishing runs only when enabled (0.435382ms)
+✔ wasm.yml: single-line if expressions do not start with ! (0.212136ms)
+✔ wasm.yml: every release_mode option is handled by a job (0.11787ms)
+✔ wasm.yml: publish steps do not silently skip on missing credentials (0.154579ms)
+✔ wasm.yml: npm lookups tell "not published" apart from a failure (0.225932ms)
+✔ wasm.yml: required choice inputs declare a default (0.153527ms)
+✔ wasm.yml: hosted runners use pinned OS labels (0.136605ms)
+✔ wasm.yml: provides init.defaultBranch to actions/checkout (0.093885ms)
+✔ workflows.yml: every job declares timeout-minutes (0.151323ms)
+✔ workflows.yml: declares a top-level permissions block (0.101922ms)
+✔ workflows.yml: every job is covered by a concurrency group (0.13397ms)
+✔ workflows.yml: writer jobs own a never-cancelled concurrency group (0.146684ms)
+✔ workflows.yml: does not mask failures with continue-on-error (0.095788ms)
+✔ workflows.yml: crates.io trusted publishing runs only when enabled (0.167552ms)
+✔ workflows.yml: single-line if expressions do not start with ! (0.105617ms)
+✔ workflows.yml: every release_mode option is handled by a job (0.070602ms)
+✔ workflows.yml: publish steps do not silently skip on missing credentials (0.098283ms)
+✔ workflows.yml: npm lookups tell "not published" apart from a failure (0.140292ms)
+✔ workflows.yml: required choice inputs declare a default (0.100247ms)
+✔ workflows.yml: hosted runners use pinned OS labels (1.863429ms)
+✔ workflows.yml: provides init.defaultBranch to actions/checkout (0.252211ms)
+✔ exactly one workflow publishes GitHub Pages (1.034102ms)
+✔ only the Pages publisher uploads a Pages artifact (0.51899ms)
+✔ every clippy invocation denies warnings (2.589134ms)
+✔ the Rust and C# pipelines simulate a fresh merge on pull requests (0.421626ms)
+✔ every cargo audit invocation denies warnings (2.02909ms)
+✔ coverage uploads use OIDC and retain reports without requiring Codecov (3.915881ms)
+✔ Rust PR lint compiles release helpers without executing them (0.764959ms)
+✔ registry trust can be verified without versioning or publishing a release (3.256991ms)
+✔ Dependabot watches every directory the dependency check reads (20.755525ms)
+ℹ tests 222
+ℹ suites 0
+ℹ pass 219
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2767.871454
+
+✖ failing tests:
+
+test at .github/scripts/dependency-failures.test.mjs:5:1
+✖ a failed Cargo lookup is unknown, even when it prints updates (3.254467ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /rust\/wasm\/Cargo.lock.*registry unavailable/. Input:
+  
+  'rust/wasm/Cargo.lock: cargo update failed (exit 101): Updating example v1.0.0 -> v1.0.1\n' +
+    'error: registry unavailable'
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793920673713/.github/scripts/dependency-failures.test.mjs:12:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'rust/wasm/Cargo.lock: cargo update failed (exit 101): Updating example v1.0.0 -> v1.0.1\nerror: registry unavailable',
+    expected: /rust\/wasm\/Cargo.lock.*registry unavailable/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at .github/scripts/link-failures.test.mjs:24:1
+✖ transient recovery preserves permanent errors and cannot claim partial recovery as complete (7.108022ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      false,
+  -   true
+    ]
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793920673713/.github/scripts/link-failures.test.mjs:27:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ false ],
+    expected: [ false, true ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at .github/scripts/nuget-auth.test.mjs:1:1
+✖ .github/scripts/nuget-auth.test.mjs (88.124337ms)
+  'test failed'

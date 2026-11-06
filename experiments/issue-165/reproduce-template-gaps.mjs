@@ -3,11 +3,16 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { parseLycheeFailures as fixedParser } from '../../.github/scripts/recheck-broken-links.mjs';
 import { checkCodeqlResults as fixedGate } from '../../.github/scripts/check-codeql-results.mjs';
-const root = resolve('dev/log/issues/165/pulls/166/templates');
+const snapshots = resolve('dev/log/issues/165/pulls/166/templates');
+const root = mkdtempSync(join(tmpdir(), 'issue-165-templates-'));
+process.on('exit', () => rmSync(root, { recursive: true, force: true }));
+for (const template of ['rust', 'js', 'csharp', 'python']) {
+  execFileSync('tar', ['-xzf', join(snapshots, template, 'snapshot.tar.gz'), '-C', root]);
+}
 const report =
   '## Errors per input\n* [404] https://example.com/missing\n* [ERROR] https://example.com/reset';
 for (const template of ['rust', 'js', 'csharp']) {

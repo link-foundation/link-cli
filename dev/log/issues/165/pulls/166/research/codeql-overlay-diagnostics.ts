@@ -1,0 +1,137 @@
+import { type CodeQL } from "../codeql";
+import { type Config } from "../config-utils";
+import {
+  addNoLanguageDiagnostic,
+  makeDiagnostic,
+  makeTelemetryDiagnostic,
+} from "../diagnostics";
+import { DocUrl } from "../doc-url";
+import { RepositoryPropertyName } from "../feature-flags/properties";
+
+/** Reason why overlay analysis was disabled. */
+export enum OverlayDisabledReason {
+  /** Overlay analysis was disabled by the CODEQL_OVERLAY_DATABASE_MODE environment variable being set to "none". */
+  DisabledByEnvironmentVariable = "disabled-by-environment-variable",
+  /** Overlay analysis was disabled by a repository property. */
+  DisabledByRepositoryProperty = "disabled-by-repository-property",
+  /** The build mode is incompatible with overlay analysis. */
+  IncompatibleBuildMode = "incompatible-build-mode",
+  /** The CodeQL CLI version is too old to support overlay analysis. */
+  IncompatibleCodeQl = "incompatible-codeql",
+  /** The Git version could not be determined or is too old. */
+  IncompatibleGit = "incompatible-git",
+  /** The runner does not have enough disk space to perform overlay analysis. */
+  InsufficientDiskSpace = "insufficient-disk-space",
+  /** The runner does not have enough memory to perform overlay analysis. */
+  InsufficientMemory = "insufficient-memory",
+  /** Overlay analysis is not enabled for one or more of the configured languages. */
+  LanguageNotEnabled = "language-not-enabled",
+  /** The source root is not inside a git repository. */
+  NoGitRoot = "no-git-root",
+  /**
+   * For one or more of the configured languages, overlay analysis is only
+   * enabled when using the default query suite, but the config customises the
+   * queries by disabling default queries, specifying custom queries or packs,
+   * or adding query filters.
+   */
+  NonDefaultQueries = "non-default-queries",
+  /** We are not analyzing a pull request or the default branch. */
+  NotPullRequestOrDefaultBranch = "not-pull-request-or-default-branch",
+  /** The top-level overlay analysis feature flag is not enabled. */
+  OverallFeatureNotEnabled = "overall-feature-not-enabled",
+  /**
+   * Overlay analysis was selected for a pull request, but diff-informed
+   * analysis was not enabled for the run (for example, because the
+   * `DiffInformedQueries` feature flag is off, the GHES version is too old,
+   * or the PR diff ranges could not be computed). Overlay analysis has only
+   * been validated in combination with diff-informed analysis, so we fall
+   * back to a non-overlay analysis in this case.
+   */
+  DiffInformedAnalysisNotEnabled = "diff-informed-analysis-not-enabled",
+  /** Overlay analysis was skipped because it previously failed with similar hardware resources. */
+  SkippedDueToCachedStatus = "skipped-due-to-cached-status",
+  /** Disk usage could not be determined during the overlay status check. */
+  UnableToDetermineDiskUsage = "unable-to-determine-disk-usage",
+}
+
+/**
+ * Add diagnostics related to why overlay was disabled. This includes:
+ *
+ * - A telemetry diagnostic that logs the disablement reason.
+ * - User-facing diagnostics for specific disablement reasons that are
+ *   actionable by the user.
+ */
+export async function addOverlayDisablementDiagnostics(
+  config: Config,
+  codeql: CodeQL,
+  overlayDisabledReason: OverlayDisabledReason,
+): Promise<void> {
+  addNoLanguageDiagnostic(
+    config,
+    makeTelemetryDiagnostic(
+      "codeql-action/overlay-disabled",
+      "Overlay analysis disabled",
+      {
+        reason: overlayDisabledReason,
+      },
+    ),
+  );
+
+  if (
+    overlayDisabledReason === OverlayDisabledReason.SkippedDueToCachedStatus
+  ) {
+    addNoLanguageDiagnostic(
+      config,
+      makeDiagnostic(
+        "codeql-action/overlay-disabled-due-to-cached-status",
+        "Skipped improved incremental analysis because it failed previously with similar hardware resources",
+        {
+          attributes: {
+            languages: config.languages,
+          },
+          markdownMessage:
+            `Improved incremental analysis was skipped because it previously failed for this repository ` +
+            `with CodeQL version ${(await codeql.getVersion()).version} on a runner with similar hardware resources. ` +
+            "One possible reason for this is that improved incremental analysis can require a significant amount of disk space for some repositories. " +
+            "If you want to try re-enabling improved incremental analysis, increase the disk space available " +
+            "to the runner. If that doesn't help, contact GitHub Support for further assistance.\n\n" +
+            "Improved incremental analysis will be automatically retried when the next version of CodeQL is released. " +
+            `You can also manually trigger a retry by [removing](${DocUrl.DELETE_ACTIONS_CACHE_ENTRIES}) \`codeql-overlay-status-*\` entries from the Actions cache.`,
+          severity: "note",
+          visibility: {
+            cliSummaryTable: true,
+            statusPage: true,
+            telemetry: false,
+          },
+        },
+      ),
+    );
+  }
+
+  if (
+    overlayDisabledReason === OverlayDisabledReason.DisabledByRepositoryProperty
+  ) {
+    addNoLanguageDiagnostic(
+      config,
+      makeDiagnostic(
+        "codeql-action/overlay-disabled-by-repository-property",
+        "Improved incremental analysis disabled by repository property",
+        {
+          attributes: {
+            languages: config.languages,
+          },
+          markdownMessage:
+            "Improved incremental analysis has been disabled because the " +
+            `\`${RepositoryPropertyName.DISABLE_OVERLAY}\` repository property is set to \`true\`. ` +
+            "To re-enable improved incremental analysis, set this property to `false` or remove it.",
+          severity: "note",
+          visibility: {
+            cliSummaryTable: true,
+            statusPage: true,
+            telemetry: false,
+          },
+        },
+      ),
+    );
+  }
+}

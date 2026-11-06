@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { gzipSync } from 'node:zlib';
 
 const directory = 'experiments/issue-165/ignored-secret-fixture';
 const path = `${directory}/example.log`;
@@ -17,6 +18,12 @@ try {
     1,
     `Fixed command detects the synthetic example credential: ${after.stdout} ${after.stderr}`,
   );
+  writeFileSync(`${path}.gz`, gzipSync(`aws_secret_access_key = "${'aB3dE5fG7h'.repeat(4)}"\n`));
+  const compressed = spawnSync(process.execPath, [
+    '.github/scripts/check-secrets.mjs',
+    `${path}.gz`,
+  ]);
+  assert.equal(compressed.status, 1, 'Compressed evidence must also be checked');
   console.log('PASS: original command skips ignored log; fixed command rejects it');
 } finally {
   rmSync(directory, { recursive: true, force: true });

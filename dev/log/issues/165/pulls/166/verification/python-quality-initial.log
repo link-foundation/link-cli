@@ -1,0 +1,280 @@
+EXE001 Shebang is present but file is not executable
+ --> .github/scripts/unacquired-jobs.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 | """Find and rerun jobs that GitHub never handed to a hosted runner (issue #165).
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> .github/scripts/unacquired_jobs_test.py:2:1
+  |
+1 |   """Offline regression cases, including the annotation from run 42054738038."""
+2 | / import importlib.util
+3 | | from pathlib import Path
+4 | | import unittest
+5 | | from unittest.mock import patch
+  | |_______________________________^
+6 |
+7 |   spec = importlib.util.spec_from_file_location('recovery', Path(__file__).with_name('unacquired-jobs.py'))
+  |
+help: Organize imports
+  |
+2 | import importlib.util
+3 + import unittest
+4 | from pathlib import Path
+  - import unittest
+5 | from unittest.mock import patch
+  |
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> .github/scripts/unacquired_jobs_test.py:14:17
+   |
+12 | class RecoveryTests(unittest.TestCase):
+13 |     def test_only_confirmed_capacity_failure_is_retried(self):
+14 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+15 |                 dict(id=2, name='superseded', conclusion='cancelled', steps=[], runner_name=''),
+16 |                 dict(id=3, name='test failure', conclusion='failure', steps=[{}], runner_name='hosted')]
+   |
+help: Rewrite as a literal
+   |
+13 |     def test_only_confirmed_capacity_failure_is_retried(self):
+   -         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+14 +         jobs = [{'id': 1, 'name': 'macOS', 'conclusion': 'cancelled', 'steps': [], 'runner_name': ''},
+15 |                 dict(id=2, name='superseded', conclusion='cancelled', steps=[], runner_name=''),
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> .github/scripts/unacquired_jobs_test.py:15:17
+   |
+13 |     def test_only_confirmed_capacity_failure_is_retried(self):
+14 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+15 |                 dict(id=2, name='superseded', conclusion='cancelled', steps=[], runner_name=''),
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |                 dict(id=3, name='test failure', conclusion='failure', steps=[{}], runner_name='hosted')]
+17 |         message = 'The job was not acquired by Runner of type hosted even after multiple attempts'
+   |
+help: Rewrite as a literal
+   |
+14 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+   -                 dict(id=2, name='superseded', conclusion='cancelled', steps=[], runner_name=''),
+15 +                 {'id': 2, 'name': 'superseded', 'conclusion': 'cancelled', 'steps': [], 'runner_name': ''},
+16 |                 dict(id=3, name='test failure', conclusion='failure', steps=[{}], runner_name='hosted')]
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> .github/scripts/unacquired_jobs_test.py:16:17
+   |
+14 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+15 |                 dict(id=2, name='superseded', conclusion='cancelled', steps=[], runner_name=''),
+16 |                 dict(id=3, name='test failure', conclusion='failure', steps=[{}], runner_name='hosted')]
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+17 |         message = 'The job was not acquired by Runner of type hosted even after multiple attempts'
+18 |         self.assertEqual(recovery.unacquired(jobs, {1: [message], 3: [message]}), ['macOS'])
+   |
+help: Rewrite as a literal
+   |
+15 |                 dict(id=2, name='superseded', conclusion='cancelled', steps=[], runner_name=''),
+   -                 dict(id=3, name='test failure', conclusion='failure', steps=[{}], runner_name='hosted')]
+16 +                 {'id': 3, 'name': 'test failure', 'conclusion': 'failure', 'steps': [{}], 'runner_name': 'hosted'}]
+17 |         message = 'The job was not acquired by Runner of type hosted even after multiple attempts'
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> .github/scripts/unacquired_jobs_test.py:21:15
+   |
+20 |     def test_annotations_are_paginated_and_later_pages_are_checked(self):
+21 |         job = dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name='')
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 |         with patch.object(recovery, 'gh_json', side_effect=[
+23 |             [{'jobs': [job]}], [[{'message': 'queued'}], [{'message': recovery.NOT_ACQUIRED}]],
+   |
+help: Rewrite as a literal
+   |
+20 |     def test_annotations_are_paginated_and_later_pages_are_checked(self):
+   -         job = dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name='')
+21 +         job = {'id': 1, 'name': 'macOS', 'conclusion': 'cancelled', 'steps': [], 'runner_name': ''}
+22 |         with patch.object(recovery, 'gh_json', side_effect=[
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> .github/scripts/unacquired_jobs_test.py:31:17
+   |
+30 |     def test_mixed_code_and_capacity_failure_is_not_retried(self):
+31 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+32 |                 dict(id=2, name='Tests', conclusion='failure', steps=[{}], runner_name='hosted')]
+33 |         with patch.object(recovery, 'gh_json', return_value=[{'jobs': jobs}]) as api:
+   |
+help: Rewrite as a literal
+   |
+30 |     def test_mixed_code_and_capacity_failure_is_not_retried(self):
+   -         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+31 +         jobs = [{'id': 1, 'name': 'macOS', 'conclusion': 'cancelled', 'steps': [], 'runner_name': ''},
+32 |                 dict(id=2, name='Tests', conclusion='failure', steps=[{}], runner_name='hosted')]
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+C408 Unnecessary `dict()` call (rewrite as a literal)
+  --> .github/scripts/unacquired_jobs_test.py:32:17
+   |
+30 |     def test_mixed_code_and_capacity_failure_is_not_retried(self):
+31 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+32 |                 dict(id=2, name='Tests', conclusion='failure', steps=[{}], runner_name='hosted')]
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+33 |         with patch.object(recovery, 'gh_json', return_value=[{'jobs': jobs}]) as api:
+34 |             self.assertEqual(recovery.fetch_unacquired('owner/repo', 10, 1), [])
+   |
+help: Rewrite as a literal
+   |
+31 |         jobs = [dict(id=1, name='macOS', conclusion='cancelled', steps=[], runner_name=''),
+   -                 dict(id=2, name='Tests', conclusion='failure', steps=[{}], runner_name='hosted')]
+32 +                 {'id': 2, 'name': 'Tests', 'conclusion': 'failure', 'steps': [{}], 'runner_name': 'hosted'}]
+33 |         with patch.object(recovery, 'gh_json', return_value=[{'jobs': jobs}]) as api:
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+EXE001 Shebang is present but file is not executable
+ --> examples/named-import/run-scaling.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 | """Bounded issue-110 benchmark; build named_import_scaling in release mode first.
+  |
+
+EXE001 Shebang is present but file is not executable
+ --> examples/quoted-query-names/run.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 | """Check numeric query names and export replay against either clink executable."""
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> examples/quoted-query-names/run.py:4:1
+  |
+2 |   """Check numeric query names and export replay against either clink executable."""
+3 |
+4 | / import argparse
+5 | | from pathlib import Path
+6 | | import subprocess
+7 | | import tempfile
+  | |_______________^
+help: Organize imports
+  |
+4 | import argparse
+  - from pathlib import Path
+5 | import subprocess
+6 | import tempfile
+7 + from pathlib import Path
+8 |
+  |
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> experiments/issue-165/collect-runs.py:2:1
+  |
+1 |   """Collect issue-referenced workflow evidence without building the project."""
+2 | / import json
+3 | | from pathlib import Path
+4 | | import re
+5 | | import subprocess
+6 | | import sys
+  | |__________^
+7 |
+8 |   root = Path('dev/log/issues/165/pulls/166')
+  |
+help: Organize imports
+  |
+2 | import json
+  - from pathlib import Path
+3 | import re
+4 | import subprocess
+5 | import sys
+6 + from pathlib import Path
+7 |
+  |
+
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> experiments/issue-165/collect-runs.py:20:18
+   |
+18 |         continue
+19 |     with (root / f'ci-logs/run-{run_id}.log').open('w') as output:
+20 |         result = subprocess.run(['gh', 'run', 'view', run_id, '--repo', 'link-foundation/link-cli', '--log'], stdout=output, stderr=su…
+   |                  ^^^^^^^^^^^^^^
+21 |         if result.returncode:
+22 |             (root / f'ci-logs/run-{run_id}-missing.txt').write_text(result.stderr)
+   |
+help: Add explicit `check=False`
+   |
+19 |     with (root / f'ci-logs/run-{run_id}.log').open('w') as output:
+   -         result = subprocess.run(['gh', 'run', 'view', run_id, '--repo', 'link-foundation/link-cli', '--log'], stdout=output, stderr=subprocess.PIPE, text=True)
+20 +         result = subprocess.run(['gh', 'run', 'view', run_id, '--repo', 'link-foundation/link-cli', '--log'], check=False, stdout=output, stderr=subprocess.PIPE, text=True)
+21 |         if result.returncode:
+   |
+note: This suggestion may be incorrect or produce invalid syntax. It requires manual review and cannot be applied automatically
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> experiments/issue-165/collect-template-tooling.py:1:1
+  |
+1 | / import concurrent.futures
+2 | | import json
+3 | | from pathlib import Path
+4 | | import re
+5 | | import subprocess
+  | |_________________^
+6 |   root=Path('dev/log/issues/165/pulls/166/templates')
+7 |   tasks=[]
+  |
+help: Organize imports
+  |
+2 | import json
+  - from pathlib import Path
+3 | import re
+4 | import subprocess
+5 + from pathlib import Path
+6 +
+7 | root=Path('dev/log/issues/165/pulls/166/templates')
+  |
+
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> experiments/issue-165/collect-template-tooling.py:19:9
+   |
+17 | def collect(task):
+18 |  meta,p,file=task
+19 |  result=subprocess.run(['gh','api',f"repos/{meta['repository']}/contents/{file}?ref={meta['sha']}",'-H','Accept: application/vnd.githu…
+   |         ^^^^^^^^^^^^^^
+20 |  if result.returncode: raise RuntimeError(result.stderr.decode())
+21 |  dest=p/file;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(result.stdout)
+   |
+help: Add explicit `check=False`
+   |
+18 |  meta,p,file=task
+   -  result=subprocess.run(['gh','api',f"repos/{meta['repository']}/contents/{file}?ref={meta['sha']}",'-H','Accept: application/vnd.github.raw+json'],capture_output=True)
+19 +  result=subprocess.run(['gh','api',f"repos/{meta['repository']}/contents/{file}?ref={meta['sha']}",'-H','Accept: application/vnd.github.raw+json'],check=False, capture_output=True)
+20 |  if result.returncode: raise RuntimeError(result.stderr.decode())
+   |
+note: This suggestion may be incorrect or produce invalid syntax. It requires manual review and cannot be applied automatically
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> experiments/issue-165/prepare-upstream-reports.py:1:1
+  |
+1 | / import json
+2 | | from pathlib import Path
+  | |________________________^
+3 |   root=Path('dev/log/issues/165/pulls/166')
+4 |   reports=root/'analysis/upstream-reports'
+  |
+help: Organize imports
+  |
+2 | from pathlib import Path
+3 +
+4 | root=Path('dev/log/issues/165/pulls/166')
+  |
+
+Found 16 errors.
+[*] 5 fixable with `--fix` (6 unsafe fixes available with `--fix --unsafe-fixes`).

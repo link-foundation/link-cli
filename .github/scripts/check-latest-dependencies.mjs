@@ -388,6 +388,23 @@ export function dependencyFiles(files) {
   return files.filter((file) => !file.startsWith('dev/log/'));
 }
 
+/** CI Python tools use exact pins; unsupported entries must not disappear. */
+export function parseRequirements(text) {
+  return text.split(/\r?\n/).flatMap((line) => {
+    const value = line.split('#')[0].trim();
+    if (!value) return [];
+    const match = /^([\w.-]+)==(\d+(?:\.\d+)+)$/.exec(value);
+    if (!match) throw Error(`Unsupported pinned Python requirement: ${value}`);
+    return [
+      {
+        name: match[1],
+        version: match[2],
+        ...(blockerOf(line) ? { blocker: blockerOf(line) } : {}),
+      },
+    ];
+  });
+}
+
 /** Everything to check, as `{ registry, name, version, source[, blocker] }`. */
 function collectDependencies(files) {
   const entries = [];
@@ -399,6 +416,10 @@ function collectDependencies(files) {
   for (const project of files.filter((file) => file.endsWith('.csproj'))) {
     for (const dependency of parseCsproj(read(project)))
       entries.push({ registry: 'nuget', source: project, ...dependency });
+  }
+  for (const manifest of files.filter((file) => /(^|\/)requirements[^/]*\.txt$/.test(file))) {
+    for (const dependency of parseRequirements(read(manifest)))
+      entries.push({ registry: 'pypi', source: manifest, ...dependency });
   }
   for (const manifest of named('package.json')) {
     const packageJson = parsePackageJson(read(manifest));
