@@ -62,7 +62,9 @@ export class FileLsmJournalStore {
       try {
         this.close();
       } catch (cleanup) {
-        throw new AggregateError([cause, cleanup], 'native LSM open and cleanup failed');
+        throw new AggregateError([cause, cleanup], 'native LSM open and cleanup failed', {
+          cause: cleanup,
+        });
       }
       throw cause;
     }

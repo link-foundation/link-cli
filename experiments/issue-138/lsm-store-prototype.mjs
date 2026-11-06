@@ -104,7 +104,9 @@ export class PhysicalLsmJournalStore {
       const failures = store.#release();
       store.#closed = true;
       if (failures.length)
-        throw new AggregateError([cause, ...failures], 'LSM recovery and lease cleanup failed');
+        throw new AggregateError([cause, ...failures], 'LSM recovery and lease cleanup failed', {
+          cause,
+        });
       throw cause;
     }
   }

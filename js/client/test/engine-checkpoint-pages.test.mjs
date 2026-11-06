@@ -8,7 +8,6 @@ import {
   vectors,
   clone,
   blank,
-  Device,
   makeDevices,
   open,
   setup,

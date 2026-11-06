@@ -66,6 +66,7 @@ test('unsupported capabilities and malformed replacement sequences reject before
     'bad',
     {},
     [null],
+    // eslint-disable-next-line no-sparse-arrays -- a hole is the invalid input under test.
     [,],
     ['bad'],
     [fixture.logical[0], 'bad'],

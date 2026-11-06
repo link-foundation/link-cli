@@ -46,6 +46,7 @@ export class FileCheckpointPagedCommitLog extends CheckpointPagedCommitLog {
         throw new AggregateError(
           [cause, ...errors],
           'native checkpoint initialization and cleanup failed',
+          { cause },
         );
       throw cause;
     }

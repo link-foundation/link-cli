@@ -34,6 +34,7 @@ export class FileMirroredPagedCommitLog extends PagedCommitLog {
         throw new AggregateError(
           [error, cleanup],
           'native mirror initialization and cleanup failed',
+          { cause: cleanup },
         );
       }
       throw error;

@@ -71,6 +71,7 @@ export class AuthorFence {
       if (
         typeof entry !== 'string' ||
         entry.length > 256 ||
+        // eslint-disable-next-line no-control-regex -- the rule is the ASCII range itself.
         /[^\x00-\x7f]/.test(entry) ||
         (bytes += entry.length) > this.#maxBytes
       )

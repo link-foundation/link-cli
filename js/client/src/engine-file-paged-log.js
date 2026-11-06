@@ -60,7 +60,11 @@ export class FilePageDevice {
       try {
         this.close();
       } catch (cleanup) {
-        throw new AggregateError([cause, cleanup], 'native page initialization and cleanup failed');
+        throw new AggregateError(
+          [cause, cleanup],
+          'native page initialization and cleanup failed',
+          { cause: cleanup },
+        );
       }
       throw cause;
     }
@@ -175,6 +179,7 @@ export class FilePagedCommitLog extends PagedCommitLog {
         throw new AggregateError(
           [cause, cleanup],
           'native page log initialization and cleanup failed',
+          { cause: cleanup },
         );
       }
       throw cause;

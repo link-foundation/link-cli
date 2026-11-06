@@ -49,11 +49,11 @@ export async function collect(store) {
         )
           fail('missing or changed protected object');
       }
-      snapshots.push({ partition, provider, items });
+      snapshots.push({ provider, items });
     }
     let examined = 0;
     let deleted = 0;
-    for (const { partition, provider, items } of snapshots) {
+    for (const { provider, items } of snapshots) {
       for (const item of items) {
         examined++;
         if (keyEpoch(item.key) >= fence || protectedKeys.has(item.key)) continue;

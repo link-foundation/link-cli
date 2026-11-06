@@ -364,7 +364,6 @@ export class ClusterTransaction {
     return this.#pending;
   }
   async #commit() {
-    let failed = false;
     try {
       const updates = [];
       for (let index = 0; index < this.#work.length; index++) {
@@ -396,16 +395,13 @@ export class ClusterTransaction {
           outcome: 'failed',
         });
     } catch (cause) {
-      failed = true;
-      throw cause;
-    } finally {
       this.#state = 'closed';
-      try {
-        await this.#dispose();
-      } catch (cause) {
-        if (!failed) throw cause;
-      }
+      // The commit failure is the outcome the caller must see, not a cleanup error.
+      await this.#dispose().catch(() => {});
+      throw cause;
     }
+    this.#state = 'closed';
+    await this.#dispose();
   }
   async #dispose() {
     let failure;

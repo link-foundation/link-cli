@@ -355,6 +355,7 @@ test('group validation rejects invalid and closing members before consuming any 
     [closed],
     [closing],
     [local, null],
+    // eslint-disable-next-line no-sparse-arrays -- a hole is the invalid input under test.
     [local, ,],
   ]) {
     await assert.rejects(engine.commitGroup(invalid), TypeError);

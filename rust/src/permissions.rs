@@ -705,8 +705,16 @@ impl<L: NamedTypeLinks, P: AccessPolicy> NamedTypeLinks for PermissionsDecorator
         restriction: &crate::lino_link::LinoLink,
         substitution: &crate::lino_link::LinoLink,
     ) -> Result<Option<std::collections::HashSet<u32>>> {
-        self.links
-            .reserve_query_allocations(processor, restriction, substitution)
+        let reserved = self
+            .links
+            .reserve_query_allocations(processor, restriction, substitution)?;
+        // A preview lists every row of its scratch store. Only addresses that do
+        // not exist yet are allocations; counting an existing row would let a
+        // hidden address pass as one and answer differently from a missing one.
+        Ok(reserved.map(|mut ids| {
+            ids.retain(|&id| !self.links.reference_exists(id));
+            ids
+        }))
     }
 
     /// Panics when the subject may not create; use

@@ -400,4 +400,6 @@ byte budget also bounds malformed UTF-8 records.
 
 Preserve checked query admission and allocation reservation capabilities through
 permission and undo sessions. Keep original-query envelopes observable by
-subscriptions and use the released Platform.Data.Doublets 0.18.9.
+subscriptions.
+
+Update Platform.Data.Doublets to 1.0.0 and Link.Foundation.Links.Notation to 0.31.1.

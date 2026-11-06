@@ -38,6 +38,7 @@ export class ReadOnlyLsmDevice {
         throw new AggregateError(
           [cause, cleanup],
           'native LSM read-only acquisition and cleanup failed',
+          { cause: cleanup },
         );
       }
       throw cause;
