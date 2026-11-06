@@ -1,31 +1,63 @@
 """Preserve complete Unicode graph results after sequential validation finishes."""
+
 import json
 from pathlib import Path
 
 root = Path.cwd()
-summary = json.loads((root / 'experiments/issue-138/unicode-graph-summary.json').read_text())
-assert summary['native'] == {'passed': 875, 'failed': 0, 'ignored': 14}
-assert summary['wasm'] == {'passed': 516, 'failed': 0, 'ignored': 0}
-assert summary['csharp_Debug']['passed'] == summary['csharp_Release']['passed'] == 2022
-assert summary['js']['pass'] == 177 and summary['repository']['pass'] == 221
+summary = json.loads(
+    (root / "experiments/issue-138/unicode-graph-summary.json").read_text()
+)
+assert summary["native"] == {"passed": 875, "failed": 0, "ignored": 14}
+assert summary["wasm"] == {"passed": 516, "failed": 0, "ignored": 0}
+assert summary["csharp_Debug"]["passed"] == summary["csharp_Release"]["passed"] == 2022
+assert summary["js"]["pass"] == 177 and summary["repository"]["pass"] == 221
 rows = []
 components = []
-for label, key in [('Native Rust', 'native_coverage'), ('Actual WASM, complete linked source', 'wasm_coverage')]:
+for label, key in [
+    ("Native Rust", "native_coverage"),
+    ("Actual WASM, complete linked source", "wasm_coverage"),
+]:
+
     def metric(kind):
-        v = summary[key][kind]
-        return f"{v['covered']:,}/{v['count']:,} ({100 * v['covered'] / v['count']:.2f}%)"
-    rows.append(f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |")
-    components.append(label + ': ' + ', '.join(
-        f"{v['covered']}/{v['count']} {kind}" for kind, v in summary[key]['checked_walker'].items()))
-for mode in ['Debug', 'Release']:
+        v = summary[key][kind]  # noqa: B023
+        return (
+            f"{v['covered']:,}/{v['count']:,} ({100 * v['covered'] / v['count']:.2f}%)"
+        )
+
+    rows.append(
+        f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |"
+    )
+    components.append(
+        label
+        + ": "
+        + ", ".join(
+            f"{v['covered']}/{v['count']} {kind}"
+            for kind, v in summary[key]["checked_walker"].items()
+        )
+    )
+for mode in ["Debug", "Release"]:
+
     def metric(kind):
-        v = summary['csharp_' + mode]['coverage']
-        covered, count = v[kind + '-covered'], v[kind + '-valid']
-        return f'{covered:,}/{count:,} ({100 * covered / count:.2f}%)'
-    rows.append(f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |")
-    assert all(float(v['line-rate']) == float(v['branch-rate']) == 1 for v in summary['csharp_' + mode]['checked_walker'])
-table = '\n'.join(['| Scope | Covered lines | Covered branches | Covered functions |', '| --- | --- | --- | --- |'] + rows)
-body = '''Unicode sequence graph integrity: complete local validation
+        v = summary["csharp_" + mode]["coverage"]  # noqa: B023
+        covered, count = v[kind + "-covered"], v[kind + "-valid"]
+        return f"{covered:,}/{count:,} ({100 * covered / count:.2f}%)"
+
+    rows.append(
+        f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |"
+    )
+    assert all(
+        float(v["line-rate"]) == float(v["branch-rate"]) == 1
+        for v in summary["csharp_" + mode]["checked_walker"]
+    )
+table = "\n".join(
+    [
+        "| Scope | Covered lines | Covered branches | Covered functions |",
+        "| --- | --- | --- | --- |",
+    ]
+    + rows
+)
+body = (
+    """Unicode sequence graph integrity: complete local validation
 PR: https://github.com/link-foundation/link-cli/pull/139
 Date: 2026-10-25 UTC
 Base: 4729b539ddd9db9167895fed654282c95789e026
@@ -74,7 +106,11 @@ Complete local validation:
 
 Official complete-run totals, without filtered denominators or diagnostic unions:
 
-''' + table + '\n\nChecked walker component: ' + '; '.join(components) + '''.
+"""
+    + table
+    + "\n\nChecked walker component: "
+    + "; ".join(components)
+    + """.
 C# Debug/Release class summaries report 100% lines and branches. All three
 actual-WASM wrappers retain 100% lines, reported branches and functions.
 
@@ -86,13 +122,14 @@ legacy physical repair, LSM, physical power loss, full journal transfer/replay,
 persistent object retention, automatic balancing, multi-catalog transactions
 and wider competitor requirements remain unfinished. The goal remains active
 and PR 139 remains draft; publication requires fresh exact-head CI.
-'''
-(root / 'dev/log/issues/138/pulls/139/unicode-graph.txt').write_text(body)
-p = root / 'docs/case-studies/issue-138/VERIFICATION.md'
+"""
+)
+(root / "dev/log/issues/138/pulls/139/unicode-graph.txt").write_text(body)
+p = root / "docs/case-studies/issue-138/VERIFICATION.md"
 s = p.read_text()
-heading = '## Unicode sequence graph integrity\n'
+heading = "## Unicode sequence graph integrity\n"
 assert heading not in s
-section = body.split('\n\nReproduce with ', 1)[1]
-p.write_text(s + '\n\n' + heading + '\nReproduce with ' + section)
+section = body.split("\n\nReproduce with ", 1)[1]
+p.write_text(s + "\n\n" + heading + "\nReproduce with " + section)
 print(table)
-print('\n'.join(components))
+print("\n".join(components))

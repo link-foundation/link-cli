@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Finite local-batch design model; deliberately imports no production codec."""
+
 import copy
 import itertools
-import json
 import resource
 from dataclasses import dataclass
 
@@ -40,20 +40,35 @@ def wire(value):
     require(value.clock == tuple(sorted(dict(value.clock).items())))
     require(1 <= len(value.clock) <= 2)
     require(dict(value.clock).get(value.author) == value.counter)
-    require(all(author in (OWNER, REMOTE) and 1 <= counter <= MAX
-                for author, counter in value.clock))
+    require(
+        all(
+            author in (OWNER, REMOTE) and 1 <= counter <= MAX
+            for author, counter in value.clock
+        )
+    )
     payload = None
     if value.payload is not None:
         source, target, name = value.payload
         require(0 <= source <= MAX and 0 <= target <= MAX)
         require(name is None or isinstance(name, str) and len(name.encode()) <= 4096)
-        payload = [str(source), str(target), None if name is None else name.encode().hex()]
-    return ["causal-version1", str(value.address), [value.author, str(value.counter)],
-            [[a, str(c)] for a, c in value.clock], payload]
+        payload = [
+            str(source),
+            str(target),
+            None if name is None else name.encode().hex(),
+        ]
+    return [
+        "causal-version1",
+        str(value.address),
+        [value.author, str(value.counter)],
+        [[a, str(c)] for a, c in value.clock],
+        payload,
+    ]
 
 
 def dominates(left, right):
-    return all(dict(left.clock).get(author, 0) >= counter for author, counter in right.clock)
+    return all(
+        dict(left.clock).get(author, 0) >= counter for author, counter in right.clock
+    )
 
 
 def merge(values):
@@ -63,11 +78,26 @@ def merge(values):
         require(not unique or next(iter(unique.values())).address == value.address)
         identity = value.author, value.counter
         require(identity not in unique or unique[identity] == value)
-        require(all(other.clock != value.clock or other == value for other in unique.values()))
+        require(
+            all(
+                other.clock != value.clock or other == value
+                for other in unique.values()
+            )
+        )
         unique[identity] = value
-    return tuple(sorted((value for value in unique.values()
-                         if not any(other != value and dominates(other, value)
-                                    for other in unique.values())), key=lambda v: (v.author, v.counter)))
+    return tuple(
+        sorted(
+            (
+                value
+                for value in unique.values()
+                if not any(
+                    other != value and dominates(other, value)
+                    for other in unique.values()
+                )
+            ),
+            key=lambda v: (v.author, v.counter),
+        )
+    )
 
 
 def advance(author, counter, address, seen, payload):
@@ -108,17 +138,27 @@ class Store:
             require(identity not in self.history or self.history[identity] == value)
             require(local or value.author != OWNER or identity in self.history)
             require(dict(value.clock).get(OWNER, 0) <= self.counter)
-            require(all(prior.address != value.address or prior.clock != value.clock or prior == value
-                        for prior in self.history.values()))
+            require(
+                all(
+                    prior.address != value.address
+                    or prior.clock != value.clock
+                    or prior == value
+                    for prior in self.history.values()
+                )
+            )
             self.history[identity] = value
             if update:
-                self.rows[value.address] = merge(self.rows.get(value.address, ()) + (value,))
+                self.rows[value.address] = merge(
+                    self.rows.get(value.address, ()) + (value,)
+                )
 
     def receive(self, values):
         candidate = copy.deepcopy(self)
         known = set(candidate.history)
         candidate.remember(values)
-        added = tuple(value for value in values if (value.author, value.counter) not in known)
+        added = tuple(
+            value for value in values if (value.author, value.counter) not in known
+        )
         if added:
             candidate.journal.append(("receive", added))
             candidate.generation += 1
@@ -131,8 +171,13 @@ class Store:
         addresses = tuple(edit[0] for edit in request.edits)
         require(addresses == tuple(sorted(set(addresses))))
         for address, seen, payload in request.edits:
-            advance(OWNER, 0 if not seen else max(dict(v.clock).get(OWNER, 0) for v in seen),
-                    address, seen, payload)
+            advance(
+                OWNER,
+                0 if not seen else max(dict(v.clock).get(OWNER, 0) for v in seen),
+                address,
+                seen,
+                payload,
+            )
         if request.token in self.receipts:
             previous, result = self.receipts[request.token]
             require(previous == request)
@@ -184,10 +229,18 @@ def rejected_without_effect(store, operation):
 
 
 scenarios = 0
-for count, fault, intervening in itertools.product(range(4), (None, "before", "after"), (False, True)):
+for count, fault, intervening in itertools.product(
+    range(4), (None, "before", "after"), (False, True)
+):
     store = Store()
-    request = Request(token(1), 0, tuple((address, (), (0, address, "\ufeff雪😀\0"))
-                                        for address in range(1, count + 1)))
+    request = Request(
+        token(1),
+        0,
+        tuple(
+            (address, (), (0, address, "\ufeff雪😀\0"))
+            for address in range(1, count + 1)
+        ),
+    )
     prior = copy.deepcopy(store.__dict__)
     try:
         result = store.publish(request, fault)
@@ -204,16 +257,26 @@ for count, fault, intervening in itertools.product(range(4), (None, "before", "a
     assert store.publish(request) == result
     assert store.__dict__ == before_retry
     assert store.replay().__dict__ == store.__dict__
-    rejected_without_effect(store, lambda: store.publish(Request(token(1), 1, request.edits)))
-    rejected_without_effect(store, lambda: store.publish(Request(token(3), 0, request.edits)))
+    rejected_without_effect(
+        store,
+        lambda: store.publish(Request(token(1), 1, request.edits)),  # noqa: B023
+    )
+    rejected_without_effect(
+        store,
+        lambda: store.publish(Request(token(3), 0, request.edits)),  # noqa: B023
+    )
     scenarios += 1
 
 for order in itertools.permutations((1, 2)):
     store = Store()
-    requests = {index: Request(token(index), 0, ((1, (), (index, index, None)),
-                                                (2, (), (index, 0, None)))) for index in order}
+    requests = {
+        index: Request(
+            token(index), 0, ((1, (), (index, index, None)), (2, (), (index, 0, None)))
+        )
+        for index in order
+    }
     result = store.publish(requests[order[0]])
-    rejected_without_effect(store, lambda: store.publish(requests[order[1]]))
+    rejected_without_effect(store, lambda: store.publish(requests[order[1]]))  # noqa: B023
     assert store.counter == 2 and len(store.journal) == 1
     assert [store.rows[address][0] for address in (1, 2)] == list(result)
     assert store.replay().__dict__ == store.__dict__
@@ -225,13 +288,17 @@ remote = advance(REMOTE, 0, 2, (), (0, 0, None))
 store.receive((remote,))
 bad = Version(2, REMOTE, 1, remote.clock, None)
 # First edit could succeed, but a contradiction in the second rejects the whole batch.
-request = Request(token(2), store.generation, ((1, (original,), None), (2, (bad,), None)))
+request = Request(
+    token(2), store.generation, ((1, (original,), None), (2, (bad,), None))
+)
 rejected_without_effect(store, lambda: store.publish(request))
 assert store.rows[1] == (original,) and store.counter == 1
 scenarios += 1
 
 # Global dot progression must not be reconstructed from the last visible row.
-store.publish(Request(token(3), store.generation, ((1, (original,), None), (3, (), (0, 0, None)))))
+store.publish(
+    Request(token(3), store.generation, ((1, (original,), None), (3, (), (0, 0, None))))
+)
 assert store.counter == 3 and store.rows[3][0].counter == 3
 assert store.replay().__dict__ == store.__dict__
 scenarios += 1
@@ -248,13 +315,26 @@ scenarios += 1
 live = advance(OWNER, 0, 1, (), (0, 0, None))
 erased = advance(REMOTE, 0, 1, (), None)
 siblings = merge((live, erased))
-assert len(siblings) == 2 and max(siblings, key=lambda v: (v.author, v.counter)).payload is None
+assert (
+    len(siblings) == 2
+    and max(siblings, key=lambda v: (v.author, v.counter)).payload is None
+)
 assert max(merge((live, erased, live)), key=lambda v: (v.author, v.counter)) == erased
 scenarios += 1
 
 print("PR: https://github.com/link-foundation/link-cli/pull/139")
-print(f"PASS {scenarios} finite local-batch design scenarios; imports no production implementation.")
-print("Includes 24 size/fault/intervening schedules, both stale-session orders, later-row rejection,")
-print("whole-batch counter exhaustion, exact retry/replay and concurrent deletion projection.")
-print("Bounds: two authors, three rows/edits per batch, finite schedules, 192 MiB address space, 8 MiB stack.")
-print("This model is not production parity, raw-wire admission or physical durability evidence.")
+print(
+    f"PASS {scenarios} finite local-batch design scenarios; imports no production implementation."
+)
+print(
+    "Includes 24 size/fault/intervening schedules, both stale-session orders, later-row rejection,"
+)
+print(
+    "whole-batch counter exhaustion, exact retry/replay and concurrent deletion projection."
+)
+print(
+    "Bounds: two authors, three rows/edits per batch, finite schedules, 192 MiB address space, 8 MiB stack."
+)
+print(
+    "This model is not production parity, raw-wire admission or physical durability evidence."
+)

@@ -4,6 +4,7 @@
 This models decisions, not a hardware durability proof or an implemented LSM.
 Run before implementing the LSM composition, then reuse its cases as contracts.
 """
+
 from copy import deepcopy
 from dataclasses import dataclass, field
 
@@ -15,12 +16,22 @@ class Image:
     covered: int = 2
     last_id: int = 1
     manifest: list[int] = field(default_factory=lambda: [1])
-    buffer: dict = field(default_factory=lambda: {
-        "a": (3, ["new"]), "deleted": (4, None), "empty": (5, [])})
+    buffer: dict = field(
+        default_factory=lambda: {
+            "a": (3, ["new"]),
+            "deleted": (4, None),
+            "empty": (5, []),
+        }
+    )
     # Only fully synchronized and sealed tables may be selected.
-    tables: dict = field(default_factory=lambda: {
-        1: {"sealed": True, "rows": {
-            "a": (1, ["old"]), "deleted": (2, ["obsolete"])}}})
+    tables: dict = field(
+        default_factory=lambda: {
+            1: {
+                "sealed": True,
+                "rows": {"a": (1, ["old"]), "deleted": (2, ["obsolete"])},
+            }
+        }
+    )
 
 
 def read(image):
@@ -82,9 +93,13 @@ def compact(durable, cut=None):
             raise Interrupted
 
     operation("reserve-sync", lambda: setattr(durable, "last_id", identity))
-    operation("create", lambda: durable.tables.__setitem__(identity, {
-        "sealed": False, "rows": {}}))
-    operation("data-sync", lambda: durable.tables[identity].update(rows=deepcopy(desired)))
+    operation(
+        "create",
+        lambda: durable.tables.__setitem__(identity, {"sealed": False, "rows": {}}),
+    )
+    operation(
+        "data-sync", lambda: durable.tables[identity].update(rows=deepcopy(desired))
+    )
     operation("seal-sync", lambda: durable.tables[identity].update(sealed=True))
 
     def publish():
@@ -122,7 +137,9 @@ def main():
         durable.manifest, durable.buffer = [next_identity], {}
         durable.covered = durable.generation
         assert read(durable) == desired, event
-        print(f"PASS cut{point:02}: {event}; exact values/tombstone/empty; next ID {next_identity}")
+        print(
+            f"PASS cut{point:02}: {event}; exact values/tombstone/empty; next ID {next_identity}"
+        )
 
     for damage in ("missing", "unsealed"):
         durable = deepcopy(original)
@@ -166,7 +183,9 @@ def main():
     else:
         raise AssertionError("exhaustion must reject before mutation")
     print("PASS last u64 table ID; following reservation rejects without mutation")
-    print("PASS independent finite LSM publication model: 12 cuts, two damage and six counter controls")
+    print(
+        "PASS independent finite LSM publication model: 12 cuts, two damage and six counter controls"
+    )
 
 
 if __name__ == "__main__":

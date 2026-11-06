@@ -1,4 +1,5 @@
 """Summarize the complete run; never substitute diagnostic coverage unions."""
+
 import json
 import re
 import xml.etree.ElementTree as ET
@@ -6,15 +7,27 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent
 progress = (root / "sqlite-validation-full.log").read_text()
-assert progress.endswith("SQLite contracts and eight five-provider persistent configurations: passed\n"), progress
+assert progress.endswith(
+    "SQLite contracts and eight five-provider persistent configurations: passed\n"
+), progress
 
 
 def counts(name):
     log = (root / name).read_text()
-    results = [tuple(map(int, match)) for match in re.findall(
-        r"test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;", log)]
+    results = [
+        tuple(map(int, match))
+        for match in re.findall(
+            r"test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;", log
+        )
+    ]
     assert results, name
-    return dict(zip(["passed", "failed", "ignored"], map(sum, zip(*results))))
+    return dict(
+        zip(
+            ["passed", "failed", "ignored"],
+            map(sum, zip(*results, strict=False)),
+            strict=False,
+        )
+    )
 
 
 def coverage(name):
@@ -22,9 +35,14 @@ def coverage(name):
     result = {key: report["totals"][key] for key in ("lines", "branches", "functions")}
     if "wasm" in name:
         result["wrappers"] = {
-            file["filename"]: {key: file["summary"][key] for key in ("lines", "branches", "functions")}
-            for file in report["files"] if any(file["filename"].endswith("/rust/wasm/src/" + leaf)
-                for leaf in ("engine.rs", "engine_log.rs", "lib.rs"))
+            file["filename"]: {
+                key: file["summary"][key] for key in ("lines", "branches", "functions")
+            }
+            for file in report["files"]
+            if any(
+                file["filename"].endswith("/rust/wasm/src/" + leaf)
+                for leaf in ("engine.rs", "engine_log.rs", "lib.rs")
+            )
         }
         assert len(result["wrappers"]) == 3
         for file in result["wrappers"].values():
@@ -41,19 +59,37 @@ result = {
 }
 for mode in ("Debug", "Release"):
     log = (root / f"sqlite-csharp-{mode}-full.log").read_text()
-    match = re.search(r"Passed!\s+- Failed:\s+(\d+), Passed:\s+(\d+), Skipped:\s+(\d+), Total:\s+(\d+)", log)
+    match = re.search(
+        r"Passed!\s+- Failed:\s+(\d+), Passed:\s+(\d+), Skipped:\s+(\d+), Total:\s+(\d+)",
+        log,
+    )
     assert match, mode
     match_path = re.search(r"Attachments:\s*\n\s*([^\n]+coverage.cobertura.xml)", log)
     assert match_path, mode
     report = ET.parse(match_path[1].strip()).getroot()
     result["csharp_" + mode] = {
-        **dict(zip(["failed", "passed", "skipped", "total"], map(int, match.groups()))),
-        "coverage": {key: int(report.attrib[key]) for key in (
-            "lines-covered", "lines-valid", "branches-covered", "branches-valid")},
+        **dict(
+            zip(
+                ["failed", "passed", "skipped", "total"],
+                map(int, match.groups()),
+                strict=False,
+            )
+        ),
+        "coverage": {
+            key: int(report.attrib[key])
+            for key in (
+                "lines-covered",
+                "lines-valid",
+                "branches-covered",
+                "branches-valid",
+            )
+        },
     }
 for key, name in [("js", "js-full"), ("repository", "repository-tests")]:
     log = (root / ("sqlite-" + name + ".log")).read_text()
-    result[key] = {field: int(re.search(r"(?:#|ℹ) " + field + r" (\d+)\b", log)[1])
-        for field in ("tests", "pass", "fail", "skipped")}
+    result[key] = {
+        field: int(re.search(r"(?:#|ℹ) " + field + r" (\d+)\b", log)[1])
+        for field in ("tests", "pass", "fail", "skipped")
+    }
     assert result[key]["fail"] == 0
 print(json.dumps(result, indent=2))

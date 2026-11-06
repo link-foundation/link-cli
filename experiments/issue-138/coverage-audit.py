@@ -4,10 +4,11 @@
 LLVM locations are zero-hit region starts, including regions on partly covered
 lines. Cobertura locations are lines with no hit in any class for that file.
 """
+
 import argparse
 import json
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument("report", type=Path)
@@ -24,10 +25,13 @@ if args.report.suffix == ".json":
             summary = file["summary"]
             missing = summary["lines"]["count"] - summary["lines"]["covered"]
             if missing:
-                locations = sorted({
-                    s[0] for s in file["segments"]
-                    if s[3] and s[4] and not s[2] and (len(s) < 6 or not s[5])
-                })
+                locations = sorted(
+                    {
+                        s[0]
+                        for s in file["segments"]
+                        if s[3] and s[4] and not s[2] and (len(s) < 6 or not s[5])
+                    }
+                )
                 rows.append((missing, file["filename"], locations))
 else:
     print("Locations: Cobertura lines with no hit in any class for that file.")
@@ -37,11 +41,13 @@ else:
         locations = files.setdefault(cls.attrib["filename"], {})
         for line in cls.findall("./lines/line"):
             number = int(line.attrib["number"])
-            locations[number] = locations.get(number, False) or int(line.attrib["hits"]) > 0
+            locations[number] = (
+                locations.get(number, False) or int(line.attrib["hits"]) > 0
+            )
     for file, locations in files.items():
         missing = sorted(line for line, covered in locations.items() if not covered)
         if missing:
             rows.append((len(missing), file, missing))
-for missing, file, locations in sorted(rows, reverse=True)[:args.limit]:
+for missing, file, locations in sorted(rows, reverse=True)[: args.limit]:
     print(f"{missing:4} uncovered lines: {file}")
     print("     " + ", ".join(map(str, locations)))

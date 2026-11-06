@@ -1,28 +1,59 @@
 """Keep complete final results, including partial component/project coverage."""
+
 import json
 from pathlib import Path
 
-root=Path.cwd()
-s=json.loads((root/'experiments/issue-138/structure-depth-summary.json').read_text())
-assert s['native']=={'passed':882,'failed':0,'ignored':15}
-assert s['wasm']=={'passed':520,'failed':0,'ignored':0}
-assert s['csharp_Debug']['passed']==s['csharp_Release']['passed']==2027
-assert s['js']['pass']==177 and s['repository']['pass']==221
-rows=[]
-components=[]
-for label,key in [('Native Rust','native_coverage'),('Actual WASM, complete linked source','wasm_coverage')]:
- def metric(kind):
-  v=s[key][kind]
-  return f"{v['covered']:,}/{v['count']:,} ({100*v['covered']/v['count']:.2f}%)"
- rows.append(f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |")
- components.append(label+': '+', '.join(f"{v['covered']}/{v['count']} {kind}" for kind,v in s[key]['structure_formatter'].items()))
-for mode in ['Debug','Release']:
- def metric(kind):
-  v=s['csharp_'+mode]['coverage']; covered,count=v[kind+'-covered'],v[kind+'-valid']
-  return f'{covered:,}/{count:,} ({100*covered/count:.2f}%)'
- rows.append(f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |")
-table='\n'.join(['| Scope | Covered lines | Covered branches | Covered functions |','| --- | --- | --- | --- |']+rows)
-body='''Deep structure output: complete local validation
+root = Path.cwd()
+s = json.loads(
+    (root / "experiments/issue-138/structure-depth-summary.json").read_text()
+)
+assert s["native"] == {"passed": 882, "failed": 0, "ignored": 15}
+assert s["wasm"] == {"passed": 520, "failed": 0, "ignored": 0}
+assert s["csharp_Debug"]["passed"] == s["csharp_Release"]["passed"] == 2027
+assert s["js"]["pass"] == 177 and s["repository"]["pass"] == 221
+rows = []
+components = []
+for label, key in [
+    ("Native Rust", "native_coverage"),
+    ("Actual WASM, complete linked source", "wasm_coverage"),
+]:
+
+    def metric(kind):
+        v = s[key][kind]  # noqa: B023
+        return (
+            f"{v['covered']:,}/{v['count']:,} ({100 * v['covered'] / v['count']:.2f}%)"
+        )
+
+    rows.append(
+        f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |"
+    )
+    components.append(
+        label
+        + ": "
+        + ", ".join(
+            f"{v['covered']}/{v['count']} {kind}"
+            for kind, v in s[key]["structure_formatter"].items()
+        )
+    )
+for mode in ["Debug", "Release"]:
+
+    def metric(kind):
+        v = s["csharp_" + mode]["coverage"]  # noqa: B023
+        covered, count = v[kind + "-covered"], v[kind + "-valid"]
+        return f"{covered:,}/{count:,} ({100 * covered / count:.2f}%)"
+
+    rows.append(
+        f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |"
+    )
+table = "\n".join(
+    [
+        "| Scope | Covered lines | Covered branches | Covered functions |",
+        "| --- | --- | --- | --- |",
+    ]
+    + rows
+)
+body = (
+    """Deep structure output: complete local validation
 PR: https://github.com/link-foundation/link-cli/pull/139
 Date: 2026-10-26 UTC
 Recovered implementation: 500ec8f951b4e7ebf5904488400b11acecacca29
@@ -62,7 +93,11 @@ Complete local validation:
 
 Official complete-run coverage (no filtered project denominator):
 
-'''+table+'\n\nShared Rust formatter component: '+'; '.join(components)+'''.
+"""
+    + table
+    + "\n\nShared Rust formatter component: "
+    + "; ".join(components)
+    + """.
 All three actual-WASM wrappers retain 100% lines/reported branches/functions.
 The C# output-file component includes its other existing output methods; inspect
 its complete Coverlet report rather than treating file coverage as method scope.
@@ -79,10 +114,19 @@ composition, legacy physical repair, LSM, real power loss, full journal replay,
 persistent object retention, balancing, multi-catalog transactions and wider
 competitor requirements remain unfinished. Keep the goal active and PR draft;
 publication requires fresh exact-head CI.
-'''
-(root/'dev/log/issues/138/pulls/139/structure-depth.txt').write_text(body)
-p=root/'docs/case-studies/issue-138/VERIFICATION.md'; text=p.read_text()
-heading='## Deep structure output\n'; assert heading not in text
-p.write_text(text+'\n\n'+heading+'\nReproduce with '+body.split('\n\nReproduce with ',1)[1])
+"""
+)
+(root / "dev/log/issues/138/pulls/139/structure-depth.txt").write_text(body)
+p = root / "docs/case-studies/issue-138/VERIFICATION.md"
+text = p.read_text()
+heading = "## Deep structure output\n"
+assert heading not in text
+p.write_text(
+    text
+    + "\n\n"
+    + heading
+    + "\nReproduce with "
+    + body.split("\n\nReproduce with ", 1)[1]
+)
 print(table)
-print('\n'.join(components))
+print("\n".join(components))

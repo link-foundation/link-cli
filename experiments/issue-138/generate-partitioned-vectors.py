@@ -1,4 +1,5 @@
 """Independent portable object-address oracle, including framing and UTF-8."""
+
 import json
 from pathlib import Path
 

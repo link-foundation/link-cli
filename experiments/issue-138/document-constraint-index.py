@@ -1,36 +1,72 @@
 """Preserve final complete-run results after sequential validation succeeds."""
+
 import json
 from pathlib import Path
 
 root = Path.cwd()
-summary = json.loads((root / "experiments/issue-138/constraint-index-summary.json").read_text())
+summary = json.loads(
+    (root / "experiments/issue-138/constraint-index-summary.json").read_text()
+)
 assert summary["native"] == {"passed": 859, "failed": 0, "ignored": 13}
 assert summary["wasm"] == {"passed": 502, "failed": 0, "ignored": 0}
 assert summary["csharp_Debug"]["passed"] == summary["csharp_Release"]["passed"] == 2003
 assert summary["js"]["pass"] == 168 and summary["repository"]["pass"] == 217
 rows = []
-for label, key in [("Native Rust", "native_coverage"), ("Actual WASM, complete linked source", "wasm_coverage")]:
+for label, key in [
+    ("Native Rust", "native_coverage"),
+    ("Actual WASM, complete linked source", "wasm_coverage"),
+]:
+
     def metric(kind):
-        value = summary[key][kind]
+        value = summary[key][kind]  # noqa: B023
         return f"{value['covered']:,}/{value['count']:,} ({100 * value['covered'] / value['count']:.2f}%)"
-    rows.append(f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |")
+
+    rows.append(
+        f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |"
+    )
 for mode in ("Debug", "Release"):
+
     def metric(kind):
-        values = summary["csharp_" + mode]["coverage"]
+        values = summary["csharp_" + mode]["coverage"]  # noqa: B023
         covered, count = values[kind + "-covered"], values[kind + "-valid"]
         return f"{covered:,}/{count:,} ({100 * covered / count:.2f}%)"
-    rows.append(f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |")
-table = "\n".join(["| Scope | Covered lines | Covered branches | Covered functions |", "| --- | --- | --- | --- |"] + rows)
+
+    rows.append(
+        f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |"
+    )
+table = "\n".join(
+    [
+        "| Scope | Covered lines | Covered branches | Covered functions |",
+        "| --- | --- | --- | --- |",
+    ]
+    + rows
+)
 component_rows = []
-for label, key in [("Native Rust", "native_coverage"), ("Actual WASM", "wasm_coverage")]:
+for label, key in [
+    ("Native Rust", "native_coverage"),
+    ("Actual WASM", "wasm_coverage"),
+]:
     component = summary[key]["constraint_index"]
-    component_rows.append(label + ": " + ", ".join(
-        f"{value['covered']}/{value['count']} {kind}" for kind, value in component.items()))
+    component_rows.append(
+        label
+        + ": "
+        + ", ".join(
+            f"{value['covered']}/{value['count']} {kind}"
+            for kind, value in component.items()
+        )
+    )
 for mode in ("Debug", "Release"):
     components = summary["csharp_" + mode]["constraint_index"]
-    assert all(float(entry["line-rate"]) == float(entry["branch-rate"]) == 1 for entry in components)
-component_text = "; ".join(component_rows) + ". C# Debug/Release class summaries report 100% lines and branches."
-body = """Optional indexed constraints: complete local validation
+    assert all(
+        float(entry["line-rate"]) == float(entry["branch-rate"]) == 1
+        for entry in components
+    )
+component_text = (
+    "; ".join(component_rows)
+    + ". C# Debug/Release class summaries report 100% lines and branches."
+)
+body = (
+    """Optional indexed constraints: complete local validation
 PR: https://github.com/link-foundation/link-cli/pull/139
 Date: 2026-10-25 UTC
 Base: 3322f36aa838c7a6c01d1b7e0d7d30adb78f56dd
@@ -93,7 +129,11 @@ Complete local validation:
 
 Official complete-run totals, without filtered denominators or diagnostic unions:
 
-""" + table + "\n\nConstraintIndex component: " + component_text + """
+"""
+    + table
+    + "\n\nConstraintIndex component: "
+    + component_text
+    + """
 
 All three actual-WASM wrapper files measure 100% lines, reported branches and
 functions. Whole native Rust, linked WASM and C# remain below the required 100%.
@@ -104,10 +144,11 @@ automatic balancing/multi-catalog transactions and wider competitor criteria
 remain unfinished. The native issue goal stays active and PR 139 remains draft;
 fresh exact-head CI is required after publication.
 """
+)
 (root / "dev/log/issues/138/pulls/139/constraint-index.txt").write_text(body)
 path = root / "docs/case-studies/issue-138/VERIFICATION.md"
 text = path.read_text()
 heading = "## Independently selected constraint indexes"
 assert heading not in text
-path.write_text(text + "\n\n" + heading + "\n\n" + body[body.index("Reproduce with"):])
+path.write_text(text + "\n\n" + heading + "\n\n" + body[body.index("Reproduce with") :])
 print(table)

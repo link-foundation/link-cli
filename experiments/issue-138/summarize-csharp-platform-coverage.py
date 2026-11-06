@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify real platform artifacts against one successful, immutable C# run."""
+
 import argparse
 import hashlib
 import itertools
@@ -28,23 +29,50 @@ def saved_json(suffix, command):
     return json.loads(path.read_text())
 
 
-run = saved_json("run", ["run", "view", str(args.run), "--repo", repository,
-                         "--json", "headSha,status,conclusion,createdAt,jobs"])
+run = saved_json(
+    "run",
+    [
+        "run",
+        "view",
+        str(args.run),
+        "--repo",
+        repository,
+        "--json",
+        "headSha,status,conclusion,createdAt,jobs",
+    ],
+)
 assert run["headSha"] == args.sha
 assert run["status"] == "completed" and run["conclusion"] == "success"
 print("PR: https://github.com/link-foundation/link-cli/pull/139", flush=True)
 print(f"C# run: https://github.com/{repository}/actions/runs/{args.run}", flush=True)
 print(f"Exact head: {args.sha}; created {run['createdAt']}", flush=True)
-artifacts = saved_json("artifacts", ["api", f"repos/{repository}/actions/runs/{args.run}/artifacts?per_page=100", "--paginate"])["artifacts"]
+artifacts = saved_json(
+    "artifacts",
+    [
+        "api",
+        f"repos/{repository}/actions/runs/{args.run}/artifacts?per_page=100",
+        "--paginate",
+    ],
+)["artifacts"]
 by_name = {artifact["name"]: artifact for artifact in artifacts}
-platforms = {"ubuntu-24.04": "csharp-coverage", "windows-2025": "csharp-coverage-windows-2025", "macos-26": "csharp-coverage-macos-26"}
+platforms = {
+    "ubuntu-24.04": "csharp-coverage",
+    "windows-2025": "csharp-coverage-windows-2025",
+    "macos-26": "csharp-coverage-macos-26",
+}
 missing = sorted(set(platforms.values()) - by_name.keys())
 assert not missing, f"Missing complete platform coverage artifacts: {missing}"
 log_path = Path(f"{prefix}-full.log")
 with log_path.open("wb") as output:
-    subprocess.run(["gh", "run", "view", str(args.run), "--repo", repository, "--log"], stdout=output, check=True)
-counts_by_platform = {platform: {label: [] for label in ("Total tests:", "Passed:")}
-                      for platform in platforms}
+    subprocess.run(
+        ["gh", "run", "view", str(args.run), "--repo", repository, "--log"],
+        stdout=output,
+        check=True,
+    )
+counts_by_platform = {
+    platform: {label: [] for label in ("Total tests:", "Passed:")}
+    for platform in platforms
+}
 summaries = set()
 with log_path.open() as source:
     while chunk := list(itertools.islice(source, 1500)):
@@ -58,7 +86,7 @@ with log_path.open() as source:
                     if match := re.search(re.escape(label) + r"\s+(\d+)\s*$", line):
                         counts_by_platform[platform][label].append(match[1])
 for platform, name in platforms.items():
-    job, = [job for job in run["jobs"] if job["name"] == f"Test ({platform})"]
+    (job,) = [job for job in run["jobs"] if job["name"] == f"Test ({platform})"]
     assert job["status"] == "completed" and job["conclusion"] == "success"
     for label in ("Total tests:", "Passed:"):
         counts = counts_by_platform[platform][label]
@@ -69,21 +97,39 @@ for platform, name in platforms.items():
     assert artifact["size_in_bytes"] < 16 * 1024 * 1024
     archive = Path(f"{prefix}-{platform}.zip")
     with archive.open("wb") as output:
-        subprocess.run(["gh", "api", f"repos/{repository}/actions/artifacts/{artifact['id']}/zip"], stdout=output, check=True)
+        subprocess.run(
+            ["gh", "api", f"repos/{repository}/actions/artifacts/{artifact['id']}/zip"],
+            stdout=output,
+            check=True,
+        )
     assert archive.stat().st_size == artifact["size_in_bytes"] < 16 * 1024 * 1024
     with archive.open("rb") as source:
         digest = hashlib.file_digest(source, "sha256").hexdigest()
     assert f"sha256:{digest}" == artifact["digest"]
     with zipfile.ZipFile(archive) as zipped:
         assert sum(info.file_size for info in zipped.infolist()) < 64 * 1024 * 1024
-        reports = [name for name in zipped.namelist() if name.endswith("coverage.cobertura.xml")]
+        reports = [
+            name
+            for name in zipped.namelist()
+            if name.endswith("coverage.cobertura.xml")
+        ]
         assert len(reports) == 1, reports
         root = ET.fromstring(zipped.read(reports[0]))
-    print(f"{platform}: {args.expected_tests} tests pass, platform summary present; artifact {artifact['id']}, verified SHA256 {digest}.")
+    print(
+        f"{platform}: {args.expected_tests} tests pass, platform summary present; artifact {artifact['id']}, verified SHA256 {digest}."
+    )
     for metric in ("lines", "branches"):
-        covered, valid = [int(root.attrib[f"{metric}-{key}"]) for key in ("covered", "valid")]
+        covered, valid = [
+            int(root.attrib[f"{metric}-{key}"]) for key in ("covered", "valid")
+        ]
         assert 0 <= covered <= valid and valid > 0
-        print(f"Complete {platform} {metric}: {covered}/{valid} ({100 * covered / valid:.5f}%).")
-print("All three existing full reports are retained; Linux artifact name and Codecov behavior are preserved.")
+        print(
+            f"Complete {platform} {metric}: {covered}/{valid} ({100 * covered / valid:.5f}%)."
+        )
+print(
+    "All three existing full reports are retained; Linux artifact name and Codecov behavior are preserved."
+)
 print("No platform percentages are added or treated as newly achieved 100% coverage.")
-print("Complete native/C#/linked-WASM coverage and all other unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged.")
+print(
+    "Complete native/C#/linked-WASM coverage and all other unmet R1-R12 criteria remain unfinished; PR139 stays draft/unmerged."
+)

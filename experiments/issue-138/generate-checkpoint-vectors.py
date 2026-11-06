@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Independent, finite engine3 wire vectors; imports no production codec."""
+
 import json
 import sys
 from pathlib import Path
@@ -47,7 +48,9 @@ vectors = {
 
 
 def complete(kind, revision, rows):
-    payload = ";".join(f"{i},{source},0,{name}" for i, (source, name) in sorted(rows.items()))
+    payload = ";".join(
+        f"{i},{source},0,{name}" for i, (source, name) in sorted(rows.items())
+    )
     return record(f"{kind}|{revision}|41|{payload}")
 
 
@@ -57,9 +60,12 @@ def delta(before, after):
     while prefix < min(len(a[3]), len(b[3])) and a[3][prefix] == b[3][prefix]:
         prefix += 1
     suffix = 0
-    while suffix < min(len(a[3]), len(b[3])) - prefix and a[3][-suffix-1] == b[3][-suffix-1]:
+    while (
+        suffix < min(len(a[3]), len(b[3])) - prefix
+        and a[3][-suffix - 1] == b[3][-suffix - 1]
+    ):
         suffix += 1
-    middle = b[3][prefix:len(b[3])-suffix] if suffix else b[3][prefix:]
+    middle = b[3][prefix : len(b[3]) - suffix] if suffix else b[3][prefix:]
     result = record(f"delta1|{a[4]}|{b[1]}|{b[2]}|{prefix}|{suffix}|{middle}|{b[4]}")
     assert len(result) < len(after)
     return result
@@ -69,10 +75,14 @@ def delta(before, after):
 # A logical change interrupts the complete-image compression dependency.
 rows = {i: (0, (f"row {i} 雪;|😀" * 2).encode().hex()) for i in range(1, 33)}
 seed = complete("engine3", 9, rows)
-rows[16] = (3, rows[16][1]); two = complete("engine1", 10, rows)
-rows[16] = (4, rows[16][1]); three = record(f"engine2|11|10|41|+16,4,0,{rows[16][1]}")
-rows[16] = (5, rows[16][1]); four = complete("engine1", 12, rows)
-rows[16] = (6, rows[16][1]); five = complete("engine1", 13, rows)
+rows[16] = (3, rows[16][1])
+two = complete("engine1", 10, rows)
+rows[16] = (4, rows[16][1])
+three = record(f"engine2|11|10|41|+16,4,0,{rows[16][1]}")
+rows[16] = (5, rows[16][1])
+four = complete("engine1", 12, rows)
+rows[16] = (6, rows[16][1])
+five = complete("engine1", 13, rows)
 zero, maximum = vectors["valid"][0][0], vectors["valid"][1][0]
 vectors["physicalDelta"] = {
     "logical": [seed, two, three, four, five],
@@ -95,10 +105,13 @@ vectors["physicalDelta"] = {
 # The native page examples deliberately keep references, duplicate names/pairs,
 # a nonzero checkpoint revision and eight retired allocator reservations.
 interop_rows = {
-    i: (0 if i % 2 else i - 1, ("\ufefffirst 雪\0😀" if i % 2 else "second").encode().hex())
+    i: (
+        0 if i % 2 else i - 1,
+        ("\ufefffirst 雪\0😀" if i % 2 else "second").encode().hex(),
+    )
     for i in range(1, 33)
 }
 vectors["nativePageSeed"] = complete("engine3", 40, interop_rows)
-Path(sys.argv[1] if len(sys.argv) > 1 else "docs/protocol/engine-checkpoint-vectors.json").write_text(
-    json.dumps(vectors, ensure_ascii=False, indent=2) + "\n"
-)
+Path(
+    sys.argv[1] if len(sys.argv) > 1 else "docs/protocol/engine-checkpoint-vectors.json"
+).write_text(json.dumps(vectors, ensure_ascii=False, indent=2) + "\n")

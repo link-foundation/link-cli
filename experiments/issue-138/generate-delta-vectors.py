@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Independent, finite delta1 oracle; no implementation imports."""
+
 import json
 from pathlib import Path
 
@@ -27,14 +28,17 @@ def delta(before, after):
     while prefix < min(len(a), len(b)) and a[prefix] == b[prefix]:
         prefix += 1
     suffix = 0
-    while suffix < min(len(a), len(b)) - prefix and a[-suffix-1] == b[-suffix-1]:
+    while suffix < min(len(a), len(b)) - prefix and a[-suffix - 1] == b[-suffix - 1]:
         suffix += 1
-    middle = b[prefix:len(b)-suffix] if suffix else b[prefix:]
-    return checked("|".join(["delta1", old[4], new[1], new[2], str(prefix),
-                             str(suffix), middle, new[4]]))
+    middle = b[prefix : len(b) - suffix] if suffix else b[prefix:]
+    return checked(
+        "|".join(
+            ["delta1", old[4], new[1], new[2], str(prefix), str(suffix), middle, new[4]]
+        )
+    )
 
 
-rows = {i: "-" for i in range(1, 201)}
+rows = dict.fromkeys(range(1, 201), "-")
 first = full(1, rows)
 rows[100] = "雪;|😀".encode().hex()
 second = full(2, rows)
@@ -101,15 +105,24 @@ for name, field, value in [
 ]:
     mutate(name, field, value)
 
-output = {"format": "delta1", "validSequences": [
-    {"physical": [first, d2, d3], "logical": [first, second, third]},
-    {"physical": [first, second, d3], "logical": [first, second, third]},
-    {"physical": [first, second, third], "logical": [first, second, third]},
-    {"physical": [], "logical": []},
-    {"physical": [checked("engine1|1|1|"), checked("engine1|2|1|")],
-     "logical": [checked("engine1|1|1|"), checked("engine1|2|1|")]},
-], "invalidSequences": invalid}
+output = {
+    "format": "delta1",
+    "validSequences": [
+        {"physical": [first, d2, d3], "logical": [first, second, third]},
+        {"physical": [first, second, d3], "logical": [first, second, third]},
+        {"physical": [first, second, third], "logical": [first, second, third]},
+        {"physical": [], "logical": []},
+        {
+            "physical": [checked("engine1|1|1|"), checked("engine1|2|1|")],
+            "logical": [checked("engine1|1|1|"), checked("engine1|2|1|")],
+        },
+    ],
+    "invalidSequences": invalid,
+}
 root = Path(__file__).resolve().parents[2]
 (root / "docs/protocol/engine-delta-vectors.json").write_text(
-    json.dumps(output, ensure_ascii=False, indent=2) + "\n")
-print(f"Wrote {len(output['validSequences'])} valid and {len(invalid)} invalid sequences")
+    json.dumps(output, ensure_ascii=False, indent=2) + "\n"
+)
+print(
+    f"Wrote {len(output['validSequences'])} valid and {len(invalid)} invalid sequences"
+)

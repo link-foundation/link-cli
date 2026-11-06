@@ -4,22 +4,28 @@
 This tests a design assumption, not production anti-entropy or durability.
 All permutations are bounded: five events, two authors and at most 120 orders.
 """
+
 from itertools import permutations, product
 
 
 def dominates(left, right):
-    return all(a >= b for a, b in zip(left, right))
+    return all(a >= b for a, b in zip(left, right, strict=False))
 
 
 def merge(left, right):
     unique = set(left) | set(right)
     for clock, value in unique:
         assert len(clock) == 2 and all(0 <= counter <= 3 for counter in clock)
-        assert all(other_value == value for other_clock, other_value in unique
-                   if other_clock == clock), "one causal identity has contradictory data"
-    return frozenset((clock, value) for clock, value in unique
-                     if not any(other != clock and dominates(other, clock)
-                                for other, _ in unique))
+        assert all(
+            other_value == value
+            for other_clock, other_value in unique
+            if other_clock == clock
+        ), "one causal identity has contradictory data"
+    return frozenset(
+        (clock, value)
+        for clock, value in unique
+        if not any(other != clock and dominates(other, clock) for other, _ in unique)
+    )
 
 
 def resolve(versions, author, value):
@@ -64,7 +70,15 @@ except AssertionError as error:
 else:
     raise AssertionError("contradictory causal identity accepted")
 
-print("PASS 120 finite event orders and 216 state triples; merge is idempotent, commutative and associative.")
-print("PASS concurrent update/delete stay as siblings; observed resolution dominates both; retained deletion prevents resurrection.")
-print("PASS equal causal identities with contradictory payloads reject before reconciliation.")
-print("Model only: production native/C#/WASM anti-entropy, persistent counters, bounded Merkle transfer and crash recovery remain unimplemented.")
+print(
+    "PASS 120 finite event orders and 216 state triples; merge is idempotent, commutative and associative."
+)
+print(
+    "PASS concurrent update/delete stay as siblings; observed resolution dominates both; retained deletion prevents resurrection."
+)
+print(
+    "PASS equal causal identities with contradictory payloads reject before reconciliation."
+)
+print(
+    "Model only: production native/C#/WASM anti-entropy, persistent counters, bounded Merkle transfer and crash recovery remain unimplemented."
+)

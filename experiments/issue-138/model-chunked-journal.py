@@ -4,9 +4,10 @@
 At most 32 records, eight immutable chunks, 18 operation cuts. SHA-256 is used
 only to make this oracle independent of the proposed production address codec.
 """
+
+import json
 from copy import deepcopy
 from hashlib import sha256
-import json
 
 
 class Cut(Exception):
@@ -20,7 +21,7 @@ def payload(records):
 def chunks(records, count=4, limit=512):
     if not 1 <= count <= 8 or len(records) > 32:
         raise ValueError("admission")
-    result = [records[i:i + count] for i in range(0, len(records), count)]
+    result = [records[i : i + count] for i in range(0, len(records), count)]
     if len(result) > 8 or any(len(payload(part)) > limit for part in result):
         raise ValueError("admission")
     return result
@@ -126,9 +127,15 @@ def main():
     new_bytes, staging_reads = measured.written, measured.read
     whole_bytes = len(payload(following))
     assert 0 < new_bytes < whole_bytes
-    print(f"PASS {cuts} finite before/after publication cuts; stale, empty, admission and collision controls")
-    print(f"MODEL append: whole journal {whole_bytes} bytes; new chunks {new_bytes} bytes; staging reads {staging_reads} bytes")
-    print("Finite decision model only; production APIs, codecs, runtime costs and reclamation remain unverified.")
+    print(
+        f"PASS {cuts} finite before/after publication cuts; stale, empty, admission and collision controls"
+    )
+    print(
+        f"MODEL append: whole journal {whole_bytes} bytes; new chunks {new_bytes} bytes; staging reads {staging_reads} bytes"
+    )
+    print(
+        "Finite decision model only; production APIs, codecs, runtime costs and reclamation remain unverified."
+    )
 
 
 if __name__ == "__main__":

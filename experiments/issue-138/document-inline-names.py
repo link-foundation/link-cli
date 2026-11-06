@@ -1,29 +1,50 @@
 """Preserve complete official denominators and the independent before evidence."""
+
 import json
 from pathlib import Path
 
 root = Path.cwd()
-s = json.loads((root / 'experiments/issue-138/inline-names-summary.json').read_text())
-assert s['native'] == dict(passed=894, failed=0, ignored=15)
-assert s['wasm'] == dict(passed=521, failed=0, ignored=0)
-assert s['csharp_Debug']['passed'] == s['csharp_Release']['passed'] == 2027
-assert s['js']['pass'] == 177 and s['repository']['pass'] == 221
+s = json.loads((root / "experiments/issue-138/inline-names-summary.json").read_text())
+assert s["native"] == {"passed": 894, "failed": 0, "ignored": 15}
+assert s["wasm"] == {"passed": 521, "failed": 0, "ignored": 0}
+assert s["csharp_Debug"]["passed"] == s["csharp_Release"]["passed"] == 2027
+assert s["js"]["pass"] == 177 and s["repository"]["pass"] == 221
 rows = []
-for label, key in [('Native Rust', 'native_coverage'), ('Actual WASM, complete linked source', 'wasm_coverage')]:
+for label, key in [
+    ("Native Rust", "native_coverage"),
+    ("Actual WASM, complete linked source", "wasm_coverage"),
+]:
+
     def metric(kind):
-        v = s[key][kind]
-        return f"{v['covered']:,}/{v['count']:,} ({100*v['covered']/v['count']:.2f}%)"
-    rows.append(f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |")
-for mode in ('Debug', 'Release'):
+        v = s[key][kind]  # noqa: B023
+        return (
+            f"{v['covered']:,}/{v['count']:,} ({100 * v['covered'] / v['count']:.2f}%)"
+        )
+
+    rows.append(
+        f"| {label} | {metric('lines')} | {metric('branches')} | {metric('functions')} |"
+    )
+for mode in ("Debug", "Release"):
+
     def metric(kind):
-        v = s['csharp_' + mode]['coverage']
-        covered, count = v[kind + '-covered'], v[kind + '-valid']
-        return f'{covered:,}/{count:,} ({100*covered/count:.2f}%)'
-    rows.append(f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |")
-table = '\n'.join(['| Scope | Covered lines | Covered branches | Covered functions |', '| --- | --- | --- | --- |'] + rows)
-component = s['native_coverage']['text_storage_format']
-assert all(value['count'] == value['covered'] for value in component.values())
-body = '''Exact native text names and atomic reload: complete local validation
+        v = s["csharp_" + mode]["coverage"]  # noqa: B023
+        covered, count = v[kind + "-covered"], v[kind + "-valid"]
+        return f"{covered:,}/{count:,} ({100 * covered / count:.2f}%)"
+
+    rows.append(
+        f"| C# {mode} | {metric('lines')} | {metric('branches')} | Not reported by this collector |"
+    )
+table = "\n".join(
+    [
+        "| Scope | Covered lines | Covered branches | Covered functions |",
+        "| --- | --- | --- | --- |",
+    ]
+    + rows
+)
+component = s["native_coverage"]["text_storage_format"]
+assert all(value["count"] == value["covered"] for value in component.values())
+body = (
+    """Exact native text names and atomic reload: complete local validation
 PR: https://github.com/link-foundation/link-cli/pull/139
 Date: 2026-10-26 UTC
 Before implementation: faf191d10f1dc6fab561dd46dafb0d67561e0963
@@ -69,8 +90,14 @@ Complete local validation:
 
 Official complete-run coverage, with the whole project denominator:
 
-''' + table + '\n\nNative text format component: ' + ', '.join(
-    f"{value['covered']}/{value['count']} {kind}" for kind, value in component.items()) + '''.
+"""
+    + table
+    + "\n\nNative text format component: "
+    + ", ".join(
+        f"{value['covered']}/{value['count']} {kind}"
+        for kind, value in component.items()
+    )
+    + """.
 All three actual-WASM wrappers retain 100% measured lines/branches/functions.
 The native text-file parser is not exercised through a WASM filesystem; its
 linked-source coverage is retained in the complete WASM denominator.
@@ -92,10 +119,12 @@ object retention, balancing, multi-catalog transactions and the other inventorie
 acceptance criteria remain unfinished. Keep the goal active and PR draft;
 publication requires fresh exact-head CI. Native page prototype experiments are
 separate future implementation evidence, not part of these production results.
-'''
-(root / 'dev/log/issues/138/pulls/139/inline-names.txt').write_text(body)
-p = root / 'docs/case-studies/issue-138/VERIFICATION.md'
-text = p.read_text(); heading = '## Exact native text names and atomic reload\n'
+"""
+)
+(root / "dev/log/issues/138/pulls/139/inline-names.txt").write_text(body)
+p = root / "docs/case-studies/issue-138/VERIFICATION.md"
+text = p.read_text()
+heading = "## Exact native text names and atomic reload\n"
 assert heading not in text
-p.write_text(text + '\n\n' + heading + '\n' + body)
+p.write_text(text + "\n\n" + heading + "\n" + body)
 print(table)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Finite independent session reference; imports no production implementation."""
+
 import copy
 import itertools
 import resource
@@ -46,8 +47,12 @@ class Store:
 class Session:
     def __init__(self, store, allocation=(32, 33)):
         first, last = allocation
-        if not 1 <= first <= last <= 2**64 - 1 or any(first <= address <= last for address in (1, 2, 3, 4)):
-            raise ValueError("reservation must be valid and unused, including deletions")
+        if not 1 <= first <= last <= 2**64 - 1 or any(
+            first <= address <= last for address in (1, 2, 3, 4)
+        ):
+            raise ValueError(
+                "reservation must be valid and unused, including deletions"
+            )
         self.store, self.base = store, store.generation
         self.original = copy.deepcopy(store.rows)
         self.rows = copy.deepcopy(self.original)
@@ -84,10 +89,15 @@ class Session:
     def prepare(self, token):
         if self.state != "active":
             raise ValueError("session is frozen")
-        edits = [(address, {1: ("a1", "b1"), 2: ("b2",)}.get(address, ()),
-                  copy.deepcopy(self.rows.get(address)))
-                 for address in sorted(self.original.keys() | self.rows.keys())
-                 if self.original.get(address) != self.rows.get(address)]
+        edits = [
+            (
+                address,
+                {1: ("a1", "b1"), 2: ("b2",)}.get(address, ()),
+                copy.deepcopy(self.rows.get(address)),
+            )
+            for address in sorted(self.original.keys() | self.rows.keys())
+            if self.original.get(address) != self.rows.get(address)
+        ]
         # Even an empty request uses the explicit batch receipt contract. It
         # consumes metadata but no author counter; its base is still checked.
         self.request = token, self.base, edits
@@ -109,7 +119,15 @@ class Session:
         self.state = "disposed"
 
 
-operations = ("create", "rename", "update", "delete", "restore", "cancel-create", "noop")
+operations = (
+    "create",
+    "rename",
+    "update",
+    "delete",
+    "restore",
+    "cancel-create",
+    "noop",
+)
 scenarios = retries = 0
 for sequence in itertools.product(operations, repeat=3):
     for fault in (None, "before", "after"):
@@ -198,6 +216,12 @@ try:
 except ValueError:
     pass
 assert session.rows == before
-print(f"PASS {scenarios} finite session sequences; {retries} exact before/after-reply retries.")
-print("PASS private writes, frozen requests, complete sibling observations, reserved u64 allocation, duplicate pairs, non-cascading deletion, final diffs, empty receipts, stale bases and disposal after unknown publication.")
-print("Independent design evidence only; no ordinary causal session production API is verified.")
+print(
+    f"PASS {scenarios} finite session sequences; {retries} exact before/after-reply retries."
+)
+print(
+    "PASS private writes, frozen requests, complete sibling observations, reserved u64 allocation, duplicate pairs, non-cascading deletion, final diffs, empty receipts, stale bases and disposal after unknown publication."
+)
+print(
+    "Independent design evidence only; no ordinary causal session production API is verified."
+)
