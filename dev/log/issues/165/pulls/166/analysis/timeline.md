@@ -87,3 +87,13 @@ Run creation timestamps are UTC. The SHA is essential: the issue's baseline runs
 | 2026-11-06T00:37:20Z | Rust CI/CD Pipeline | [42138164962](https://github.com/link-foundation/link-cli/actions/runs/42138164962) | `8f24ffd509a7` | success |
 | 2026-11-06T00:37:20Z | C# CI/CD Pipeline | [42138164981](https://github.com/link-foundation/link-cli/actions/runs/42138164981) | `8f24ffd509a7` | success |
 | 2026-11-06T00:37:20Z | WebAssembly CI | [42138164992](https://github.com/link-foundation/link-cli/actions/runs/42138164992) | `8f24ffd509a7` | success |
+| 2026-11-06T00:56:56Z | Broken Link Checker | [42140455282](https://github.com/link-foundation/link-cli/actions/runs/42140455282) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | Dependencies | [42140455328](https://github.com/link-foundation/link-cli/actions/runs/42140455328) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | Rust CI/CD Pipeline | [42140455615](https://github.com/link-foundation/link-cli/actions/runs/42140455615) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | Security | [42140455675](https://github.com/link-foundation/link-cli/actions/runs/42140455675) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | C# CI/CD Pipeline | [42140455753](https://github.com/link-foundation/link-cli/actions/runs/42140455753) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | JS client CI | [42140455830](https://github.com/link-foundation/link-cli/actions/runs/42140455830) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | Docs | [42140455891](https://github.com/link-foundation/link-cli/actions/runs/42140455891) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | Workflows | [42140456052](https://github.com/link-foundation/link-cli/actions/runs/42140456052) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:56Z | DeepClient CI | [42140456113](https://github.com/link-foundation/link-cli/actions/runs/42140456113) | `5db14dddd56c` | success |
+| 2026-11-06T00:56:57Z | WebAssembly CI | [42140456230](https://github.com/link-foundation/link-cli/actions/runs/42140456230) | `5db14dddd56c` | success |

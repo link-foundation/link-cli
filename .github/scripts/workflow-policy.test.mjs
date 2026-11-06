@@ -38,6 +38,14 @@ test('there is at least one workflow to inspect', () => {
   assert.ok(workflows.length > 0, `no workflows found in ${workflowsDir}`);
 });
 
+test('CodeQL scans the complete checkout without a truncated PR diff', () => {
+  const security = workflows.find(({ name }) => name === 'security.yml');
+  const codeql = readJobs(security.text).find(({ name }) => name === 'codeql');
+  assert.match(codeql.body, /^ {6}CODEQL_OVERLAY_DATABASE_MODE: none$/m);
+  assert.match(codeql.body, /^ {6}CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'$/m);
+  assert.match(codeql.body, /check-codeql-results\.mjs codeql-results/);
+});
+
 /** Splits a workflow into `{ name, body }` entries, one per job. */
 function readJobs(text) {
   const lines = text.split('\n');

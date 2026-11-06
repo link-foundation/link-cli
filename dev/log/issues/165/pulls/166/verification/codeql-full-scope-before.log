@@ -1,0 +1,109 @@
+✖ CodeQL scans the complete checkout without a truncated PR diff (12.755135ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 215.075354
+
+✖ failing tests:
+
+test at .github/scripts/workflow-policy.test.mjs:41:1
+✖ CodeQL scans the complete checkout without a truncated PR diff (12.755135ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^ {6}CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'$/m. Input:
+  
+  '    name: CodeQL (${{ matrix.language }})\n' +
+    '    # Cached overlay-base SARIF retains extraction diagnostics from the base\n' +
+    '    # even after the PR repairs the source (confirmed in run 42133108866).\n' +
+    '    # A full database makes the completeness gate describe this checkout.\n' +
+    '    env:\n' +
+    '      CODEQL_OVERLAY_DATABASE_MODE: none\n' +
+    '    runs-on: ubuntu-24.04\n' +
+    '    timeout-minutes: 30\n' +
+    '    concurrency:\n' +
+    '      group: check-${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}\n' +
+    '      cancel-in-progress: true\n' +
+    '    permissions:\n' +
+    '      actions: read\n' +
+    '      contents: read\n' +
+    '      security-events: write\n' +
+    '    strategy:\n' +
+    '      fail-fast: false\n' +
+    '      # build-mode has to be declared per language. Leaving it unset made every\n' +
+    '      # run log "Cannot build an overlay database because build-mode is set to\n' +
+    `      # 'undefined'" and fall back to a full database, and drove the standalone\n` +
+    '      # autobuild step, whose inputs the action now reports as DEPRECATED\n' +
+    '      # (issue #96). C# used `autobuild`, which still logged "Cannot build an\n' +
+    '      # overlay-base database because build-mode is set to "autobuild" instead\n' +
+    '      # of "none"" on every run (issue #134); buildless extraction is supported\n' +
+    '      # for C#, so every language is now analysed from source.\n' +
+    '      matrix:\n' +
+    '        include:\n' +
+    '          - language: csharp\n' +
+    '            build-mode: none\n' +
+    '          - language: rust\n' +
+    '            build-mode: none\n' +
+    '          - language: javascript-typescript\n' +
+    '            build-mode: none\n' +
+    '          - language: python\n' +
+    '            build-mode: none\n' +
+    '          - language: actions\n' +
+    '            build-mode: none\n' +
+    '    steps:\n' +
+    '      - uses: actions/checkout@v7\n' +
+    '        with:\n' +
+    '          persist-credentials: false\n' +
+    '\n' +
+    '      # Buildless C# extraction still restores NuGet packages to resolve\n' +
+    '      # dependency types, so the SDK stays.\n' +
+    '      - name: Setup .NET\n' +
+    "        if: matrix.language == 'csharp'\n" +
+    '        uses: actions/setup-dotnet@v6\n' +
+    '        with:\n' +
+    "          dotnet-version: '10.0.x'\n" +
+    '\n' +
+    '      # With build-mode set here the action builds the database itself, so the\n' +
+    '      # deprecated github/codeql-action/autobuild step is no longer needed.\n' +
+    '      - name: Initialize CodeQL\n' +
+    '        uses: github/codeql-action/init@v4\n' +
+    '        with:\n' +
+    '          languages: ${{ matrix.language }}\n' +
+    '          build-mode: ${{ matrix.build-mode }}\n' +
+    '          config-file: ./.github/codeql/codeql-config.yml\n' +
+    '          # Opt in when an upload/extraction fails without useful diagnostics.\n' +
+    "          debug: ${{ vars.CI_VERBOSE == 'true' }}\n" +
+    '\n' +
+    '      - name: Analyze\n' +
+    '        uses: github/codeql-action/analyze@v4\n' +
+    '        with:\n' +
+    '          output: codeql-results\n' +
+    '\n' +
+    '      - uses: actions/setup-node@v7\n' +
+    '        with:\n' +
+    "          node-version: '26.x'\n" +
+    '\n' +
+    '      - name: Require complete analysis without unresolved findings\n' +
+    '        run: node .github/scripts/check-codeql-results.mjs codeql-results\n' +
+    '\n' +
+    '      - name: Preserve SARIF for investigation\n' +
+    '        if: ${{ !cancelled() }}\n' +
+    '        uses: actions/upload-artifact@v7\n' +
+    '        with:\n' +
+    '          name: codeql-${{ matrix.language }}\n' +
+    '          path: codeql-results/**/*.sarif\n' +
+    '          if-no-files-found: error\n'
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793920673713/.github/scripts/workflow-policy.test.mjs:45:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '    name: CodeQL (${{ matrix.language }})\n    # Cached overlay-base SARIF retains extraction diagnostics from the base\n    # even after the PR repairs the source (confirmed in run 42133108866).\n    # A full database makes the completeness gate describe this checkout.\n    env:\n      CODEQL_OVERLAY_DATABASE_MODE: none\n    runs-on: ubuntu-24.04\n    timeout-minutes: 30\n    concurrency:\n      group: check-${{ github.workflow }}-${{ github.ref }}-codeql-${{ matrix.language }}\n      cancel-in-progress: true\n    permissions:\n      actions: read\n      contents: read\n      security-events: write\n    strategy:\n      fail-fast: false\n      # build-mode has to be declared per language. Leaving it unset made every\n      # run log "Cannot build an overlay database because build-mode is set to\n      # \'undefined\'" and fall back to a full database, and drove the standalone\n      # autobuild step, whose inputs the action now reports as DEPRECATED\n      # (issue #96). C# used `autobuild`, which still logged "Cannot build an\n      # overlay-base database because build-mode is set to "autobuild" instead\n      # of "none"" on every run (issue #134); buildless extraction is supported\n      # for C#, so every language is now analysed from source.\n      matrix:\n        include:\n          - language: csharp\n            build-mode: none\n          - language: rust\n            build-mode: none\n          - language: javascript-typescript\n            build-mode: none\n          - language: python\n            build-mode: none\n          - language: actions\n            build-mode: none\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          persist-credentials: false\n\n      # Buildless C# extraction still restores NuGet packages to resolve\n      # dependency types, so the SDK stays.\n      - name: Setup .NET\n        if: matrix.language == \'csharp\'\n        uses: actions/setup-dotnet@v6\n        with:\n          dotnet-version: \'10.0.x\'\n\n      # With build-mode set here the action builds the database itself, so the\n      # deprecated github/codeql-action/autobuild step is no longer needed.\n      - name: Initialize CodeQL\n        uses: github/codeql-action/init@v4\n        with:\n          languages: ${{ matrix.language }}\n          build-mode: ${{ matrix.build-mode }}\n          config-file: ./.github/codeql/codeql-config.yml\n          # Opt in when an upload/extraction fails without useful diagnostics.\n          debug: ${{ vars.CI_VERBOSE == \'true\' }}\n\n      - name: Analyze\n        uses: github/codeql-action/analyze@v4\n        with:\n          output: codeql-results\n\n      - uses: actions/setup-node@v7\n        with:\n          node-version: \'26.x\'\n\n      - name: Require complete analysis without unresolved findings\n        run: node .github/scripts/check-codeql-results.mjs codeql-results\n\n      - name: Preserve SARIF for investigation\n        if: ${{ !cancelled() }}\n        uses: actions/upload-artifact@v7\n        with:\n          name: codeql-${{ matrix.language }}\n          path: codeql-results/**/*.sarif\n          if-no-files-found: error\n',
+    expected: /^ {6}CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'$/m,
+    operator: 'match',
+    diff: 'simple'
+  }

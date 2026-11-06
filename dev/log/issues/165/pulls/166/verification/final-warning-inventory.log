@@ -1,0 +1,32 @@
+run-42140455675.log.gz
+1265: CodeQL (python)	Initialize CodeQL	2026-11-06T00:57:21.0122175Z ##[warning]Cannot retrieve the full diff because there are too many (300) changed files in the pull request.
+3576: CodeQL (rust)	Initialize CodeQL	2026-11-06T00:57:15.4173877Z ##[warning]Cannot retrieve the full diff because there are too many (300) changed files in the pull request.
+4882: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2464311Z ##[warning]npm/acorn-jsx has an OpenSSF Scorecard of 2.6, which is less than this repository's threshold of 3.
+4883: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2475210Z ##[warning]npm/astral-regex has an OpenSSF Scorecard of 2.3, which is less than this repository's threshold of 3.
+4884: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2477610Z ##[warning]npm/color-name has an OpenSSF Scorecard of 2.3, which is less than this repository's threshold of 3.
+4885: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2479829Z ##[warning]npm/debug has an OpenSSF Scorecard of 2.6, which is less than this repository's threshold of 3.
+4886: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2481303Z ##[warning]npm/deep-is has an OpenSSF Scorecard of 1.9, which is less than this repository's threshold of 3.
+4887: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2482762Z ##[warning]npm/esrecurse has an OpenSSF Scorecard of 2.4, which is less than this repository's threshold of 3.
+4888: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2484740Z ##[warning]npm/estraverse has an OpenSSF Scorecard of 2.8, which is less than this repository's threshold of 3.
+4889: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2486388Z ##[warning]npm/esutils has an OpenSSF Scorecard of 2.3, which is less than this repository's threshold of 3.
+4890: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2488000Z ##[warning]npm/fast-deep-equal has an OpenSSF Scorecard of 2.3, which is less than this repository's threshold of 3.
+4891: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2490287Z ##[warning]npm/fast-json-stable-stringify has an OpenSSF Scorecard of 2.2, which is less than this repository's threshold of 3.
+4892: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2492248Z ##[warning]npm/imurmurhash has an OpenSSF Scorecard of 2, which is less than this repository's threshold of 3.
+4893: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2493933Z ##[warning]npm/js-tokens has an OpenSSF Scorecard of 2.9, which is less than this repository's threshold of 3.
+4894: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2495871Z ##[warning]npm/json-stable-stringify-without-jsonify has an OpenSSF Scorecard of 1.9, which is less than this repository's threshold of 3.
+4895: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2497388Z ##[warning]npm/levn has an OpenSSF Scorecard of 2, which is less than this repository's threshold of 3.
+4896: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2499169Z ##[warning]npm/optionator has an OpenSSF Scorecard of 2.1, which is less than this repository's threshold of 3.
+4897: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2500712Z ##[warning]npm/prelude-ls has an OpenSSF Scorecard of 2.1, which is less than this repository's threshold of 3.
+4898: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2502216Z ##[warning]npm/require-from-string has an OpenSSF Scorecard of 2.3, which is less than this repository's threshold of 3.
+4899: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2503842Z ##[warning]npm/spdx-exceptions has an OpenSSF Scorecard of 2.7, which is less than this repository's threshold of 3.
+4900: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2505548Z ##[warning]npm/spdx-expression-parse has an OpenSSF Scorecard of 2.8, which is less than this repository's threshold of 3.
+4901: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2507253Z ##[warning]npm/spdx-license-ids has an OpenSSF Scorecard of 2.5, which is less than this repository's threshold of 3.
+4902: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2509157Z ##[warning]npm/type-check has an OpenSSF Scorecard of 2.3, which is less than this repository's threshold of 3.
+4903: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2510845Z ##[warning]npm/uri-js has an OpenSSF Scorecard of 2.4, which is less than this repository's threshold of 3.
+4904: Dependency Review	Review dependency changes	2026-11-06T00:57:11.2512560Z ##[warning]npm/validate-npm-package-license has an OpenSSF Scorecard of 2.8, which is less than this repository's threshold of 3.
+5955: CodeQL (javascript-typescript)	Initialize CodeQL	2026-11-06T00:57:21.8978643Z ##[warning]Cannot retrieve the full diff because there are too many (300) changed files in the pull request.
+8180: CodeQL (actions)	Initialize CodeQL	2026-11-06T00:57:28.6278406Z ##[warning]Cannot retrieve the full diff because there are too many (300) changed files in the pull request.
+9827: CodeQL (csharp)	Initialize CodeQL	2026-11-06T00:57:31.4708722Z ##[warning]Cannot retrieve the full diff because there are too many (300) changed files in the pull request.
+
+run-42140455753.log.gz
+11260: Test (ubuntu-24.04)	Upload coverage to Codecov (OIDC)	2026-11-06T00:59:32.6370542Z gpg: WARNING: This key is not certified with a trusted signature!

@@ -17,7 +17,7 @@ The complete issue, all conversation comments, inline comments, reviews and sub-
 | Apply all applicable best practices from the linked document | All seventeen principles assessed below; missing JS/Python quality gates and hooks added | Workflow policy tests, format/lint checks, multi-OS builds, fresh-merge checks |
 | Research known libraries/components and reuse established implementations | Reused template helpers and official APIs; compared native Actions artifact behavior and existing ESLint/Prettier/Ruff/mypy/secretlint/CodeQL/lychee components | Primary sources and decisions below; pinned snapshots in `../research` and `../templates` |
 | Add default-off debug/verbose output where root cause cannot be established | `CI_VERBOSE=true` enables CodeQL debug; `UNACQUIRED_JOBS_VERBOSE=1` enables recovery tracing; existing dependency debug retained | Offline recovery mocks; CodeQL debug run captured actual C# extractor errors |
-| Report shared defects upstream with repro, workaround and code suggestions | Four template reports, two CodeQL reports and one CodeQL Action overlay report | Seven URLs below and complete submitted report bodies |
+| Report shared defects upstream with repro, workaround and code suggestions | Four template reports, two CodeQL reports and two CodeQL Action reports | Eight URLs below/final verification and complete submitted report bodies |
 | Apply fixes to all occurrences, preserving features | All workflow terminal gates and consumers; every maintained NuGet project, Cargo lock and npm lock; every maintained JS/Python helper/example | Git inventories, matrix-wide checks and conformance tests |
 | Regression tests must fail before the fix and pass afterward | Template parser/SARIF repro, ignored-log secrets repro, failure classification/coverage/authentication mocks | `experiments/issue-165/reproduce-template-gaps.mjs`, `reproduce-ignored-secret.mjs`, `.github/scripts/*.test.mjs` |
 | Prepare release through existing automation | Rust patch fragment and C# patch changeset; no manual package-version edits | Existing changeset and version-modification CI checks |
@@ -105,6 +105,7 @@ Each report contains the reproduction/evidence, workaround and suggested code ch
 - JavaScript CodeQL parser: https://github.com/github/codeql/issues/23036
 - C# CodeQL buildless extraction: https://github.com/github/codeql/issues/23037
 - CodeQL Action stale overlay diagnostics: https://github.com/github/codeql-action/issues/4307
+- CodeQL comparison summary retaining pending configurations: https://github.com/github/codeql-action/issues/4308
 
 ## Verification and practical limits
 
@@ -132,3 +133,11 @@ The current Rust template already supplies lockfile classification, event-aware 
 Five C# child-process tests cover failed comparisons, first commits, missing/invalid identities and source moves. All three initial C# reproductions failed before the repair (`change-detection-before.log`). Five Rust tests exercise lock/helper inputs, real merge/rename fixtures, empty diffs and missing Git evidence. `experiments/issue-165/reproduce-change-detection.py` compiles only the original/fixed helpers with one compiler job and no debug information; it demonstrates before/after lock/helper flags, missing-evidence exit status and output-write failures. The initial probe peaked at 289456 KiB and removed its temporary build tree. Full final-head CI remains the final validation record on PR #166.
 
 Additional shared detection defects were reported in [Rust template #228](https://github.com/link-foundation/rust-ai-driven-development-pipeline-template/issues/228#issuecomment-6673597224) and [C# template #98](https://github.com/link-foundation/csharp-ai-driven-development-pipeline-template/issues/98#issuecomment-6673597622). The C# report includes an executable confirmation against the current immutable template snapshot.
+
+## Complete source validation and final diagnostic review
+
+All ten workflows passed on the full repaired source at `5db14dd`, with all native OS matrices, fresh merges, Wasm, three-runtime client conformance and complete five-language security analysis. The ten additional full logs bring the evidence cutoff to 93 runs. See [the final verification record](final-verification.md) for individual run links, the retained warning inventory and the eighth upstream report.
+
+Review of the complete successful Security log found that CodeQL's separate diff-informed query optimization still requested GitHub's capped 300-file comparison even though overlay extraction was already disabled. Official action source confirms the feature guard and fallback. Explicitly disable that optimization and retain full queries plus full databases and the strict SARIF gate. The new workflow regression fails before and passes after the correction.
+
+The review also distinguishes actual code/coverage failures from external project-practice advisories, GPG trust metadata, runner-capacity notices and a pre-existing stale GitHub comparison summary. The full warning inventory is retained without lowering thresholds, deleting security history, dismissing alerts or claiming that a successful upload alone proves complete extraction. GitHub's internal reason for the stale summary remains unknown and is reported with reproducible API evidence and diagnostic suggestions.
