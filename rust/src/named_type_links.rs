@@ -786,39 +786,18 @@ impl<T: QueryAddress, L: NamedTypeLinks<T> + ?Sized> NamedTypeLinks<T> for &mut 
     }
 }
 
+/// The text of a name used as a reference. The notation decides how to delimit
+/// it, except for digits that would otherwise read as an address and for mixed
+/// quotes, whose literal form the C# port has always written.
 pub fn escape_lino_reference(reference: &str) -> String {
-    if reference.is_empty() || reference.trim().is_empty() {
+    if reference.is_empty() {
         return String::new();
     }
-
-    let has_single_quote = reference.contains('\'');
-    let has_double_quote = reference.contains('"');
-    let needs_quoting = reference.parse::<u32>().is_ok()
-        || reference.contains(':')
-        || reference.contains('(')
-        || reference.contains(')')
-        || reference.contains(' ')
-        || reference.contains('\t')
-        || reference.contains('\n')
-        || reference.contains('\r')
-        || has_single_quote
-        || has_double_quote;
-
-    if has_single_quote && has_double_quote {
-        return format!("'{}'", reference.replace('\'', "\\'"));
-    }
-
-    if has_double_quote {
+    if reference.parse::<u32>().is_ok() {
         return format!("'{reference}'");
     }
-
-    if has_single_quote {
-        return format!("\"{reference}\"");
+    if reference.contains('\'') && reference.contains('"') {
+        return links_notation::encode_reference_literal(reference);
     }
-
-    if needs_quoting {
-        return format!("'{reference}'");
-    }
-
-    reference.to_string()
+    links_notation::LiNo::Ref(reference).to_string()
 }

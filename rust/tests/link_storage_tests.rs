@@ -293,9 +293,48 @@ fn test_lino_lines_select_quote_style_for_names_containing_quotes() -> Result<()
         vec![
             "(\"single'quote\": \"single'quote\" \"single'quote\")",
             "('double\"quote': 'double\"quote' 'double\"quote')",
-            "('both\\'\"quote': \"single'quote\" 'double\"quote')"
+            "(~1{626f7468272271756f7465}: \"single'quote\" 'double\"quote')"
         ]
     );
+
+    Ok(())
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn test_lino_lines_read_back_every_name_that_needs_delimiting() -> Result<()> {
+    // A backslash never escaped a quote: `'both\'"quote'` read back as another
+    // name, so the notation has to choose a delimiter the name does not hold.
+    let legacy = links_notation::parse_lino_to_links("('both\\'\"quote': a b)")
+        .ok()
+        .and_then(|links| links.first().cloned())
+        .and_then(|link| match link {
+            links_notation::LiNo::Link { id, .. } => id,
+            links_notation::LiNo::Ref(_) => None,
+        });
+    assert_ne!(legacy.as_deref(), Some("both'\"quote"));
+
+    for name in [
+        "both'\"quote",
+        "back`tick",
+        "#hash",
+        "~1{name}",
+        "new\nline",
+        "no\u{a0}break",
+        " ",
+    ] {
+        let (_temp_file, mut storage) = test_store::links()?;
+        let link = storage.create(1, 1);
+        storage.set_name(link, name);
+        let lines = storage.lino_lines();
+        let parsed = links_notation::parse_lino_to_links(&lines[0]).expect("a parsable line");
+        let id = match parsed.first() {
+            Some(links_notation::LiNo::Link { id, .. }) => id.clone(),
+            other => panic!("not a link: {other:?}"),
+        };
+        let id = id.map(|id| links_notation::decode_reference_literal(&id).unwrap_or(id));
+        assert_eq!(id.as_deref(), Some(name), "{}", lines[0]);
+    }
 
     Ok(())
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using LinoFormat = Link.Foundation.Links.Notation.Binary.LinoFormat;
 using ReferenceLiteral = Link.Foundation.Links.Notation.ReferenceLiteral;
 using Platform.Data;
 using Platform.Data.Doublets;
@@ -105,37 +106,17 @@ public static class LinoDatabaseOutput
             return string.Empty;
         }
 
-        var hasSingleQuote = reference.Contains('\'');
-        var hasDoubleQuote = reference.Contains('"');
-        if ((hasSingleQuote && hasDoubleQuote) || reference.Any(character => character < ' ' || character == '\u007f'))
+        // Mixed quotes keep their established lossless literal.
+        if (reference.Contains('\'') && reference.Contains('"'))
         {
-            // Share the notation library's lossless form for controls and mixed
-            // quotes, instead of inventing backslash escapes for literal names.
             return ReferenceLiteral.Encode(reference);
         }
 
-        var needsQuoting = uint.TryParse(reference, out _)
-            || reference.Contains(':')
-            || reference.Contains('(')
-            || reference.Contains(')')
-            || reference.Any(char.IsWhiteSpace)
-            || reference.Contains('\\')
-            || reference.Contains('`')
-            || reference.StartsWith('#')
-            || Regex.IsMatch(reference, @"^~[0-9]+\{")
-            || hasSingleQuote
-            || hasDoubleQuote;
-
-        if (hasDoubleQuote)
-        {
-            return $"'{reference}'";
-        }
-
-        if (hasSingleQuote)
-        {
-            return $"\"{reference}\"";
-        }
-
-        return needsQuoting ? $"'{reference}'" : reference;
+        // The notation decides how to delimit a name. Digits would otherwise read
+        // as an address, and a backslash keeps its established quoted form.
+        var formatted = LinoFormat.FormatReference(reference);
+        return formatted == reference && (uint.TryParse(reference, out _) || reference.Contains('\\'))
+            ? $"'{reference}'"
+            : formatted;
     }
 }

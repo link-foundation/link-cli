@@ -36,7 +36,7 @@ use std::path::{Path, PathBuf};
 use doublets::data::{Flow, LinkReference};
 use doublets::decorators::{AutomaticUniquenessAndUsagesResolution, DecoratorsExt};
 use doublets::unit::{LinkPart, Store as UnitStore};
-use doublets::Doublets;
+use doublets::{Doublets, DoubletsExt};
 
 use crate::error::LinkError;
 use crate::link::GenericLink;
@@ -383,12 +383,9 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
     }
 
     fn all_links(&self) -> Vec<GenericLink<T>> {
-        let mut links = Vec::new();
-        Doublets::each(&self.store, |link| {
-            links.push(GenericLink::from(link));
-            Flow::Continue
-        });
-        links
+        DoubletsExt::iter(&self.store)
+            .map(GenericLink::from)
+            .collect()
     }
 
     fn query_links(
@@ -403,12 +400,9 @@ impl<T: LinkReference, S: Doublets<T>> LinksStorage<T> for DoubletsStorage<T, S>
             source.unwrap_or(any),
             target.unwrap_or(any),
         ];
-        let mut links = Vec::new();
-        Doublets::each_by(&self.store, query, |link| {
-            links.push(GenericLink::from(link));
-            Flow::Continue
-        });
-        links
+        DoubletsExt::each_iter(&self.store, query)
+            .map(GenericLink::from)
+            .collect()
     }
 
     fn search_link(&self, source: T, target: T) -> Option<T> {
