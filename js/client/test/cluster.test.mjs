@@ -140,6 +140,16 @@ function bindingWith(events, { failFree = false } = {}) {
           request: () => '(count: 0)',
           commit() {},
           rollback() {},
+          savepoint() {
+            events.push(`savepoint ${id}`);
+            return 5n;
+          },
+          rollbackTo(token) {
+            events.push(`rollbackTo ${id} ${token}`);
+          },
+          releaseSavepoint(token) {
+            events.push(`release ${id} ${token}`);
+          },
           free() {
             events.push(`session ${id}`);
             if (failFree && id === 0) throw Error('free failed');
@@ -187,6 +197,26 @@ test('close waits for an in-flight commit and frees every workspace after cleanu
   ]);
   await assert.rejects(failing.close(), /free failed/);
   assert.deepEqual(events.slice(2), ['session 0', 'engine 0', 'session 1', 'engine 1']);
+});
+
+test('shard savepoints reach only that shard and close with the group', async () => {
+  const { ClusterEngine } = await import('../src/cluster.js');
+  const events = [];
+  const store = { read: async (keys) => emptySnapshot(keys), compareExchange: async () => true };
+  const tx = await new ClusterEngine(bindingWith(events), store).begin(['a', 'b']);
+  const shard = tx.shard('b');
+  const token = await shard.savepoint();
+  await shard.rollbackTo(token);
+  await shard.releaseSavepoint(token);
+  assert.deepEqual(events, ['savepoint 1', 'rollbackTo 1 5', 'release 1 5']);
+  await tx.close();
+  for (const control of [
+    () => shard.savepoint(),
+    () => shard.rollbackTo(token),
+    () => shard.releaseSavepoint(token),
+  ]) {
+    await assert.rejects(control(), /cluster transaction is closed/);
+  }
 });
 
 test('cluster validates configuration and snapshots before creating private engines', async () => {

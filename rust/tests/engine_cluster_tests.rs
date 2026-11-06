@@ -102,6 +102,29 @@ fn cross_shard_commit_is_atomic_and_checks_read_only_shards() {
 }
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
+fn shard_savepoints_cover_one_shard_of_the_group() {
+    let cluster = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
+    let mut group = cluster.begin(&["a", "b"]).unwrap();
+    group.shard("a").unwrap().create_link(0, 0).unwrap();
+    let savepoint = group.shard("b").unwrap().savepoint().unwrap();
+    let inner = group.shard("b").unwrap().savepoint().unwrap();
+    group.shard("b").unwrap().create_link(0, 0).unwrap();
+    group.shard("b").unwrap().release_savepoint(inner).unwrap();
+    group
+        .shard("b")
+        .unwrap()
+        .rollback_to_savepoint(savepoint)
+        .unwrap();
+    assert!(group.shard("a").unwrap().get_link(1).is_some());
+    assert!(group.shard("b").unwrap().get_link(1).is_none());
+    group.commit().unwrap();
+    let mut check = cluster.begin(&["a", "b"]).unwrap();
+    assert!(check.shard("a").unwrap().get_link(1).is_some());
+    assert!(check.shard("b").unwrap().get_link(1).is_none());
+}
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
 fn independent_shards_commit_without_global_false_conflicts_and_rollback_is_private() {
     let cluster = ClusterEngine::<u32, _>::new(Store::default(), EngineOptions::default()).unwrap();
     let mut a = cluster.begin(&["a"]).unwrap();

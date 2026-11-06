@@ -13,6 +13,35 @@ import { sharedStateConformance } from './shared-state.mjs';
 import { changeRecordConformance } from './change-records.mjs';
 import { constraintIndexConformance } from './constraint-index.mjs';
 
+async function savepointConformance(binding) {
+  const engine = new WasmEngine(binding, { isolation: 'snapshot' });
+  const session = engine.begin();
+  try {
+    const kept = await session.create(0n, 0n);
+    const savepoint = await session.savepoint();
+    assert.equal(typeof savepoint, 'bigint');
+    const dropped = await session.create(0n, 0n);
+    assert.equal(await session.count(), 2n);
+    await session.rollbackTo(savepoint);
+    assert.equal(await session.count(), 1n);
+    // The discarded address stays retired and the savepoint stays usable.
+    assert.equal(await session.create(0n, 0n), dropped + 1n);
+    await session.rollbackTo(savepoint);
+    await session.releaseSavepoint(savepoint);
+    await assert.rejects(session.rollbackTo(savepoint), /unknown savepoint/);
+    await session.commit();
+    const { rows } = engine.snapshot();
+    assert.deepEqual(
+      rows.map((row) => row.index),
+      [kept],
+    );
+    await assert.rejects(session.savepoint(), /closed/);
+  } finally {
+    await session.close();
+    engine.close();
+  }
+}
+
 /** The actual compiled Rust engine, run in Node, Bun and Deno by existing CI. */
 export async function engineConformance(binding) {
   await causalSessionConformance(binding);
@@ -22,6 +51,7 @@ export async function engineConformance(binding) {
   await changeRecordConformance(binding);
   await groupCommitConformance(binding);
   await pessimisticConformance(binding);
+  await savepointConformance(binding);
   const engine = new WasmEngine(binding, { history: 'all', isolation: 'snapshot' });
   const first = engine.begin();
   const observer = engine.begin();

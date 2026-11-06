@@ -4,7 +4,8 @@ namespace Foundation.Data.Doublets.Cli.Tests;
 
 public partial class EngineClusterTests
 {
-    private sealed class Store : IAtomicJournalStore
+    internal sealed class SavepointStore : Store { }
+    internal class Store : IAtomicJournalStore
     {
         private readonly object _gate = new();
         private readonly Dictionary<string, JournalVersion> _values = new();

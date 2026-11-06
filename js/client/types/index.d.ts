@@ -52,6 +52,9 @@ export class ReplicatedCommitLog implements CommitLog {
 export interface StagedSessionLike extends ClinkLike {
   commit(): bigint;
   rollback(): void;
+  savepoint?(): bigint;
+  rollbackTo?(savepoint: bigint): void;
+  releaseSavepoint?(savepoint: bigint): void;
 }
 export interface StagedEngineLike {
   begin(): StagedSessionLike;
@@ -85,6 +88,16 @@ export class EngineClient extends LinksClient {
   constructor(session: StagedSessionLike, capabilities?: { durableFlush?: boolean; persistent?: boolean });
   commit(): Promise<bigint>;
   rollback(): Promise<void>;
+  savepoint(): Promise<bigint>;
+  /** Restores staged writes only: reads stay validated and addresses stay retired. */
+  rollbackTo(savepoint: bigint): Promise<void>;
+  releaseSavepoint(savepoint: bigint): Promise<void>;
+}
+/** A savepoint covers this shard only, not the containing group. */
+export interface ClusterShardClient extends LinksClient {
+  savepoint(): Promise<bigint>;
+  rollbackTo(savepoint: bigint): Promise<void>;
+  releaseSavepoint(savepoint: bigint): Promise<void>;
 }
 export class WasmEngine {
   constructor(binding: { StagedEngine: { new (options: string, journal: string): StagedEngineLike; withLog(options: string, log: CommitLog): StagedEngineLike } }, options?: EngineOptions, journal?: string[] | CommitLog);
@@ -466,6 +479,8 @@ export class WasmTransport implements Transport {
   send(text: string, scope?: Scope): Promise<string>;
   control(method: 'commit'): Promise<bigint>;
   control(method: 'rollback'): Promise<void>;
+  control(method: 'savepoint'): Promise<bigint>;
+  control(method: 'rollbackTo' | 'releaseSavepoint', savepoint: bigint): Promise<void>;
   close(): Promise<void>;
 }
 export function createWasmClient(clink: ClinkLike, options?: WasmOptions): LinksClient;
@@ -527,7 +542,7 @@ export class ClusterEngine {
 }
 export class ClusterTransaction {
   private constructor();
-  shard(key: string): LinksClient;
+  shard(key: string): ClusterShardClient;
   commit(): Promise<void>;
   rollback(): Promise<void>;
   close(): Promise<void>;

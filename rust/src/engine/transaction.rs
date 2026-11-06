@@ -12,6 +12,7 @@ pub struct EngineTransaction<T: LinkReference, L: TransitionLogStore> {
     pub(super) engine: Engine<T, L>,
     pub(super) base: Snapshot<T>,
     pub(super) writes: BTreeMap<T, Option<Row<T>>>,
+    pub(super) savepoints: Vec<(u64, BTreeMap<T, Option<Row<T>>>)>,
     pub(super) reserved: std::collections::VecDeque<T>,
     pub(super) closed: bool,
     pub(super) isolation: IsolationLevel,
@@ -19,7 +20,7 @@ pub struct EngineTransaction<T: LinkReference, L: TransitionLogStore> {
     pub(super) locks: Option<super::pessimistic::WriteLocks<T>>,
 }
 impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
-    fn check_open(&self) -> Result<(), LinkError> {
+    pub(super) fn check_open(&self) -> Result<(), LinkError> {
         if self.closed {
             Err(error("transaction is closed"))
         } else {
@@ -122,6 +123,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
             }
             self.closed = true;
             self.writes.clear();
+            self.savepoints.clear();
             self.reserved.clear();
             self.reads.take();
         }
@@ -149,6 +151,7 @@ impl<T: LinkReference, L: TransitionLogStore> EngineTransaction<T, L> {
         // Every commit attempt ends this session, including conflicts/failures.
         state.active -= 1;
         self.closed = true;
+        self.savepoints.clear();
         self.reserved.clear();
         // Publication holds this mutex until completion, so no writer can
         // acquire released addresses yet. Release before fallible callbacks

@@ -14,6 +14,7 @@ transaction algorithm.
 | --- | --- | --- |
 | Disposable cache | Existing bare in-memory links store | No journal, retained snapshots, transaction validation, replica work or disk flush is added. |
 | Isolated volatile state | Staged engine + `MemoryLog` / `MemoryCommitLog` | Atomic publication within one engine, rollback, configurable isolation. Process exit loses it. |
+| Undo part of a transaction | Call `savepoint` on any session | Restore staged rows and keep the session open; costs O(staged writes) only when taken. See [semantics and limits](ENGINE-SAVEPOINTS.md). |
 | Early point-write conflict detection | Select pessimistic admission | Reserve individual written addresses until session end; competing writes fail immediately. [Configuration and costs](ENGINE-PESSIMISTIC.md). |
 | Durable single writer | Staged engine + exclusive file log, require durable flush | One authoritative, checksummed logical revision is appended and flushed before publication. Storage must honor flush; one writer owns the log. |
 | Physical page WAL | Staged engine + optional SQLite log, require durable flush | SQLite supplies WAL/FULL and checkpoints; one engine owns its connection and cache. [Providers, maintenance, costs and examples](ENGINE-SQLITE.md). |
@@ -384,6 +385,7 @@ matter for a large or frequently written database.
 | Competitor configuration | Closest available configuration | Material difference |
 | --- | --- | --- |
 | SQLite WAL with synchronous commit | Optional SQLite log + staged engine, selected isolation | Reuses SQLite page WAL/FULL and checkpointing; logical links revisions still replay the retained journal. No SQL planner or independent-engine MVCC/performance equivalence. |
+| SQLite / PostgreSQL savepoints | [Session savepoints](ENGINE-SAVEPOINTS.md) | Same stack behavior with tokens instead of names; a cluster savepoint covers one shard. |
 | PostgreSQL READ COMMITTED / REPEATABLE READ | Read committed / snapshot | Similar visibility choices; no SQL planner, row locks or PostgreSQL vacuum. |
 | PostgreSQL SERIALIZABLE | Serializable revision/read-set validation | Whole-revision scans or point dependencies replace SSI dependency tracking; unrelated predicates can still conflict. |
 | FoundationDB conflict sets | Serializable read-set validation | Local address sets and whole-revision scans; no range index, distributed resolver, snapshot-read bypass or FoundationDB protocol. |
@@ -479,10 +481,12 @@ its pointer, contents and barrier after quota, overflow, mapping or initializati
 errors. This temporarily duplicates the file handle and view; Windows also
 uses a temporary mapping handle to extend the file. Fresh padding and bytes
 added by failed preparations are initialized on retry. Logical prefix edits
-made by a failed callback remain observable. Generic values with destructors
-retain their upstream path. Failed shrink and failed destructor growth invalidate
-the barrier and can leave unsafe allocator state; reopening alone does not
-establish safe cleanup of that owner. Their failure safety remains unfinished.
+made by a failed callback remain observable. Values with destructors use the
+upstream path after a trial extension and mapping, so a quota or mapping-limit
+error returns with the view and barrier intact. Shrinking aborts if a tail
+destructor panics. A failure that first appears after the trial, or a failed
+truncation, still invalidates the barrier and can leave unsafe allocator state
+until [upstream maps before unmapping](https://github.com/linksplatform/mem-rs/issues/38).
 See the self-checking
 [adoption example](../rust/examples/owned_mapped_flush.rs). The ordering follows
 [Microsoft's FlushViewOfFile contract](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-flushviewoffile);

@@ -351,6 +351,8 @@ written addresses and immediately reject competing writes. It composes with the
 existing isolation and history options. See [point-write ownership, retry rules
 and costs](../docs/ENGINE-PESSIMISTIC.md).
 
+Any session can undo part of its work with [savepoints](../docs/ENGINE-SAVEPOINTS.md).
+
 `TransactionsDecorator` borrows its data and journal stores. Finish foreground
 operations, dispose the decorator, then dispose those stores. `Shutdown()` and
 `Dispose()` wait for the active asynchronous checkpoint to finish; concurrent

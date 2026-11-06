@@ -39,6 +39,17 @@ export class EngineClient extends LinksClient {
   rollback() {
     return this.transport.control('rollback');
   }
+  /** Remembers the staged writes; resolves to a token for this session. */
+  savepoint() {
+    return this.transport.control('savepoint');
+  }
+  /** Restores staged writes only: reads stay validated and addresses stay retired. */
+  rollbackTo(savepoint) {
+    return this.transport.control('rollbackTo', savepoint);
+  }
+  releaseSavepoint(savepoint) {
+    return this.transport.control('releaseSavepoint', savepoint);
+  }
 }
 
 /** Pass the initialized clink-wasm module. No Node.js dependency is imported. */

@@ -52,6 +52,7 @@ mod query_scratch;
 pub mod reclaiming;
 pub mod replication;
 mod rows;
+mod savepoint;
 #[cfg(test)]
 mod shared_cost_tests;
 mod sorted_runs;
@@ -70,6 +71,7 @@ pub use delta::DeltaLog;
 pub use group::GroupCommitOutcome;
 pub use journal::MemoryLog;
 use rows::Rows;
+pub use savepoint::Savepoint;
 pub use transaction::EngineTransaction;
 pub use validation::SerializableValidation;
 
@@ -326,6 +328,7 @@ impl<T: LinkReference, L: TransitionLogStore> Engine<T, L> {
             engine: self.clone(),
             base: state.current.clone(),
             writes: BTreeMap::new(),
+            savepoints: Vec::new(),
             reserved: std::collections::VecDeque::new(),
             closed: false,
             isolation: state.options.isolation,

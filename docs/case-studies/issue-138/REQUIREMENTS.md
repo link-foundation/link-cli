@@ -1,3 +1,11 @@
+Session savepoints (R2/R5/R7/R11) now exist in Rust, C#, actual-WASM JS and on
+each cluster shard. Eight shared behaviors cover restored rows, nesting, foreign
+and closed refusals, empty commits, conflict scope, retained read validation,
+retained ownership and read committed. docs/ENGINE-SAVEPOINTS.md records costs
+and limits. Generic mapped quota and mapping-limit failures now keep the view,
+and tail-destructor panics abort; later failures need upstream mem-rs#38.
+Every other unmet R1-R12 criterion remains active; PR139 stays draft and unmerged.
+
 Selected author takeover fencing now composes ordinary atomic providers,
 address reservations and causal batches in Rust/C#/JS. A bound claim is
 validated at reads and compared in the same data CAS; superseded token retries

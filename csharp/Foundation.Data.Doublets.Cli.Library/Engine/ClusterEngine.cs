@@ -122,6 +122,9 @@ public sealed class ClusterShardSession<T> : INamedTypesLinks<T> where T : struc
     public T SetName(T id, string name) => Use(s => s.SetName(id, name));
     public T GetByName(string name) => Use(s => s.GetByName(name));
     public void RemoveName(T id) { _group.CheckOpen(); _session.RemoveName(id); }
+    public EngineSavepoint Savepoint() => Use(s => s.Savepoint());
+    public void RollbackTo(EngineSavepoint savepoint) { _group.CheckOpen(); _session.RollbackTo(savepoint); }
+    public void ReleaseSavepoint(EngineSavepoint savepoint) { _group.CheckOpen(); _session.ReleaseSavepoint(savepoint); }
     public T Count(IList<T>? restriction) => Use(s => s.Count(restriction));
     public T Each(IList<T>? restriction, ReadHandler<T>? handler) => Use(s => s.Each(restriction, handler));
     public T Create(IList<T>? substitution, WriteHandler<T>? handler) => Use(s => s.Create(substitution, handler));

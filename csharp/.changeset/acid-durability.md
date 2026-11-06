@@ -2,6 +2,10 @@
 'Foundation.Data.Doublets.Cli': minor
 ---
 
+Add nested session and cluster-shard savepoints with `Savepoint`, `RollbackTo`
+and `ReleaseSavepoint`. Rolling back restores staged rows only; reads stay
+validated, point-write ownership stays and allocated addresses stay retired.
+
 Select permanent fresh-address ranges through one linearizable atomic journal
 key. Retain exact author/token/count receipts across lost replies and following
 grants; refuse token collisions, exhausted domains and finite admission before

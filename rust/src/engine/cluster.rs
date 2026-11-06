@@ -205,6 +205,16 @@ impl<T: LinkReference> ShardSession<T> {
     pub fn set_name(&mut self, id: T, name: Option<String>) -> Result<(), LinkError> {
         self.session.set_name(id, name)
     }
+    /// A savepoint covers this shard only, not the containing group.
+    pub fn savepoint(&mut self) -> Result<super::Savepoint, LinkError> {
+        self.session.savepoint()
+    }
+    pub fn rollback_to_savepoint(&mut self, savepoint: super::Savepoint) -> Result<(), LinkError> {
+        self.session.rollback_to_savepoint(savepoint)
+    }
+    pub fn release_savepoint(&mut self, savepoint: super::Savepoint) -> Result<(), LinkError> {
+        self.session.release_savepoint(savepoint)
+    }
 }
 impl<T: LinkReference> LinksStorage<T> for ShardSession<T> {
     fn create_link(&mut self, source: T, target: T) -> Result<T, LinkError> {

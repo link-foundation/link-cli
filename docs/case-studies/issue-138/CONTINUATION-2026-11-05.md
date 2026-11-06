@@ -59,3 +59,10 @@ These were checked and left alone, because they would not make the code shorter:
 - Most C# `.Each(` sites filter. The one plain collect (`TripletsOverDoublets.cs:530`) has to copy rows.
 - The C# `GetIndex`, `GetSource` and `GetTarget` helpers save no lines across their 28 sites, and those sites are critical code.
 - The JS `lino.js` parser is a single copy, so it is under the threshold.
+
+## Savepoints
+
+Session and cluster-shard savepoints were added next, as a competitor feature that
+none of the earlier strategies covered. [The semantics, costs and limits](../../ENGINE-SAVEPOINTS.md)
+follow the SQLite and PostgreSQL documents. The MySQL page could not be checked, so
+InnoDB is not compared.

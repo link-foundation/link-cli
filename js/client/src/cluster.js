@@ -301,6 +301,24 @@ export class ClusterEngine {
   }
 }
 
+/** A savepoint covers this shard only, not the containing group. */
+class ClusterShardClient extends LinksClient {
+  #use;
+  constructor(transport, use) {
+    super(transport);
+    this.#use = use;
+  }
+  async savepoint() {
+    return this.#use((session) => session.savepoint());
+  }
+  async rollbackTo(savepoint) {
+    return this.#use((session) => session.rollbackTo(savepoint));
+  }
+  async releaseSavepoint(savepoint) {
+    return this.#use((session) => session.releaseSavepoint(savepoint));
+  }
+}
+
 export class ClusterTransaction {
   #store;
   #keys;
@@ -326,19 +344,26 @@ export class ClusterTransaction {
         transaction.#work.push(work);
         work.client = engine.begin();
         const transport = work.client.transport;
+        const session = work.client;
         transaction.#clients.push(
-          new LinksClient({
-            capabilities: {
-              ...transport.capabilities,
-              durableFlush: store.supportsDurableFlush === true,
-              persistent: store.supportsDurableFlush === true,
-              crashConsistency: store.supportsDurableFlush === true,
+          new ClusterShardClient(
+            {
+              capabilities: {
+                ...transport.capabilities,
+                durableFlush: store.supportsDurableFlush === true,
+                persistent: store.supportsDurableFlush === true,
+                crashConsistency: store.supportsDurableFlush === true,
+              },
+              send: (text, scope) => {
+                transaction.#check();
+                return transport.send(text, scope);
+              },
             },
-            send: (text, scope) => {
+            (control) => {
               transaction.#check();
-              return transport.send(text, scope);
+              return control(session);
             },
-          }),
+          ),
         );
       }
       return transaction;

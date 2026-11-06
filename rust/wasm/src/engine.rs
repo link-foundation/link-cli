@@ -2,7 +2,7 @@
 use crate::engine_log::{BindingLog, JsCommitLog};
 use link_cli::engine::{
     Branch, ConcurrencyControl, Constraint, ConstraintValidation, Engine, EngineOptions,
-    EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog,
+    EngineTransaction, GroupCommitOutcome, HistoryPolicy, IsolationLevel, MemoryLog, Savepoint,
     RevisionEncoding, SerializableValidation, StateStructure,
 };
 use link_cli::protocol::{error_document, execute_request, format_document, parse_document};
@@ -315,6 +315,22 @@ impl StagedSession {
     pub fn rollback(&mut self) {
         self.inner.rollback();
     }
+    pub fn savepoint(&mut self) -> Result<u64, String> {
+        let savepoint = self.inner.savepoint().map_err(|e| e.to_string())?;
+        Ok(savepoint.0)
+    }
+    #[wasm_bindgen(js_name = rollbackTo)]
+    pub fn rollback_to(&mut self, savepoint: u64) -> Result<(), String> {
+        self.inner
+            .rollback_to_savepoint(Savepoint(savepoint))
+            .map_err(|e| e.to_string())
+    }
+    #[wasm_bindgen(js_name = releaseSavepoint)]
+    pub fn release_savepoint(&mut self, savepoint: u64) -> Result<(), String> {
+        self.inner
+            .release_savepoint(Savepoint(savepoint))
+            .map_err(|e| e.to_string())
+    }
     pub fn count(&self) -> usize {
         self.inner.links_count()
     }
@@ -335,6 +351,28 @@ mod tests {
         let reopened = StagedEngine::new("{}", &engine.journal().unwrap()).unwrap();
         assert_eq!(reopened.begin().unwrap().count(), 1);
         assert!(engine.snapshot(Some(0)).unwrap().contains("\"rows\":[]"));
+    }
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    fn binding_savepoints_restore_staged_writes() {
+        let engine = StagedEngine::new("{}", "[]").unwrap();
+        let mut session = engine.begin().unwrap();
+        session.request("(create: (0 0))");
+        let kept = session.savepoint().unwrap();
+        let later = session.savepoint().unwrap();
+        session.request("(create: (0 0))");
+        assert_eq!(session.count(), 2);
+        session.release_savepoint(later).unwrap();
+        session.rollback_to(kept).unwrap();
+        assert_eq!(session.count(), 1);
+        assert!(session.rollback_to(later).unwrap_err().contains("unknown"));
+        session.release_savepoint(kept).unwrap();
+        assert!(session
+            .release_savepoint(kept)
+            .unwrap_err()
+            .contains("unknown"));
+        assert_eq!(session.commit().unwrap(), 1);
+        assert!(session.savepoint().unwrap_err().contains("closed"));
     }
     #[cfg_attr(not(target_arch = "wasm32"), test)]
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]

@@ -13,6 +13,7 @@ public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
     private readonly LinksEngine<T> _engine;
     private EngineSnapshot<T> _base;
     private readonly SortedDictionary<T, EngineRow<T>?> _writes = new();
+    private readonly List<(ulong Id, KeyValuePair<T, EngineRow<T>?>[] Writes)> _savepoints = new();
     private bool _closed;
     private HashSet<T>? _reads;
     private bool _scanned;
@@ -175,6 +176,7 @@ public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
             _locks?.Release(target);
             _locks = null;
             _writes.Clear();
+            _savepoints.Clear();
             _reserved = null;
             _reads = null;
             // Validate the last committer before reclaiming generations,
@@ -188,7 +190,7 @@ public sealed partial class EngineSession<T> : INamedTypesLinks<T>, IDisposable
         {
             if (!_closed)
             {
-                _closed = true; _engine.Active--; _writes.Clear(); _reserved = null; _reads = null;
+                _closed = true; _engine.Active--; _writes.Clear(); _savepoints.Clear(); _reserved = null; _reads = null;
                 _locks?.Release(_engine); _locks = null;
                 if (_engine.Active == 0) _engine.Changed = null;
             }

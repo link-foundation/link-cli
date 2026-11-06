@@ -410,3 +410,11 @@ async function physicalLsmTypes(wal: ReplaceableCommitLog, namespace: LsmTableNa
   return { changed, engine, partitioned, reclaiming, asyncOnly };
 }
 void physicalLsmTypes;
+
+declare const savepointSession: EngineClient;
+const savepointToken: Promise<bigint> = savepointSession.savepoint();
+const savepointRestored: Promise<void> = savepointSession.rollbackTo(1n);
+const savepointReleased: Promise<void> = savepointSession.releaseSavepoint(1n);
+void savepointToken;
+void savepointRestored;
+void savepointReleased;

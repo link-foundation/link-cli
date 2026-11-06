@@ -40,6 +40,50 @@ test('transaction controls run after queued requests and failures do not break t
   await assert.rejects(client.commit(), /closed/);
 });
 
+test('savepoint controls keep queue order, forward tokens and report failures', async () => {
+  const events = [];
+  const session = {
+    request(text) {
+      events.push(text);
+      return '(count: 0)';
+    },
+    commit() {},
+    rollback() {},
+    savepoint() {
+      events.push('savepoint');
+      return 7n;
+    },
+    rollbackTo(token) {
+      events.push(`rollbackTo ${token}`);
+    },
+    releaseSavepoint(token) {
+      events.push(`release ${token}`);
+      throw new Error('unknown savepoint');
+    },
+    free() {},
+  };
+  const client = new EngineClient(session);
+  const request = client.count();
+  const token = await client.savepoint();
+  await request;
+  assert.equal(token, 7n);
+  await client.rollbackTo(token);
+  await assert.rejects(client.releaseSavepoint(token), (error) => {
+    assert.ok(error instanceof LinksError);
+    assert.equal(error.outcome, 'failed');
+    return /unknown savepoint/.test(error.message);
+  });
+  await client.close();
+  assert.deepEqual(events, ['(count: ())', 'savepoint', 'rollbackTo 7', 'release 7']);
+  await assert.rejects(client.savepoint(), /closed/);
+});
+
+test('sessions built before savepoints refuse the controls instead of ignoring them', async () => {
+  const client = new EngineClient({ request: () => '', commit() {}, rollback() {}, free() {} });
+  await assert.rejects(client.savepoint(), UnsupportedError);
+  await client.close();
+});
+
 test('ordinary wasm stores cannot be sent transaction controls', async () => {
   assert.throws(() => new EngineClient({ request: () => '' }), TypeError);
   const client = createWasmClient({ request: () => '', free() {} });

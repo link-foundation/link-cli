@@ -57,7 +57,8 @@ continues to use optimistic generation validation.
 The strategy follows the acquire/validate/release seam observed in pinned
 [RocksDB pessimistic transaction source](https://github.com/facebook/rocksdb/blob/ea313605367281013c2c81158069e88411516357/utilities/transactions/pessimistic_transaction.cc#L1151).
 This implementation adds no RocksDB dependency or copied implementation, LSM tree,
-range locks, waiting/deadlock machinery, savepoints or distributed lock recovery.
+range locks, waiting/deadlock machinery or distributed lock recovery.
+[Savepoints](ENGINE-SAVEPOINTS.md) keep point-write ownership until the session ends.
 See the [source observations](case-studies/issue-138/RESEARCH.md).
 
 Run the existing examples with both flags to show a busy competing write and two

@@ -17,6 +17,7 @@ import { DEFAULT_MAX_MESSAGE_BYTES } from './framing.js';
 const encoder = new TextEncoder();
 // Internal ownership protocol for staged group commits. These symbols are not
 // exported by the client package's public entry point.
+const controls = new Set(['commit', 'rollback', 'savepoint', 'rollbackTo', 'releaseSavepoint']);
 export const canTransferHandle = Symbol('can transfer wasm handle');
 export const transferHandle = Symbol('transfer wasm handle');
 
@@ -103,7 +104,7 @@ export class WasmTransport {
   }
 
   /** Serializes transaction controls after all previously queued requests. */
-  control(method) {
+  control(method, ...values) {
     if (this.#reserved)
       return Promise.reject(
         new ConnectionClosedError('the WebAssembly session belongs to a commit group', {
@@ -113,11 +114,11 @@ export class WasmTransport {
     return this.#enqueue(() => {
       if (this.#closed)
         throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
-      if (!['commit', 'rollback'].includes(method) || typeof this.#clink[method] !== 'function') {
+      if (!controls.has(method) || typeof this.#clink[method] !== 'function') {
         throw new UnsupportedError('this WebAssembly store has no transaction control');
       }
       try {
-        return this.#clink[method]();
+        return this.#clink[method](...values);
       } catch (cause) {
         throw new LinksError(String(cause), {
           outcome:
