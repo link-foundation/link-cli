@@ -10,8 +10,13 @@ name: Production source
 # The Rust and C# files under experiments/ are single-file probes run by hand
 # with rustc or a throwaway project. No manifest or solution includes them, so
 # extracting them only reports missing manifests and unresolved references.
+#
+# Each C# example is its own project with top-level statements. CodeQL's
+# no-build mode compiles every file together, where only one file may have them,
+# so it reports a compiler error for each example. csharp.yml builds them instead.
 paths-ignore:
   - dev/log
   - docs/case-studies
   - experiments/**/*.rs
   - experiments/**/*.cs
+  - examples/*-csharp/**

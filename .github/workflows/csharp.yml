@@ -21,7 +21,7 @@ on:
       - 'docs/protocol/chunked-journal*'
       - 'docs/protocol/reclaiming-chunks*'
       - 'docs/protocol/causal-*'
-      - 'examples/cluster-csharp/**'
+      - 'examples/*-csharp/**'
   workflow_dispatch:
     inputs:
       release_mode:
@@ -332,6 +332,13 @@ jobs:
           test -f "${reports[0]}"
           python3 experiments/issue-138/check-causal-raw-coverage.py "${reports[0]}" --require-session
           python3 experiments/issue-138/check-author-fence-coverage.py "${reports[0]}"
+
+      - name: Build remaining examples
+        working-directory: .
+        run: |
+          dotnet build examples/engine-csharp --configuration Release
+          dotnet build examples/group-commit-csharp --configuration Release
+          dotnet build examples/transaction-names-csharp --configuration Release
 
       - name: Native file LSM cluster consumers
         working-directory: .
