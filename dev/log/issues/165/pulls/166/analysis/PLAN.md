@@ -9,8 +9,8 @@ Objective: address every requirement in issue #165 in this single unmerged PR.
 - [x] Reproduce actual failures and audit false positives, false negatives, warnings and errors across all workflows and helpers.
 - [x] Implement all applicable template/best-practice improvements; add minimal regression tests and default-off diagnostics wherever evidence is insufficient.
 - [x] Report reproducible shared template/upstream defects with workaround and code-level fixes when found.
-- [x] Commit each independently useful change; push only issue-165-a5206aa5b4c0 (final evidence commit pending at this audit cutoff).
-- [x] Run focused inexpensive local checks; use CI for full builds and OS matrices (ten workflows green on fd17aa4; final-head confirmation pending).
+- [x] Commit each independently useful change; push only issue-165-a5206aa5b4c0 (final detection/evidence commit prepared at this cutoff).
+- [x] Run focused inexpensive local checks; use CI for full builds and OS matrices (ten workflows green on fd17aa4 and 8f24ffd; final detection-commit confirmation pending).
 - [x] Review complete PR source diff, latest comments, release trigger and main ancestry; final clean-status confirmation pending.
 - [ ] Update title/body with reproduction, tests, complete evidence and Fixes #165; mark ready after all final-commit checks pass.
 

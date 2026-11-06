@@ -1,0 +1,27 @@
+    Updating crates.io index
+     Locking 5 packages to highest compatible versions
+   Compiling memchr v2.8.3
+   Compiling aho-corasick v1.1.5
+   Compiling regex-syntax v0.8.11
+   Compiling regex-automata v0.4.18
+   Compiling regex v1.13.1
+   Compiling issue-165-detector-repro v0.0.0 (/tmp/issue-165-change-detection-_wsmrw7v)
+    Finished `dev` profile [unoptimized] target(s) in 12.64s
+   Compiling issue-165-detector-repro v0.0.0 (/tmp/issue-165-change-detection-_wsmrw7v)
+    Finished `test` profile [unoptimized] target(s) in 0.50s
+     Running unittests after.rs (/tmp/issue-165-change-detection-_wsmrw7v/target/debug/deps/after-60727f9a25db1ceb)
+
+running 5 tests
+test tests::lock_only_updates_require_cargo_checks ... ok
+test tests::shell_helper_changes_require_workflow_checks ... ok
+test tests::moving_code_into_an_excluded_folder_keeps_source_deletion ... ok
+test tests::empty_diffs_and_missing_git_evidence_are_distinct ... ok
+test tests::main_merge_checks_all_changes_and_pr_keeps_per_commit_scope ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+rust/Cargo.lock {"before": false, "after": true}
+rust/scripts/check-scripts.sh {"before": false, "after": true}
+missing Git evidence {"before": 0, "after": 1}
+unwritable Actions output {"before": 0, "after": 1}
+Peak child memory KiB: 290284

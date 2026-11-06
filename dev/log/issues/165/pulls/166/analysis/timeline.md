@@ -47,3 +47,43 @@ Run creation timestamps are UTC. The SHA is essential: the issue's baseline runs
 | 2026-11-06T00:13:27Z | DeepClient CI | [42135244516](https://github.com/link-foundation/link-cli/actions/runs/42135244516) | `fd17aa4ecc79` | success |
 | 2026-11-06T00:13:27Z | WebAssembly CI | [42135244558](https://github.com/link-foundation/link-cli/actions/runs/42135244558) | `fd17aa4ecc79` | success |
 | 2026-11-06T00:13:27Z | Rust CI/CD Pipeline | [42135244645](https://github.com/link-foundation/link-cli/actions/runs/42135244645) | `fd17aa4ecc79` | success |
+| 2026-11-06T00:28:32Z | DeepClient CI | [42137078297](https://github.com/link-foundation/link-cli/actions/runs/42137078297) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | WebAssembly CI | [42137078337](https://github.com/link-foundation/link-cli/actions/runs/42137078337) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | JS client CI | [42137078351](https://github.com/link-foundation/link-cli/actions/runs/42137078351) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | Docs | [42137078373](https://github.com/link-foundation/link-cli/actions/runs/42137078373) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | Rust CI/CD Pipeline | [42137078389](https://github.com/link-foundation/link-cli/actions/runs/42137078389) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | Workflows | [42137078405](https://github.com/link-foundation/link-cli/actions/runs/42137078405) | `9d5c40fb0515` | success |
+| 2026-11-06T00:28:32Z | Dependencies | [42137078408](https://github.com/link-foundation/link-cli/actions/runs/42137078408) | `9d5c40fb0515` | success |
+| 2026-11-06T00:28:32Z | C# CI/CD Pipeline | [42137078463](https://github.com/link-foundation/link-cli/actions/runs/42137078463) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | Security | [42137078480](https://github.com/link-foundation/link-cli/actions/runs/42137078480) | `9d5c40fb0515` | cancelled |
+| 2026-11-06T00:28:32Z | Broken Link Checker | [42137078529](https://github.com/link-foundation/link-cli/actions/runs/42137078529) | `9d5c40fb0515` | success |
+| 2026-11-06T00:30:44Z | Rust CI/CD Pipeline | [42137352672](https://github.com/link-foundation/link-cli/actions/runs/42137352672) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | Workflows | [42137352675](https://github.com/link-foundation/link-cli/actions/runs/42137352675) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | DeepClient CI | [42137352678](https://github.com/link-foundation/link-cli/actions/runs/42137352678) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | Security | [42137352691](https://github.com/link-foundation/link-cli/actions/runs/42137352691) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | JS client CI | [42137352695](https://github.com/link-foundation/link-cli/actions/runs/42137352695) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | Docs | [42137352708](https://github.com/link-foundation/link-cli/actions/runs/42137352708) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | WebAssembly CI | [42137352727](https://github.com/link-foundation/link-cli/actions/runs/42137352727) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | C# CI/CD Pipeline | [42137352753](https://github.com/link-foundation/link-cli/actions/runs/42137352753) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | Dependencies | [42137352768](https://github.com/link-foundation/link-cli/actions/runs/42137352768) | `ba152ebe5b0f` | cancelled |
+| 2026-11-06T00:30:44Z | Broken Link Checker | [42137352791](https://github.com/link-foundation/link-cli/actions/runs/42137352791) | `ba152ebe5b0f` | success |
+| 2026-11-06T00:31:24Z | Broken Link Checker | [42137433715](https://github.com/link-foundation/link-cli/actions/runs/42137433715) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | Rust CI/CD Pipeline | [42137433729](https://github.com/link-foundation/link-cli/actions/runs/42137433729) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | C# CI/CD Pipeline | [42137433742](https://github.com/link-foundation/link-cli/actions/runs/42137433742) | `98bfb6fbced9` | cancelled |
+| 2026-11-06T00:31:24Z | Dependencies | [42137433749](https://github.com/link-foundation/link-cli/actions/runs/42137433749) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | Security | [42137433755](https://github.com/link-foundation/link-cli/actions/runs/42137433755) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | DeepClient CI | [42137433759](https://github.com/link-foundation/link-cli/actions/runs/42137433759) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | WebAssembly CI | [42137433793](https://github.com/link-foundation/link-cli/actions/runs/42137433793) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | Docs | [42137433797](https://github.com/link-foundation/link-cli/actions/runs/42137433797) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | JS client CI | [42137433800](https://github.com/link-foundation/link-cli/actions/runs/42137433800) | `98bfb6fbced9` | success |
+| 2026-11-06T00:31:24Z | Workflows | [42137433830](https://github.com/link-foundation/link-cli/actions/runs/42137433830) | `98bfb6fbced9` | success |
+| 2026-11-06T00:37:20Z | Workflows | [42138164816](https://github.com/link-foundation/link-cli/actions/runs/42138164816) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | DeepClient CI | [42138164864](https://github.com/link-foundation/link-cli/actions/runs/42138164864) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | Docs | [42138164867](https://github.com/link-foundation/link-cli/actions/runs/42138164867) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | JS client CI | [42138164869](https://github.com/link-foundation/link-cli/actions/runs/42138164869) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | Security | [42138164934](https://github.com/link-foundation/link-cli/actions/runs/42138164934) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | Broken Link Checker | [42138164935](https://github.com/link-foundation/link-cli/actions/runs/42138164935) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | Dependencies | [42138164939](https://github.com/link-foundation/link-cli/actions/runs/42138164939) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | Rust CI/CD Pipeline | [42138164962](https://github.com/link-foundation/link-cli/actions/runs/42138164962) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | C# CI/CD Pipeline | [42138164981](https://github.com/link-foundation/link-cli/actions/runs/42138164981) | `8f24ffd509a7` | success |
+| 2026-11-06T00:37:20Z | WebAssembly CI | [42138164992](https://github.com/link-foundation/link-cli/actions/runs/42138164992) | `8f24ffd509a7` | success |

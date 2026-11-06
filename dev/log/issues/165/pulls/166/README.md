@@ -13,4 +13,4 @@ Read a raw workflow log with `gzip -cd ci-logs/run-<id>.log.gz`. Extract a templ
 
 The reusable collection, archive, comparison and before/after regression scripts are in `experiments/issue-165/`. Collection is bounded at an explicit audit cutoff; final-commit live check URLs are recorded in PR #166, because committing a run's own logs necessarily creates a new commit and a new run.
 
-All ten workflows passed on `fd17aa4ecc799435c5e70b16e5b0021489e20d2a`; their complete logs and conclusions are included. The following commit adds the evidence and Python tool auditing; its complete final-head check result is recorded on the PR before it is marked ready.
+All ten workflows passed on both `fd17aa4ecc799435c5e70b16e5b0021489e20d2a` and `8f24ffd509a7c3c5b77b4521e1cb8151bbd44e0e`; their complete logs and conclusions are included among 83 collected runs. The final source commit also repairs the additional change-detection false negatives documented in the audit. The complete final-head check result is recorded on the PR before it is marked ready.

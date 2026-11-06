@@ -47,22 +47,16 @@
  *   - rust-code-changed: 'true' if any Rust code files changed
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { appendFileSync } from 'fs';
 
 /**
  * Execute a shell command and return trimmed output
- * @param {string} command - The command to execute
+ * @param {string[]} args - Git arguments
  * @returns {string} - The trimmed command output
  */
-function exec(command) {
-  try {
-    return execSync(command, { encoding: 'utf-8' }).trim();
-  } catch (error) {
-    console.error(`Error executing command: ${command}`);
-    console.error(error.message);
-    return '';
-  }
+function git(args) {
+  return execFileSync('git', args, { encoding: 'utf-8', stdio: 'pipe' }).trim();
 }
 
 /**
@@ -89,35 +83,37 @@ function getChangedFiles() {
     const baseSha = process.env.GITHUB_BASE_SHA;
     const headSha = process.env.GITHUB_HEAD_SHA;
 
-    if (baseSha && headSha) {
-      console.log(`Comparing PR: ${baseSha}...${headSha}`);
-      try {
-        // Ensure we have the base commit
-        try {
-          execSync(`git cat-file -e ${baseSha}`, { stdio: 'ignore' });
-        } catch {
-          console.log('Base commit not available locally, attempting fetch...');
-          execSync(`git fetch origin ${baseSha}`, { stdio: 'inherit' });
-        }
-        const output = exec(`git diff --name-only ${baseSha} ${headSha}`);
-        return output ? output.split('\n').filter(Boolean) : [];
-      } catch (error) {
-        console.error(`Git diff failed: ${error.message}`);
-      }
+    if (!baseSha || !headSha) {
+      throw new Error('PR detection requires GITHUB_BASE_SHA and GITHUB_HEAD_SHA');
     }
+    if (![baseSha, headSha].every((sha) => /^[a-f0-9]{40,64}$/i.test(sha))) {
+      throw new Error('Invalid PR commit identity');
+    }
+    console.log(`Comparing PR: ${baseSha}...${headSha}`);
+    // Ensure we have the base commit. A failed comparison must fail the job;
+    // otherwise an empty result silently skips every downstream source check.
+    try {
+      git(['cat-file', '-e', baseSha]);
+    } catch {
+      console.log('Base commit not available locally, attempting fetch...');
+      git(['fetch', 'origin', baseSha]);
+    }
+    const output = git(['diff', '--name-only', '--no-renames', baseSha, headSha, '--']);
+    return output ? output.split('\n').filter(Boolean) : [];
   }
 
   // For push events or fallback
   console.log('Comparing HEAD^ to HEAD');
   try {
-    const output = exec('git diff --name-only HEAD^ HEAD');
-    return output ? output.split('\n').filter(Boolean) : [];
+    git(['rev-parse', '--verify', 'HEAD^']);
   } catch {
     // If HEAD^ doesn't exist (first commit), list all files in HEAD
     console.log('HEAD^ not available, listing all files in HEAD');
-    const output = exec('git ls-tree --name-only -r HEAD');
+    const output = git(['ls-tree', '--name-only', '-r', 'HEAD']);
     return output ? output.split('\n').filter(Boolean) : [];
   }
+  const output = git(['diff', '--name-only', '--no-renames', 'HEAD^', 'HEAD', '--']);
+  return output ? output.split('\n').filter(Boolean) : [];
 }
 
 /**
@@ -249,4 +245,12 @@ function detectChanges() {
 }
 
 // Run the detection
-detectChanges();
+try {
+  detectChanges();
+} catch (error) {
+  console.error(`::error::Change detection failed: ${error.message}`);
+  if (process.env.CI_VERBOSE === 'true') {
+    console.error(error.stack);
+  }
+  process.exitCode = 1;
+}
