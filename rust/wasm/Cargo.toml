@@ -23,7 +23,7 @@ serde_json = "1.0.154"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.80"
-links-notation = "0.31.2"
+links-notation = "0.31.3"
 
 # The cdylib is linked before the test executable. It therefore needs the
 # profiling runtime itself when collecting experimental WASM coverage.

@@ -4,4 +4,4 @@ bump: patch
 
 ### Changed
 
-- Update links-notation to 0.31.2.
+- Update doublets to 0.21.0 and links-notation to 0.31.3.
