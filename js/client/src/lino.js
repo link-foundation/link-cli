@@ -2,7 +2,7 @@
 // `clink --serve` and the WebAssembly `Clink.request` entry point.
 //
 // This is a port of `links_notation::binary::{format_document, parse_document}`
-// (links-notation 0.27.1, the version both link-cli ports pin), restricted to
+// (links-notation 0.31, the series both link-cli ports pin), restricted to
 // what the links protocol exchanges: one top-level link per line, nested
 // groups in parentheses, `id:` names and references. A reference is a JS
 // string, a link is `{ id: string | null, values: (string | link)[] }`.

@@ -28,11 +28,10 @@ fn generic(mode: &str, path: &str) -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(mode, "generic-rejected-growth");
     let error = mapped.grow_filled(8192, Droppable(19)).unwrap_err();
     eprintln!("REJECTED generic growth: {error}");
-    let error = barrier.flush().unwrap_err();
-    assert!(error.to_string().contains("unfinished remap"));
-    eprintln!("REJECTED stale generic flush descriptor before pointer access");
-    // The parent bounds this intentional negative control and disables core
-    // dumps. This safe public read after a returned error must remain valid.
+    barrier.flush().unwrap();
+    eprintln!("PASS retained generic flush descriptor");
+    // The parent disables core dumps, because upstream alone crashes here. This
+    // safe public read after a returned error must remain valid.
     println!(
         "retained generic prefix={}",
         std::hint::black_box(mapped.allocated()[0].0)

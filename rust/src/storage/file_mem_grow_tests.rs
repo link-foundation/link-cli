@@ -85,3 +85,23 @@ fn clone_failure_never_enters_preparation_or_retires_the_current_view() {
     assert_eq!(mapped.allocated().as_ptr(), pointer);
     assert_eq!(mapped.allocated()[0], 42);
 }
+
+#[test]
+fn generic_preflight_failure_keeps_the_view_and_runs_no_destructor() {
+    struct Value(u64);
+    impl Drop for Value {
+        fn drop(&mut self) {
+            assert_eq!(self.0, 42, "a value was destroyed by rejected growth");
+        }
+    }
+    let mut mapped = PersistentFileMapped::<Value>::new(tempfile::tempfile().unwrap()).unwrap();
+    mapped.grow_with(32, || Value(42)).unwrap();
+    let pointer = mapped.allocated().as_ptr();
+    mapped.flush.close();
+    // SAFETY: preflight returns an error before any callback runs.
+    let result = unsafe { mapped.grow(64, |_, _| panic!("unreachable fill")) };
+    assert!(result.err().unwrap().to_string().contains("closed"));
+    assert!(mapped.shrink(8).unwrap_err().to_string().contains("closed"));
+    assert_eq!(mapped.allocated().as_ptr(), pointer);
+    assert_eq!(mapped.allocated().len(), 32);
+}

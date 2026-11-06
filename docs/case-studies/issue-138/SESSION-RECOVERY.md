@@ -73,3 +73,27 @@ The second interruption was reported in the
 The report distinguishes the observed failed turn from its unknown internal
 cause and links the public evidence and database task. It does not claim that
 an interactive `/feedback` report was submitted.
+
+## Third recovery: generic mapped failure
+
+The [2026-10-28 maintainer comment](https://github.com/link-foundation/link-cli/pull/139#issuecomment-6668512260)
+links gist `087b962b5422c2a97464dbef28b33bcd`. The session failed at
+2026-10-28 15:39:58 UTC while running a finite mapped-file regression. The
+wrapper preserved five files in `ea36fa4972e98fcfe9985e6a68e0d51442f32e4b` on the
+recovery branch. That commit is not an ancestor of this branch; its plan,
+verification notes and probe were carried over by content, and the probe still
+reproduces the failure it was written for. The failure was
+[reported to OpenAI](https://github.com/openai/codex/issues/56475#issuecomment-6668783708).
+
+## Fourth recovery: dependency refresh
+
+The [2026-11-06 maintainer comment](https://github.com/link-foundation/link-cli/pull/139#issuecomment-6697033988)
+links [the next log](https://gist.githubusercontent.com/konard/c84043e33e835b8e76d887b033120c93/raw/988dbff848ae22a2e6edbaa021ed91471c8597ca/tmp-hive-mind-log-upload-dKQymU-sanitized.log.txt).
+The session failed at 2026-11-05 20:55:07 UTC (log line 6874), straight after
+`cargo update -p links-notation`. Its work is preserved in `3b5fce45`, which is
+an ancestor of this branch. The failure was
+[reported to OpenAI](https://github.com/openai/codex/issues/56475#issuecomment-6697611619)
+as a possible false positive.
+
+Neither visible event identifies the triggering input or the classifier's
+reasoning, so these reports state what was observed and do not claim a cause.

@@ -14,6 +14,19 @@ impl<T> PersistentFileMapped<T> {
         unsafe { self.grow_prepared(addition, fill, prepare::<T>) }
     }
 
+    // Extends the file and proves a view of this size can be mapped, all while
+    // the current view stays valid. The upstream owner then repeats these steps
+    // after unmapping, when a quota or mapping-limit error could not be undone.
+    // Only a failure that first appears between the two attempts can still
+    // reach that state; closing that window needs the upstream order to change.
+    pub(super) fn preflight_view(&self, bytes: usize) -> MemResult<()> {
+        let mut trial = prepare::<u8>(self.flush.clone_file()?, bytes)?;
+        // SAFETY: the callback reads and writes nothing, and this owner never
+        // exposes the bytes. u8 has no destructor to run when it is dropped.
+        unsafe { trial.grow(bytes, |_, _| {}) }?;
+        Ok(())
+    }
+
     unsafe fn grow_prepared(
         &mut self,
         addition: usize,

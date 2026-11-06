@@ -228,8 +228,12 @@ impl<T> RawMem for PersistentFileMapped<T> {
         let capacity = previous_len
             .checked_add(addition)
             .ok_or(doublets::mem::Error::CapacityOverflow)?;
-        std::alloc::Layout::array::<T>(capacity)
-            .map_err(|_| doublets::mem::Error::CapacityOverflow)?;
+        let bytes = std::alloc::Layout::array::<T>(capacity)
+            .map_err(|_| doublets::mem::Error::CapacityOverflow)?
+            .size();
+        // Upstream unmaps first and keeps its old pointer if a later step fails,
+        // so run those steps while the current view can still be returned to.
+        self.preflight_view(bytes)?;
         // Upstream counts its minimum-page padding as initialized data. Only
         // bytes known before that padding (or from successful growth) contain
         // application values that the caller may skip when filling the tail.
@@ -257,13 +261,27 @@ impl<T> RawMem for PersistentFileMapped<T> {
             return Ok(());
         }
         // Reject before retiring the descriptor of the still-valid live view.
-        self.inner
+        let retained = self
+            .inner
             .allocated()
             .len()
             .checked_sub(cap)
             .expect("Tried to shrink to a larger capacity");
+        self.preflight_view(retained * mem::size_of::<T>())?;
         self.flush.invalidate();
-        self.inner.shrink(cap)?;
+        // Upstream retires the tail before lowering its length. A panicking
+        // destructor would leave those values reachable through the safe view
+        // and drop them again with the owner, so it must not unwind past here.
+        struct AbortOnUnwind;
+        impl Drop for AbortOnUnwind {
+            fn drop(&mut self) {
+                std::process::abort();
+            }
+        }
+        let guard = AbortOnUnwind;
+        let result = self.inner.shrink(cap);
+        mem::forget(guard);
+        result?;
         self.initialized_bytes = mem::size_of_val(self.inner.allocated()) as u64;
         self.flush.publish(self.inner.allocated());
         Ok(())

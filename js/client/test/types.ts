@@ -38,7 +38,6 @@ function causalProjectionTypes(values: readonly CausalValue[]) {
   void invalid;
   return [rows, retained, projection.selected()];
 }
-import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links } from '../types/index.js';
 import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links, UnionLinks, RemapLinks, OffsetAddressMap, AddressTable, ExternalIdMap, LinksExternalIds, NotFoundError } from '../types/index.js';
 import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';

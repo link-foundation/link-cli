@@ -126,3 +126,112 @@ fn generic_zero_growth_callback_panic_preserves_the_live_barrier() -> Result<()>
 fn generic_zero_growth_keeps_callback_prefix_and_empty_tail_semantics() -> Result<()> {
     zero_growth(false)
 }
+
+#[cfg(target_os = "linux")]
+const CHILD: &str = "LINK_CLI_MAPPED_CHILD";
+
+#[cfg(target_os = "linux")]
+fn in_child() -> bool {
+    std::env::var_os(CHILD).is_some()
+}
+
+// Runs one test of this binary alone in a child process, for failures that
+// are per process or end it. Core dumps stay off in every case.
+#[cfg(target_os = "linux")]
+fn run_child(name: &str, setup: &str) -> Result<std::process::Output> {
+    let script = format!("ulimit -c 0; {setup} exec \"$@\"");
+    Ok(std::process::Command::new("sh")
+        .args(["-c", &script, "sh"])
+        .arg(std::env::current_exe()?)
+        .args(["--exact", name, "--nocapture", "--test-threads=1"])
+        .env(CHILD, "1")
+        .output()?)
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn quota_rejected_destructor_growth_keeps_the_view_readable() -> Result<()> {
+    if !in_child() {
+        // One page admits the initial view but none of the rejected extension.
+        // SIGXFSZ stays ignored across exec so set_len returns its error.
+        let output = run_child(
+            "quota_rejected_destructor_growth_keeps_the_view_readable",
+            "ulimit -f 8; trap '' XFSZ;",
+        )?;
+        assert!(
+            output.status.success(),
+            "{:?}: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr),
+        );
+        return Ok(());
+    }
+    let drops = Arc::new(AtomicUsize::new(0));
+    let file = tempfile::tempfile()?;
+    let observer = file.try_clone()?;
+    let mut mapped = PersistentFileMapped::<Value>::new(file)?;
+    mapped.grow_with(32, || value(&drops, 9))?[0].number = 42;
+    let pointer = mapped.allocated().as_ptr();
+    let barrier = mapped.flush_handle();
+    let length = observer.metadata()?.len();
+    for _ in 0..3 {
+        // SAFETY: the quota rejects the extension before any callback runs.
+        let error = unsafe { mapped.grow(8192, |_, _| panic!("rejected growth was filled")) }
+            .err()
+            .expect("the file quota must reject this extension");
+        assert_eq!(
+            error.to_string(),
+            std::io::Error::from_raw_os_error(27).to_string()
+        );
+        assert_eq!(mapped.allocated().as_ptr(), pointer);
+        assert_eq!(mapped.allocated()[0].number, 42);
+        assert_eq!(mapped.allocated().len(), 32);
+        assert_eq!(observer.metadata()?.len(), length);
+        assert_eq!(drops.load(Ordering::SeqCst), 0);
+        barrier.flush()?;
+    }
+    // The same owner still grows within the quota and destroys each value once.
+    mapped.grow_with(8, || value(&drops, 19))?;
+    assert_eq!(mapped.allocated()[0].number, 42);
+    assert_eq!(mapped.allocated()[32].number, 19);
+    barrier.flush()?;
+    drop(mapped);
+    assert_eq!(drops.load(Ordering::SeqCst), 40);
+    Ok(())
+}
+
+// A panicking tail destructor must never leave retired values reachable: the
+// safe view and the owner's own destructor would use them a second time.
+#[cfg(target_os = "linux")]
+#[test]
+fn panicking_tail_destructor_cannot_drop_a_value_twice() -> Result<()> {
+    use std::os::unix::process::ExitStatusExt;
+    // A static counter: a shared heap owner would corrupt the allocator on the
+    // second drop, and that unrelated abort would look like the required one.
+    static DROPS: AtomicUsize = AtomicUsize::new(0);
+    struct Tail(#[allow(dead_code)] u64);
+    impl Drop for Tail {
+        fn drop(&mut self) {
+            if DROPS.fetch_add(1, Ordering::SeqCst) == 0 {
+                panic!("finite tail destructor failure");
+            }
+        }
+    }
+    if !in_child() {
+        let output = run_child("panicking_tail_destructor_cannot_drop_a_value_twice", "")?;
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.signal(), Some(6), "{stderr}");
+        assert!(
+            stderr.contains("finite tail destructor failure"),
+            "{stderr}"
+        );
+        return Ok(());
+    }
+    let mut mapped = PersistentFileMapped::<Tail>::new(tempfile::tempfile()?)?;
+    mapped.grow_with(4, || Tail(7))?;
+    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| mapped.shrink(2)));
+    drop(mapped);
+    // Reached only if the panic was not stopped. Every value has one owner.
+    assert_eq!(DROPS.load(Ordering::SeqCst), 4);
+    Ok(())
+}

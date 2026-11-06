@@ -61,10 +61,8 @@ with tempfile.TemporaryDirectory(prefix="mapped-growth-", dir=base) as directory
             assert child.returncode == 0 and expected in stdout
         elif generic:
             assert "REJECTED generic growth:" in stderr
-            assert "REJECTED stale generic flush descriptor" in stderr
-            assert child.returncode in (-signal.SIGSEGV, -signal.SIGBUS), (
-                child.returncode
-            )
+            assert "PASS retained generic flush descriptor" in stderr
+            assert child.returncode == 0 and "PASS retained generic mapping" in stdout
         else:
             assert "REJECTED growth:" in stderr and "retained length=32" in stderr
             if expect_retained:
@@ -76,7 +74,7 @@ with tempfile.TemporaryDirectory(prefix="mapped-growth-", dir=base) as directory
                     child.returncode
                 )
 result = (
-    "REPRODUCED destructor-bearing rejected growth leaves the public allocation unreadable"
+    "PASS destructor-bearing rejected growth preserves the public allocation"
     if generic
     else "PASS rejected growth preserves the retained allocation"
     if expect_retained
