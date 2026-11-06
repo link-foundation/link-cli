@@ -229,7 +229,7 @@ public abstract record LinksOperation<T>
     public IReadOnlyList<LinoLink> Execute(INamedTypesLinks<T> links)
     {
         if (this is Subscribe or Unsubscribe)
-            throw new InvalidOperationException("Subscriptions need a server.");
+            throw LinksOperation.NeedsServer();
         ArgumentNullException.ThrowIfNull(links);
         var limits = links.QueryLimits;
         limits?.Document(ToDocument());

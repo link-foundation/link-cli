@@ -57,8 +57,21 @@ namespace Foundation.Data.Doublets.Cli
 
         public QueryLimits? QueryLimits => _named.QueryLimits;
 
+        /// <summary>
+        /// Only addresses that do not exist yet are allocations; a preview lists every row, and counting
+        /// a hidden one would let it answer differently from a missing one. A subject who may not create
+        /// gets no reservation, so its first new link is refused whether or not the same pair is hidden.
+        /// </summary>
         public IReadOnlySet<TLinkAddress>? ReserveQueryAllocations(Action<INamedTypesLinks<TLinkAddress>> preview)
-            => _named.ReserveQueryAllocations(preview);
+        {
+            if (!Policy.CanCreate(Subject))
+            {
+                return null;
+            }
+            var reserved = _named.ReserveQueryAllocations(preview);
+            return reserved?.Where(address => !_links.Exists(address)).ToHashSet();
+        }
+
         private readonly Func<TLinkAddress> _subject;
         private readonly HashSet<TLinkAddress> _created = new();
 

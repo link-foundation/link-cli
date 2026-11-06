@@ -483,7 +483,7 @@ public sealed partial class LinksServer : IDisposable
 
     /// <summary>Answers the requests on <paramref name="stream"/>, which belongs to <paramref name="client"/>.</summary>
     internal void HandleConnection(TcpClient client, NetworkStream stream, INamedTypesLinks<uint> links)
-        => HandleConnection(client, stream, links, _options.Limits.ForQuery(links.QueryLimits));
+        => HandleConnection(client, stream, links, _options.Limits.ForQuery(links?.QueryLimits));
 
     private void HandleConnection<T>(TcpClient client, NetworkStream stream, INamedTypesLinks<T> links, ProtocolLimits limits)
         where T : struct, IBinaryInteger<T>, IUnsignedNumber<T>, IMinMaxValue<T>
@@ -553,7 +553,7 @@ public sealed partial class LinksServer : IDisposable
     {
         if (_options.Trace)
         {
-            Console.Error.WriteLine($"[server] {message}");
+            DiagnosticOutput.WriteErrorLine($"[server] {message}");
         }
     }
 
