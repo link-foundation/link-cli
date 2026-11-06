@@ -36,7 +36,9 @@ class Random:
         self.state = seed
 
     def next(self, bound):
-        self.state = (self.state * 6364136223846793005 + 1442695040888963407) % (1 << 64)
+        self.state = (self.state * 6364136223846793005 + 1442695040888963407) % (
+            1 << 64
+        )
         return (self.state >> 33) % bound
 
 
@@ -180,7 +182,10 @@ class Chosen(Encoding):
         for pair in self.store.with_target(to):
             source = self.store.links[pair][0]
             self.store.visited += 1
-            if source != self.pair_marker and self.store.links.get(source, (None,))[0] == self.pair_marker:
+            if (
+                source != self.pair_marker
+                and self.store.links.get(source, (None,))[0] == self.pair_marker
+            ):
                 found.extend(self.triplets_on_pair(pair))
         return found
 
@@ -240,7 +245,10 @@ def workload():
     ids = list(range(1, 12))
     while len(triplets) < 1011:
         type_id = ids[random.next(len(ids))]
-        part = lambda: 0 if random.next(4) == 0 else ids[random.next(len(ids))]
+
+        def part():
+            return 0 if random.next(4) == 0 else ids[random.next(len(ids))]
+
         frm = part()
         to = part()
         triplets.append((type_id, frm, to))
@@ -256,19 +264,36 @@ def measure(encoding_type, triplets):
     for number, (type_id, frm, to) in enumerate(triplets, start=1):
         # A triplet may use itself only as the root does; parts are earlier triplets.
         if number == 1:
-            index = encoding.store.create(None, None) if not isinstance(encoding, Pairs) else None
+            index = (
+                encoding.store.create(None, None)
+                if not isinstance(encoding, Pairs)
+                else None
+            )
             if index is None:
                 index = encoding.store.create(None, None)
                 source = encoding.outer_source(index)
                 encoding.store.set(index, source, index)
         else:
-            index = encoding.create(address[type_id], address.get(frm, 0), address.get(to, 0))
+            index = encoding.create(
+                address[type_id], address.get(frm, 0), address.get(to, 0)
+            )
         address[number] = index
         encoding.triplets.add(index)
-    expected = {address[n]: (address[t], address.get(f, 0), address.get(o, 0)) for n, (t, f, o) in enumerate(triplets, start=1)}
+    expected = {
+        address[n]: (address[t], address.get(f, 0), address.get(o, 0))
+        for n, (t, f, o) in enumerate(triplets, start=1)
+    }
     doublets = len(encoding.store.links) - encoding.markers
-    result = {"doublets": doublets, "per_triplet": doublets / len(expected), "collisions": encoding.collisions}
-    for kind, read, part in (("type", encoding.by_type, 0), ("from", encoding.by_from, 1), ("to", encoding.by_to, 2)):
+    result = {
+        "doublets": doublets,
+        "per_triplet": doublets / len(expected),
+        "collisions": encoding.collisions,
+    }
+    for kind, read, part in (
+        ("type", encoding.by_type, 0),
+        ("from", encoding.by_from, 1),
+        ("to", encoding.by_to, 2),
+    ):
         visited = results = wrong = 0
         worst = 0
         for queried in expected:
@@ -280,21 +305,35 @@ def measure(encoding_type, triplets):
             visited += encoding.store.visited
             results += len(truth)
             worst = max(worst, encoding.store.visited - len(truth))
-        result[kind] = (visited / len(expected), (visited - results) / len(expected), worst)
+        result[kind] = (
+            visited / len(expected),
+            (visited - results) / len(expected),
+            worst,
+        )
         result["wrong"] = result.get("wrong", 0) + wrong
     return result
 
 
 def main():
     triplets = workload()
-    print(f"{len(triplets)} triplets, {sum(1 for _, f, t in triplets if f == 0 and t == 0)} of them nodes")
+    print(
+        f"{len(triplets)} triplets, {sum(1 for _, f, t in triplets if f == 0 and t == 0)} of them nodes"
+    )
     print()
-    print("| encoding | doublets | per triplet | Each by type: visited / noise / worst noise | by from | by to | pairs that are triplets | wrong answers |")
+    print(
+        "| encoding | doublets | per triplet | Each by type: visited / noise / worst noise | by from | by to | pairs that are triplets | wrong answers |"
+    )
     print("|---|---|---|---|---|---|---|---|")
     for encoding_type in (Chosen, Bare, Pairs):
         r = measure(encoding_type, triplets)
-        cells = [f"{v:.1f} / {n:.1f} / {w}" for v, n, w in (r["type"], r["from"], r["to"])]
-        print(f"| {encoding_type.name} | {r['doublets']} | {r['per_triplet']:.2f} | " + " | ".join(cells) + f" | {r['collisions']} | {r['wrong']} |")
+        cells = [
+            f"{v:.1f} / {n:.1f} / {w}" for v, n, w in (r["type"], r["from"], r["to"])
+        ]
+        print(
+            f"| {encoding_type.name} | {r['doublets']} | {r['per_triplet']:.2f} | "
+            + " | ".join(cells)
+            + f" | {r['collisions']} | {r['wrong']} |"
+        )
 
 
 if __name__ == "__main__":

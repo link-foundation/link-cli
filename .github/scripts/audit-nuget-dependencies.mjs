@@ -4,7 +4,10 @@ import { validateAudit } from './nuget-audit.mjs';
 mkdirSync('artifacts/security', { recursive: true });
 const listed = spawnSync('git', ['ls-files', '*.csproj'], { encoding: 'utf8' });
 if (listed.status !== 0) throw Error('Cannot enumerate the tracked project graph');
-const expected = listed.stdout.trim().split('\n').filter((file) => file && !file.startsWith('dev/log/'));
+const expected = listed.stdout
+  .trim()
+  .split('\n')
+  .filter((file) => file && !file.startsWith('dev/log/'));
 if (!expected.length) throw Error('No project graph to audit');
 const combined = { version: 1, projects: [] };
 const audit = { version: 1, projects: [] };
@@ -18,9 +21,7 @@ function run(args) {
     `${JSON.stringify(args)}\n${result.stdout || ''}${result.stderr || ''}\n`,
   );
   if (result.status !== 0 || result.error || result.stderr?.trim())
-    throw Error(
-      `Dependency audit command failed: ${result.stdout || ''}${result.stderr || ''}`,
-    );
+    throw Error(`Dependency audit command failed: ${result.stdout || ''}${result.stderr || ''}`);
   return result.stdout;
 }
 writeFileSync('artifacts/security/projects.json', JSON.stringify(expected, null, 2));
@@ -60,9 +61,6 @@ for (const project of expected) {
     );
   }
 }
-writeFileSync(
-  'artifacts/security/dependency-graph.json',
-  JSON.stringify(combined, null, 2),
-);
+writeFileSync('artifacts/security/dependency-graph.json', JSON.stringify(combined, null, 2));
 writeFileSync('artifacts/security/audit.json', JSON.stringify(audit, null, 2));
 validateAudit(audit, combined, expected);

@@ -53,19 +53,25 @@ export function toAddress(value, what = 'address') {
   }
   if (typeof value === 'number') {
     if (!Number.isSafeInteger(value) || value < 0) {
-      throw new AddressRangeError(`${what} must be a non-negative safe integer or a BigInt, got ${value}`);
+      throw new AddressRangeError(
+        `${what} must be a non-negative safe integer or a BigInt, got ${value}`,
+      );
     }
     return BigInt(value);
   }
   if (typeof value === 'string' && DIGITS.test(value)) return BigInt(value);
-  throw new AddressRangeError(`${what} must be a BigInt, a safe integer or a decimal string, got ${String(value)}`);
+  throw new AddressRangeError(
+    `${what} must be a BigInt, a safe integer or a decimal string, got ${String(value)}`,
+  );
 }
 
 /** Checks that `address` fits the backend; `maxAddress` null means unbounded. */
 export function checkAddress(value, maxAddress, what = 'address') {
   const address = toAddress(value, what);
   if (maxAddress !== null && maxAddress !== undefined && address > maxAddress) {
-    throw new AddressRangeError(`${what} ${address} exceeds the backend's largest address ${maxAddress}`);
+    throw new AddressRangeError(
+      `${what} ${address} exceeds the backend's largest address ${maxAddress}`,
+    );
   }
   return address;
 }
@@ -76,11 +82,15 @@ function number(address) {
 
 function restrictionLino(restriction, maxAddress, maxParts = 'three') {
   const limit = maxParts === 'four' ? 4 : 3;
-  if (!Array.isArray(restriction)) throw new TypeError(`a restriction is an array of up to ${maxParts} parts`);
-  if (restriction.length > limit) throw new TypeError(`a restriction has at most ${maxParts} parts, got ${restriction.length}`);
+  if (!Array.isArray(restriction))
+    throw new TypeError(`a restriction is an array of up to ${maxParts} parts`);
+  if (restriction.length > limit)
+    throw new TypeError(`a restriction has at most ${maxParts} parts, got ${restriction.length}`);
   return group(
     restriction.map((part, position) =>
-      part === null || part === undefined || part === ANY ? ANY : number(checkAddress(part, maxAddress, `restriction part ${position}`)),
+      part === null || part === undefined || part === ANY
+        ? ANY
+        : number(checkAddress(part, maxAddress, `restriction part ${position}`)),
     ),
   );
 }
@@ -91,10 +101,18 @@ function operation(name, argument) {
 
 /** Request documents, validated against `maxAddress` before anything is sent. */
 export const requests = {
-  count: (restriction = [], maxAddress) => operation('count', restrictionLino(restriction, maxAddress)),
-  each: (restriction = [], maxAddress) => operation('each', restrictionLino(restriction, maxAddress)),
+  count: (restriction = [], maxAddress) =>
+    operation('count', restrictionLino(restriction, maxAddress)),
+  each: (restriction = [], maxAddress) =>
+    operation('each', restrictionLino(restriction, maxAddress)),
   create: (source, target, maxAddress) =>
-    operation('create', group([number(checkAddress(source, maxAddress, 'source')), number(checkAddress(target, maxAddress, 'target'))])),
+    operation(
+      'create',
+      group([
+        number(checkAddress(source, maxAddress, 'source')),
+        number(checkAddress(target, maxAddress, 'target')),
+      ]),
+    ),
   update: (index, source, target, maxAddress) =>
     operation(
       'update',
@@ -104,8 +122,10 @@ export const requests = {
         number(checkAddress(target, maxAddress, 'target')),
       ]),
     ),
-  delete: (index, maxAddress) => operation('delete', number(checkAddress(index, maxAddress, 'index'))),
-  getName: (index, maxAddress) => operation('get-name', number(checkAddress(index, maxAddress, 'index'))),
+  delete: (index, maxAddress) =>
+    operation('delete', number(checkAddress(index, maxAddress, 'index'))),
+  getName: (index, maxAddress) =>
+    operation('get-name', number(checkAddress(index, maxAddress, 'index'))),
   setName: (index, name, maxAddress) => {
     if (typeof name !== 'string') throw new TypeError('a name is a string');
     return operation('set-name', group([number(checkAddress(index, maxAddress, 'index')), name]));
@@ -114,11 +134,15 @@ export const requests = {
     if (typeof name !== 'string') throw new TypeError('a name is a string');
     return operation('get-by-name', name);
   },
-  removeName: (index, maxAddress) => operation('remove-name', number(checkAddress(index, maxAddress, 'index'))),
-  subscribe: (restriction = [], maxAddress) => operation('subscribe', restrictionLino(restriction, maxAddress)),
+  removeName: (index, maxAddress) =>
+    operation('remove-name', number(checkAddress(index, maxAddress, 'index'))),
+  subscribe: (restriction = [], maxAddress) =>
+    operation('subscribe', restrictionLino(restriction, maxAddress)),
   unsubscribe: (subscription) => operation('unsubscribe', number(toSubscription(subscription))),
-  countTriplets: (restriction = [], maxAddress) => operation('count', restrictionLino(restriction, maxAddress, 'four')),
-  eachTriplets: (restriction = [], maxAddress) => operation('each', restrictionLino(restriction, maxAddress, 'four')),
+  countTriplets: (restriction = [], maxAddress) =>
+    operation('count', restrictionLino(restriction, maxAddress, 'four')),
+  eachTriplets: (restriction = [], maxAddress) =>
+    operation('each', restrictionLino(restriction, maxAddress, 'four')),
   createTriplet: (type, from, to, maxAddress) =>
     operation(
       'create',
@@ -138,7 +162,8 @@ export const requests = {
         number(checkAddress(to, maxAddress, 'to')),
       ]),
     ),
-  subscribeTriplets: (restriction = [], maxAddress) => operation('subscribe', restrictionLino(restriction, maxAddress, 'four')),
+  subscribeTriplets: (restriction = [], maxAddress) =>
+    operation('subscribe', restrictionLino(restriction, maxAddress, 'four')),
 };
 
 /** The largest subscription number: the servers count them in a `u32`. */
@@ -146,17 +171,22 @@ const MAX_SUBSCRIPTION = 2n ** 32n - 1n;
 
 function toSubscription(value) {
   const subscription = toAddress(value, 'subscription');
-  if (subscription > MAX_SUBSCRIPTION) throw new AddressRangeError(`subscription ${subscription} exceeds ${MAX_SUBSCRIPTION}`);
+  if (subscription > MAX_SUBSCRIPTION)
+    throw new AddressRangeError(`subscription ${subscription} exceeds ${MAX_SUBSCRIPTION}`);
   return subscription;
 }
 
 function malformed(what, document) {
-  return new MalformedMessageError(`expected ${what}, found ${document.map(formatLink).join(' ') || 'an empty reply'}`);
+  return new MalformedMessageError(
+    `expected ${what}, found ${document.map(formatLink).join(' ') || 'an empty reply'}`,
+  );
 }
 
 function parseNumber(value, what) {
   if (typeof value === 'string' && DIGITS.test(value)) return BigInt(value);
-  throw new MalformedMessageError(`expected a number for ${what}, found ${typeof value === 'string' ? value : formatLink(value)}`);
+  throw new MalformedMessageError(
+    `expected a number for ${what}, found ${typeof value === 'string' ? value : formatLink(value)}`,
+  );
 }
 
 /** The message of an `(error: 'message')` reply, or null. */
@@ -181,7 +211,12 @@ export function parseLink(link) {
 
 /** `(index: source target)` with every reference kept as the text the backend wrote (a number or a name). */
 export function parseNamedLink(link) {
-  if (typeof link === 'string' || link.id === null || link.values.length !== 2 || link.values.some((value) => typeof value !== 'string')) {
+  if (
+    typeof link === 'string' ||
+    link.id === null ||
+    link.values.length !== 2 ||
+    link.values.some((value) => typeof value !== 'string')
+  ) {
     throw new MalformedMessageError(`expected (index: source target), found ${formatLink(link)}`);
   }
   return { index: link.id, source: link.values[0], target: link.values[1] };
@@ -191,14 +226,18 @@ export function parseNamedLink(link) {
 function tripletParts(link) {
   if (typeof link === 'string' || link.id === null) return null;
   const [first] = link.values;
-  const parts = link.values.length === 1 && typeof first !== 'string' && first.id === null ? first.values : link.values;
+  const parts =
+    link.values.length === 1 && typeof first !== 'string' && first.id === null
+      ? first.values
+      : link.values;
   return parts.length === 3 ? parts : null;
 }
 
 /** `(index: type from to)` or `(index: (type from to))` as `{ index, type, from, to }` BigInts. */
 export function parseTriplet(link) {
   const parts = tripletParts(link);
-  if (parts === null) throw new MalformedMessageError(`expected (index: type from to), found ${formatLink(link)}`);
+  if (parts === null)
+    throw new MalformedMessageError(`expected (index: type from to), found ${formatLink(link)}`);
   return {
     index: parseNumber(link.id, 'an index'),
     type: parseNumber(parts[0], 'a type'),
@@ -227,15 +266,24 @@ function parseSide(side, parse) {
 
 function parseChangesWith(document, parse) {
   return document.map((change) => {
-    if (typeof change === 'string' || change.id !== null || change.values.length !== 2) throw malformed('(before) (after)', document);
-    return { before: parseSide(change.values[0], parse), after: parseSide(change.values[1], parse) };
+    if (typeof change === 'string' || change.id !== null || change.values.length !== 2)
+      throw malformed('(before) (after)', document);
+    return {
+      before: parseSide(change.values[0], parse),
+      after: parseSide(change.values[1], parse),
+    };
   });
 }
 
 export const replies = {
   count(document) {
     const [link] = document;
-    if (document.length !== 1 || typeof link === 'string' || link.id !== 'count' || link.values.length !== 1) {
+    if (
+      document.length !== 1 ||
+      typeof link === 'string' ||
+      link.id !== 'count' ||
+      link.values.length !== 1
+    ) {
       throw malformed('(count: N)', document);
     }
     return parseNumber(link.values[0], 'a count');
@@ -251,7 +299,13 @@ export const replies = {
   name(document) {
     if (document.length === 0) return null;
     const [link] = document;
-    if (document.length !== 1 || typeof link === 'string' || link.id !== 'name' || link.values.length !== 1 || typeof link.values[0] !== 'string') {
+    if (
+      document.length !== 1 ||
+      typeof link === 'string' ||
+      link.id !== 'name' ||
+      link.values.length !== 1 ||
+      typeof link.values[0] !== 'string'
+    ) {
       throw malformed('(name: text)', document);
     }
     return link.values[0];
@@ -259,7 +313,12 @@ export const replies = {
   link(document) {
     if (document.length === 0) return null;
     const [link] = document;
-    if (document.length !== 1 || typeof link === 'string' || link.id !== 'link' || link.values.length !== 1) {
+    if (
+      document.length !== 1 ||
+      typeof link === 'string' ||
+      link.id !== 'link' ||
+      link.values.length !== 1
+    ) {
       throw malformed('(link: N)', document);
     }
     return parseNumber(link.values[0], 'a link');
@@ -267,11 +326,17 @@ export const replies = {
   /** `(subscription: N)` as a number. */
   subscription(document) {
     const [link] = document;
-    if (document.length !== 1 || typeof link === 'string' || link.id !== 'subscription' || link.values.length !== 1) {
+    if (
+      document.length !== 1 ||
+      typeof link === 'string' ||
+      link.id !== 'subscription' ||
+      link.values.length !== 1
+    ) {
       throw malformed('(subscription: N)', document);
     }
     const subscription = parseNumber(link.values[0], 'a subscription');
-    if (subscription > MAX_SUBSCRIPTION) throw new MalformedMessageError(`subscription ${subscription} exceeds ${MAX_SUBSCRIPTION}`);
+    if (subscription > MAX_SUBSCRIPTION)
+      throw new MalformedMessageError(`subscription ${subscription} exceeds ${MAX_SUBSCRIPTION}`);
     return Number(subscription);
   },
   empty(document) {
@@ -281,7 +346,13 @@ export const replies = {
 
 function notificationNumber(document) {
   const [link] = document;
-  if (document.length === 0 || typeof link === 'string' || link.id !== 'notify' || link.values.length !== 1) return null;
+  if (
+    document.length === 0 ||
+    typeof link === 'string' ||
+    link.id !== 'notify' ||
+    link.values.length !== 1
+  )
+    return null;
   const [value] = link.values;
   return typeof value === 'string' && DIGITS.test(value) ? BigInt(value) : null;
 }
@@ -299,13 +370,15 @@ export function isNotificationText(text) {
 /** `(notify: N)` and its `(before) (after)` lines as `{ subscription, changes }`. */
 export function parseNotification(document) {
   const subscription = notificationNumber(document);
-  if (subscription === null || subscription > MAX_SUBSCRIPTION) throw malformed('(notify: N) (before) (after) ...', document);
+  if (subscription === null || subscription > MAX_SUBSCRIPTION)
+    throw malformed('(notify: N) (before) (after) ...', document);
   return { subscription: Number(subscription), changes: replies.changes(document.slice(1)) };
 }
 
 /** A push of a server in triplet mode: `(notify: N)` and its changes of triplets. */
 export function parseTripletNotification(document) {
   const subscription = notificationNumber(document);
-  if (subscription === null || subscription > MAX_SUBSCRIPTION) throw malformed('(notify: N) (before) (after) ...', document);
+  if (subscription === null || subscription > MAX_SUBSCRIPTION)
+    throw malformed('(notify: N) (before) (after) ...', document);
   return { subscription: Number(subscription), changes: replies.tripletChanges(document.slice(1)) };
 }

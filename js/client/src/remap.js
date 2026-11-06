@@ -22,7 +22,17 @@
 // reference) or a NotFoundError (the link written), before anything is sent.
 
 import { LinksDecorator } from './client.js';
-import { byIndex, checkRestriction, COMPOSED_OPERATIONS, isAny, isNullAddress, refuseTriplets, requireGuarantees, runBatch, untranslatable } from './composed.js';
+import {
+  byIndex,
+  checkRestriction,
+  COMPOSED_OPERATIONS,
+  isAny,
+  isNullAddress,
+  refuseTriplets,
+  requireGuarantees,
+  runBatch,
+  untranslatable,
+} from './composed.js';
 import { AddressRangeError, NotFoundError } from './errors.js';
 import { toAddress } from './operations.js';
 
@@ -66,10 +76,13 @@ export class AddressTable {
 
   constructor({ first, newId } = {}) {
     if ((first === undefined) === (newId === undefined)) {
-      throw new TypeError('an address table gives addresses from `first` on or ids from `newId()`, one of the two');
+      throw new TypeError(
+        'an address table gives addresses from `first` on or ids from `newId()`, one of the two',
+      );
     }
     if (newId !== undefined) {
-      if (typeof newId !== 'function') throw new TypeError('newId is a function returning a new id');
+      if (typeof newId !== 'function')
+        throw new TypeError('newId is a function returning a new id');
       this.#newId = newId;
     } else {
       this.#next = toAddress(first, 'first');
@@ -110,11 +123,14 @@ export class AddressTable {
   add(outer, inner) {
     const key = this.#key(outer);
     const address = toAddress(inner);
-    if (isNullAddress(key) || address === 0n) throw new AddressRangeError('the null link is mapped to itself');
+    if (isNullAddress(key) || address === 0n)
+      throw new AddressRangeError('the null link is mapped to itself');
     const knownInner = this.#inner.get(key);
-    if (knownInner !== undefined && knownInner !== address) throw new AddressRangeError(`${key} is mapped to ${knownInner} already`);
+    if (knownInner !== undefined && knownInner !== address)
+      throw new AddressRangeError(`${key} is mapped to ${knownInner} already`);
     const knownOuter = this.#outer.get(address);
-    if (knownOuter !== undefined && knownOuter !== key) throw new AddressRangeError(`${address} is mapped from ${knownOuter} already`);
+    if (knownOuter !== undefined && knownOuter !== key)
+      throw new AddressRangeError(`${address} is mapped from ${knownOuter} already`);
     this.#inner.set(key, address);
     this.#outer.set(address, key);
   }
@@ -126,7 +142,13 @@ export class AddressTable {
   }
 }
 
-const REMAPPED_OPERATIONS = [...COMPOSED_OPERATIONS, 'subscribe', 'unsubscribe', 'receiveNotification', 'onNotification'];
+const REMAPPED_OPERATIONS = [
+  ...COMPOSED_OPERATIONS,
+  'subscribe',
+  'unsubscribe',
+  'receiveNotification',
+  'onNotification',
+];
 
 /** `links` under the addresses of `map`; see the top of this module. */
 export class RemapLinks extends LinksDecorator {
@@ -146,7 +168,10 @@ export class RemapLinks extends LinksDecorator {
       ...inner,
       backend: `remap(${inner.backend})`,
       operations: inner.operations.filter((operation) => REMAPPED_OPERATIONS.includes(operation)),
-      maxAddress: typeof this.map.maxAddress === 'function' ? this.map.maxAddress(inner.maxAddress) : inner.maxAddress,
+      maxAddress:
+        typeof this.map.maxAddress === 'function'
+          ? this.map.maxAddress(inner.maxAddress)
+          : inner.maxAddress,
       bulk: 'sequential-non-atomic',
       triplets: false,
     });
@@ -179,18 +204,26 @@ export class RemapLinks extends LinksDecorator {
 
   async #referred(outer) {
     const inner = await this.toInner(outer);
-    if (inner === null) throw new AddressRangeError(`a link of this network cannot refer to ${outer}: the address is not of this network`);
+    if (inner === null)
+      throw new AddressRangeError(
+        `a link of this network cannot refer to ${outer}: the address is not of this network`,
+      );
     return inner;
   }
 
   async #outerLink(link) {
     if (link === null) return null;
-    return { index: await this.toOuter(link.index), source: await this.toOuter(link.source), target: await this.toOuter(link.target) };
+    return {
+      index: await this.toOuter(link.index),
+      source: await this.toOuter(link.source),
+      target: await this.toOuter(link.target),
+    };
   }
 
   async #outerChanges(changes) {
     const outer = [];
-    for (const { before, after } of changes) outer.push({ before: await this.#outerLink(before), after: await this.#outerLink(after) });
+    for (const { before, after } of changes)
+      outer.push({ before: await this.#outerLink(before), after: await this.#outerLink(after) });
     return outer;
   }
 
@@ -218,7 +251,8 @@ export class RemapLinks extends LinksDecorator {
     const inner = await this.#innerRestriction(restriction);
     if (inner === null) return [];
     const links = [];
-    for (const link of await this.links.each(inner, options)) links.push(await this.#outerLink(link));
+    for (const link of await this.links.each(inner, options))
+      links.push(await this.#outerLink(link));
     return byIndex(links);
   }
 
@@ -282,25 +316,34 @@ export class RemapLinks extends LinksDecorator {
   /** Subscribes below; the changes pushed read under the addresses above. */
   async subscribe(restriction = [], options) {
     const inner = await this.#innerRestriction(restriction);
-    if (inner === null) throw new AddressRangeError('a subscription names an address that is not of this network');
+    if (inner === null)
+      throw new AddressRangeError('a subscription names an address that is not of this network');
     return this.links.subscribe(inner, options);
   }
 
   async receiveNotification(options) {
     const notification = await this.links.receiveNotification(options);
-    return notification === null ? null : { subscription: notification.subscription, changes: await this.#outerChanges(notification.changes) };
+    return notification === null
+      ? null
+      : {
+          subscription: notification.subscription,
+          changes: await this.#outerChanges(notification.changes),
+        };
   }
 
   onNotification(listener) {
-    if (typeof listener !== 'function') throw new TypeError('a notification listener is a function');
+    if (typeof listener !== 'function')
+      throw new TypeError('a notification listener is a function');
     return this.links.onNotification((notification) => {
       // Mapping may wait (a map that reads links); the order is kept.
       this.#delivered = this.#delivered
         .then(() => this.#outerChanges(notification.changes))
         .then((changes) => listener({ subscription: notification.subscription, changes }))
-        .catch((error) => queueMicrotask(() => {
-          throw error;
-        }));
+        .catch((error) =>
+          queueMicrotask(() => {
+            throw error;
+          }),
+        );
     });
   }
 }

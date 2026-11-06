@@ -76,8 +76,7 @@ export function parseLycheeFailures(content) {
       continue;
     }
 
-    const answered =
-      /^\d{3}$/.test(marker) || /rejected status code/i.test(detail);
+    const answered = /^\d{3}$/.test(marker) || /rejected status code/i.test(detail);
 
     const status = /^\d{3}$/.test(marker)
       ? Number(marker)
@@ -108,11 +107,7 @@ export function parseAcceptRanges(spec) {
     const range = trimmed.match(/^(\d+)\.\.=(\d+)$/);
 
     if (range) {
-      for (
-        let status = Number(range[1]);
-        status <= Number(range[2]);
-        status += 1
-      ) {
+      for (let status = Number(range[1]); status <= Number(range[2]); status += 1) {
         accepted.push(status);
       }
       continue;
@@ -134,9 +129,7 @@ export function parseAcceptRanges(spec) {
  */
 export function extractLycheeRequestOptions(workflowText) {
   const accept = workflowText.match(/--accept[=\s]+["']?([^\s"']+)["']?/);
-  const userAgent = workflowText.match(
-    /--user-agent[=\s]+["']?([^\s"']+)["']?/
-  );
+  const userAgent = workflowText.match(/--user-agent[=\s]+["']?([^\s"']+)["']?/);
 
   return {
     accept: accept ? accept[1] : ACCEPT_DEFAULT,
@@ -185,11 +178,14 @@ export async function recheckUnanswered(urls, options) {
 
     for (const url of pending) {
       const remainingMs = budgetMs - (Date.now() - startedAt);
-      if (remainingMs <= 0) { stillPending.push(url); continue; }
+      if (remainingMs <= 0) {
+        stillPending.push(url);
+        continue;
+      }
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        Math.min(REQUEST_TIMEOUT_MS, remainingMs)
+        Math.min(REQUEST_TIMEOUT_MS, remainingMs),
       );
       let response;
 
@@ -248,11 +244,7 @@ export async function recheckUnanswered(urls, options) {
  * @param {{recovered: string[], stillBroken: unknown[]}} result
  * @returns {boolean}
  */
-export function allFailuresRecovered(
-  finalFailureCount,
-  unansweredCount,
-  result
-) {
+export function allFailuresRecovered(finalFailureCount, unansweredCount, result) {
   return (
     finalFailureCount === 0 &&
     unansweredCount > 0 &&
@@ -263,8 +255,7 @@ export function allFailuresRecovered(
 
 async function main() {
   const lycheeOutput = process.env.LYCHEE_OUTPUT || 'lychee/out.md';
-  const recoveredOutput =
-    process.env.RECOVERED_OUTPUT || 'lychee/recovered.txt';
+  const recoveredOutput = process.env.RECOVERED_OUTPUT || 'lychee/recovered.txt';
   const workflowText = readFileSync('.github/workflows/links.yml', 'utf8');
   const options = extractLycheeRequestOptions(workflowText);
   const content = readFileSync(lycheeOutput, 'utf8');
@@ -272,14 +263,18 @@ async function main() {
   const failures = parseLycheeFailures(content);
 
   const finalFailures = failures.filter(
-    (failure) => !failure.retryable || !/^https?:\/\//i.test(failure.url)
+    (failure) => !failure.retryable || !/^https?:\/\//i.test(failure.url),
   );
-  const unanswered = [...new Set(failures
-    .filter((failure) => failure.retryable && /^https?:\/\//i.test(failure.url))
-    .map((failure) => failure.url))];
+  const unanswered = [
+    ...new Set(
+      failures
+        .filter((failure) => failure.retryable && /^https?:\/\//i.test(failure.url))
+        .map((failure) => failure.url),
+    ),
+  ];
 
   console.log(
-    `Re-check: ${failures.length} lychee failure(s), ${finalFailures.length} permanent failures, ${unanswered.length} retryable failures`
+    `Re-check: ${failures.length} lychee failure(s), ${finalFailures.length} permanent failures, ${unanswered.length} retryable failures`,
   );
 
   if (unanswered.length === 0) {
@@ -289,17 +284,13 @@ async function main() {
 
   const result = await recheckUnanswered(unanswered, {
     ...options,
-    budgetSeconds: Number(
-      process.env.RECHECK_BUDGET_SECONDS || BUDGET_SECONDS_DEFAULT
-    ),
-    initialWaitMs: Number(
-      process.env.RECHECK_WAIT_MS || INITIAL_WAIT_MS_DEFAULT
-    ),
+    budgetSeconds: Number(process.env.RECHECK_BUDGET_SECONDS || BUDGET_SECONDS_DEFAULT),
+    initialWaitMs: Number(process.env.RECHECK_WAIT_MS || INITIAL_WAIT_MS_DEFAULT),
   });
 
   for (const url of result.recovered) {
     console.log(
-      `::notice::${url} failed transiently in lychee but answers ${options.accept} now -- not a broken link`
+      `::notice::${url} failed transiently in lychee but answers ${options.accept} now -- not a broken link`,
     );
   }
 
@@ -308,22 +299,18 @@ async function main() {
   }
 
   console.log(
-    `Re-check finished: ${result.recovered.length} recovered, ${result.stillBroken.length} still failed`
+    `Re-check finished: ${result.recovered.length} recovered, ${result.stillBroken.length} still failed`,
   );
 
   if (allFailuresRecovered(finalFailures.length, unanswered.length, result)) {
-    appendFileSync(
-      process.env.GITHUB_OUTPUT || '/dev/null',
-      'all_recovered=true\n'
-    );
+    appendFileSync(process.env.GITHUB_OUTPUT || '/dev/null', 'all_recovered=true\n');
   }
 }
 
 // The re-check only ever downgrades failures, so any crash here must not
 // mask itself as a verdict: exit 0 in every case.
 const isDirectExecution =
-  process.argv[1] &&
-  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 
 if (isDirectExecution) {
   main().catch((error) => {

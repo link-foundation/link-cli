@@ -53,10 +53,18 @@ function parseArguments(argv) {
   }
   if (!options.backend) {
     const env = process.env;
-    options.backend = env.CLINK_RUST ? 'rust' : env.CLINK_CSHARP ? 'csharp' : env.CLINK_WASM ? 'wasm' : null;
+    options.backend = env.CLINK_RUST
+      ? 'rust'
+      : env.CLINK_CSHARP
+        ? 'csharp'
+        : env.CLINK_WASM
+          ? 'wasm'
+          : null;
   }
-  if (!['rust', 'csharp', 'wasm'].includes(options.backend)) throw new Error('--backend rust|csharp|wasm (with CLINK_RUST, CLINK_CSHARP or CLINK_WASM set)');
-  if (!Number.isInteger(options.records) || options.records < 1) throw new Error('--records is a positive integer');
+  if (!['rust', 'csharp', 'wasm'].includes(options.backend))
+    throw new Error('--backend rust|csharp|wasm (with CLINK_RUST, CLINK_CSHARP or CLINK_WASM set)');
+  if (!Number.isInteger(options.records) || options.records < 1)
+    throw new Error('--records is a positive integer');
   return options;
 }
 
@@ -86,8 +94,30 @@ const PLACES = [
   ['Zürich', 'Schweiz'],
   ['Kraków', 'Polska'],
 ];
-const WORDS = ['Khách sạn', 'Nhà nghỉ', 'ホテル', 'Гостиница', 'Gästehaus', 'Pousada', 'فندق', "L'Auberge", 'Hostel "Central"', 'Villa (garden)'];
-const SUFFIXES = ['Sông Hồng', 'さくら', 'Звезда', 'Am See', 'Do Sol', 'النيل', 'du Lac', '🏨 Deluxe', 'Old Town', 'Riverside'];
+const WORDS = [
+  'Khách sạn',
+  'Nhà nghỉ',
+  'ホテル',
+  'Гостиница',
+  'Gästehaus',
+  'Pousada',
+  'فندق',
+  "L'Auberge",
+  'Hostel "Central"',
+  'Villa (garden)',
+];
+const SUFFIXES = [
+  'Sông Hồng',
+  'さくら',
+  'Звезда',
+  'Am See',
+  'Do Sol',
+  'النيل',
+  'du Lac',
+  '🏨 Deluxe',
+  'Old Town',
+  'Riverside',
+];
 
 function generateRecords(count, seed) {
   const next = random(seed);
@@ -131,7 +161,8 @@ async function openBackend(name) {
     };
   }
   const path = process.env[name === 'rust' ? 'CLINK_RUST' : 'CLINK_CSHARP'];
-  if (!path || !existsSync(path)) throw new Error(`set CLINK_${name.toUpperCase()} to the clink executable`);
+  if (!path || !existsSync(path))
+    throw new Error(`set CLINK_${name.toUpperCase()} to the clink executable`);
   const [command, args] = path.endsWith('.dll') ? ['dotnet', [path]] : [path, []];
   const dir = await mkdtemp(join(tmpdir(), `synthetic consumer ${name} `));
   const db = join(dir, 'consumer db.links');
@@ -202,7 +233,9 @@ class Phases {
     const ms = performance.now() - started;
     this.list.push({ phase: name, requests: operations.length, ms });
     if (!result.completed) {
-      throw new Error(`${name}: ${result.ok} ok, ${result.failed} failed, ${result.unknown} unknown, ${result.notSent} not sent: ${result.firstError?.message}`);
+      throw new Error(
+        `${name}: ${result.ok} ok, ${result.failed} failed, ${result.unknown} unknown, ${result.notSent} not sent: ${result.firstError?.message}`,
+      );
     }
     return result.results.map((entry) => entry.value);
   }
@@ -241,14 +274,27 @@ async function write(client, records, phases) {
   }));
 
   // 1. atoms, then their names
-  const atoms = await phases.batch(client, 'atoms', texts.items.map((_, i) => ({ op: 'create', source: ATOM_BASE + BigInt(i), target: ATOM_BASE + BigInt(i) })));
+  const atoms = await phases.batch(
+    client,
+    'atoms',
+    texts.items.map((_, i) => ({
+      op: 'create',
+      source: ATOM_BASE + BigInt(i),
+      target: ATOM_BASE + BigInt(i),
+    })),
+  );
   const atom = (position) => atoms[position].index;
-  await phases.batch(client, 'names', texts.items.map((value, i) => ({ op: 'setName', index: atom(i), name: value })));
+  await phases.batch(
+    client,
+    'names',
+    texts.items.map((value, i) => ({ op: 'setName', index: atom(i), name: value })),
+  );
   const type = (name) => atom(texts.positions.get(`type:${name}`));
 
   // 2. fields (type value), shared between records
   const fields = new Interned();
-  const field = (typeName, value) => fields.add(`${typeName} ${value}`, { source: type(typeName), target: atom(value) });
+  const field = (typeName, value) =>
+    fields.add(`${typeName} ${value}`, { source: type(typeName), target: atom(value) });
   const fieldPlan = plan.map((p) => ({
     name: field('name', p.name),
     rating: field('rating', p.rating),
@@ -256,14 +302,31 @@ async function write(client, records, phases) {
     country: field('country', p.country),
     prices: p.offers.map((offer) => field('price', offer.price)),
   }));
-  const fieldLinks = await phases.batch(client, 'fields', fields.items.map((pair) => ({ op: 'create', ...pair })));
+  const fieldLinks = await phases.batch(
+    client,
+    'fields',
+    fields.items.map((pair) => ({ op: 'create', ...pair })),
+  );
   const fieldIndex = (position) => fieldLinks[position].index;
 
   // 3. records and addresses
-  const recordLinks = await phases.batch(client, 'records', plan.map((p) => ({ op: 'create', source: type('record'), target: atom(p.key) })));
+  const recordLinks = await phases.batch(
+    client,
+    'records',
+    plan.map((p) => ({ op: 'create', source: type('record'), target: atom(p.key) })),
+  );
   const addresses = new Interned();
-  const addressPlan = fieldPlan.map((f) => addresses.add(`${f.city} ${f.country}`, { source: fieldIndex(f.city), target: fieldIndex(f.country) }));
-  const addressLinks = await phases.batch(client, 'addresses', addresses.items.map((pair) => ({ op: 'create', ...pair })));
+  const addressPlan = fieldPlan.map((f) =>
+    addresses.add(`${f.city} ${f.country}`, {
+      source: fieldIndex(f.city),
+      target: fieldIndex(f.country),
+    }),
+  );
+  const addressLinks = await phases.batch(
+    client,
+    'addresses',
+    addresses.items.map((pair) => ({ op: 'create', ...pair })),
+  );
 
   // 4. members and offers; a duplicate offer is the same pair, written once
   const members = new Interned();
@@ -272,8 +335,15 @@ async function write(client, records, phases) {
   plan.forEach((p, r) => {
     const record = recordLinks[r].index;
     const f = fieldPlan[r];
-    for (const position of [f.name, f.rating]) members.add(`${record} ${fieldIndex(position)}`, { source: record, target: fieldIndex(position) });
-    members.add(`${record} a${addressPlan[r]}`, { source: record, target: addressLinks[addressPlan[r]].index });
+    for (const position of [f.name, f.rating])
+      members.add(`${record} ${fieldIndex(position)}`, {
+        source: record,
+        target: fieldIndex(position),
+      });
+    members.add(`${record} a${addressPlan[r]}`, {
+      source: record,
+      target: addressLinks[addressPlan[r]].index,
+    });
     p.offers.forEach((offer, o) => {
       const key = `${record} ${fieldIndex(f.prices[o])}`;
       const before = members.items.length;
@@ -282,10 +352,31 @@ async function write(client, records, phases) {
       else offerPositions.push({ position, trace: offer.trace });
     });
   });
-  const memberLinks = await phases.batch(client, 'members', members.items.map((pair) => ({ op: 'create', ...pair })));
-  await phases.batch(client, 'traces', offerPositions.map(({ position, trace }) => ({ op: 'create', source: memberLinks[position].index, target: atom(trace) })));
+  const memberLinks = await phases.batch(
+    client,
+    'members',
+    members.items.map((pair) => ({ op: 'create', ...pair })),
+  );
+  await phases.batch(
+    client,
+    'traces',
+    offerPositions.map(({ position, trace }) => ({
+      op: 'create',
+      source: memberLinks[position].index,
+      target: atom(trace),
+    })),
+  );
 
-  return { duplicateOffers, links: atoms.length + fieldLinks.length + recordLinks.length + addressLinks.length + memberLinks.length + offerPositions.length };
+  return {
+    duplicateOffers,
+    links:
+      atoms.length +
+      fieldLinks.length +
+      recordLinks.length +
+      addressLinks.length +
+      memberLinks.length +
+      offerPositions.length,
+  };
 }
 
 /** Rebuilds the records from a store, using only what a fresh client reads. */
@@ -294,17 +385,30 @@ async function readBack(client, phases) {
   const links = await client.each();
   phases.list.push({ phase: 'read links', requests: 1, ms: performance.now() - started });
   const byIndex = new Map(links.map((link) => [link.index, link]));
-  const atomIndexes = links.filter((link) => link.source >= ATOM_BASE && link.source === link.target).map((link) => link.index);
-  const names = await phases.batch(client, 'read names', atomIndexes.map((index) => ({ op: 'getName', index })));
+  const atomIndexes = links
+    .filter((link) => link.source >= ATOM_BASE && link.source === link.target)
+    .map((link) => link.index);
+  const names = await phases.batch(
+    client,
+    'read names',
+    atomIndexes.map((index) => ({ op: 'getName', index })),
+  );
   const text = new Map(atomIndexes.map((index, i) => [index, names[i]]));
-  const typeOf = new Map([...text].filter(([, value]) => value.startsWith('type:')).map(([index, value]) => [index, value.slice(5)]));
+  const typeOf = new Map(
+    [...text]
+      .filter(([, value]) => value.startsWith('type:'))
+      .map(([index, value]) => [index, value.slice(5)]),
+  );
   const fieldOf = (index) => {
     const link = byIndex.get(index);
-    return link && typeOf.has(link.source) ? { type: typeOf.get(link.source), value: text.get(link.target) } : null;
+    return link && typeOf.has(link.source)
+      ? { type: typeOf.get(link.source), value: text.get(link.target) }
+      : null;
   };
   const records = new Map();
   for (const link of links) {
-    if (typeOf.get(link.source) === 'record') records.set(link.index, { key: text.get(link.target), offers: [] });
+    if (typeOf.get(link.source) === 'record')
+      records.set(link.index, { key: text.get(link.target), offers: [] });
   }
   const offers = new Map();
   for (const link of links) {
@@ -319,7 +423,10 @@ async function readBack(client, phases) {
       record[field.type] = field.value;
     } else {
       const address = byIndex.get(link.target);
-      record.address = { city: fieldOf(address.source).value, country: fieldOf(address.target).value };
+      record.address = {
+        city: fieldOf(address.source).value,
+        country: fieldOf(address.target).value,
+      };
     }
   }
   for (const link of links) {
@@ -333,14 +440,24 @@ async function readBack(client, phases) {
 function normalize(records) {
   return records
     .map(({ key, name, rating, address, offers }) => {
-      const unique = [...new Map(offers.map((offer) => [`${offer.price}\u0000${offer.trace}`, offer])).values()];
-      return JSON.stringify({ key, name, rating, address: { city: address.city, country: address.country }, offers: unique.map((o) => `${o.price} @ ${o.trace}`).sort() });
+      const unique = [
+        ...new Map(offers.map((offer) => [`${offer.price}\u0000${offer.trace}`, offer])).values(),
+      ];
+      return JSON.stringify({
+        key,
+        name,
+        rating,
+        address: { city: address.city, country: address.country },
+        offers: unique.map((o) => `${o.price} @ ${o.trace}`).sort(),
+      });
     })
     .sort();
 }
 
 function percentile(sorted, p) {
-  return sorted.length === 0 ? 0 : sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))];
+  return sorted.length === 0
+    ? 0
+    : sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))];
 }
 
 async function main() {
@@ -378,16 +495,34 @@ async function main() {
     const mismatches = expected.filter((record, i) => record !== actual[i]);
     const latency = (durations) => {
       const sorted = [...durations].sort((a, b) => a - b);
-      return { p50: percentile(sorted, 50), p95: percentile(sorted, 95), p99: percentile(sorted, 99), max: sorted.at(-1) ?? 0 };
+      return {
+        p50: percentile(sorted, 50),
+        p95: percentile(sorted, 95),
+        p99: percentile(sorted, 99),
+        max: sorted.at(-1) ?? 0,
+      };
     };
     Object.assign(report, {
       runtime: globalThis.Deno ? 'deno' : globalThis.Bun ? 'bun' : 'node',
       linksWritten: written.links,
       linksRead: read.links,
       duplicateOffersDropped: written.duplicateOffers,
-      verified: mismatches.length === 0 && actual.length === expected.length && read.links === written.links,
-      write: { ms: writeMs, requests: writer.durations.length, requestLatencyMs: latency(writer.durations), phases: writePhases.list },
-      read: { ms: readMs, requests: reader.durations.length, requestLatencyMs: latency(reader.durations), phases: readPhases.list },
+      verified:
+        mismatches.length === 0 &&
+        actual.length === expected.length &&
+        read.links === written.links,
+      write: {
+        ms: writeMs,
+        requests: writer.durations.length,
+        requestLatencyMs: latency(writer.durations),
+        phases: writePhases.list,
+      },
+      read: {
+        ms: readMs,
+        requests: reader.durations.length,
+        requestLatencyMs: latency(reader.durations),
+        phases: readPhases.list,
+      },
       clientHeapDeltaBytes: process.memoryUsage().heapUsed - heapBefore,
       clientRssBytes: process.memoryUsage().rss,
       disk: await backend.disk(),
@@ -396,17 +531,33 @@ async function main() {
       console.log(JSON.stringify(report, null, 2));
     } else {
       const ms = (value) => `${value.toFixed(1)} ms`;
-      const bytes = (value) => (value === null || value === undefined ? 'n/a' : `${(value / 1024).toFixed(0)} KiB`);
-      console.log(`synthetic consumer on ${report.runtime}, backend ${report.backend}: ${report.records} records, window ${report.window}`);
+      const bytes = (value) =>
+        value === null || value === undefined ? 'n/a' : `${(value / 1024).toFixed(0)} KiB`;
+      console.log(
+        `synthetic consumer on ${report.runtime}, backend ${report.backend}: ${report.records} records, window ${report.window}`,
+      );
       for (const side of ['write', 'read']) {
         const { ms: total, requests, requestLatencyMs: l, phases } = report[side];
-        console.log(`  ${side}: ${ms(total)}, ${requests} requests (${(requests / (total / 1000)).toFixed(0)}/s); request p50 ${ms(l.p50)}, p95 ${ms(l.p95)}, p99 ${ms(l.p99)}, max ${ms(l.max)}`);
-        for (const phase of phases) console.log(`    ${phase.phase.padEnd(12)} ${String(phase.requests).padStart(6)} requests  ${ms(phase.ms)}`);
+        console.log(
+          `  ${side}: ${ms(total)}, ${requests} requests (${(requests / (total / 1000)).toFixed(0)}/s); request p50 ${ms(l.p50)}, p95 ${ms(l.p95)}, p99 ${ms(l.p99)}, max ${ms(l.max)}`,
+        );
+        for (const phase of phases)
+          console.log(
+            `    ${phase.phase.padEnd(12)} ${String(phase.requests).padStart(6)} requests  ${ms(phase.ms)}`,
+          );
       }
-      console.log(`  links: ${report.linksWritten} written, ${report.linksRead} read back; ${report.duplicateOffersDropped} duplicate offers dropped`);
-      console.log(`  memory: client heap +${bytes(report.clientHeapDeltaBytes)}, client RSS ${bytes(report.clientRssBytes)}, server peak RSS ${bytes(report.serverPeakRssBytes)}`);
-      console.log(`  disk: ${report.disk ? `${bytes(report.disk.bytes)} in ${report.disk.files.map((f) => `${f.file} (${bytes(f.bytes)})`).join(', ')}` : 'n/a (in memory)'}`);
-      console.log(`  readback by a fresh client: ${report.verified ? 'identical' : `${mismatches.length} records differ, e.g. ${mismatches[0]}`}`);
+      console.log(
+        `  links: ${report.linksWritten} written, ${report.linksRead} read back; ${report.duplicateOffersDropped} duplicate offers dropped`,
+      );
+      console.log(
+        `  memory: client heap +${bytes(report.clientHeapDeltaBytes)}, client RSS ${bytes(report.clientRssBytes)}, server peak RSS ${bytes(report.serverPeakRssBytes)}`,
+      );
+      console.log(
+        `  disk: ${report.disk ? `${bytes(report.disk.bytes)} in ${report.disk.files.map((f) => `${f.file} (${bytes(f.bytes)})`).join(', ')}` : 'n/a (in memory)'}`,
+      );
+      console.log(
+        `  readback by a fresh client: ${report.verified ? 'identical' : `${mismatches.length} records differ, e.g. ${mismatches[0]}`}`,
+      );
     }
     if (!report.verified) process.exitCode = 1;
   } finally {

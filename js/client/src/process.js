@@ -75,10 +75,24 @@ export class ServerProcess {
  * `port` (default 0: any free port), `env`, `cwd`, `signal`, `deadline`,
  * `timeout` (default 30 s: the C# server compiles on first start).
  */
-export async function startServer({ command, args = [], db, host = '127.0.0.1', port = 0, env, cwd, signal, deadline, timeout = 30000 } = {}) {
-  if (typeof command !== 'string' || command === '') throw new TypeError('command is the path of the clink executable');
-  if (typeof db !== 'string' || db === '') throw new TypeError('db is the path of the links database file');
-  if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) throw new TypeError('args is an array of strings');
+export async function startServer({
+  command,
+  args = [],
+  db,
+  host = '127.0.0.1',
+  port = 0,
+  env,
+  cwd,
+  signal,
+  deadline,
+  timeout = 30000,
+} = {}) {
+  if (typeof command !== 'string' || command === '')
+    throw new TypeError('command is the path of the clink executable');
+  if (typeof db !== 'string' || db === '')
+    throw new TypeError('db is the path of the links database file');
+  if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string'))
+    throw new TypeError('args is an array of strings');
   const scope = scopeOf({ signal, deadline, timeout });
   const early = scopeError(scope, 'not-sent');
   if (early) throw early;
@@ -96,7 +110,9 @@ export async function startServer({ command, args = [], db, host = '127.0.0.1', 
   };
   child.stderr.setEncoding('utf8');
   child.stderr.on('data', onStderr);
-  const exited = new Promise((resolve) => child.once('exit', (code, signal) => resolve({ code, signal })));
+  const exited = new Promise((resolve) =>
+    child.once('exit', (code, signal) => resolve({ code, signal })),
+  );
   let address;
   try {
     address = await new Promise((resolve, reject) => {
@@ -114,13 +130,24 @@ export async function startServer({ command, args = [], db, host = '127.0.0.1', 
         const line = lines.find((candidate) => candidate.startsWith(BANNER));
         if (line !== undefined) finish(null, line.slice(BANNER.length).trim());
       };
-      const onError = (error) => finish(new ConnectionClosedError(`cannot start ${command}: ${error.message}`, { outcome: 'not-sent', cause: error }));
+      const onError = (error) =>
+        finish(
+          new ConnectionClosedError(`cannot start ${command}: ${error.message}`, {
+            outcome: 'not-sent',
+            cause: error,
+          }),
+        );
       const stop = watchScope(scope, (errorOf) => finish(errorOf('not-sent')));
       child.stdout.setEncoding('utf8');
       child.stdout.on('data', onStdout);
       child.once('error', onError);
       exited.then(({ code, signal: exitSignal }) =>
-        finish(new ConnectionClosedError(`${command} exited (${exitSignal ?? `code ${code}`}) before listening${stderr ? `: ${stderr.trim()}` : ''}`, { outcome: 'not-sent' })),
+        finish(
+          new ConnectionClosedError(
+            `${command} exited (${exitSignal ?? `code ${code}`}) before listening${stderr ? `: ${stderr.trim()}` : ''}`,
+            { outcome: 'not-sent' },
+          ),
+        ),
       );
     });
   } catch (error) {
@@ -187,6 +214,9 @@ export class ProcessTransport {
       failure = error;
     }
     await this.server.close();
-    if (failure) throw failure instanceof LinksError ? failure : new ConnectionClosedError(failure.message, { cause: failure });
+    if (failure)
+      throw failure instanceof LinksError
+        ? failure
+        : new ConnectionClosedError(failure.message, { cause: failure });
   }
 }

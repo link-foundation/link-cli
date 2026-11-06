@@ -3,11 +3,7 @@ const request = fetch;
 export const NUGET_AUTH_HINT =
   'Renew NUGET_API_KEY with push permission and the correct package owner/glob, or configure NuGet trusted publishing and set the NUGET_USER repository variable.';
 
-export function selectNugetCredential({
-  oidcOutcome = 'skipped',
-  oidcKey = '',
-  apiKey = '',
-} = {}) {
+export function selectNugetCredential({ oidcOutcome = 'skipped', oidcKey = '', apiKey = '' } = {}) {
   if (oidcOutcome === 'success' && oidcKey)
     return {
       method: 'trusted-publishing',
@@ -41,8 +37,7 @@ export async function checkNugetAuthentication({
     authenticated: 'unknown',
     authorized: 'unknown',
   };
-  if (selected.method === 'none')
-    return { ...result, status: 'failed', detail: selected.reason };
+  if (selected.method === 'none') return { ...result, status: 'failed', detail: selected.reason };
   if (selected.method === 'trusted-publishing') {
     return {
       ...result,
@@ -82,8 +77,7 @@ export async function checkNugetAuthentication({
       return {
         ...result,
         status: 'unknown',
-        detail:
-          'NuGet returned no verification key; authentication remains unverified.',
+        detail: 'NuGet returned no verification key; authentication remains unverified.',
       };
     return {
       ...result,

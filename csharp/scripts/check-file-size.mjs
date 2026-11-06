@@ -73,7 +73,7 @@ export function shouldExclude(path, rootDir) {
   }
   const relativePath = components.join('/');
   return EXCLUDE_PREFIXES.some(
-    (prefix) => relativePath === prefix || relativePath.startsWith(`${prefix}/`)
+    (prefix) => relativePath === prefix || relativePath.startsWith(`${prefix}/`),
   );
 }
 
@@ -186,9 +186,7 @@ function main() {
     } else {
       console.log('Found files exceeding the line limit:\n');
       for (const violation of allViolations) {
-        console.log(
-          `  ${violation.file}: ${violation.lines} lines (exceeds ${MAX_LINES})`
-        );
+        console.log(`  ${violation.file}: ${violation.lines} lines (exceeds ${MAX_LINES})`);
       }
       console.log(`\nPlease refactor these files to be under ${MAX_LINES} lines\n`);
       process.exit(1);

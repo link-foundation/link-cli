@@ -117,10 +117,16 @@ test('npm ranges lose their operator, and locked versions come from the lock fil
       'node_modules/nested/node_modules/react': { version: '1.0.0' },
     },
   });
-  assert.deepEqual(parsePackageLock(lock, dependencies.map(({ name }) => name)), [
-    { name: 'react', version: '19.2.8' },
-    { name: 'vite', version: '8.3.2' },
-  ]);
+  assert.deepEqual(
+    parsePackageLock(
+      lock,
+      dependencies.map(({ name }) => name),
+    ),
+    [
+      { name: 'react', version: '19.2.8' },
+      { name: 'vite', version: '8.3.2' },
+    ],
+  );
 });
 
 test('actions pinned to a major tag are found once per repository', () => {
@@ -176,7 +182,11 @@ test('actions pinned to a commit, a digest or an exact tag are found', () => {
   assert.deepEqual(parsePinnedWorkflowActions(workflow), [
     { name: 'rust-lang/crates-io-auth-action', version: 'v1.0.5' },
     { name: 'rhysd/actionlint', version: 'v1.7.12' },
-    { name: 'NuGet/login', version: 'v1.2.0', blocker: 'https://github.com/link-foundation/link-cli/issues/1' },
+    {
+      name: 'NuGet/login',
+      version: 'v1.2.0',
+      blocker: 'https://github.com/link-foundation/link-cli/issues/1',
+    },
     { name: 'zizmorcore/zizmor-action', version: 'v0.8.0' },
   ]);
 });
@@ -278,27 +288,38 @@ function fakeFetch(answers) {
   return { calls, fetchImpl };
 }
 
-const networkFailure = () => new TypeError('fetch failed', { cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }) });
+const networkFailure = () =>
+  new TypeError('fetch failed', {
+    cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }),
+  });
 
 test('a dropped connection to a registry is retried instead of failing the check', async () => {
   const { calls, fetchImpl } = fakeFetch([networkFailure(), 503, 429, 200]);
-  assert.deepEqual(await fetchJson('https://registry.example/foo', {}, { fetchImpl, delayMs: 0 }), { version: '1.2.3' });
+  assert.deepEqual(await fetchJson('https://registry.example/foo', {}, { fetchImpl, delayMs: 0 }), {
+    version: '1.2.3',
+  });
   assert.equal(calls.length, 4);
 });
 
 test('a lookup that keeps failing reports the network cause and the attempts', async () => {
   const { calls, fetchImpl } = fakeFetch([networkFailure(), networkFailure()]);
-  await assert.rejects(fetchJson('https://registry.example/foo', {}, { fetchImpl, attempts: 2, delayMs: 0 }), {
-    message: 'https://registry.example/foo: fetch failed: ECONNRESET (after 2 attempts)',
-  });
+  await assert.rejects(
+    fetchJson('https://registry.example/foo', {}, { fetchImpl, attempts: 2, delayMs: 0 }),
+    {
+      message: 'https://registry.example/foo: fetch failed: ECONNRESET (after 2 attempts)',
+    },
+  );
   assert.equal(calls.length, 2);
 });
 
 test('an answer a retry cannot change fails at once', async () => {
   const { calls, fetchImpl } = fakeFetch([404, 200]);
-  await assert.rejects(fetchJson('https://registry.example/missing', {}, { fetchImpl, delayMs: 0 }), {
-    message: 'https://registry.example/missing answered 404',
-  });
+  await assert.rejects(
+    fetchJson('https://registry.example/missing', {}, { fetchImpl, delayMs: 0 }),
+    {
+      message: 'https://registry.example/missing answered 404',
+    },
+  );
   assert.equal(calls.length, 1);
 });
 

@@ -126,15 +126,24 @@ export function readCsprojInfo(csprojPath) {
  * attempt the last answer is returned or the network error is thrown with
  * its cause, which Node's "fetch failed" message leaves out.
  */
-export async function fetchWithRetries(url, options, fetchImpl = fetch, { attempts = 4, delayMs = 1000 } = {}) {
+export async function fetchWithRetries(
+  url,
+  options,
+  fetchImpl = fetch,
+  { attempts = 4, delayMs = 1000 } = {},
+) {
   for (let attempt = 1; ; attempt += 1) {
     let response;
     try {
       response = await fetchImpl(url, options);
     } catch (error) {
       if (attempt >= attempts) {
-        const cause = error.cause ? `: ${error.cause.code ?? error.cause.message ?? error.cause}` : '';
-        throw new Error(`${url}: ${error.message}${cause} (after ${attempt} attempts)`);
+        const cause = error.cause
+          ? `: ${error.cause.code ?? error.cause.message ?? error.cause}`
+          : '';
+        throw new Error(`${url}: ${error.message}${cause} (after ${attempt} attempts)`, {
+          cause: error,
+        });
       }
     }
     const transient = !response || response.status === 429 || response.status >= 500;
@@ -169,7 +178,10 @@ export async function fetchNugetVersions(packageId, fetchImpl = fetch, retry = {
     throw new Error(`NuGet flat-container index returned HTTP ${response.status} for ${packageId}`);
   }
   const payload = await response.json();
-  if (!Array.isArray(payload?.versions) || payload.versions.some((version) => typeof version !== 'string')) {
+  if (
+    !Array.isArray(payload?.versions) ||
+    payload.versions.some((version) => typeof version !== 'string')
+  ) {
     throw new Error(`Malformed NuGet version index for ${packageId}`);
   }
   return payload.versions;
@@ -229,8 +241,8 @@ export async function fetchGithubReleaseExists(repository, tag, fetchImpl = fetc
  * @returns {CheckResult}
  */
 export function decide({ hasChangesets, currentVersion, publishedVersions, githubReleaseExists }) {
-  const nugetPublished = Array.isArray(publishedVersions)
-    && publishedVersions.includes(currentVersion);
+  const nugetPublished =
+    Array.isArray(publishedVersions) && publishedVersions.includes(currentVersion);
 
   if (hasChangesets) {
     return {
@@ -250,9 +262,10 @@ export function decide({ hasChangesets, currentVersion, publishedVersions, githu
       currentVersion,
       nugetPublished,
       githubReleaseExists,
-      reason: publishedVersions === null
-        ? `package not yet registered on NuGet — self-healing resume for v${currentVersion}`
-        : `v${currentVersion} not yet published on NuGet — self-healing resume`,
+      reason:
+        publishedVersions === null
+          ? `package not yet registered on NuGet — self-healing resume for v${currentVersion}`
+          : `v${currentVersion} not yet published on NuGet — self-healing resume`,
     };
   }
 
@@ -278,8 +291,8 @@ export function decide({ hasChangesets, currentVersion, publishedVersions, githu
 }
 
 async function main() {
-  const csprojPath = getArg('csproj')
-    || 'csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj';
+  const csprojPath =
+    getArg('csproj') || 'csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublets.Cli.csproj';
   const repository = getArg('repository') || process.env.GITHUB_REPOSITORY || '';
   const tagPrefix = getArg('tag-prefix') || 'csharp-v';
   const packageIdOverride = getArg('package-id') || '';
@@ -323,22 +336,23 @@ async function main() {
   setOutput('reason', decision.reason);
 
   appendStepSummary(
-    `### C# release decision\n\n`
-    + `- Package: \`${packageId}\`\n`
-    + `- csproj \`<Version>\`: \`${currentVersion}\`\n`
-    + `- On NuGet: ${decision.nugetPublished ? 'yes' : 'no'}\n`
-    + `- GitHub release \`${tag}\`: ${decision.githubReleaseExists ? 'exists' : 'missing'}\n`
-    + `- \`should_release\`: \`${decision.shouldRelease}\`\n`
-    + `- \`skip_bump\`: \`${decision.skipBump}\`\n`
-    + `- Reason: ${decision.reason}\n`
+    `### C# release decision\n\n` +
+      `- Package: \`${packageId}\`\n` +
+      `- csproj \`<Version>\`: \`${currentVersion}\`\n` +
+      `- On NuGet: ${decision.nugetPublished ? 'yes' : 'no'}\n` +
+      `- GitHub release \`${tag}\`: ${decision.githubReleaseExists ? 'exists' : 'missing'}\n` +
+      `- \`should_release\`: \`${decision.shouldRelease}\`\n` +
+      `- \`skip_bump\`: \`${decision.skipBump}\`\n` +
+      `- Reason: ${decision.reason}\n`,
   );
 }
 
 // Allow `import { decide, readCsprojInfo, ... }` without running main().
 const entryPath = process.argv[1];
-const invokedDirectly = typeof entryPath === 'string'
-  && entryPath.length > 0
-  && (import.meta.url === `file://${entryPath}` || import.meta.url.endsWith(entryPath));
+const invokedDirectly =
+  typeof entryPath === 'string' &&
+  entryPath.length > 0 &&
+  (import.meta.url === `file://${entryPath}` || import.meta.url.endsWith(entryPath));
 if (invokedDirectly) {
   main().catch((error) => {
     console.error('Error:', error.message);

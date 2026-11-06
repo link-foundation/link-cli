@@ -15,7 +15,12 @@ import { tmpdir } from 'node:os';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
-import { decide, fetchGithubReleaseExists, fetchNugetVersions, readCsprojInfo } from './check-release-needed.mjs';
+import {
+  decide,
+  fetchGithubReleaseExists,
+  fetchNugetVersions,
+  readCsprojInfo,
+} from './check-release-needed.mjs';
 import {
   DEFAULT_MAX_ATTEMPTS,
   DEFAULT_SLEEP_SECONDS,
@@ -30,18 +35,20 @@ import {
   buildReleasePayload,
   prependNugetBadges,
 } from './create-github-release.mjs';
-import {
-  classifyPushFailure,
-  insertChangelogEntry,
-} from './version-and-commit.mjs';
+import { classifyPushFailure, insertChangelogEntry } from './version-and-commit.mjs';
 
 const execFileAsync = promisify(execFile);
 
 test('NuGet release lookup rejects an incomplete provider response', async () => {
   for (const payload of [{}, { versions: null }, { versions: [123] }]) {
-    await assert.rejects(fetchNugetVersions('Example', async () => ({
-      ok: true, status: 200, json: async () => payload,
-    })), /Malformed NuGet version index/);
+    await assert.rejects(
+      fetchNugetVersions('Example', async () => ({
+        ok: true,
+        status: 200,
+        json: async () => payload,
+      })),
+      /Malformed NuGet version index/,
+    );
   }
 });
 
@@ -61,15 +68,11 @@ function runNode(script, args, options = {}) {
 }
 
 async function runNodeAsync(script, args, options = {}) {
-  const { stdout } = await execFileAsync(
-    process.execPath,
-    [join(repoRoot, script), ...args],
-    {
-      cwd: options.cwd ?? repoRoot,
-      encoding: 'utf8',
-      env: { ...process.env, ...(options.env ?? {}) },
-    }
-  );
+  const { stdout } = await execFileAsync(process.execPath, [join(repoRoot, script), ...args], {
+    cwd: options.cwd ?? repoRoot,
+    encoding: 'utf8',
+    env: { ...process.env, ...(options.env ?? {}) },
+  });
   return stdout;
 }
 
@@ -88,11 +91,11 @@ test('merge-changesets honors the requested directory and package name', () => {
 
   writeFileSync(
     join(changesetDir, 'one.md'),
-    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFirst fix.\n"
+    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFirst fix.\n",
   );
   writeFileSync(
     join(changesetDir, 'two.md'),
-    "---\n'Foundation.Data.Doublets.Cli': minor\n---\n\nSecond fix.\n"
+    "---\n'Foundation.Data.Doublets.Cli': minor\n---\n\nSecond fix.\n",
   );
 
   runNode('csharp/scripts/merge-changesets.mjs', [
@@ -122,7 +125,7 @@ test('merge-changesets fails on a changeset it cannot parse and keeps every file
   mkdirSync(changesetDir, { recursive: true });
   writeFileSync(
     join(changesetDir, 'one.md'),
-    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFirst fix.\n"
+    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFirst fix.\n",
   );
   writeFileSync(join(changesetDir, 'typo.md'), typoChangeset);
 
@@ -134,7 +137,7 @@ test('merge-changesets fails on a changeset it cannot parse and keeps every file
         '--package-name',
         'Foundation.Data.Doublets.Cli',
       ]),
-    (error) => /::error title=Invalid changeset::.*typo\.md/.test(error.stderr)
+    (error) => /::error title=Invalid changeset::.*typo\.md/.test(error.stderr),
   );
   assert.deepEqual(readdirSync(changesetDir).sort(), ['one.md', 'typo.md']);
 });
@@ -153,7 +156,7 @@ test('version-and-commit fails on a changeset it cannot parse instead of droppin
         cwd: work,
         env: { GITHUB_OUTPUT: outputFile },
       }),
-    (error) => /::error title=Invalid changeset::.*typo\.md/.test(error.stderr)
+    (error) => /::error title=Invalid changeset::.*typo\.md/.test(error.stderr),
   );
   assert.equal(runGit(['--git-dir', remote, 'rev-parse', 'main'], dir), remoteHead);
   assert.equal(runGit(['--git-dir', remote, 'tag', '--list'], dir), '');
@@ -165,7 +168,7 @@ test('create-github-release dry run uses tag prefix and component changelog', ()
   const changelog = join(dir, 'CHANGELOG.md');
   writeFileSync(
     changelog,
-    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n\n## [2.3.0] - 2026-05-01\n\nPrevious release.\n'
+    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n\n## [2.3.0] - 2026-05-01\n\nPrevious release.\n',
   );
 
   const stdout = runNode('csharp/scripts/create-github-release.mjs', [
@@ -193,21 +196,18 @@ test('create-github-release dry run uses tag prefix and component changelog', ()
   // exact released version (not the package landing page).
   assert.match(
     payload.body,
-    /\[!\[NuGet\]\(https:\/\/img\.shields\.io\/nuget\/v\/clink\?logo=nuget&label=NuGet\)\]\(https:\/\/www\.nuget\.org\/packages\/clink\/2\.4\.0\)/
+    /\[!\[NuGet\]\(https:\/\/img\.shields\.io\/nuget\/v\/clink\?logo=nuget&label=NuGet\)\]\(https:\/\/www\.nuget\.org\/packages\/clink\/2\.4\.0\)/,
   );
   assert.match(
     payload.body,
-    /\[!\[NuGet Downloads\]\(https:\/\/img\.shields\.io\/nuget\/dt\/clink\?logo=nuget&label=downloads\)\]\(https:\/\/www\.nuget\.org\/packages\/clink\/2\.4\.0\)/
+    /\[!\[NuGet Downloads\]\(https:\/\/img\.shields\.io\/nuget\/dt\/clink\?logo=nuget&label=downloads\)\]\(https:\/\/www\.nuget\.org\/packages\/clink\/2\.4\.0\)/,
   );
 });
 
 test('create-github-release dry run omits NuGet badges when no package id is provided', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-no-package-'));
   const changelog = join(dir, 'CHANGELOG.md');
-  writeFileSync(
-    changelog,
-    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n'
-  );
+  writeFileSync(changelog, '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n');
 
   const stdout = runNode('csharp/scripts/create-github-release.mjs', [
     '--release-version',
@@ -269,24 +269,15 @@ test('buildNugetBadges accepts multiple package ids', () => {
   const badges = buildNugetBadges(['clink', 'Foundation.Data.Doublets.Cli'], '2.4.0');
 
   assert.match(badges, /img\.shields\.io\/nuget\/v\/clink\?/);
-  assert.match(
-    badges,
-    /img\.shields\.io\/nuget\/v\/Foundation\.Data\.Doublets\.Cli\?/
-  );
+  assert.match(badges, /img\.shields\.io\/nuget\/v\/Foundation\.Data\.Doublets\.Cli\?/);
   assert.match(badges, /img\.shields\.io\/nuget\/dt\/clink\?/);
-  assert.match(
-    badges,
-    /img\.shields\.io\/nuget\/dt\/Foundation\.Data\.Doublets\.Cli\?/
-  );
+  assert.match(badges, /img\.shields\.io\/nuget\/dt\/Foundation\.Data\.Doublets\.Cli\?/);
 });
 
 test('buildReleasePayload includes badges for both CLI and library packages', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-dual-release-payload-'));
   const changelog = join(dir, 'CHANGELOG.md');
-  writeFileSync(
-    changelog,
-    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nDual package release.\n'
-  );
+  writeFileSync(changelog, '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nDual package release.\n');
 
   const payload = buildReleasePayload({
     changelogPath: changelog,
@@ -297,23 +288,14 @@ test('buildReleasePayload includes badges for both CLI and library packages', ()
   });
 
   assert.match(payload.body, /img\.shields\.io\/nuget\/v\/clink\?/);
-  assert.match(
-    payload.body,
-    /img\.shields\.io\/nuget\/v\/Foundation\.Data\.Doublets\.Cli\?/
-  );
-  assert.match(
-    payload.body,
-    /Packages: `clink`, `Foundation\.Data\.Doublets\.Cli`/
-  );
+  assert.match(payload.body, /img\.shields\.io\/nuget\/v\/Foundation\.Data\.Doublets\.Cli\?/);
+  assert.match(payload.body, /Packages: `clink`, `Foundation\.Data\.Doublets\.Cli`/);
 });
 
 test('buildReleasePayload places NuGet badges above the package footer', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-payload-'));
   const changelog = join(dir, 'CHANGELOG.md');
-  writeFileSync(
-    changelog,
-    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFirst line.\nSecond line.\n'
-  );
+  writeFileSync(changelog, '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFirst line.\nSecond line.\n');
 
   const payload = buildReleasePayload({
     changelogPath: changelog,
@@ -333,17 +315,14 @@ test('buildReleasePayload places NuGet badges above the package footer', () => {
   assert.notEqual(footerIndex, -1);
   assert.ok(
     badgesIndex < notesIndex && notesIndex < footerIndex,
-    `expected badges < notes < footer, got ${badgesIndex} ${notesIndex} ${footerIndex}`
+    `expected badges < notes < footer, got ${badgesIndex} ${notesIndex} ${footerIndex}`,
   );
 });
 
 test('create-github-release dry run reports matching assets without uploading', () => {
   const dir = mkdtempSync(join(tmpdir(), 'link-cli-release-assets-'));
   const changelog = join(dir, 'CHANGELOG.md');
-  writeFileSync(
-    changelog,
-    '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n'
-  );
+  writeFileSync(changelog, '# Changelog\n\n## [2.4.0] - 2026-05-12\n\nFixed release automation.\n');
   const artifacts = join(dir, 'artifacts');
   mkdirSync(artifacts, { recursive: true });
   writeFileSync(join(artifacts, 'clink.2.4.0.nupkg'), 'fake');
@@ -386,11 +365,11 @@ test('version-and-commit creates a C# release commit when the next tag is missin
   mkdirSync(changesetDir, { recursive: true });
   writeFileSync(
     join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'),
-    '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><Version>2.3.0</Version></PropertyGroup></Project>\n'
+    '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><Version>2.3.0</Version></PropertyGroup></Project>\n',
   );
   writeFileSync(
     join(changesetDir, 'release.md'),
-    "---\n'Foundation.Data.Doublets.Cli': minor\n---\n\nFix release automation.\n"
+    "---\n'Foundation.Data.Doublets.Cli': minor\n---\n\nFix release automation.\n",
   );
 
   runGit(['add', '.'], work);
@@ -403,10 +382,7 @@ test('version-and-commit creates a C# release commit when the next tag is missin
     env: { GITHUB_OUTPUT: outputFile },
   });
 
-  const csproj = readFileSync(
-    join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'),
-    'utf8'
-  );
+  const csproj = readFileSync(join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'), 'utf8');
   const outputs = readFileSync(outputFile, 'utf8');
 
   assert.match(csproj, /<Version>2\.4\.0<\/Version>/);
@@ -435,11 +411,11 @@ function createCsharpReleaseSandbox(prefix) {
   mkdirSync(changesetDir, { recursive: true });
   writeFileSync(
     join(projectDir, 'Foundation.Data.Doublets.Cli.csproj'),
-    '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><Version>2.3.0</Version></PropertyGroup></Project>\n'
+    '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><Version>2.3.0</Version></PropertyGroup></Project>\n',
   );
   writeFileSync(
     join(changesetDir, 'release.md'),
-    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFix release automation.\n"
+    "---\n'Foundation.Data.Doublets.Cli': patch\n---\n\nFix release automation.\n",
   );
   runGit(['add', '.'], work);
   runGit(['commit', '-m', 'initial'], work);
@@ -461,7 +437,7 @@ test('insertChangelogEntry keeps exactly one blank line around entries (issue #1
   assert.equal(
     twice,
     '# Changelog\n\nIntro.\n\n## [1.0.2] - 2026-01-03\n\nThird.\n\n' +
-      '## [1.0.1] - 2026-01-02\n\nSecond.\n\n## [1.0.0] - 2026-01-01\n\nFirst.\n'
+      '## [1.0.1] - 2026-01-02\n\nSecond.\n\n## [1.0.0] - 2026-01-01\n\nFirst.\n',
   );
   assert.doesNotMatch(twice, /\n\n\n/);
 });
@@ -472,7 +448,7 @@ test('insertChangelogEntry collapses blank lines accumulated by earlier releases
 
   assert.equal(
     updated,
-    '# Changelog\n\nIntro.\n\n## [4.0.6] - 2026-10-24\n\nNext.\n\n## [4.0.5] - 2026-10-01\n\nFix.\n'
+    '# Changelog\n\nIntro.\n\n## [4.0.6] - 2026-10-24\n\nNext.\n\n## [4.0.5] - 2026-10-01\n\nFix.\n',
   );
 });
 
@@ -480,27 +456,35 @@ test('insertChangelogEntry creates the header for a missing changelog', () => {
   const created = insertChangelogEntry(null, '## [1.0.0] - 2026-01-01\n\nFirst.\n');
 
   assert.match(created, /^# Changelog\n\n/);
-  assert.match(created, /Semantic Versioning\]\(https:\/\/semver\.org\/spec\/v2\.0\.0\.html\)\.\n\n## \[1\.0\.0\] - 2026-01-01\n\nFirst\.\n$/);
+  assert.match(
+    created,
+    /Semantic Versioning\]\(https:\/\/semver\.org\/spec\/v2\.0\.0\.html\)\.\n\n## \[1\.0\.0\] - 2026-01-01\n\nFirst\.\n$/,
+  );
 });
 
 test('classifyPushFailure separates repository rules from lost races', () => {
   assert.equal(
     classifyPushFailure(
-      'remote: error: GH013: Repository rule violations found for refs/heads/main.\n ! [remote rejected] HEAD -> main (push declined due to repository rule violations)'
+      'remote: error: GH013: Repository rule violations found for refs/heads/main.\n ! [remote rejected] HEAD -> main (push declined due to repository rule violations)',
     ),
-    'repository-rules'
-  );
-  assert.equal(
-    classifyPushFailure('remote: error: GH006: Protected branch update failed for refs/heads/main.'),
-    'repository-rules'
+    'repository-rules',
   );
   assert.equal(
     classifyPushFailure(
-      " ! [rejected]        HEAD -> main (fetch first)\nerror: failed to push some refs\nhint: Updates were rejected because the remote contains work that you do not have locally."
+      'remote: error: GH006: Protected branch update failed for refs/heads/main.',
     ),
-    'lost-race'
+    'repository-rules',
   );
-  assert.equal(classifyPushFailure('fatal: unable to access remote: Could not resolve host'), 'other');
+  assert.equal(
+    classifyPushFailure(
+      ' ! [rejected]        HEAD -> main (fetch first)\nerror: failed to push some refs\nhint: Updates were rejected because the remote contains work that you do not have locally.',
+    ),
+    'lost-race',
+  );
+  assert.equal(
+    classifyPushFailure('fatal: unable to access remote: Could not resolve host'),
+    'other',
+  );
 });
 
 test('version-and-commit rebases and retries when another release pushed first', () => {
@@ -516,7 +500,7 @@ test('version-and-commit rebases and retries when another release pushed first',
     join(work, '.git', 'hooks', 'post-commit'),
     `[ -e "${marker}" ] && exit 0\ntouch "${marker}"\n` +
       `cd "${rival}" && echo rust > rust.txt && git add rust.txt && ` +
-      `git commit -q -m "chore: release rust-v1.0.9" && git push -q origin main`
+      `git commit -q -m "chore: release rust-v1.0.9" && git push -q origin main`,
   );
 
   const stdout = runNode('csharp/scripts/version-and-commit.mjs', ['--mode', 'changeset'], {
@@ -532,7 +516,7 @@ test('version-and-commit rebases and retries when another release pushed first',
   // The tag points at the rebased commit that actually reached main.
   assert.equal(
     runGit(['--git-dir', remote, 'rev-parse', 'csharp-v2.3.1^{commit}'], dir),
-    runGit(['--git-dir', remote, 'rev-parse', 'main'], dir)
+    runGit(['--git-dir', remote, 'rev-parse', 'main'], dir),
   );
   assert.equal(runGit(['status', '--porcelain'], work), '');
   assert.match(readFileSync(outputFile, 'utf8'), /^version_committed=true$/m);
@@ -544,7 +528,7 @@ test('version-and-commit fails fast without tagging when a repository rule decli
   writeHook(
     join(remote, 'hooks', 'pre-receive'),
     `echo attempt >> "${attempts}"\n` +
-      'echo "error: GH013: Repository rule violations found for refs/heads/main." >&2\nexit 1'
+      'echo "error: GH013: Repository rule violations found for refs/heads/main." >&2\nexit 1',
   );
 
   let failure;
@@ -634,7 +618,7 @@ test('check-release-needed readCsprojInfo() extracts version and package id', ()
   const csprojPath = join(dir, 'sample.csproj');
   writeFileSync(
     csprojPath,
-    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>1.2.3</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n'
+    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>1.2.3</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n',
   );
 
   const info = readCsprojInfo(csprojPath);
@@ -672,12 +656,13 @@ function startNugetAndGithubMock({ versions, githubReleaseStatus }) {
       resolve({
         nugetUrl: `http://127.0.0.1:${port}/nuget`,
         githubUrl: `http://127.0.0.1:${port}/github`,
-        close: () => new Promise((r) => {
-          for (const socket of sockets) {
-            socket.destroy();
-          }
-          server.close(() => r());
-        }),
+        close: () =>
+          new Promise((r) => {
+            for (const socket of sockets) {
+              socket.destroy();
+            }
+            server.close(() => r());
+          }),
       });
     });
   });
@@ -689,7 +674,7 @@ test('check-release-needed CLI writes self-healing outputs when NuGet version is
   const outputFile = join(dir, 'github-output.txt');
   writeFileSync(
     csprojPath,
-    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>2.4.0</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n'
+    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>2.4.0</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n',
   );
 
   const mock = await startNugetAndGithubMock({
@@ -708,7 +693,7 @@ test('check-release-needed CLI writes self-healing outputs when NuGet version is
           NUGET_INDEX_URL: mock.nugetUrl,
           GITHUB_API_URL: mock.githubUrl,
         },
-      }
+      },
     );
   } finally {
     await mock.close();
@@ -728,7 +713,7 @@ test('check-release-needed CLI short-circuits when NuGet and GitHub already have
   const outputFile = join(dir, 'github-output.txt');
   writeFileSync(
     csprojPath,
-    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>2.4.0</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n'
+    '<Project Sdk="Microsoft.NET.Sdk">\n  <PropertyGroup>\n    <Version>2.4.0</Version>\n    <PackageId>clink</PackageId>\n  </PropertyGroup>\n</Project>\n',
   );
 
   const mock = await startNugetAndGithubMock({
@@ -747,7 +732,7 @@ test('check-release-needed CLI short-circuits when NuGet and GitHub already have
           NUGET_INDEX_URL: mock.nugetUrl,
           GITHUB_API_URL: mock.githubUrl,
         },
-      }
+      },
     );
   } finally {
     await mock.close();
@@ -761,10 +746,7 @@ test('check-release-needed CLI short-circuits when NuGet and GitHub already have
 });
 
 test('wait-for-nuget defaults to two-minute checks across the NuGet indexing window', () => {
-  const config = parseWaitForNugetArgs(
-    ['--package-id', 'clink', '--release-version', '2.4.0'],
-    {}
-  );
+  const config = parseWaitForNugetArgs(['--package-id', 'clink', '--release-version', '2.4.0'], {});
 
   assert.equal(config.packageId, 'clink');
   assert.equal(config.releaseVersion, '2.4.0');
@@ -781,7 +763,7 @@ test('wait-for-nuget builds the flat-container nuspec URL', () => {
       packageId: 'Clink',
       version: '2.4.0',
     }),
-    'https://api.nuget.org/v3-flatcontainer/clink/2.4.0/clink.nuspec'
+    'https://api.nuget.org/v3-flatcontainer/clink/2.4.0/clink.nuspec',
   );
 });
 
@@ -853,7 +835,9 @@ test('wait-for-nuget fails only after exhausting all attempts', async () => {
 });
 
 const droppedConnection = () =>
-  new TypeError('fetch failed', { cause: Object.assign(new Error('connect ETIMEDOUT'), { code: 'ETIMEDOUT' }) });
+  new TypeError('fetch failed', {
+    cause: Object.assign(new Error('connect ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+  });
 
 // Plays back `answers`: an Error is thrown like a network failure, a number
 // is answered as that HTTP status.
@@ -877,7 +861,8 @@ test('the release decision retries a dropped NuGet connection instead of failing
 test('the release decision reports the network cause once retries run out', async () => {
   const { calls, fetchImpl } = playback([droppedConnection(), droppedConnection()]);
   await assert.rejects(fetchNugetVersions('clink', fetchImpl, { attempts: 2, delayMs: 0 }), {
-    message: 'https://api.nuget.org/v3-flatcontainer/clink/index.json: fetch failed: ETIMEDOUT (after 2 attempts)',
+    message:
+      'https://api.nuget.org/v3-flatcontainer/clink/index.json: fetch failed: ETIMEDOUT (after 2 attempts)',
   });
   assert.equal(calls.length, 2);
 });
@@ -887,6 +872,11 @@ test('answers a retry cannot change are not retried', async () => {
   assert.equal(await fetchNugetVersions('clink', nuget.fetchImpl, { delayMs: 0 }), null);
   assert.equal(nuget.calls.length, 1);
   const release = playback([429, 404]);
-  assert.equal(await fetchGithubReleaseExists('owner/repo', 'csharp-v1.0.0', release.fetchImpl, { delayMs: 0 }), false);
+  assert.equal(
+    await fetchGithubReleaseExists('owner/repo', 'csharp-v1.0.0', release.fetchImpl, {
+      delayMs: 0,
+    }),
+    false,
+  );
   assert.equal(release.calls.length, 2);
 });

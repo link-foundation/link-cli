@@ -87,6 +87,7 @@ jobs:
       - name: Authenticate preflight with NuGet
         if: vars.NUGET_USER != '' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
         id: preflight_nuget
+        continue-on-error: true
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
           user: ${{ vars.NUGET_USER }}

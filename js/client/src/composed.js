@@ -10,16 +10,29 @@ import { LinksError, UnsupportedError } from './errors.js';
 import { ANY } from './operations.js';
 
 /** The operations a composed layer translates. */
-export const COMPOSED_OPERATIONS = ['count', 'each', 'create', 'update', 'delete', 'getName', 'setName', 'getByName', 'removeName'];
+export const COMPOSED_OPERATIONS = [
+  'count',
+  'each',
+  'create',
+  'update',
+  'delete',
+  'getName',
+  'setName',
+  'getByName',
+  'removeName',
+];
 
 /** Throws an UnsupportedError unless `capabilities` offer every guarantee named. */
 export function requireGuarantees(capabilities, guarantees) {
   const missing = guarantees.filter((guarantee) => {
-    if (!GUARANTEES.includes(guarantee)) throw new TypeError(`unknown guarantee "${guarantee}"; known: ${GUARANTEES.join(', ')}`);
+    if (!GUARANTEES.includes(guarantee))
+      throw new TypeError(`unknown guarantee "${guarantee}"; known: ${GUARANTEES.join(', ')}`);
     return capabilities[guarantee] !== true;
   });
   if (missing.length > 0) {
-    throw new UnsupportedError(`the ${capabilities.backend} backend does not offer ${missing.join(', ')}; nothing is emulated`);
+    throw new UnsupportedError(
+      `the ${capabilities.backend} backend does not offer ${missing.join(', ')}; nothing is emulated`,
+    );
   }
 }
 
@@ -30,14 +43,17 @@ export function isAny(part) {
 
 /** Checks the shape of a restriction: an array of up to three parts. */
 export function checkRestriction(restriction) {
-  if (!Array.isArray(restriction)) throw new TypeError('a restriction is an array of up to three parts');
-  if (restriction.length > 3) throw new TypeError(`a restriction has at most three parts, got ${restriction.length}`);
+  if (!Array.isArray(restriction))
+    throw new TypeError('a restriction is an array of up to three parts');
+  if (restriction.length > 3)
+    throw new TypeError(`a restriction has at most three parts, got ${restriction.length}`);
   return restriction;
 }
 
 /** Orders links by address when every address is a BigInt. */
 export function byIndex(links) {
-  if (links.every((link) => typeof link.index === 'bigint')) links.sort((a, b) => (a.index < b.index ? -1 : a.index > b.index ? 1 : 0));
+  if (links.every((link) => typeof link.index === 'bigint'))
+    links.sort((a, b) => (a.index < b.index ? -1 : a.index > b.index ? 1 : 0));
   return links;
 }
 
@@ -49,7 +65,9 @@ export function untranslatable(layer, what) {
 }
 
 function tripletsRefused(layer) {
-  return new UnsupportedError(`${layer} does not translate triplets: send them to the store below (\`links\` or \`members[i]\`)`);
+  return new UnsupportedError(
+    `${layer} does not translate triplets: send them to the store below (\`links\` or \`members[i]\`)`,
+  );
 }
 
 /**
@@ -97,8 +115,10 @@ export async function runBatch(links, operations, { signal, deadline, timeout } 
   const calls = operations.map((operation, position) => {
     const argumentsOf = ARGUMENTS[operation?.op];
     if (!argumentsOf) {
-      if (operation?.op === 'query') throw untranslatable(links.capabilities.backend, `operation ${position} (query)`);
-      if (TRIPLET_OPERATIONS.includes(operation?.op)) throw tripletsRefused(links.capabilities.backend);
+      if (operation?.op === 'query')
+        throw untranslatable(links.capabilities.backend, `operation ${position} (query)`);
+      if (TRIPLET_OPERATIONS.includes(operation?.op))
+        throw tripletsRefused(links.capabilities.backend);
       throw new TypeError(`operation ${position}: unknown op "${operation?.op}"`);
     }
     return { op: operation.op, args: argumentsOf(operation) };
@@ -110,7 +130,10 @@ export async function runBatch(links, operations, { signal, deadline, timeout } 
     try {
       results[position] = { status: 'ok', value: await links[op](...args, scope) };
     } catch (error) {
-      results[position] = { status: error instanceof LinksError ? error.outcome : 'unknown', error };
+      results[position] = {
+        status: error instanceof LinksError ? error.outcome : 'unknown',
+        error,
+      };
       break;
     }
   }

@@ -23,12 +23,17 @@ test('the errors section stops at the next top-level heading', () => {
   assert.ok(section.includes('Errors in README.md'));
   assert.ok(
     !section.includes('Redirects per input'),
-    'the redirects section must not leak into the errors section'
+    'the redirects section must not leak into the errors section',
   );
 });
 
 test('a report without an errors section yields nothing', () => {
-  assert.equal(extractErrorsSection('# Report\n\n## Redirects per input\n\n* https://example.com --[301]--> https://example.org\n'), '');
+  assert.equal(
+    extractErrorsSection(
+      '# Report\n\n## Redirects per input\n\n* https://example.com --[301]--> https://example.org\n',
+    ),
+    '',
+  );
 });
 
 test('redirected links are not reported as broken', () => {
@@ -40,7 +45,7 @@ test('redirected links are not reported as broken', () => {
   ]) {
     assert.ok(
       !urls.some((url) => url.startsWith(redirected)),
-      `${redirected} redirects successfully and must not be treated as broken`
+      `${redirected} redirects successfully and must not be treated as broken`,
     );
   }
 });
@@ -58,7 +63,7 @@ test('errors that the Wayback Machine cannot answer are still reported', () => {
   assert.equal(
     others.length,
     2,
-    'the missing DocFX file and the unresolvable root-relative link must not be silently dropped'
+    'the missing DocFX file and the unresolvable root-relative link must not be silently dropped',
   );
   assert.ok(others.some((link) => link.endsWith('Foundation.Data.Doublets.Cli.yml')));
 });
@@ -73,12 +78,22 @@ test('the parsed error count matches the count lychee reports', () => {
 // was found", which failed runs whose links do have a snapshot.
 const snapshot = {
   archived_snapshots: {
-    closest: { available: true, url: 'http://web.archive.org/web/2024/https://example.com/', timestamp: '20240101000000' },
+    closest: {
+      available: true,
+      url: 'http://web.archive.org/web/2024/https://example.com/',
+      timestamp: '20240101000000',
+    },
   },
 };
-const answer = (status, body = {}) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+const answer = (status, body = {}) => ({
+  ok: status >= 200 && status < 300,
+  status,
+  json: async () => body,
+});
 const droppedConnection = () =>
-  Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }) });
+  Object.assign(new TypeError('fetch failed'), {
+    cause: Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }),
+  });
 const playback = (...steps) => {
   const calls = [];
   const fetchImpl = async (url) => {
@@ -103,7 +118,11 @@ test('transient Wayback failures are retried before a snapshot is reported', asy
 
 test('a Wayback lookup that keeps failing is reported as failed, not as unarchived', async () => {
   const { calls, fetchImpl } = playback(droppedConnection());
-  const result = await checkWaybackMachine('https://example.com/', { fetchImpl, attempts: 2, delayMs: 0 });
+  const result = await checkWaybackMachine('https://example.com/', {
+    fetchImpl,
+    attempts: 2,
+    delayMs: 0,
+  });
   assert.equal(calls.length, 2);
   assert.equal(result.available, false);
   assert.equal(result.error, 'fetch failed: ECONNRESET (after 2 attempts)');
@@ -116,6 +135,14 @@ test('a definite Wayback answer is not retried', async () => {
   assert.deepEqual(result, { available: false, archiveUrl: null, timestamp: null });
 
   const forbidden = playback(answer(403));
-  assert.equal((await checkWaybackMachine('https://example.com/', { fetchImpl: forbidden.fetchImpl, delayMs: 0 })).error, 'HTTP 403');
+  assert.equal(
+    (
+      await checkWaybackMachine('https://example.com/', {
+        fetchImpl: forbidden.fetchImpl,
+        delayMs: 0,
+      })
+    ).error,
+    'HTTP 403',
+  );
   assert.equal(forbidden.calls.length, 1);
 });

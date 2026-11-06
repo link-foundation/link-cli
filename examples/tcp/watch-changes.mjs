@@ -27,7 +27,8 @@ try {
   const selfLoops = await watcher.subscribe([ANY, 1, 1]);
   console.log(`watching every link as subscription ${all}, links (1 1) as ${selfLoops}`);
   watcher.onNotification(({ subscription, changes }) => {
-    for (const { before, after } of changes) console.log(`(notify: ${subscription}) ${show(before)} -> ${show(after)}`);
+    for (const { before, after } of changes)
+      console.log(`(notify: ${subscription}) ${show(before)} -> ${show(after)}`);
   });
 
   await writer.create(0, 0);

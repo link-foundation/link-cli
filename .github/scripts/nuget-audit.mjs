@@ -14,11 +14,7 @@ function projects(data, expected, kind) {
       throw Error(`Invalid ${kind} project`);
     // dotnet 8 emits exactly {path} for a successfully audited clean project.
     // The independently captured complete graph still supplies every TFM.
-    if (
-      kind === 'audit' &&
-      project.frameworks === undefined &&
-      Object.keys(project).length === 1
-    ) {
+    if (kind === 'audit' && project.frameworks === undefined && Object.keys(project).length === 1) {
       found.set(resolve(project.path), null);
       continue;
     }
@@ -57,11 +53,7 @@ export function validateAudit(audit, graph, expected) {
             throw Error('Unresolved dependency coordinate');
         }
         for (const pkg of array(report[kind] ?? [], `audit ${kind}`)) {
-          if (
-            !object(pkg) ||
-            !Array.isArray(pkg.vulnerabilities) ||
-            !pkg.vulnerabilities.length
-          )
+          if (!object(pkg) || !Array.isArray(pkg.vulnerabilities) || !pkg.vulnerabilities.length)
             throw Error('Malformed vulnerability verdict');
           throw Error(`Vulnerable ${kind}: ${pkg.id}@${pkg.resolvedVersion}`);
         }

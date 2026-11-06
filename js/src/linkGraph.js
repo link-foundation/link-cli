@@ -15,7 +15,8 @@ export function buildGraph(links) {
   const points = new Map();
 
   ordered.forEach((id, index) => {
-    const angle = ordered.length === 1 ? -Math.PI / 2 : (index / ordered.length) * Math.PI * 2 - Math.PI / 2;
+    const angle =
+      ordered.length === 1 ? -Math.PI / 2 : (index / ordered.length) * Math.PI * 2 - Math.PI / 2;
     points.set(id, {
       id,
       x: center.x + Math.cos(angle) * radius,

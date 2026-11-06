@@ -24,147 +24,200 @@ Subcommands:
 Set UNACQUIRED_JOBS_VERBOSE=1 for a trace on stderr. GH_BIN overrides the gh
 executable (the offline tests use a fake).
 """
+
 import argparse
 import json
 import os
 import subprocess
 import sys
+from typing import Any
 
-NOT_ACQUIRED = 'was not acquired by Runner'
+NOT_ACQUIRED = "was not acquired by Runner"
 MAX_ATTEMPTS = 3
 
 
-def trace(message):
-    if os.environ.get('UNACQUIRED_JOBS_VERBOSE') == '1':
-        print(f'[unacquired-jobs] {message}', file=sys.stderr)
+def trace(message: str) -> None:
+    if os.environ.get("UNACQUIRED_JOBS_VERBOSE") == "1":
+        print(f"[unacquired-jobs] {message}", file=sys.stderr)
 
 
-def gh(*args):
-    command = [os.environ.get('GH_BIN', 'gh'), *args]
-    trace('run: ' + ' '.join(command))
+def gh(*args: str) -> str:
+    command = [os.environ.get("GH_BIN", "gh"), *args]
+    trace("run: " + " ".join(command))
     result = subprocess.run(command, capture_output=True, text=True, check=False)
     if result.returncode:
         raise RuntimeError(f"gh {' '.join(args[:2])} failed: {result.stderr.strip()}")
     return result.stdout
 
 
-def gh_json(*args):
-    return json.loads(gh(*args) or 'null')
+def gh_json(*args: str) -> Any:
+    return json.loads(gh(*args) or "null")
 
 
-def never_started(job):
+def never_started(job: dict[str, Any]) -> bool:
     """Structural signal: a finished job with no runner and no steps."""
-    return (job.get('conclusion') in ('cancelled', 'failure')
-            and not (job.get('runner_name') or '')
-            and not job.get('steps'))
+    return (
+        job.get("conclusion") in ("cancelled", "failure")
+        and not (job.get("runner_name") or "")
+        and not job.get("steps")
+    )
 
 
-def unacquired(jobs, annotations):
+def unacquired(
+    jobs: list[dict[str, Any]], annotations: dict[int, list[str]]
+) -> list[str]:
     """Names of jobs that never started and carry the "not acquired" annotation.
 
     `annotations` maps a job id to the messages of its check-run annotations.
     """
-    return [job['name'] for job in jobs
-            if never_started(job)
-            and any(NOT_ACQUIRED in message for message in annotations.get(job['id'], []))]
+    return [
+        job["name"]
+        for job in jobs
+        if never_started(job)
+        and any(NOT_ACQUIRED in message for message in annotations.get(job["id"], []))
+    ]
 
 
-def decide(names, attempt, newest, max_attempts=MAX_ATTEMPTS):
+def decide(
+    names: list[str], attempt: int, newest: bool, max_attempts: int = MAX_ATTEMPTS
+) -> str:
     """Return 'nothing', 'superseded', 'give-up' or 'rerun'."""
     if not names:
-        return 'nothing'
+        return "nothing"
     if not newest:
-        return 'superseded'
-    return 'rerun' if attempt < max_attempts else 'give-up'
+        return "superseded"
+    return "rerun" if attempt < max_attempts else "give-up"
 
 
-def fetch_unacquired(repository, run_id, attempt):
-    pages = gh_json('api', '--paginate', '--slurp',
-                    f'repos/{repository}/actions/runs/{run_id}/attempts/{attempt}/jobs?per_page=100')
-    jobs = [job for page in pages or [] for job in page.get('jobs', [])]
+def fetch_unacquired(repository: str, run_id: int, attempt: int) -> list[str]:
+    pages = gh_json(
+        "api",
+        "--paginate",
+        "--slurp",
+        f"repos/{repository}/actions/runs/{run_id}/attempts/{attempt}/jobs?per_page=100",
+    )
+    jobs = [job for page in pages or [] for job in page.get("jobs", [])]
     # --failed also reruns ordinary failed tests. Never turn a mixed failure
     # into a passing retry; only the terminal gate may have failed as a result.
-    if any(job.get('conclusion') in ('failure', 'cancelled', 'timed_out')
-           and not never_started(job)
-           and not job.get('name', '').startswith('Pipeline Status (') for job in jobs):
-        trace('ordinary failure present; no automatic retry')
+    if any(
+        job.get("conclusion") in ("failure", "cancelled", "timed_out")
+        and not never_started(job)
+        and not job.get("name", "").startswith("Pipeline Status (")
+        for job in jobs
+    ):
+        trace("ordinary failure present; no automatic retry")
         return []
     annotations = {}
     for job in jobs:
         if never_started(job):
-            pages = gh_json('api', '--paginate', '--slurp',
-                            f"repos/{repository}/check-runs/{job['id']}/annotations?per_page=100")
-            annotations[job['id']] = [item.get('message', '')
-                                      for page in pages or [] for item in page]
+            pages = gh_json(
+                "api",
+                "--paginate",
+                "--slurp",
+                f"repos/{repository}/check-runs/{job['id']}/annotations?per_page=100",
+            )
+            annotations[job["id"]] = [
+                item.get("message", "") for page in pages or [] for item in page
+            ]
             trace(f"{job['name']}: {annotations[job['id']]}")
     return unacquired(jobs, annotations)
 
 
-def is_newest_run(repository, run_id):
+def is_newest_run(repository: str, run_id: int) -> bool:
     """True when no later run of the same workflow exists for its branch and event.
 
     Rerunning an older run on main could release a commit that a newer push
     has already replaced, so a superseded run is left alone.
     """
-    run = gh_json('api', f'repos/{repository}/actions/runs/{run_id}')
-    latest = gh_json('api', '-X', 'GET', f"repos/{repository}/actions/workflows/{run['workflow_id']}/runs",
-                     '-f', f"branch={run['head_branch']}", '-f', f"event={run['event']}",
-                     '-f', 'per_page=1')
-    runs = (latest or {}).get('workflow_runs') or []
-    trace(f"newest run for {run['head_branch']}/{run['event']}: {runs[0]['id'] if runs else None}")
-    return bool(runs) and int(runs[0]['id']) == int(run_id)
+    run = gh_json("api", f"repos/{repository}/actions/runs/{run_id}")
+    latest = gh_json(
+        "api",
+        "-X",
+        "GET",
+        f"repos/{repository}/actions/workflows/{run['workflow_id']}/runs",
+        "-f",
+        f"branch={run['head_branch']}",
+        "-f",
+        f"event={run['event']}",
+        "-f",
+        "per_page=1",
+    )
+    runs = (latest or {}).get("workflow_runs") or []
+    trace(
+        f"newest run for {run['head_branch']}/{run['event']}: {runs[0]['id'] if runs else None}"
+    )
+    return bool(runs) and int(runs[0]["id"]) == int(run_id)
 
 
-def command_list(options):
+def command_list(options: argparse.Namespace) -> int:
     try:
         names = fetch_unacquired(options.repository, options.run_id, options.attempt)
     except (RuntimeError, ValueError, KeyError, TypeError) as error:
         # Reporting is best effort: the gate already fails on the job result.
-        print(f'Could not inspect jobs for runner acquisition: {error}', file=sys.stderr)
+        print(
+            f"Could not inspect jobs for runner acquisition: {error}", file=sys.stderr
+        )
         return 0
     for name in names:
         print(name)
     return 0
 
 
-def command_rerun(options):
+def command_rerun(options: argparse.Namespace) -> int:
     names = fetch_unacquired(options.repository, options.run_id, options.attempt)
     newest = bool(names) and is_newest_run(options.repository, options.run_id)
     verdict = decide(names, options.attempt, newest, options.max_attempts)
-    listed = ', '.join(names)
-    manual = f'gh run rerun {options.run_id} --failed --repo {options.repository}'
-    if verdict == 'nothing':
-        print(f'Attempt {options.attempt}: no isolated hosted-runner acquisition failure; '
-              'leaving the run as it is.')
-    elif verdict == 'superseded':
-        print(f'::notice title=Hosted runner not acquired::{listed} (attempt {options.attempt}); '
-              'a newer run of this workflow exists for the same branch, so this run is not rerun.')
-    elif verdict == 'give-up':
-        print(f'::error title=Hosted runner not acquired::{listed} found no hosted runner in '
-              f'{options.attempt} attempts. GitHub runner capacity is outside this repository; '
-              f'rerun it later with `{manual}`.')
+    listed = ", ".join(names)
+    manual = f"gh run rerun {options.run_id} --failed --repo {options.repository}"
+    if verdict == "nothing":
+        print(
+            f"Attempt {options.attempt}: no isolated hosted-runner acquisition failure; "
+            "leaving the run as it is."
+        )
+    elif verdict == "superseded":
+        print(
+            f"::notice title=Hosted runner not acquired::{listed} (attempt {options.attempt}); "
+            "a newer run of this workflow exists for the same branch, so this run is not rerun."
+        )
+    elif verdict == "give-up":
+        print(
+            f"::error title=Hosted runner not acquired::{listed} found no hosted runner in "
+            f"{options.attempt} attempts. GitHub runner capacity is outside this repository; "
+            f"rerun it later with `{manual}`."
+        )
         return 1
     else:
-        print(f'::warning title=Hosted runner not acquired::{listed} (attempt {options.attempt}); '
-              'rerunning the failed jobs and the jobs that depend on them.')
+        print(
+            f"::warning title=Hosted runner not acquired::{listed} (attempt {options.attempt}); "
+            "rerunning the failed jobs and the jobs that depend on them."
+        )
         if options.dry_run:
-            print(f'Dry run: would execute `{manual}`.')
+            print(f"Dry run: would execute `{manual}`.")
         else:
-            gh('run', 'rerun', str(options.run_id), '--failed', '--repo', options.repository)
+            gh(
+                "run",
+                "rerun",
+                str(options.run_id),
+                "--failed",
+                "--repo",
+                options.repository,
+            )
     return 0
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('command', choices=['list', 'rerun'])
-    parser.add_argument('--repository', required=True)
-    parser.add_argument('--run-id', required=True, type=int)
-    parser.add_argument('--attempt', required=True, type=int)
-    parser.add_argument('--max-attempts', type=int, default=MAX_ATTEMPTS)
-    parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument("command", choices=["list", "rerun"])
+    parser.add_argument("--repository", required=True)
+    parser.add_argument("--run-id", required=True, type=int)
+    parser.add_argument("--attempt", required=True, type=int)
+    parser.add_argument("--max-attempts", type=int, default=MAX_ATTEMPTS)
+    parser.add_argument("--dry-run", action="store_true")
     options = parser.parse_args(argv)
-    return command_list(options) if options.command == 'list' else command_rerun(options)
+    return (
+        command_list(options) if options.command == "list" else command_rerun(options)
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -29,7 +29,8 @@ const CSPROJ_PATH = 'csharp/Foundation.Data.Doublets.Cli/Foundation.Data.Doublet
 // version so both packages reference each other consistently. The path
 // is optional — when the library csproj does not exist (e.g. inside unit
 // tests for this script), the bump silently skips the second update.
-const LIBRARY_CSPROJ_PATH = 'csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj';
+const LIBRARY_CSPROJ_PATH =
+  'csharp/Foundation.Data.Doublets.Cli.Library/Foundation.Data.Doublets.Cli.Library.csproj';
 const CHANGESET_DIR = 'csharp/.changeset';
 const CHANGELOG_FILE = 'csharp/CHANGELOG.md';
 
@@ -123,10 +124,7 @@ function calculateNewVersion(current, bumpType) {
  */
 function updateCsprojAt(path, newVersion) {
   let csproj = readFileSync(path, 'utf-8');
-  csproj = csproj.replace(
-    /<Version>[^<]+<\/Version>/,
-    `<Version>${newVersion}</Version>`
-  );
+  csproj = csproj.replace(/<Version>[^<]+<\/Version>/, `<Version>${newVersion}</Version>`);
   writeFileSync(path, csproj, 'utf-8');
   console.log(`Updated ${path} to version ${newVersion}`);
 }
@@ -168,7 +166,7 @@ function parseChangeset(filePath) {
     // Extract version type - support both quoted and unquoted package names
     const versionTypeRegex = new RegExp(
       `^['"]?${PACKAGE_NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]?:\\s+(major|minor|patch)`,
-      'm'
+      'm',
     );
     const versionTypeMatch = content.match(versionTypeRegex);
 
@@ -215,8 +213,7 @@ function getChangesetFiles() {
     return [];
   }
   return readdirSync(CHANGESET_DIR).filter(
-    (file) =>
-      file.endsWith('.md') && file !== 'README.md' && file !== 'config.json'
+    (file) => file.endsWith('.md') && file !== 'README.md' && file !== 'config.json',
   );
 }
 
@@ -255,16 +252,14 @@ function processChangesets() {
   if (invalid.length > 0) {
     console.error(
       `::error title=Invalid changeset::Cannot parse ${invalid.join(', ')} in ${CHANGESET_DIR}. ` +
-        `How to fix: start it with ---, '${PACKAGE_NAME}': major|minor|patch, --- and a description.`
+        `How to fix: start it with ---, '${PACKAGE_NAME}': major|minor|patch, --- and a description.`,
     );
     process.exit(1);
   }
 
   const bumpTypes = parsedChangesets.map((c) => c.type);
   const highestBumpType = getHighestBumpType(bumpTypes);
-  const descriptions = parsedChangesets
-    .filter((c) => c.description)
-    .map((c) => c.description);
+  const descriptions = parsedChangesets.filter((c) => c.description).map((c) => c.description);
 
   console.log(`Bump types found: ${[...new Set(bumpTypes)].join(', ')}`);
   console.log(`Using highest: ${highestBumpType}`);
@@ -420,14 +415,17 @@ function pushReleaseCommit(branch, maxAttempts = 3) {
         throw new Error(
           `The push to '${branch}' was declined by a repository rule (GH006/GH013). ` +
             `Rebasing cannot change repository policy: allow the release bot to push to '${branch}' ` +
-            `or release through a pull request.\n${output}`
+            `or release through a pull request.\n${output}`,
+          { cause: error },
         );
       }
       if (kind === 'other' || attempt >= maxAttempts) {
-        throw new Error(`git push failed after ${attempt} attempt(s):\n${output}`);
+        throw new Error(`git push failed after ${attempt} attempt(s):\n${output}`, {
+          cause: error,
+        });
       }
       console.log(
-        `Push rejected as non-fast-forward (attempt ${attempt}/${maxAttempts}); pulling with rebase and retrying...`
+        `Push rejected as non-fast-forward (attempt ${attempt}/${maxAttempts}); pulling with rebase and retrying...`,
       );
       try {
         git(['pull', '--rebase', 'origin', branch]);
@@ -437,7 +435,9 @@ function pushReleaseCommit(branch, maxAttempts = 3) {
         } catch {
           // Nothing to abort.
         }
-        throw new Error(`git pull --rebase failed:\n${gitErrorOutput(rebaseError)}`);
+        throw new Error(`git pull --rebase failed:\n${gitErrorOutput(rebaseError)}`, {
+          cause: rebaseError,
+        });
       }
     }
   }
@@ -478,7 +478,7 @@ function main() {
     // Instant mode: use provided bump type
     if (!bumpTypeArg || !['major', 'minor', 'patch'].includes(bumpTypeArg)) {
       console.error(
-        'Usage: node csharp/scripts/version-and-commit.mjs --mode instant --bump-type <major|minor|patch> [--description <desc>]'
+        'Usage: node csharp/scripts/version-and-commit.mjs --mode instant --bump-type <major|minor|patch> [--description <desc>]',
       );
       process.exit(1);
     }
@@ -532,7 +532,7 @@ function main() {
   const staged = git(['diff', '--cached', '--name-only']);
   if (!staged) {
     throw new Error(
-      `Nothing was staged for ${tagName}; refusing to publish a version that is not committed`
+      `Nothing was staged for ${tagName}; refusing to publish a version that is not committed`,
     );
   }
   console.log(`Staged release files:\n${staged}`);

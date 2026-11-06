@@ -109,7 +109,7 @@ export function splitRecoveredUrls(urls, recoveredText) {
     (recoveredText || '')
       .split('\n')
       .map((line) => line.trim())
-      .filter(Boolean)
+      .filter(Boolean),
   );
 
   return {
@@ -118,21 +118,28 @@ export function splitRecoveredUrls(urls, recoveredText) {
   };
 }
 
-
 /** Validate before either archive or recovery code emits a successful verdict. */
 export function validateLycheeReport(content, exitCode = process.env.LYCHEE_EXIT_CODE) {
   const section = extractErrorsSection(content);
-  const entries = [...section.matchAll(/^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?[^\s>|)]+>?/gim)];
+  const entries = [
+    ...section.matchAll(
+      /^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?[^\s>|)]+>?/gim,
+    ),
+  ];
   const bullets = [...section.matchAll(/^\s*(?:\*|-)\s+\[/gm)];
   const reported = /\|[^|\n]*Errors\s*\|\s*(\d+)\s*\|/.exec(content);
   const failed = exitCode !== undefined && exitCode !== '0';
-  if (!content.trim() || entries.length !== bullets.length ||
-      (reported && Number(reported[1]) !== entries.length) ||
-      (entries.length === 0 && (failed || !reported || Number(reported[1]) !== 0))) {
-    throw new Error('Missing, empty, malformed or incomplete lychee report; re-run the link checker');
+  if (
+    !content.trim() ||
+    entries.length !== bullets.length ||
+    (reported && Number(reported[1]) !== entries.length) ||
+    (entries.length === 0 && (failed || !reported || Number(reported[1]) !== 0))
+  ) {
+    throw new Error(
+      'Missing, empty, malformed or incomplete lychee report; re-run the link checker',
+    );
   }
 }
-
 
 /**
  * Check if a URL has an archived version in the Wayback Machine
@@ -152,7 +159,7 @@ export function validateLycheeReport(content, exitCode = process.env.LYCHEE_EXIT
  */
 export async function checkWaybackMachine(
   url,
-  { fetchImpl = fetch, attempts = 3, delayMs = 2000, timeoutMs = 10000 } = {}
+  { fetchImpl = fetch, attempts = 3, delayMs = 2000, timeoutMs = 10000 } = {},
 ) {
   const apiUrl = `${WAYBACK_API}${encodeURIComponent(url)}`;
   const notArchived = { available: false, archiveUrl: null, timestamp: null };
@@ -161,7 +168,7 @@ export async function checkWaybackMachine(
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     if (attempt > 1) {
       console.log(
-        `  Retrying the Wayback API (attempt ${attempt} of ${attempts}) after: ${failure}`
+        `  Retrying the Wayback API (attempt ${attempt} of ${attempts}) after: ${failure}`,
       );
       await sleep(delayMs * 2 ** (attempt - 2));
     }
@@ -245,15 +252,17 @@ async function main() {
   validateLycheeReport(content);
   const { urls, others: unarchivableLinks } = extractBrokenLinks(content);
   const recoveredFile = process.env.RECOVERED_URLS || 'lychee/recovered.txt';
-  const { remaining: brokenUrls } = splitRecoveredUrls(urls,
-    existsSync(recoveredFile) ? readFileSync(recoveredFile, 'utf8') : '');
+  const { remaining: brokenUrls } = splitRecoveredUrls(
+    urls,
+    existsSync(recoveredFile) ? readFileSync(recoveredFile, 'utf8') : '',
+  );
 
   if (unarchivableLinks.length > 0) {
     // Local files and unresolvable root-relative links have no Wayback
     // equivalent. Reporting `all_archived=true` for them turned a real lychee
     // failure into a green run (issue #96).
     console.log(
-      `✗ ${unarchivableLinks.length} broken link(s) cannot be checked against the Web Archive:`
+      `✗ ${unarchivableLinks.length} broken link(s) cannot be checked against the Web Archive:`,
     );
     for (const link of unarchivableLinks) {
       console.log(`  ${link}`);
@@ -263,7 +272,7 @@ async function main() {
           'It is not an http(s) URL (missing file, unresolvable relative link, ...),\n' +
           'so the Wayback Machine cannot provide a fallback.\n' +
           'How to fix: correct the path, restore the missing file, or pass --root-dir\n' +
-          'to lychee so root-relative links resolve.'
+          'to lychee so root-relative links resolve.',
       );
     }
     console.log('');
@@ -275,9 +284,7 @@ async function main() {
     process.exit(unarchivableLinks.length === 0 ? 0 : 1);
   }
 
-  console.log(
-    `Found ${brokenUrls.length} broken URL(s). Checking Web Archive...\n`
-  );
+  console.log(`Found ${brokenUrls.length} broken URL(s). Checking Web Archive...\n`);
 
   const withArchive = [];
   const withoutArchive = [];
@@ -307,7 +314,7 @@ async function main() {
 
   if (withArchive.length > 0) {
     console.log(
-      `✓ ${withArchive.length} broken link(s) have Web Archive versions - consider replacing:`
+      `✓ ${withArchive.length} broken link(s) have Web Archive versions - consider replacing:`,
     );
     for (const { url, archiveUrl, date } of withArchive) {
       console.log(`  Original: ${url}`);
@@ -322,15 +329,13 @@ async function main() {
           `Broken link detected: ${url}\n` +
           `A Web Archive snapshot from ${date} is available.\n` +
           `Suggested fix: replace the broken link with the archived version:\n` +
-          `  ${archiveUrl}`
+          `  ${archiveUrl}`,
       );
     }
   }
 
   if (withoutArchive.length > 0) {
-    console.log(
-      `✗ ${withoutArchive.length} broken link(s) have NO Web Archive version:`
-    );
+    console.log(`✗ ${withoutArchive.length} broken link(s) have NO Web Archive version:`);
     for (const url of withoutArchive) {
       console.log(`  ${url}`);
     }
@@ -345,14 +350,14 @@ async function main() {
           `How to fix:\n` +
           `  1. Find an updated URL for the same or equivalent content and replace the link.\n` +
           `  2. Remove the link if the content is no longer relevant.\n` +
-          `  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).`
+          `  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).`,
       );
     }
   }
 
   if (unchecked.length > 0) {
     console.log(
-      `✗ ${unchecked.length} broken link(s) could not be checked against the Web Archive:`
+      `✗ ${unchecked.length} broken link(s) could not be checked against the Web Archive:`,
     );
     for (const { url, error } of unchecked) {
       console.log(`  ${url}: ${error}`);
@@ -360,29 +365,25 @@ async function main() {
         `::error title=Broken link - Web Archive lookup failed::` +
           `Broken link detected: ${url}\n` +
           `The Wayback Machine could not be asked whether it has a snapshot: ${error}\n` +
-          `How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.`
+          `How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.`,
       );
     }
     console.log('');
   }
 
   const allArchived =
-    withoutArchive.length === 0 &&
-    unarchivableLinks.length === 0 &&
-    unchecked.length === 0;
+    withoutArchive.length === 0 && unarchivableLinks.length === 0 && unchecked.length === 0;
   setOutput('all_archived', allArchived ? 'true' : 'false');
 
   if (!allArchived) {
+    console.log('\nAction required: Fix or remove the broken links listed above.');
     console.log(
-      '\nAction required: Fix or remove the broken links listed above.'
-    );
-    console.log(
-      'For links with Web Archive versions, you can replace them with the suggested archive.org URLs.'
+      'For links with Web Archive versions, you can replace them with the suggested archive.org URLs.',
     );
     process.exit(1);
   } else {
     console.log(
-      '\nAll broken links have Web Archive versions. Consider replacing them with the suggested archive.org URLs.'
+      '\nAll broken links have Web Archive versions. Consider replacing them with the suggested archive.org URLs.',
     );
     process.exit(0);
   }

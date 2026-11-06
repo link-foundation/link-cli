@@ -24,9 +24,13 @@ export function checkCodeqlResults(directory) {
     }
     for (const [index, run] of data.runs.entries()) {
       const context = `${file}, run ${index + 1}`;
-      if (run?.tool?.driver?.name !== 'CodeQL' || !Array.isArray(run.results) ||
-          !Array.isArray(run.invocations) || !run.invocations.length ||
-          run.invocations.some((invocation) => invocation?.executionSuccessful !== true)) {
+      if (
+        run?.tool?.driver?.name !== 'CodeQL' ||
+        !Array.isArray(run.results) ||
+        !Array.isArray(run.invocations) ||
+        !run.invocations.length ||
+        run.invocations.some((invocation) => invocation?.executionSuccessful !== true)
+      ) {
         throw new Error(`Missing or unsuccessful CodeQL analysis: ${context}`);
       }
       for (const invocation of run.invocations) {
@@ -38,33 +42,45 @@ export function checkCodeqlResults(directory) {
           for (const item of diagnostics) {
             if (!item || !['note', 'none'].includes(item.level)) {
               const location = item?.locations?.[0]?.physicalLocation;
-              throw new Error(`CodeQL warning/error or malformed diagnostic: ${context}, ${key}: ` +
-                `${item?.descriptor?.id ?? '?'} ${location?.artifactLocation?.uri ?? '?'}:` +
-                `${location?.region?.startLine ?? '?'}: ${item?.message?.text ?? 'missing diagnostic message'}`);
+              throw new Error(
+                `CodeQL warning/error or malformed diagnostic: ${context}, ${key}: ` +
+                  `${item?.descriptor?.id ?? '?'} ${location?.artifactLocation?.uri ?? '?'}:` +
+                  `${location?.region?.startLine ?? '?'}: ${item?.message?.text ?? 'missing diagnostic message'}`,
+              );
             }
           }
         }
       }
       for (const result of run.results) {
-        if (!result || typeof result.ruleId !== 'string' ||
-            !(typeof result.message?.text === 'string' || typeof result.message?.markdown === 'string')) {
+        if (
+          !result ||
+          typeof result.ruleId !== 'string' ||
+          !(
+            typeof result.message?.text === 'string' || typeof result.message?.markdown === 'string'
+          )
+        ) {
           throw new Error(`Malformed SARIF result: ${context}`);
         }
         if (result.baselineState === 'absent') continue;
         const location = result.locations?.[0]?.physicalLocation;
-        findings.push(`${context}: ${result.ruleId} (${result.level ?? 'warning'}) ` +
-          `${location?.artifactLocation?.uri ?? '?'}:${location?.region?.startLine ?? '?'}: ` +
-          `${result.message.text ?? result.message.markdown}`);
+        findings.push(
+          `${context}: ${result.ruleId} (${result.level ?? 'warning'}) ` +
+            `${location?.artifactLocation?.uri ?? '?'}:${location?.region?.startLine ?? '?'}: ` +
+            `${result.message.text ?? result.message.markdown}`,
+        );
       }
     }
   }
-  if (findings.length) throw new Error(`${findings.length} unresolved CodeQL finding(s):\n${findings.join('\n')}`);
+  if (findings.length)
+    throw new Error(`${findings.length} unresolved CodeQL finding(s):\n${findings.join('\n')}`);
   return reports.length;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   try {
-    console.log(`CodeQL gate: ${checkCodeqlResults(process.argv[2] ?? 'codeql-results')} report(s), no unresolved findings`);
+    console.log(
+      `CodeQL gate: ${checkCodeqlResults(process.argv[2] ?? 'codeql-results')} report(s), no unresolved findings`,
+    );
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;

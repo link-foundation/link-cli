@@ -210,15 +210,11 @@ function detectChanges() {
   setOutput('docs-changed', docsChanged ? 'true' : 'false');
 
   // Detect workflow changes
-  const workflowChanged = changedFiles.some((file) =>
-    file.startsWith('.github/')
-  );
+  const workflowChanged = changedFiles.some((file) => file.startsWith('.github/'));
   setOutput('workflow-changed', workflowChanged ? 'true' : 'false');
 
   // Detect code changes (excluding docs, changesets, experiments, examples folders, and markdown files)
-  const codeChangedFiles = changedFiles.filter(
-    (file) => !isExcludedFromCodeChanges(file)
-  );
+  const codeChangedFiles = changedFiles.filter((file) => !isExcludedFromCodeChanges(file));
 
   console.log('\nFiles considered as code changes:');
   if (codeChangedFiles.length === 0) {
@@ -235,13 +231,17 @@ function detectChanges() {
 
   // Check if C# code files changed
   const csharpPattern = /\.(cs|csproj|sln|props)$/;
-  const csharpCodeChangedFiles = codeChangedFiles.filter((file) => isCsharpFile(file) || csharpPattern.test(file));
+  const csharpCodeChangedFiles = codeChangedFiles.filter(
+    (file) => isCsharpFile(file) || csharpPattern.test(file),
+  );
   const csharpCodeChanged = csharpCodeChangedFiles.some((file) => csharpPattern.test(file));
   setOutput('csharp-code-changed', csharpCodeChanged ? 'true' : 'false');
 
   // Check if Rust code files changed
   const rustPattern = /\.(rs|toml)$/;
-  const rustCodeChangedFiles = codeChangedFiles.filter((file) => isRustFile(file) || rustPattern.test(file));
+  const rustCodeChangedFiles = codeChangedFiles.filter(
+    (file) => isRustFile(file) || rustPattern.test(file),
+  );
   const rustCodeChanged = rustCodeChangedFiles.some((file) => rustPattern.test(file));
   setOutput('rust-code-changed', rustCodeChanged ? 'true' : 'false');
 

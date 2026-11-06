@@ -28,6 +28,11 @@ env:
 jobs:
   codeql:
     name: CodeQL (${{ matrix.language }})
+    # Cached overlay-base SARIF retains extraction diagnostics from the base
+    # even after the PR repairs the source (confirmed in run 42133108866).
+    # A full database makes the completeness gate describe this checkout.
+    env:
+      CODEQL_OVERLAY_DATABASE_MODE: none
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
@@ -135,7 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        manifest: [rust, rust/wasm]
+        manifest: [rust, rust/wasm, docs/case-studies/issue-100/evidence/external-range/rust]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -211,8 +216,8 @@ jobs:
   # the literal contents of the tree. This repository commits CI evidence under
   # dev/log, which is exactly where a token pasted from a workflow log would end
   # up unnoticed (issue #96). Ported from the pipeline templates' secrets-scan
-  # job. .gitignore doubles as the ignore file, so node_modules and build output
-  # are skipped.
+  # job. Git inventories tracked files, including force-added logs/experiments;
+  # build-output ignores must never hide committed evidence from this scan.
   secrets-scan:
     name: Scan for committed secrets
     runs-on: ubuntu-24.04
@@ -229,8 +234,12 @@ jobs:
         with:
           node-version: '26.x'
 
-      - name: Run secretlint
-        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+      - name: Install locked secret scanner
+        run: npm ci --prefix js --ignore-scripts
+      - name: Run secretlint on every tracked file
+        run: node .github/scripts/check-secrets.mjs
+      - name: Verify ignored-log regression
+        run: node experiments/issue-165/reproduce-ignored-secret.mjs
 
   pipeline-status:
     name: Pipeline Status (security)

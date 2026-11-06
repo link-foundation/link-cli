@@ -69,11 +69,18 @@ test('pipelined replies are matched to their requests in order', async () => {
     if (text === '(count: (0))') return '(count: 0)';
     const index = /(\d+)\)+$/.exec(text)[1];
     // Answer later requests sooner; order must still hold.
-    return new Promise((resolve) => setTimeout(() => resolve(`(count: ${index})`), Number(index) % 3));
+    return new Promise((resolve) =>
+      setTimeout(() => resolve(`(count: ${index})`), Number(index) % 3),
+    );
   });
   const client = await connectTcp(server.address, { maxInFlight: 8 });
-  const counts = await Promise.all(Array.from({ length: 200 }, (_, index) => client.count([index + 1])));
-  assert.deepEqual(counts, Array.from({ length: 200 }, (_, index) => BigInt(index + 1)));
+  const counts = await Promise.all(
+    Array.from({ length: 200 }, (_, index) => client.count([index + 1])),
+  );
+  assert.deepEqual(
+    counts,
+    Array.from({ length: 200 }, (_, index) => BigInt(index + 1)),
+  );
   assert.equal(client.transport.stats.requests, 201);
   await client.close();
   await server.close();
@@ -116,16 +123,24 @@ test('an absolute deadline ends a request the server never answers', async () =>
   const server = await fakeServer(countZero);
   const client = await connectTcp(server.address);
   const started = Date.now();
-  await assert.rejects(client.count([1], { deadline: Date.now() + 50 }), { name: 'DeadlineExceededError', outcome: 'unknown' });
+  await assert.rejects(client.count([1], { deadline: Date.now() + 50 }), {
+    name: 'DeadlineExceededError',
+    outcome: 'unknown',
+  });
   assert.ok(Date.now() - started < 2000);
   await client.close();
   await server.close();
 });
 
 test('request and reply sizes are bounded', async () => {
-  const server = await fakeServer((text) => (text === '(count: (0))' ? '(count: 0)' : `(name: ${'x'.repeat(200)})`));
+  const server = await fakeServer((text) =>
+    text === '(count: (0))' ? '(count: 0)' : `(name: ${'x'.repeat(200)})`,
+  );
   const client = await connectTcp(server.address, { maxRequestBytes: 64, maxReplyBytes: 100 });
-  await assert.rejects(client.setName(1, 'y'.repeat(100)), { name: 'LimitExceededError', outcome: 'not-sent' });
+  await assert.rejects(client.setName(1, 'y'.repeat(100)), {
+    name: 'LimitExceededError',
+    outcome: 'not-sent',
+  });
   assert.equal(client.transport.stats.requests, 1);
   await assert.rejects(client.getName(1), { name: 'LimitExceededError', outcome: 'unknown' });
   assert.equal(client.transport.closed, true);
@@ -140,7 +155,8 @@ test('writes wait for the socket to drain', async () => {
       const reader = new MessageReader({ maxBytes: 2 ** 30 });
       paused = socket;
       socket.on('data', (chunk) => {
-        for (const text of reader.push(chunk)) socket.write(encodeMessage(text === '(count: (0))' ? '(count: 0)' : '(count: 7)'));
+        for (const text of reader.push(chunk))
+          socket.write(encodeMessage(text === '(count: (0))' ? '(count: 0)' : '(count: 7)'));
       });
     },
   });
@@ -150,7 +166,10 @@ test('writes wait for the socket to drain', async () => {
   const pending = Array.from({ length: 64 }, () => client.transport.send(big));
   await new Promise((resolve) => setTimeout(resolve, 50));
   // The kernel buffers hold a few MiB at most: most requests are still queued, not written.
-  assert.ok(client.transport.stats.requests < 64, `wrote ${client.transport.stats.requests} requests into a stalled socket`);
+  assert.ok(
+    client.transport.stats.requests < 64,
+    `wrote ${client.transport.stats.requests} requests into a stalled socket`,
+  );
   paused.resume();
   assert.equal((await Promise.all(pending)).length, 64);
   assert.equal(client.transport.stats.requests, 65);
@@ -164,11 +183,16 @@ test('a peer that does not speak the links protocol is refused', async () => {
       socket.once('data', () => socket.end('HTTP/1.1 400 Bad Request\r\n\r\n'));
     },
   });
-  await assert.rejects(connectTcp(http.address, { timeout: 2000 }), (error) => ['ProtocolMismatchError', 'ConnectionClosedError'].includes(error.name));
+  await assert.rejects(connectTcp(http.address, { timeout: 2000 }), (error) =>
+    ['ProtocolMismatchError', 'ConnectionClosedError'].includes(error.name),
+  );
   await http.close();
 
   const other = await fakeServer(() => "(error: 'unknown command')");
-  await assert.rejects(connectTcp(other.address), { name: 'ProtocolMismatchError', message: /unknown command/ });
+  await assert.rejects(connectTcp(other.address), {
+    name: 'ProtocolMismatchError',
+    message: /unknown command/,
+  });
   await other.close();
 
   const wrongShape = await fakeServer(() => '(1: 1 1)');
@@ -189,14 +213,24 @@ test('connecting fails as not-sent when nobody listens or time runs out', async 
   await new Promise((resolve) => probe.listen(0, '127.0.0.1', resolve));
   const { port } = probe.address();
   await new Promise((resolve) => probe.close(resolve));
-  await assert.rejects(connectTcp(`127.0.0.1:${port}`), { name: 'ConnectionClosedError', outcome: 'not-sent' });
+  await assert.rejects(connectTcp(`127.0.0.1:${port}`), {
+    name: 'ConnectionClosedError',
+    outcome: 'not-sent',
+  });
   const silent = await fakeServer(() => undefined);
-  await assert.rejects(connectTcp(silent.address, { timeout: 50 }), { name: 'DeadlineExceededError' });
+  await assert.rejects(connectTcp(silent.address, { timeout: 50 }), {
+    name: 'DeadlineExceededError',
+  });
   await silent.close();
 });
 
 test('close waits for answers, then ends only an owned connection', async () => {
-  const server = await fakeServer((text) => new Promise((resolve) => setTimeout(() => resolve(text === '(count: (0))' ? '(count: 0)' : '(count: 3)'), 20)));
+  const server = await fakeServer(
+    (text) =>
+      new Promise((resolve) =>
+        setTimeout(() => resolve(text === '(count: (0))' ? '(count: 0)' : '(count: 3)'), 20),
+      ),
+  );
   const client = await connectTcp(server.address);
   const [connection] = server.connections;
   const pending = client.count([3]);
@@ -225,7 +259,8 @@ function pushingServer() {
     // `(count: (N))` asks for N pushes ahead of its reply.
     const many = /^\(count: \(\((\d+)\)\)\)$/.exec(text);
     if (many) {
-      for (let i = 1; i <= Number(many[1]); i += 1) connection.socket.write(encodeMessage(`(notify: 1)\n() ((${i}: 0 0))`));
+      for (let i = 1; i <= Number(many[1]); i += 1)
+        connection.socket.write(encodeMessage(`(notify: 1)\n() ((${i}: 0 0))`));
       return `(count: ${many[1]})`;
     }
     return undefined;
@@ -244,7 +279,11 @@ test('pushes are told from replies and wait to be received', async () => {
   const received = [];
   for (let i = 0; i < 4; i += 1) received.push(await client.receiveNotification({ timeout: 1000 }));
   assert.deepEqual(
-    received.map(({ subscription, changes }) => [subscription, changes[0].before, changes[0].after.index]),
+    received.map(({ subscription, changes }) => [
+      subscription,
+      changes[0].before,
+      changes[0].after.index,
+    ]),
     [
       [1, null, 1n],
       [1, null, 2n],
@@ -268,7 +307,9 @@ test('a waiting receiver gets the next push; listeners take them instead', async
   assert.equal((await waiting).changes[0].after.index, 1n);
 
   const seen = [];
-  const stop = client.onNotification((notification) => seen.push(notification.changes[0].after.index));
+  const stop = client.onNotification((notification) =>
+    seen.push(notification.changes[0].after.index),
+  );
   await client.count([2]);
   assert.deepEqual(seen, [1n, 2n]);
   assert.equal(client.pendingNotifications, 0);
@@ -292,7 +333,9 @@ test('receivers end when the connection does; too many pushes break it', async (
   const waiting = client.receiveNotification();
   for (const connection of server.connections) connection.socket.destroy();
   await assert.rejects(waiting, { name: 'ConnectionClosedError' });
-  await assert.rejects(client.receiveNotification({ timeout: 1000 }), { name: 'ConnectionClosedError' });
+  await assert.rejects(client.receiveNotification({ timeout: 1000 }), {
+    name: 'ConnectionClosedError',
+  });
 
   const bounded = await connectTcp(server.address, { maxPendingPushes: 2 });
   await assert.rejects(bounded.count([3]), { name: 'LimitExceededError', outcome: 'unknown' });
@@ -308,7 +351,10 @@ test('a reply nobody asked for that is no push breaks the connection', async () 
   const client = await connectTcp(server.address);
   const waiting = client.receiveNotification();
   for (const connection of server.connections) connection.socket.write(encodeMessage('(count: 7)'));
-  const error = await waiting.then(() => assert.fail('no push came'), (failure) => failure);
+  const error = await waiting.then(
+    () => assert.fail('no push came'),
+    (failure) => failure,
+  );
   assert.equal(error.name, 'ConnectionClosedError');
   assert.equal(error.cause.name, 'MalformedMessageError');
   assert.match(error.message, /nobody asked for: \(count: 7\)/);

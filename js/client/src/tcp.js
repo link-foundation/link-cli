@@ -6,20 +6,28 @@ import net from 'node:net';
 import { tcpServerCapabilities } from './capabilities.js';
 import { LinksClient } from './client.js';
 import { scopeError, scopeOf, watchScope } from './deadline.js';
-import { ConnectionClosedError, LimitExceededError, LinksError, MalformedMessageError, ProtocolMismatchError } from './errors.js';
+import {
+  ConnectionClosedError,
+  LimitExceededError,
+  LinksError,
+  MalformedMessageError,
+  ProtocolMismatchError,
+} from './errors.js';
 import { DEFAULT_MAX_MESSAGE_BYTES, encodeMessage, MessageReader } from './framing.js';
 import { parseDocument } from './lino.js';
 import { errorMessage, isNotificationText } from './operations.js';
 
 /** Parses `host:port`, `[v6]:port` or `{ host, port }`. */
 export function parseAddress(address) {
-  if (typeof address === 'object' && address !== null) return { host: address.host ?? '127.0.0.1', port: Number(address.port) };
+  if (typeof address === 'object' && address !== null)
+    return { host: address.host ?? '127.0.0.1', port: Number(address.port) };
   const text = String(address);
   const colon = text.lastIndexOf(':');
   if (colon === -1) throw new TypeError(`expected host:port, got "${text}"`);
   const host = text.slice(0, colon).replace(/^\[(.*)\]$/, '$1');
   const port = Number(text.slice(colon + 1));
-  if (!Number.isInteger(port) || port < 0 || port > 65535) throw new TypeError(`invalid port in "${text}"`);
+  if (!Number.isInteger(port) || port < 0 || port > 65535)
+    throw new TypeError(`invalid port in "${text}"`);
   return { host, port };
 }
 
@@ -57,7 +65,14 @@ export class TcpTransport {
 
   constructor(
     socket,
-    { owned = true, maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES, maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES, maxInFlight = 64, maxPendingPushes = 1024, capabilities } = {},
+    {
+      owned = true,
+      maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES,
+      maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES,
+      maxInFlight = 64,
+      maxPendingPushes = 1024,
+      capabilities,
+    } = {},
   ) {
     this.#socket = socket;
     this.#owned = owned;
@@ -65,7 +80,10 @@ export class TcpTransport {
     this.maxInFlight = maxInFlight;
     this.maxPendingPushes = maxPendingPushes;
     this.#reader = new MessageReader({ maxBytes: maxReplyBytes });
-    this.capabilities = tcpServerCapabilities({ ...capabilities, limits: { maxRequestBytes, maxReplyBytes, maxInFlight, maxPendingPushes } });
+    this.capabilities = tcpServerCapabilities({
+      ...capabilities,
+      limits: { maxRequestBytes, maxReplyBytes, maxInFlight, maxPendingPushes },
+    });
     this.stats = { requests: 0, bytesSent: 0, bytesReceived: 0, pushes: 0 };
     this.#closed = new Promise((resolve) => socket.once('close', resolve));
     this.onData = (chunk) => this.#receive(chunk);
@@ -74,7 +92,8 @@ export class TcpTransport {
       this.#pump();
     };
     this.onClose = () => this.#fail(new ConnectionClosedError('the server closed the connection'));
-    this.onError = (error) => this.#fail(new ConnectionClosedError(`connection error: ${error.message}`, { cause: error }));
+    this.onError = (error) =>
+      this.#fail(new ConnectionClosedError(`connection error: ${error.message}`, { cause: error }));
     socket.on('data', this.onData);
     socket.on('drain', this.onDrain);
     socket.on('close', this.onClose);
@@ -99,7 +118,12 @@ export class TcpTransport {
       });
       socket.once('error', (error) => {
         stop();
-        reject(new ConnectionClosedError(`cannot connect to ${host}:${port}: ${error.message}`, { outcome: 'not-sent', cause: error }));
+        reject(
+          new ConnectionClosedError(`cannot connect to ${host}:${port}: ${error.message}`, {
+            outcome: 'not-sent',
+            cause: error,
+          }),
+        );
       });
     });
     socket.setNoDelay(true);
@@ -108,11 +132,19 @@ export class TcpTransport {
 
   /** Sends one request (LiNo text) and resolves to the reply text. */
   send(text, scope = {}) {
-    if (this.#closedError) return Promise.reject(new ConnectionClosedError(this.#closedError.message, { outcome: 'not-sent' }));
+    if (this.#closedError)
+      return Promise.reject(
+        new ConnectionClosedError(this.#closedError.message, { outcome: 'not-sent' }),
+      );
     const bytes = encodeMessage(text);
     // The limit applies to the message as the server counts it: its text.
     if (bytes.length - 2 > this.maxRequestBytes) {
-      return Promise.reject(new LimitExceededError(`request of ${bytes.length - 2} bytes exceeds maxRequestBytes ${this.maxRequestBytes}`, { outcome: 'not-sent' }));
+      return Promise.reject(
+        new LimitExceededError(
+          `request of ${bytes.length - 2} bytes exceeds maxRequestBytes ${this.maxRequestBytes}`,
+          { outcome: 'not-sent' },
+        ),
+      );
     }
     const early = scopeError(scope, 'not-sent');
     if (early) return Promise.reject(early);
@@ -135,7 +167,12 @@ export class TcpTransport {
   }
 
   #pump() {
-    while (!this.#blocked && this.#queue.length > 0 && this.#inFlight.length < this.maxInFlight && !this.#closedError) {
+    while (
+      !this.#blocked &&
+      this.#queue.length > 0 &&
+      this.#inFlight.length < this.maxInFlight &&
+      !this.#closedError
+    ) {
       const entry = this.#queue.shift();
       entry.sent = true;
       this.#inFlight.push(entry);
@@ -169,7 +206,9 @@ export class TcpTransport {
       }
       const entry = this.#inFlight.shift();
       if (!entry) {
-        this.#fail(new MalformedMessageError(`the server sent a reply nobody asked for: ${message}`));
+        this.#fail(
+          new MalformedMessageError(`the server sent a reply nobody asked for: ${message}`),
+        );
         return;
       }
       entry.stop();
@@ -201,7 +240,11 @@ export class TcpTransport {
       return;
     }
     if (this.#pushes.length >= this.maxPendingPushes) {
-      this.#fail(new LimitExceededError(`more than ${this.maxPendingPushes} pushes are waiting to be received`));
+      this.#fail(
+        new LimitExceededError(
+          `more than ${this.maxPendingPushes} pushes are waiting to be received`,
+        ),
+      );
       return;
     }
     this.#pushes.push(text);
@@ -232,7 +275,13 @@ export class TcpTransport {
    */
   receivePush(scope = {}) {
     if (this.#pushes.length > 0) return Promise.resolve(this.#pushes.shift());
-    if (this.#closedError) return Promise.reject(new ConnectionClosedError(this.#closedError.message, { outcome: 'not-sent', cause: this.#closedError }));
+    if (this.#closedError)
+      return Promise.reject(
+        new ConnectionClosedError(this.#closedError.message, {
+          outcome: 'not-sent',
+          cause: this.#closedError,
+        }),
+      );
     const early = scopeError(scope, 'not-sent');
     if (early) return Promise.reject(early);
     return new Promise((resolve, reject) => {
@@ -248,7 +297,12 @@ export class TcpTransport {
   #endPushWaiters() {
     for (const waiter of this.#pushWaiters.splice(0)) {
       waiter.stop();
-      waiter.reject(new ConnectionClosedError(this.#closedError.message, { outcome: 'not-sent', cause: this.#closedError }));
+      waiter.reject(
+        new ConnectionClosedError(this.#closedError.message, {
+          outcome: 'not-sent',
+          cause: this.#closedError,
+        }),
+      );
     }
   }
 
@@ -259,11 +313,23 @@ export class TcpTransport {
     if (error.outcome === undefined) error.outcome = 'unknown';
     for (const entry of this.#inFlight) {
       entry.stop();
-      entry.reject(entry === culprit || this.#inFlight.length === 1 ? error : new ConnectionClosedError(`the connection broke: ${error.message}`, { outcome: 'unknown', cause: error }));
+      entry.reject(
+        entry === culprit || this.#inFlight.length === 1
+          ? error
+          : new ConnectionClosedError(`the connection broke: ${error.message}`, {
+              outcome: 'unknown',
+              cause: error,
+            }),
+      );
     }
     for (const entry of this.#queue) {
       entry.stop();
-      entry.reject(new ConnectionClosedError(`the connection broke: ${error.message}`, { outcome: 'not-sent', cause: error }));
+      entry.reject(
+        new ConnectionClosedError(`the connection broke: ${error.message}`, {
+          outcome: 'not-sent',
+          cause: error,
+        }),
+      );
     }
     this.#inFlight = [];
     this.#queue = [];
@@ -304,7 +370,9 @@ export class TcpTransport {
       if (this.#owned) await this.#closed;
       return;
     }
-    this.#closedError = new ConnectionClosedError('the client closed the connection', { outcome: 'not-sent' });
+    this.#closedError = new ConnectionClosedError('the client closed the connection', {
+      outcome: 'not-sent',
+    });
     this.#endPushWaiters();
     this.#detach();
     if (!this.#owned) return;
@@ -331,7 +399,10 @@ export async function verifyProtocol(transport, scope) {
     reply = await transport.send('(count: (0))', scope);
   } catch (error) {
     if (error instanceof MalformedMessageError) {
-      throw new ProtocolMismatchError(`the peer does not frame links protocol messages: ${error.message}`, { cause: error });
+      throw new ProtocolMismatchError(
+        `the peer does not frame links protocol messages: ${error.message}`,
+        { cause: error },
+      );
     }
     throw error;
   }
@@ -339,11 +410,18 @@ export async function verifyProtocol(transport, scope) {
   try {
     document = parseDocument(reply);
   } catch (error) {
-    throw new ProtocolMismatchError(`the peer's reply is not LiNo: ${error.message}`, { cause: error });
+    throw new ProtocolMismatchError(`the peer's reply is not LiNo: ${error.message}`, {
+      cause: error,
+    });
   }
   const message = errorMessage(document);
   const [link] = document;
-  if (message !== null || document.length !== 1 || typeof link === 'string' || link.id !== 'count') {
+  if (
+    message !== null ||
+    document.length !== 1 ||
+    typeof link === 'string' ||
+    link.id !== 'count'
+  ) {
     throw new ProtocolMismatchError(
       `the peer does not answer LinksOperation documents (links-text/1)${message === null ? `; it replied ${JSON.stringify(reply)}` : `: ${message}`}`,
     );
