@@ -10,7 +10,12 @@ export { EXTERNAL_ID_NAME, ExternalIdMap, LinksExternalIds } from './external-id
 export { createWasmClient, WasmTransport } from './wasm.js';
 export { EngineClient, WasmEngine, WasmBranch } from './engine.js';
 export { MemoryCommitLog, ReplicatedCommitLog } from './engine-logs.js';
-export { GUARANTEES, MAX_U32_ADDRESS, tcpServerCapabilities, wasmCapabilities } from './capabilities.js';
+export {
+  GUARANTEES,
+  MAX_U32_ADDRESS,
+  tcpServerCapabilities,
+  wasmCapabilities,
+} from './capabilities.js';
 export { scopeOf } from './deadline.js';
 export {
   AbortError,
@@ -33,4 +38,10 @@ export { PartitionedJournalStore } from './partitioned.js';
 export { DeltaCommitLog } from './engine-delta.js';
 
 export { ReclaimingPartitionedJournalStore } from './reclaiming.js';
-export { ANY, isNotification, parseNotification, parseTripletNotification, toAddress } from './operations.js';
+export {
+  ANY,
+  isNotification,
+  parseNotification,
+  parseTripletNotification,
+  toAddress,
+} from './operations.js';

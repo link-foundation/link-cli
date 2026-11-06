@@ -1,0 +1,1267 @@
+diff --git a/.github/workflows/csharp.yml b/.github/workflows/csharp.yml
+index 15138c9..4621153 100644
+--- a/.github/workflows/csharp.yml
++++ b/.github/workflows/csharp.yml
+@@ -10,6 +10,7 @@ on:
+       - 'csharp/**'
+       - 'csharp/scripts/**'
+       - '.github/workflows/csharp.yml'
++      - '.github/scripts/**'
+       - '.github/scripts/coverage*'
+   workflow_dispatch:
+     inputs:
+@@ -65,6 +66,40 @@ defaults:
+     working-directory: csharp
+ 
+ jobs:
++  release-preflight:
++    name: Release authentication preflight
++    if: inputs.release_mode != 'verify-trusted-publishing'
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++      id-token: write
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Authenticate preflight with NuGet
++        if: vars.NUGET_USER != '' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
++        id: preflight_nuget
++        continue-on-error: true
++        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
++        with:
++          user: ${{ vars.NUGET_USER }}
++      - name: Prove authentication before builds or version writes
++        working-directory: .
++        env:
++          RELEASE_MODE: ${{ inputs.release_mode }}
++          NUGET_OIDC_OUTCOME: ${{ steps.preflight_nuget.outcome }}
++          NUGET_OIDC_KEY: ${{ steps.preflight_nuget.outputs.NUGET_API_KEY }}
++          NUGET_API_KEY: ${{ github.event_name != 'pull_request' && secrets.NUGET_API_KEY || '' }}
++        run: node .github/scripts/release-preflight.mjs nuget
++
+   # Authenticate without a version commit, tag, or package upload. The input
+   # allows verification before setting NUGET_USER (which enables OIDC releases).
+   verify-trusted-publishing:
+@@ -76,7 +111,7 @@ jobs:
+       id-token: write
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - name: Validate NuGet account
+         working-directory: .
+@@ -109,7 +144,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: github.event_name != 'workflow_dispatch'
+     outputs:
+       cs-changed: ${{ steps.changes.outputs.cs-changed }}
+@@ -148,7 +183,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
+     steps:
+@@ -189,10 +224,10 @@ jobs:
+     timeout-minutes: 20
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-    needs: [detect-changes]
++      cancel-in-progress: true
++    needs: [detect-changes, release-preflight]
+     if: |
+-      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
++      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+         github.event_name == 'push' ||
+         github.event_name == 'workflow_dispatch' ||
+         needs.detect-changes.outputs.cs-changed == 'true' ||
+@@ -246,16 +281,16 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-    needs: [detect-changes, changeset-check]
+-    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
++      cancel-in-progress: true
++    needs: [detect-changes, changeset-check, release-preflight, lint]
++    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+     permissions:
+       contents: read
+       id-token: write
+     strategy:
+       fail-fast: false
+       matrix:
+-        os: [ubuntu-24.04, macos-26, windows-2025]
++        os: [ubuntu-24.04, macos-26-intel, windows-2025]
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -324,9 +359,9 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: github.event_name == 'pull_request'
+-    needs: [detect-changes]
++    needs: [detect-changes, lint, release-preflight]
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -356,7 +391,7 @@ jobs:
+     timeout-minutes: 20
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [lint, test]
+     if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
+     steps:
+@@ -383,6 +418,7 @@ jobs:
+         with:
+           name: nuget-package
+           path: csharp/artifacts/*.nupkg
++          if-no-files-found: error
+ 
+   # === AUTOMATIC RELEASE ===
+   release:
+@@ -394,7 +430,7 @@ jobs:
+     # Writer group: never cancel a release that may already have pushed a
+     # package or a version commit.
+     concurrency:
+-      group: csharp-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       contents: write
+@@ -619,7 +655,7 @@ jobs:
+     # Writer group: never cancel a release that may already have pushed a
+     # package or a version commit.
+     concurrency:
+-      group: csharp-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       contents: write
+@@ -774,7 +810,7 @@ jobs:
+     timeout-minutes: 10
+     # Writer group: never cancel a run that may already have pushed a branch.
+     concurrency:
+-      group: csharp-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       contents: write
+@@ -827,3 +863,36 @@ jobs:
+             1. Review the changeset in this PR
+             2. Merge this PR to main
+             3. The automated release workflow will version, publish, and create a GitHub release
++
++  pipeline-status:
++    name: Pipeline Status (csharp)
++    needs:
++      - release-preflight
++      - verify-trusted-publishing
++      - detect-changes
++      - changeset-check
++      - lint
++      - test
++      - fresh-merge
++      - build
++      - release
++      - instant-release
++      - changeset-pr
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/deep-client.yml b/.github/workflows/deep-client.yml
+index f3f698a..20a5faf 100644
+--- a/.github/workflows/deep-client.yml
++++ b/.github/workflows/deep-client.yml
+@@ -8,6 +8,7 @@ on:
+       - main
+     paths:
+       - '.github/workflows/deep-client.yml'
++      - '.github/scripts/**'
+       - 'examples/deep-client/**'
+       - 'docs/protocol/graphql/**'
+       - 'rust/**'
+@@ -17,6 +18,7 @@ on:
+       - main
+     paths:
+       - '.github/workflows/deep-client.yml'
++      - '.github/scripts/**'
+       - 'examples/deep-client/**'
+       - 'docs/protocol/graphql/**'
+       - 'rust/**'
+@@ -33,7 +35,7 @@ env:
+ 
+ concurrency:
+   group: ${{ github.workflow }}-${{ github.ref }}
+-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++  cancel-in-progress: true
+ 
+ jobs:
+   deep-client:
+@@ -63,3 +65,26 @@ jobs:
+         run: |
+           dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
+           examples/deep-client/run.sh "$PWD/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink"
++
++  pipeline-status:
++    name: Pipeline Status (deep-client)
++    needs:
++      - deep-client
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/dependencies.yml b/.github/workflows/dependencies.yml
+index dad9e2f..cf0518b 100644
+--- a/.github/workflows/dependencies.yml
++++ b/.github/workflows/dependencies.yml
+@@ -59,4 +59,28 @@ jobs:
+       - name: Compare every dependency with its registry
+         env:
+           GITHUB_TOKEN: ${{ github.token }}
++          CHECK_DEPENDENCIES_MODE: ${{ github.event_name == 'pull_request' && 'enforce' || 'report' }}
+         run: node .github/scripts/check-latest-dependencies.mjs
++
++  pipeline-status:
++    name: Pipeline Status (dependencies)
++    needs:
++      - latest
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/docs.yml b/.github/workflows/docs.yml
+index 44ea600..e17be6e 100644
+--- a/.github/workflows/docs.yml
++++ b/.github/workflows/docs.yml
+@@ -22,9 +22,13 @@ on:
+       - 'csharp/docfx.json'
+       - 'rust/src/**'
+       - 'rust/Cargo.toml'
++      - 'rust/Cargo.lock'
++      - 'csharp/Directory.Build.props'
++      - 'csharp/Directory.Build.targets'
+       - 'rust/wasm/**'
+       - 'js/**'
+       - '.github/workflows/docs.yml'
++      - '.github/scripts/**'
+   pull_request:
+     branches: [main]
+     paths:
+@@ -33,9 +37,13 @@ on:
+       - 'csharp/docfx.json'
+       - 'rust/src/**'
+       - 'rust/Cargo.toml'
++      - 'rust/Cargo.lock'
++      - 'csharp/Directory.Build.props'
++      - 'csharp/Directory.Build.targets'
+       - 'rust/wasm/**'
+       - 'js/**'
+       - '.github/workflows/docs.yml'
++      - '.github/scripts/**'
+   workflow_dispatch:
+ 
+ permissions:
+@@ -65,7 +73,7 @@ jobs:
+     timeout-minutes: 20
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -186,7 +194,7 @@ jobs:
+     name: Deploy to GitHub Pages
+     # Single writer for GitHub Pages: never cancel a deployment mid-flight.
+     concurrency:
+-      group: github-pages-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+     needs: build
+@@ -218,3 +226,27 @@ jobs:
+           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+         run: |
+           echo "Pages deployed to: $PAGE_URL"
++
++  pipeline-status:
++    name: Pipeline Status (docs)
++    needs:
++      - build
++      - deploy
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/js-client.yml b/.github/workflows/js-client.yml
+index 3c546a1..d8faf9f 100644
+--- a/.github/workflows/js-client.yml
++++ b/.github/workflows/js-client.yml
+@@ -12,6 +12,7 @@ on:
+       - main
+     paths:
+       - '.github/workflows/js-client.yml'
++      - '.github/scripts/**'
+       - '.github/scripts/verify-npm-trust*'
+       - 'js/client/**'
+       - 'examples/composition/**'
+@@ -23,6 +24,7 @@ on:
+       - main
+     paths:
+       - '.github/workflows/js-client.yml'
++      - '.github/scripts/**'
+       - '.github/scripts/verify-npm-trust*'
+       - 'js/client/**'
+       - 'examples/composition/**'
+@@ -54,6 +56,30 @@ env:
+   GIT_CONFIG_VALUE_0: main
+ 
+ jobs:
++  release-preflight:
++    name: Release authentication preflight
++    if: inputs.verify_trusted_publishing != true
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++      id-token: write
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Prove authentication before builds or version writes
++        working-directory: .
++        env:
++          NPM_PACKAGE: '@link-foundation/link-cli-client'
++        run: node .github/scripts/release-preflight.mjs npm
++
+   verify-trusted-publishing:
+     name: Verify npm trusted publishing
+     if: github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing
+@@ -64,7 +90,7 @@ jobs:
+       id-token: write
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -78,13 +104,14 @@ jobs:
+         run: node .github/scripts/verify-npm-trust.mjs
+ 
+   unit:
++    needs: [release-preflight]
+     if: inputs.verify_trusted_publishing != true
+     name: Unit tests and types
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-unit
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     defaults:
+       run:
+         working-directory: js/client
+@@ -110,13 +137,14 @@ jobs:
+         run: npm run typecheck
+ 
+   conformance:
++    needs: [release-preflight, unit]
+     if: inputs.verify_trusted_publishing != true
+     name: Conformance on Node.js, Bun and Deno
+     runs-on: ubuntu-24.04
+     timeout-minutes: 40
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-conformance
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     env:
+       CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+       CLINK_CSHARP: ${{ github.workspace }}/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
+@@ -213,7 +241,7 @@ jobs:
+     timeout-minutes: 10
+     # Writer group: never cancel a publish that may already be under way.
+     concurrency:
+-      group: npm-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       contents: read
+@@ -284,3 +312,30 @@ jobs:
+           fi
+           echo "::error title=npm trusted publishing failed::@link-foundation/link-cli-client $VERSION could not be published. Check the js-client.yml trusted publisher policy on npmjs.com (including permission to publish directly), then run the authentication-only verification dispatch and retry."
+           exit 1
++
++  pipeline-status:
++    name: Pipeline Status (js-client)
++    needs:
++      - release-preflight
++      - verify-trusted-publishing
++      - unit
++      - conformance
++      - release
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/links.yml b/.github/workflows/links.yml
+index 4062aab..efc2866 100644
+--- a/.github/workflows/links.yml
++++ b/.github/workflows/links.yml
+@@ -8,12 +8,20 @@ on:
+       - '**.md'
+       - '**.html'
+       - '.github/workflows/links.yml'
++      - '.github/scripts/**'
++      - '.github/scripts/*web-archive*'
++      - '.github/scripts/recheck-broken-links*'
++      - '.lycheeignore'
+   pull_request:
+     types: [opened, synchronize, reopened]
+     paths:
+       - '**.md'
+       - '**.html'
+       - '.github/workflows/links.yml'
++      - '.github/scripts/**'
++      - '.github/scripts/*web-archive*'
++      - '.github/scripts/recheck-broken-links*'
++      - '.lycheeignore'
+   workflow_dispatch:
+ 
+ # Least-privilege default; jobs escalate individually when needed.
+@@ -44,6 +52,10 @@ jobs:
+         with:
+           persist-credentials: false
+ 
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++
+       - name: Check links with lychee
+         id: lychee
+         uses: lycheeverse/lychee-action@v2
+@@ -73,15 +85,23 @@ jobs:
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
++      - name: Recheck unanswered links and transient HTTP failures
++        if: steps.lychee.outputs.exit_code != '0'
++        id: recheck
++        run: node .github/scripts/recheck-broken-links.mjs
++        env:
++          LYCHEE_EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
++
+       - name: Check broken links against Web Archive
+-        if: steps.lychee.outputs.exit_code != 0
++        if: steps.lychee.outputs.exit_code != '0' && steps.recheck.outputs.all_recovered != 'true'
+         id: webarchive
+         run: node .github/scripts/check-web-archive.mjs
+         env:
+           LYCHEE_OUTPUT: lychee/out.md
++          LYCHEE_EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+ 
+       - name: Fail if broken links found and no web archive fallback
+-        if: steps.lychee.outputs.exit_code != 0 && steps.webarchive.outputs.all_archived != 'true'
++        if: ${{ !cancelled() && steps.lychee.outputs.exit_code != '0' && steps.recheck.outputs.all_recovered != 'true' && steps.webarchive.outputs.all_archived != 'true' }}
+         run: |
+           echo "::error::Broken links were detected with no Web Archive fallback available."
+           echo ""
+@@ -98,5 +118,36 @@ jobs:
+           echo "     b. Remove the link if the content is no longer relevant."
+           echo "     c. Add the URL to .lycheeignore if it is a known false positive."
+           echo ""
+-          echo "Report location: lychee/out.md (available as a workflow artifact if configured)."
++          echo "Report location: lychee/out.md (workflow artifact: link-check-reports)."
+           exit 1
++
++      - name: Preserve link reports
++        if: ${{ !cancelled() }}
++        uses: actions/upload-artifact@v7
++        with:
++          name: link-check-reports
++          path: lychee/
++          if-no-files-found: error
++
++  pipeline-status:
++    name: Pipeline Status (links)
++    needs:
++      - link-checker
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/rerun-infrastructure-failures.yml b/.github/workflows/rerun-infrastructure-failures.yml
+new file mode 100644
+index 0000000..b4b91a5
+--- /dev/null
++++ b/.github/workflows/rerun-infrastructure-failures.yml
+@@ -0,0 +1,97 @@
++name: Rerun infrastructure failures
++
++# Ported from the Rust pipeline template (#226), for link-cli issue #165.
++# When GitHub has no hosted runner to give (macOS arm64 capacity is
++# the usual case) it gives up on a queued job with "The job was not acquired by
++# Runner of type hosted even after multiple attempts". The job ends cancelled
++# with no steps and no runner, so no code ran, yet the release and status gates
++# go red and nothing reruns them. This workflow reruns such a run's failed jobs
++# (and, through `gh run rerun --failed`, the gates that depend on them) at most
++# twice. A job that ran steps and failed never triggers a rerun; see
++# .github/scripts/unacquired-jobs.py for the exact rule.
++#
++# workflow_run is safe here: the checkout is the default branch (github.sha of a
++# workflow_run event), nothing from the triggering run is executed, and the job
++# only reads that run through the API and asks GitHub to rerun it.
++on: # zizmor: ignore[dangerous-triggers]
++  workflow_run:
++    # Every workflow with a terminal Pipeline Status gate.
++    workflows:
++      - Rust CI/CD Pipeline
++      - C# CI/CD Pipeline
++      - JS client CI
++      - DeepClient CI
++      - WebAssembly CI
++      - Docs
++      - Dependencies
++      - Workflows
++      - Security
++      - Broken Link Checker
++    types: [completed]
++
++permissions:
++  contents: read
++
++# Configure checkout's git init before the first step runs.
++env:
++  GIT_CONFIG_COUNT: '1'
++  GIT_CONFIG_KEY_0: init.defaultBranch
++  GIT_CONFIG_VALUE_0: main
++
++jobs:
++  rerun:
++    name: Rerun jobs that never got a runner
++    # The status gate turns the run into a failure when a job was not acquired.
++    # The script reruns attempts 1 and 2 and reports an error on attempt 3.
++    if: github.event.workflow_run.conclusion == 'failure'
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: rerun-infrastructure-failures-${{ github.event.workflow_run.id }}
++      cancel-in-progress: false
++    permissions:
++      contents: read
++      # Read the run's jobs and rerun them.
++      actions: write
++      # Read each job's check-run annotations.
++      checks: read
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          ref: ${{ github.sha }}
++          persist-credentials: false
++
++      - name: Rerun jobs that GitHub never handed to a runner
++        env:
++          GH_TOKEN: ${{ github.token }}
++          REPOSITORY: ${{ github.repository }}
++          RUN_ID: ${{ github.event.workflow_run.id }}
++          ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
++          UNACQUIRED_JOBS_VERBOSE: ${{ vars.UNACQUIRED_JOBS_VERBOSE || '0' }}
++        run: >-
++          python3 .github/scripts/unacquired-jobs.py rerun
++          --repository "$REPOSITORY" --run-id "$RUN_ID" --attempt "$ATTEMPT"
++
++
++  pipeline-status:
++    name: Pipeline Status (rerun-infrastructure-failures)
++    needs:
++      - rerun
++    if: ${{ !cancelled() && github.event.workflow_run.conclusion == 'failure' }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/rust.yml b/.github/workflows/rust.yml
+index 960701d..d592fa1 100644
+--- a/.github/workflows/rust.yml
++++ b/.github/workflows/rust.yml
+@@ -10,6 +10,7 @@ on:
+       - 'rust/**'
+       - 'rust/scripts/**'
+       - '.github/workflows/rust.yml'
++      - '.github/scripts/**'
+   workflow_dispatch:
+     inputs:
+       release_mode:
+@@ -55,6 +56,35 @@ env:
+   GIT_CONFIG_VALUE_0: main
+ 
+ jobs:
++  release-preflight:
++    name: Release authentication preflight
++    if: inputs.release_mode != 'verify-trusted-publishing'
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++      id-token: write
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Authenticate preflight with crates.io
++        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
++        id: preflight_auth
++        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
++      - name: Prove authentication before builds or version writes
++        working-directory: .
++        env:
++          RELEASE_MODE: ${{ inputs.release_mode }}
++          CARGO_REGISTRY_TOKEN: ${{ github.event_name != 'pull_request' && (steps.preflight_auth.outputs.token || secrets.CARGO_TOKEN) || '' }}
++        run: node .github/scripts/release-preflight.mjs crates
++
+   # Authenticate without a version commit, tag, or package upload. This lets
+   # maintainers verify the registry policy before retiring the token fallback.
+   verify-trusted-publishing:
+@@ -66,7 +96,7 @@ jobs:
+       id-token: write
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - name: Authenticate with crates.io (trusted publishing)
+         id: auth
+@@ -86,7 +116,7 @@ jobs:
+     timeout-minutes: 15
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: github.event_name != 'workflow_dispatch'
+     outputs:
+       rs-changed: ${{ steps.changes.outputs.rs-changed }}
+@@ -126,7 +156,7 @@ jobs:
+     timeout-minutes: 15
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-changelog
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [detect-changes]
+     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
+     steps:
+@@ -157,10 +187,10 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-lint
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-    needs: [detect-changes]
++      cancel-in-progress: true
++    needs: [detect-changes, release-preflight]
+     if: |
+-      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
++      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+         github.event_name == 'push' ||
+         github.event_name == 'workflow_dispatch' ||
+         needs.detect-changes.outputs.rs-changed == 'true' ||
+@@ -224,6 +254,11 @@ jobs:
+       # A dependency bump in Cargo.toml without the matching Cargo.lock update
+       # otherwise passes CI while every job silently re-resolves the graph
+       # (issue #96). --locked turns that drift into a failure.
++      - name: Deny Cargo manifest warnings
++        run: |
++          bash .github/scripts/check-cargo-warnings.sh --manifest-path rust/Cargo.toml
++          bash .github/scripts/check-cargo-warnings.sh --manifest-path rust/wasm/Cargo.toml
++
+       - name: Verify Cargo.lock is up to date
+         run: |
+           cargo metadata --locked --format-version 1 --manifest-path rust/Cargo.toml > /dev/null
+@@ -246,9 +281,9 @@ jobs:
+     timeout-minutes: 45
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-    needs: [detect-changes, changelog]
+-    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
++      cancel-in-progress: true
++    needs: [detect-changes, changelog, release-preflight, lint]
++    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+     strategy:
+       fail-fast: false
+       matrix:
+@@ -294,9 +329,9 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     if: github.event_name == 'pull_request'
+-    needs: [detect-changes]
++    needs: [detect-changes, lint, release-preflight]
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -336,7 +371,7 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-build
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     needs: [lint, test]
+     if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
+     steps:
+@@ -377,7 +412,7 @@ jobs:
+     # Writer group: never cancel a release that may already have published a
+     # crate or pushed a version commit.
+     concurrency:
+-      group: rust-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       id-token: write
+@@ -493,7 +528,7 @@ jobs:
+     # Writer group: never cancel a release that may already have published a
+     # crate or pushed a version commit.
+     concurrency:
+-      group: rust-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       id-token: write
+@@ -583,7 +618,7 @@ jobs:
+     timeout-minutes: 15
+     # Writer group: never cancel a run that may already have pushed a branch.
+     concurrency:
+-      group: rust-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       contents: write
+@@ -635,3 +670,36 @@ jobs:
+             1. Review the changelog fragment in this PR
+             2. Merge this PR to main
+             3. The automated release workflow will publish to crates.io and create a GitHub release
++
++  pipeline-status:
++    name: Pipeline Status (rust)
++    needs:
++      - release-preflight
++      - verify-trusted-publishing
++      - detect-changes
++      - changelog
++      - lint
++      - test
++      - fresh-merge
++      - build
++      - auto-release
++      - manual-release
++      - changelog-pr
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index d02f6f4..a2e7331 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -28,6 +28,11 @@ env:
+ jobs:
+   codeql:
+     name: CodeQL (${{ matrix.language }})
++    # Cached overlay-base SARIF retains extraction diagnostics from the base
++    # even after the PR repairs the source (confirmed in run 42133108866).
++    # A full database makes the completeness gate describe this checkout.
++    env:
++      CODEQL_OVERLAY_DATABASE_MODE: none
+     runs-on: ubuntu-24.04
+     timeout-minutes: 30
+     concurrency:
+@@ -55,6 +60,8 @@ jobs:
+             build-mode: none
+           - language: javascript-typescript
+             build-mode: none
++          - language: python
++            build-mode: none
+           - language: actions
+             build-mode: none
+     steps:
+@@ -78,9 +85,28 @@ jobs:
+           languages: ${{ matrix.language }}
+           build-mode: ${{ matrix.build-mode }}
+           config-file: ./.github/codeql/codeql-config.yml
++          # Opt in when an upload/extraction fails without useful diagnostics.
++          debug: ${{ vars.CI_VERBOSE == 'true' }}
+ 
+       - name: Analyze
+         uses: github/codeql-action/analyze@v4
++        with:
++          output: codeql-results
++
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++
++      - name: Require complete analysis without unresolved findings
++        run: node .github/scripts/check-codeql-results.mjs codeql-results
++
++      - name: Preserve SARIF for investigation
++        if: ${{ !cancelled() }}
++        uses: actions/upload-artifact@v7
++        with:
++          name: codeql-${{ matrix.language }}
++          path: codeql-results/**/*.sarif
++          if-no-files-found: error
+ 
+   dependency-review:
+     name: Dependency Review
+@@ -114,7 +140,7 @@ jobs:
+     strategy:
+       fail-fast: false
+       matrix:
+-        manifest: [rust, rust/wasm]
++        manifest: [rust, rust/wasm, docs/case-studies/issue-100/evidence/external-range/rust]
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -135,11 +161,15 @@ jobs:
+         run: cargo audit --file "$MANIFEST/Cargo.lock" --deny warnings
+ 
+   npm-audit:
+-    name: Audit npm lock
++    strategy:
++      fail-fast: false
++      matrix:
++        directory: [js, js/client]
++    name: Audit npm lock (${{ matrix.directory }})
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit
++      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit-${{ matrix.directory }}
+       cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+@@ -151,16 +181,60 @@ jobs:
+           node-version: '26.x'
+ 
+       - name: Audit current lock
+-        working-directory: js
++        working-directory: ${{ matrix.directory }}
+         run: npm audit --package-lock-only --audit-level=high
+ 
++  nuget-audit:
++    name: Audit every NuGet dependency graph
++    runs-on: ubuntu-24.04
++    timeout-minutes: 15
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-nuget-audit
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-dotnet@v6
++        with:
++          dotnet-version: '10.0.x'
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Audit direct and transitive packages and validate the complete result
++        run: node .github/scripts/audit-nuget-dependencies.mjs
++      - name: Preserve dependency graphs and diagnostics
++        if: ${{ !cancelled() }}
++        uses: actions/upload-artifact@v7
++        with:
++          name: nuget-audit
++          path: artifacts/security
++          if-no-files-found: error
++
++  python-audit:
++    name: Audit resolved Python CI tools
++    runs-on: ubuntu-24.04
++    timeout-minutes: 10
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-python-audit
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-python@v7
++        with:
++          python-version: '3.14'
++      - name: Audit pinned tools and their resolved dependencies
++        run: pipx run pip-audit==2.10.1 --strict --requirement .github/scripts/requirements-quality.txt
++
+   # === COMMITTED SECRETS ===
+   # CodeQL and the audit jobs look at code and dependencies; nothing looked at
+   # the literal contents of the tree. This repository commits CI evidence under
+   # dev/log, which is exactly where a token pasted from a workflow log would end
+   # up unnoticed (issue #96). Ported from the pipeline templates' secrets-scan
+-  # job. .gitignore doubles as the ignore file, so node_modules and build output
+-  # are skipped.
++  # job. Git inventories tracked files, including force-added logs/experiments;
++  # build-output ignores must never hide committed evidence from this scan.
+   secrets-scan:
+     name: Scan for committed secrets
+     runs-on: ubuntu-24.04
+@@ -177,5 +251,38 @@ jobs:
+         with:
+           node-version: '26.x'
+ 
+-      - name: Run secretlint
+-        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
++      - name: Install locked secret scanner
++        run: npm ci --prefix js --ignore-scripts
++      - name: Run secretlint on every tracked file
++        run: node .github/scripts/check-secrets.mjs
++      - name: Verify ignored-log regression
++        run: node experiments/issue-165/reproduce-ignored-secret.mjs
++
++  pipeline-status:
++    name: Pipeline Status (security)
++    needs:
++      - codeql
++      - dependency-review
++      - cargo-audit
++      - npm-audit
++      - nuget-audit
++      - python-audit
++      - secrets-scan
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/wasm.yml b/.github/workflows/wasm.yml
+index 78e3526..ce3884e 100644
+--- a/.github/workflows/wasm.yml
++++ b/.github/workflows/wasm.yml
+@@ -9,6 +9,7 @@ on:
+       - main
+     paths:
+       - '.github/workflows/wasm.yml'
++      - '.github/scripts/**'
+       - 'js/**'
+       - 'rust/**'
+   pull_request:
+@@ -16,6 +17,7 @@ on:
+       - main
+     paths:
+       - '.github/workflows/wasm.yml'
++      - '.github/scripts/**'
+       - 'js/**'
+       - 'rust/**'
+   workflow_dispatch:
+@@ -43,7 +45,7 @@ jobs:
+     timeout-minutes: 30
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-test
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+ 
+     steps:
+       - uses: actions/checkout@v7
+@@ -104,8 +106,32 @@ jobs:
+         with:
+           name: link-cli-web
+           path: dist/
++          if-no-files-found: error
+ 
+   # GitHub Pages is published by docs.yml alone: it assembles this workbench
+   # together with the C# and Rust API references into a single artifact. This
+   # workflow used to deploy the workbench on its own, which replaced the docs
+   # already published at /csharp/ and /rust/ (issue #96).
++
++  pipeline-status:
++    name: Pipeline Status (wasm)
++    needs:
++      - test
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/workflows.yml b/.github/workflows/workflows.yml
+index c73204c..c723bd4 100644
+--- a/.github/workflows/workflows.yml
++++ b/.github/workflows/workflows.yml
+@@ -11,10 +11,20 @@ on:
+       - main
+     paths:
+       - '.github/**'
++      - 'js/**'
++      - 'csharp/scripts/**'
++      - 'examples/**'
++      - 'experiments/**'
++      - '.pre-commit-config.yaml'
+   pull_request:
+     types: [opened, synchronize, reopened]
+     paths:
+       - '.github/**'
++      - 'js/**'
++      - 'csharp/scripts/**'
++      - 'examples/**'
++      - 'experiments/**'
++      - '.pre-commit-config.yaml'
+   workflow_dispatch:
+ 
+ # Least-privilege default; these jobs only read the checked-out tree.
+@@ -36,7 +46,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-actionlint
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -63,7 +73,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-zizmor
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -107,7 +117,7 @@ jobs:
+     timeout-minutes: 10
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-policy
+-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
++      cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+         with:
+@@ -120,3 +130,57 @@ jobs:
+ 
+       - name: Run workflow policy tests
+         run: node --test .github/scripts/*.test.mjs
++
++  languages:
++    name: JavaScript and Python lint and formatting
++    runs-on: ubuntu-24.04
++    timeout-minutes: 10
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-languages
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++          cache: npm
++          cache-dependency-path: js/package-lock.json
++      - uses: actions/setup-python@v7
++        with:
++          python-version: '3.14'
++      - name: Install locked JavaScript tools
++        run: npm ci --prefix js --ignore-scripts
++      - name: Check all maintained JavaScript including JSX and examples
++        run: npm --prefix js run lint
++      - name: Install Python tools
++        run: python -m pip install -r .github/scripts/requirements-quality.txt
++      - name: Check all maintained Python and type-check runtime CI helpers
++        run: python .github/scripts/check-python-quality.py
++
++  pipeline-status:
++    name: Pipeline Status (workflows)
++    needs:
++      - actionlint
++      - zizmor
++      - policy
++      - languages
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs

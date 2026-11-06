@@ -17,14 +17,7 @@
  *   node csharp/scripts/merge-changesets.mjs --dir csharp/.changeset --package-name Foundation.Data.Doublets.Cli
  */
 
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-  unlinkSync,
-  statSync,
-} from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync, statSync } from 'fs';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 
@@ -50,14 +43,8 @@ function parseArgs() {
   };
 
   return {
-    changesetDir: getArg(
-      'dir',
-      process.env.CHANGESET_DIR || 'csharp/.changeset'
-    ),
-    packageName: getArg(
-      'package-name',
-      process.env.PACKAGE_NAME || 'Foundation.Data.Doublets.Cli'
-    ),
+    changesetDir: getArg('dir', process.env.CHANGESET_DIR || 'csharp/.changeset'),
+    packageName: getArg('package-name', process.env.PACKAGE_NAME || 'Foundation.Data.Doublets.Cli'),
   };
 }
 
@@ -75,21 +62,18 @@ function parseChangeset(filePath, packageName) {
     // Extract version type - support both quoted and unquoted package names
     const versionTypeRegex = new RegExp(
       `^['"]?${packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]?:\\s+(major|minor|patch)`,
-      'm'
+      'm',
     );
     const versionTypeMatch = content.match(versionTypeRegex);
 
     if (!versionTypeMatch) {
-      console.warn(
-        `Warning: Could not parse version type from ${filePath}, skipping`
-      );
+      console.warn(`Warning: Could not parse version type from ${filePath}, skipping`);
       return null;
     }
 
     // Extract description
     const parts = content.split('---');
-    const description =
-      parts.length >= 3 ? parts.slice(2).join('---').trim() : '';
+    const description = parts.length >= 3 ? parts.slice(2).join('---').trim() : '';
 
     return {
       type: versionTypeMatch[1],
@@ -146,8 +130,7 @@ function main() {
 
   // Get all changeset files
   const changesetFiles = readdirSync(changesetDir).filter(
-    (file) =>
-      file.endsWith('.md') && file !== 'README.md' && file !== 'config.json'
+    (file) => file.endsWith('.md') && file !== 'README.md' && file !== 'config.json',
   );
 
   console.log(`Found ${changesetFiles.length} changeset file(s)`);
@@ -183,7 +166,7 @@ function main() {
   if (invalid.length > 0) {
     console.error(
       `::error title=Invalid changeset::Cannot parse ${invalid.join(', ')} in ${changesetDir}. ` +
-        `How to fix: start it with ---, '${packageName}': major|minor|patch, --- and a description.`
+        `How to fix: start it with ---, '${packageName}': major|minor|patch, --- and a description.`,
     );
     process.exit(1);
   }
@@ -200,18 +183,12 @@ function main() {
   console.log(`  Using highest: ${highestBumpType}`);
 
   // Collect descriptions in chronological order
-  const descriptions = parsedChangesets
-    .filter((c) => c.description)
-    .map((c) => c.description);
+  const descriptions = parsedChangesets.filter((c) => c.description).map((c) => c.description);
 
   console.log(`  Descriptions to merge: ${descriptions.length}`);
 
   // Create merged changeset content
-  const mergedContent = createMergedChangeset(
-    highestBumpType,
-    descriptions,
-    packageName
-  );
+  const mergedContent = createMergedChangeset(highestBumpType, descriptions, packageName);
 
   // Generate a unique name for the merged changeset
   const mergedFileName = `merged-${randomUUID()}.md`;

@@ -1,0 +1,261 @@
+.github/workflows/js-client.yml-90-      id-token: write
+.github/workflows/js-client.yml-91-    concurrency:
+.github/workflows/js-client.yml-92-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+.github/workflows/js-client.yml:93:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/js-client.yml-94-    steps:
+.github/workflows/js-client.yml-95-      - uses: actions/checkout@v7
+.github/workflows/js-client.yml-96-        with:
+--
+.github/workflows/js-client.yml-111-    timeout-minutes: 10
+.github/workflows/js-client.yml-112-    concurrency:
+.github/workflows/js-client.yml-113-      group: check-${{ github.workflow }}-${{ github.ref }}-unit
+.github/workflows/js-client.yml:114:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/js-client.yml-115-    defaults:
+.github/workflows/js-client.yml-116-      run:
+.github/workflows/js-client.yml-117-        working-directory: js/client
+--
+.github/workflows/js-client.yml-144-    timeout-minutes: 40
+.github/workflows/js-client.yml-145-    concurrency:
+.github/workflows/js-client.yml-146-      group: check-${{ github.workflow }}-${{ github.ref }}-conformance
+.github/workflows/js-client.yml:147:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/js-client.yml-148-    env:
+.github/workflows/js-client.yml-149-      CLINK_RUST: ${{ github.workspace }}/rust/target/release/clink
+.github/workflows/js-client.yml-150-      CLINK_CSHARP: ${{ github.workspace }}/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink
+--
+.github/workflows/js-client.yml-242-    # Writer group: never cancel a publish that may already be under way.
+.github/workflows/js-client.yml-243-    concurrency:
+.github/workflows/js-client.yml-244-      group: npm-writer-${{ github.repository }}
+.github/workflows/js-client.yml:245:      cancel-in-progress: false
+.github/workflows/js-client.yml-246-    permissions:
+.github/workflows/js-client.yml-247-      contents: read
+.github/workflows/js-client.yml-248-      # Trusted publishing and npm provenance use a GitHub OIDC token.
+--
+.github/workflows/docs.yml-73-    timeout-minutes: 20
+.github/workflows/docs.yml-74-    concurrency:
+.github/workflows/docs.yml-75-      group: check-${{ github.workflow }}-${{ github.ref }}-build
+.github/workflows/docs.yml:76:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/docs.yml-77-    steps:
+.github/workflows/docs.yml-78-      - uses: actions/checkout@v7
+.github/workflows/docs.yml-79-        with:
+--
+.github/workflows/docs.yml-195-    # Single writer for GitHub Pages: never cancel a deployment mid-flight.
+.github/workflows/docs.yml-196-    concurrency:
+.github/workflows/docs.yml-197-      group: github-pages-${{ github.repository }}
+.github/workflows/docs.yml:198:      cancel-in-progress: false
+.github/workflows/docs.yml-199-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+.github/workflows/docs.yml-200-    needs: build
+.github/workflows/docs.yml-201-    runs-on: ubuntu-24.04
+--
+.github/workflows/workflows.yml-36-    timeout-minutes: 10
+.github/workflows/workflows.yml-37-    concurrency:
+.github/workflows/workflows.yml-38-      group: check-${{ github.workflow }}-${{ github.ref }}-actionlint
+.github/workflows/workflows.yml:39:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/workflows.yml-40-    steps:
+.github/workflows/workflows.yml-41-      - uses: actions/checkout@v7
+.github/workflows/workflows.yml-42-        with:
+--
+.github/workflows/workflows.yml-63-    timeout-minutes: 10
+.github/workflows/workflows.yml-64-    concurrency:
+.github/workflows/workflows.yml-65-      group: check-${{ github.workflow }}-${{ github.ref }}-zizmor
+.github/workflows/workflows.yml:66:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/workflows.yml-67-    steps:
+.github/workflows/workflows.yml-68-      - uses: actions/checkout@v7
+.github/workflows/workflows.yml-69-        with:
+--
+.github/workflows/workflows.yml-107-    timeout-minutes: 10
+.github/workflows/workflows.yml-108-    concurrency:
+.github/workflows/workflows.yml-109-      group: check-${{ github.workflow }}-${{ github.ref }}-policy
+.github/workflows/workflows.yml:110:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/workflows.yml-111-    steps:
+.github/workflows/workflows.yml-112-      - uses: actions/checkout@v7
+.github/workflows/workflows.yml-113-        with:
+--
+.github/workflows/wasm.yml-45-    timeout-minutes: 30
+.github/workflows/wasm.yml-46-    concurrency:
+.github/workflows/wasm.yml-47-      group: check-${{ github.workflow }}-${{ github.ref }}-test
+.github/workflows/wasm.yml:48:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/wasm.yml-49-
+.github/workflows/wasm.yml-50-    steps:
+.github/workflows/wasm.yml-51-      - uses: actions/checkout@v7
+--
+.github/workflows/deep-client.yml-35-
+.github/workflows/deep-client.yml-36-concurrency:
+.github/workflows/deep-client.yml-37-  group: ${{ github.workflow }}-${{ github.ref }}
+.github/workflows/deep-client.yml:38:  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/deep-client.yml-39-
+.github/workflows/deep-client.yml-40-jobs:
+.github/workflows/deep-client.yml-41-  deep-client:
+--
+.github/workflows/csharp.yml-110-      id-token: write
+.github/workflows/csharp.yml-111-    concurrency:
+.github/workflows/csharp.yml-112-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+.github/workflows/csharp.yml:113:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-114-    steps:
+.github/workflows/csharp.yml-115-      - name: Validate NuGet account
+.github/workflows/csharp.yml-116-        working-directory: .
+--
+.github/workflows/csharp.yml-143-    timeout-minutes: 10
+.github/workflows/csharp.yml-144-    concurrency:
+.github/workflows/csharp.yml-145-      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+.github/workflows/csharp.yml:146:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-147-    if: github.event_name != 'workflow_dispatch'
+.github/workflows/csharp.yml-148-    outputs:
+.github/workflows/csharp.yml-149-      cs-changed: ${{ steps.changes.outputs.cs-changed }}
+--
+.github/workflows/csharp.yml-182-    timeout-minutes: 10
+.github/workflows/csharp.yml-183-    concurrency:
+.github/workflows/csharp.yml-184-      group: check-${{ github.workflow }}-${{ github.ref }}-changeset-check
+.github/workflows/csharp.yml:185:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-186-    needs: [detect-changes]
+.github/workflows/csharp.yml-187-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.csharp-code-changed == 'true'
+.github/workflows/csharp.yml-188-    steps:
+--
+.github/workflows/csharp.yml-223-    timeout-minutes: 20
+.github/workflows/csharp.yml-224-    concurrency:
+.github/workflows/csharp.yml-225-      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+.github/workflows/csharp.yml:226:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-227-    needs: [detect-changes, release-preflight]
+.github/workflows/csharp.yml-228-    if: |
+.github/workflows/csharp.yml-229-      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+--
+.github/workflows/csharp.yml-280-    timeout-minutes: 30
+.github/workflows/csharp.yml-281-    concurrency:
+.github/workflows/csharp.yml-282-      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+.github/workflows/csharp.yml:283:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-284-    needs: [detect-changes, changeset-check, release-preflight, lint]
+.github/workflows/csharp.yml-285-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changeset-check.result == 'success' || needs.changeset-check.result == 'skipped') }}
+.github/workflows/csharp.yml-286-    permissions:
+--
+.github/workflows/csharp.yml-358-    timeout-minutes: 30
+.github/workflows/csharp.yml-359-    concurrency:
+.github/workflows/csharp.yml-360-      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+.github/workflows/csharp.yml:361:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-362-    if: github.event_name == 'pull_request'
+.github/workflows/csharp.yml-363-    needs: [detect-changes, lint, release-preflight]
+.github/workflows/csharp.yml-364-    steps:
+--
+.github/workflows/csharp.yml-390-    timeout-minutes: 20
+.github/workflows/csharp.yml-391-    concurrency:
+.github/workflows/csharp.yml-392-      group: check-${{ github.workflow }}-${{ github.ref }}-build
+.github/workflows/csharp.yml:393:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/csharp.yml-394-    needs: [lint, test]
+.github/workflows/csharp.yml-395-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
+.github/workflows/csharp.yml-396-    steps:
+--
+.github/workflows/csharp.yml-429-    # Writer group: never cancel a release that may already have pushed a
+.github/workflows/csharp.yml-430-    # package or a version commit.
+.github/workflows/csharp.yml-431-    concurrency:
+.github/workflows/csharp.yml:432:      group: main-writer-${{ github.repository }}
+.github/workflows/csharp.yml:433:      cancel-in-progress: false
+.github/workflows/csharp.yml-434-    permissions:
+.github/workflows/csharp.yml-435-      contents: write
+.github/workflows/csharp.yml-436-      packages: write
+--
+.github/workflows/csharp.yml-654-    # Writer group: never cancel a release that may already have pushed a
+.github/workflows/csharp.yml-655-    # package or a version commit.
+.github/workflows/csharp.yml-656-    concurrency:
+.github/workflows/csharp.yml:657:      group: main-writer-${{ github.repository }}
+.github/workflows/csharp.yml:658:      cancel-in-progress: false
+.github/workflows/csharp.yml-659-    permissions:
+.github/workflows/csharp.yml-660-      contents: write
+.github/workflows/csharp.yml-661-      packages: write
+--
+.github/workflows/csharp.yml-809-    timeout-minutes: 10
+.github/workflows/csharp.yml-810-    # Writer group: never cancel a run that may already have pushed a branch.
+.github/workflows/csharp.yml-811-    concurrency:
+.github/workflows/csharp.yml:812:      group: main-writer-${{ github.repository }}
+.github/workflows/csharp.yml:813:      cancel-in-progress: false
+.github/workflows/csharp.yml-814-    permissions:
+.github/workflows/csharp.yml-815-      contents: write
+.github/workflows/csharp.yml-816-      pull-requests: write
+--
+.github/workflows/rust.yml-96-      id-token: write
+.github/workflows/rust.yml-97-    concurrency:
+.github/workflows/rust.yml-98-      group: check-${{ github.workflow }}-${{ github.ref }}-verify-trusted-publishing
+.github/workflows/rust.yml:99:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-100-    steps:
+.github/workflows/rust.yml-101-      - name: Authenticate with crates.io (trusted publishing)
+.github/workflows/rust.yml-102-        id: auth
+--
+.github/workflows/rust.yml-116-    timeout-minutes: 15
+.github/workflows/rust.yml-117-    concurrency:
+.github/workflows/rust.yml-118-      group: check-${{ github.workflow }}-${{ github.ref }}-detect-changes
+.github/workflows/rust.yml:119:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-120-    if: github.event_name != 'workflow_dispatch'
+.github/workflows/rust.yml-121-    outputs:
+.github/workflows/rust.yml-122-      rs-changed: ${{ steps.changes.outputs.rs-changed }}
+--
+.github/workflows/rust.yml-156-    timeout-minutes: 15
+.github/workflows/rust.yml-157-    concurrency:
+.github/workflows/rust.yml-158-      group: check-${{ github.workflow }}-${{ github.ref }}-changelog
+.github/workflows/rust.yml:159:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-160-    needs: [detect-changes]
+.github/workflows/rust.yml-161-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust-code-changed == 'true'
+.github/workflows/rust.yml-162-    steps:
+--
+.github/workflows/rust.yml-187-    timeout-minutes: 30
+.github/workflows/rust.yml-188-    concurrency:
+.github/workflows/rust.yml-189-      group: check-${{ github.workflow }}-${{ github.ref }}-lint
+.github/workflows/rust.yml:190:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-191-    needs: [detect-changes, release-preflight]
+.github/workflows/rust.yml-192-    if: |
+.github/workflows/rust.yml-193-      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+--
+.github/workflows/rust.yml-276-    timeout-minutes: 45
+.github/workflows/rust.yml-277-    concurrency:
+.github/workflows/rust.yml-278-      group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+.github/workflows/rust.yml:279:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-280-    needs: [detect-changes, changelog, release-preflight, lint]
+.github/workflows/rust.yml-281-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+.github/workflows/rust.yml-282-    strategy:
+--
+.github/workflows/rust.yml-324-    timeout-minutes: 30
+.github/workflows/rust.yml-325-    concurrency:
+.github/workflows/rust.yml-326-      group: check-${{ github.workflow }}-${{ github.ref }}-fresh-merge
+.github/workflows/rust.yml:327:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-328-    if: github.event_name == 'pull_request'
+.github/workflows/rust.yml-329-    needs: [detect-changes, lint, release-preflight]
+.github/workflows/rust.yml-330-    steps:
+--
+.github/workflows/rust.yml-366-    timeout-minutes: 30
+.github/workflows/rust.yml-367-    concurrency:
+.github/workflows/rust.yml-368-      group: check-${{ github.workflow }}-${{ github.ref }}-build
+.github/workflows/rust.yml:369:      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+.github/workflows/rust.yml-370-    needs: [lint, test]
+.github/workflows/rust.yml-371-    if: ${{ !cancelled() && needs.lint.result == 'success' && needs.test.result == 'success' }}
+.github/workflows/rust.yml-372-    steps:
+--
+.github/workflows/rust.yml-407-    # Writer group: never cancel a release that may already have published a
+.github/workflows/rust.yml-408-    # crate or pushed a version commit.
+.github/workflows/rust.yml-409-    concurrency:
+.github/workflows/rust.yml:410:      group: main-writer-${{ github.repository }}
+.github/workflows/rust.yml:411:      cancel-in-progress: false
+.github/workflows/rust.yml-412-    permissions:
+.github/workflows/rust.yml-413-      id-token: write
+.github/workflows/rust.yml-414-      contents: write
+--
+.github/workflows/rust.yml-523-    # Writer group: never cancel a release that may already have published a
+.github/workflows/rust.yml-524-    # crate or pushed a version commit.
+.github/workflows/rust.yml-525-    concurrency:
+.github/workflows/rust.yml:526:      group: main-writer-${{ github.repository }}
+.github/workflows/rust.yml:527:      cancel-in-progress: false
+.github/workflows/rust.yml-528-    permissions:
+.github/workflows/rust.yml-529-      id-token: write
+.github/workflows/rust.yml-530-      contents: write
+--
+.github/workflows/rust.yml-613-    timeout-minutes: 15
+.github/workflows/rust.yml-614-    # Writer group: never cancel a run that may already have pushed a branch.
+.github/workflows/rust.yml-615-    concurrency:
+.github/workflows/rust.yml:616:      group: main-writer-${{ github.repository }}
+.github/workflows/rust.yml:617:      cancel-in-progress: false
+.github/workflows/rust.yml-618-    permissions:
+.github/workflows/rust.yml-619-      contents: write
+.github/workflows/rust.yml-620-      pull-requests: write
+--
+.github/workflows/rerun-infrastructure-failures.yml-48-    timeout-minutes: 5
+.github/workflows/rerun-infrastructure-failures.yml-49-    concurrency:
+.github/workflows/rerun-infrastructure-failures.yml-50-      group: rerun-infrastructure-failures-${{ github.event.workflow_run.id }}
+.github/workflows/rerun-infrastructure-failures.yml:51:      cancel-in-progress: false
+.github/workflows/rerun-infrastructure-failures.yml-52-    permissions:
+.github/workflows/rerun-infrastructure-failures.yml-53-      contents: read
+.github/workflows/rerun-infrastructure-failures.yml-54-      # Read the run's jobs and rerun them.

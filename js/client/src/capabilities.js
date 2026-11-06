@@ -9,7 +9,19 @@ const common = {
   protocol: 'links-text/1',
   // Explicit negotiation retains legacy servers' query documents.
   losslessQueries: false,
-  operations: ['count', 'each', 'create', 'update', 'delete', 'getName', 'setName', 'getByName', 'removeName', 'query', 'exportLinks'],
+  operations: [
+    'count',
+    'each',
+    'create',
+    'update',
+    'delete',
+    'getName',
+    'setName',
+    'getByName',
+    'removeName',
+    'query',
+    'exportLinks',
+  ],
   // No request carries several writes; a batch is many requests, each applied
   // on its own, so a failure in the middle leaves the earlier ones in place.
   atomicTransactions: false,
@@ -24,7 +36,12 @@ const common = {
 
 // Subscriptions belong to a connection to a server: another connection's
 // writes are pushed to it as `(notify: N)` documents.
-const SUBSCRIPTION_OPERATIONS = ['subscribe', 'unsubscribe', 'receiveNotification', 'onNotification'];
+const SUBSCRIPTION_OPERATIONS = [
+  'subscribe',
+  'unsubscribe',
+  'receiveNotification',
+  'onNotification',
+];
 
 /** The calls that only a server in triplet mode (`clink --serve --triplets`) answers. */
 export const TRIPLET_OPERATIONS = [
@@ -97,4 +114,15 @@ export function wasmCapabilities(overrides = {}) {
 }
 
 /** Names of the boolean guarantees `require` understands. */
-export const GUARANTEES = ['atomicTransactions', 'rollback', 'crashConsistency', 'durableFlush', 'pagination', 'persistent', 'rawTcp', 'sharding', 'subscriptions', 'triplets'];
+export const GUARANTEES = [
+  'atomicTransactions',
+  'rollback',
+  'crashConsistency',
+  'durableFlush',
+  'pagination',
+  'persistent',
+  'rawTcp',
+  'sharding',
+  'subscriptions',
+  'triplets',
+];

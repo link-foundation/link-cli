@@ -11,9 +11,20 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { dependencyFiles } from './check-latest-dependencies.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const workflowsDir = join(repoRoot, '.github', 'workflows');
+
+test('generic hooks preserve immutable evidence while secrets still scan it', () => {
+  const config = readFileSync(join(repoRoot, '.pre-commit-config.yaml'), 'utf8');
+  const generic = config.split('  - repo: local')[0];
+  assert.match(generic, /exclude: \^\(dev\/log\/\|docs\/case-studies\/\)/);
+  const secrets = config.match(/ {6}- id: secrets\n([\s\S]*?)(?=\n {6}- id:|$)/)?.[1];
+  assert.ok(secrets, 'tracked-file secrets hook must remain installed');
+  assert.doesNotMatch(secrets, /\bexclude:/);
+  assert.match(secrets, /entry: node \.github\/scripts\/check-secrets\.mjs/);
+});
 
 const workflows = readdirSync(workflowsDir)
   .filter((name) => name.endsWith('.yml') || name.endsWith('.yaml'))
@@ -25,6 +36,14 @@ const workflows = readdirSync(workflowsDir)
 
 test('there is at least one workflow to inspect', () => {
   assert.ok(workflows.length > 0, `no workflows found in ${workflowsDir}`);
+});
+
+test('CodeQL scans the complete checkout without a truncated PR diff', () => {
+  const security = workflows.find(({ name }) => name === 'security.yml');
+  const codeql = readJobs(security.text).find(({ name }) => name === 'codeql');
+  assert.match(codeql.body, /^ {6}CODEQL_OVERLAY_DATABASE_MODE: none$/m);
+  assert.match(codeql.body, /^ {6}CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'$/m);
+  assert.match(codeql.body, /check-codeql-results\.mjs codeql-results/);
 });
 
 /** Splits a workflow into `{ name, body }` entries, one per job. */
@@ -70,7 +89,11 @@ function readSteps(text) {
     if (start && (!current || start[1].length <= current.indent)) {
       current = { indent: start[1].length, first: index + 1, lines: [line] };
       steps.push(current);
-    } else if (current && line.trim() !== '' && line.length - line.trimStart().length <= current.indent) {
+    } else if (
+      current &&
+      line.trim() !== '' &&
+      line.length - line.trimStart().length <= current.indent
+    ) {
       current = null; // left the steps list
     } else if (current) {
       current.lines.push(line);
@@ -147,7 +170,9 @@ test('no workflow reacts to both pull_request and non-main push branches', () =>
 // Tests that never run in CI are the purest false negative: js/test held a
 // failing repository-layout test for months because no workflow invoked it.
 test('the JavaScript unit tests are executed by a workflow', () => {
-  const jsTests = readdirSync(join(repoRoot, 'js', 'test')).filter((name) => name.endsWith('.test.mjs'));
+  const jsTests = readdirSync(join(repoRoot, 'js', 'test')).filter((name) =>
+    name.endsWith('.test.mjs'),
+  );
   assert.ok(jsTests.length > 0, 'expected JavaScript tests under js/test');
   assert.ok(
     workflows.some((workflow) => /npm run test:js/.test(workflow.text)),
@@ -210,28 +235,32 @@ for (const workflow of workflows) {
     }
   });
 
-  // `continue-on-error` turns a real failure into a green run - the exact
-  // false negative that hid the Windows test failures reported in issue #96.
-  // The crates.io trusted publishing exchange used to be the one exception,
-  // but its expected failure left a red annotation on every green release
-  // (issue #134), so it is now gated on a repository variable instead.
-  test(`${workflow.name}: does not mask failures with continue-on-error`, () => {
-    const offenders = workflow.text
-      .split('\n')
-      .map((line, index) => ({ line, number: index + 1 }))
-      .filter(({ line }) => /^\s*continue-on-error:/.test(line));
-    assert.deepEqual(
-      offenders.map(({ number }) => `${workflow.name}:${number}`),
-      [],
-      'continue-on-error masks real failures',
-    );
+  // An authentication attempt may fail so the preflight can classify it or
+  // verify a fallback. The following preflight must enforce the final verdict.
+  test(`${workflow.name}: only classified authentication attempts may continue after failure`, () => {
+    for (const job of readJobs(workflow.text)) {
+      for (const step of readSteps(job.body).filter(({ text }) =>
+        /continue-on-error:/.test(text),
+      )) {
+        assert.equal(workflow.name, 'csharp.yml');
+        assert.equal(job.name, 'release-preflight');
+        assert.match(step.text, /id: preflight_nuget/);
+        assert.match(step.text, /uses: NuGet\/login@/);
+        assert.match(job.body, /NUGET_OIDC_OUTCOME: \$\{\{ steps\.preflight_nuget\.outcome \}\}/);
+        assert.match(job.body, /run: node \.github\/scripts\/release-preflight\.mjs nuget/);
+      }
+    }
   });
 
   // Trusted publishing that is not configured on crates.io fails with
   // "No Trusted Publishing config found", so it must only run once it is.
   test(`${workflow.name}: crates.io trusted publishing runs only when enabled`, () => {
-    const releaseJobs = readJobs(workflow.text).filter(({ name }) => name !== 'verify-trusted-publishing');
-    for (const step of releaseJobs.flatMap(({ body }) => readSteps(body)).filter((s) => trustedPublishingAuth.test(s.text))) {
+    const releaseJobs = readJobs(workflow.text).filter(
+      ({ name }) => name !== 'verify-trusted-publishing',
+    );
+    for (const step of releaseJobs
+      .flatMap(({ body }) => readSteps(body))
+      .filter((s) => trustedPublishingAuth.test(s.text))) {
       assert.match(
         step.text,
         /^\s*if: vars\.CRATES_IO_TRUSTED_PUBLISHING == 'true' && /m,
@@ -239,7 +268,9 @@ for (const workflow of workflows) {
       );
       const id = /^\s*id:\s*(\S+)\s*$/m.exec(step.text)?.[1];
       assert.ok(id, `${workflow.name}:${step.first}: the trusted publishing step needs an id`);
-      const consumers = workflow.text.split('\n').filter((other) => other.includes(`steps.${id}.outputs.token`));
+      const consumers = workflow.text
+        .split('\n')
+        .filter((other) => other.includes(`steps.${id}.outputs.token`));
       assert.ok(consumers.length > 0, `${workflow.name}: nothing reads steps.${id}.outputs.token`);
       for (const consumer of consumers) {
         assert.match(
@@ -286,9 +317,17 @@ for (const workflow of workflows) {
     const offenders = readSteps(workflow.text)
       .filter(({ text }) => /\bsecrets\.[A-Z0-9_]*(?:TOKEN|KEY)\b/.test(text))
       .map((step) => ({ ...step, code: step.text.replace(/^\s*#.*$/gm, '') }))
-      .filter(({ code }) => /(?:not set|not configured|missing)[^\n]*\bskipp(?:ing|ed)\b|\bskipping\b[^\n]*publish/i.test(code))
+      .filter(({ code }) =>
+        /(?:not set|not configured|missing)[^\n]*\bskipp(?:ing|ed)\b|\bskipping\b[^\n]*publish/i.test(
+          code,
+        ),
+      )
       .map(({ first }) => first);
-    assert.deepEqual(offenders, [], `${workflow.name} skips publishing on missing credentials at lines ${offenders}`);
+    assert.deepEqual(
+      offenders,
+      [],
+      `${workflow.name} skips publishing on missing credentials at lines ${offenders}`,
+    );
   });
 
   // `if npm view pkg@version` reads every failure, including an unreachable
@@ -299,7 +338,11 @@ for (const workflow of workflows) {
       .filter(({ text }) => /\bnpm view\b/.test(text.replace(/^\s*#.*$/gm, '')))
       .filter(({ text }) => !/code E404/.test(text) || /npm view[^\n]*>\s*\/dev\/null/.test(text))
       .map(({ first }) => first);
-    assert.deepEqual(offenders, [], `${workflow.name} treats any npm view failure as "not published" at lines ${offenders}`);
+    assert.deepEqual(
+      offenders,
+      [],
+      `${workflow.name} treats any npm view failure as "not published" at lines ${offenders}`,
+    );
   });
 
   // `gh workflow run` and the REST API refuse a dispatch that omits a
@@ -312,15 +355,25 @@ for (const workflow of workflows) {
       if (line.trim() !== 'type: choice') return;
       const indent = line.length - line.trimStart().length;
       let start = index;
-      while (start > 0 && lines[start - 1].length - lines[start - 1].trimStart().length >= indent) start -= 1;
+      while (start > 0 && lines[start - 1].length - lines[start - 1].trimStart().length >= indent)
+        start -= 1;
       let end = index;
-      while (end + 1 < lines.length && (lines[end + 1].trim() === '' || lines[end + 1].length - lines[end + 1].trimStart().length >= indent)) end += 1;
+      while (
+        end + 1 < lines.length &&
+        (lines[end + 1].trim() === '' ||
+          lines[end + 1].length - lines[end + 1].trimStart().length >= indent)
+      )
+        end += 1;
       const body = lines.slice(start, end + 1).join('\n');
       if (/^\s*required: true$/m.test(body) && !/^\s*default:/m.test(body)) {
         offenders.push(lines[start - 1].trim());
       }
     });
-    assert.deepEqual(offenders, [], `${workflow.name} has required choice inputs without a default`);
+    assert.deepEqual(
+      offenders,
+      [],
+      `${workflow.name} has required choice inputs without a default`,
+    );
   });
 
   // `ubuntu-latest` moved these jobs to Ubuntu 26.04 mid-rollout while the
@@ -332,7 +385,11 @@ for (const workflow of workflows) {
       .map((line, index) => ({ line: line.replace(/#.*$/, ''), number: index + 1 }))
       .filter(({ line }) => /\b(?:ubuntu|macos|windows)-latest\b/.test(line))
       .map(({ number }) => number);
-    assert.deepEqual(offenders, [], `${workflow.name} uses a -latest runner label at lines ${offenders}`);
+    assert.deepEqual(
+      offenders,
+      [],
+      `${workflow.name} uses a -latest runner label at lines ${offenders}`,
+    );
   });
 
   // actions/checkout runs `git init` before any step can configure Git, so
@@ -429,14 +486,23 @@ test('every cargo audit invocation denies warnings', () => {
 test('coverage uploads use OIDC and retain reports without requiring Codecov', () => {
   let uploads = 0;
   for (const { name, text } of workflows) {
-    assert.doesNotMatch(text, /secrets\.CODECOV_TOKEN|^  codecov-token:/m, `${name} requires a Codecov secret`);
+    assert.doesNotMatch(
+      text,
+      /secrets\.CODECOV_TOKEN|^ {2}codecov-token:/m,
+      `${name} requires a Codecov secret`,
+    );
     for (const job of readJobs(text)) {
-      for (const step of readSteps(job.body).filter(({ text }) => /uses: codecov\/codecov-action@/.test(text))) {
+      for (const step of readSteps(job.body).filter(({ text }) =>
+        /uses: codecov\/codecov-action@/.test(text),
+      )) {
         uploads += 1;
         assert.match(step.text, /uses: codecov\/codecov-action@v7/);
         assert.match(step.text, /^\s*use_oidc: true$/m);
         assert.match(job.body, /^ {6}id-token: write$/m);
-        assert.match(step.text, /^\s*fail_ci_if_error: \$\{\{ steps\.codecov\.outputs\.required \}\}$/m);
+        assert.match(
+          step.text,
+          /^\s*fail_ci_if_error: \$\{\{ steps\.codecov\.outputs\.required \}\}$/m,
+        );
         assert.match(job.body, /node .github\/scripts\/coverage\.mjs codecov/);
         assert.match(step.text, /^\s*(?:directory|files):/m);
         assert.match(step.text, /^\s*plugins: noop$/m);
@@ -465,41 +531,74 @@ test('Rust PR lint compiles release helpers without executing them', () => {
 test('registry trust can be verified without versioning or publishing a release', () => {
   for (const name of ['rust.yml', 'csharp.yml']) {
     const workflow = workflows.find((candidate) => candidate.name === name);
-    assert.ok(readChoiceOptions(workflow.text, 'release_mode').includes('verify-trusted-publishing'));
+    assert.ok(
+      readChoiceOptions(workflow.text, 'release_mode').includes('verify-trusted-publishing'),
+    );
     const verify = readJobs(workflow.text).find(({ name }) => name === 'verify-trusted-publishing');
     assert.ok(verify, `${name} needs an authentication-only verification job`);
-    assert.match(verify.body, /github.event_name == 'workflow_dispatch'.*release_mode == 'verify-trusted-publishing'/);
+    assert.match(
+      verify.body,
+      /github.event_name == 'workflow_dispatch'.*release_mode == 'verify-trusted-publishing'/,
+    );
     assert.match(verify.body, /^ {6}id-token: write$/m);
-    assert.doesNotMatch(verify.body, /secrets\.|cargo publish|nuget push|version-and-commit|contents: write/);
+    assert.doesNotMatch(
+      verify.body,
+      /secrets\.|cargo publish|nuget push|version-and-commit|contents: write/,
+    );
     assert.match(verify.body, name === 'rust.yml' ? trustedPublishingAuth : /uses: NuGet\/login@/);
-    for (const job of readJobs(workflow.text).filter(({ name }) => ['lint', 'test'].includes(name))) {
-      assert.match(job.body, /inputs.release_mode != 'verify-trusted-publishing'/, `${name}: authentication-only dispatch must not start or cancel ${job.name}`);
+    for (const job of readJobs(workflow.text).filter(({ name }) =>
+      ['lint', 'test'].includes(name),
+    )) {
+      assert.match(
+        job.body,
+        /inputs.release_mode != 'verify-trusted-publishing'/,
+        `${name}: authentication-only dispatch must not start or cancel ${job.name}`,
+      );
     }
   }
   const npm = workflows.find(({ name }) => name === 'js-client.yml');
   const verify = readJobs(npm.text).find(({ name }) => name === 'verify-trusted-publishing');
-  assert.match(verify.body, /github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing/);
+  assert.match(
+    verify.body,
+    /github.event_name == 'workflow_dispatch' && inputs.verify_trusted_publishing/,
+  );
   assert.match(verify.body, /^ {6}id-token: write$/m);
   assert.match(verify.body, /node .github\/scripts\/verify-npm-trust.mjs/);
   assert.doesNotMatch(verify.body, /secrets\.|npm publish/);
-  assert.doesNotMatch(npm.text, /secrets\.NPM_TOKEN|NODE_AUTH_TOKEN/, 'verified npm OIDC publishing must not fall back to a long-lived token');
+  assert.doesNotMatch(
+    npm.text,
+    /secrets\.NPM_TOKEN|NODE_AUTH_TOKEN/,
+    'verified npm OIDC publishing must not fall back to a long-lived token',
+  );
 });
 
 test('Dependabot watches every directory the dependency check reads', () => {
   const config = readFileSync(join(repoRoot, '.github', 'dependabot.yml'), 'utf8');
   const watched = (ecosystem) => {
-    const block = config.split(/\n(?=  - package-ecosystem:)/).find((part) => part.includes(`package-ecosystem: ${ecosystem}\n`));
-    return [...block.matchAll(/^\s+(?:- |directory: )(\/[\w./-]*)\s*$/gm)].map(([, directory]) => directory);
+    const block = config
+      .split(/\n(?= {2}- package-ecosystem:)/)
+      .find((part) => part.includes(`package-ecosystem: ${ecosystem}\n`));
+    return [...block.matchAll(/^\s+(?:- |directory: )(\/[\w./-]*)\s*$/gm)].map(
+      ([, directory]) => directory,
+    );
   };
-  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0');
+  const tracked = dependencyFiles(
+    execFileSync('git', ['ls-files', '-z'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).split('\0'),
+  );
   const directoriesOf = (pattern, needs) =>
     tracked
-      .filter((file) => pattern.test(file) && needs.test(readFileSync(join(repoRoot, file), 'utf8')))
+      .filter(
+        (file) => pattern.test(file) && needs.test(readFileSync(join(repoRoot, file), 'utf8')),
+      )
       .map((file) => `/${dirname(file)}`.replace(/\/\.$/, ''));
   const expectations = {
     cargo: directoriesOf(/(^|\/)Cargo\.toml$/, /^\[(?:.*\.)?(?:dev-|build-)?dependencies/m),
     nuget: directoriesOf(/\.csproj$/, /<PackageReference /),
     npm: directoriesOf(/(^|\/)package\.json$/, /"(?:dev)?[dD]ependencies"/),
+    pip: directoriesOf(/(^|\/)requirements[^/]*\.txt$/, /==/),
   };
   for (const [ecosystem, directories] of Object.entries(expectations)) {
     for (const directory of directories) {

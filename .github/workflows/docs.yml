@@ -22,9 +22,13 @@ on:
       - 'csharp/docfx.json'
       - 'rust/src/**'
       - 'rust/Cargo.toml'
+      - 'rust/Cargo.lock'
+      - 'csharp/Directory.Build.props'
+      - 'csharp/Directory.Build.targets'
       - 'rust/wasm/**'
       - 'js/**'
       - '.github/workflows/docs.yml'
+      - '.github/scripts/**'
   pull_request:
     branches: [main]
     paths:
@@ -33,9 +37,13 @@ on:
       - 'csharp/docfx.json'
       - 'rust/src/**'
       - 'rust/Cargo.toml'
+      - 'rust/Cargo.lock'
+      - 'csharp/Directory.Build.props'
+      - 'csharp/Directory.Build.targets'
       - 'rust/wasm/**'
       - 'js/**'
       - '.github/workflows/docs.yml'
+      - '.github/scripts/**'
   workflow_dispatch:
 
 permissions:
@@ -65,7 +73,7 @@ jobs:
     timeout-minutes: 20
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-build
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -186,7 +194,7 @@ jobs:
     name: Deploy to GitHub Pages
     # Single writer for GitHub Pages: never cancel a deployment mid-flight.
     concurrency:
-      group: github-pages-${{ github.repository }}
+      group: main-writer-${{ github.repository }}
       cancel-in-progress: false
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     needs: build
@@ -218,3 +226,27 @@ jobs:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
           echo "Pages deployed to: $PAGE_URL"
+
+  pipeline-status:
+    name: Pipeline Status (docs)
+    needs:
+      - build
+      - deploy
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

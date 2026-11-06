@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { decodeReferenceLiteral, encodeReferenceLiteral, formatDocument, formatReference, group, named, parseDocument } from '../src/lino.js';
+import {
+  decodeReferenceLiteral,
+  encodeReferenceLiteral,
+  formatDocument,
+  formatReference,
+  group,
+  named,
+  parseDocument,
+} from '../src/lino.js';
 
 test('references stay bare unless the notation needs them quoted', () => {
   assert.equal(formatReference('42'), '42');
@@ -24,19 +32,29 @@ test('empty text and control characters become ~1{hex} literals', () => {
 });
 
 test('the formats the servers write parse into the model', () => {
-  assert.deepEqual(parseDocument('() ((1: 1 1))'), [group([group([]), group([named('1', ['1', '1'])])])]);
+  assert.deepEqual(parseDocument('() ((1: 1 1))'), [
+    group([group([]), group([named('1', ['1', '1'])])]),
+  ]);
   assert.deepEqual(parseDocument('(count: 2)'), [named('count', ['2'])]);
   assert.deepEqual(parseDocument("(name: 'a pair')"), [named('name', ['a pair'])]);
   assert.deepEqual(parseDocument('(name: ~1{})'), [named('name', [''])]);
-  assert.deepEqual(parseDocument('(1: 1 1)\n(2: 1 2)\n'), [named('1', ['1', '1']), named('2', ['1', '2'])]);
+  assert.deepEqual(parseDocument('(1: 1 1)\n(2: 1 2)\n'), [
+    named('1', ['1', '1']),
+    named('2', ['1', '2']),
+  ]);
   assert.deepEqual(parseDocument(''), []);
-  assert.deepEqual(parseDocument('((1: 1 1)) ()'), [group([group([named('1', ['1', '1'])]), group([])])]);
+  assert.deepEqual(parseDocument('((1: 1 1)) ()'), [
+    group([group([named('1', ['1', '1'])]), group([])]),
+  ]);
 });
 
 test('formatting matches the canonical text of links-notation', () => {
   assert.equal(formatDocument([named('create', [group(['1', '1'])])]), '(create: (1 1))');
   assert.equal(formatDocument([named('delete', ['7'])]), '(delete: 7)');
-  assert.equal(formatDocument([group([group([]), group([named('1', ['1', '1'])])])]), '() ((1: 1 1))');
+  assert.equal(
+    formatDocument([group([group([]), group([named('1', ['1', '1'])])])]),
+    '() ((1: 1 1))',
+  );
   assert.equal(formatDocument([named('count', [group(['*', '*', '2'])])]), '(count: (* * 2))');
   assert.equal(formatDocument([named('remove-name', [])]), '(remove-name:)');
 });

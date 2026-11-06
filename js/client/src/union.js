@@ -21,16 +21,25 @@
 // LiNo text, queries and subscriptions belong to one store, so they go to a
 // member (`union.members[i]`), never to the wrong one.
 
-import { byIndex, COMPOSED_OPERATIONS, refuseTriplets, requireGuarantees, runBatch, untranslatable } from './composed.js';
+import {
+  byIndex,
+  COMPOSED_OPERATIONS,
+  refuseTriplets,
+  requireGuarantees,
+  runBatch,
+  untranslatable,
+} from './composed.js';
 import { AddressRangeError, NotFoundError, UnsupportedError } from './errors.js';
 import { toAddress } from './operations.js';
 
 /** Networks seen as one; see the top of this module. */
 export class UnionLinks {
   constructor(members) {
-    if (!Array.isArray(members) || members.length === 0) throw new TypeError('a union joins at least one links network');
+    if (!Array.isArray(members) || members.length === 0)
+      throw new TypeError('a union joins at least one links network');
     for (const member of members) {
-      if (!member || typeof member.each !== 'function') throw new TypeError('a member of a union is a links client');
+      if (!member || typeof member.each !== 'function')
+        throw new TypeError('a member of a union is a links client');
     }
     this.members = Object.freeze([...members]);
   }
@@ -43,12 +52,16 @@ export class UnionLinks {
   get capabilities() {
     const all = this.members.map((member) => member.capabilities);
     const every = (guarantee) => all.every((capabilities) => capabilities[guarantee] === true);
-    const maxAddress = all.map((capabilities) => capabilities.maxAddress).reduce((max, address) => (address > max ? address : max));
+    const maxAddress = all
+      .map((capabilities) => capabilities.maxAddress)
+      .reduce((max, address) => (address > max ? address : max));
     return Object.freeze({
       backend: `union(${all.map((capabilities) => capabilities.backend).join(', ')})`,
       transport: 'composed',
       protocol: all[0].protocol,
-      operations: COMPOSED_OPERATIONS.filter((operation) => all.every((capabilities) => capabilities.operations.includes(operation))),
+      operations: COMPOSED_OPERATIONS.filter((operation) =>
+        all.every((capabilities) => capabilities.operations.includes(operation)),
+      ),
       addressBits: Math.max(...all.map((capabilities) => capabilities.addressBits)),
       maxAddress,
       // A write goes to one member; nothing spans members.
@@ -174,7 +187,8 @@ export class UnionLinks {
   async getByName(name, options) {
     for (const [position, member] of this.members.entries()) {
       const found = await member.getByName(name, options);
-      if (found !== null && found !== 0n && !(await this.#shadowed(position, found, options))) return found;
+      if (found !== null && found !== 0n && !(await this.#shadowed(position, found, options)))
+        return found;
     }
     return null;
   }
@@ -239,5 +253,7 @@ export class UnionLinks {
 refuseTriplets(UnionLinks, 'a union');
 
 function unsubscribable() {
-  return new UnsupportedError('a union does not subscribe: subscribe to the member whose changes you want (union.members[i])');
+  return new UnsupportedError(
+    'a union does not subscribe: subscribe to the member whose changes you want (union.members[i])',
+  );
 }

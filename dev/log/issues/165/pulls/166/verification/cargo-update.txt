@@ -1,0 +1,4 @@
+    Updating crates.io index
+     Locking 2 packages to highest compatible versions
+    Updating doublets v0.19.0 -> v0.20.0
+    Updating links-notation v0.30.1 -> v0.31.0

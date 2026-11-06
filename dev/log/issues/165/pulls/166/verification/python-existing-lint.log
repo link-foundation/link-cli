@@ -1,0 +1,12 @@
+E741 Ambiguous variable name: `l`
+  --> experiments/compare-derived-tables.py:18:68
+   |
+16 | def pg(q):
+17 |     o = subprocess.run(["docker","exec","deep-postgres","psql","-U","postgres","-tAF,","-c",q],capture_output=True,text=True).stdout
+18 |     return [tuple(int(x) if x else None for x in l.split(",")) for l in o.splitlines()]
+   |                                                                    ^
+19 | def report(name, a, b, key):
+20 |     a, b = set(a), set(b)
+   |
+
+Found 8 errors (7 fixed, 1 remaining).

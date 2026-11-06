@@ -1,0 +1,33 @@
+
+/tmp/gh-issue-solver-1793920673713/.github/scripts/check-latest-dependencies.mjs
+  314:7  error  There is no `cause` attached to the symptom error being thrown  preserve-caught-error
+
+/tmp/gh-issue-solver-1793920673713/.github/scripts/npm-release.test.mjs
+   9:78  error  Spaces are hard to count. Use {6}  no-regex-spaces
+  11:13  error  Spaces are hard to count. Use {8}  no-regex-spaces
+
+/tmp/gh-issue-solver-1793920673713/.github/scripts/pipeline-status.test.mjs
+  22:69  error  Spaces are hard to count. Use {2}  no-regex-spaces
+
+/tmp/gh-issue-solver-1793920673713/.github/scripts/workflow-policy.test.mjs
+  472:7   error  Spaces are hard to count. Use {2}  no-regex-spaces
+  553:14  error  Spaces are hard to count. Use {2}  no-regex-spaces
+
+/tmp/gh-issue-solver-1793920673713/csharp/scripts/check-release-needed.mjs
+  144:9  error  There is no `cause` attached to the symptom error being thrown  preserve-caught-error
+
+/tmp/gh-issue-solver-1793920673713/csharp/scripts/version-and-commit.mjs
+  415:9  error  There is no `cause` attached to the symptom error being thrown  preserve-caught-error
+  422:9  error  There is no `cause` attached to the symptom error being thrown  preserve-caught-error
+  435:9  error  There is no `cause` attached to the symptom error being thrown  preserve-caught-error
+
+/tmp/gh-issue-solver-1793920673713/js/client/src/lino.js
+  18:17  error  Unexpected control character(s) in regular expression: \x00, \x1f  no-control-regex
+
+/tmp/gh-issue-solver-1793920673713/js/client/test/client.test.mjs
+  262:34  error  'scope' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+✖ 12 problems (12 errors, 0 warnings)
+  5 errors and 0 warnings potentially fixable with the `--fix` option.
+
+JavaScript quality: 75 files, 12 formatting/lint findings

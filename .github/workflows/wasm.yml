@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - '.github/workflows/wasm.yml'
+      - '.github/scripts/**'
       - 'experiments/issue-138/wasm-coverage.sh'
       - 'js/**'
       - 'rust/**'
@@ -23,6 +24,7 @@ on:
       - main
     paths:
       - '.github/workflows/wasm.yml'
+      - '.github/scripts/**'
       - 'experiments/issue-138/wasm-coverage.sh'
       - 'js/**'
       - 'rust/**'
@@ -57,7 +59,7 @@ jobs:
     timeout-minutes: 30
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-test
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
 
     steps:
       - uses: actions/checkout@v7
@@ -118,6 +120,7 @@ jobs:
         with:
           name: link-cli-web
           path: dist/
+          if-no-files-found: error
 
   coverage:
     name: WASM coverage
@@ -162,3 +165,26 @@ jobs:
   # together with the C# and Rust API references into a single artifact. This
   # workflow used to deploy the workbench on its own, which replaced the docs
   # already published at /csharp/ and /rust/ (issue #96).
+
+  pipeline-status:
+    name: Pipeline Status (wasm)
+    needs:
+      - test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

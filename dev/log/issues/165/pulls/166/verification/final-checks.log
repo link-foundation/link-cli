@@ -1,0 +1,64 @@
+Audit every NuGet dependency graph	pass	42s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184058	
+Audit npm lock (js)	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184220	
+Audit npm lock (js/client)	pass	12s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639183914	
+Audit resolved Python CI tools	pass	21s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639183580	
+Build Package	pass	28s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127640507443	
+Build documentation	pass	2m12s	https://github.com/link-foundation/link-cli/actions/runs/42140455891/job/127639183018	
+Cargo audit (docs/case-studies/issue-100/evidence/external-range/rust)	pass	10s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184416	
+Cargo audit (rust)	pass	10s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639183850	
+Cargo audit (rust/wasm)	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184084	
+Changelog Fragment Check	pass	36s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127639655884	
+Changeset Validation	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639255272	
+Check Links	pass	16s	https://github.com/link-foundation/link-cli/actions/runs/42140455282/job/127639181706	
+CodeQL (actions)	pass	52s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184387	
+CodeQL (csharp)	pass	2m2s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184417	
+CodeQL (javascript-typescript)	pass	1m22s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184264	
+CodeQL (python)	pass	1m8s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639183942	
+CodeQL (rust)	pass	4m9s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184130	
+Conformance on Node.js, Bun and Deno	pass	3m17s	https://github.com/link-foundation/link-cli/actions/runs/42140455830/job/127639398566	
+DeepClient (csharp)	pass	59s	https://github.com/link-foundation/link-cli/actions/runs/42140456113/job/127639184619	
+DeepClient (rust)	pass	1m11s	https://github.com/link-foundation/link-cli/actions/runs/42140456113/job/127639184819	
+Dependencies are on their latest versions	pass	19s	https://github.com/link-foundation/link-cli/actions/runs/42140455328/job/127639182533	
+Dependency Review	pass	15s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639184134	
+Detect Changes	pass	1m0s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127639182654	
+Deploy to GitHub Pages	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455891/job/127640018381	
+CodeQL	skipping	2s	https://github.com/link-foundation/link-cli/runs/127639504317	
+Lint and Format Check	pass	54s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639341256	
+Pipeline Status (dependencies)	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455328/job/127639313318	
+Pipeline Status (links)	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455282/job/127639292579	
+Lint and Format Check	pass	2m13s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127639656073	
+Unit tests and types	pass	13s	https://github.com/link-foundation/link-cli/actions/runs/42140455830/job/127639270287	
+JavaScript and Python lint and formatting	pass	20s	https://github.com/link-foundation/link-cli/actions/runs/42140456052/job/127639185155	
+Lint Workflows	pass	7s	https://github.com/link-foundation/link-cli/actions/runs/42140456052/job/127639184747	
+Simulate Fresh Merge	pass	1m2s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639688941	
+Build Package	pending	0	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127641932071	
+Test	pass	4m40s	https://github.com/link-foundation/link-cli/actions/runs/42140456230/job/127639185121	
+Release authentication preflight	pass	10s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639184627	
+Test (windows-2025)	pass	1m49s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639689107	
+Test (ubuntu-24.04)	pass	1m16s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639689000	
+Test (macos-26-intel)	pass	2m9s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639688932	
+zizmor	pass	14s	https://github.com/link-foundation/link-cli/actions/runs/42140456052/job/127639184958	
+Workflow Policy Tests	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140456052/job/127639184992	
+Release authentication preflight	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455830/job/127639183383	
+Pipeline Status (deep-client)	pass	17s	https://github.com/link-foundation/link-cli/actions/runs/42140456113/job/127639712039	
+Pipeline Status (workflows)	pass	10s	https://github.com/link-foundation/link-cli/actions/runs/42140456052/job/127639428884	
+Pipeline Status (docs)	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455891/job/127640016462	
+Test (windows-2025)	pass	3m42s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127640497869	
+Simulate Fresh Merge	pass	1m36s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127640497878	
+Test (ubuntu-24.04)	pass	1m57s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127640497825	
+Test (macos-26)	pass	2m31s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127640497944	
+Release to npm	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455830/job/127640637981	
+Scan for committed secrets	pass	47s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127639183996	
+Pipeline Status (security)	pass	13s	https://github.com/link-foundation/link-cli/actions/runs/42140455675/job/127640748923	
+Create Changelog PR	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127639184292	
+Create Changeset PR	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639185560	
+Detect Changes	pass	10s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639184122	
+Pipeline Status (csharp)	pass	10s	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127640939994	
+Pipeline Status (js-client)	pass	13s	https://github.com/link-foundation/link-cli/actions/runs/42140455830/job/127640912835	
+Release authentication preflight	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127639182962	
+Pipeline Status (wasm)	pass	11s	https://github.com/link-foundation/link-cli/actions/runs/42140456230/job/127641037583	
+Instant Release	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127640941012	
+Release	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127640941954	
+Verify NuGet trusted publishing	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455753/job/127639185645	
+Verify crates.io trusted publishing	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455615/job/127639184349	
+Verify npm trusted publishing	skipping	0	https://github.com/link-foundation/link-cli/actions/runs/42140455830/job/127639184800	

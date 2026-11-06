@@ -1,0 +1,7 @@
+// Run: node --input-type=module < experiments/issue-165/codeql-using-repro.mjs.txt
+async function using(body) { return body(); }
+async function exercise() {
+  await using(async () => 42);
+}
+await exercise();
+console.log('Valid await using(...) expression completed');

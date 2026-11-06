@@ -8,12 +8,20 @@ on:
       - '**.md'
       - '**.html'
       - '.github/workflows/links.yml'
+      - '.github/scripts/**'
+      - '.github/scripts/*web-archive*'
+      - '.github/scripts/recheck-broken-links*'
+      - '.lycheeignore'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - '**.md'
       - '**.html'
       - '.github/workflows/links.yml'
+      - '.github/scripts/**'
+      - '.github/scripts/*web-archive*'
+      - '.github/scripts/recheck-broken-links*'
+      - '.lycheeignore'
   workflow_dispatch:
 
 # Least-privilege default; jobs escalate individually when needed.
@@ -44,6 +52,10 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
       - name: Check links with lychee
         id: lychee
         uses: lycheeverse/lychee-action@v2
@@ -73,15 +85,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Recheck unanswered links and transient HTTP failures
+        if: steps.lychee.outputs.exit_code != '0'
+        id: recheck
+        run: node .github/scripts/recheck-broken-links.mjs
+        env:
+          LYCHEE_EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
+
       - name: Check broken links against Web Archive
-        if: steps.lychee.outputs.exit_code != 0
+        if: steps.lychee.outputs.exit_code != '0' && steps.recheck.outputs.all_recovered != 'true'
         id: webarchive
         run: node .github/scripts/check-web-archive.mjs
         env:
           LYCHEE_OUTPUT: lychee/out.md
+          LYCHEE_EXIT_CODE: ${{ steps.lychee.outputs.exit_code }}
 
       - name: Fail if broken links found and no web archive fallback
-        if: steps.lychee.outputs.exit_code != 0 && steps.webarchive.outputs.all_archived != 'true'
+        if: ${{ !cancelled() && steps.lychee.outputs.exit_code != '0' && steps.recheck.outputs.all_recovered != 'true' && steps.webarchive.outputs.all_archived != 'true' }}
         run: |
           echo "::error::Broken links were detected with no Web Archive fallback available."
           echo ""
@@ -98,5 +118,36 @@ jobs:
           echo "     b. Remove the link if the content is no longer relevant."
           echo "     c. Add the URL to .lycheeignore if it is a known false positive."
           echo ""
-          echo "Report location: lychee/out.md (available as a workflow artifact if configured)."
+          echo "Report location: lychee/out.md (workflow artifact: link-check-reports)."
           exit 1
+
+      - name: Preserve link reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: link-check-reports
+          path: lychee/
+          if-no-files-found: error
+
+  pipeline-status:
+    name: Pipeline Status (links)
+    needs:
+      - link-checker
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

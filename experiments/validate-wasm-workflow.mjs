@@ -26,7 +26,10 @@ if (!workflow.includes('deploy_pages:')) {
   pass('workflow_dispatch deploy_pages input exists');
 }
 
-if (!workflow.includes("github.event_name == 'workflow_dispatch'") || !workflow.includes('inputs.deploy_pages')) {
+if (
+  !workflow.includes("github.event_name == 'workflow_dispatch'") ||
+  !workflow.includes('inputs.deploy_pages')
+) {
   fail('Deploy job is not gated by manual workflow_dispatch opt-in');
 } else {
   pass('Deploy job is gated by manual workflow_dispatch opt-in');

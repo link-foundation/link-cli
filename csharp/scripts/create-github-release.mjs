@@ -122,9 +122,7 @@ export function getChangelogForVersion(version, changelogPath) {
   const content = readFileSync(changelogPath, 'utf-8');
 
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pattern = new RegExp(
-    `## \\[${escapedVersion}\\].*?\\n([\\s\\S]*?)(?=\\n## \\[|$)`
-  );
+  const pattern = new RegExp(`## \\[${escapedVersion}\\].*?\\n([\\s\\S]*?)(?=\\n## \\[|$)`);
   const match = content.match(pattern);
 
   if (match) {
@@ -147,15 +145,14 @@ export function buildReleasePayload({
   releaseVersion,
   tagPrefix,
 }) {
-  const ids = (packageIds && packageIds.length > 0
-    ? packageIds
-    : [packageId].filter(Boolean));
+  const ids = packageIds && packageIds.length > 0 ? packageIds : [packageId].filter(Boolean);
   const changelogNotes = getChangelogForVersion(releaseVersion, changelogPath);
-  const footer = ids.length === 0
-    ? ''
-    : ids.length === 1
-      ? `\n\nPackage: \`${ids[0]}\``
-      : `\n\nPackages: ${ids.map((id) => `\`${id}\``).join(', ')}`;
+  const footer =
+    ids.length === 0
+      ? ''
+      : ids.length === 1
+        ? `\n\nPackage: \`${ids[0]}\``
+        : `\n\nPackages: ${ids.map((id) => `\`${id}\``).join(', ')}`;
   const notesWithPackage = `${changelogNotes}${footer}`;
   const body = prependNugetBadges(notesWithPackage, ids, releaseVersion);
 
@@ -205,7 +202,7 @@ function main(argv) {
   if (!version || !repository) {
     console.error('Error: Missing required arguments');
     console.error(
-      'Usage: node csharp/scripts/create-github-release.mjs --release-version <version> --repository <repository>'
+      'Usage: node csharp/scripts/create-github-release.mjs --release-version <version> --repository <repository>',
     );
     process.exit(1);
   }
@@ -267,7 +264,7 @@ function main(argv) {
       execFileSync(
         'gh',
         ['release', 'upload', tag, ...assetPaths, '--clobber', '--repo', repository],
-        { stdio: 'inherit' }
+        { stdio: 'inherit' },
       );
     }
   } catch (error) {

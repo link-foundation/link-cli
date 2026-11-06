@@ -1,0 +1,8 @@
+rust: expected 2 separate failures, got 1: [{"marker":"404","url":"https://example.com/missing","detail":"* [ERROR] https://example.com/reset","answered":true,"retryable":false}]
+js: expected 2 separate failures, got 1: [{"marker":"404","url":"https://example.com/missing","detail":"* [ERROR] https://example.com/reset","answered":true,"retryable":false}]
+csharp: expected 2 separate failures, got 1: [{"marker":"404","url":"https://example.com/missing","detail":"* [ERROR] https://example.com/reset"}]
+link-cli fixed parser preserves both failures
+rust: incomplete extraction incorrectly passes (exit 0)
+js: incomplete extraction incorrectly passes (exit 0)
+python: incomplete extraction incorrectly passes (exit 0)
+link-cli fixed SARIF gate rejects incomplete extraction

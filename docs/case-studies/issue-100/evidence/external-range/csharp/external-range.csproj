@@ -7,6 +7,6 @@
     <AssemblyName>external-range</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Platform.Data.Doublets" Version="0.18.9" />
+    <PackageReference Include="Platform.Data.Doublets" Version="0.18.10" />
   </ItemGroup>
 </Project>

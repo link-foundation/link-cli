@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - '.github/workflows/deep-client.yml'
+      - '.github/scripts/**'
       - 'examples/deep-client/**'
       - 'docs/protocol/graphql/**'
       - 'rust/**'
@@ -17,6 +18,7 @@ on:
       - main
     paths:
       - '.github/workflows/deep-client.yml'
+      - '.github/scripts/**'
       - 'examples/deep-client/**'
       - 'docs/protocol/graphql/**'
       - 'rust/**'
@@ -33,7 +35,7 @@ env:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: true
 
 jobs:
   deep-client:
@@ -63,3 +65,26 @@ jobs:
         run: |
           dotnet build csharp/Foundation.Data.Doublets.Cli --configuration Release
           examples/deep-client/run.sh "$PWD/csharp/Foundation.Data.Doublets.Cli/bin/Release/net10.0/clink"
+
+  pipeline-status:
+    name: Pipeline Status (deep-client)
+    needs:
+      - deep-client
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

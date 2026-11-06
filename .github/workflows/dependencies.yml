@@ -59,4 +59,28 @@ jobs:
       - name: Compare every dependency with its registry
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          CHECK_DEPENDENCIES_MODE: ${{ github.event_name == 'pull_request' && 'enforce' || 'report' }}
         run: node .github/scripts/check-latest-dependencies.mjs
+
+  pipeline-status:
+    name: Pipeline Status (dependencies)
+    needs:
+      - latest
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

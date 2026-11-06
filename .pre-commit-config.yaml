@@ -9,6 +9,9 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
+    # Preserve verbatim investigation inputs, including large compressed logs.
+    # The separate secrets hook still checks all tracked evidence.
+    exclude: ^(dev/log/|docs/case-studies/)
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -53,4 +56,27 @@ repos:
         entry: node --test .github/scripts/*.test.mjs js/test/*.test.mjs csharp/scripts/*.test.mjs
         language: system
         files: ^(\.github/|js/|csharp/|rust/|\.lycheeignore|README\.md)
+        pass_filenames: false
+
+      - id: javascript-quality
+        name: JavaScript lint and formatting
+        entry: node .github/scripts/check-javascript-quality.mjs
+        language: system
+        files: \.(js|mjs|cjs|jsx)$
+        exclude: ^(dev/log/|docs/case-studies/)
+        pass_filenames: false
+
+      - id: secrets
+        name: secrets in tracked files including ignored evidence
+        entry: node .github/scripts/check-secrets.mjs
+        language: system
+        pass_filenames: false
+
+      - id: python-quality
+        name: Python lint, formatting and CI helper types
+        entry: python .github/scripts/check-python-quality.py
+        language: python
+        additional_dependencies: [ruff==0.17.4, mypy==2.4.1]
+        types: [python]
+        exclude: ^(dev/log/|docs/case-studies/)
         pass_filenames: false

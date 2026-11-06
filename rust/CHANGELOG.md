@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog-insert-here -->
 
+## [2.1.2] - 2026-11-06
+
+Update doublets and links-notation, and split large permission, triplet and protocol modules without changing their public interfaces. Harden CI failure, security and release checks.
+
 ## [2.1.1] - 2026-11-05
 
 Update links-notation to 0.30.1 while auditing the associative architecture roadmap.

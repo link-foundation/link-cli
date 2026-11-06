@@ -1,0 +1,583 @@
+--- .github/scripts/check-web-archive.mjs	2026-11-05 23:17:57.043704054 +0000
++++ dev/log/issues/165/pulls/166/templates/rust/scripts/check-web-archive.mjs	2026-11-05 23:20:10.221374589 +0000
+@@ -10,24 +10,29 @@
+  * - Links that have no web archive version (clearly marked as unrecoverable)
+  *
+  * Usage:
+- *   node .github/scripts/check-web-archive.mjs
++ *   node scripts/check-web-archive.mjs
+  *
+  * Environment variables:
+  *   - LYCHEE_OUTPUT: Path to lychee markdown output file (default: lychee/out.md)
++ *   - LYCHEE_EXIT_CODE: Checker exit status; failed checks require error entries.
++ *   - RECOVERED_URLS: Path to a file listing URLs the re-check
++ *     (scripts/recheck-broken-links.mjs) found healthy after lychee got no
++ *     answer (default: lychee/recovered.txt). Listed URLs are skipped; a
++ *     missing file skips nothing.
+  *
+  * GitHub Actions outputs:
+  *   - all_archived: 'true' if all broken links have a web archive version
+  *
+  * Exit codes:
+  *   - 0: All broken links have web archive versions (or no broken links)
+- *   - 1: Some broken links have no web archive version, or the Web Archive
+- *        could not be asked about them
++ *   - 1: Some broken links have no web archive version, or lychee reported an
++ *        error that has no http(s) URL to look up (missing local file, ...)
+  */
+ 
+-import { readFileSync, appendFileSync, existsSync } from 'fs';
+-import { resolve } from 'path';
+-import { setTimeout as sleep } from 'timers/promises';
+-import { fileURLToPath } from 'url';
++import { readFileSync, appendFileSync, existsSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import path from 'node:path';
++import { setTimeout as sleep } from 'node:timers/promises';
+ 
+ const WAYBACK_API = 'https://archive.org/wayback/available?url=';
+ 
+@@ -48,17 +53,20 @@
+  * Extract the "Errors per input" section of a lychee markdown report.
+  *
+  * Everything after it - most importantly "## Redirects per input" - describes
+- * links that resolved successfully. Scanning the whole report made every
+- * redirected link look broken and failed the workflow for healthy URLs
+- * (issue #96).
++ * links that resolved successfully, so scanning the whole report would make
++ * every redirected link look broken. Reports without that heading (older
++ * lychee versions, hand-written fixtures) are parsed in full.
++ *
+  * @param {string} content - The markdown content from lychee
+- * @returns {string} The errors section, or an empty string when there is none
++ * @returns {string} The errors section, or the whole document when there is none
+  */
+-function extractErrorsSection(content) {
++export function extractErrorsSection(content) {
+   const lines = content.split('\n');
+-  const start = lines.findIndex((line) => /^#+\s+Errors per input\s*$/.test(line));
++  const start = lines.findIndex((line) =>
++    /^#+\s+Errors per input\s*$/.test(line)
++  );
+   if (start === -1) {
+-    return '';
++    return content;
+   }
+   const heading = /^(#+)\s/.exec(lines[start])[1].length;
+   const section = [];
+@@ -82,20 +90,27 @@
+  *   links that cannot be looked up in the Wayback Machine (local files,
+  *   unresolvable root-relative links, ...)
+  */
+-function extractBrokenLinks(content) {
++export function extractBrokenLinks(content) {
+   const section = extractErrorsSection(content);
+   const urls = [];
+   const others = [];
+ 
+-  // One bullet per broken link; the status marker is always present.
++  // One bullet per broken link; the status marker is always present, so it
++  // anchors the match. Any link shape then qualifies, including the non-HTTP
++  // failures (a missing local file, an unresolvable root-relative link) that
++  // the Wayback Machine cannot answer.
+   const entryPattern =
+     /^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?([^\s>|)]+)>?/gim;
+   let match;
+   while ((match = entryPattern.exec(section)) !== null) {
+     const link = match[1].trim().replace(/[.,;!?]+$/, '');
+-    if (!link) continue;
++    if (!link) {
++      continue;
++    }
+     if (/^https?:\/\//i.test(link)) {
+-      if (!urls.includes(link)) urls.push(link);
++      if (!urls.includes(link)) {
++        urls.push(link);
++      }
+     } else if (!others.includes(link)) {
+       others.push(link);
+     }
+@@ -105,88 +120,113 @@
+ }
+ 
+ /**
++ * Extract broken http(s) URLs from lychee markdown output.
++ * @param {string} content - The markdown content from lychee
++ * @returns {string[]} Array of broken URLs
++ */
++export function extractBrokenUrls(content) {
++  return extractBrokenLinks(content).urls;
++}
++
++/**
++ * Drop URLs the re-check found healthy. A URL that never answered lychee but
++ * answers the re-check is not a broken link; keeping it in this report would
++ * send a healthy URL to the Wayback Machine and fail the job on it.
++ * @param {string[]} urls - Broken http(s) URLs extracted from the lychee report
++ * @param {string} recoveredText - Contents of the recheck output file, one URL per line
++ * @returns {{remaining: string[], recovered: string[]}}
++ */
++export function splitRecoveredUrls(urls, recoveredText) {
++  const recoveredSet = new Set(
++    (recoveredText || '')
++      .split('\n')
++      .map((line) => line.trim())
++      .filter(Boolean)
++  );
++
++  return {
++    remaining: urls.filter((url) => !recoveredSet.has(url)),
++    recovered: urls.filter((url) => recoveredSet.has(url)),
++  };
++}
++
++/**
+  * Check if a URL has an archived version in the Wayback Machine
+  * Uses the Wayback Machine Availability API:
+  * https://archive.org/help/wayback_api.php
+- *
+- * Network errors, timeouts, 429 and 5xx are retried with backoff. When they
+- * persist the result carries `error`, so the report says the lookup failed
+- * instead of claiming that the link has no archived version (issue #134).
+  * @param {string} url - The URL to check
+- * @param {object} [options]
+- * @param {typeof fetch} [options.fetchImpl]
+- * @param {number} [options.attempts]
+- * @param {number} [options.delayMs] - wait before the second attempt, doubled after
+- * @param {number} [options.timeoutMs] - per request
+- * @returns {Promise<{available: boolean, archiveUrl: string|null, timestamp: string|null, error?: string}>}
+- */
+-export async function checkWaybackMachine(
+-  url,
+-  { fetchImpl = fetch, attempts = 3, delayMs = 2000, timeoutMs = 10000 } = {}
+-) {
++ * @returns {Promise<{available: boolean, archiveUrl: string|null, timestamp: string|null}>}
++ */
++export async function checkWaybackMachine(url, {
++  fetchImpl = globalThis.fetch, attempts = 3, delayMs = 2000,
++  timeoutMs = 10000, sleepImpl = sleep,
++} = {}) {
++  if (!Number.isInteger(attempts) || attempts < 1 || attempts > 10 ||
++      !Number.isFinite(delayMs) || delayMs < 0 ||
++      !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
++    throw new Error('Invalid Wayback retry configuration');
++  }
+   const apiUrl = `${WAYBACK_API}${encodeURIComponent(url)}`;
+-  const notArchived = { available: false, archiveUrl: null, timestamp: null };
++  const absent = { available: false, archiveUrl: null, timestamp: null };
+   let failure = '';
+-
+-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
++  for (let attempt = 1; attempt <= attempts; attempt++) {
+     if (attempt > 1) {
+-      console.log(
+-        `  Retrying the Wayback API (attempt ${attempt} of ${attempts}) after: ${failure}`
+-      );
+-      await sleep(delayMs * 2 ** (attempt - 2));
++      console.log(`  Retrying Wayback API (attempt ${attempt} of ${attempts}): ${failure}`);
++      await sleepImpl(delayMs * 2 ** (attempt - 2));
+     }
+-
+-    let response;
+     try {
+-      response = await fetchImpl(apiUrl, {
+-        headers: {
+-          'User-Agent': 'broken-link-checker/1.0 (GitHub Actions CI)',
+-        },
++      const response = await fetchImpl(apiUrl, {
++        headers: { 'User-Agent': 'broken-link-checker/1.0 (GitHub Actions CI)' },
+         signal: AbortSignal.timeout(timeoutMs),
+       });
++      if (!response.ok) {
++        failure = `HTTP ${response.status}`;
++        await response.body?.cancel();
++        if (response.status !== 429 && response.status < 500) {
++          return { ...absent, error: failure };
++        }
++        continue;
++      }
++      const data = await response.json();
++      const snapshots = data?.archived_snapshots;
++      if (!snapshots || typeof snapshots !== 'object' || Array.isArray(snapshots)) {
++        throw new Error('unreadable answer: missing archived_snapshots object');
++      }
++      if (Object.keys(snapshots).length === 0) return absent;
++      const snapshot = snapshots.closest;
++      if (snapshot?.available === false) return absent;
++      if (snapshot?.available !== true || typeof snapshot.url !== 'string' ||
++          !/^https?:\/\//.test(snapshot.url) || typeof snapshot.timestamp !== 'string') {
++        throw new Error('unreadable answer: malformed snapshot');
++      }
++      return { available: true, archiveUrl: snapshot.url.replace(/^http:\/\//, 'https://'),
++        timestamp: snapshot.timestamp };
+     } catch (error) {
+-      // fetch() rejects with a bare "fetch failed" and keeps the reason in cause.
+       const cause = error.cause?.code ?? error.cause?.message;
+       failure = cause ? `${error.message}: ${cause}` : error.message;
+-      continue;
+-    }
+-
+-    if (response.status === 429 || response.status >= 500) {
+-      failure = `HTTP ${response.status}`;
+-      continue;
+-    }
+-    if (!response.ok) {
+-      return { ...notArchived, error: `HTTP ${response.status}` };
+-    }
+-
+-    let data;
+-    try {
+-      data = await response.json();
+-    } catch (error) {
+-      failure = `unreadable answer: ${error.message}`;
+-      continue;
+     }
+-
+-    if (data.archived_snapshots?.closest?.available === true) {
+-      const snapshot = data.archived_snapshots.closest;
+-      const archiveUrl = snapshot.url.replace(/^http:\/\//, 'https://');
+-      return {
+-        available: true,
+-        archiveUrl,
+-        timestamp: snapshot.timestamp,
+-      };
+-    }
+-
+-    return notArchived;
+   }
++  return { ...absent, error: `${failure} (after ${attempts} attempts)` };
++}
+ 
+-  return { ...notArchived, error: `${failure} (after ${attempts} attempts)` };
++/** Validate before either archive or recovery code emits a successful verdict. */
++export function validateLycheeReport(content, exitCode = process.env.LYCHEE_EXIT_CODE) {
++  const section = extractErrorsSection(content);
++  const entries = [...section.matchAll(/^\s*(?:\*|-)\s+\[(?:4\d\d|5\d\d|ERROR|TIMEOUT|UNKNOWN)\]\s+<?[^\s>|)]+>?/gim)];
++  const bullets = [...section.matchAll(/^\s*(?:\*|-)\s+\[/gm)];
++  const reported = /\|[^|\n]*Errors\s*\|\s*(\d+)\s*\|/.exec(content);
++  const failed = exitCode !== undefined && exitCode !== '0';
++  if (!content.trim() || entries.length !== bullets.length ||
++      (reported && Number(reported[1]) !== entries.length) ||
++      (entries.length === 0 && (failed || !reported || Number(reported[1]) !== 0))) {
++    throw new Error('Missing, empty, malformed or incomplete lychee report; re-run the link checker');
++  }
+ }
+ 
+ /**
+- * Format a timestamp from Wayback Machine (YYYYMMDDHHmmss) to readable date
++ * Render a Wayback Machine timestamp (YYYYMMDDHHmmss) as a readable date
+  * @param {string} timestamp - e.g. "20231015143022"
+- * @returns {string} - e.g. "2023-10-15"
++ * @returns {string} Date formatted as YYYY-MM-DD
+  */
+ function formatTimestamp(timestamp) {
+   if (!timestamp || timestamp.length < 8) {
+@@ -199,49 +239,136 @@
+ }
+ 
+ /**
++ * Report lychee errors that have no http(s) URL to look up in the Wayback
++ * Machine. Local files and unresolvable root-relative links have no archived
++ * equivalent, so they can never be `all_archived` and always fail the check.
++ * @param {string[]} unarchivableLinks - Broken links that are not http(s) URLs
++ */
++function reportUnarchivableLinks(unarchivableLinks) {
++  if (unarchivableLinks.length === 0) {
++    return;
++  }
++
++  console.log(
++    `✗ ${unarchivableLinks.length} broken link(s) cannot be checked against the Web Archive:`
++  );
++  for (const link of unarchivableLinks) {
++    console.log(`  ${link}`);
++    console.log(
++      '::error title=Broken link - not recoverable from the Web Archive::' +
++        `Broken link detected: ${link}\n` +
++        'It is not an http(s) URL (missing file, unresolvable relative link, ...),\n' +
++        'so the Wayback Machine cannot provide a fallback.\n' +
++        'How to fix: correct the path, restore the missing file, or pass --root-dir\n' +
++        'to lychee so root-relative links resolve.'
++    );
++  }
++  console.log('');
++}
++
++/**
++ * Report broken links that have a Wayback Machine snapshot as suggestions
++ * @param {Array<{url: string, archiveUrl: string, date: string}>} withArchive - Archived links
++ */
++function reportArchivedLinks(withArchive) {
++  if (withArchive.length === 0) {
++    return;
++  }
++
++  console.log(
++    `✓ ${withArchive.length} broken link(s) have Web Archive versions - consider replacing:`
++  );
++  for (const { url, archiveUrl, date } of withArchive) {
++    console.log(`  Original: ${url}`);
++    console.log(`  Archive (${date}): ${archiveUrl}`);
++    console.log('');
++  }
++
++  // Print GitHub Actions annotations as suggestions (one per link)
++  for (const { url, archiveUrl, date } of withArchive) {
++    console.log(
++      `::notice title=Broken link - Web Archive available (${date})::` +
++        `Broken link detected: ${url}\n` +
++        `A Web Archive snapshot from ${date} is available.\n` +
++        `Suggested fix: replace the broken link with the archived version:\n` +
++        `  ${archiveUrl}`
++    );
++  }
++}
++
++/**
++ * Report broken links that have no Wayback Machine snapshot as errors
++ * @param {string[]} withoutArchive - Broken URLs with no archived version
++ */
++function reportUnarchivedUrls(withoutArchive) {
++  if (withoutArchive.length === 0) {
++    return;
++  }
++
++  console.log(
++    `✗ ${withoutArchive.length} broken link(s) have NO Web Archive version:`
++  );
++  for (const url of withoutArchive) {
++    console.log(`  ${url}`);
++  }
++  console.log('');
++
++  // Print GitHub Actions annotations as errors (one per link)
++  for (const url of withoutArchive) {
++    console.log(
++      `::error title=Broken link - No Web Archive fallback::` +
++        `Broken link detected: ${url}\n` +
++        `No archived version was found in the Wayback Machine.\n` +
++        `How to fix:\n` +
++        `  1. Find an updated URL for the same or equivalent content and replace the link.\n` +
++        `  2. Remove the link if the content is no longer relevant.\n` +
++        `  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).`
++    );
++  }
++}
++
++/**
+  * Main function
+  */
+-async function main() {
++export async function main({ lookup = checkWaybackMachine, pause = sleep } = {}) {
+   const lycheeOutput = process.env.LYCHEE_OUTPUT || 'lychee/out.md';
+ 
+   console.log('=== Web Archive Fallback Check ===\n');
+   console.log(`Reading lychee output from: ${lycheeOutput}\n`);
+ 
+-  if (!existsSync(lycheeOutput)) {
+-    console.log('No lychee output file found. Skipping web archive check.');
+-    setOutput('all_archived', 'true');
+-    process.exit(0);
++  // Fail closed even when reading or validating the report throws.
++  let content;
++  try {
++    content = readFileSync(lycheeOutput, 'utf-8');
++    validateLycheeReport(content);
++  } catch (error) {
++    setOutput('all_archived', 'false');
++    console.error(`::error title=Lychee report failed::${error.message}`);
++    return 1;
+   }
+-
+-  const content = readFileSync(lycheeOutput, 'utf-8');
+-  const { urls: brokenUrls, others: unarchivableLinks } =
++  const { urls: extractedUrls, others: unarchivableLinks } =
+     extractBrokenLinks(content);
+ 
+-  if (unarchivableLinks.length > 0) {
+-    // Local files and unresolvable root-relative links have no Wayback
+-    // equivalent. Reporting `all_archived=true` for them turned a real lychee
+-    // failure into a green run (issue #96).
++  const recoveredFile = process.env.RECOVERED_URLS || 'lychee/recovered.txt';
++  const recoveredText = existsSync(recoveredFile)
++    ? readFileSync(recoveredFile, 'utf-8')
++    : '';
++  const { remaining: brokenUrls, recovered: recheckedHealthy } =
++    splitRecoveredUrls(extractedUrls, recoveredText);
++
++  for (const url of recheckedHealthy) {
+     console.log(
+-      `✗ ${unarchivableLinks.length} broken link(s) cannot be checked against the Web Archive:`
++      `✓ ${url} never answered lychee but answers the re-check -- not broken`
+     );
+-    for (const link of unarchivableLinks) {
+-      console.log(`  ${link}`);
+-      console.log(
+-        '::error title=Broken link - not recoverable from the Web Archive::' +
+-          `Broken link detected: ${link}\n` +
+-          'It is not an http(s) URL (missing file, unresolvable relative link, ...),\n' +
+-          'so the Wayback Machine cannot provide a fallback.\n' +
+-          'How to fix: correct the path, restore the missing file, or pass --root-dir\n' +
+-          'to lychee so root-relative links resolve.'
+-      );
+-    }
+-    console.log('');
+   }
+ 
++  reportUnarchivableLinks(unarchivableLinks);
++
+   if (brokenUrls.length === 0) {
+     console.log('No broken URLs found in lychee output.');
+-    setOutput('all_archived', unarchivableLinks.length === 0 ? 'true' : 'false');
+-    process.exit(unarchivableLinks.length === 0 ? 0 : 1);
++    const clean = unarchivableLinks.length === 0;
++    setOutput('all_archived', clean ? 'true' : 'false');
++    return clean ? 0 : 1;
+   }
+ 
+   console.log(
+@@ -250,119 +377,64 @@
+ 
+   const withArchive = [];
+   const withoutArchive = [];
+-  const unchecked = [];
++  const lookupFailures = [];
+ 
+   for (const url of brokenUrls) {
+     console.log(`Checking: ${url}`);
+-    const result = await checkWaybackMachine(url);
++    const result = await lookup(url);
+ 
+-    if (result.available) {
++    if (result.error) {
++      lookupFailures.push({ url, error: result.error });
++      console.error(`::error title=Broken link - Web Archive lookup failed::${url}: ${result.error}. Re-run the job. If lookup keeps failing, fix or remove the link.`);
++    } else if (result.available) {
+       const date = formatTimestamp(result.timestamp);
+       console.log(`  ✓ Archived on ${date}: ${result.archiveUrl}`);
+       withArchive.push({ url, archiveUrl: result.archiveUrl, date });
+-    } else if (result.error) {
+-      console.log(`  ✗ Web Archive lookup failed: ${result.error}`);
+-      unchecked.push({ url, error: result.error });
+     } else {
+       console.log('  ✗ Not found in Web Archive');
+       withoutArchive.push(url);
+     }
+ 
+     // Small delay to avoid rate-limiting the Wayback API
+-    await new Promise((resolve) => globalThis.setTimeout(resolve, 500));
++    await pause(500);
+   }
+ 
+   console.log('\n=== Web Archive Check Summary ===\n');
+ 
+-  if (withArchive.length > 0) {
+-    console.log(
+-      `✓ ${withArchive.length} broken link(s) have Web Archive versions - consider replacing:`
+-    );
+-    for (const { url, archiveUrl, date } of withArchive) {
+-      console.log(`  Original: ${url}`);
+-      console.log(`  Archive (${date}): ${archiveUrl}`);
+-      console.log('');
+-    }
+-
+-    // Print GitHub Actions annotations as suggestions (one per link)
+-    for (const { url, archiveUrl, date } of withArchive) {
+-      console.log(
+-        `::notice title=Broken link - Web Archive available (${date})::` +
+-          `Broken link detected: ${url}\n` +
+-          `A Web Archive snapshot from ${date} is available.\n` +
+-          `Suggested fix: replace the broken link with the archived version:\n` +
+-          `  ${archiveUrl}`
+-      );
+-    }
+-  }
+-
+-  if (withoutArchive.length > 0) {
+-    console.log(
+-      `✗ ${withoutArchive.length} broken link(s) have NO Web Archive version:`
+-    );
+-    for (const url of withoutArchive) {
+-      console.log(`  ${url}`);
+-    }
+-    console.log('');
+-
+-    // Print GitHub Actions annotations as errors (one per link)
+-    for (const url of withoutArchive) {
+-      console.log(
+-        `::error title=Broken link - No Web Archive fallback::` +
+-          `Broken link detected: ${url}\n` +
+-          `No archived version was found in the Wayback Machine.\n` +
+-          `How to fix:\n` +
+-          `  1. Find an updated URL for the same or equivalent content and replace the link.\n` +
+-          `  2. Remove the link if the content is no longer relevant.\n` +
+-          `  3. Add the URL to .lycheeignore if it is a known false positive (e.g. localhost, example.com).`
+-      );
+-    }
+-  }
+-
+-  if (unchecked.length > 0) {
+-    console.log(
+-      `✗ ${unchecked.length} broken link(s) could not be checked against the Web Archive:`
+-    );
+-    for (const { url, error } of unchecked) {
+-      console.log(`  ${url}: ${error}`);
+-      console.log(
+-        `::error title=Broken link - Web Archive lookup failed::` +
+-          `Broken link detected: ${url}\n` +
+-          `The Wayback Machine could not be asked whether it has a snapshot: ${error}\n` +
+-          `How to fix: re-run the job. If the lookup keeps failing, fix or remove the link.`
+-      );
+-    }
+-    console.log('');
+-  }
++  reportArchivedLinks(withArchive);
++  reportUnarchivedUrls(withoutArchive);
+ 
+   const allArchived =
+-    withoutArchive.length === 0 &&
+-    unarchivableLinks.length === 0 &&
+-    unchecked.length === 0;
++    withoutArchive.length === 0 && unarchivableLinks.length === 0 && lookupFailures.length === 0;
+   setOutput('all_archived', allArchived ? 'true' : 'false');
+ 
+   if (!allArchived) {
+-    console.log(
+-      '\nAction required: Fix or remove the broken links listed above.'
+-    );
++    if (lookupFailures.length) {
++      console.log('\nAction required: Re-run the job after the Web Archive lookup service recovers.');
++    }
++    if (withoutArchive.length || unarchivableLinks.length) {
++      console.log('\nAction required: Fix or remove the broken links listed above.');
++    }
+     console.log(
+       'For links with Web Archive versions, you can replace them with the suggested archive.org URLs.'
+     );
+-    process.exit(1);
++    return 1;
+   } else {
+     console.log(
+       '\nAll broken links have Web Archive versions. Consider replacing them with the suggested archive.org URLs.'
+     );
+-    process.exit(0);
++    return 0;
+   }
+ }
+ 
+-export { extractErrorsSection, extractBrokenLinks };
++const isDirectExecution =
++  process.argv[1] &&
++  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+ 
+-// Only run when executed directly, so the unit tests can import the parsers.
+-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+-  main().catch((error) => {
++if (isDirectExecution) {
++  main().then((code) => { process.exitCode = code; }).catch((error) => {
+     console.error('Unexpected error:', error);
+-    process.exit(1);
++    setOutput('all_archived', 'false');
++    process.exitCode = 1;
+   });
+ }

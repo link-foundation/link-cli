@@ -1,0 +1,1457 @@
+198: CodeQL (rust)	Set up job	﻿2026-11-05T23:18:18.8253006Z Current runner version: '2.338.2'
+199: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8274884Z ##[group]Runner Image Provisioner
+200: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8275601Z Hosted Compute Agent
+201: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8276000Z Version: 20261028.624
+202: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8276448Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+203: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8276903Z Build Date: 2026-10-28T21:51:42Z
+204: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8277346Z Worker ID: {7cefeba5-d676-40a3-8b12-09702579c95f}
+205: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8277798Z Region: centralus
+206: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8278183Z Cloud: Azure
+207: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8278570Z ##[endgroup]
+208: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8279436Z ##[group]Operating System
+209: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8279848Z Ubuntu
+210: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8280197Z 24.04.5
+211: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8280554Z LTS
+212: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8280922Z ##[endgroup]
+213: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8281276Z ##[group]Runner Image
+214: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8281662Z Image: ubuntu-24.04
+215: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8282389Z Version: 20261101.360.1
+216: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8283065Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+217: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8284200Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+218: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8284864Z ##[endgroup]
+219: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8285770Z ##[group]GITHUB_TOKEN Permissions
+220: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8287300Z Actions: read
+221: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8287740Z Contents: read
+222: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8288136Z Metadata: read
+223: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8288526Z SecurityEvents: write
+224: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8288936Z ##[endgroup]
+225: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8290420Z Secret source: Actions
+226: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8291044Z Cache mode: write
+227: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8291523Z Prepare workflow directory
+228: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8583354Z Prepare all required actions
+229: CodeQL (rust)	Set up job	2026-11-05T23:18:18.8617483Z Getting action download info
+230: CodeQL (rust)	Set up job	2026-11-05T23:18:19.1043102Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+231: CodeQL (rust)	Set up job	2026-11-05T23:18:19.2032970Z Download action repository 'actions/setup-dotnet@v6' (SHA:0f4a354dd5547a28c70b7853dbd95d5b67886e73)
+232: CodeQL (rust)	Set up job	2026-11-05T23:18:19.6370939Z Download action repository 'github/codeql-action@v4' (SHA:33d7b85da1a04171e211befe2c739303b9a4c066)
+233: CodeQL (rust)	Set up job	2026-11-05T23:18:20.2393315Z Complete job name: CodeQL (rust)
+234: CodeQL (rust)	Run actions/checkout@v7	﻿2026-11-05T23:18:20.3025671Z ##[group]Run actions/checkout@v7
+235: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3026344Z with:
+236: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3026719Z   persist-credentials: false
+237: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3027200Z   repository: link-foundation/link-cli
+238: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3029748Z   token: ***
+239: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3030162Z   ssh-strict: true
+240: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3030520Z   ssh-user: git
+241: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3030860Z   clean: true
+242: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3031277Z   sparse-checkout-cone-mode: true
+243: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3031685Z   fetch-depth: 1
+244: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3032209Z   fetch-tags: false
+245: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3032623Z   show-progress: true
+246: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3033004Z   lfs: false
+247: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3033405Z   submodules: false
+248: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3033804Z   set-safe-directory: true
+249: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3034256Z   allow-unsafe-pr-checkout: false
+250: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3034783Z env:
+251: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3035153Z   GIT_CONFIG_COUNT: 1
+252: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3035567Z   GIT_CONFIG_KEY_0: init.defaultBranch
+253: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3035989Z   GIT_CONFIG_VALUE_0: main
+254: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.3036547Z ##[endgroup]
+255: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5635074Z Syncing repository: link-foundation/link-cli
+256: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5637155Z ##[group]Getting Git version info
+257: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5638073Z Working directory is '/home/runner/work/link-cli/link-cli'
+258: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5639280Z [command]/usr/bin/git version
+259: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5706666Z git version 2.56.0
+260: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5722898Z ##[endgroup]
+261: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5736030Z Temporarily overriding HOME='/home/runner/work/_temp/7c4471fd-dfd1-4f22-9881-37dc0619d03a' before making global git config changes
+262: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5737823Z Adding repository directory to the temporary git global config as a safe directory
+263: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5741178Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+264: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5889372Z Deleting the contents of '/home/runner/work/link-cli/link-cli'
+265: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5891434Z ##[group]Determining repository object format
+266: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5892546Z ##[endgroup]
+267: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5893280Z ##[group]Initializing the repository
+268: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5893980Z [command]/usr/bin/git init /home/runner/work/link-cli/link-cli
+269: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5983541Z Initialized empty Git repository in /home/runner/work/link-cli/link-cli/.git/
+270: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.5994284Z [command]/usr/bin/git remote add origin https://github.com/link-foundation/link-cli
+271: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6058015Z ##[endgroup]
+272: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6058980Z ##[group]Disabling automatic garbage collection
+273: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6062123Z [command]/usr/bin/git config --local gc.auto 0
+274: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6110737Z ##[endgroup]
+275: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6111999Z ##[group]Setting up auth
+276: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6112623Z Removing SSH command configuration
+277: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6116027Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+278: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6168353Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+279: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6541682Z Removing HTTP extra header
+280: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6547333Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+281: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6602290Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+282: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6819183Z Removing includeIf entries pointing to credentials config files
+283: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6825196Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+284: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.6874429Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+285: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7114270Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+286: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7167482Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git.path /home/runner/work/_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+287: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7217193Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+288: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7269562Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+289: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7317360Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+290: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7364722Z ##[endgroup]
+291: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7370814Z ##[group]Fetching the repository
+292: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:20.7373268Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +da29ed17bec3c0b7e53cd6224f23bfe81f518caf:refs/remotes/pull/166/merge
+293: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.4902783Z From https://github.com/link-foundation/link-cli
+294: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.4905556Z  * [new ref]         da29ed17bec3c0b7e53cd6224f23bfe81f518caf -> pull/166/merge
+295: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.4923500Z ##[endgroup]
+296: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.4925045Z ##[group]Determining the checkout info
+297: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.4926288Z ##[endgroup]
+298: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.4926993Z [command]/usr/bin/git sparse-checkout disable
+299: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.5318605Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+300: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.5367295Z ##[group]Checking out the ref
+301: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.5370855Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/166/merge
+302: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6288293Z Note: switching to 'refs/remotes/pull/166/merge'.
+303: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6289872Z 
+304: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6290922Z You are in 'detached HEAD' state. You can look around, make experimental
+305: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6292513Z changes and commit them, and you can discard any commits you make in this
+306: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6293773Z state without impacting any branches by switching back to a branch.
+307: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6294538Z 
+308: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6295032Z If you want to create a new branch to retain commits you create, you may
+309: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6296174Z do so (now or later) by using -c with the switch command. Example:
+310: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6296822Z 
+311: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6297124Z   git switch -c <new-branch-name>
+312: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6297616Z 
+313: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6297984Z Or undo this operation with:
+314: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6298479Z 
+315: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6298811Z   git switch -
+316: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6299203Z 
+317: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6299844Z Turn off this advice by setting config variable advice.detachedHead to false
+318: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6301112Z 
+319: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6302665Z HEAD is now at da29ed1 Merge a20e07144b659d1be43f675895cc923dff92acb6 into e183f0dbb891c0252c7aad53b47a454a8d848eaa
+320: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6307276Z ##[endgroup]
+321: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6364981Z [command]/usr/bin/git log -1 --format=%H
+322: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6403829Z da29ed17bec3c0b7e53cd6224f23bfe81f518caf
+323: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6412066Z ##[group]Removing auth
+324: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6412975Z Removing SSH command configuration
+325: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6415307Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+326: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6457413Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+327: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6669670Z Removing HTTP extra header
+328: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6672406Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+329: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6716037Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+330: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6935613Z Removing includeIf entries pointing to credentials config files
+331: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6937768Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+332: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6984069Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+333: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6986027Z includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+334: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6987650Z includeif.gitdir:/github/workspace/.git.path
+335: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6989114Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+336: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.6994068Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path
+337: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7034730Z /home/runner/work/_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+338: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7053725Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-62ca351d\-799d\-4a6c\-b45d\-1026c3d4158d\.config
+339: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7109826Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path
+340: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7157169Z /home/runner/work/_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+341: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7169826Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/link-cli/link-cli/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-62ca351d\-799d\-4a6c\-b45d\-1026c3d4158d\.config
+342: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7216598Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+343: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7258742Z /github/runner_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+344: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7263926Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-62ca351d\-799d\-4a6c\-b45d\-1026c3d4158d\.config
+345: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7311233Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+346: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7349040Z /github/runner_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config
+347: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7357685Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-62ca351d\-799d\-4a6c\-b45d\-1026c3d4158d\.config
+348: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7405154Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+349: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7641547Z Removing credentials config '/home/runner/work/_temp/git-credentials-62ca351d-799d-4a6c-b45d-1026c3d4158d.config'
+350: CodeQL (rust)	Run actions/checkout@v7	2026-11-05T23:18:21.7673088Z ##[endgroup]
+351: CodeQL (rust)	Initialize CodeQL	﻿2026-11-05T23:18:21.8039444Z ##[group]Run github/codeql-action/init@v4
+352: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8040233Z with:
+353: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8040731Z   languages: rust
+354: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8041258Z   build-mode: none
+355: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8042093Z   config-file: ./.github/codeql/codeql-config.yml
+356: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8042866Z   analysis-kinds: code-scanning
+357: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8047991Z   token: ***
+358: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8048619Z   matrix: {
+359: CodeQL (rust)	Initialize CodeQL	  "language": "rust",
+360: CodeQL (rust)	Initialize CodeQL	  "build-mode": "none"
+361: CodeQL (rust)	Initialize CodeQL	}
+362: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8049409Z   debug: false
+363: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8049943Z   check-run-id: 127599065403
+364: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8050547Z   job-status: success
+365: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8051078Z env:
+366: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8051567Z   GIT_CONFIG_COUNT: 1
+367: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8052241Z   GIT_CONFIG_KEY_0: init.defaultBranch
+368: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8052912Z   GIT_CONFIG_VALUE_0: main
+369: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:21.8053485Z ##[endgroup]
+370: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:22.1708319Z Job run UUID is 039914bd-ca73-42c4-a2f2-dcfddb541023.
+371: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:22.5198974Z Using configuration file input from workflow: ./.github/codeql/codeql-config.yml
+372: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7265888Z ##[group]Setup CodeQL tools
+373: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7284279Z [command]/usr/bin/tar --version
+374: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7324370Z tar (GNU tar) 1.35
+375: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7324695Z Copyright (C) 2023 Free Software Foundation, Inc.
+376: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7325382Z License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+377: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7325783Z This is free software: you are free to change and redistribute it.
+378: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7326114Z There is NO WARRANTY, to the extent permitted by law.
+379: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7326309Z 
+380: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7326412Z Written by John Gilmore and Jay Fenlason.
+381: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:23.7328742Z Found gnu tar version 1.35.
+382: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:24.0776778Z No overlay-base databases found in Actions cache.
+383: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:24.1110670Z Did not find CodeQL tools version 2.27.4 in the toolcache.
+384: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:24.1116901Z Using CodeQL CLI version 2.27.4 sourced from https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-linux64.tar.zst .
+385: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:28.9151697Z Deleted the CodeQL tools at '/opt/hostedtoolcache/CodeQL/2.27.3' from the toolcache to free up disk space.
+386: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:28.9164231Z Downloading CodeQL tools from https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-linux64.tar.zst . This may take a while.
+387: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:28.9165033Z Streaming the extraction of the CodeQL bundle.
+388: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:29.1821305Z [command]/usr/bin/tar -x --zstd --ignore-zeros --warning=no-unknown-keyword --overwrite -f - -C /opt/hostedtoolcache/CodeQL/2.27.4/x64
+389: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.3437897Z Finished downloading and extracting CodeQL bundle to /opt/hostedtoolcache/CodeQL/2.27.4/x64 (3.4s).
+390: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.3438984Z Created toolcache marker file /opt/hostedtoolcache/CodeQL/2.27.4/x64.complete
+391: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9619392Z {
+392: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9619731Z   "productName": "CodeQL",
+393: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9619994Z   "vendor": "GitHub",
+394: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9620187Z   "version": "2.27.4",
+395: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9620473Z   "sha": "7eb0047c90fffaeb822564a0ac56d585dc871f30",
+396: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9620911Z   "branches": [
+397: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9621036Z     "codeql-cli-2.27.4"
+398: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9621159Z   ],
+399: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9621343Z   "copyright": "Copyright (C) 2019-2026 GitHub, Inc.",
+400: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9621581Z   "unpackedLocation": "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql",
+401: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622080Z   "configFileLocation": "/home/runner/.config/codeql/config",
+402: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622276Z   "configFileFound": false,
+403: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622416Z   "overlayVersion": 4,
+404: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622541Z   "features": {
+405: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622672Z     "analysisSummaryV2Default": true,
+406: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622830Z     "buildModeOption": true,
+407: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9622988Z     "bundleSupportsIncludeDiagnostics": true,
+408: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9623166Z     "bundleSupportsIncludeLogs": true,
+409: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9623326Z     "bundleSupportsOverlay": true,
+410: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9623544Z     "databaseInterpretResultsSupportsSarifRunProperty": true,
+411: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9623931Z     "featuresInVersionResult": true,
+412: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9624106Z     "indirectTracingSupportsStaticBinaries": false,
+413: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9624303Z     "informsAboutUnsupportedPathFilters": true,
+414: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9624476Z     "supportsPython312": true,
+415: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9624621Z     "mrvaPackCreate": true,
+416: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9624759Z     "threatModelOption": true,
+417: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9624906Z     "traceCommandUseBuildMode": true,
+418: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9625056Z     "v2ramSizing": true,
+419: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9625200Z     "mrvaPackCreateMultipleQueries": true,
+420: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9625367Z     "setsCodeqlRunnerEnvVar": true,
+421: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9625554Z     "sarifMergeRunsFromEqualCategory": true,
+422: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9625718Z     "forceOverwrite": true,
+423: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9625862Z     "generateSummarySymbolMap": true,
+424: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9626035Z     "pythonDefaultIsToNotExtractStdlib": true,
+425: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9626209Z     "queryServerRunQueries": true,
+426: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9626372Z     "queryServerTrimCacheWithMode": true,
+427: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9626557Z     "builtinExtractorsSpecifyDefaultQueries": true,
+428: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9626736Z     "bqrsDiffResultSets": true,
+429: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9626889Z     "bundleSupportsIncludeOption": true,
+430: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9627068Z     "suppressesMissingFileBaselineWarning": true,
+431: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9627271Z     "jsonDataExtensions": true
+432: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9627403Z   }
+433: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9627515Z }
+434: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9628223Z ##[endgroup]
+435: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:32.9628447Z ##[group]Validating workflow
+436: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:33.3180160Z Detected no issues with the code scanning workflow.
+437: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:33.3180725Z ##[endgroup]
+438: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:33.3183828Z ##[group]Load language configuration
+439: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:33.3263763Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql resolve languages --format=betterjson --extractor-options-verbosity=4 --extractor-include-aliases --filter-to-languages-with-queries
+440: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0840251Z {
+441: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0863806Z   "aliases" : {
+442: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0864169Z     "c" : "cpp",
+443: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0864358Z     "c++" : "cpp",
+444: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0864548Z     "c-c++" : "cpp",
+445: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0864762Z     "c-cpp" : "cpp",
+446: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0864950Z     "c#" : "csharp",
+447: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0865141Z     "java-kotlin" : "java",
+448: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0865351Z     "kotlin" : "java",
+449: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0865573Z     "javascript-typescript" : "javascript",
+450: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0865844Z     "typescript" : "javascript"
+451: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0866057Z   },
+452: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0866224Z   "extractors" : {
+453: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0866410Z     "rust" : [
+454: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0866578Z       {
+455: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0866850Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/rust",
+456: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0867197Z         "extractor_options" : {
+457: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0867416Z           "trap" : {
+458: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0867649Z             "title" : "Options pertaining to TRAP.",
+459: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0867981Z             "description" : "Options pertaining to TRAP.",
+460: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0868736Z             "type" : "object",
+461: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0868956Z             "properties" : {
+462: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0869170Z               "compression" : {
+463: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0869512Z                 "title" : "Controls compression for the TRAP files written by the extractor.",
+464: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0870491Z                 "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'gzip' (to write gzip-compressed TRAP) 'zstd' (the default, to write Zstandard-compressed TRAP) and 'none' (to write uncompressed TRAP).\n",
+465: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0871355Z                 "type" : "string",
+466: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0871591Z                 "pattern" : "^(none|gzip|zstd)$"
+467: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0872663Z               }
+468: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0872848Z             }
+469: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0873014Z           },
+470: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0873190Z           "cargo_target_dir" : {
+471: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0874014Z             "title" : "Directory to use for cargo output files.",
+472: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0875394Z             "description" : "This value is an optional path to use as `CARGO_TARGET_DIR` for the internal cargo commands the extractor uses. Pointing it to a persistent directory may reduce execution time of consecutive extractor runs. By default, a new scratch directory is used for each extraction, while qltests use the test's `target` directory so artifacts can be reused across runs.\n",
+473: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0876648Z             "type" : "string"
+474: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0876855Z           },
+475: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0877036Z           "cargo_target" : {
+476: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0877286Z             "title" : "Target architecture",
+477: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0877889Z             "description" : "Target architecture to use for analysis, analogous to `cargo --target`. By default the host architecture is used.\n",
+478: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0878427Z             "type" : "string"
+479: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0878637Z           },
+480: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0878822Z           "cargo_features" : {
+481: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0879067Z             "title" : "Cargo features to turn on",
+482: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0880052Z             "description" : "Comma-separated list of features to turn on. By default all features are enabled. If any features are specified, then only those features are enabled. The `default` feature must be explicitly specified if only default features are desired. Can be repeated.\n",
+483: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0880990Z             "type" : "array"
+484: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0881182Z           },
+485: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0881358Z           "cargo_cfg_overrides" : {
+486: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0881600Z             "title" : "Cargo cfg overrides",
+487: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0882230Z             "description" : "Comma-separated list of cfg settings to enable, or disable if prefixed with `-`. Can be repeated.\n",
+488: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0882732Z             "type" : "array"
+489: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0882928Z           },
+490: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0883100Z           "logging" : {
+491: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0883337Z             "title" : "Options pertaining to logging.",
+492: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0883670Z             "description" : "Options pertaining to logging.",
+493: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0884002Z             "type" : "object",
+494: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0884271Z             "properties" : {
+495: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0884485Z               "verbosity" : {
+496: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0884747Z                 "title" : "Extractor logging verbosity level.",
+497: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0885766Z                 "description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - progress+++\n",
+498: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0886707Z                 "type" : "string",
+499: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0887077Z                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+500: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0887352Z               },
+501: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0887477Z               "flamegraph" : {
+502: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0887817Z                 "title" : "[Experimental] File path for write flame graph log",
+503: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0888325Z                 "description" : "Collect flame graph data using the `tracing-flame` crate. To render a flame graph or chart, run the `inferno-flamegraph` command. See also: https://crates.io/crates/tracing-flame\n",
+504: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0888772Z                 "type" : "string"
+505: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0888929Z               }
+506: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0889186Z             }
+507: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0889295Z           },
+508: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0889416Z           "extract_dependencies_as_source" : {
+509: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0889599Z             "title" : "Extract dependencies as source code",
+510: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0889888Z             "description" : "Extract the full source code of dependencies instead of only extracting signatures.\n",
+511: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890146Z             "type" : "string",
+512: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890280Z             "pattern" : "^(false|true)$"
+513: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890577Z           }
+514: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890691Z         }
+515: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890791Z       }
+516: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890893Z     ],
+517: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0890994Z     "csharp" : [
+518: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0891103Z       {
+519: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0891267Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/csharp",
+520: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0891484Z         "extractor_options" : {
+521: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0891622Z           "trap" : {
+522: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0891944Z             "title" : "Options pertaining to TRAP.",
+523: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0892212Z             "description" : "Options pertaining to TRAP.",
+524: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0892446Z             "type" : "object",
+525: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0892636Z             "properties" : {
+526: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0892820Z               "compression" : {
+527: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0893114Z                 "title" : "Controls compression for the TRAP files written by the extractor.",
+528: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0893864Z                 "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'brotli' (the default, to write brotli-compressed TRAP), 'gzip', and 'none' (to write uncompressed TRAP).\n",
+529: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0894517Z                 "type" : "string",
+530: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0894729Z                 "pattern" : "^(none|gzip|brotli)$"
+531: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0894940Z               }
+532: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0895089Z             }
+533: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0895238Z           },
+534: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0895400Z           "buildless" : {
+535: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0895686Z             "title" : "DEPRECATED - Whether to use buildless (standalone) extraction.",
+536: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0897204Z             "description" : "DEPRECATED: Use `--build-mode none` instead.\nA value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performed. The default is 'false'. Note that buildless extraction will generally yield less accurate analysis results, and should only be used in cases where it is not possible to build the code (for example if it uses inaccessible dependencies).\n",
+537: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0898634Z             "type" : "string",
+538: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0898855Z             "pattern" : "^(false|true)$"
+539: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0899067Z           },
+540: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0899235Z           "logging" : {
+541: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0899458Z             "title" : "Options pertaining to logging.",
+542: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0899766Z             "description" : "Options pertaining to logging.",
+543: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0900051Z             "type" : "object",
+544: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0900250Z             "properties" : {
+545: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0900449Z               "verbosity" : {
+546: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0900684Z                 "title" : "Extractor logging verbosity level.",
+547: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0901479Z                 "description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - progress+++\n",
+548: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0902691Z                 "type" : "string",
+549: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0903105Z                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+550: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0903530Z               }
+551: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0903696Z             }
+552: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0903858Z           },
+553: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0904023Z           "binlog" : {
+554: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0904212Z             "title" : "Binlog",
+555: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0905012Z             "description" : "[EXPERIMENTAL] The value is a path to the MsBuild binary log file that should be extracted. This option only works when `--build-mode none` is also specified.\n",
+556: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0905602Z             "type" : "array"
+557: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0905794Z           },
+558: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0905972Z           "buildless_dependency_dir" : {
+559: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0906340Z             "title" : "The path where buildless (standalone) extraction should keep dependencies.",
+560: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0907124Z             "description" : "If set, the buildless (standalone) extractor will store dependencies in this directory.\n",
+561: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0907552Z             "type" : "string"
+562: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0907755Z           }
+563: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0907913Z         }
+564: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0908065Z       }
+565: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0908214Z     ],
+566: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0908375Z     "python" : [
+567: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0908545Z       {
+568: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0908806Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/python",
+569: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0909138Z         "extractor_options" : {
+570: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0909344Z           "logging" : {
+571: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0909558Z             "title" : "Options pertaining to logging.",
+572: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0909751Z             "description" : "Options pertaining to logging.",
+573: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0909923Z             "type" : "object",
+574: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0910081Z             "properties" : {
+575: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0935147Z               "verbosity" : {
+576: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0935457Z                 "title" : "Python extractor logging verbosity level.",
+577: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0936348Z                 "description" : "Controls the level of verbosity of the CodeQL Python extractor.\nThe supported levels are (in order of increasing verbosity):\n\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - progress+++\n",
+578: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0937180Z                 "type" : "string",
+579: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0937596Z                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+580: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0938019Z               }
+581: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0938194Z             }
+582: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0938364Z           },
+583: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0938567Z           "python_executable_name" : {
+584: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0938956Z             "title" : "Controls the name of the Python executable used by the Python extractor.",
+585: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0940392Z             "description" : "The Python extractor uses platform-dependent heuristics to determine the name of the Python executable to use. Specifying a value for this option overrides the name of the Python executable used by the extractor. Accepted values are py, python and python3. Use this setting with caution, the Python extractor requires Python 3 to run.\n",
+586: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0941817Z             "type" : "string",
+587: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0942077Z             "pattern" : "^(py|python|python3)$"
+588: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0942369Z           }
+589: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0942558Z         }
+590: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0942754Z       }
+591: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0942919Z     ],
+592: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0943098Z     "cpp" : [
+593: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0943284Z       {
+594: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0943588Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/cpp",
+595: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0943950Z         "extractor_options" : {
+596: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0944156Z           "trap" : {
+597: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0944345Z             "title" : "TRAP options",
+598: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0944671Z             "description" : "Options about how the extractor handles TRAP files",
+599: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0945324Z             "type" : "object",
+600: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0945547Z             "visibility" : 3,
+601: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0945767Z             "properties" : {
+602: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0945973Z               "cache" : {
+603: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0946190Z                 "title" : "TRAP cache options",
+604: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0946577Z                 "description" : "Options about how the extractor handles its TRAP cache",
+605: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0946963Z                 "type" : "object",
+606: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0947216Z                 "properties" : {
+607: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0947472Z                   "dir" : {
+608: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0947722Z                     "title" : "TRAP cache directory",
+609: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0948044Z                     "description" : "The directory of the TRAP cache to use",
+610: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0948360Z                     "type" : "string"
+611: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0948578Z                   },
+612: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0948927Z                   "bound" : {
+613: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0949157Z                     "title" : "TRAP cache bound",
+614: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0949501Z                     "description" : "A soft limit (in MB) on the size of the TRAP cache",
+615: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0949841Z                     "type" : "string",
+616: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0950057Z                     "pattern" : "[0-9]+"
+617: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0950287Z                   },
+618: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0950474Z                   "write" : {
+619: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0950700Z                     "title" : "TRAP cache writeable",
+620: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0951070Z                     "description" : "Whether to write to the TRAP cache as well as reading it",
+621: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0951422Z                     "type" : "string",
+622: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0951669Z                     "pattern" : "(true|TRUE|false|FALSE)"
+623: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0952040Z                   }
+624: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0952268Z                 }
+625: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0952441Z               }
+626: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0952614Z             }
+627: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0952787Z           },
+628: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0952958Z           "scale_timeouts" : {
+629: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0953226Z             "title" : "Value to scale compiler introspection timeouts with",
+630: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0954425Z             "description" : "The extractor attempts to determine what compiler the source code being extracted is compiled with. To this end the extractor makes additional calls to the compiler, some of which are expected to return within a certain fixed time (either 10s or 15s). On some systems that are under high load this time might be too short, and can be scaled up using this option.\n",
+631: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0955551Z             "type" : "string",
+632: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0955757Z             "pattern" : "[0-9]+"
+633: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0955992Z           },
+634: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0956158Z           "log_verbosity" : {
+635: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0956387Z             "title" : "Verbosity of the extractor logging",
+636: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0956897Z             "description" : "Set the verbosity of the extractor logging to 'quiet' (0), 'normal' (1), 'chatty' (2), or 'noisy' (3). The default is 'normal'.\n",
+637: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0957378Z             "type" : "string",
+638: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0957575Z             "pattern" : "[0-3]"
+639: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0957776Z           },
+640: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0957939Z           "frontend_options" : {
+641: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0958173Z             "title" : "C/C++ extractor frontend options",
+642: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0958581Z             "description" : "Set additional options that should be passed to the C/C++ extractor frontend.\n",
+643: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0958964Z             "type" : "array",
+644: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0959159Z             "visibility" : 3
+645: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0959347Z           }
+646: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0959497Z         }
+647: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0959642Z       }
+648: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0959786Z     ],
+649: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0959931Z     "java" : [
+650: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0960082Z       {
+651: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0960319Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/java",
+652: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0960776Z         "extractor_options" : {
+653: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0960968Z           "exclude" : {
+654: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0961188Z             "title" : "A glob excluding files from analysis.",
+655: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0961904Z             "description" : "A glob indicating what files to exclude from the analysis. This accepts glob patterns that are supported by Java's 'getPathMatcher' implementation.\n",
+656: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0962459Z             "type" : "string"
+657: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0962642Z           },
+658: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0962804Z           "add_prefer_source" : {
+659: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0963081Z             "title" : "Whether to always prefer source files over class files.",
+660: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0964008Z             "description" : "A value indicating whether source files should be preferred over class files. If set to 'true', the extraction adds '-Xprefer:source' to the javac command line. If set to 'false', the extraction uses the default javac behavior ('-Xprefer:newer'). The default is 'true'.\n",
+661: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0964971Z             "type" : "string",
+662: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0965240Z             "pattern" : "^(false|true)$"
+663: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0965444Z           },
+664: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0965601Z           "buildless" : {
+665: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0965877Z             "title" : "Whether to use buildless (standalone) extraction (experimental).",
+666: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0967215Z             "description" : "A value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performed. The default is 'false'. Note that buildless extraction will generally yield less accurate analysis results, and should only be used in cases where it is not possible to build the code (for example if it uses inaccessible dependencies).\n",
+667: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0968445Z             "type" : "string",
+668: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0968640Z             "pattern" : "^(false|true)$"
+669: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0968844Z           },
+670: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0969019Z           "buildless_dependency_dir" : {
+671: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0969370Z             "title" : "The path where buildless (standalone) extraction should keep dependencies.",
+672: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0969899Z             "description" : "If set, the buildless (standalone) extractor will store dependencies in this directory.\n",
+673: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0970295Z             "type" : "string"
+674: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0970477Z           },
+675: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0970647Z           "minimize_dependency_jars" : {
+676: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0970991Z             "title" : "Whether to rewrite and minimize downloaded JAR dependencies (experimental).",
+677: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0971662Z             "description" : "If 'true', JAR dependencies downloaded during extraction will be rewritten to remove unneeded data, such as method bodies. The default is 'false'.\n",
+678: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0972306Z             "type" : "string",
+679: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0972503Z             "pattern" : "^(false|true)$"
+680: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0972704Z           }
+681: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0972855Z         }
+682: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0973006Z       }
+683: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0973148Z     ],
+684: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0973293Z     "go" : [
+685: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0973443Z       {
+686: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0973673Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/go",
+687: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0973972Z         "extractor_options" : {
+688: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0974168Z           "extract_tests" : {
+689: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0974436Z             "title" : "Whether to include Go test files in the CodeQL database.",
+690: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0974955Z             "description" : "A value indicating whether Go test files should be included in the CodeQL database. The default is 'false'.\n",
+691: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0975397Z             "type" : "string",
+692: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0975591Z             "pattern" : "^(false|true)$"
+693: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0975791Z           },
+694: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0975957Z           "extract_vendor_dirs" : {
+695: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0976257Z             "title" : "Whether to include Go vendor directories in the CodeQL database.",
+696: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0976957Z             "description" : "A value indicating whether Go vendor directories should be included in the CodeQL database. The default is 'false'.\n",
+697: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0977418Z             "type" : "string",
+698: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0977614Z             "pattern" : "^(false|true)$"
+699: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0977819Z           }
+700: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0977964Z         }
+701: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0978110Z       }
+702: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0978251Z     ],
+703: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0978401Z     "actions" : [
+704: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0978560Z       {
+705: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0978798Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/actions",
+706: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0979104Z         "extractor_options" : {
+707: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0979293Z           "trap" : {
+708: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0979474Z             "title" : "TRAP options",
+709: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0979760Z             "description" : "Options about how the extractor handles TRAP files",
+710: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0980083Z             "type" : "object",
+711: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0980434Z             "visibility" : 3,
+712: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0980637Z             "properties" : {
+713: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0980828Z               "cache" : {
+714: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0981029Z                 "title" : "TRAP cache options",
+715: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0981353Z                 "description" : "Options about how the extractor handles its TRAP cache",
+716: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0981669Z                 "type" : "object",
+717: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0981974Z                 "properties" : {
+718: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0982170Z                   "dir" : {
+719: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0982375Z                     "title" : "TRAP cache directory",
+720: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0982667Z                     "description" : "The directory of the TRAP cache to use",
+721: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0982947Z                     "type" : "string"
+722: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0983144Z                   },
+723: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0983314Z                   "bound" : {
+724: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0983520Z                     "title" : "TRAP cache bound",
+725: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0983837Z                     "description" : "A soft limit (in MB) on the size of the TRAP cache",
+726: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0984147Z                     "type" : "string",
+727: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0984357Z                     "pattern" : "[0-9]+"
+728: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0984562Z                   },
+729: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0984732Z                   "write" : {
+730: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0984942Z                     "title" : "TRAP cache writeable",
+731: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0985274Z                     "description" : "Whether to write to the TRAP cache as well as reading it",
+732: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0985598Z                     "type" : "string",
+733: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0985823Z                     "pattern" : "(true|TRUE|false|FALSE)"
+734: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986050Z                   }
+735: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986213Z                 }
+736: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986369Z               }
+737: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986527Z             }
+738: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986681Z           }
+739: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986835Z         }
+740: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0986986Z       }
+741: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0987132Z     ],
+742: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0987287Z     "javascript" : [
+743: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0987455Z       {
+744: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0987710Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/javascript",
+745: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0988048Z         "extractor_options" : {
+746: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0988245Z           "trap" : {
+747: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0988425Z             "title" : "TRAP options",
+748: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0988714Z             "description" : "Options about how the extractor handles TRAP files",
+749: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0989013Z             "type" : "object",
+750: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0989213Z             "visibility" : 3,
+751: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0989408Z             "properties" : {
+752: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0989599Z               "cache" : {
+753: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0989800Z                 "title" : "TRAP cache options",
+754: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0990123Z                 "description" : "Options about how the extractor handles its TRAP cache",
+755: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0990444Z                 "type" : "object",
+756: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0990656Z                 "properties" : {
+757: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0990990Z                   "dir" : {
+758: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0991198Z                     "title" : "TRAP cache directory",
+759: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0991491Z                     "description" : "The directory of the TRAP cache to use",
+760: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0992040Z                     "type" : "string"
+761: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0992243Z                   },
+762: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0992410Z                   "bound" : {
+763: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0992617Z                     "title" : "TRAP cache bound",
+764: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0992926Z                     "description" : "A soft limit (in MB) on the size of the TRAP cache",
+765: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0993230Z                     "type" : "string",
+766: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0993440Z                     "pattern" : "[0-9]+"
+767: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0993641Z                   },
+768: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0993811Z                   "write" : {
+769: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0994026Z                     "title" : "TRAP cache writeable",
+770: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0994488Z                     "description" : "Whether to write to the TRAP cache as well as reading it",
+771: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0994816Z                     "type" : "string",
+772: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0995047Z                     "pattern" : "(true|TRUE|false|FALSE)"
+773: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0995281Z                   }
+774: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0995438Z                 }
+775: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0995594Z               }
+776: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0995745Z             }
+777: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0995898Z           },
+778: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0996059Z           "skip_types" : {
+779: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0996286Z             "title" : "Skip type extraction for TypeScript",
+780: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0996660Z             "description" : "Whether to skip the extraction of types in a TypeScript application",
+781: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997008Z             "type" : "string",
+782: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997196Z             "pattern" : "^(false|true)$"
+783: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997397Z           }
+784: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997551Z         }
+785: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997699Z       }
+786: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997849Z     ],
+787: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0997999Z     "swift" : [
+788: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0998160Z       {
+789: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0998394Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/swift"
+790: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0998682Z       }
+791: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0998825Z     ],
+792: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0998972Z     "ruby" : [
+793: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0999128Z       {
+794: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0999359Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/ruby",
+795: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0999658Z         "extractor_options" : {
+796: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.0999852Z           "trap" : {
+797: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1000048Z             "title" : "Options pertaining to TRAP.",
+798: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1000316Z             "description" : "Options pertaining to TRAP.",
+799: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1000564Z             "type" : "object",
+800: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1000757Z             "properties" : {
+801: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1000951Z               "compression" : {
+802: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1001256Z                 "title" : "Controls compression for the TRAP files written by the extractor.",
+803: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1002468Z                 "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'gzip' (the default, to write gzip-compressed TRAP) 'zstd' (to write Zstandard-compressed TRAP) and 'none' (to write uncompressed TRAP).\n",
+804: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1003225Z                 "type" : "string",
+805: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1003445Z                 "pattern" : "^(none|gzip|zstd)$"
+806: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1003664Z               }
+807: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1003819Z             }
+808: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1003973Z           }
+809: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1004121Z         }
+810: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1004269Z       }
+811: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1004413Z     ]
+812: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1004562Z   }
+813: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1004713Z }
+814: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1035735Z Languages from configuration: rust
+815: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1108908Z Using Git version 2.56.0
+816: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1112524Z Using overlay database mode: none without caching.
+817: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.1121082Z Computing PR diff ranges...
+818: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.4199962Z Persisted 1 diff range(s) across 1 file(s).
+819: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:34.4204544Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql resolve languages --format=betterjson --extractor-options-verbosity=4 --extractor-include-aliases
+820: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1454891Z {
+821: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1455307Z   "aliases" : {
+822: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1467650Z     "c" : "cpp",
+823: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1467903Z     "c++" : "cpp",
+824: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1468081Z     "c-c++" : "cpp",
+825: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1468269Z     "c-cpp" : "cpp",
+826: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1468446Z     "c#" : "csharp",
+827: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1468631Z     "java-kotlin" : "java",
+828: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1468845Z     "kotlin" : "java",
+829: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1469065Z     "javascript-typescript" : "javascript",
+830: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1469323Z     "typescript" : "javascript"
+831: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1469531Z   },
+832: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1469691Z   "extractors" : {
+833: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1469867Z     "actions" : [
+834: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1470028Z       {
+835: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1470292Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/actions",
+836: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1471170Z         "extractor_options" : {
+837: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1471371Z           "trap" : {
+838: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1471557Z             "title" : "TRAP options",
+839: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1471985Z             "description" : "Options about how the extractor handles TRAP files",
+840: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1472300Z             "type" : "object",
+841: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1472501Z             "visibility" : 3,
+842: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1472708Z             "properties" : {
+843: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1472902Z               "cache" : {
+844: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1473107Z                 "title" : "TRAP cache options",
+845: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1473441Z                 "description" : "Options about how the extractor handles its TRAP cache",
+846: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1473772Z                 "type" : "object",
+847: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1473982Z                 "properties" : {
+848: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1474184Z                   "dir" : {
+849: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1474401Z                     "title" : "TRAP cache directory",
+850: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1474607Z                     "description" : "The directory of the TRAP cache to use",
+851: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1474797Z                     "type" : "string"
+852: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1474928Z                   },
+853: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475045Z                   "bound" : {
+854: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475183Z                     "title" : "TRAP cache bound",
+855: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475392Z                     "description" : "A soft limit (in MB) on the size of the TRAP cache",
+856: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475596Z                     "type" : "string",
+857: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475739Z                     "pattern" : "[0-9]+"
+858: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475883Z                   },
+859: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1475997Z                   "write" : {
+860: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1476137Z                     "title" : "TRAP cache writeable",
+861: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1476359Z                     "description" : "Whether to write to the TRAP cache as well as reading it",
+862: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1476597Z                     "type" : "string",
+863: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1476755Z                     "pattern" : "(true|TRUE|false|FALSE)"
+864: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1476912Z                   }
+865: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477021Z                 }
+866: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477124Z               }
+867: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477229Z             }
+868: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477331Z           }
+869: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477432Z         }
+870: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477530Z       }
+871: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477624Z     ],
+872: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477720Z     "java" : [
+873: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477821Z       {
+874: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1477979Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/java",
+875: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1478180Z         "extractor_options" : {
+876: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1478309Z           "exclude" : {
+877: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1478514Z             "title" : "A glob excluding files from analysis.",
+878: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1479086Z             "description" : "A glob indicating what files to exclude from the analysis. This accepts glob patterns that are supported by Java's 'getPathMatcher' implementation.\n",
+879: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1479794Z             "type" : "string"
+880: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1479987Z           },
+881: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1480157Z           "add_prefer_source" : {
+882: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1480438Z             "title" : "Whether to always prefer source files over class files.",
+883: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1481397Z             "description" : "A value indicating whether source files should be preferred over class files. If set to 'true', the extraction adds '-Xprefer:source' to the javac command line. If set to 'false', the extraction uses the default javac behavior ('-Xprefer:newer'). The default is 'true'.\n",
+884: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1482374Z             "type" : "string",
+885: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1482585Z             "pattern" : "^(false|true)$"
+886: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1482793Z           },
+887: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1483699Z           "buildless" : {
+888: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1483987Z             "title" : "Whether to use buildless (standalone) extraction (experimental).",
+889: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1485305Z             "description" : "A value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performed. The default is 'false'. Note that buildless extraction will generally yield less accurate analysis results, and should only be used in cases where it is not possible to build the code (for example if it uses inaccessible dependencies).\n",
+890: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1486228Z             "type" : "string",
+891: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1486363Z             "pattern" : "^(false|true)$"
+892: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1486500Z           },
+893: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1486613Z           "buildless_dependency_dir" : {
+894: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1486839Z             "title" : "The path where buildless (standalone) extraction should keep dependencies.",
+895: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1487187Z             "description" : "If set, the buildless (standalone) extractor will store dependencies in this directory.\n",
+896: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1487447Z             "type" : "string"
+897: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1487571Z           },
+898: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1487687Z           "minimize_dependency_jars" : {
+899: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1487916Z             "title" : "Whether to rewrite and minimize downloaded JAR dependencies (experimental).",
+900: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1488355Z             "description" : "If 'true', JAR dependencies downloaded during extraction will be rewritten to remove unneeded data, such as method bodies. The default is 'false'.\n",
+901: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1488708Z             "type" : "string",
+902: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1488838Z             "pattern" : "^(false|true)$"
+903: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1488970Z           }
+904: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489069Z         }
+905: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489165Z       }
+906: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489258Z     ],
+907: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489353Z     "csv" : [
+908: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489508Z       {
+909: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489662Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/csv"
+910: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489849Z       }
+911: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1489942Z     ],
+912: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490038Z     "swift" : [
+913: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490145Z       {
+914: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490301Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/swift"
+915: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490491Z       }
+916: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490584Z     ],
+917: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490681Z     "properties" : [
+918: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490790Z       {
+919: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1490950Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/properties"
+920: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1491148Z       }
+921: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1491238Z     ],
+922: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1491335Z     "csharp" : [
+923: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1491439Z       {
+924: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1491593Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/csharp",
+925: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1492199Z         "extractor_options" : {
+926: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1492385Z           "trap" : {
+927: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1492582Z             "title" : "Options pertaining to TRAP.",
+928: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1492851Z             "description" : "Options pertaining to TRAP.",
+929: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1493097Z             "type" : "object",
+930: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1493295Z             "properties" : {
+931: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1493609Z               "compression" : {
+932: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1493916Z                 "title" : "Controls compression for the TRAP files written by the extractor.",
+933: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1494703Z                 "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'brotli' (the default, to write brotli-compressed TRAP), 'gzip', and 'none' (to write uncompressed TRAP).\n",
+934: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1495381Z                 "type" : "string",
+935: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1495604Z                 "pattern" : "^(none|gzip|brotli)$"
+936: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1495829Z               }
+937: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1495985Z             }
+938: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1496138Z           },
+939: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1496297Z           "buildless" : {
+940: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1496583Z             "title" : "DEPRECATED - Whether to use buildless (standalone) extraction.",
+941: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1498250Z             "description" : "DEPRECATED: Use `--build-mode none` instead.\nA value indicating, which type of extraction the autobuilder should perform. If 'true', then the standalone extractor will be used, otherwise tracing extraction will be performed. The default is 'false'. Note that buildless extraction will generally yield less accurate analysis results, and should only be used in cases where it is not possible to build the code (for example if it uses inaccessible dependencies).\n",
+942: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1499739Z             "type" : "string",
+943: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1499940Z             "pattern" : "^(false|true)$"
+944: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1500144Z           },
+945: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1500299Z           "logging" : {
+946: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1500504Z             "title" : "Options pertaining to logging.",
+947: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1500784Z             "description" : "Options pertaining to logging.",
+948: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1501038Z             "type" : "object",
+949: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1501232Z             "properties" : {
+950: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1501424Z               "verbosity" : {
+951: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1501658Z                 "title" : "Extractor logging verbosity level.",
+952: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1502619Z                 "description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - progress+++\n",
+953: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1503382Z                 "type" : "string",
+954: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1503785Z                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+955: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1504192Z               }
+956: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1504347Z             }
+957: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1504497Z           },
+958: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1504649Z           "binlog" : {
+959: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1504827Z             "title" : "Binlog",
+960: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1505390Z             "description" : "[EXPERIMENTAL] The value is a path to the MsBuild binary log file that should be extracted. This option only works when `--build-mode none` is also specified.\n",
+961: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1505985Z             "type" : "array"
+962: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1506166Z           },
+963: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1506334Z           "buildless_dependency_dir" : {
+964: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1506679Z             "title" : "The path where buildless (standalone) extraction should keep dependencies.",
+965: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1507206Z             "description" : "If set, the buildless (standalone) extractor will store dependencies in this directory.\n",
+966: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1507608Z             "type" : "string"
+967: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1507792Z           }
+968: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1507939Z         }
+969: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1508085Z       }
+970: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1508233Z     ],
+971: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1508380Z     "html" : [
+972: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1508533Z       {
+973: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1508765Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/html"
+974: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1509054Z       }
+975: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1509197Z     ],
+976: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1509346Z     "javascript" : [
+977: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1509518Z       {
+978: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1509953Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/javascript",
+979: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1510274Z         "extractor_options" : {
+980: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1510465Z           "trap" : {
+981: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1510648Z             "title" : "TRAP options",
+982: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1510996Z             "description" : "Options about how the extractor handles TRAP files",
+983: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1511306Z             "type" : "object",
+984: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1511498Z             "visibility" : 3,
+985: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1511690Z             "properties" : {
+986: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1512013Z               "cache" : {
+987: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1512213Z                 "title" : "TRAP cache options",
+988: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1512537Z                 "description" : "Options about how the extractor handles its TRAP cache",
+989: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1512857Z                 "type" : "object",
+990: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1513066Z                 "properties" : {
+991: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1513387Z                   "dir" : {
+992: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1513608Z                     "title" : "TRAP cache directory",
+993: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1513913Z                     "description" : "The directory of the TRAP cache to use",
+994: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1514213Z                     "type" : "string"
+995: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1514423Z                   },
+996: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1514595Z                   "bound" : {
+997: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1514811Z                     "title" : "TRAP cache bound",
+998: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1515129Z                     "description" : "A soft limit (in MB) on the size of the TRAP cache",
+999: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1515439Z                     "type" : "string",
+1000: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1515659Z                     "pattern" : "[0-9]+"
+1001: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1515881Z                   },
+1002: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1516060Z                   "write" : {
+1003: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1516281Z                     "title" : "TRAP cache writeable",
+1004: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1516629Z                     "description" : "Whether to write to the TRAP cache as well as reading it",
+1005: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1516976Z                     "type" : "string",
+1006: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1517214Z                     "pattern" : "(true|TRUE|false|FALSE)"
+1007: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1517447Z                   }
+1008: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1517610Z                 }
+1009: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1517771Z               }
+1010: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1517928Z             }
+1011: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1518083Z           },
+1012: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1518248Z           "skip_types" : {
+1013: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1518476Z             "title" : "Skip type extraction for TypeScript",
+1014: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1518864Z             "description" : "Whether to skip the extraction of types in a TypeScript application",
+1015: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1519214Z             "type" : "string",
+1016: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1519416Z             "pattern" : "^(false|true)$"
+1017: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1519624Z           }
+1018: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1519774Z         }
+1019: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1519923Z       }
+1020: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1520068Z     ],
+1021: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1520213Z     "yaml" : [
+1022: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1520373Z       {
+1023: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1520617Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/yaml"
+1024: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1520908Z       }
+1025: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1521051Z     ],
+1026: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1521224Z     "python" : [
+1027: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1521386Z       {
+1028: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1521624Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/python",
+1029: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1522076Z         "extractor_options" : {
+1030: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1522273Z           "logging" : {
+1031: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1522482Z             "title" : "Options pertaining to logging.",
+1032: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1522764Z             "description" : "Options pertaining to logging.",
+1033: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1523022Z             "type" : "object",
+1034: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1523221Z             "properties" : {
+1035: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1523415Z               "verbosity" : {
+1036: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1523658Z                 "title" : "Python extractor logging verbosity level.",
+1037: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1524551Z                 "description" : "Controls the level of verbosity of the CodeQL Python extractor.\nThe supported levels are (in order of increasing verbosity):\n\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - progress+++\n",
+1038: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1525506Z                 "type" : "string",
+1039: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1525904Z                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+1040: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1526309Z               }
+1041: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1526469Z             }
+1042: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1526624Z           },
+1043: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1526795Z           "python_executable_name" : {
+1044: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1527131Z             "title" : "Controls the name of the Python executable used by the Python extractor.",
+1045: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1528315Z             "description" : "The Python extractor uses platform-dependent heuristics to determine the name of the Python executable to use. Specifying a value for this option overrides the name of the Python executable used by the extractor. Accepted values are py, python and python3. Use this setting with caution, the Python extractor requires Python 3 to run.\n",
+1046: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1529469Z             "type" : "string",
+1047: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1529683Z             "pattern" : "^(py|python|python3)$"
+1048: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1529907Z           }
+1049: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1530062Z         }
+1050: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1530209Z       }
+1051: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1530350Z     ],
+1052: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1530493Z     "go" : [
+1053: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1530644Z       {
+1054: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1530874Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/go",
+1055: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1531173Z         "extractor_options" : {
+1056: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1531375Z           "extract_tests" : {
+1057: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1531643Z             "title" : "Whether to include Go test files in the CodeQL database.",
+1058: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1532272Z             "description" : "A value indicating whether Go test files should be included in the CodeQL database. The default is 'false'.\n",
+1059: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1532734Z             "type" : "string",
+1060: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1532940Z             "pattern" : "^(false|true)$"
+1061: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1533148Z           },
+1062: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1533315Z           "extract_vendor_dirs" : {
+1063: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1533620Z             "title" : "Whether to include Go vendor directories in the CodeQL database.",
+1064: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1534197Z             "description" : "A value indicating whether Go vendor directories should be included in the CodeQL database. The default is 'false'.\n",
+1065: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1534674Z             "type" : "string",
+1066: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1534873Z             "pattern" : "^(false|true)$"
+1067: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1535254Z           }
+1068: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1535403Z         }
+1069: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1535551Z       }
+1070: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1535693Z     ],
+1071: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1535839Z     "rust" : [
+1072: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1535995Z       {
+1073: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1536229Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/rust",
+1074: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1536539Z         "extractor_options" : {
+1075: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1536730Z           "trap" : {
+1076: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1536929Z             "title" : "Options pertaining to TRAP.",
+1077: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1537256Z             "description" : "Options pertaining to TRAP.",
+1078: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1537507Z             "type" : "object",
+1079: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1537699Z             "properties" : {
+1080: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1537899Z               "compression" : {
+1081: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1538210Z                 "title" : "Controls compression for the TRAP files written by the extractor.",
+1082: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1539082Z                 "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'gzip' (to write gzip-compressed TRAP) 'zstd' (the default, to write Zstandard-compressed TRAP) and 'none' (to write uncompressed TRAP).\n",
+1083: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1539838Z                 "type" : "string",
+1084: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1540054Z                 "pattern" : "^(none|gzip|zstd)$"
+1085: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1540392Z               }
+1086: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1540550Z             }
+1087: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1540701Z           },
+1088: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1540865Z           "cargo_target_dir" : {
+1089: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1541111Z             "title" : "Directory to use for cargo output files.",
+1090: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1543736Z             "description" : "This value is an optional path to use as `CARGO_TARGET_DIR` for the internal cargo commands the extractor uses. Pointing it to a persistent directory may reduce execution time of consecutive extractor runs. By default, a new scratch directory is used for each extraction, while qltests use the test's `target` directory so artifacts can be reused across runs.\n",
+1091: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1545082Z             "type" : "string"
+1092: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1545264Z           },
+1093: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1545424Z           "cargo_target" : {
+1094: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1545630Z             "title" : "Target architecture",
+1095: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1546119Z             "description" : "Target architecture to use for analysis, analogous to `cargo --target`. By default the host architecture is used.\n",
+1096: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1546704Z             "type" : "string"
+1097: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1546891Z           },
+1098: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1547053Z           "cargo_features" : {
+1099: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1547268Z             "title" : "Cargo features to turn on",
+1100: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1548129Z             "description" : "Comma-separated list of features to turn on. By default all features are enabled. If any features are specified, then only those features are enabled. The `default` feature must be explicitly specified if only default features are desired. Can be repeated.\n",
+1101: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1549018Z             "type" : "array"
+1102: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1549207Z           },
+1103: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1549374Z           "cargo_cfg_overrides" : {
+1104: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1549594Z             "title" : "Cargo cfg overrides",
+1105: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1550036Z             "description" : "Comma-separated list of cfg settings to enable, or disable if prefixed with `-`. Can be repeated.\n",
+1106: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1550474Z             "type" : "array"
+1107: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1550658Z           },
+1108: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1550820Z           "logging" : {
+1109: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1551032Z             "title" : "Options pertaining to logging.",
+1110: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1551318Z             "description" : "Options pertaining to logging.",
+1111: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1551579Z             "type" : "object",
+1112: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1551893Z             "properties" : {
+1113: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1552085Z               "verbosity" : {
+1114: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1552318Z                 "title" : "Extractor logging verbosity level.",
+1115: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1553133Z                 "description" : "Controls the level of verbosity of the extractor. The supported levels are (in order of increasing verbosity):\n  - off\n  - errors\n  - warnings\n  - info or progress\n  - debug or progress+\n  - trace or progress++\n  - progress+++\n",
+1116: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1553902Z                 "type" : "string",
+1117: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1554311Z                 "pattern" : "^(off|errors|warnings|(info|progress)|(debug|progress\\+)|(trace|progress\\+\\+)|progress\\+\\+\\+)$"
+1118: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1554717Z               },
+1119: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1554885Z               "flamegraph" : {
+1120: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1555152Z                 "title" : "[Experimental] File path for write flame graph log",
+1121: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1555904Z                 "description" : "Collect flame graph data using the `tracing-flame` crate. To render a flame graph or chart, run the `inferno-flamegraph` command. See also: https://crates.io/crates/tracing-flame\n",
+1122: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1556558Z                 "type" : "string"
+1123: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1556754Z               }
+1124: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1556911Z             }
+1125: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1557065Z           },
+1126: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1557247Z           "extract_dependencies_as_source" : {
+1127: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1557519Z             "title" : "Extract dependencies as source code",
+1128: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1557950Z             "description" : "Extract the full source code of dependencies instead of only extracting signatures.\n",
+1129: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1558477Z             "type" : "string",
+1130: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1558683Z             "pattern" : "^(false|true)$"
+1131: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1558898Z           }
+1132: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1559049Z         }
+1133: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1559200Z       }
+1134: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1559346Z     ],
+1135: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1559494Z     "ruby" : [
+1136: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1559649Z       {
+1137: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1559885Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/ruby",
+1138: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1560194Z         "extractor_options" : {
+1139: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1560389Z           "trap" : {
+1140: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1560590Z             "title" : "Options pertaining to TRAP.",
+1141: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1560865Z             "description" : "Options pertaining to TRAP.",
+1142: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1561120Z             "type" : "object",
+1143: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1561316Z             "properties" : {
+1144: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1561513Z               "compression" : {
+1145: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1562035Z                 "title" : "Controls compression for the TRAP files written by the extractor.",
+1146: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1562918Z                 "description" : "This option is only intended for use in debugging the extractor. Accepted values are 'gzip' (the default, to write gzip-compressed TRAP) 'zstd' (to write Zstandard-compressed TRAP) and 'none' (to write uncompressed TRAP).\n",
+1147: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1563677Z                 "type" : "string",
+1148: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1563897Z                 "pattern" : "^(none|gzip|zstd)$"
+1149: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1564116Z               }
+1150: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1564276Z             }
+1151: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1564433Z           }
+1152: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1564583Z         }
+1153: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1564730Z       }
+1154: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1564874Z     ],
+1155: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1565025Z     "cpp" : [
+1156: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1565180Z       {
+1157: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1565412Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/cpp",
+1158: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1565717Z         "extractor_options" : {
+1159: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1565922Z           "trap" : {
+1160: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1566103Z             "title" : "TRAP options",
+1161: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1566397Z             "description" : "Options about how the extractor handles TRAP files",
+1162: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1566704Z             "type" : "object",
+1163: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1566902Z             "visibility" : 3,
+1164: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1567100Z             "properties" : {
+1165: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1567293Z               "cache" : {
+1166: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1567498Z                 "title" : "TRAP cache options",
+1167: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1567822Z                 "description" : "Options about how the extractor handles its TRAP cache",
+1168: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1568143Z                 "type" : "object",
+1169: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1568351Z                 "properties" : {
+1170: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1568549Z                   "dir" : {
+1171: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1568761Z                     "title" : "TRAP cache directory",
+1172: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1569054Z                     "description" : "The directory of the TRAP cache to use",
+1173: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1569352Z                     "type" : "string"
+1174: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1569551Z                   },
+1175: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1569724Z                   "bound" : {
+1176: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1569930Z                     "title" : "TRAP cache bound",
+1177: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1570243Z                     "description" : "A soft limit (in MB) on the size of the TRAP cache",
+1178: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1570550Z                     "type" : "string",
+1179: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1570766Z                     "pattern" : "[0-9]+"
+1180: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1570972Z                   },
+1181: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1571144Z                   "write" : {
+1182: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1571360Z                     "title" : "TRAP cache writeable",
+1183: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1571699Z                     "description" : "Whether to write to the TRAP cache as well as reading it",
+1184: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1572139Z                     "type" : "string",
+1185: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1572370Z                     "pattern" : "(true|TRUE|false|FALSE)"
+1186: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1572603Z                   }
+1187: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1573105Z                 }
+1188: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1573264Z               }
+1189: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1573420Z             }
+1190: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1573758Z           },
+1191: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1574026Z           "scale_timeouts" : {
+1192: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1574690Z             "title" : "Value to scale compiler introspection timeouts with",
+1193: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1575996Z             "description" : "The extractor attempts to determine what compiler the source code being extracted is compiled with. To this end the extractor makes additional calls to the compiler, some of which are expected to return within a certain fixed time (either 10s or 15s). On some systems that are under high load this time might be too short, and can be scaled up using this option.\n",
+1194: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1577211Z             "type" : "string",
+1195: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1577591Z             "pattern" : "[0-9]+"
+1196: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1577876Z           },
+1197: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1578191Z           "log_verbosity" : {
+1198: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1578659Z             "title" : "Verbosity of the extractor logging",
+1199: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1579292Z             "description" : "Set the verbosity of the extractor logging to 'quiet' (0), 'normal' (1), 'chatty' (2), or 'noisy' (3). The default is 'normal'.\n",
+1200: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1579901Z             "type" : "string",
+1201: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1580187Z             "pattern" : "[0-3]"
+1202: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1580486Z           },
+1203: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1580804Z           "frontend_options" : {
+1204: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1592341Z             "title" : "C/C++ extractor frontend options",
+1205: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1592639Z             "description" : "Set additional options that should be passed to the C/C++ extractor frontend.\n",
+1206: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1592914Z             "type" : "array",
+1207: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593053Z             "visibility" : 3
+1208: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593178Z           }
+1209: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593281Z         }
+1210: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593381Z       }
+1211: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593481Z     ],
+1212: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593591Z     "xml" : [
+1213: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593698Z       {
+1214: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1593858Z         "extractor_root" : "/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/xml"
+1215: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1594046Z       }
+1216: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1594140Z     ]
+1217: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1594234Z   }
+1218: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.1594336Z }
+1219: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2413124Z rust does not support TRAP caching (missing option group)
+1220: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2414569Z Found 0 languages that support TRAP caching
+1221: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2415201Z ##[endgroup]
+1222: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2430893Z While resolving threads, found a cgroup CPUs file with 4 CPUs in /sys/fs/cgroup/cpuset.cpus.effective.
+1223: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2440190Z Writing augmented user configuration file to /home/runner/work/_temp/user-config.yaml
+1224: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2440954Z ##[group]Augmented user configuration file contents
+1225: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2456338Z name: Production source
+1226: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2456581Z paths-ignore:
+1227: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2456753Z   - dev/log
+1228: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2456955Z   - docs/case-studies
+1229: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2457187Z query-filters:
+1230: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2457314Z   - exclude:
+1231: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2457438Z       tags: exclude-from-incremental
+1232: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2457556Z 
+1233: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2457707Z ##[endgroup]
+1234: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:35.2460289Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql database init --force-overwrite --db-cluster /home/runner/work/_temp/codeql_databases --source-root=/home/runner/work/link-cli/link-cli --no-calculate-baseline --extractor-include-aliases --language=rust --codescanning-config=/home/runner/work/_temp/user-config.yaml --build-mode=none
+1235: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:36.1997387Z Package install location: /home/runner/.codeql/packages
+1236: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:36.2036679Z Nothing downloaded.
+1237: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:36.7073039Z Resolving extractor rust.
+1238: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:36.7123023Z Successfully loaded extractor Rust (rust) from /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/rust.
+1239: CodeQL (rust)	Initialize CodeQL	2026-11-05T23:18:36.7315752Z Created skeleton CodeQL database at /home/runner/work/_temp/codeql_databases/rust. This in-progress database is ready to be populated by an extractor.
+1240: CodeQL (rust)	Analyze	﻿2026-11-05T23:18:37.1778247Z ##[group]Run github/codeql-action/analyze@v4
+1241: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1778431Z with:
+1242: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1778543Z   output: ../results
+1243: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1778658Z   upload: always
+1244: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1778773Z   skip-queries: false
+1245: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1778918Z   checkout_path: /home/runner/work/link-cli/link-cli
+1246: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1779089Z   upload-database: true
+1247: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1779219Z   wait-for-processing: true
+1248: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1780458Z   token: ***
+1249: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1780596Z   matrix: {
+1250: CodeQL (rust)	Analyze	  "language": "rust",
+1251: CodeQL (rust)	Analyze	  "build-mode": "none"
+1252: CodeQL (rust)	Analyze	}
+1253: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1780779Z   expect-error: false
+1254: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1780898Z env:
+1255: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1781003Z   GIT_CONFIG_COUNT: 1
+1256: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1781127Z   GIT_CONFIG_KEY_0: init.defaultBranch
+1257: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1781277Z   GIT_CONFIG_VALUE_0: main
+1258: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1781451Z   CODEQL_ACTION_JOB_RUN_UUID: 039914bd-ca73-42c4-a2f2-dcfddb541023
+1259: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1781655Z   CODEQL_ACTION_FEATURE_MULTI_LANGUAGE: false
+1260: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1782056Z   CODEQL_ACTION_FEATURE_SANDWICH: false
+1261: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1782238Z   CODEQL_ACTION_FEATURE_SARIF_COMBINE: true
+1262: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1782396Z   CODEQL_ACTION_FEATURE_WILL_UPLOAD: true
+1263: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1782592Z   CODEQL_ACTION_VERSION: 4.39.3
+1264: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1782773Z   CODEQL_ACTION_INIT_HAS_RUN: true
+1265: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1782955Z   CODEQL_ACTION_ANALYSIS_KEY: .github/workflows/security.yml:codeql
+1266: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1783167Z   CODEQL_WORKFLOW_STARTED_AT: 2026-11-05T23:18:22.169Z
+1267: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1783340Z   CODEQL_ACTION_HAS_SET_UP_CODEQL: true
+1268: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1783481Z   CODEQL_RAM: 14570
+1269: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1783598Z   CODEQL_THREADS: 4
+1270: CodeQL (rust)	Analyze	2026-11-05T23:18:37.1783714Z ##[endgroup]
+1271: CodeQL (rust)	Analyze	2026-11-05T23:18:37.3712082Z Existing job run UUID is 039914bd-ca73-42c4-a2f2-dcfddb541023.
+1272: CodeQL (rust)	Analyze	2026-11-05T23:18:37.8562267Z While resolving threads, found a cgroup CPUs file with 4 CPUs in /sys/fs/cgroup/cpuset.cpus.effective.
+1273: CodeQL (rust)	Analyze	2026-11-05T23:18:37.8647644Z ##[group]Generating diff range extension pack
+1274: CodeQL (rust)	Analyze	2026-11-05T23:18:37.8666852Z Successfully created diff range extension pack at /home/runner/work/_temp/pr-diff-range.
+1275: CodeQL (rust)	Analyze	2026-11-05T23:18:37.8667311Z ##[endgroup]
+1276: CodeQL (rust)	Analyze	2026-11-05T23:18:37.8708694Z ##[group]Extracting rust
+1277: CodeQL (rust)	Analyze	2026-11-05T23:18:37.8711163Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql database trace-command --use-build-mode --working-dir /home/runner/work/link-cli/link-cli /home/runner/work/_temp/codeql_databases/rust
+1278: CodeQL (rust)	Analyze	2026-11-05T23:18:38.4943325Z Running command in /home/runner/work/link-cli/link-cli: [/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/rust/tools/autobuild.sh]
+1279: CodeQL (rust)	Analyze	2026-11-05T23:18:39.2262927Z [2026-11-05 23:18:39] [build-stderr] Scanning for files in /home/runner/work/link-cli/link-cli...
+1280: CodeQL (rust)	Analyze	2026-11-05T23:18:39.3828495Z [2026-11-05 23:18:39] [build-stderr] /home/runner/work/_temp/codeql_databases/rust: Indexing files in in /home/runner/work/link-cli/link-cli...
+1281: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4090054Z [2026-11-05 23:18:39] [build-stderr] Running command in /home/runner/work/link-cli/link-cli: [/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/rust/tools/index-files.sh, /home/runner/work/_temp/codeql_databases/rust/working/files-to-index18197600586045301517.list]
+1282: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4249389Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout] ^[[32m INFO^[[0m configuration: {
+1283: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4250197Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     scratch_dir: "/home/runner/work/_temp/codeql_databases/rust/working",
+1284: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4252750Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     trap_dir: "/home/runner/work/_temp/codeql_databases/rust/trap/rust",
+1285: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4253593Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     source_archive_dir: "/home/runner/work/_temp/codeql_databases/rust/src",
+1286: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4260605Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     diagnostic_dir: "/home/runner/work/_temp/codeql_databases/rust/diagnostic/extractors/rust",
+1287: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4262449Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_target_dir: None,
+1288: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4263451Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_target: None,
+1289: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4263981Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_features: [],
+1290: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4264459Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_cfg_overrides: [],
+1291: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4264929Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_extra_env: {},
+1292: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4265385Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_extra_args: [],
+1293: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4265854Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     cargo_all_targets: false,
+1294: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4266333Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     logging_flamegraph: None,
+1295: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4266828Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     logging_verbosity: Some(
+1296: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4267288Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]         "progress",
+1297: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4268818Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     ),
+1298: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4279069Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     trap_compression: Zstd,
+1299: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4288736Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     number of inputs: 165,
+1300: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4289482Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     qltest: false,
+1301: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4290169Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     qltest_cargo_check: false,
+1302: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4290943Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     qltest_dependencies: [],
+1303: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4291677Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     qltest_use_nightly: false,
+1304: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4292490Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     qltest_edition: None,
+1305: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4293236Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     sysroot: None,
+1306: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4293831Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     sysroot_src: None,
+1307: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4294422Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     rustc_src: None,
+1308: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4295063Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     build_script_command: [],
+1309: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4309736Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     extra_includes: [],
+1310: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4310242Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     proc_macro_server: None,
+1311: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4310754Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     extract_dependencies_as_source: false,
+1312: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4311222Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]     force_library_mode: false,
+1313: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4311629Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout] }
+1314: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4312827Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout] ^[[32m INFO^[[0m found manifests:
+1315: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4313365Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]   /home/runner/work/link-cli/link-cli/rust/Cargo.toml
+1316: CodeQL (rust)	Analyze	2026-11-05T23:18:39.4313784Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout]   /home/runner/work/link-cli/link-cli/rust/wasm/Cargo.toml
+1317: CodeQL (rust)	Analyze	2026-11-05T23:18:39.8531101Z [2026-11-05 23:18:39] [build-stdout] [2026-11-05 23:18:39] [build-stdout] ^[[32m INFO^[[0m project Rust toolchain: stable-x86_64-unknown-linux-gnu (default)
+1318: CodeQL (rust)	Analyze	2026-11-05T23:19:45.3897435Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/bump-version.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1319: CodeQL (rust)	Analyze	2026-11-05T23:19:45.3912624Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/check-changelog-fragment.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1320: CodeQL (rust)	Analyze	2026-11-05T23:19:45.3933863Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/check-file-size.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1321: CodeQL (rust)	Analyze	2026-11-05T23:19:45.3963386Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/check-release-needed.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1322: CodeQL (rust)	Analyze	2026-11-05T23:19:45.3988287Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/check-version-modification.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1323: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4003752Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/collect-changelog.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1324: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4017080Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/create-changelog-fragment.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1325: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4034289Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/create-github-release.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1326: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4076082Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/detect-code-changes.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1327: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4099748Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/get-bump-type.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1328: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4123941Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/get-version.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1329: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4146727Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/git-config.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1330: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4148950Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/publish-crate.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1331: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4174012Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/registry.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1332: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4207046Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/release-changelog.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1333: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4254674Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/release-write.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1334: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4267910Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/rust-paths.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1335: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4305545Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/version-and-commit.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1336: CodeQL (rust)	Analyze	2026-11-05T23:19:45.4378826Z [2026-11-05 23:19:45] [build-stdout] [2026-11-05 23:19:45] [build-stdout] ^[[32m INFO^[[0m /home/runner/work/link-cli/link-cli/rust/scripts/wait-for-crate.rs:1:1: semantic analyzer unavailable (not included as a module): macro expansion will be skipped.
+1337: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0441278Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (CrateGraph): 0.026s
+1338: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0442500Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (LoadManifest): 11.267s
+1339: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0443611Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (Parse): 0.001s
+1340: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0444827Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (LoadSource): 10.174s
+1341: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0445564Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (Extract): 1.746s
+1342: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0446375Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (ParseLibrary): 2.366s
+1343: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0447103Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (ExtractLibrary): 19.898s
+1344: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0447786Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration (FindManifests): 0.004s
+1345: CodeQL (rust)	Analyze	2026-11-05T23:19:47.0448202Z [2026-11-05 23:19:47] [build-stdout] [2026-11-05 23:19:47] [build-stdout] ^[[32m INFO^[[0m total duration: 1min07.626s
+1346: CodeQL (rust)	Analyze	2026-11-05T23:19:47.3219668Z ##[endgroup]
+1347: CodeQL (rust)	Analyze	2026-11-05T23:19:47.3225458Z ##[group]Finalizing rust
+1348: CodeQL (rust)	Analyze	2026-11-05T23:19:47.3227420Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql database finalize --finalize-dataset --threads=4 --ram=14570 /home/runner/work/_temp/codeql_databases/rust
+1349: CodeQL (rust)	Analyze	2026-11-05T23:19:47.9654743Z Running TRAP import for CodeQL database at /home/runner/work/_temp/codeql_databases/rust...
+1350: CodeQL (rust)	Analyze	2026-11-05T23:19:48.7963450Z Importing TRAP files
+1351: CodeQL (rust)	Analyze	2026-11-05T23:19:57.6124308Z Merging relations
+1352: CodeQL (rust)	Analyze	2026-11-05T23:20:02.2331027Z Finished writing database (relations: 135.24 MiB; string pool: 22.03 MiB).
+1353: CodeQL (rust)	Analyze	2026-11-05T23:20:02.5486635Z TRAP import complete (14.6s).
+1354: CodeQL (rust)	Analyze	2026-11-05T23:20:06.6266231Z Finished zipping source archive (19.66 MiB).
+1355: CodeQL (rust)	Analyze	2026-11-05T23:20:06.6423206Z ##[endgroup]
+1356: CodeQL (rust)	Analyze	2026-11-05T23:20:06.6427654Z ##[group]Running queries for rust
+1357: CodeQL (rust)	Analyze	2026-11-05T23:20:06.6429235Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql database run-queries --ram=14570 --threads=4 --expect-discarded-cache --additional-packs=/home/runner/work/_temp/pr-diff-range --extension-packs=codeql-action/pr-diff-range /home/runner/work/_temp/codeql_databases/rust --min-disk-free=1024 -v
+1358: CodeQL (rust)	Analyze	2026-11-05T23:20:07.2475416Z Writing logs to /home/runner/work/_temp/codeql_databases/rust/log/database-run-queries-20261105.232007.244.log.
+1359: CodeQL (rust)	Analyze	2026-11-05T23:20:07.7753249Z Writing logs to /home/runner/work/_temp/codeql_databases/rust/log/execute-queries-20261105.232007.772.log.
+1360: CodeQL (rust)	Analyze	2026-11-05T23:20:08.0353926Z Recording pack reference codeql/rust-queries at /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46.
+1361: CodeQL (rust)	Analyze	2026-11-05T23:20:08.2112748Z Resolving data extensions.
+1362: CodeQL (rust)	Analyze	2026-11-05T23:20:08.7721323Z Finished resolving data extensions.
+1363: CodeQL (rust)	Analyze	2026-11-05T23:20:08.8257987Z Merging data extensions.
+1364: CodeQL (rust)	Analyze	2026-11-05T23:20:08.8658466Z Finished merging data extensions.
+1365: CodeQL (rust)	Analyze	2026-11-05T23:20:09.8854392Z [1/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-918/RequestForgery.qlx.
+1366: CodeQL (rust)	Analyze	2026-11-05T23:20:09.9058525Z [2/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-079/XSS.qlx.
+1367: CodeQL (rust)	Analyze	2026-11-05T23:20:09.9233131Z [3/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-311/CleartextTransmission.qlx.
+1368: CodeQL (rust)	Analyze	2026-11-05T23:20:09.9253246Z [4/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-798/HardcodedCryptographicValue.qlx.
+1369: CodeQL (rust)	Analyze	2026-11-05T23:20:10.0153433Z [5/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-022/TaintedPath.qlx.
+1370: CodeQL (rust)	Analyze	2026-11-05T23:20:10.0273195Z [6/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-825/AccessInvalidPointer.qlx.
+1371: CodeQL (rust)	Analyze	2026-11-05T23:20:10.0333374Z [7/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-312/CleartextLogging.qlx.
+1372: CodeQL (rust)	Analyze	2026-11-05T23:20:10.0363070Z [8/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-312/CleartextStorageDatabase.qlx.
+1373: CodeQL (rust)	Analyze	2026-11-05T23:20:10.1402555Z [9/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-295/DisabledCertificateCheck.qlx.
+1374: CodeQL (rust)	Analyze	2026-11-05T23:20:10.1433311Z [10/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-078/CommandInjection.qlx.
+1375: CodeQL (rust)	Analyze	2026-11-05T23:20:10.1434398Z [11/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-089/SqlInjection.qlx.
+1376: CodeQL (rust)	Analyze	2026-11-05T23:20:10.1953045Z [12/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-770/UncontrolledAllocationSize.qlx.
+1377: CodeQL (rust)	Analyze	2026-11-05T23:20:10.2153199Z [13/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-327/BrokenCryptoAlgorithm.qlx.
+1378: CodeQL (rust)	Analyze	2026-11-05T23:20:10.2933186Z [14/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-020/RegexInjection.qlx.
+1379: CodeQL (rust)	Analyze	2026-11-05T23:20:10.2971512Z [15/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-319/UseOfHttp.qlx.
+1380: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3159505Z [16/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-614/InsecureCookie.qlx.
+1381: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3219713Z [17/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/TypeInferenceConsistencyCounts.qlx.
+1382: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3245703Z [18/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/AstConsistencyCounts.qlx.
+1383: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3250987Z [19/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/UnextractedElements.qlx.
+1384: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3336458Z [20/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/UnresolvedMacroCalls.qlx.
+1385: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3362847Z [21/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/ExtractionWarnings.qlx.
+1386: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3392801Z [22/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/ExtractionErrors.qlx.
+1387: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3422678Z [23/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-327/WeakSensitiveDataHashing.qlx.
+1388: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3442644Z [24/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/ExtractedFiles.qlx.
+1389: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3484003Z [25/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/DataFlowConsistencyCounts.qlx.
+1390: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3522702Z [26/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/telemetry/ExtractorInformation.qlx.
+1391: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3542639Z [27/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/telemetry/DatabaseQualityDiagnostics.qlx.
+1392: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3697224Z [28/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/QuerySinkCounts.qlx.
+1393: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3737702Z [29/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/SsaConsistencyCounts.qlx.
+1394: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3802876Z [30/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/LinesOfUserCode.qlx.
+1395: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3809039Z [31/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/NumberOfFilesExtractedWithErrors.qlx.
+1396: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3832630Z [32/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/LinesOfCode.qlx.
+1397: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3862612Z [33/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/NumberOfSuccessfullyExtractedFiles.qlx.
+1398: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3882167Z [34/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/NodesWithTypeAtLengthLimit.qlx.
+1399: CodeQL (rust)	Analyze	2026-11-05T23:20:10.3892566Z [35/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/CfgConsistencyCounts.qlx.
+1400: CodeQL (rust)	Analyze	2026-11-05T23:20:10.4130579Z [36/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/SummaryStatsReduced.qlx.
+1401: CodeQL (rust)	Analyze	2026-11-05T23:20:10.4876068Z [37/37] Loaded /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/SummaryStats.qlx.
+1402: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6656031Z Starting evaluation of codeql/rust-queries/queries/diagnostics/AstConsistencyCounts.ql.
+1403: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6657145Z Starting evaluation of codeql/rust-queries/queries/diagnostics/DataFlowConsistencyCounts.ql.
+1404: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6657798Z Starting evaluation of codeql/rust-queries/queries/diagnostics/ExtractedFiles.ql.
+1405: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6658438Z Starting evaluation of codeql/rust-queries/queries/diagnostics/CfgConsistencyCounts.ql.
+1406: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6750435Z Starting evaluation of codeql/rust-queries/queries/diagnostics/ExtractionErrors.ql.
+1407: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6751528Z Starting evaluation of codeql/rust-queries/queries/diagnostics/ExtractionWarnings.ql.
+1408: CodeQL (rust)	Analyze	2026-11-05T23:20:10.6772924Z Starting evaluation of codeql/rust-queries/queries/diagnostics/SsaConsistencyCounts.ql.
+1409: CodeQL (rust)	Analyze	2026-11-05T23:20:13.6113064Z Starting evaluation of codeql/rust-queries/queries/diagnostics/TypeInferenceConsistencyCounts.ql.
+1410: CodeQL (rust)	Analyze	2026-11-05T23:20:13.6842964Z Starting evaluation of codeql/rust-queries/queries/diagnostics/UnextractedElements.ql.
+1411: CodeQL (rust)	Analyze	2026-11-05T23:20:13.6866320Z Starting evaluation of codeql/rust-queries/queries/diagnostics/UnresolvedMacroCalls.ql.
+1412: CodeQL (rust)	Analyze	2026-11-05T23:20:13.6892821Z Starting evaluation of codeql/rust-queries/queries/security/CWE-020/RegexInjection.ql.
+1413: CodeQL (rust)	Analyze	2026-11-05T23:20:14.7313205Z Starting evaluation of codeql/rust-queries/queries/security/CWE-022/TaintedPath.ql.
+1414: CodeQL (rust)	Analyze	2026-11-05T23:20:14.7527064Z Starting evaluation of codeql/rust-queries/queries/security/CWE-078/CommandInjection.ql.
+1415: CodeQL (rust)	Analyze	2026-11-05T23:20:14.7847530Z Starting evaluation of codeql/rust-queries/queries/security/CWE-079/XSS.ql.
+1416: CodeQL (rust)	Analyze	2026-11-05T23:20:14.8185507Z Starting evaluation of codeql/rust-queries/queries/security/CWE-089/SqlInjection.ql.
+1417: CodeQL (rust)	Analyze	2026-11-05T23:20:14.8483014Z Starting evaluation of codeql/rust-queries/queries/security/CWE-295/DisabledCertificateCheck.ql.
+1418: CodeQL (rust)	Analyze	2026-11-05T23:20:14.8793245Z Starting evaluation of codeql/rust-queries/queries/security/CWE-311/CleartextTransmission.ql.
+1419: CodeQL (rust)	Analyze	2026-11-05T23:20:14.9113219Z Starting evaluation of codeql/rust-queries/queries/security/CWE-312/CleartextLogging.ql.
+1420: CodeQL (rust)	Analyze	2026-11-05T23:20:14.9433249Z Starting evaluation of codeql/rust-queries/queries/security/CWE-312/CleartextStorageDatabase.ql.
+1421: CodeQL (rust)	Analyze	2026-11-05T23:20:14.9712871Z Starting evaluation of codeql/rust-queries/queries/security/CWE-319/UseOfHttp.ql.
+1422: CodeQL (rust)	Analyze	2026-11-05T23:20:15.0003304Z Starting evaluation of codeql/rust-queries/queries/security/CWE-327/BrokenCryptoAlgorithm.ql.
+1423: CodeQL (rust)	Analyze	2026-11-05T23:20:15.0072894Z Starting evaluation of codeql/rust-queries/queries/security/CWE-327/WeakSensitiveDataHashing.ql.
+1424: CodeQL (rust)	Analyze	2026-11-05T23:20:15.0263101Z Starting evaluation of codeql/rust-queries/queries/security/CWE-614/InsecureCookie.ql.
+1425: CodeQL (rust)	Analyze	2026-11-05T23:20:15.0553132Z Starting evaluation of codeql/rust-queries/queries/security/CWE-770/UncontrolledAllocationSize.ql.
+1426: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1063457Z Starting evaluation of codeql/rust-queries/queries/security/CWE-798/HardcodedCryptographicValue.ql.
+1427: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1384959Z Starting evaluation of codeql/rust-queries/queries/security/CWE-825/AccessInvalidPointer.ql.
+1428: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1508861Z [1/37 eval 4.5s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/ExtractionWarnings.bqrs.
+1429: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1529992Z Starting evaluation of codeql/rust-queries/queries/security/CWE-918/RequestForgery.ql.
+1430: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1706119Z Starting evaluation of codeql/rust-queries/queries/summary/LinesOfCode.ql.
+1431: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1736824Z Starting evaluation of codeql/rust-queries/queries/summary/LinesOfUserCode.ql.
+1432: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1762742Z Starting evaluation of codeql/rust-queries/queries/summary/NodesWithTypeAtLengthLimit.ql.
+1433: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1763450Z Starting evaluation of codeql/rust-queries/queries/summary/NumberOfFilesExtractedWithErrors.ql.
+1434: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1764075Z Starting evaluation of codeql/rust-queries/queries/summary/NumberOfSuccessfullyExtractedFiles.ql.
+1435: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1764648Z Starting evaluation of codeql/rust-queries/queries/summary/QuerySinkCounts.ql.
+1436: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1765139Z Starting evaluation of codeql/rust-queries/queries/summary/SummaryStats.ql.
+1437: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1765634Z Starting evaluation of codeql/rust-queries/queries/summary/SummaryStatsReduced.ql.
+1438: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1766179Z Starting evaluation of codeql/rust-queries/queries/telemetry/DatabaseQualityDiagnostics.ql.
+1439: CodeQL (rust)	Analyze	2026-11-05T23:20:15.1766740Z Starting evaluation of codeql/rust-queries/queries/telemetry/ExtractorInformation.ql.
+1440: CodeQL (rust)	Analyze	2026-11-05T23:20:18.7053005Z [2/37 eval 8s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/ExtractionErrors.bqrs.
+1441: CodeQL (rust)	Analyze	2026-11-05T23:20:18.7083028Z [3/37 eval 5s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/UnextractedElements.bqrs.
+1442: CodeQL (rust)	Analyze	2026-11-05T23:20:20.2893509Z [4/37 eval 9.6s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/ExtractedFiles.bqrs.
+1443: CodeQL (rust)	Analyze	2026-11-05T23:20:29.0523271Z [5/37 eval 13.9s] Evaluation done; writing results to codeql/rust-queries/queries/summary/NumberOfFilesExtractedWithErrors.bqrs.
+1444: CodeQL (rust)	Analyze	2026-11-05T23:20:29.0533187Z [6/37 eval 13.9s] Evaluation done; writing results to codeql/rust-queries/queries/summary/NumberOfSuccessfullyExtractedFiles.bqrs.
+1445: CodeQL (rust)	Analyze	2026-11-05T23:20:40.6393030Z [7/37 eval 25.5s] Evaluation done; writing results to codeql/rust-queries/queries/summary/LinesOfCode.bqrs.
+1446: CodeQL (rust)	Analyze	2026-11-05T23:20:40.6452609Z [8/37 eval 25.5s] Evaluation done; writing results to codeql/rust-queries/queries/summary/LinesOfUserCode.bqrs.
+1447: CodeQL (rust)	Analyze	2026-11-05T23:20:40.9953117Z [9/37 eval 27.3s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/UnresolvedMacroCalls.bqrs.
+1448: CodeQL (rust)	Analyze	2026-11-05T23:20:55.5566670Z [10/37 eval 44.9s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/AstConsistencyCounts.bqrs.
+1449: CodeQL (rust)	Analyze	2026-11-05T23:21:01.6224070Z [11/37 eval 51s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/CfgConsistencyCounts.bqrs.
+1450: CodeQL (rust)	Analyze	2026-11-05T23:21:02.0078743Z [12/37 eval 51.3s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/SsaConsistencyCounts.bqrs.
+1451: CodeQL (rust)	Analyze	2026-11-05T23:21:11.3033088Z [13/37 eval 57.7s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/TypeInferenceConsistencyCounts.bqrs.
+1452: CodeQL (rust)	Analyze	2026-11-05T23:21:30.7604257Z [14/37 eval 1m16s] Evaluation done; writing results to codeql/rust-queries/queries/summary/NodesWithTypeAtLengthLimit.bqrs.
+1453: CodeQL (rust)	Analyze	2026-11-05T23:21:32.3563027Z [15/37 eval 1m17s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-311/CleartextTransmission.bqrs.
+1454: CodeQL (rust)	Analyze	2026-11-05T23:21:32.3644496Z [16/37 eval 1m17s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-312/CleartextStorageDatabase.bqrs.
+1455: CodeQL (rust)	Analyze	2026-11-05T23:21:33.0835306Z [17/37 eval 1m22s] Evaluation done; writing results to codeql/rust-queries/queries/diagnostics/DataFlowConsistencyCounts.bqrs.
+1456: CodeQL (rust)	Analyze	2026-11-05T23:21:33.5206362Z [18/37 eval 1m20s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-020/RegexInjection.bqrs.
+1457: CodeQL (rust)	Analyze	2026-11-05T23:21:33.5242983Z [19/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-022/TaintedPath.bqrs.
+1458: CodeQL (rust)	Analyze	2026-11-05T23:21:33.5313174Z [20/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-078/CommandInjection.bqrs.
+1459: CodeQL (rust)	Analyze	2026-11-05T23:21:33.5708650Z [21/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-312/CleartextLogging.bqrs.
+1460: CodeQL (rust)	Analyze	2026-11-05T23:21:33.6143172Z [22/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-089/SqlInjection.bqrs.
+1461: CodeQL (rust)	Analyze	2026-11-05T23:21:33.6170437Z [23/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-079/XSS.bqrs.
+1462: CodeQL (rust)	Analyze	2026-11-05T23:21:33.9953327Z [24/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-295/DisabledCertificateCheck.bqrs.
+1463: CodeQL (rust)	Analyze	2026-11-05T23:21:34.0153345Z [25/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-614/InsecureCookie.bqrs.
+1464: CodeQL (rust)	Analyze	2026-11-05T23:21:34.0634769Z [26/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-770/UncontrolledAllocationSize.bqrs.
+1465: CodeQL (rust)	Analyze	2026-11-05T23:21:34.1202943Z [27/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-319/UseOfHttp.bqrs.
+1466: CodeQL (rust)	Analyze	2026-11-05T23:21:34.1220240Z [28/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-327/BrokenCryptoAlgorithm.bqrs.
+1467: CodeQL (rust)	Analyze	2026-11-05T23:21:34.3778013Z [29/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-825/AccessInvalidPointer.bqrs.
+1468: CodeQL (rust)	Analyze	2026-11-05T23:21:34.3913699Z [30/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-918/RequestForgery.bqrs.
+1469: CodeQL (rust)	Analyze	2026-11-05T23:21:34.5984691Z [31/37 eval 1m19s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-798/HardcodedCryptographicValue.bqrs.
+1470: CodeQL (rust)	Analyze	2026-11-05T23:21:35.3903072Z [32/37 eval 1m20s] Evaluation done; writing results to codeql/rust-queries/queries/telemetry/DatabaseQualityDiagnostics.bqrs.
+1471: CodeQL (rust)	Analyze	2026-11-05T23:21:35.4433660Z [33/37 eval 1m20s] Evaluation done; writing results to codeql/rust-queries/queries/telemetry/ExtractorInformation.bqrs.
+1472: CodeQL (rust)	Analyze	2026-11-05T23:21:35.6876064Z [34/37 eval 1m21s] Evaluation done; writing results to codeql/rust-queries/queries/summary/SummaryStatsReduced.bqrs.
+1473: CodeQL (rust)	Analyze	2026-11-05T23:21:37.7223350Z [35/37 eval 1m23s] Evaluation done; writing results to codeql/rust-queries/queries/summary/SummaryStats.bqrs.
+1474: CodeQL (rust)	Analyze	2026-11-05T23:21:38.1401447Z [36/37 eval 1m23s] Evaluation done; writing results to codeql/rust-queries/queries/summary/QuerySinkCounts.bqrs.
+1475: CodeQL (rust)	Analyze	2026-11-05T23:21:38.2858918Z [37/37 eval 1m23s] Evaluation done; writing results to codeql/rust-queries/queries/security/CWE-327/WeakSensitiveDataHashing.bqrs.
+1476: CodeQL (rust)	Analyze	2026-11-05T23:21:38.2864806Z Shutting down query evaluator.
+1477: CodeQL (rust)	Analyze	2026-11-05T23:21:38.9179549Z Interpreting code scanning results for rust
+1478: CodeQL (rust)	Analyze	2026-11-05T23:21:39.4645022Z Writing logs to /home/runner/work/_temp/codeql_databases/rust/log/database-interpret-results-20261105.232139.461.log.
+1479: CodeQL (rust)	Analyze	2026-11-05T23:21:39.5685247Z Recording pack reference codeql/rust-queries at /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46.
+1480: CodeQL (rust)	Analyze	2026-11-05T23:21:39.5940661Z Resolving extensions
+1481: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0446736Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-798/HardcodedCryptographicValue.ql...
+1482: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0615075Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-798/HardcodedCryptographicValue.bqrs.
+1483: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0734574Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-079/XSS.ql...
+1484: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0814888Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-079/XSS.bqrs.
+1485: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0825547Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-311/CleartextTransmission.ql...
+1486: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0908715Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-311/CleartextTransmission.bqrs.
+1487: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0922714Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-918/RequestForgery.ql...
+1488: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0993803Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-918/RequestForgery.bqrs.
+1489: CodeQL (rust)	Analyze	2026-11-05T23:21:40.0995564Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-022/TaintedPath.ql...
+1490: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1089530Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-022/TaintedPath.bqrs.
+1491: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1091516Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-825/AccessInvalidPointer.ql...
+1492: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1198753Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-825/AccessInvalidPointer.bqrs.
+1493: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1204987Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-312/CleartextLogging.ql...
+1494: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1271046Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-312/CleartextLogging.bqrs.
+1495: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1281193Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-312/CleartextStorageDatabase.ql...
+1496: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1339272Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-312/CleartextStorageDatabase.bqrs.
+1497: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1349267Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-089/SqlInjection.ql...
+1498: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1407304Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-089/SqlInjection.bqrs.
+1499: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1412597Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-078/CommandInjection.ql...
+1500: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1476652Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-078/CommandInjection.bqrs.
+1501: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1477577Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-295/DisabledCertificateCheck.ql...
+1502: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1540371Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-295/DisabledCertificateCheck.bqrs.
+1503: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1543261Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-770/UncontrolledAllocationSize.ql...
+1504: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1592781Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-770/UncontrolledAllocationSize.bqrs.
+1505: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1609332Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-614/InsecureCookie.ql...
+1506: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1650309Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-614/InsecureCookie.bqrs.
+1507: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1656054Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-327/BrokenCryptoAlgorithm.ql...
+1508: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1719141Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-327/BrokenCryptoAlgorithm.bqrs.
+1509: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1743205Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-327/WeakSensitiveDataHashing.ql...
+1510: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1784261Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-327/WeakSensitiveDataHashing.bqrs.
+1511: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1786284Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-319/UseOfHttp.ql...
+1512: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1841602Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-319/UseOfHttp.bqrs.
+1513: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1843202Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/security/CWE-020/RegexInjection.ql...
+1514: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1893665Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-020/RegexInjection.bqrs.
+1515: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1897722Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/AstConsistencyCounts.ql...
+1516: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1948078Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/AstConsistencyCounts.bqrs.
+1517: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1955745Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/TypeInferenceConsistencyCounts.ql...
+1518: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1992672Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/TypeInferenceConsistencyCounts.bqrs.
+1519: CodeQL (rust)	Analyze	2026-11-05T23:21:40.1997993Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/UnextractedElements.ql...
+1520: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2043914Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/UnextractedElements.bqrs.
+1521: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2045383Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/UnresolvedMacroCalls.ql...
+1522: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2089795Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/UnresolvedMacroCalls.bqrs.
+1523: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2094895Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/ExtractionWarnings.ql...
+1524: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2136153Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/ExtractionWarnings.bqrs.
+1525: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2142765Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/DataFlowConsistencyCounts.ql...
+1526: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2183730Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/DataFlowConsistencyCounts.bqrs.
+1527: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2188849Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/CfgConsistencyCounts.ql...
+1528: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2235797Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/CfgConsistencyCounts.bqrs.
+1529: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2240645Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/ExtractionErrors.ql...
+1530: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2267420Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/ExtractionErrors.bqrs.
+1531: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2272526Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/ExtractedFiles.ql...
+1532: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2313867Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/ExtractedFiles.bqrs.
+1533: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2333898Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/diagnostics/SsaConsistencyCounts.ql...
+1534: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2382120Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/SsaConsistencyCounts.bqrs.
+1535: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2387840Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/telemetry/DatabaseQualityDiagnostics.ql...
+1536: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2431596Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/telemetry/DatabaseQualityDiagnostics.bqrs.
+1537: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2443315Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/telemetry/ExtractorInformation.ql...
+1538: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2479998Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/telemetry/ExtractorInformation.bqrs.
+1539: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2489326Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/QuerySinkCounts.ql...
+1540: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2534204Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/QuerySinkCounts.bqrs.
+1541: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2543169Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/SummaryStats.ql...
+1542: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2577114Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/SummaryStats.bqrs.
+1543: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2581874Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/LinesOfCode.ql...
+1544: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2636162Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/LinesOfCode.bqrs.
+1545: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2665107Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/LinesOfUserCode.ql...
+1546: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2695973Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/LinesOfUserCode.bqrs.
+1547: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2698874Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/NumberOfFilesExtractedWithErrors.ql...
+1548: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2755019Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/NumberOfFilesExtractedWithErrors.bqrs.
+1549: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2755962Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/NumberOfSuccessfullyExtractedFiles.ql...
+1550: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2756894Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/NumberOfSuccessfullyExtractedFiles.bqrs.
+1551: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2761170Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/NodesWithTypeAtLengthLimit.ql...
+1552: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2802079Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/NodesWithTypeAtLengthLimit.bqrs.
+1553: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2803376Z Interpreting /opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/qlpacks/codeql/rust-queries/0.1.46/queries/summary/SummaryStatsReduced.ql...
+1554: CodeQL (rust)	Analyze	2026-11-05T23:21:40.2839092Z  ... found results file at /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/SummaryStatsReduced.bqrs.
+1555: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3122017Z Interpreted pathproblem query "Hard-coded cryptographic value" (rust/hard-coded-cryptographic-value) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-798/HardcodedCryptographicValue.bqrs.
+1556: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3127726Z Interpreted pathproblem query "Cross-site scripting" (rust/xss) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-079/XSS.bqrs.
+1557: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3134464Z Interpreted pathproblem query "Cleartext transmission of sensitive information" (rust/cleartext-transmission) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-311/CleartextTransmission.bqrs.
+1558: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3138718Z Interpreted pathproblem query "Server-side request forgery" (rust/request-forgery) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-918/RequestForgery.bqrs.
+1559: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3152897Z Interpreted pathproblem query "Uncontrolled data used in path expression" (rust/path-injection) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-022/TaintedPath.bqrs.
+1560: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3154458Z Interpreted pathproblem query "Access of invalid pointer" (rust/access-invalid-pointer) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-825/AccessInvalidPointer.bqrs.
+1561: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3161443Z Interpreted pathproblem query "Cleartext logging of sensitive information" (rust/cleartext-logging) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-312/CleartextLogging.bqrs.
+1562: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3163296Z Interpreted pathproblem query "Cleartext storage of sensitive information in a database" (rust/cleartext-storage-database) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-312/CleartextStorageDatabase.bqrs.
+1563: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3164953Z Interpreted pathproblem query "Database query built from user-controlled sources" (rust/sql-injection) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-089/SqlInjection.bqrs.
+1564: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3168145Z Interpreted pathproblem query "Uncontrolled command line" (rust/command-line-injection) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-078/CommandInjection.bqrs.
+1565: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3175091Z Interpreted pathproblem query "Disabled TLS certificate check" (rust/disabled-certificate-check) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-295/DisabledCertificateCheck.bqrs.
+1566: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3181250Z Interpreted pathproblem query "Uncontrolled allocation size" (rust/uncontrolled-allocation-size) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-770/UncontrolledAllocationSize.bqrs.
+1567: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3199050Z Interpreted pathproblem query "'Secure' attribute is not set to true" (rust/insecure-cookie) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-614/InsecureCookie.bqrs.
+1568: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3200912Z Interpreted problem query "Use of a broken or weak cryptographic algorithm" (rust/weak-cryptographic-algorithm) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-327/BrokenCryptoAlgorithm.bqrs.
+1569: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3202705Z Interpreted pathproblem query "Use of a broken or weak cryptographic hashing algorithm on sensitive data" (rust/weak-sensitive-data-hashing) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-327/WeakSensitiveDataHashing.bqrs.
+1570: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3204626Z Interpreted pathproblem query "Failure to use HTTPS URLs" (rust/non-https-url) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-319/UseOfHttp.bqrs.
+1571: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3205914Z Interpreted pathproblem query "Regular expression injection" (rust/regex-injection) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/security/CWE-020/RegexInjection.bqrs.
+1572: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3207345Z Interpreted diagnostic query "Abstract syntax tree inconsistency counts" (rust/diagnostics/ast-consistency-counts) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/AstConsistencyCounts.bqrs.
+1573: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3209028Z Interpreted diagnostic query "Type inference inconsistency counts" (rust/diagnostics/type-inference-consistency-counts) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/TypeInferenceConsistencyCounts.bqrs.
+1574: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3210604Z Interpreted diagnostic query "Unextracted Elements" (rust/diagnostics/unextracted-elements) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/UnextractedElements.bqrs.
+1575: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3212144Z Interpreted diagnostic query "Unresolved Macro Calls" (rust/diagnostics/unresolved-macro-calls) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/UnresolvedMacroCalls.bqrs.
+1576: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3213299Z Interpreted diagnostic query "Extraction warnings" (rust/diagnostics/extraction-warnings) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/ExtractionWarnings.bqrs.
+1577: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3214476Z Interpreted diagnostic query "Data flow inconsistency counts" (rust/diagnostics/data-flow-consistency-counts) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/DataFlowConsistencyCounts.bqrs.
+1578: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3215798Z Interpreted diagnostic query "Control flow graph inconsistency counts" (rust/diagnostics/cfg-consistency-counts) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/CfgConsistencyCounts.bqrs.
+1579: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3217222Z Interpreted diagnostic query "Extraction errors" (rust/diagnostics/extraction-errors) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/ExtractionErrors.bqrs.
+1580: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3218556Z Interpreted diagnostic query "Extracted files" (rust/diagnostics/successfully-extracted-files) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/ExtractedFiles.bqrs.
+1581: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3239621Z Interpreted diagnostic query "Static single assignment inconsistency counts" (rust/diagnostics/ssa-consistency-counts) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/diagnostics/SsaConsistencyCounts.bqrs.
+1582: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3241607Z Interpreted diagnostic query "Low Rust analysis quality" (rust/diagnostic/database-quality) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/telemetry/DatabaseQualityDiagnostics.bqrs.
+1583: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3243077Z Interpreted metric query "Rust extraction information" (rust/telemetry/extraction-information) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/telemetry/ExtractorInformation.bqrs.
+1584: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3244337Z Interpreted metric query "Query Sink Counts" (rust/summary/query-sink-counts) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/QuerySinkCounts.bqrs.
+1585: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3245534Z Interpreted metric query "Summary Statistics" (rust/summary/summary-statistics) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/SummaryStats.bqrs.
+1586: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3246740Z Interpreted metric query "Total lines of Rust code in the database" (rust/summary/lines-of-code) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/LinesOfCode.bqrs.
+1587: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3248056Z Interpreted metric query "Total lines of user written Rust code in the database" (rust/summary/lines-of-user-code) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/LinesOfUserCode.bqrs.
+1588: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3293422Z Interpreted metric query "Total number of Rust files that were extracted with errors" (rust/summary/number-of-files-extracted-with-errors) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/NumberOfFilesExtractedWithErrors.bqrs.
+1589: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3295329Z Interpreted metric query "Total number of Rust files that were extracted without error" (rust/summary/number-of-successfully-extracted-files) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/NumberOfSuccessfullyExtractedFiles.bqrs.
+1590: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3297001Z Interpreted metric query "Nodes With Type At Length Limit" (rust/summary/nodes-at-type-path-length-limit) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/NodesWithTypeAtLengthLimit.bqrs.
+1591: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3298455Z Interpreted metric query "Summary Statistics Reduced" (rust/summary/reduced-summary-statistics) at path /home/runner/work/_temp/codeql_databases/rust/results/codeql/rust-queries/queries/summary/SummaryStatsReduced.bqrs.
+1592: CodeQL (rust)	Analyze	2026-11-05T23:21:40.3299443Z Reading source archive /home/runner/work/_temp/codeql_databases/rust/src.zip
+1593: CodeQL (rust)	Analyze	2026-11-05T23:21:40.5302013Z Interpreting diagnostic messages...
+1594: CodeQL (rust)	Analyze	2026-11-05T23:21:40.5548188Z Found 3 raw diagnostic messages.
+1595: CodeQL (rust)	Analyze	2026-11-05T23:21:40.5615145Z Processed diagnostic messages (removed 0 due to limits, created 0 summary diagnostics for status page).
+1596: CodeQL (rust)	Analyze	2026-11-05T23:21:40.5629609Z Interpreted diagnostic messages (31ms).
+1597: CodeQL (rust)	Analyze	2026-11-05T23:21:40.6911459Z Exporting results to SARIF...
+1598: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8284886Z Exported results to SARIF (137ms).
+1599: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8804429Z ##[endgroup]
+1600: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8804699Z Analysis produced the following metric data:
+1601: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8804841Z 
+1602: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8804918Z |                            Metric                            | Value |
+1603: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8805128Z +--------------------------------------------------------------+-------+
+1604: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8805360Z | Total number of Rust files that were extracted with errors   |     0 |
+1605: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8805599Z | Total number of Rust files that were extracted without error |   165 |
+1606: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8805741Z 
+1607: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8805743Z 
+1608: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8805954Z To speed up pull request analysis, file coverage information is only enabled when analyzing the default branch and protected branches.
+1609: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8813076Z Post-processing sarif files: ["/home/runner/work/link-cli/results/rust.sarif"]
+1610: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8834670Z Adding fingerprints to SARIF file. See https://docs.github.com/en/code-security/reference/code-scanning/sarif-support-for-code-scanning#data-for-preventing-duplicated-alerts for more information.
+1611: CodeQL (rust)	Analyze	2026-11-05T23:21:40.8836292Z ##[group]Uploading code scanning results
+1612: CodeQL (rust)	Analyze	2026-11-05T23:21:40.9059882Z Uploading results
+1613: CodeQL (rust)	Post Analyze	﻿2026-11-05T23:22:08.2753140Z Post job cleanup.
+1614: CodeQL (rust)	Post Initialize CodeQL	﻿2026-11-05T23:22:08.4958685Z Post job cleanup.
+1615: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:08.7016678Z Existing job run UUID is 039914bd-ca73-42c4-a2f2-dcfddb541023.
+1616: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.1047686Z [command]/opt/hostedtoolcache/CodeQL/2.27.4/x64/codeql/codeql database export-diagnostics /home/runner/work/_temp/codeql_databases --db-cluster --format=sarif-latest --output=../codeql-failed-run.sarif --sarif-include-diagnostics -vvv
+1617: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.4822917Z Writing logs to /home/runner/work/_temp/codeql_databases/log/database-export-diagnostics-20261105.232209.479.log.
+1618: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.6817280Z Interpreting diagnostic messages...
+1619: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.6832800Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/rust/diagnostic...
+1620: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.6833522Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/rust/diagnostic/extractors...
+1621: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.6834295Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/rust/diagnostic/extractors/rust...
+1622: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.6835152Z Found diagnostics file /home/runner/work/_temp/codeql_databases/rust/diagnostic/extractors/rust/extraction.jsonc.
+1623: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7182380Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/rust/diagnostic/tracer...
+1624: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7183228Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/rust/diagnostic/codeql-action...
+1625: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7184036Z Found diagnostics file /home/runner/work/_temp/codeql_databases/rust/diagnostic/codeql-action/codeql-action-2026-11-05T231828.915Z-0.json.
+1626: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7225202Z Found diagnostics file /home/runner/work/_temp/codeql_databases/rust/diagnostic/codeql-action/codeql-action-2026-11-05T231834.111Z-1.json.
+1627: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7266364Z Looking for diagnostics in /home/runner/work/_temp/codeql_databases/diagnostic...
+1628: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7267359Z Found diagnostics file /home/runner/work/_temp/codeql_databases/diagnostic/cli-diagnostics-add-20261105T231836.734Z.json.
+1629: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7328642Z Found 5 raw diagnostic messages.
+1630: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7499374Z Processed diagnostic messages (removed 0 due to limits, created 0 summary diagnostics for status page).
+1631: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.7507276Z Interpreted diagnostic messages (68ms).
+1632: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.8450389Z Uploading failed SARIF file ../codeql-failed-run.sarif
+1633: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.8451305Z Post-processing sarif files: ["../codeql-failed-run.sarif"]
+1634: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.8463927Z Adding fingerprints to SARIF file. See https://docs.github.com/en/code-security/reference/code-scanning/sarif-support-for-code-scanning#data-for-preventing-duplicated-alerts for more information.
+1635: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.8466174Z ##[group]Uploading code scanning results
+1636: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.8594936Z CodeQL job status was failure.
+1637: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:09.8655711Z Sending status report for init-post step.
+1638: CodeQL (rust)	Post Initialize CodeQL	2026-11-05T23:22:10.2360888Z Status report sent for init-post step.
+1639: CodeQL (rust)	Post Run actions/checkout@v7	﻿2026-11-05T23:22:10.2537401Z Post job cleanup.
+1640: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3202242Z [command]/usr/bin/git version
+1641: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3245389Z git version 2.56.0
+1642: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3271066Z Temporarily overriding HOME='/home/runner/work/_temp/d107b613-7b71-44b6-b948-593b266aea5a' before making global git config changes
+1643: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3272458Z Adding repository directory to the temporary git global config as a safe directory
+1644: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3276108Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/link-cli/link-cli
+1645: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3315142Z Removing SSH command configuration
+1646: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3321581Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+1647: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3361180Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+1648: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3613260Z Removing HTTP extra header
+1649: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3619747Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+1650: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3674312Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+1651: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3914811Z Removing includeIf entries pointing to credentials config files
+1652: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3920534Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+1653: CodeQL (rust)	Post Run actions/checkout@v7	2026-11-05T23:22:10.3968534Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+1654: CodeQL (rust)	Complete job	﻿2026-11-05T23:22:10.4314204Z Cleaning up orphan processes

@@ -5,12 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-import {
-  LANGUAGE_CONFIG,
-  MAX_LINES,
-  checkLanguage,
-  countLines,
-} from './check-file-size.mjs';
+import { LANGUAGE_CONFIG, MAX_LINES, checkLanguage, countLines } from './check-file-size.mjs';
 
 const script = new URL('./check-file-size.mjs', import.meta.url).pathname;
 
@@ -45,7 +40,7 @@ test('exclusions match whole path components, not substrings', () => {
   const csharp = checkLanguage(root, LANGUAGE_CONFIG.csharp);
   assert.deepEqual(
     csharp.violations.map((v) => v.file),
-    [join('csharp', 'App', 'Robin.cs')]
+    [join('csharp', 'App', 'Robin.cs')],
   );
 });
 
@@ -74,6 +69,6 @@ test('CLI fails when a file exceeds the limit and passes otherwise', () => {
   writeTree(root, { 'rust/src/sequences/target_matcher.rs': 'x\n'.repeat(MAX_LINES + 1) });
   assert.throws(
     () => execFileSync('node', [script, '--dir', root], { encoding: 'utf8', stdio: 'pipe' }),
-    (error) => error.status === 1 && /target_matcher\.rs: 1001 lines/.test(error.stdout)
+    (error) => error.status === 1 && /target_matcher\.rs: 1001 lines/.test(error.stdout),
   );
 });

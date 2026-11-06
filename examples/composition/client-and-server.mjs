@@ -17,7 +17,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { ExternalIdMap, OffsetAddressMap, RemapLinks, UnionLinks } from '../../js/client/src/index.js';
+import {
+  ExternalIdMap,
+  OffsetAddressMap,
+  RemapLinks,
+  UnionLinks,
+} from '../../js/client/src/index.js';
 import { connectProcess } from '../../js/client/src/process.js';
 
 const WORLD =
@@ -35,7 +40,16 @@ const dir = await mkdtemp(join(tmpdir(), 'client-and-server-'));
 const db = (name) => join(dir, `${name}.links`);
 
 await run('--db', db('server'), '--auto-create-missing-references', WORLD);
-await run('--db', db('server'), '--tokens', db('tokens'), '--subject', 'alice', '--grant-token', 'alice-secret');
+await run(
+  '--db',
+  db('server'),
+  '--tokens',
+  db('tokens'),
+  '--subject',
+  'alice',
+  '--grant-token',
+  'alice-secret',
+);
 
 const opened = [];
 const open = async (name, more = []) => {
@@ -45,7 +59,9 @@ const open = async (name, more = []) => {
 };
 try {
   const server = await open('server', ['--permissions', 'self', '--tokens', db('tokens')]);
-  console.log(`# the server's connection authenticates: ${(await server.requestText('(auth: alice-secret)')).trim()}`);
+  console.log(
+    `# the server's connection authenticates: ${(await server.requestText('(auth: alice-secret)')).trim()}`,
+  );
   const local = await open('local');
   const ids = await open('ids');
 
@@ -67,7 +83,9 @@ try {
   const draft = (await links.create(0n, 0n)).index;
   await links.update(draft, draft, news);
   await links.setName(draft, 'draft');
-  console.log(`  created in member ${await links.ownerOf(draft)}: ${await show(links, (await links.each([draft]))[0])}`);
+  console.log(
+    `  created in member ${await links.ownerOf(draft)}: ${await show(links, (await links.each([draft]))[0])}`,
+  );
 
   console.log("# a write the server's rules refuse, through the union");
   try {
@@ -83,7 +101,9 @@ try {
   const byUuid = new RemapLinks(links, new ExternalIdMap(ids, 'uuid', { newId }));
   await print(byUuid);
   const uuid = await byUuid.toOuter(draft);
-  console.log(`  the draft is ${uuid}; ids.links holds ${await ids.count([])} links, local.links ${await local.count([])}`);
+  console.log(
+    `  the draft is ${uuid}; ids.links holds ${await ids.count([])} links, local.links ${await local.count([])}`,
+  );
 } finally {
   for (const links of opened.reverse()) await links.close();
   await rm(dir, { recursive: true, force: true });

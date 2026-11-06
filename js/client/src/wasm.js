@@ -29,25 +29,42 @@ export class WasmTransport {
   #closing = false;
   #tail = Promise.resolve();
 
-  constructor(clink, { owned = false, maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES, maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES, capabilities } = {}) {
+  constructor(
+    clink,
+    {
+      owned = false,
+      maxRequestBytes = DEFAULT_MAX_MESSAGE_BYTES,
+      maxReplyBytes = DEFAULT_MAX_MESSAGE_BYTES,
+      capabilities,
+    } = {},
+  ) {
     if (!clink || typeof clink.request !== 'function') {
-      throw new TypeError('expected a Clink instance with request(text); build rust/wasm with a version that has it');
+      throw new TypeError(
+        'expected a Clink instance with request(text); build rust/wasm with a version that has it',
+      );
     }
     this.#clink = clink;
     this.#owned = owned;
     this.maxRequestBytes = maxRequestBytes;
     this.maxReplyBytes = maxReplyBytes;
-    this.capabilities = wasmCapabilities({ ...capabilities, limits: { maxRequestBytes, maxReplyBytes } });
+    this.capabilities = wasmCapabilities({
+      ...capabilities,
+      limits: { maxRequestBytes, maxReplyBytes },
+    });
     this.stats = { requests: 0, bytesSent: 0, bytesReceived: 0 };
   }
 
   send(text, scope = {}) {
     if (this.#reserved) return Promise.reject(new ConnectionClosedError('the WebAssembly session belongs to a commit group', { outcome: 'not-sent' }));
     const run = () => {
-      if (this.#closed) throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
+      if (this.#closed)
+        throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
       const size = encoder.encode(text).length;
       if (size > this.maxRequestBytes) {
-        throw new LimitExceededError(`request of ${size} bytes exceeds maxRequestBytes ${this.maxRequestBytes}`, { outcome: 'not-sent' });
+        throw new LimitExceededError(
+          `request of ${size} bytes exceeds maxRequestBytes ${this.maxRequestBytes}`,
+          { outcome: 'not-sent' },
+        );
       }
       const late = scopeError(scope, 'not-sent');
       if (late) throw late;
@@ -58,7 +75,10 @@ export class WasmTransport {
       this.stats.bytesReceived += replySize;
       if (replySize > this.maxReplyBytes) {
         // It ran; only its reply is dropped.
-        throw new LimitExceededError(`reply of ${replySize} bytes exceeds maxReplyBytes ${this.maxReplyBytes}`, { outcome: 'unknown' });
+        throw new LimitExceededError(
+          `reply of ${replySize} bytes exceeds maxReplyBytes ${this.maxReplyBytes}`,
+          { outcome: 'unknown' },
+        );
       }
       return reply;
     };

@@ -33,10 +33,17 @@ test('union reads the links of every member', async () => {
   await make(server, 2n, 2n);
   await make(server, 2n, 1n);
   const local1 = await make(local, 3n, 3n);
-  assert.deepEqual(await all(union), [[local1, 3n, 3n], [2n, 2n, 2n], [3n, 2n, 1n]]);
+  assert.deepEqual(await all(union), [
+    [local1, 3n, 3n],
+    [2n, 2n, 2n],
+    [3n, 2n, 1n],
+  ]);
   assert.equal(await union.count(), 3n);
   assert.equal(await union.count([3n]), 1n);
-  assert.deepEqual(await all(union, [ANY, 2n, ANY]), [[2n, 2n, 2n], [3n, 2n, 1n]]);
+  assert.deepEqual(await all(union, [ANY, 2n, ANY]), [
+    [2n, 2n, 2n],
+    [3n, 2n, 1n],
+  ]);
   assert.deepEqual(await all(union, [ANY, ANY, 3n]), [[local1, 3n, 3n]]);
   assert.equal(await union.ownerOf(1n), 0);
   assert.equal(await union.ownerOf(2n), 1);
@@ -60,7 +67,10 @@ test('union creates in the primary member and writes where the link lives', asyn
   await union.update(created, 2n, 2n);
   assert.deepEqual(await all(local), [[created, 2n, 2n]]);
   await union.update(2n, 2n, created);
-  assert.deepEqual(await all(server), [[1n, 1n, 1n], [2n, 2n, created]]);
+  assert.deepEqual(await all(server), [
+    [1n, 1n, 1n],
+    [2n, 2n, created],
+  ]);
   await union.delete(2n);
   assert.deepEqual(await all(server), [[1n, 1n, 1n]]);
   assert.deepEqual(await all(union), [[created, 2n, 2n]]);
@@ -104,7 +114,10 @@ test('remap moves every address by an offset', async () => {
   const created = (await remap.create(0n, 0n)).index;
   assert.equal(created, 1002n);
   await remap.update(created, 1001n, created);
-  assert.deepEqual(await all(inner), [[point, point, point], [2n, 1n, 2n]]);
+  assert.deepEqual(await all(inner), [
+    [point, point, point],
+    [2n, 1n, 2n],
+  ]);
   assert.deepEqual(await all(remap, [ANY, 1001n, 1002n]), [[1002n, 1001n, 1002n]]);
   await remap.delete(1002n);
   assert.deepEqual(await all(inner), [[point, point, point]]);
@@ -116,7 +129,10 @@ test('remap finds nothing and writes nothing outside its network', async () => {
   assert.deepEqual(await all(remap, [ANY, 1n, ANY]), []);
   assert.equal(await remap.count([1n]), 0n);
   assert.deepEqual(await all(remap, [ANY, 5n, ANY]), []);
-  await assert.rejects(remap.update(1001n, 5n, 1001n), { name: 'AddressRangeError', message: /not of this network/ });
+  await assert.rejects(remap.update(1001n, 5n, 1001n), {
+    name: 'AddressRangeError',
+    message: /not of this network/,
+  });
   await assert.rejects(remap.delete(5n), { name: 'NotFoundError', outcome: 'not-sent' });
   assert.deepEqual(await all(inner), [[point, point, point]]);
 });
@@ -126,7 +142,10 @@ test('remap reports changes under its addresses', async () => {
   const created = await remap.create(0n, 0n);
   assert.deepEqual(created, { index: 1001n, source: 0n, target: 0n });
   const changes = await remap.update(1001n, 1001n, 1001n);
-  assert.deepEqual(changes.at(-1), { before: { index: 1001n, source: 0n, target: 0n }, after: { index: 1001n, source: 1001n, target: 1001n } });
+  assert.deepEqual(changes.at(-1), {
+    before: { index: 1001n, source: 0n, target: 0n },
+    after: { index: 1001n, source: 1001n, target: 1001n },
+  });
 });
 
 test('remap names under its addresses', async () => {
@@ -148,9 +167,16 @@ test('an address table gives addresses in the order they are seen', async () => 
   const remap = new RemapLinks(inner, table);
   await make(inner, 1n, 1n);
   await make(inner, 1n, 2n);
-  assert.deepEqual(await all(remap), [[500n, 500n, 500n], [900n, 500n, 900n]]);
+  assert.deepEqual(await all(remap), [
+    [500n, 500n, 500n],
+    [900n, 500n, 900n],
+  ]);
   assert.equal((await remap.create(0n, 0n)).index, 501n);
-  assert.deepEqual(table.pairs(), [[500n, 1n], [501n, 3n], [900n, 2n]]);
+  assert.deepEqual(table.pairs(), [
+    [500n, 1n],
+    [501n, 3n],
+    [900n, 2n],
+  ]);
   assert.throws(() => table.add(500n, 7n), /mapped to 1 already/);
   assert.throws(() => table.add(600n, 1n), /mapped from 500 already/);
   assert.throws(() => new AddressTable({ first: 0n }), { name: 'AddressRangeError' });
@@ -165,7 +191,10 @@ test('a union of remapped networks shadows nothing', async () => {
   const offset = 1n << 24n;
   const remote = offset + 1n;
   const union = new UnionLinks([local, new RemapLinks(server, new OffsetAddressMap(offset))]);
-  assert.deepEqual(await all(union), [[1n, 1n, 1n], [remote, remote, remote]]);
+  assert.deepEqual(await all(union), [
+    [1n, 1n, 1n],
+    [remote, remote, remote],
+  ]);
   const typed = await make(union, remote, 1n);
   assert.deepEqual(await all(local, [ANY, remote, ANY]), [[typed, remote, 1n]]);
   await union.update(remote, remote, remote);
@@ -197,16 +226,19 @@ async function externalIdsBindIdsOfOtherSystemsToLinks(tableApart) {
   assert.equal(await ids.unbind(table, second), false);
   assert.equal(await ids.idOf(table, other), null);
   assert.throws(() => new LinksExternalIds('a:b'), TypeError);
-  for (let address = 1n; address <= 6n; address += 1n) await ids.bind(table, `n${address}`, address);
+  for (let address = 1n; address <= 6n; address += 1n)
+    await ids.bind(table, `n${address}`, address);
   for (let address = 1n; address <= 6n; address += 1n) {
     assert.equal(await ids.find(table, `n${address}`), address);
     assert.equal(await ids.idOf(table, address), `n${address}`);
   }
 }
 
-test('external ids bind ids of other systems to links in the data', () => externalIdsBindIdsOfOtherSystemsToLinks(false));
+test('external ids bind ids of other systems to links in the data', () =>
+  externalIdsBindIdsOfOtherSystemsToLinks(false));
 
-test('external ids bind ids of other systems to links in a table apart', () => externalIdsBindIdsOfOtherSystemsToLinks(true));
+test('external ids bind ids of other systems to links in a table apart', () =>
+  externalIdsBindIdsOfOtherSystemsToLinks(true));
 
 // What only JavaScript adds: above a remap, ids that are not addresses.
 
@@ -221,7 +253,10 @@ test('a remap reads a network under UUIDs and writes it back under its own addre
   await remap.update(type, type, type);
   const note = (await remap.create(type, 0n)).index;
   assert.notEqual(note, type);
-  assert.deepEqual(await all(inner), [[1n, 1n, 1n], [2n, 1n, 0n]]);
+  assert.deepEqual(await all(inner), [
+    [1n, 1n, 1n],
+    [2n, 1n, 0n],
+  ]);
   assert.deepEqual(await all(remap, [ANY, type, ANY]).then((links) => links.length), 2);
   assert.deepEqual(await all(remap, [note]), [[note, type, 0n]]);
   await remap.setName(type, 'Type');
@@ -247,7 +282,10 @@ test('external ids keep the UUIDs of a remap in links, across remaps', async () 
   assert.equal(point, '00000000-0000-4000-8000-000000000001');
   assert.equal(await new LinksExternalIds('uuid').find(table, point), 1n);
   // Another remap over the same table reads the same ids.
-  const again = new RemapLinks(data, new ExternalIdMap(table, 'uuid', { newId: () => assert.fail('no new id needed') }));
+  const again = new RemapLinks(
+    data,
+    new ExternalIdMap(table, 'uuid', { newId: () => assert.fail('no new id needed') }),
+  );
   assert.deepEqual(await all(again), [[point, point, point]]);
   // The default ids are random UUIDs.
   const random = new RemapLinks(new MemoryLinks(), new ExternalIdMap(new MemoryLinks(), 'uuid'));
@@ -273,7 +311,10 @@ test('composed layers state what they translate and refuse the rest up front', a
   await assert.rejects(union.createTriplet(1, 0, 0), UnsupportedError);
   await assert.rejects(union.eachTriplets(), UnsupportedError);
   assert.throws(() => union.onTripletNotification(() => {}), UnsupportedError);
-  await assert.rejects(union.batch([{ op: 'createTriplet', type: 1, from: 0, to: 0 }]), UnsupportedError);
+  await assert.rejects(
+    union.batch([{ op: 'createTriplet', type: 1, from: 0, to: 0 }]),
+    UnsupportedError,
+  );
   const batch = await union.batch([
     { op: 'create', source: 0, target: 0 },
     { op: 'update', index: 1, source: 1, target: 1 },
@@ -313,15 +354,27 @@ test('a remap subscribes below and pushes changes under its addresses', async ()
     listener = next;
     return () => {};
   };
-  inner.receiveNotification = async () => ({ subscription: 1, changes: [{ before: null, after: { index: 1n, source: 1n, target: 0n } }] });
+  inner.receiveNotification = async () => ({
+    subscription: 1,
+    changes: [{ before: null, after: { index: 1n, source: 1n, target: 0n } }],
+  });
   const remap = new RemapLinks(inner, new OffsetAddressMap(100n));
   assert.equal(await remap.subscribe([ANY, 101n, ANY]), 1);
   assert.deepEqual(pushed, [[ANY, 1n, ANY]]);
   await assert.rejects(remap.subscribe([5n]), { name: 'AddressRangeError' });
-  assert.deepEqual(await remap.receiveNotification(), { subscription: 1, changes: [{ before: null, after: { index: 101n, source: 101n, target: 0n } }] });
+  assert.deepEqual(await remap.receiveNotification(), {
+    subscription: 1,
+    changes: [{ before: null, after: { index: 101n, source: 101n, target: 0n } }],
+  });
   const received = new Promise((resolve) => remap.onNotification(resolve));
-  listener({ subscription: 1, changes: [{ before: { index: 2n, source: 1n, target: 2n }, after: null }] });
-  assert.deepEqual(await received, { subscription: 1, changes: [{ before: { index: 102n, source: 101n, target: 102n }, after: null }] });
+  listener({
+    subscription: 1,
+    changes: [{ before: { index: 2n, source: 1n, target: 2n }, after: null }],
+  });
+  assert.deepEqual(await received, {
+    subscription: 1,
+    changes: [{ before: { index: 102n, source: 101n, target: 102n }, after: null }],
+  });
 });
 
 /** A layer of rules over any links client: here, writes only to links from `owner`. */
@@ -333,7 +386,8 @@ class OwnedWrites extends LinksDecorator {
 
   async #check(index) {
     const [link] = await this.links.each([index]);
-    if (link && link.source !== this.owner) throw new UnsupportedError(`forbidden: link ${index} is not of ${this.owner}`);
+    if (link && link.source !== this.owner)
+      throw new UnsupportedError(`forbidden: link ${index} is not of ${this.owner}`);
   }
 
   async update(index, source, target, options) {
@@ -357,7 +411,10 @@ test('a layer of rules over a union restricts every member, under it one member'
   // Over the union the rules see every member: the local link and the server's.
   await over.update(1n, 9n, 1n);
   await assert.rejects(over.delete(theirs), /forbidden/);
-  assert.deepEqual(await all(server), [[mine, 1n, 1n], [theirs, 2n, 2n]]);
+  assert.deepEqual(await all(server), [
+    [mine, 1n, 1n],
+    [theirs, 2n, 2n],
+  ]);
   // Under the union, only the server's links are restricted.
   const under = new UnionLinks([local, new OwnedWrites(server, owner)]);
   await under.update(1n, 1n, 1n);
