@@ -20,7 +20,7 @@ test('generic hooks preserve immutable evidence while secrets still scan it', ()
   const config = readFileSync(join(repoRoot, '.pre-commit-config.yaml'), 'utf8');
   const generic = config.split('  - repo: local')[0];
   assert.match(generic, /exclude: \^\(dev\/log\/\|docs\/case-studies\/\)/);
-  const secrets = config.match(/      - id: secrets\n([\s\S]*?)(?=\n      - id:|$)/)?.[1];
+  const secrets = config.match(/ {6}- id: secrets\n([\s\S]*?)(?=\n {6}- id:|$)/)?.[1];
   assert.ok(secrets, 'tracked-file secrets hook must remain installed');
   assert.doesNotMatch(secrets, /\bexclude:/);
   assert.match(secrets, /entry: node \.github\/scripts\/check-secrets\.mjs/);
