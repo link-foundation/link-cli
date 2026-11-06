@@ -2,15 +2,27 @@
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
 let loads = 0;
-const hook = registerHooks({ resolve(specifier, context, nextResolve) {
-  if (specifier.endsWith('/engine-lsm-wal.js')) { loads++; throw Error('selected LSM WAL codec'); }
-  assert.doesNotMatch(specifier, /sqlite/i);
-  return nextResolve(specifier, context);
-} });
+const hook = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier.endsWith('/engine-lsm-wal.js')) {
+      loads++;
+      throw Error('selected LSM WAL codec');
+    }
+    assert.doesNotMatch(specifier, /sqlite/i);
+    return nextResolve(specifier, context);
+  },
+});
 try {
   const { MemoryCommitLog } = await import('../../js/client/src/index.js');
-  const log = new MemoryCommitLog(); log.append('ordinary'); log.flush(); assert.equal(loads, 0);
+  const log = new MemoryCommitLog();
+  log.append('ordinary');
+  log.flush();
+  assert.equal(loads, 0);
   await assert.rejects(import('../../js/client/src/engine-lsm-wal.js'), /selected LSM WAL codec/);
   assert.equal(loads, 1);
-} finally { hook.deregister(); }
-console.log('PASS: ordinary root/memory paths do not load the LSM WAL or SQLite; explicit selection reaches the codec.');
+} finally {
+  hook.deregister();
+}
+console.log(
+  'PASS: ordinary root/memory paths do not load the LSM WAL or SQLite; explicit selection reaches the codec.',
+);

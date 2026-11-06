@@ -170,6 +170,7 @@ jobs:
     name: Pipeline Status (wasm)
     needs:
       - test
+      - coverage
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5

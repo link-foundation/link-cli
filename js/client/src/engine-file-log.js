@@ -1,5 +1,15 @@
 // Node/Bun/Deno filesystem adapter. The universal entry point never imports it.
-import { openSync, closeSync, readSync, writeSync, fstatSync, ftruncateSync, fsyncSync, mkdirSync, rmdirSync } from 'node:fs';
+import {
+  openSync,
+  closeSync,
+  readSync,
+  writeSync,
+  fstatSync,
+  ftruncateSync,
+  fsyncSync,
+  mkdirSync,
+  rmdirSync,
+} from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 
@@ -37,7 +47,11 @@ export class FileCommitLog {
       // POSIX directory sync establishes a new journal's name before commits.
       if (process.platform !== 'win32') {
         const dir = openSync(directory, 'r');
-        try { fsyncSync(dir); } finally { closeSync(dir); }
+        try {
+          fsyncSync(dir);
+        } finally {
+          closeSync(dir);
+        }
       }
     } catch (error) {
       if (this.#fd !== undefined) closeSync(this.#fd);
@@ -55,7 +69,10 @@ export class FileCommitLog {
       const length = Math.min(end, buffer.length);
       readExactly(this.#fd, buffer, length, end - length);
       const offset = buffer.subarray(0, length).lastIndexOf(10);
-      if (offset >= 0) { complete = end - length + offset + 1; break; }
+      if (offset >= 0) {
+        complete = end - length + offset + 1;
+        break;
+      }
       end -= length;
     }
     if (complete !== fstatSync(this.#fd).size) ftruncateSync(this.#fd, complete);
@@ -67,8 +84,12 @@ export class FileCommitLog {
       this.#tailMayBeTorn = false;
     }
   }
-  get supportsDurableFlush() { return true; }
-  #check() { if (this.#closed) throw new Error('journal is closed'); }
+  get supportsDurableFlush() {
+    return true;
+  }
+  #check() {
+    if (this.#closed) throw new Error('journal is closed');
+  }
   read() {
     this.#check();
     this.#repairIfNeeded();
@@ -80,7 +101,8 @@ export class FileCommitLog {
   }
   append(record) {
     this.#check();
-    if (typeof record !== 'string' || /[\r\n]/.test(record)) throw new TypeError('journal records must be strings without line breaks');
+    if (typeof record !== 'string' || /[\r\n]/.test(record))
+      throw new TypeError('journal records must be strings without line breaks');
     this.#repairIfNeeded();
     const bytes = encode.encode(record + '\n');
     this.#tailMayBeTorn = true;
@@ -102,8 +124,14 @@ export class FileCommitLog {
   close() {
     if (!this.#closed) {
       this.#closed = true;
-      try { closeSync(this.#fd); } finally { rmdirSync(this.#lock); }
+      try {
+        closeSync(this.#fd);
+      } finally {
+        rmdirSync(this.#lock);
+      }
     }
   }
-  [Symbol.dispose]() { this.close(); }
+  [Symbol.dispose]() {
+    this.close();
+  }
 }

@@ -6,44 +6,56 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FileCommitLog } from '../src/engine-file-log.js';
 
-for (const unicode of [false, true]) for (const next of ['read', 'append', 'flush']) {
-  test(`live file journal repairs partial ${unicode ? 'UTF-8' : 'ASCII'} before ${next}`, (context) => {
-    const directory = fs.mkdtempSync(join(tmpdir(), 'journal-live-tail-'));
-    const original = fs.writeSync;
-    let writes = 0;
-    let fail = false;
-    const mocked = context.mock.method(fs, 'writeSync', (fd, bytes, offset, length) => {
-      if (!fail) return original(fd, bytes, offset, length);
-      if (writes++ === 0) return original(fd, bytes, offset, 1);
-      throw new Error('injected error after one byte');
+for (const unicode of [false, true])
+  for (const next of ['read', 'append', 'flush']) {
+    test(`live file journal repairs partial ${unicode ? 'UTF-8' : 'ASCII'} before ${next}`, (context) => {
+      const directory = fs.mkdtempSync(join(tmpdir(), 'journal-live-tail-'));
+      const original = fs.writeSync;
+      let writes = 0;
+      let fail = false;
+      const mocked = context.mock.method(fs, 'writeSync', (fd, bytes, offset, length) => {
+        if (!fail) return original(fd, bytes, offset, length);
+        if (writes++ === 0) return original(fd, bytes, offset, 1);
+        throw new Error('injected error after one byte');
+      });
+      syncBuiltinESMExports();
+      try {
+        using log = new FileCommitLog(join(directory, 'journal'));
+        log.append('committed');
+        log.flush();
+        fail = true;
+        assert.throws(() => log.append(unicode ? '雪' : 'uncommitted'), /after one byte/);
+        assert.equal(fs.statSync(join(directory, 'journal')).size, 11);
+        fail = false;
+        if (next === 'read') assert.deepEqual(JSON.parse(log.read()), ['committed']);
+        if (next === 'flush') {
+          log.flush();
+          assert.deepEqual(JSON.parse(log.read()), ['committed']);
+        }
+        log.append('following');
+        log.flush();
+        assert.deepEqual(JSON.parse(log.read()), ['committed', 'following']);
+        log.close();
+        using reopened = new FileCommitLog(join(directory, 'journal'));
+        assert.deepEqual(JSON.parse(reopened.read()), ['committed', 'following']);
+      } finally {
+        mocked.mock.restore();
+        syncBuiltinESMExports();
+        fs.rmSync(directory, { recursive: true, force: true });
+      }
     });
-    syncBuiltinESMExports();
-    try {
-      using log = new FileCommitLog(join(directory, 'journal'));
-      log.append('committed'); log.flush();
-      fail = true;
-      assert.throws(() => log.append(unicode ? '雪' : 'uncommitted'), /after one byte/);
-      assert.equal(fs.statSync(join(directory, 'journal')).size, 11);
-      fail = false;
-      if (next === 'read') assert.deepEqual(JSON.parse(log.read()), ['committed']);
-      if (next === 'flush') { log.flush(); assert.deepEqual(JSON.parse(log.read()), ['committed']); }
-      log.append('following'); log.flush();
-      assert.deepEqual(JSON.parse(log.read()), ['committed', 'following']);
-      log.close();
-      using reopened = new FileCommitLog(join(directory, 'journal'));
-      assert.deepEqual(JSON.parse(reopened.read()), ['committed', 'following']);
-    } finally {
-      mocked.mock.restore(); syncBuiltinESMExports();
-      fs.rmSync(directory, { recursive: true, force: true });
-    }
-  });
-}
+  }
 
 for (const phase of ['read', 'truncate', 'sync']) {
   test(`failed ${phase} during tail repair retains recovery for retry`, (context) => {
     const directory = fs.mkdtempSync(join(tmpdir(), 'journal-repair-retry-'));
     const path = join(directory, 'journal');
-    const originals = { write: fs.writeSync, read: fs.readSync, truncate: fs.ftruncateSync, sync: fs.fsyncSync };
+    const originals = {
+      write: fs.writeSync,
+      read: fs.readSync,
+      truncate: fs.ftruncateSync,
+      sync: fs.fsyncSync,
+    };
     let writes = 0;
     let failingWrite = false;
     let failingRepair = false;
@@ -69,7 +81,8 @@ for (const phase of ['read', 'truncate', 'sync']) {
     syncBuiltinESMExports();
     try {
       using log = new FileCommitLog(path);
-      log.append('committed'); log.flush();
+      log.append('committed');
+      log.flush();
       failingWrite = true;
       assert.throws(() => log.append('x'.repeat(20000)), /partial write/);
       failingWrite = false;
@@ -78,12 +91,14 @@ for (const phase of ['read', 'truncate', 'sync']) {
       assert.throws(() => log.append('blocked'), new RegExp(`repair ${phase}`));
       assert.throws(() => log.flush(), new RegExp(`repair ${phase}`));
       failingRepair = false;
-      log.append('following'); log.flush();
+      log.append('following');
+      log.flush();
       assert.deepEqual(JSON.parse(log.read()), ['committed', 'following']);
       assert.equal(fs.readFileSync(path, 'utf8'), 'committed\nfollowing\n');
     } finally {
       for (const mocked of mocks) mocked.mock.restore();
-      syncBuiltinESMExports(); fs.rmSync(directory, { recursive: true, force: true });
+      syncBuiltinESMExports();
+      fs.rmSync(directory, { recursive: true, force: true });
     }
   });
 }
@@ -110,14 +125,19 @@ for (const phase of ['append', 'flush']) {
       using log = new FileCommitLog(join(directory, 'journal'));
       fail = true;
       if (phase === 'append') assert.throws(() => log.append('committed'), /complete write/);
-      else { log.append('committed'); assert.throws(() => log.flush(), /complete flush/); }
+      else {
+        log.append('committed');
+        assert.throws(() => log.flush(), /complete flush/);
+      }
       fail = false;
       assert.deepEqual(JSON.parse(log.read()), ['committed']);
-      log.append('following'); log.flush();
+      log.append('following');
+      log.flush();
       assert.deepEqual(JSON.parse(log.read()), ['committed', 'following']);
     } finally {
       for (const mocked of mocks) mocked.mock.restore();
-      syncBuiltinESMExports(); fs.rmSync(directory, { recursive: true, force: true });
+      syncBuiltinESMExports();
+      fs.rmSync(directory, { recursive: true, force: true });
     }
   });
 }

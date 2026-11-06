@@ -4,7 +4,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { DeltaCommitLog, MemoryCommitLog, ReplicatedCommitLog, WasmEngine } from '../../js/client/src/index.js';
+import {
+  DeltaCommitLog,
+  MemoryCommitLog,
+  ReplicatedCommitLog,
+  WasmEngine,
+} from '../../js/client/src/index.js';
 
 const directory = resolve(process.env.CLINK_WASM ?? 'js/pkg');
 const binding = await import(pathToFileURL(join(directory, 'clink_wasm.js')).href);
@@ -21,14 +26,18 @@ for (const stateStructure of ['flat', 'shared', 'sorted-runs']) {
           for (let id = 1n; id <= 40n; id++) assert.equal((await tx.create(0, 0)).index, id);
           for (let id = 33n; id <= 40n; id++) await tx.delete(id);
         }
-        await tx.setName(16, `雪;|😀 ${revision}`); await tx.commit();
+        await tx.setName(16, `雪;|😀 ${revision}`);
+        await tx.commit();
       }
       const exported = original.exportCheckpoint();
       for (const compressOutside of [false, true]) {
-        const primary = new MemoryCommitLog(); const follower = new MemoryCommitLog();
+        const primary = new MemoryCommitLog();
+        const follower = new MemoryCommitLog();
         const replica = new ReplicatedCommitLog(
           compressOutside ? primary : new DeltaCommitLog(primary, { checkpointInterval: 1 }),
-          [compressOutside ? follower : new DeltaCommitLog(follower)], { acknowledgements: 2 });
+          [compressOutside ? follower : new DeltaCommitLog(follower)],
+          { acknowledgements: 2 },
+        );
         const log = compressOutside ? new DeltaCommitLog(replica) : replica;
         for (const record of exported) log.append(record);
         log.flush();
@@ -42,8 +51,10 @@ for (const stateStructure of ['flat', 'shared', 'sorted-runs']) {
         const pinned = copy.snapshot();
         await using tx = copy.begin();
         assert.equal((await tx.create(1, 0)).index, 41n);
-        await tx.setName(16, 'after checkpoint'); await tx.commit();
-        assert.equal(pinned.revision, 6n); assert.equal(pinned.rows.length, 32);
+        await tx.setName(16, 'after checkpoint');
+        await tx.commit();
+        assert.equal(pinned.revision, 6n);
+        assert.equal(pinned.rows.length, 32);
         assert.equal(pinned.rows.find((row) => row.index === 16n).name, '雪;|😀 6');
         assert.equal(replica.synchronize(), 2);
         const logical = copy.journal();
@@ -54,12 +65,19 @@ for (const stateStructure of ['flat', 'shared', 'sorted-runs']) {
           assert.deepEqual(reopened.journal(), logical);
         }
         if (compressOutside) assert.equal(primary.read(), follower.read());
-        else if (history !== null || revisionEncoding === 'snapshot') assert.notEqual(primary.read(), follower.read());
+        else if (history !== null || revisionEncoding === 'snapshot')
+          assert.notEqual(primary.read(), follower.read());
         const last = JSON.parse(follower.read()).at(-1);
         assert.match(last, revisionEncoding === 'snapshot' ? /^delta1\|/ : /^engine2\|/);
-        results.push({ stateStructure, revisionEncoding, history, compressOutside,
-          records: logical.length, primaryBytes: new TextEncoder().encode(primary.read()).length,
-          followerBytes: new TextEncoder().encode(follower.read()).length });
+        results.push({
+          stateStructure,
+          revisionEncoding,
+          history,
+          compressOutside,
+          records: logical.length,
+          primaryBytes: new TextEncoder().encode(primary.read()).length,
+          followerBytes: new TextEncoder().encode(follower.read()).length,
+        });
       }
     }
   }

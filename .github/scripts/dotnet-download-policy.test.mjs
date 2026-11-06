@@ -12,7 +12,11 @@ for (const name of readdirSync(directory).filter((name) => /\.ya?ml$/.test(name)
     const versions = [...text.matchAll(/^\s*dotnet-version:\s*['"]?([\w.]+)/gm)];
     assert.ok(versions.length > 0, 'setup-dotnet must select an explicit SDK');
     for (const [, version] of versions) {
-      assert.match(version, /^\d+\.\d+\.\d+$/, 'channel installs select the inaccessible aka.ms origin');
+      assert.match(
+        version,
+        /^\d+\.\d+\.\d+$/,
+        'channel installs select the inaccessible aka.ms origin',
+      );
     }
   });
 }

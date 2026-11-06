@@ -10,23 +10,61 @@ test('checkpoint interval is independent, positive and checked before allocating
 
 test('checkpoint publication detects changed work before compaction and preserves cleanup', async () => {
   for (const mode of ['default', 'not-due', 'due', 'read-only', 'failure']) {
-    const events = []; let updates;
-    const store = { read: async () => [{ generation: '4', entries: ['old'] }],
-      compareExchange: async (keys, expected, changed) => { events.push('CAS'); assert.deepEqual(keys, ['a']); assert.equal(expected[0].generation, '4'); updates = changed; return true; } };
+    const events = [];
+    let updates;
+    const store = {
+      read: async () => [{ generation: '4', entries: ['old'] }],
+      compareExchange: async (keys, expected, changed) => {
+        events.push('CAS');
+        assert.deepEqual(keys, ['a']);
+        assert.equal(expected[0].generation, '4');
+        updates = changed;
+        return true;
+      },
+    };
     class Native {
-      constructor(options) { assert.deepEqual(JSON.parse(options), { history: 2, requireDurableFlush: false }); }
-      begin() { return { request() {}, commit() {}, rollback() {}, free() { events.push('session'); } }; }
-      journal() { return JSON.stringify(mode === 'read-only' ? ['old'] : ['old', 'new']); }
-      snapshot() { events.push('snapshot'); return '{"revision":"2","rows":[]}'; }
-      exportCheckpoint() { events.push('export'); if (mode === 'failure') throw Error('cannot export'); return '["checkpoint"]'; }
-      free() { events.push('engine'); }
+      constructor(options) {
+        assert.deepEqual(JSON.parse(options), { history: 2, requireDurableFlush: false });
+      }
+      begin() {
+        return {
+          request() {},
+          commit() {},
+          rollback() {},
+          free() {
+            events.push('session');
+          },
+        };
+      }
+      journal() {
+        return JSON.stringify(mode === 'read-only' ? ['old'] : ['old', 'new']);
+      }
+      snapshot() {
+        events.push('snapshot');
+        return '{"revision":"2","rows":[]}';
+      }
+      exportCheckpoint() {
+        events.push('export');
+        if (mode === 'failure') throw Error('cannot export');
+        return '["checkpoint"]';
+      }
+      free() {
+        events.push('engine');
+      }
     }
-    const interval = mode === 'default' ? {} : { journalCheckpointInterval: mode === 'not-due' ? 3 : 2 };
-    const tx = await new ClusterEngine({ StagedEngine: Native }, store, { history: 2, ...interval }).begin(['a']);
+    const interval =
+      mode === 'default' ? {} : { journalCheckpointInterval: mode === 'not-due' ? 3 : 2 };
+    const tx = await new ClusterEngine({ StagedEngine: Native }, store, {
+      history: 2,
+      ...interval,
+    }).begin(['a']);
     if (mode === 'failure') await assert.rejects(tx.commit(), /cannot export/);
     else {
       await tx.commit();
-      assert.deepEqual(updates, mode === 'read-only' ? [null] : [mode === 'due' ? ['checkpoint'] : ['old', 'new']]);
+      assert.deepEqual(
+        updates,
+        mode === 'read-only' ? [null] : [mode === 'due' ? ['checkpoint'] : ['old', 'new']],
+      );
     }
     assert.equal(events.includes('export'), mode === 'due' || mode === 'failure');
     assert.equal(events.includes('snapshot'), !['default', 'read-only'].includes(mode));

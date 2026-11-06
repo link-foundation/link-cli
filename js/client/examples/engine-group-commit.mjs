@@ -10,12 +10,23 @@ if (!dir || !process.argv[2]) throw new Error('provide CLINK_WASM and an exclusi
 const binding = await import(pathToFileURL(join(dir, 'clink_wasm.js')).href);
 binding.initSync({ module: readFileSync(join(dir, 'clink_wasm_bg.wasm')) });
 using file = new FileCommitLog(process.argv[2]);
-using engine = new WasmEngine(binding, { isolation: 'snapshot', history: 'all', requireDurableFlush: true },
-  process.argv.includes('--delta') ? new DeltaCommitLog(file) : file);
-await using first = engine.begin(); await using second = engine.begin();
-const a = await first.create(0n, 0n); await first.setName(a.index, 'first independent session');
-const b = await second.create(a.index, 0n); await second.setName(b.index, 'second independent session');
+using engine = new WasmEngine(
+  binding,
+  { isolation: 'snapshot', history: 'all', requireDurableFlush: true },
+  process.argv.includes('--delta') ? new DeltaCommitLog(file) : file,
+);
+await using first = engine.begin();
+await using second = engine.begin();
+const a = await first.create(0n, 0n);
+await first.setName(a.index, 'first independent session');
+const b = await second.create(a.index, 0n);
+await second.setName(b.index, 'second independent session');
 for (const outcome of await engine.commitGroup([first, second])) {
-  if (outcome.status === 'indeterminate') throw new Error(`${outcome.error}; inspect reopened state before retrying`);
-  console.log(outcome.status === 'committed' ? `acknowledged revision ${outcome.revision}` : `known abort: ${outcome.error}`);
+  if (outcome.status === 'indeterminate')
+    throw new Error(`${outcome.error}; inspect reopened state before retrying`);
+  console.log(
+    outcome.status === 'committed'
+      ? `acknowledged revision ${outcome.revision}`
+      : `known abort: ${outcome.error}`,
+  );
 }

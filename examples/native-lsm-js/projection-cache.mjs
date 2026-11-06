@@ -13,14 +13,15 @@ import { CausalProjection } from '../../js/client/src/engine-causal-projection.j
 const directory = mkdtempSync(join(tmpdir(), 'causal-projection-cache-'));
 const alice = '00000000000000000000000000000001';
 const bob = '00000000000000000000000000000002';
-const token = value => BigInt(value).toString(16).padStart(32, '0');
+const token = (value) => BigInt(value).toString(16).padStart(32, '0');
 let store;
 try {
   store = new FileLsmJournalStore(directory);
   const batch = new CausalBatch(store, 'owner', 'receipts', alice, { requireDurableFlush: true });
   const owner = new CausalReplica(store, 'owner', alice, { requireDurableFlush: true });
-  await batch.write(token(100), '0', [{ address: '1', observed: [],
-    payload: { source: '0', target: '0', name: 'cached row' } }]);
+  await batch.write(token(100), '0', [
+    { address: '1', observed: [], payload: { source: '0', target: '0', name: 'cached row' } },
+  ]);
   // A verified remote version arrives independently, concurrent with Alice's row.
   await owner.receive([CausalVersion.advance('1', bob, '0', [], null)]);
   const snapshot = await batch.snapshot();
@@ -29,14 +30,22 @@ try {
   assert.equal(cache.versions().length, 2); // Losing live value is still retained.
   assert.equal(cache.selected()[0].payload, null);
   assert.deepEqual(cache.rows(), []); // Choose the deletion before visibility.
-  await batch.write(token(200), snapshot.generation, [{ address: '1',
-    observed: cache.versions(), payload: { source: '0', target: '0', name: 'resolved' } }]);
+  await batch.write(token(200), snapshot.generation, [
+    {
+      address: '1',
+      observed: cache.versions(),
+      payload: { source: '0', target: '0', name: 'resolved' },
+    },
+  ]);
   const refreshed = new CausalProjection((await batch.snapshot()).versions, 'reject');
   assert.equal(refreshed.rows()[0].name, 'resolved');
   assert.deepEqual(cache.rows(), []); // An owned old view remains a snapshot.
   store.flush();
   console.log('PASS owned causal cache: concurrent deletion, explicit resolution, refreshed rows');
 } finally {
-  try { store?.close(); }
-  finally { rmSync(directory, { recursive: true, force: true }); }
+  try {
+    store?.close();
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 }

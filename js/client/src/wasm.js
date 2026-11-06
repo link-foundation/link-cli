@@ -6,7 +6,12 @@
 import { wasmCapabilities } from './capabilities.js';
 import { LinksClient } from './client.js';
 import { scopeError } from './deadline.js';
-import { ConnectionClosedError, LimitExceededError, LinksError, UnsupportedError } from './errors.js';
+import {
+  ConnectionClosedError,
+  LimitExceededError,
+  LinksError,
+  UnsupportedError,
+} from './errors.js';
 import { DEFAULT_MAX_MESSAGE_BYTES } from './framing.js';
 
 const encoder = new TextEncoder();
@@ -55,7 +60,12 @@ export class WasmTransport {
   }
 
   send(text, scope = {}) {
-    if (this.#reserved) return Promise.reject(new ConnectionClosedError('the WebAssembly session belongs to a commit group', { outcome: 'not-sent' }));
+    if (this.#reserved)
+      return Promise.reject(
+        new ConnectionClosedError('the WebAssembly session belongs to a commit group', {
+          outcome: 'not-sent',
+        }),
+      );
     const run = () => {
       if (this.#closed)
         throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
@@ -94,22 +104,40 @@ export class WasmTransport {
 
   /** Serializes transaction controls after all previously queued requests. */
   control(method) {
-    if (this.#reserved) return Promise.reject(new ConnectionClosedError('the WebAssembly session belongs to a commit group', { outcome: 'not-sent' }));
+    if (this.#reserved)
+      return Promise.reject(
+        new ConnectionClosedError('the WebAssembly session belongs to a commit group', {
+          outcome: 'not-sent',
+        }),
+      );
     return this.#enqueue(() => {
-      if (this.#closed) throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
+      if (this.#closed)
+        throw new ConnectionClosedError('the WebAssembly store is closed', { outcome: 'not-sent' });
       if (!['commit', 'rollback'].includes(method) || typeof this.#clink[method] !== 'function') {
         throw new UnsupportedError('this WebAssembly store has no transaction control');
       }
-      try { return this.#clink[method](); }
-      catch (cause) { throw new LinksError(String(cause), {
-        outcome: method === 'commit' && String(cause).includes('indeterminate commit') ? 'unknown' : 'failed', cause,
-      }); }
+      try {
+        return this.#clink[method]();
+      } catch (cause) {
+        throw new LinksError(String(cause), {
+          outcome:
+            method === 'commit' && String(cause).includes('indeterminate commit')
+              ? 'unknown'
+              : 'failed',
+          cause,
+        });
+      }
     });
   }
 
-  [canTransferHandle]() { return this.#owned && !this.#closed && !this.#reserved && !this.#closing; }
+  [canTransferHandle]() {
+    return this.#owned && !this.#closed && !this.#reserved && !this.#closing;
+  }
   [transferHandle]() {
-    if (!this[canTransferHandle]()) throw new ConnectionClosedError('the WebAssembly session is closed or already transferred', { outcome: 'not-sent' });
+    if (!this[canTransferHandle]())
+      throw new ConnectionClosedError('the WebAssembly session is closed or already transferred', {
+        outcome: 'not-sent',
+      });
     // Reserve synchronously: previously queued work drains, while subsequent
     // requests/controls cannot race the transfer. Close waits for the same tail.
     this.#reserved = true;
@@ -124,7 +152,10 @@ export class WasmTransport {
   async close() {
     this.#closing = true;
     await this.#tail;
-    if (this.#reserved) { await this.#tail; return; }
+    if (this.#reserved) {
+      await this.#tail;
+      return;
+    }
     if (this.#closed) return;
     this.#closed = true;
     if (this.#owned) this.#clink.free?.();

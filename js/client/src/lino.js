@@ -221,15 +221,18 @@ class Reader {
     for (;;) {
       const c = this.text[this.at];
       if (isSpace(c) || (this.depth > 0 && isLineBreak(c))) this.at += 1;
-      else if (c === '#' && (this.at === 0 || isSpace(this.text[this.at - 1]) || isLineBreak(this.text[this.at - 1]))) {
+      else if (
+        c === '#' &&
+        (this.at === 0 || isSpace(this.text[this.at - 1]) || isLineBreak(this.text[this.at - 1]))
+      ) {
         while (this.at < this.text.length && !isLineBreak(this.text[this.at])) this.at += 1;
-      }
-      else return;
+      } else return;
     }
   }
 
   admitNode() {
-    if (++this.nodes > this.maxNodes) throw new LimitExceededError('LiNo node limit exceeded', { outcome: 'not-sent' });
+    if (++this.nodes > this.maxNodes)
+      throw new LimitExceededError('LiNo node limit exceeded', { outcome: 'not-sent' });
   }
 
   reference() {
@@ -257,7 +260,8 @@ class Reader {
   /** `(id: values)` or `(values)`; the reader stands on `(`. */
   parenthesized() {
     this.admitNode();
-    if (this.depth >= this.maxDepth) throw new LimitExceededError('LiNo depth limit exceeded', { outcome: 'not-sent' });
+    if (this.depth >= this.maxDepth)
+      throw new LimitExceededError('LiNo depth limit exceeded', { outcome: 'not-sent' });
     this.at += 1;
     this.depth += 1;
     this.skipSpace();
@@ -318,9 +322,13 @@ class Reader {
 export function parseDocument(text, limits = {}) {
   if (typeof text !== 'string') throw new TypeError('LiNo text must be a string');
   for (const limit of [limits.maxBytes, limits.maxDepth, limits.maxNodes]) {
-    if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 0)) throw new TypeError('LiNo limits must be non-negative safe integers');
+    if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 0))
+      throw new TypeError('LiNo limits must be non-negative safe integers');
   }
-  if (limits.maxBytes !== undefined && (text.length > limits.maxBytes || encoder.encode(text).length > limits.maxBytes)) {
+  if (
+    limits.maxBytes !== undefined &&
+    (text.length > limits.maxBytes || encoder.encode(text).length > limits.maxBytes)
+  ) {
     throw new LimitExceededError('LiNo byte limit exceeded', { outcome: 'not-sent' });
   }
   const reader = new Reader(text, limits);

@@ -102,9 +102,12 @@ test('the universal entry point imports nothing from node:', async () => {
 });
 
 test('a request whose scope expires while queued never reaches native code', async () => {
-  const clink = fakeClink(); const transport = new WasmTransport(clink);
+  const clink = fakeClink();
+  const transport = new WasmTransport(clink);
   const controller = new AbortController();
-  const pending = transport.send('(count: ())', { signal: controller.signal }); controller.abort();
+  const pending = transport.send('(count: ())', { signal: controller.signal });
+  controller.abort();
   await assert.rejects(pending, { outcome: 'not-sent', name: 'AbortError' });
-  assert.equal(clink.requests.length, 0); await transport.close();
+  assert.equal(clink.requests.length, 0);
+  await transport.close();
 });

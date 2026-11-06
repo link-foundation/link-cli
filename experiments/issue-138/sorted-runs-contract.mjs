@@ -9,7 +9,11 @@ assert.ok(process.env.CLINK_WASM, 'provide the generated actual WASM web package
 const binding = await import(pathToFileURL(join(process.env.CLINK_WASM, 'clink_wasm.js')).href);
 binding.initSync({ module: readFileSync(join(process.env.CLINK_WASM, 'clink_wasm_bg.wasm')) });
 for (const revisionEncoding of ['snapshot', 'changes']) {
-  using engine = new WasmEngine(binding, { stateStructure: 'sorted-runs', revisionEncoding, history: 'all' });
+  using engine = new WasmEngine(binding, {
+    stateStructure: 'sorted-runs',
+    revisionEncoding,
+    history: 'all',
+  });
   await using seed = engine.begin();
   const first = await seed.create(0, 0);
   await seed.setName(first.index, 'original 雪\0');
@@ -32,4 +36,6 @@ for (const revisionEncoding of ['snapshot', 'changes']) {
     assert.deepEqual(reopened.snapshot(), engine.snapshot());
   }
 }
-console.log('Actual-WASM sorted-run selection, edits, pins, rollback and all-structure reopening pass.');
+console.log(
+  'Actual-WASM sorted-run selection, edits, pins, rollback and all-structure reopening pass.',
+);

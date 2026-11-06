@@ -15,5 +15,7 @@ for (const [literal, bare] of [
   const unquoted = parseDocument(bareQuery);
   assert.deepEqual(quoted, unquoted);
   assert.equal(formatDocument(quoted), formatDocument(unquoted));
-  console.log(JSON.stringify({ original: quotedQuery, canonical: formatDocument(quoted), kindsLost: true }));
+  console.log(
+    JSON.stringify({ original: quotedQuery, canonical: formatDocument(quoted), kindsLost: true }),
+  );
 }
