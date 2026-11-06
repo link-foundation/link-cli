@@ -285,7 +285,7 @@ export class TcpTransport {
     const early = scopeError(scope, 'not-sent');
     if (early) return Promise.reject(early);
     return new Promise((resolve, reject) => {
-      const waiter = { resolve, reject, stop: () => {} };
+      const waiter = { resolve, reject };
       waiter.stop = watchScope(scope, (errorOf) => {
         this.#pushWaiters.splice(this.#pushWaiters.indexOf(waiter), 1);
         reject(errorOf('not-sent'));
