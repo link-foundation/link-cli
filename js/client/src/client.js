@@ -398,7 +398,7 @@ export class LinksClient {
       setName: ({ index, name }) => [requests.setName(index, name, max), replies.link],
       getByName: ({ name }) => [requests.getByName(name), replies.link],
       removeName: ({ index }) => [requests.removeName(index, max), replies.empty],
-      query: ({ text }) => [parseDocument(text), replies.namedChanges],
+      query: ({ text }) => [this.#queryDocument(text), replies.namedChanges],
       countTriplets: ({ restriction = [] }) => [
         requests.countTriplets(restriction, max),
         replies.count,
