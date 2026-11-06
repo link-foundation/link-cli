@@ -33,6 +33,8 @@
  *
  * Usage:
  *   node .github/scripts/check-latest-dependencies.mjs [--skip-lockfiles]
+ * CHECK_DEPENDENCIES_MODE=report reports new releases without failing main.
+ * Lookup failures still fail: an unavailable registry is not a clean audit.
  *
  * Registry lookups that fail on the network, or answer 429 or 5xx, are
  * retried with backoff. Set CHECK_DEPENDENCIES_DEBUG=1 to log each retry.
@@ -83,7 +85,11 @@ export function isOutdated(declared, latest) {
 export function latestStable(versions) {
   return versions
     .filter((version) => /^v?\d+(\.\d+)*$/.test(version))
-    .reduce((best, version) => (best === undefined || compareVersions(version, best) > 0 ? version : best), undefined);
+    .reduce(
+      (best, version) =>
+        best === undefined || compareVersions(version, best) > 0 ? version : best,
+      undefined,
+    );
 }
 
 /** The URL of the GitHub issue a manifest comment links, if any. */
@@ -137,7 +143,8 @@ export function parseCargoManifest(text) {
         dependencies.push(withBlocker({ name: plain[1], version: plain[2] }, comment));
       } else if (detailed) {
         const version = /\bversion\s*=\s*"([^"]+)"/.exec(detailed[2]);
-        if (version) dependencies.push(withBlocker({ name: detailed[1], version: version[1] }, comment));
+        if (version)
+          dependencies.push(withBlocker({ name: detailed[1], version: version[1] }, comment));
       }
     } else if (table) {
       const version = /^version\s*=\s*"([^"]+)"$/.exec(line);
@@ -149,21 +156,28 @@ export function parseCargoManifest(text) {
 
 /** `<PackageReference Include="…" Version="…" />` entries of a project file. */
 export function parseCsproj(text) {
-  return [...text.matchAll(/<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"/g)].map((match) => {
-    const end = match.index + match[0].length;
-    const lineEnd = text.indexOf('\n', end);
-    // The rest of the line holds the `<!-- … -->` comment, if any.
-    return withBlocker({ name: match[1], version: match[2] }, text.slice(end, lineEnd === -1 ? undefined : lineEnd));
-  });
+  return [...text.matchAll(/<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"/g)].map(
+    (match) => {
+      const end = match.index + match[0].length;
+      const lineEnd = text.indexOf('\n', end);
+      // The rest of the line holds the `<!-- … -->` comment, if any.
+      return withBlocker(
+        { name: match[1], version: match[2] },
+        text.slice(end, lineEnd === -1 ? undefined : lineEnd),
+      );
+    },
+  );
 }
 
 /** Dependencies and devDependencies of a package.json, without range operators. */
 export function parsePackageJson(text) {
   const manifest = JSON.parse(text);
-  return Object.entries({ ...manifest.dependencies, ...manifest.devDependencies }).map(([name, range]) => ({
-    name,
-    version: range.replace(/^[\^~=]/, ''),
-  }));
+  return Object.entries({ ...manifest.dependencies, ...manifest.devDependencies }).map(
+    ([name, range]) => ({
+      name,
+      version: range.replace(/^[\^~=]/, ''),
+    }),
+  );
 }
 
 /** Locked versions of a package-lock.json's direct dependencies. */
@@ -219,7 +233,8 @@ export function parseWorkflowTools(text) {
   for (const [, list, comment] of text.matchAll(/^\s*tool:\s*([^#\n]+?)\s*(?:#(.*))?$/gm)) {
     for (const entry of list.split(',')) {
       const pinned = /^\s*([\w-]+)@([\d.]+)\s*$/.exec(entry);
-      if (pinned) tools.push(withBlocker({ kind: 'crate', name: pinned[1], version: pinned[2] }, comment));
+      if (pinned)
+        tools.push(withBlocker({ kind: 'crate', name: pinned[1], version: pinned[2] }, comment));
     }
   }
   for (const [, name, version, comment] of text.matchAll(
@@ -227,7 +242,9 @@ export function parseWorkflowTools(text) {
   )) {
     tools.push(withBlocker({ kind: 'crate', name, version }, comment));
   }
-  for (const [, name, version, comment] of text.matchAll(/\bpipx run\s+([\w.-]+)==([\d.]+)\b[^#\n]*(?:#(.*))?$/gm)) {
+  for (const [, name, version, comment] of text.matchAll(
+    /\bpipx run\s+([\w.-]+)==([\d.]+)\b[^#\n]*(?:#(.*))?$/gm,
+  )) {
     tools.push(withBlocker({ kind: 'pypi', name, version }, comment));
   }
   return tools;
@@ -235,11 +252,13 @@ export function parseWorkflowTools(text) {
 
 /** `Updating name vA -> vB` lines of `cargo update --dry-run`. */
 export function parseCargoUpdates(output) {
-  return [...output.matchAll(/^\s*Updating (\S+) v(\S+) -> v(\S+)/gm)].map(([, name, from, to]) => ({
-    name,
-    version: from,
-    latest: to,
-  }));
+  return [...output.matchAll(/^\s*Updating (\S+) v(\S+) -> v(\S+)/gm)].map(
+    ([, name, from, to]) => ({
+      name,
+      version: from,
+      latest: to,
+    }),
+  );
 }
 
 /**
@@ -284,14 +303,21 @@ export async function fetchJson(url, headers = {}, { fetchImpl = fetch, ...retry
   return withRetries(async () => {
     let response;
     try {
-      response = await fetchImpl(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers } });
+      response = await fetchImpl(url, {
+        headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers },
+        signal: AbortSignal.timeout(30_000),
+      });
     } catch (error) {
-      const cause = error.cause ? `: ${error.cause.code ?? error.cause.message ?? error.cause}` : '';
-      throw new Error(`${url}: ${error.message}${cause}`);
+      const cause = error.cause
+        ? `: ${error.cause.code ?? error.cause.message ?? error.cause}`
+        : '';
+      throw new Error(`${url}: ${error.message}${cause}`, { cause: error });
     }
     if (response.ok) return response.json();
     const failure = `${url} answered ${response.status}`;
-    throw response.status === 429 || response.status >= 500 ? new Error(failure) : new PermanentError(failure);
+    throw response.status === 429 || response.status >= 500
+      ? new Error(failure)
+      : new PermanentError(failure);
   }, retry);
 }
 
@@ -306,20 +332,30 @@ function remoteTags(name) {
 }
 
 const registries = {
-  crate: async (name) => (await fetchJson(`https://crates.io/api/v1/crates/${name}`)).crate.max_stable_version,
+  crate: async (name) =>
+    (await fetchJson(`https://crates.io/api/v1/crates/${name}`)).crate.max_stable_version,
   nuget: async (name) =>
-    latestStable((await fetchJson(`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/index.json`)).versions),
-  npm: async (name) => (await fetchJson(`https://registry.npmjs.org/${name.replaceAll('/', '%2F')}/latest`)).version,
+    latestStable(
+      (await fetchJson(`https://api.nuget.org/v3-flatcontainer/${name.toLowerCase()}/index.json`))
+        .versions,
+    ),
+  npm: async (name) =>
+    (await fetchJson(`https://registry.npmjs.org/${name.replaceAll('/', '%2F')}/latest`)).version,
   action: async (name) => `v${versionParts(latestStable(await remoteTags(name)))[0]}`,
   release: async (name) => latestStable(await remoteTags(name)),
   pypi: async (name) => (await fetchJson(`https://pypi.org/pypi/${name}/json`)).info.version,
-  node: async () => (await fetchJson('https://nodejs.org/dist/index.json')).find((release) => release.lts).version,
+  node: async () =>
+    (await fetchJson('https://nodejs.org/dist/index.json')).find((release) => release.lts).version,
   dotnet: async () =>
     latestStable(
-      (await fetchJson('https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json'))[
-        'releases-index'
-      ]
-        .filter((release) => release['release-type'] === 'lts' && release['support-phase'] === 'active')
+      (
+        await fetchJson(
+          'https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json',
+        )
+      )['releases-index']
+        .filter(
+          (release) => release['release-type'] === 'lts' && release['support-phase'] === 'active',
+        )
         .map((release) => release['channel-version']),
     ),
 };
@@ -329,7 +365,9 @@ export async function issueState(url) {
   const [, owner, repository, number] = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/.exec(url);
   const token = process.env.GITHUB_TOKEN;
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  return (await fetchJson(`https://api.github.com/repos/${owner}/${repository}/issues/${number}`, headers)).state;
+  return (
+    await fetchJson(`https://api.github.com/repos/${owner}/${repository}/issues/${number}`, headers)
+  ).state;
 }
 
 function read(path) {
@@ -338,7 +376,33 @@ function read(path) {
 
 /** Files git tracks, relative to the repository root. */
 function trackedFiles() {
-  return execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0').filter(Boolean);
+  return dependencyFiles(
+    execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' })
+      .split('\0')
+      .filter(Boolean),
+  );
+}
+
+/** Evidence snapshots are immutable inputs, not dependencies of this project. */
+export function dependencyFiles(files) {
+  return files.filter((file) => !file.startsWith('dev/log/'));
+}
+
+/** CI Python tools use exact pins; unsupported entries must not disappear. */
+export function parseRequirements(text) {
+  return text.split(/\r?\n/).flatMap((line) => {
+    const value = line.split('#')[0].trim();
+    if (!value) return [];
+    const match = /^([\w.-]+)==(\d+(?:\.\d+)+)$/.exec(value);
+    if (!match) throw Error(`Unsupported pinned Python requirement: ${value}`);
+    return [
+      {
+        name: match[1],
+        version: match[2],
+        ...(blockerOf(line) ? { blocker: blockerOf(line) } : {}),
+      },
+    ];
+  });
 }
 
 /** Everything to check, as `{ registry, name, version, source[, blocker] }`. */
@@ -346,24 +410,38 @@ function collectDependencies(files) {
   const entries = [];
   const named = (name) => files.filter((file) => file === name || file.endsWith(`/${name}`));
   for (const manifest of named('Cargo.toml')) {
-    for (const dependency of parseCargoManifest(read(manifest))) entries.push({ registry: 'crate', source: manifest, ...dependency });
+    for (const dependency of parseCargoManifest(read(manifest)))
+      entries.push({ registry: 'crate', source: manifest, ...dependency });
   }
   for (const project of files.filter((file) => file.endsWith('.csproj'))) {
-    for (const dependency of parseCsproj(read(project))) entries.push({ registry: 'nuget', source: project, ...dependency });
+    for (const dependency of parseCsproj(read(project)))
+      entries.push({ registry: 'nuget', source: project, ...dependency });
+  }
+  for (const manifest of files.filter((file) => /(^|\/)requirements[^/]*\.txt$/.test(file))) {
+    for (const dependency of parseRequirements(read(manifest)))
+      entries.push({ registry: 'pypi', source: manifest, ...dependency });
   }
   for (const manifest of named('package.json')) {
     const packageJson = parsePackageJson(read(manifest));
-    for (const dependency of packageJson) entries.push({ registry: 'npm', source: manifest, ...dependency });
+    for (const dependency of packageJson)
+      entries.push({ registry: 'npm', source: manifest, ...dependency });
     const lockFile = join(dirname(manifest), 'package-lock.json');
     if (!files.includes(lockFile)) continue;
-    const locked = parsePackageLock(read(lockFile), packageJson.map(({ name }) => name));
-    for (const dependency of locked) entries.push({ registry: 'npm', source: lockFile, ...dependency });
+    const locked = parsePackageLock(
+      read(lockFile),
+      packageJson.map(({ name }) => name),
+    );
+    for (const dependency of locked)
+      entries.push({ registry: 'npm', source: lockFile, ...dependency });
   }
   for (const workflow of files.filter((file) => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(file))) {
     const text = read(workflow);
-    for (const action of parseWorkflowActions(text)) entries.push({ registry: 'action', source: workflow, ...action });
-    for (const action of parsePinnedWorkflowActions(text)) entries.push({ registry: 'release', source: workflow, ...action });
-    for (const { kind, ...tool } of parseWorkflowTools(text)) entries.push({ registry: kind, source: workflow, ...tool });
+    for (const action of parseWorkflowActions(text))
+      entries.push({ registry: 'action', source: workflow, ...action });
+    for (const action of parsePinnedWorkflowActions(text))
+      entries.push({ registry: 'release', source: workflow, ...action });
+    for (const { kind, ...tool } of parseWorkflowTools(text))
+      entries.push({ registry: kind, source: workflow, ...tool });
   }
   const seen = new Set();
   return entries.filter(({ registry, source, name, version }) => {
@@ -372,14 +450,30 @@ function collectDependencies(files) {
   });
 }
 
-function checkLockfiles(files) {
+export function checkLockfiles(files, { run = spawnSync, root = repoRoot } = {}) {
   const outdated = [];
+  const failures = [];
   for (const directory of files.filter((file) => /(^|\/)Cargo\.lock$/.test(file)).map(dirname)) {
     // cargo reports the updates on stderr.
-    const { stderr } = spawnSync('cargo', ['update', '--dry-run'], { cwd: join(repoRoot, directory), encoding: 'utf8' });
-    for (const update of parseCargoUpdates(stderr ?? '')) outdated.push({ source: `${directory}/Cargo.lock`, ...update });
+    const { status, error, stdout, stderr } = run('cargo', ['update', '--dry-run'], {
+      cwd: join(root, directory),
+      encoding: 'utf8',
+    });
+    if (error || status !== 0) {
+      failures.push(
+        `${directory}/Cargo.lock: cargo update failed (${error?.message ?? `exit ${status}`}): ${stderr || stdout || 'no diagnostic'}`,
+      );
+      continue;
+    }
+    for (const update of parseCargoUpdates(stderr ?? ''))
+      outdated.push({ source: `${directory}/Cargo.lock`, ...update });
   }
-  return outdated;
+  return { outdated, failures };
+}
+
+export function checkExitCode({ outdated, failures, mode = 'enforce' }) {
+  if (!['enforce', 'report'].includes(mode)) throw Error(`Unknown dependency check mode: ${mode}`);
+  return failures.length || (outdated.length && mode === 'enforce') ? 1 : 0;
 }
 
 /** A Markdown table of dependencies, the `blocker` column only when asked for. */
@@ -399,7 +493,8 @@ function table(entries, withBlockers) {
 
 function report(title, text) {
   console.log(`\n${title}:\n\n${text}`);
-  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## ${title}\n\n${text}\n`);
+  if (process.env.GITHUB_STEP_SUMMARY)
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## ${title}\n\n${text}\n`);
 }
 
 async function main() {
@@ -416,7 +511,9 @@ async function main() {
   await Promise.all(
     entries.map(async (entry) => {
       try {
-        entry.latest = await cached(`${entry.registry}:${entry.name}`, () => registries[entry.registry](entry.name));
+        entry.latest = await cached(`${entry.registry}:${entry.name}`, () =>
+          registries[entry.registry](entry.name),
+        );
         // The issue is looked up only for a dependency that is behind.
         const state =
           entry.blocker && isOutdated(entry.version, entry.latest)
@@ -430,15 +527,37 @@ async function main() {
       }
     }),
   );
-  if (!process.argv.includes('--skip-lockfiles')) outdated.push(...checkLockfiles(files));
+  if (!process.argv.includes('--skip-lockfiles')) {
+    const locked = checkLockfiles(files);
+    outdated.push(...locked.outdated);
+    failures.push(...locked.failures);
+  }
 
-  console.log(`Checked ${entries.length} declared versions${process.argv.includes('--skip-lockfiles') ? '' : ' and the Cargo.lock files'}.`);
-  if (held.length > 0) report(`${held.length} dependencies are held back by open issues`, table(held, true));
+  console.log(
+    `Checked ${entries.length} declared versions${process.argv.includes('--skip-lockfiles') ? '' : ' and the Cargo.lock files'}.`,
+  );
+  if (held.length > 0)
+    report(`${held.length} dependencies are held back by open issues`, table(held, true));
   const closed = outdated.filter(({ blocker }) => blocker);
-  if (closed.length > 0) report(`${closed.length} dependencies were held back by issues that are closed now, so they must be updated`, table(closed, true));
-  if (outdated.length > 0) report(`${outdated.length} dependencies are behind their latest release`, table(outdated, false));
+  if (closed.length > 0)
+    report(
+      `${closed.length} dependencies were held back by issues that are closed now, so they must be updated`,
+      table(closed, true),
+    );
+  if (outdated.length > 0)
+    report(
+      `${outdated.length} dependencies are behind their latest release`,
+      table(outdated, false),
+    );
   for (const failure of failures) console.error(`Could not check ${failure}`);
-  process.exitCode = outdated.length > 0 || failures.length > 0 ? 1 : 0;
+  if (outdated.length && process.env.CHECK_DEPENDENCIES_MODE === 'report') {
+    console.log('::warning::New dependency releases are available; update them in a pull request.');
+  }
+  process.exitCode = checkExitCode({
+    outdated,
+    failures,
+    mode: process.env.CHECK_DEPENDENCIES_MODE || 'enforce',
+  });
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

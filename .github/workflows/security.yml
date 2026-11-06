@@ -28,6 +28,14 @@ env:
 jobs:
   codeql:
     name: CodeQL (${{ matrix.language }})
+    # Cached overlay-base SARIF retains extraction diagnostics from the base
+    # even after the PR repairs the source (confirmed in run 42133108866).
+    # A full database makes the completeness gate describe this checkout.
+    env:
+      CODEQL_OVERLAY_DATABASE_MODE: none
+      # The compare API truncates at 300 files and warns on evidence-heavy PRs.
+      # Run the complete queries directly, alongside the full extraction above.
+      CODEQL_ACTION_DIFF_INFORMED_QUERIES: 'false'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
@@ -55,6 +63,8 @@ jobs:
             build-mode: none
           - language: javascript-typescript
             build-mode: none
+          - language: python
+            build-mode: none
           - language: actions
             build-mode: none
     steps:
@@ -78,9 +88,28 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           config-file: ./.github/codeql/codeql-config.yml
+          # Opt in when an upload/extraction fails without useful diagnostics.
+          debug: ${{ vars.CI_VERBOSE == 'true' }}
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4
+        with:
+          output: codeql-results
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+
+      - name: Require complete analysis without unresolved findings
+        run: node .github/scripts/check-codeql-results.mjs codeql-results
+
+      - name: Preserve SARIF for investigation
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: codeql-${{ matrix.language }}
+          path: codeql-results/**/*.sarif
+          if-no-files-found: error
 
   dependency-review:
     name: Dependency Review
@@ -114,7 +143,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        manifest: [rust, rust/wasm]
+        manifest: [rust, rust/wasm, docs/case-studies/issue-100/evidence/external-range/rust]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -135,11 +164,15 @@ jobs:
         run: cargo audit --file "$MANIFEST/Cargo.lock" --deny warnings
 
   npm-audit:
-    name: Audit npm lock
+    strategy:
+      fail-fast: false
+      matrix:
+        directory: [js, js/client]
+    name: Audit npm lock (${{ matrix.directory }})
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
-      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit
+      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit-${{ matrix.directory }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
@@ -151,16 +184,60 @@ jobs:
           node-version: '26.x'
 
       - name: Audit current lock
-        working-directory: js
+        working-directory: ${{ matrix.directory }}
         run: npm audit --package-lock-only --audit-level=high
+
+  nuget-audit:
+    name: Audit every NuGet dependency graph
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-nuget-audit
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Audit direct and transitive packages and validate the complete result
+        run: node .github/scripts/audit-nuget-dependencies.mjs
+      - name: Preserve dependency graphs and diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-audit
+          path: artifacts/security
+          if-no-files-found: error
+
+  python-audit:
+    name: Audit resolved Python CI tools
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-python-audit
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Audit pinned tools and their resolved dependencies
+        run: pipx run pip-audit==2.10.1 --strict --requirement .github/scripts/requirements-quality.txt
 
   # === COMMITTED SECRETS ===
   # CodeQL and the audit jobs look at code and dependencies; nothing looked at
   # the literal contents of the tree. This repository commits CI evidence under
   # dev/log, which is exactly where a token pasted from a workflow log would end
   # up unnoticed (issue #96). Ported from the pipeline templates' secrets-scan
-  # job. .gitignore doubles as the ignore file, so node_modules and build output
-  # are skipped.
+  # job. Git inventories tracked files, including force-added logs/experiments;
+  # build-output ignores must never hide committed evidence from this scan.
   secrets-scan:
     name: Scan for committed secrets
     runs-on: ubuntu-24.04
@@ -177,5 +254,38 @@ jobs:
         with:
           node-version: '26.x'
 
-      - name: Run secretlint
-        run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
+      - name: Install locked secret scanner
+        run: npm ci --prefix js --ignore-scripts
+      - name: Run secretlint on every tracked file
+        run: node .github/scripts/check-secrets.mjs
+      - name: Verify ignored-log regression
+        run: node experiments/issue-165/reproduce-ignored-secret.mjs
+
+  pipeline-status:
+    name: Pipeline Status (security)
+    needs:
+      - codeql
+      - dependency-review
+      - cargo-audit
+      - npm-audit
+      - nuget-audit
+      - python-audit
+      - secrets-scan
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

@@ -1,0 +1,13 @@
+✔ a failed PR Git comparison fails change detection (93.742476ms)
+✔ a first commit checks all files instead of treating Git failure as no changes (173.524598ms)
+✔ PR change detection requires both comparison SHAs (94.943146ms)
+✔ PR change detection rejects invalid commit identities (93.236773ms)
+✔ moving C# code into examples still requires a changeset (237.702929ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 853.200751

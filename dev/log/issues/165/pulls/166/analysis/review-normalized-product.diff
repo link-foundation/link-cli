@@ -1,0 +1,209 @@
+--- csharp/scripts/check-release-needed.mjs (base formatted)
++++ csharp/scripts/check-release-needed.mjs (current)
+@@ -141,7 +141,9 @@
+         const cause = error.cause
+           ? `: ${error.cause.code ?? error.cause.message ?? error.cause}`
+           : '';
+-        throw new Error(`${url}: ${error.message}${cause} (after ${attempt} attempts)`);
++        throw new Error(`${url}: ${error.message}${cause} (after ${attempt} attempts)`, {
++          cause: error,
++        });
+       }
+     }
+     const transient = !response || response.status === 429 || response.status >= 500;
+@@ -176,7 +178,13 @@
+     throw new Error(`NuGet flat-container index returned HTTP ${response.status} for ${packageId}`);
+   }
+   const payload = await response.json();
+-  return Array.isArray(payload.versions) ? payload.versions : [];
++  if (
++    !Array.isArray(payload?.versions) ||
++    payload.versions.some((version) => typeof version !== 'string')
++  ) {
++    throw new Error(`Malformed NuGet version index for ${packageId}`);
++  }
++  return payload.versions;
+ }
+ 
+ /**
+
+--- csharp/scripts/detect-code-changes.mjs (base formatted)
++++ csharp/scripts/detect-code-changes.mjs (current)
+@@ -210,7 +210,7 @@
+   setOutput('docs-changed', docsChanged ? 'true' : 'false');
+ 
+   // Detect workflow changes
+-  const workflowChanged = changedFiles.some((file) => file.startsWith('.github/workflows/'));
++  const workflowChanged = changedFiles.some((file) => file.startsWith('.github/'));
+   setOutput('workflow-changed', workflowChanged ? 'true' : 'false');
+ 
+   // Detect code changes (excluding docs, changesets, experiments, examples folders, and markdown files)
+
+--- csharp/scripts/release-scripts.test.mjs (base formatted)
++++ csharp/scripts/release-scripts.test.mjs (current)
+@@ -39,6 +39,19 @@
+ 
+ const execFileAsync = promisify(execFile);
+ 
++test('NuGet release lookup rejects an incomplete provider response', async () => {
++  for (const payload of [{}, { versions: null }, { versions: [123] }]) {
++    await assert.rejects(
++      fetchNugetVersions('Example', async () => ({
++        ok: true,
++        status: 200,
++        json: async () => payload,
++      })),
++      /Malformed NuGet version index/,
++    );
++  }
++});
++
+ const repoRoot = new URL('../..', import.meta.url).pathname;
+ 
+ // execFileSync forwards a child's stderr to ours unless `stdio` is set. On a
+
+--- csharp/scripts/version-and-commit.mjs (base formatted)
++++ csharp/scripts/version-and-commit.mjs (current)
+@@ -416,10 +416,13 @@
+           `The push to '${branch}' was declined by a repository rule (GH006/GH013). ` +
+             `Rebasing cannot change repository policy: allow the release bot to push to '${branch}' ` +
+             `or release through a pull request.\n${output}`,
++          { cause: error },
+         );
+       }
+       if (kind === 'other' || attempt >= maxAttempts) {
+-        throw new Error(`git push failed after ${attempt} attempt(s):\n${output}`);
++        throw new Error(`git push failed after ${attempt} attempt(s):\n${output}`, {
++          cause: error,
++        });
+       }
+       console.log(
+         `Push rejected as non-fast-forward (attempt ${attempt}/${maxAttempts}); pulling with rebase and retrying...`,
+@@ -432,7 +435,9 @@
+         } catch {
+           // Nothing to abort.
+         }
+-        throw new Error(`git pull --rebase failed:\n${gitErrorOutput(rebaseError)}`);
++        throw new Error(`git pull --rebase failed:\n${gitErrorOutput(rebaseError)}`, {
++          cause: rebaseError,
++        });
+       }
+     }
+   }
+
+--- js/client/src/lino.js (base formatted)
++++ js/client/src/lino.js (current)
+@@ -15,6 +15,8 @@
+ const NEEDS_QUOTES =
+   /[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff()'"`:]/u;
+ // Control characters cannot be written as text at all.
++// Serialization must reject these literal control characters.
++// eslint-disable-next-line no-control-regex
+ const CONTROL = /[\u0000-\u001f\u007f]/u;
+ const LITERAL_PREFIX = /^~[0-9]+\{/;
+ const encoder = new TextEncoder();
+
+--- js/client/test/client.test.mjs (base formatted)
++++ js/client/test/client.test.mjs (current)
+@@ -259,7 +259,7 @@
+   assert.equal(transport.sent.length, 0);
+ 
+   const pushes = ['(notify: 3)\n() ((1: 0 0))'];
+-  transport.receivePush = async (scope) => {
++  transport.receivePush = async (_scope) => {
+     if (pushes.length > 0) return pushes.shift();
+     throw new DeadlineExceededError('late', { outcome: 'not-sent' });
+   };
+
+--- js/client/test/conformance/run.mjs (base formatted)
++++ js/client/test/conformance/run.mjs (current)
+@@ -161,7 +161,7 @@
+   return store.open();
+ }
+ 
+-async function using(store, body) {
++async function withClient(store, body) {
+   let client = await store.open();
+   try {
+     return await body(client, async () => {
+@@ -181,7 +181,7 @@
+     async run(store, backend) {
+       const conversation = await goldenConversation();
+       assert.equal(conversation.length, 19);
+-      await using(store, async (client) => {
++      await withClient(store, async (client) => {
+         for (const { request, reply } of conversation) {
+           const actual = (await client.requestText(request)).trimEnd();
+           if (reply.startsWith('! ')) {
+@@ -377,7 +377,7 @@
+     name: 'triplets: a server without --triplets keeps refusing them',
+     processOnly: true,
+     async run(store) {
+-      await using(store, async (client) => {
++      await withClient(store, async (client) => {
+         assert.equal((await client.create(0, 0)).index, 1n);
+         await assert.rejects(client.createTriplet(1, 0, 0), { name: 'RemoteError' });
+         await assert.rejects(client.eachTriplets([1, 2, 3, 4]), { name: 'RemoteError' });
+@@ -425,7 +425,7 @@
+   {
+     name: 'addresses: the whole u32 range as BigInt, nothing beyond it',
+     async run(store) {
+-      await using(store, async (client) => {
++      await withClient(store, async (client) => {
+         assert.equal(client.capabilities.maxAddress, MAX_U32_ADDRESS);
+         const link = await client.create(MAX_U32_ADDRESS, 1n);
+         assert.deepEqual(link, { index: 1n, source: MAX_U32_ADDRESS, target: 1n });
+@@ -451,7 +451,7 @@
+   {
+     name: 'duplicates: as the backend states in capabilities.duplicateLinks',
+     async run(store) {
+-      await using(store, async (client, reopen) => {
++      await withClient(store, async (client, reopen) => {
+         const first = await client.create(1n, 1n);
+         assert.deepEqual(first, { index: 1n, source: 1n, target: 1n });
+         const second = await client.create(1n, 1n);
+@@ -475,7 +475,7 @@
+   {
+     name: 'holes: deletion cascades, frees addresses, and misses are errors',
+     async run(store) {
+-      await using(store, async (client) => {
++      await withClient(store, async (client) => {
+         const a = await client.create(0n, 0n);
+         const b = await client.create(a.index, a.index);
+         const c = await client.create(b.index, 0n);
+@@ -575,7 +575,7 @@
+         JSON.stringify({ ...result, results: undefined }),
+       );
+       // Verified with a client that shares nothing with the aborted one.
+-      await using(store, async (reader) => {
++      await withClient(store, async (reader) => {
+         const links = await reader.each();
+         const stored = new Set(links.map((link) => link.source));
+         const count = BigInt(links.length);
+@@ -626,7 +626,7 @@
+         await client.close();
+         await server.exited;
+         acknowledged += result.ok;
+-        await using(store, async (reader) => {
++        await withClient(store, async (reader) => {
+           const count = await reader.count();
+           assert.ok(
+             count >= BigInt(acknowledged),
+@@ -653,7 +653,7 @@
+         '  spaces around  ',
+         'x'.repeat(2000),
+       ];
+-      await using(store, async (client, reopen) => {
++      await withClient(store, async (client, reopen) => {
+         const links = [];
+         for (const [i, name] of names.entries()) {
+           const link = await client.create(BigInt(1000 + i), BigInt(1000 + i));
+@@ -676,7 +676,7 @@
+   {
+     name: 'empty names, renaming and moving names',
+     async run(store) {
+-      await using(store, async (client, reopen) => {
++      await withClient(store, async (client, reopen) => {
+         const a = await client.create(5n, 5n);
+         const b = await client.create(6n, 6n);
+         await client.setName(a.index, '');

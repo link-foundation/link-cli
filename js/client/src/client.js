@@ -5,9 +5,21 @@
 import { TRIPLET_OPERATIONS } from './capabilities.js';
 import { requireGuarantees } from './composed.js';
 import { scopeError, scopeOf } from './deadline.js';
-import { DeadlineExceededError, LinksError, MalformedMessageError, RemoteError, UnsupportedError } from './errors.js';
+import {
+  DeadlineExceededError,
+  LinksError,
+  MalformedMessageError,
+  RemoteError,
+  UnsupportedError,
+} from './errors.js';
 import { formatDocument, parseDocument } from './lino.js';
-import { errorMessage, parseNotification, parseTripletNotification, replies, requests } from './operations.js';
+import {
+  errorMessage,
+  parseNotification,
+  parseTripletNotification,
+  replies,
+  requests,
+} from './operations.js';
 
 /**
  * A links store behind a transport. Every address it takes or returns is a
@@ -22,7 +34,8 @@ import { errorMessage, parseNotification, parseTripletNotification, replies, req
  */
 export class LinksClient {
   constructor(transport, { capabilities } = {}) {
-    if (!transport || typeof transport.send !== 'function') throw new TypeError('a transport has a send(text, options) method');
+    if (!transport || typeof transport.send !== 'function')
+      throw new TypeError('a transport has a send(text, options) method');
     this.transport = transport;
     this.capabilities = Object.freeze({ ...transport.capabilities, ...capabilities });
   }
@@ -69,12 +82,16 @@ export class LinksClient {
    * one exists (`capabilities.duplicateLinks === false`, e.g. the C# server).
    */
   async create(source, target, options) {
-    return createdLink(await this.request(requests.create(source, target, this.maxAddress), options));
+    return createdLink(
+      await this.request(requests.create(source, target, this.maxAddress), options),
+    );
   }
 
   /** Updates a link; resolves to the net change of every link touched. */
   async update(index, source, target, options) {
-    return replies.changes(await this.request(requests.update(index, source, target, this.maxAddress), options));
+    return replies.changes(
+      await this.request(requests.update(index, source, target, this.maxAddress), options),
+    );
   }
 
   /** Deletes a link and every link using it; resolves to their changes. */
@@ -93,7 +110,9 @@ export class LinksClient {
    * stores answer a link of their names store, the in-memory store the link).
    */
   async setName(index, name, options) {
-    return replies.link(await this.request(requests.setName(index, name, this.maxAddress), options));
+    return replies.link(
+      await this.request(requests.setName(index, name, this.maxAddress), options),
+    );
   }
 
   /** The link with a name, or null. */
@@ -111,7 +130,8 @@ export class LinksClient {
    * number, or the name of a named link.
    */
   async query(text, options) {
-    if (typeof text !== 'string' || text.trim() === '') throw new TypeError('a query is non-empty LiNo text');
+    if (typeof text !== 'string' || text.trim() === '')
+      throw new TypeError('a query is non-empty LiNo text');
     return replies.namedChanges(await this.request(parseDocument(text), options));
   }
 
@@ -129,7 +149,9 @@ export class LinksClient {
    */
   async subscribe(restriction = [], options) {
     this.#requirePushes();
-    return replies.subscription(await this.request(requests.subscribe(restriction, this.maxAddress), options));
+    return replies.subscription(
+      await this.request(requests.subscribe(restriction, this.maxAddress), options),
+    );
   }
 
   /** Ends a subscription; an unknown number is ignored. Pushes already received stay receivable. */
@@ -164,7 +186,8 @@ export class LinksClient {
    */
   onNotification(listener) {
     this.#requirePushes();
-    if (typeof listener !== 'function') throw new TypeError('a notification listener is a function');
+    if (typeof listener !== 'function')
+      throw new TypeError('a notification listener is a function');
     return this.transport.onPush((text) => listener(parseNotification(parseDocument(text))));
   }
 
@@ -174,8 +197,13 @@ export class LinksClient {
   }
 
   #requirePushes() {
-    if (typeof this.transport.receivePush !== 'function' || typeof this.transport.onPush !== 'function') {
-      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not push changes: subscriptions need a connection to a server`);
+    if (
+      typeof this.transport.receivePush !== 'function' ||
+      typeof this.transport.onPush !== 'function'
+    ) {
+      throw new UnsupportedError(
+        `the ${this.capabilities.backend} backend does not push changes: subscriptions need a connection to a server`,
+      );
     }
   }
 
@@ -185,20 +213,26 @@ export class LinksClient {
 
   #requireTriplets() {
     if (this.capabilities.triplets === false) {
-      throw new UnsupportedError(`the ${this.capabilities.backend} backend does not serve triplets: they need a server started with --triplets`);
+      throw new UnsupportedError(
+        `the ${this.capabilities.backend} backend does not serve triplets: they need a server started with --triplets`,
+      );
     }
   }
 
   /** The number of triplets matching up to four parts `[index, type, from, to]`. */
   async countTriplets(restriction = [], options) {
     this.#requireTriplets();
-    return replies.count(await this.request(requests.countTriplets(restriction, this.maxAddress), options));
+    return replies.count(
+      await this.request(requests.countTriplets(restriction, this.maxAddress), options),
+    );
   }
 
   /** Every triplet matching up to four parts `[index, type, from, to]`, by address. */
   async eachTriplets(restriction = [], options) {
     this.#requireTriplets();
-    return replies.triplets(await this.request(requests.eachTriplets(restriction, this.maxAddress), options));
+    return replies.triplets(
+      await this.request(requests.eachTriplets(restriction, this.maxAddress), options),
+    );
   }
 
   /**
@@ -207,7 +241,9 @@ export class LinksClient {
    */
   async createTriplet(type, from, to, options) {
     this.#requireTriplets();
-    return createdTriplet(await this.request(requests.createTriplet(type, from, to, this.maxAddress), options));
+    return createdTriplet(
+      await this.request(requests.createTriplet(type, from, to, this.maxAddress), options),
+    );
   }
 
   /** Creates a point, a triplet that is its own type (`(i: i 0 0)`), and resolves to it. */
@@ -218,13 +254,17 @@ export class LinksClient {
   /** Updates a triplet; resolves to the net change of every triplet touched. */
   async updateTriplet(index, type, from, to, options) {
     this.#requireTriplets();
-    return replies.tripletChanges(await this.request(requests.updateTriplet(index, type, from, to, this.maxAddress), options));
+    return replies.tripletChanges(
+      await this.request(requests.updateTriplet(index, type, from, to, this.maxAddress), options),
+    );
   }
 
   /** Deletes a triplet and every triplet using it; resolves to their changes. */
   async deleteTriplet(index, options) {
     this.#requireTriplets();
-    return replies.tripletChanges(await this.request(requests.delete(index, this.maxAddress), options));
+    return replies.tripletChanges(
+      await this.request(requests.delete(index, this.maxAddress), options),
+    );
   }
 
   /**
@@ -233,7 +273,8 @@ export class LinksClient {
    */
   async queryTriplets(text, options) {
     this.#requireTriplets();
-    if (typeof text !== 'string' || text.trim() === '') throw new TypeError('a query is non-empty LiNo text');
+    if (typeof text !== 'string' || text.trim() === '')
+      throw new TypeError('a query is non-empty LiNo text');
     return replies.namedTripletChanges(await this.request(parseDocument(text), options));
   }
 
@@ -247,7 +288,9 @@ export class LinksClient {
   async subscribeTriplets(restriction = [], options) {
     this.#requireTriplets();
     this.#requirePushes();
-    return replies.subscription(await this.request(requests.subscribeTriplets(restriction, this.maxAddress), options));
+    return replies.subscription(
+      await this.request(requests.subscribeTriplets(restriction, this.maxAddress), options),
+    );
   }
 
   /** `receiveNotification` with changes of triplets. */
@@ -268,7 +311,8 @@ export class LinksClient {
   onTripletNotification(listener) {
     this.#requireTriplets();
     this.#requirePushes();
-    if (typeof listener !== 'function') throw new TypeError('a notification listener is a function');
+    if (typeof listener !== 'function')
+      throw new TypeError('a notification listener is a function');
     return this.transport.onPush((text) => listener(parseTripletNotification(parseDocument(text))));
   }
 
@@ -291,7 +335,8 @@ export class LinksClient {
    * and `{ op: 'queryTriplets', text }`.
    */
   async batch(operations, { window = 32, signal, deadline, timeout } = {}) {
-    if (!Number.isInteger(window) || window < 1) throw new TypeError('window is a positive integer');
+    if (!Number.isInteger(window) || window < 1)
+      throw new TypeError('window is a positive integer');
     // Validate everything first: a malformed operation sends nothing.
     const calls = operations.map((operation, position) => this.#batchCall(operation, position));
     const scope = scopeOf({ signal, deadline, timeout });
@@ -306,7 +351,10 @@ export class LinksClient {
         try {
           results[position] = { status: 'ok', value: await calls[position](scope) };
         } catch (error) {
-          results[position] = { status: error instanceof LinksError ? error.outcome : 'unknown', error };
+          results[position] = {
+            status: error instanceof LinksError ? error.outcome : 'unknown',
+            error,
+          };
           stopped = true;
         }
       }
@@ -331,17 +379,32 @@ export class LinksClient {
       count: ({ restriction = [] }) => [requests.count(restriction, max), replies.count],
       each: ({ restriction = [] }) => [requests.each(restriction, max), replies.links],
       create: ({ source, target }) => [requests.create(source, target, max), createdLink],
-      update: ({ index, source, target }) => [requests.update(index, source, target, max), replies.changes],
+      update: ({ index, source, target }) => [
+        requests.update(index, source, target, max),
+        replies.changes,
+      ],
       delete: ({ index }) => [requests.delete(index, max), replies.changes],
       getName: ({ index }) => [requests.getName(index, max), replies.name],
       setName: ({ index, name }) => [requests.setName(index, name, max), replies.link],
       getByName: ({ name }) => [requests.getByName(name), replies.link],
       removeName: ({ index }) => [requests.removeName(index, max), replies.empty],
       query: ({ text }) => [parseDocument(text), replies.namedChanges],
-      countTriplets: ({ restriction = [] }) => [requests.countTriplets(restriction, max), replies.count],
-      eachTriplets: ({ restriction = [] }) => [requests.eachTriplets(restriction, max), replies.triplets],
-      createTriplet: ({ type, from, to }) => [requests.createTriplet(type, from, to, max), createdTriplet],
-      updateTriplet: ({ index, type, from, to }) => [requests.updateTriplet(index, type, from, to, max), replies.tripletChanges],
+      countTriplets: ({ restriction = [] }) => [
+        requests.countTriplets(restriction, max),
+        replies.count,
+      ],
+      eachTriplets: ({ restriction = [] }) => [
+        requests.eachTriplets(restriction, max),
+        replies.triplets,
+      ],
+      createTriplet: ({ type, from, to }) => [
+        requests.createTriplet(type, from, to, max),
+        createdTriplet,
+      ],
+      updateTriplet: ({ index, type, from, to }) => [
+        requests.updateTriplet(index, type, from, to, max),
+        replies.tripletChanges,
+      ],
       deleteTriplet: ({ index }) => [requests.delete(index, max), replies.tripletChanges],
       queryTriplets: ({ text }) => [parseDocument(text), replies.namedTripletChanges],
     };
@@ -374,13 +437,16 @@ function createdLink(reply) {
   const changes = replies.changes(reply);
   if (changes.length === 0) return null;
   const created = changes.find((change) => change.before === null && change.after !== null);
-  if (!created) throw new MalformedMessageError('the create reply holds changes but no created link');
+  if (!created)
+    throw new MalformedMessageError('the create reply holds changes but no created link');
   return created.after;
 }
 
 /** The triplet a create reply holds. */
 function createdTriplet(reply) {
-  const created = replies.tripletChanges(reply).find((change) => change.before === null && change.after !== null);
+  const created = replies
+    .tripletChanges(reply)
+    .find((change) => change.before === null && change.after !== null);
   if (!created) throw new MalformedMessageError('the create reply holds no created triplet');
   return created.after;
 }

@@ -34,9 +34,9 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
 name = "doublets"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da33a132c51f9ff8f4376e3fa6954628c10f3795c0fcdc11159951975b5e8a0b"
+checksum = "e6f1b764302c8920c2af1a02ed5a7e223ea306c744b1a4954730a49a9869fa21"
 dependencies = [
  "cfg-if",
  "leak_slice",

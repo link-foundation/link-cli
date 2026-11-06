@@ -33,7 +33,11 @@ async function search(store, source, target, options) {
 /** A new link `(l: source target)`; `source`/`target` null for the link itself. */
 async function newLink(store, source, target, options) {
   const created = await store.create(0n, 0n, options);
-  if (created === null) throw new LinksError('the store merged a new link into an existing one; it cannot hold a new point', { outcome: 'failed' });
+  if (created === null)
+    throw new LinksError(
+      'the store merged a new link into an existing one; it cannot hold a new point',
+      { outcome: 'failed' },
+    );
   const index = created.index;
   await store.update(index, source ?? index, target ?? index, options);
   return index;
@@ -43,7 +47,9 @@ async function newLink(store, source, target, options) {
 export class LinksExternalIds {
   constructor(scheme) {
     if (typeof scheme !== 'string' || scheme === '' || scheme.includes(':')) {
-      throw new TypeError(`a scheme is a non-empty string without a colon, got ${JSON.stringify(scheme)}`);
+      throw new TypeError(
+        `a scheme is a non-empty string without a colon, got ${JSON.stringify(scheme)}`,
+      );
     }
     this.scheme = scheme;
   }
@@ -144,11 +150,13 @@ export class LinksExternalIds {
  */
 export class ExternalIdMap {
   constructor(table, scheme, { newId } = {}) {
-    if (!table || typeof table.each !== 'function') throw new TypeError('the table of an ExternalIdMap is a links client');
+    if (!table || typeof table.each !== 'function')
+      throw new TypeError('the table of an ExternalIdMap is a links client');
     this.table = table;
     this.ids = scheme instanceof LinksExternalIds ? scheme : new LinksExternalIds(scheme);
     this.newId = newId ?? (() => globalThis.crypto.randomUUID());
-    if (typeof this.newId !== 'function') throw new TypeError('newId is a function returning a new id');
+    if (typeof this.newId !== 'function')
+      throw new TypeError('newId is a function returning a new id');
   }
 
   toInner(outer) {

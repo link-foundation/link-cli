@@ -5,6 +5,7 @@ usage: converse.py HOST:PORT < requests, each line `A> request`; prints each
 reply and any push the other connection received, to draft or check
 docs/protocol/triplets.txt against either port.
 """
+
 import select
 import socket
 import sys

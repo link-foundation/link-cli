@@ -48,15 +48,24 @@ test('aborted or late requests never reach the store', async () => {
   const client = createWasmClient(clink);
   const controller = new AbortController();
   controller.abort();
-  await assert.rejects(client.count([], { signal: controller.signal }), { name: 'AbortError', outcome: 'not-sent' });
-  await assert.rejects(client.count([], { deadline: Date.now() - 1 }), { name: 'DeadlineExceededError', outcome: 'not-sent' });
+  await assert.rejects(client.count([], { signal: controller.signal }), {
+    name: 'AbortError',
+    outcome: 'not-sent',
+  });
+  await assert.rejects(client.count([], { deadline: Date.now() - 1 }), {
+    name: 'DeadlineExceededError',
+    outcome: 'not-sent',
+  });
   assert.equal(clink.requests.length, 0);
 });
 
 test('request and reply limits', async () => {
   const clink = fakeClink(() => `(count: ${'9'.repeat(100)})`);
   const client = createWasmClient(clink, { maxRequestBytes: 16, maxReplyBytes: 64 });
-  await assert.rejects(client.getByName('a name longer than sixteen bytes'), { name: 'LimitExceededError', outcome: 'not-sent' });
+  await assert.rejects(client.getByName('a name longer than sixteen bytes'), {
+    name: 'LimitExceededError',
+    outcome: 'not-sent',
+  });
   assert.equal(clink.requests.length, 0);
   await assert.rejects(client.count(), { name: 'LimitExceededError', outcome: 'unknown' });
   assert.equal(clink.requests.length, 1);
@@ -80,7 +89,9 @@ test('the universal entry point imports nothing from node:', async () => {
     if (seen.has(url.href)) return;
     seen.add(url.href);
     const source = await readFile(url, 'utf8');
-    for (const [, specifier] of source.matchAll(/^\s*(?:import|export)\b[^'"]*?from\s+'([^']+)'/gm)) {
+    for (const [, specifier] of source.matchAll(
+      /^\s*(?:import|export)\b[^'"]*?from\s+'([^']+)'/gm,
+    )) {
       assert.ok(specifier.startsWith('./'), `${url.pathname} imports ${specifier}`);
       await visit(new URL(specifier, url));
     }

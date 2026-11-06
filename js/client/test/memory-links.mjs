@@ -20,7 +20,8 @@ export class MemoryLinks {
 
   #address(value, what) {
     const address = toAddress(value, what);
-    if (address > this.capabilities.maxAddress) throw new AddressRangeError(`${what} ${address} exceeds ${this.capabilities.maxAddress}`);
+    if (address > this.capabilities.maxAddress)
+      throw new AddressRangeError(`${what} ${address} exceeds ${this.capabilities.maxAddress}`);
     return address;
   }
 
@@ -30,7 +31,11 @@ export class MemoryLinks {
   }
 
   #matches(link, restriction) {
-    const parts = restriction.map((part, at) => (part === null || part === undefined || part === '*' ? null : this.#address(part, `part ${at}`)));
+    const parts = restriction.map((part, at) =>
+      part === null || part === undefined || part === '*'
+        ? null
+        : this.#address(part, `part ${at}`),
+    );
     const [index, first, second] = parts;
     if (index !== null && index !== undefined && link.index !== index) return false;
     if (parts.length === 2) return first === null || link.source === first || link.target === first;
@@ -43,11 +48,17 @@ export class MemoryLinks {
   }
 
   async each(restriction = []) {
-    return [...this.links.keys()].sort((a, b) => (a < b ? -1 : 1)).map((index) => this.#link(index)).filter((link) => this.#matches(link, restriction));
+    return [...this.links.keys()]
+      .sort((a, b) => (a < b ? -1 : 1))
+      .map((index) => this.#link(index))
+      .filter((link) => this.#matches(link, restriction));
   }
 
   async create(source, target) {
-    const link = { source: this.#address(source, 'source'), target: this.#address(target, 'target') };
+    const link = {
+      source: this.#address(source, 'source'),
+      target: this.#address(target, 'target'),
+    };
     let index = 1n;
     while (this.links.has(index)) index += 1n;
     this.links.set(index, link);
@@ -58,7 +69,10 @@ export class MemoryLinks {
     const address = this.#address(index, 'index');
     const before = this.#link(address);
     if (!before) throw new RemoteError(`Link not found: ${address}`);
-    this.links.set(address, { source: this.#address(source, 'source'), target: this.#address(target, 'target') });
+    this.links.set(address, {
+      source: this.#address(source, 'source'),
+      target: this.#address(target, 'target'),
+    });
     return [{ before, after: this.#link(address) }];
   }
 
@@ -69,7 +83,8 @@ export class MemoryLinks {
     this.links.delete(address);
     const changes = [];
     for (const usage of await this.each([])) {
-      if (this.links.has(usage.index) && (usage.source === address || usage.target === address)) changes.push(...(await this.delete(usage.index)));
+      if (this.links.has(usage.index) && (usage.source === address || usage.target === address))
+        changes.push(...(await this.delete(usage.index)));
     }
     changes.push({ before: deleted, after: null });
     await this.removeName(address);
@@ -112,5 +127,9 @@ export async function make(links, source, target) {
 
 /** Every link matching `restriction` as `[index, source, target]`. */
 export async function all(links, restriction = []) {
-  return (await links.each(restriction)).map(({ index, source, target }) => [index, source, target]);
+  return (await links.each(restriction)).map(({ index, source, target }) => [
+    index,
+    source,
+    target,
+  ]);
 }

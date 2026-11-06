@@ -1,0 +1,3 @@
+{"files":["examples/Program.cs"],"outputs":{"any-code-changed":"false"}}
+
+Confirmed: current C# template omits the deleted source path and reports no code change.

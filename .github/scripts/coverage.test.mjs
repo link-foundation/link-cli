@@ -30,18 +30,29 @@ test('only inactive or missing Codecov repositories make uploading optional', as
 
 test('Codecov lookup failures and malformed responses do not silently disable upload checks', async () => {
   for (const status of [401, 403, 429, 500, 503]) {
-    await assert.rejects(codecovRequired('link-foundation/link-cli', {
-      fetch: async () => reply(status, {}),
-    }), new RegExp(String(status)));
+    await assert.rejects(
+      codecovRequired('link-foundation/link-cli', {
+        fetch: async () => reply(status, {}),
+      }),
+      new RegExp(String(status)),
+    );
   }
   for (const body of [{}, { activated: 'false' }, null]) {
-    await assert.rejects(codecovRequired('link-foundation/link-cli', {
-      fetch: async () => reply(200, body),
-    }), /activated/);
+    await assert.rejects(
+      codecovRequired('link-foundation/link-cli', {
+        fetch: async () => reply(200, body),
+      }),
+      /activated/,
+    );
   }
-  await assert.rejects(codecovRequired('link-foundation/link-cli', {
-    fetch: async () => { throw new Error('network down'); },
-  }), /network down/);
+  await assert.rejects(
+    codecovRequired('link-foundation/link-cli', {
+      fetch: async () => {
+        throw new Error('network down');
+      },
+    }),
+    /network down/,
+  );
 });
 
 const coverage = (lines, covered, branches, branchesCovered) =>
@@ -56,7 +67,13 @@ test('Cobertura totals remain visible in the summary without Codecov', () => {
 });
 
 test('missing and invalid coverage reports fail instead of publishing misleading totals', () => {
-  for (const reports of [[], ['garbage'], ['<coverage />'], [coverage(2, 3, 0, 0)], [coverage(-1, 0, 0, 0)]]) {
+  for (const reports of [
+    [],
+    ['garbage'],
+    ['<coverage />'],
+    [coverage(2, 3, 0, 0)],
+    [coverage(-1, 0, 0, 0)],
+  ]) {
     assert.throws(() => summarizeCoverage(reports), /coverage|Cobertura/);
   }
 });
@@ -69,11 +86,15 @@ test('summary command finds nested Cobertura files and appends the Actions summa
     writeFileSync(join(root, 'results', 'coverage-test.rs'), 'not a coverage report');
     const summary = join(root, 'summary.md');
     writeFileSync(summary, 'Previous step\n');
-    execFileSync(process.execPath, [new URL('./coverage.mjs', import.meta.url).pathname, 'summary', join(root, 'results')], {
-      env: { ...process.env, GITHUB_STEP_SUMMARY: summary },
-      stdio: 'pipe',
-      timeout: 10_000,
-    });
+    execFileSync(
+      process.execPath,
+      [new URL('./coverage.mjs', import.meta.url).pathname, 'summary', join(root, 'results')],
+      {
+        env: { ...process.env, GITHUB_STEP_SUMMARY: summary },
+        stdio: 'pipe',
+        timeout: 10_000,
+      },
+    );
     assert.match(readFileSync(summary, 'utf8'), /Previous step\n[\s\S]*8 \/ 10 \(80\.00%\)/);
   } finally {
     rmSync(root, { recursive: true, force: true });

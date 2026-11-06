@@ -21,7 +21,7 @@ const dryRun = hasFlag('dry-run');
 
 if (!bumpType || !['major', 'minor', 'patch'].includes(bumpType)) {
   console.error(
-    'Usage: node csharp/scripts/bump-version.mjs --bump-type <major|minor|patch> [--dry-run]'
+    'Usage: node csharp/scripts/bump-version.mjs --bump-type <major|minor|patch> [--dry-run]',
   );
   process.exit(1);
 }
@@ -75,10 +75,7 @@ function calculateNewVersion(current, bumpType) {
  */
 function updateCsproj(newVersion) {
   let csproj = readFileSync(CSPROJ_PATH, 'utf-8');
-  csproj = csproj.replace(
-    /<Version>[^<]+<\/Version>/,
-    `<Version>${newVersion}</Version>`
-  );
+  csproj = csproj.replace(/<Version>[^<]+<\/Version>/, `<Version>${newVersion}</Version>`);
   writeFileSync(CSPROJ_PATH, csproj, 'utf-8');
 }
 

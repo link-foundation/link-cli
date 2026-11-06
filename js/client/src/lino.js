@@ -12,8 +12,11 @@ import { MalformedMessageError } from './errors.js';
 const QUOTES = ["'", '"', '`'];
 // Rust's `char::is_whitespace` (Unicode White_Space) plus the characters the
 // formatter refuses to leave bare.
-const NEEDS_QUOTES = /[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff()'"`:]/u;
+const NEEDS_QUOTES =
+  /[\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff()'"`:]/u;
 // Control characters cannot be written as text at all.
+// Serialization must reject these literal control characters.
+// eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f]/u;
 const LITERAL_PREFIX = /^~[0-9]+\{/;
 const encoder = new TextEncoder();
@@ -47,7 +50,8 @@ export function decodeReferenceLiteral(literal) {
     throw new MalformedMessageError('reference literal requires an even number of hex digits');
   }
   const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i += 1) bytes[i] = Number.parseInt(hex.slice(2 * i, 2 * i + 2), 16);
+  for (let i = 0; i < bytes.length; i += 1)
+    bytes[i] = Number.parseInt(hex.slice(2 * i, 2 * i + 2), 16);
   try {
     return decoder.decode(bytes);
   } catch {
@@ -82,10 +86,13 @@ export function formatLink(link) {
   if (typeof link === 'string') return formatReference(link);
   const { id, values } = link;
   if (id === null || id === undefined) {
-    if (values.length === 1 && typeof values[0] === 'string') return `((${formatReference(values[0])}))`;
+    if (values.length === 1 && typeof values[0] === 'string')
+      return `((${formatReference(values[0])}))`;
     return `(${joinValues(values)})`;
   }
-  return values.length === 0 ? `(${formatReference(id)}:)` : `(${formatReference(id)}: ${joinValues(values)})`;
+  return values.length === 0
+    ? `(${formatReference(id)}:)`
+    : `(${formatReference(id)}: ${joinValues(values)})`;
 }
 
 function joinValues(values) {
@@ -99,7 +106,9 @@ function joinValues(values) {
 export function formatDocument(document) {
   return document
     .map((link) =>
-      typeof link !== 'string' && (link.id === null || link.id === undefined) && link.values.length >= 2
+      typeof link !== 'string' &&
+      (link.id === null || link.id === undefined) &&
+      link.values.length >= 2
         ? joinValues(link.values)
         : formatLink(link),
     )
@@ -113,13 +122,15 @@ export function formatDocument(document) {
  */
 function canonical(link) {
   if (typeof link === 'string') return link;
-  if (link.id === null && link.values.length === 1 && typeof link.values[0] === 'string') return link.values[0];
+  if (link.id === null && link.values.length === 1 && typeof link.values[0] === 'string')
+    return link.values[0];
   return { id: link.id, values: link.values.map(canonical) };
 }
 
 const isSpace = (c) => c === ' ' || c === '\t';
 const isLineBreak = (c) => c === '\n' || c === '\r';
-const endsBareWord = (c) => c === undefined || isSpace(c) || isLineBreak(c) || c === '(' || c === ')' || c === ':';
+const endsBareWord = (c) =>
+  c === undefined || isSpace(c) || isLineBreak(c) || c === '(' || c === ')' || c === ':';
 
 function runLength(text, start, quote) {
   let end = start;
@@ -193,8 +204,13 @@ class Reader {
   }
 
   fail(expected) {
-    const found = this.at < this.text.length ? JSON.stringify(this.text.slice(this.at, this.at + 20)) : 'end of input';
-    throw new MalformedMessageError(`invalid LiNo at offset ${this.at}: expected ${expected}, found ${found}`);
+    const found =
+      this.at < this.text.length
+        ? JSON.stringify(this.text.slice(this.at, this.at + 20))
+        : 'end of input';
+    throw new MalformedMessageError(
+      `invalid LiNo at offset ${this.at}: expected ${expected}, found ${found}`,
+    );
   }
 
   /** Skips blanks; inside parentheses line breaks are blanks too. */

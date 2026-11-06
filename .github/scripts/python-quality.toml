@@ -1,0 +1,6 @@
+# Shared by CI and local hooks. Verbatim historical evidence is never reformatted.
+[lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP", "C4"]
+
+[format]
+quote-style = "double"

@@ -1,0 +1,1 @@
+https://github.com/github/codeql-action/issues/4308

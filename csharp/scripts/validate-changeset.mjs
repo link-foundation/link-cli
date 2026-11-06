@@ -32,14 +32,8 @@ function parseArgs() {
   };
 
   return {
-    changesetDir: getArg(
-      'dir',
-      process.env.CHANGESET_DIR || 'csharp/.changeset'
-    ),
-    packageName: getArg(
-      'package-name',
-      process.env.PACKAGE_NAME || 'Foundation.Data.Doublets.Cli'
-    ),
+    changesetDir: getArg('dir', process.env.CHANGESET_DIR || 'csharp/.changeset'),
+    packageName: getArg('package-name', process.env.PACKAGE_NAME || 'Foundation.Data.Doublets.Cli'),
   };
 }
 
@@ -96,10 +90,9 @@ function tryExplicitShaComparison(baseSha, headSha) {
   console.log(`Comparing ${baseSha}...${headSha}`);
   try {
     ensureCommitAvailable(baseSha);
-    const diffOutput = execSync(
-      `git diff --name-status ${baseSha} ${headSha}`,
-      { encoding: 'utf-8' }
-    );
+    const diffOutput = execSync(`git diff --name-status ${baseSha} ${headSha}`, {
+      encoding: 'utf-8',
+    });
     return parseAddedChangesets(diffOutput);
   } catch (error) {
     console.log(`Git diff with explicit SHAs failed: ${error.message}`);
@@ -120,10 +113,9 @@ function tryBaseBranchComparison(prBase) {
     } catch {
       // Ignore fetch errors, we might already have it
     }
-    const diffOutput = execSync(
-      `git diff --name-status origin/${prBase}...HEAD`,
-      { encoding: 'utf-8' }
-    );
+    const diffOutput = execSync(`git diff --name-status origin/${prBase}...HEAD`, {
+      encoding: 'utf-8',
+    });
     return parseAddedChangesets(diffOutput);
   } catch (error) {
     console.log(`Git diff with base ref failed: ${error.message}`);
@@ -136,15 +128,12 @@ function tryBaseBranchComparison(prBase) {
  * @returns {string[]} Array of all changeset file names
  */
 function getAllChangesets() {
-  console.log(
-    'Warning: Could not determine PR diff, checking all changesets in directory'
-  );
+  console.log('Warning: Could not determine PR diff, checking all changesets in directory');
   if (!existsSync(changesetDir)) {
     return [];
   }
   return readdirSync(changesetDir).filter(
-    (file) =>
-      file.endsWith('.md') && file !== 'README.md' && file !== 'config.json'
+    (file) => file.endsWith('.md') && file !== 'README.md' && file !== 'config.json',
   );
 }
 
@@ -189,7 +178,7 @@ function validateChangesetFile(filePath) {
     // Check if changeset has a valid type (major, minor, or patch)
     const versionTypeRegex = new RegExp(
       `^['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]:\\s+(major|minor|patch)`,
-      'm'
+      'm',
     );
     const versionTypeMatch = content.match(versionTypeRegex);
 
@@ -205,8 +194,7 @@ function validateChangesetFile(filePath) {
     if (parts.length < 3) {
       return {
         valid: false,
-        error:
-          "Changeset must include a description of the changes (after the closing '---')",
+        error: "Changeset must include a description of the changes (after the closing '---')",
       };
     }
 
@@ -247,22 +235,18 @@ try {
   // Ensure exactly one changeset file was added
   if (changesetCount === 0) {
     console.error(
-      `::error::No changeset found in this PR. Please add a changeset file in ${changesetDir}/ directory.`
+      `::error::No changeset found in this PR. Please add a changeset file in ${changesetDir}/ directory.`,
     );
-    console.error(
-      `\nTo create a changeset, add a file like ${changesetDir}/my-change.md with:`
-    );
+    console.error(`\nTo create a changeset, add a file like ${changesetDir}/my-change.md with:`);
     console.error(`---\n'${packageName}': patch\n---\n\nDescription of your changes`);
     process.exit(1);
   } else if (changesetCount > 1) {
     console.error(
-      `::error::Multiple changesets found in this PR (${changesetCount}). Each PR should add exactly ONE changeset.`
+      `::error::Multiple changesets found in this PR (${changesetCount}). Each PR should add exactly ONE changeset.`,
     );
     console.error('::error::Found changeset files added by this PR:');
     addedChangesetFiles.forEach((file) => console.error(`  ${file}`));
-    console.error(
-      '\n::error::Please combine these into a single changeset or remove the extras.'
-    );
+    console.error('\n::error::Please combine these into a single changeset or remove the extras.');
     process.exit(1);
   }
 

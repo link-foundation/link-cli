@@ -16,7 +16,8 @@ test('the reader splits a stream at any byte, LF or CRLF', () => {
   for (let size = 1; size <= stream.length; size += 1) {
     const reader = new MessageReader();
     const messages = [];
-    for (let at = 0; at < stream.length; at += size) messages.push(...reader.push(stream.subarray(at, at + size)));
+    for (let at = 0; at < stream.length; at += size)
+      messages.push(...reader.push(stream.subarray(at, at + size)));
     assert.deepEqual(messages, ['(count: 2)', '.b', ''], `chunks of ${size}`);
     assert.equal(reader.midMessage, false);
   }
@@ -39,5 +40,7 @@ test('a reply over the limit fails without buffering it', () => {
 });
 
 test('invalid UTF-8 is a malformed message', () => {
-  assert.throws(() => new MessageReader().push(Uint8Array.of(0xff, 10)), { name: 'MalformedMessageError' });
+  assert.throws(() => new MessageReader().push(Uint8Array.of(0xff, 10)), {
+    name: 'MalformedMessageError',
+  });
 });

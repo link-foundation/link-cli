@@ -194,7 +194,12 @@ function App() {
               <p className="eyebrow">LiNo query</p>
               <h2>Substitution</h2>
             </div>
-            <button className="iconButton" type="button" onClick={resetSession} title="Reset session">
+            <button
+              className="iconButton"
+              type="button"
+              onClick={resetSession}
+              title="Reset session"
+            >
               <RotateCcw size={18} />
             </button>
           </div>
@@ -223,15 +228,31 @@ function App() {
           </div>
 
           <div className="optionGrid">
-            <Toggle label="Before" checked={options.before} onChange={() => toggleOption(setOptions, 'before')} />
-            <Toggle label="Changes" checked={options.changes} onChange={() => toggleOption(setOptions, 'changes')} />
-            <Toggle label="After" checked={options.after} onChange={() => toggleOption(setOptions, 'after')} />
+            <Toggle
+              label="Before"
+              checked={options.before}
+              onChange={() => toggleOption(setOptions, 'before')}
+            />
+            <Toggle
+              label="Changes"
+              checked={options.changes}
+              onChange={() => toggleOption(setOptions, 'changes')}
+            />
+            <Toggle
+              label="After"
+              checked={options.after}
+              onChange={() => toggleOption(setOptions, 'after')}
+            />
             <Toggle
               label="Auto-create"
               checked={options.autoCreateMissingReferences}
               onChange={() => toggleOption(setOptions, 'autoCreateMissingReferences')}
             />
-            <Toggle label="Trace" checked={options.trace} onChange={() => toggleOption(setOptions, 'trace')} />
+            <Toggle
+              label="Trace"
+              checked={options.trace}
+              onChange={() => toggleOption(setOptions, 'trace')}
+            />
           </div>
 
           <button
@@ -282,9 +303,21 @@ function App() {
             <RefreshCw size={18} aria-hidden="true" />
           </div>
           <StatusRow icon={Server} label="Rust wrapper" value={readyState.message} />
-          <StatusRow icon={GitBranch} label="Rust core" value={readyState.rustVersion || 'pending'} />
-          <StatusRow icon={Database} label="doublets-web" value={`${DOUBLETS_WEB_VERSION} / ${doubletsState.message}`} />
-          <StatusRow icon={FileClock} label="Session" value={`${stats.links} link snapshots mirrored`} />
+          <StatusRow
+            icon={GitBranch}
+            label="Rust core"
+            value={readyState.rustVersion || 'pending'}
+          />
+          <StatusRow
+            icon={Database}
+            label="doublets-web"
+            value={`${DOUBLETS_WEB_VERSION} / ${doubletsState.message}`}
+          />
+          <StatusRow
+            icon={FileClock}
+            label="Session"
+            value={`${stats.links} link snapshots mirrored`}
+          />
         </div>
       </section>
 

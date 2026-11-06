@@ -29,12 +29,18 @@ import { connectProcess, startServer } from '../../src/process.js';
 import { connectTcp } from '../../src/tcp.js';
 
 const SCENARIO_TIMEOUT_MS = 60_000;
-const runtime = globalThis.Deno ? `deno ${globalThis.Deno.version.deno}` : globalThis.Bun ? `bun ${globalThis.Bun.version}` : `node ${process.versions.node}`;
+const runtime = globalThis.Deno
+  ? `deno ${globalThis.Deno.version.deno}`
+  : globalThis.Bun
+    ? `bun ${globalThis.Bun.version}`
+    : `node ${process.versions.node}`;
 const golden = new URL('../../../../docs/protocol/links-operations.txt', import.meta.url);
 
 /** `[{ request, reply }]` of the golden conversation both servers replay. */
 async function goldenConversation() {
-  const lines = (await readFile(golden, 'utf8')).split('\n').filter((line) => line !== '' && !line.startsWith('#'));
+  const lines = (await readFile(golden, 'utf8'))
+    .split('\n')
+    .filter((line) => line !== '' && !line.startsWith('#'));
   const exchanges = [];
   for (const line of lines) {
     if (line.startsWith('> ')) exchanges.push({ request: line.slice(2), reply: [] });
@@ -52,13 +58,19 @@ const tripletsGolden = new URL('../../../../docs/protocol/triplets.txt', import.
  * (`A< (notify: n)`, then its change lines, all in `reply`).
  */
 async function twoConnectionConversation(file) {
-  const lines = (await readFile(file, 'utf8')).split('\n').filter((line) => line !== '' && !line.startsWith('#'));
+  const lines = (await readFile(file, 'utf8'))
+    .split('\n')
+    .filter((line) => line !== '' && !line.startsWith('#'));
   const steps = [];
   for (const line of lines) {
     const step = /^([AB])([<>]) (.*)$/.exec(line);
     if (step) {
       const [, connection, direction, text] = step;
-      steps.push(direction === '>' ? { connection, kind: 'request', text, reply: [] } : { connection, kind: 'push', text, reply: [text] });
+      steps.push(
+        direction === '>'
+          ? { connection, kind: 'request', text, reply: [] }
+          : { connection, kind: 'push', text, reply: [text] },
+      );
     } else {
       steps.at(-1).reply.push(line);
     }
@@ -116,11 +128,17 @@ async function backendsFromEnvironment() {
   const { CLINK_RUST, CLINK_CSHARP, CLINK_WASM } = process.env;
   // Stated, not discovered: the protocol does not say which server answers.
   if (CLINK_RUST) backends.push(processBackend('rust', CLINK_RUST, { duplicateLinks: true }));
-  if (CLINK_CSHARP) backends.push(processBackend('csharp', CLINK_CSHARP, { duplicateLinks: false }));
+  if (CLINK_CSHARP)
+    backends.push(processBackend('csharp', CLINK_CSHARP, { duplicateLinks: false }));
   if (CLINK_WASM) backends.push(await wasmBackend(CLINK_WASM));
   for (const backend of backends) {
-    if (backend.name !== 'wasm' && !existsSync(process.env[`CLINK_${backend.name.toUpperCase()}`])) {
-      throw new Error(`${backend.name}: no executable at ${process.env[`CLINK_${backend.name.toUpperCase()}`]}`);
+    if (
+      backend.name !== 'wasm' &&
+      !existsSync(process.env[`CLINK_${backend.name.toUpperCase()}`])
+    ) {
+      throw new Error(
+        `${backend.name}: no executable at ${process.env[`CLINK_${backend.name.toUpperCase()}`]}`,
+      );
     }
   }
   return backends;
@@ -132,7 +150,9 @@ const indexes = (links) => links.map((link) => link.index);
 
 /** `{ index: { source, target } }` of every link, for readback comparisons. */
 async function snapshot(client) {
-  return Object.fromEntries((await client.each()).map(({ index, source, target }) => [index, `${source} ${target}`]));
+  return Object.fromEntries(
+    (await client.each()).map(({ index, source, target }) => [index, `${source} ${target}`]),
+  );
 }
 
 /** Reopens the store with a client that shares nothing with the previous one. */
@@ -141,7 +161,7 @@ async function fresh(store, previous) {
   return store.open();
 }
 
-async function using(store, body) {
+async function withClient(store, body) {
   let client = await store.open();
   try {
     return await body(client, async () => {
@@ -161,7 +181,7 @@ const scenarios = [
     async run(store, backend) {
       const conversation = await goldenConversation();
       assert.equal(conversation.length, 19);
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         for (const { request, reply } of conversation) {
           const actual = (await client.requestText(request)).trimEnd();
           if (reply.startsWith('! ')) {
@@ -192,7 +212,11 @@ const scenarios = [
           const client = connections[connection];
           const label = `step ${position + 1}: ${connection}${kind === 'push' ? '<' : '>'} ${text}`;
           if (kind === 'push') {
-            assert.equal((await client.transport.receivePush({ timeout: 10_000 })).trimEnd(), reply, label);
+            assert.equal(
+              (await client.transport.receivePush({ timeout: 10_000 })).trimEnd(),
+              reply,
+              label,
+            );
             continue;
           }
           const actual = (await client.requestText(text)).trimEnd();
@@ -203,13 +227,20 @@ const scenarios = [
             assert.equal(actual, reply, label);
           }
           // Every push is written before any later reply on its connection.
-          assert.equal(client.pendingNotifications, 0, `${label}: a push the conversation does not list`);
+          assert.equal(
+            client.pendingNotifications,
+            0,
+            `${label}: a push the conversation does not list`,
+          );
         }
         // Through the typed API: unsubscribed, A hears of nothing more.
         assert.equal(await connections.B.subscribe([ANY, ANY, ANY]), 2);
         await connections.A.create(7n, 7n);
         const pushed = await connections.B.receiveNotification({ timeout: 10_000 });
-        assert.deepEqual(pushed, { subscription: 2, changes: [{ before: null, after: { index: 4n, source: 7n, target: 7n } }] });
+        assert.deepEqual(pushed, {
+          subscription: 2,
+          changes: [{ before: null, after: { index: 4n, source: 7n, target: 7n } }],
+        });
         assert.equal(await connections.A.receiveNotification({ timeout: 200 }), null);
       } finally {
         await connections.A?.close();
@@ -233,7 +264,11 @@ const scenarios = [
           const client = connections[connection];
           const label = `step ${position + 1}: ${connection}${kind === 'push' ? '<' : '>'} ${text}`;
           if (kind === 'push') {
-            assert.equal((await client.transport.receivePush({ timeout: 10_000 })).trimEnd(), reply, label);
+            assert.equal(
+              (await client.transport.receivePush({ timeout: 10_000 })).trimEnd(),
+              reply,
+              label,
+            );
             continue;
           }
           const actual = (await client.requestText(text)).trimEnd();
@@ -243,7 +278,11 @@ const scenarios = [
           } else {
             assert.equal(actual, reply, label);
           }
-          assert.equal(client.pendingNotifications, 0, `${label}: a push the conversation does not list`);
+          assert.equal(
+            client.pendingNotifications,
+            0,
+            `${label}: a push the conversation does not list`,
+          );
         }
       } finally {
         await connections.A?.close();
@@ -257,36 +296,75 @@ const scenarios = [
     processOnly: true,
     async run(store) {
       const server = await store.start({ args: [...store.options.args, '--triplets'] });
-      const [writer, watcher] = [await connectTcp(server.address, { capabilities: { triplets: true } }), await connectTcp(server.address)];
+      const [writer, watcher] = [
+        await connectTcp(server.address, { capabilities: { triplets: true } }),
+        await connectTcp(server.address),
+      ];
       try {
         assert.equal(writer.require('triplets').capabilities.triplets, true);
         const person = await writer.createTripletPoint();
         assert.equal(person.type, person.index);
         const knows = await writer.createTripletPoint();
-        const [alice, bob] = [await writer.createTriplet(person.index, 0, 0), await writer.createTriplet(person.index, 0, 0)];
+        const [alice, bob] = [
+          await writer.createTriplet(person.index, 0, 0),
+          await writer.createTriplet(person.index, 0, 0),
+        ];
         assert.notEqual(alice.index, bob.index);
         assert.deepEqual([alice.type, alice.from, alice.to], [person.index, 0n, 0n]);
-        assert.equal(await writer.setName(person.index, 'Person') > 0n, true);
+        assert.equal((await writer.setName(person.index, 'Person')) > 0n, true);
         const subscription = await watcher.subscribeTriplets([ANY, knows.index]);
         const fact = await writer.createTriplet(knows.index, alice.index, bob.index);
-        assert.deepEqual(await writer.eachTriplets([ANY, knows.index, alice.index, bob.index]), [fact]);
+        assert.deepEqual(await writer.eachTriplets([ANY, knows.index, alice.index, bob.index]), [
+          fact,
+        ]);
         assert.equal(await writer.countTriplets([ANY, person.index]), 3n);
-        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), { subscription, changes: [{ before: null, after: fact }] });
+        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), {
+          subscription,
+          changes: [{ before: null, after: fact }],
+        });
         const moved = { ...fact, from: bob.index, to: alice.index };
-        assert.deepEqual(await writer.updateTriplet(fact.index, knows.index, bob.index, alice.index), [{ before: fact, after: moved }]);
-        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), { subscription, changes: [{ before: fact, after: moved }] });
+        assert.deepEqual(
+          await writer.updateTriplet(fact.index, knows.index, bob.index, alice.index),
+          [{ before: fact, after: moved }],
+        );
+        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), {
+          subscription,
+          changes: [{ before: fact, after: moved }],
+        });
         const [query] = await writer.queryTriplets('() ((Person 0 0))');
-        assert.deepEqual([query.before, query.after.type, query.after.from, query.after.to], [null, 'Person', '0', '0']);
+        assert.deepEqual(
+          [query.before, query.after.type, query.after.from, query.after.to],
+          [null, 'Person', '0', '0'],
+        );
         const everything = await writer.exportTriplets();
-        assert.ok(everything.some(({ index, type }) => index === String(query.after.index) && type === 'Person'));
-        const batch = await writer.batch([{ op: 'createTriplet', type: person.index, from: 0, to: 0 }, { op: 'countTriplets', restriction: [ANY, knows.index] }], { window: 1 });
+        assert.ok(
+          everything.some(
+            ({ index, type }) => index === String(query.after.index) && type === 'Person',
+          ),
+        );
+        const batch = await writer.batch(
+          [
+            { op: 'createTriplet', type: person.index, from: 0, to: 0 },
+            { op: 'countTriplets', restriction: [ANY, knows.index] },
+          ],
+          { window: 1 },
+        );
         assert.equal(batch.completed, true);
         assert.equal(batch.results[1].value, 2n);
         const deleted = await writer.deleteTriplet(alice.index);
-        assert.deepEqual(deleted, [{ before: alice, after: null }, { before: moved, after: null }]);
-        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), { subscription, changes: [{ before: moved, after: null }] });
+        assert.deepEqual(deleted, [
+          { before: alice, after: null },
+          { before: moved, after: null },
+        ]);
+        assert.deepEqual(await watcher.receiveTripletNotification({ timeout: 10_000 }), {
+          subscription,
+          changes: [{ before: moved, after: null }],
+        });
         await watcher.unsubscribe(subscription);
-        await assert.rejects(writer.createTriplet(99, 0, 0), { name: 'RemoteError', message: /The type 99 is not a triplet/ });
+        await assert.rejects(writer.createTriplet(99, 0, 0), {
+          name: 'RemoteError',
+          message: /The type 99 is not a triplet/,
+        });
         await assert.rejects(writer.deleteTriplet(99), { name: 'RemoteError' });
       } finally {
         await writer.close();
@@ -299,7 +377,7 @@ const scenarios = [
     name: 'triplets: a server without --triplets keeps refusing them',
     processOnly: true,
     async run(store) {
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         assert.equal((await client.create(0, 0)).index, 1n);
         await assert.rejects(client.createTriplet(1, 0, 0), { name: 'RemoteError' });
         await assert.rejects(client.eachTriplets([1, 2, 3, 4]), { name: 'RemoteError' });
@@ -324,7 +402,12 @@ const scenarios = [
         await writer.create(0n, 0n);
         // A round trip on the subscriber: its pushes come before its replies.
         assert.equal(await subscriber.count(), 1n);
-        assert.deepEqual(seen, [{ subscription: 1, changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }] }]);
+        assert.deepEqual(seen, [
+          {
+            subscription: 1,
+            changes: [{ before: null, after: { index: 1n, source: 0n, target: 0n } }],
+          },
+        ]);
         stop();
         assert.equal(bystander.pendingNotifications, 0);
         await subscriber.unsubscribe(1);
@@ -342,16 +425,25 @@ const scenarios = [
   {
     name: 'addresses: the whole u32 range as BigInt, nothing beyond it',
     async run(store) {
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         assert.equal(client.capabilities.maxAddress, MAX_U32_ADDRESS);
         const link = await client.create(MAX_U32_ADDRESS, 1n);
         assert.deepEqual(link, { index: 1n, source: MAX_U32_ADDRESS, target: 1n });
         assert.equal(await client.count([1n, MAX_U32_ADDRESS]), 1n);
         // The client refuses what the store cannot hold before sending it...
-        await assert.rejects(client.create(MAX_U32_ADDRESS + 1n, 1n), { name: 'AddressRangeError', outcome: 'not-sent' });
-        await assert.rejects(client.create(2n ** 53n + 1n, 1n), { name: 'AddressRangeError', outcome: 'not-sent' });
+        await assert.rejects(client.create(MAX_U32_ADDRESS + 1n, 1n), {
+          name: 'AddressRangeError',
+          outcome: 'not-sent',
+        });
+        await assert.rejects(client.create(2n ** 53n + 1n, 1n), {
+          name: 'AddressRangeError',
+          outcome: 'not-sent',
+        });
         // ...and the backend refuses it too when sent as raw text.
-        assert.match(await client.requestText(`(create: (${MAX_U32_ADDRESS + 1n} 1))`), /^\(error: /);
+        assert.match(
+          await client.requestText(`(create: (${MAX_U32_ADDRESS + 1n} 1))`),
+          /^\(error: /,
+        );
         assert.equal(await client.count(), 1n);
       });
     },
@@ -359,7 +451,7 @@ const scenarios = [
   {
     name: 'duplicates: as the backend states in capabilities.duplicateLinks',
     async run(store) {
-      await using(store, async (client, reopen) => {
+      await withClient(store, async (client, reopen) => {
         const first = await client.create(1n, 1n);
         assert.deepEqual(first, { index: 1n, source: 1n, target: 1n });
         const second = await client.create(1n, 1n);
@@ -383,7 +475,7 @@ const scenarios = [
   {
     name: 'holes: deletion cascades, frees addresses, and misses are errors',
     async run(store) {
-      await using(store, async (client) => {
+      await withClient(store, async (client) => {
         const a = await client.create(0n, 0n);
         const b = await client.create(a.index, a.index);
         const c = await client.create(b.index, 0n);
@@ -397,7 +489,11 @@ const scenarios = [
         assert.equal(await client.count(), 2n);
         // A hole is a missing link, not a link to nothing.
         assert.deepEqual(await client.each([2n]), []);
-        await assert.rejects(client.delete(2n), { name: 'RemoteError', outcome: 'failed', message: /Link not found: 2/ });
+        await assert.rejects(client.delete(2n), {
+          name: 'RemoteError',
+          outcome: 'failed',
+          message: /Link not found: 2/,
+        });
         await assert.rejects(client.update(3n, 1n, 1n), { name: 'RemoteError', outcome: 'failed' });
         assert.equal(await client.getName(2n), null);
         // Every backend reuses the freed addresses, lowest first.
@@ -414,7 +510,9 @@ const scenarios = [
     async run(store) {
       let client = await store.open();
       try {
-        const first = await client.batch(Array.from({ length: 50 }, (_, i) => ({ op: 'create', source: BigInt(i), target: 0n })));
+        const first = await client.batch(
+          Array.from({ length: 50 }, (_, i) => ({ op: 'create', source: BigInt(i), target: 0n })),
+        );
         assert.equal(first.completed, true);
         await client.setName(1n, 'first run');
         const before = await snapshot(client);
@@ -423,9 +521,14 @@ const scenarios = [
         client = await fresh(store, client);
         assert.deepEqual(await snapshot(client), before);
         assert.equal(await client.getByName('first run'), 1n);
-        const second = await client.batch(Array.from({ length: 50 }, (_, i) => ({ op: 'create', source: BigInt(i), target: 1n })));
+        const second = await client.batch(
+          Array.from({ length: 50 }, (_, i) => ({ op: 'create', source: BigInt(i), target: 1n })),
+        );
         assert.equal(second.completed, true);
-        assert.deepEqual(indexes(second.results.map((result) => result.value)), Array.from({ length: 50 }, (_, i) => BigInt(51 + i)));
+        assert.deepEqual(
+          indexes(second.results.map((result) => result.value)),
+          Array.from({ length: 50 }, (_, i) => BigInt(51 + i)),
+        );
         const after = await snapshot(client);
         client = await fresh(store, client);
         assert.deepEqual(await snapshot(client), after);
@@ -452,7 +555,11 @@ const scenarios = [
         close: () => inner.close(),
       };
       const client = new LinksClient(counting);
-      const operations = Array.from({ length: 200 }, (_, i) => ({ op: 'create', source: BigInt(i + 1), target: BigInt(i + 1) }));
+      const operations = Array.from({ length: 200 }, (_, i) => ({
+        op: 'create',
+        source: BigInt(i + 1),
+        target: BigInt(i + 1),
+      }));
       let result;
       try {
         result = await client.batch(operations, { window: 8, signal: controller.signal });
@@ -463,16 +570,24 @@ const scenarios = [
       assert.equal(result.firstError.name, 'AbortError');
       assert.equal(result.ok + result.unknown + result.notSent + result.failed, 200);
       assert.equal(result.failed, 0);
-      assert.ok(result.ok >= 32 && result.notSent > 0, JSON.stringify({ ...result, results: undefined }));
+      assert.ok(
+        result.ok >= 32 && result.notSent > 0,
+        JSON.stringify({ ...result, results: undefined }),
+      );
       // Verified with a client that shares nothing with the aborted one.
-      await using(store, async (reader) => {
+      await withClient(store, async (reader) => {
         const links = await reader.each();
         const stored = new Set(links.map((link) => link.source));
         const count = BigInt(links.length);
-        assert.ok(count >= BigInt(result.ok) && count <= BigInt(result.ok + result.unknown), `${count} links after ${result.ok} ok, ${result.unknown} unknown`);
+        assert.ok(
+          count >= BigInt(result.ok) && count <= BigInt(result.ok + result.unknown),
+          `${count} links after ${result.ok} ok, ${result.unknown} unknown`,
+        );
         result.results.forEach((entry, i) => {
-          if (entry.status === 'ok') assert.ok(stored.has(entry.value.source), `ok #${i} is stored`);
-          if (entry.status === 'not-sent') assert.ok(!stored.has(BigInt(i + 1)), `not-sent #${i} is absent`);
+          if (entry.status === 'ok')
+            assert.ok(stored.has(entry.value.source), `ok #${i} is stored`);
+          if (entry.status === 'not-sent')
+            assert.ok(!stored.has(BigInt(i + 1)), `not-sent #${i} is absent`);
         });
       });
     },
@@ -483,7 +598,12 @@ const scenarios = [
     name: 'a server stopped mid-write keeps every acknowledged write',
     processOnly: true,
     async run(store) {
-      const create = (from, length) => Array.from({ length }, (_, i) => ({ op: 'create', source: BigInt(from + i), target: BigInt(from + i) }));
+      const create = (from, length) =>
+        Array.from({ length }, (_, i) => ({
+          op: 'create',
+          source: BigInt(from + i),
+          target: BigInt(from + i),
+        }));
       let acknowledged = 0;
       for (let round = 0; round < 4; round += 1) {
         const server = await store.start();
@@ -491,18 +611,27 @@ const scenarios = [
         // A bigger store makes each save long enough to be interrupted.
         if (round === 0) acknowledged += (await client.batch(create(1, 300), { window: 32 })).ok;
         const controller = new AbortController();
-        const pending = client.batch(create(1000 * (round + 1), 200), { window: 8, signal: controller.signal });
-        setTimeout(() => {
-          controller.abort();
-          server.close();
-        }, 10 * (round + 1));
+        const pending = client.batch(create(1000 * (round + 1), 200), {
+          window: 8,
+          signal: controller.signal,
+        });
+        setTimeout(
+          () => {
+            controller.abort();
+            server.close();
+          },
+          10 * (round + 1),
+        );
         const result = await pending;
         await client.close();
         await server.exited;
         acknowledged += result.ok;
-        await using(store, async (reader) => {
+        await withClient(store, async (reader) => {
           const count = await reader.count();
-          assert.ok(count >= BigInt(acknowledged), `round ${round}: ${count} links after ${acknowledged} acknowledged writes`);
+          assert.ok(
+            count >= BigInt(acknowledged),
+            `round ${round}: ${count} links after ${acknowledged} acknowledged writes`,
+          );
         });
       }
     },
@@ -524,7 +653,7 @@ const scenarios = [
         '  spaces around  ',
         'x'.repeat(2000),
       ];
-      await using(store, async (client, reopen) => {
+      await withClient(store, async (client, reopen) => {
         const links = [];
         for (const [i, name] of names.entries()) {
           const link = await client.create(BigInt(1000 + i), BigInt(1000 + i));
@@ -547,7 +676,7 @@ const scenarios = [
   {
     name: 'empty names, renaming and moving names',
     async run(store) {
-      await using(store, async (client, reopen) => {
+      await withClient(store, async (client, reopen) => {
         const a = await client.create(5n, 5n);
         const b = await client.create(6n, 6n);
         await client.setName(a.index, '');
@@ -569,7 +698,10 @@ const scenarios = [
     async run(store) {
       const client = await store.open({ maxRequestBytes: 64 });
       try {
-        await assert.rejects(client.getByName('n'.repeat(100)), { name: 'LimitExceededError', outcome: 'not-sent' });
+        await assert.rejects(client.getByName('n'.repeat(100)), {
+          name: 'LimitExceededError',
+          outcome: 'not-sent',
+        });
         assert.equal(await client.count(), 0n);
       } finally {
         await client.close();
@@ -582,7 +714,10 @@ const scenarios = [
     async run(store) {
       const server = await store.start({ args: [...store.options.args, '--protocol', 'binary'] });
       try {
-        await assert.rejects(connectTcp(server.address, { timeout: 10_000 }), { name: 'ProtocolMismatchError', message: /does not accept this protocol/ });
+        await assert.rejects(connectTcp(server.address, { timeout: 10_000 }), {
+          name: 'ProtocolMismatchError',
+          message: /does not accept this protocol/,
+        });
       } finally {
         await server.close();
       }
@@ -630,16 +765,23 @@ async function main() {
     console.error('set CLINK_RUST, CLINK_CSHARP and/or CLINK_WASM; see the top of this file');
     process.exit(2);
   }
-  console.log(`# link-cli-client conformance on ${runtime}: ${backends.map((backend) => backend.name).join(', ')}`);
+  console.log(
+    `# link-cli-client conformance on ${runtime}: ${backends.map((backend) => backend.name).join(', ')}`,
+  );
   let failed = 0;
   let passed = 0;
   let skipped = 0;
   for (const backend of backends) {
     for (const scenario of scenarios) {
       const label = `${backend.name}: ${scenario.name}`;
-      if ((scenario.persistentOnly && !backend.persistent) || (scenario.processOnly && !backend.process)) {
+      if (
+        (scenario.persistentOnly && !backend.persistent) ||
+        (scenario.processOnly && !backend.process)
+      ) {
         skipped += 1;
-        console.log(`skip - ${label} (${scenario.persistentOnly ? 'not persistent' : 'no server process'})`);
+        console.log(
+          `skip - ${label} (${scenario.persistentOnly ? 'not persistent' : 'no server process'})`,
+        );
         continue;
       }
       const started = performance.now();

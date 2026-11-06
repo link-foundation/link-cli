@@ -1,0 +1,185 @@
+name: "CodeQL: Init"
+description: "Set up CodeQL"
+author: "GitHub"
+inputs:
+  tools:
+    description: >-
+      By default, the Action will use the recommended version of the CodeQL
+      Bundle to analyze your project. You can override this choice using this
+      input. One of:
+
+      - A local path to a CodeQL Bundle tarball, or
+      - The URL of a CodeQL Bundle tarball GitHub release asset, or
+      - A special value `linked` which uses the version of the CodeQL tools
+        that the Action has been bundled with.
+      - A special value `nightly` which uses the latest nightly version of the
+        CodeQL tools. Note that this is unstable and not recommended for
+        production use.
+
+      If not specified, the Action will check in several places until it finds
+      the CodeQL tools.
+    required: false
+  languages:
+    description: >-
+      A comma-separated list of CodeQL languages to analyze.
+
+      Due to the performance benefit of parallelizing builds, we recommend specifying languages to
+      analyze using a matrix and providing `\$\{{ matrix.language }}` as this input.
+
+      For more information, see
+      https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#changing-the-languages-that-are-analyzed.
+    required: false
+  build-mode:
+    description: >-
+      The build mode that will be used to analyze the language. This input is only available when
+      analyzing a single CodeQL language per job, for example using a matrix.
+
+      Available build modes will differ based on the language being analyzed. One of:
+
+      - `none`:      The database will be created without building the source code.
+                     Available for all interpreted languages and some compiled languages.
+      - `autobuild`: The database will be created by attempting to automatically build the source
+                     code. Available for all compiled languages.
+      - `manual`:   The database will be created by building the source code using a manually
+                     specified build command. To use this build mode, specify manual build steps in
+                     your workflow between the `init` and `analyze` steps. Available for all
+                     compiled languages.
+    required: false
+  analysis-kinds:
+    description: >-
+      [Internal] A comma-separated list of analysis kinds to enable. This input is intended for
+      internal-use only at this time and the behaviour is subject to changes. Some features may
+      not be available depending on which analysis kinds are enabled.
+
+      Available options are:
+
+      - `code-scanning`: The default, security-focused analysis.
+      - `code-quality`: Analysis focused on code quality. This must be enabled in conjunction
+                        with `code-scanning`.
+    default: "code-scanning"
+    required: true
+  token:
+    description: GitHub token to use for authenticating with this instance of GitHub. To download custom packs from multiple registries, use the registries input.
+    default: ${{ github.token }}
+    required: false
+  registries:
+    description: |
+      Use this input only when you need to download CodeQL packages from another instance of GitHub. If you only need to download packages from this GitHub instance, use the token input instead.
+
+      A YAML string that defines the list of GitHub container registries to use for downloading packs. The string is in the following form (the | is required on the first line):
+
+      registries: |
+          - url: https://containers.GHEHOSTNAME1/v2/
+            packages:
+              - my-company/*
+              - my-company2/*
+            token: \$\{{ secrets.GHEHOSTNAME1_TOKEN }}
+
+          - url: https://ghcr.io/v2/
+            packages: */*
+            token: \$\{{ secrets.GHCR_TOKEN }}
+
+      The `url` property contains the URL to the container registry you want to connect to.
+
+      The `packages` property contains a single glob string or a list of glob strings, specifying which packages should be retrieved from this particular container registry. Order is important. Earlier entries will match before later entries.
+
+      The `token` property contains a connection token for this registry.    required: false
+  matrix:
+    default: ${{ toJson(matrix) }}
+    required: false
+  config-file:
+    description: Path of the config file to use
+    required: false
+  db-location:
+    description: Path where CodeQL databases should be created. If not specified, a temporary directory will be used.
+    required: false
+  config:
+    description: Configuration passed as a YAML string in the same format as the config-file input. This takes precedence over the config-file input.
+    required: false
+  queries:
+    description: Comma-separated list of additional queries to run. By default, this overrides the same setting in a configuration file; prefix with "+" to use both sets of queries.
+    required: false
+  quality-queries:
+    description: "[Internal] DEPRECATED. Comma-separated list of code quality queries to run."
+    required: false
+  packs:
+    description: >-
+      Comma-separated list of packs to run. Reference a pack in the format `scope/name[@version]`. If `version` is not
+      specified, then the latest version of the pack is used. By default, this overrides the same setting in a
+      configuration file; prefix with "+" to use both sets of packs.
+
+      This input is only available in single-language analyses. To use packs in multi-language
+      analyses, you must specify packs in the codeql-config.yml file.
+    required: false
+  external-repository-token:
+    description: A token for fetching external config files and queries if they reside in a private repository in the same GitHub instance that is running this action.
+    required: false
+  setup-python-dependencies:
+    description: DEPRECATED. This option is ignored since CodeQL Action no longer installs Python dependencies as of versions 3.25.0 and 2.25.0.
+    required: false
+  source-root:
+    description: Path of the root source code directory, relative to $GITHUB_WORKSPACE.
+    required: false
+  ram:
+    description: >-
+      The amount of memory in MB that can be used by CodeQL extractors.
+      By default, CodeQL extractors will use most of the memory available in the system
+      (which for GitHub-hosted runners is 6GB for Linux, 5.5GB for Windows, and 13GB for macOS).
+      This input also sets the amount of memory that can later be used by the "analyze" action.
+    required: false
+  threads:
+    description: >-
+      The number of threads that can be used by CodeQL extractors.
+      By default, CodeQL extractors will use all the hardware threads available in the system
+      (which for GitHub-hosted runners is 2 for Linux and Windows and 3 for macOS).
+      This input also sets the number of threads that can later be used by the "analyze" action.
+    required: false
+  debug:
+    description: >-
+      Enable debugging mode.
+      This will result in more output being produced which may be useful when debugging certain issues.
+      Debugging mode is enabled automatically when step debug logging is turned on.
+    required: false
+    default: "false"
+  debug-artifact-name:
+    description: >-
+      The name of the artifact to store debugging information in.
+      This is only used when debug mode is enabled.
+    required: false
+  debug-database-name:
+    description: >-
+      The name of the database uploaded to the debugging artifact.
+      This is only used when debug mode is enabled.
+    required: false
+  trap-caching:
+    description: >-
+      Explicitly enable or disable TRAP caching instead of using the automatically determined default.
+      TRAP caching is disabled by default when improved incremental analysis is enabled,
+      because improved incremental analysis of a pull request only extracts changed files,
+      which rarely benefit from TRAP caching.
+    required: false
+  dependency-caching:
+    description: >-
+      Explicitly enable or disable caching of project build dependencies.
+    required: false
+  check-run-id:
+    description: >-
+      [Internal] The ID of the check run, as provided by the Actions runtime environment. Do not set this value manually.
+    default: ${{ job.check_run_id }}
+    required: false
+  job-status:
+    description: >-
+      [Internal] The status of the job, as provided by the Actions runtime environment. This is how the
+      post step learns whether the job as a whole succeeded, failed, or was cancelled. Do not set this
+      value manually.
+    default: ${{ job.status }}
+    required: false
+outputs:
+  codeql-path:
+    description: The path of the CodeQL binary used for analysis
+  codeql-version:
+    description: The version of the CodeQL binary used for analysis
+runs:
+  using: node24
+  main: "../lib/init-entry.js"
+  post: "../lib/init-post-entry.js"

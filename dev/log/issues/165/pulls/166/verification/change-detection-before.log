@@ -1,0 +1,150 @@
+✖ a failed PR Git comparison fails change detection (130.420102ms)
+✖ a first commit checks all files instead of treating Git failure as no changes (180.710222ms)
+✖ PR change detection requires both comparison SHAs (107.644993ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 564.893064
+
+✖ failing tests:
+
+test at csharp/scripts/change-detection.test.mjs:10:1
+✖ a failed PR Git comparison fails change detection (130.420102ms)
+  AssertionError [ERR_ASSERTION]: Detecting file changes for CI/CD...
+  
+  Comparing PR: 1111111111111111111111111111111111111111...2222222222222222222222222222222222222222
+  Changed files:
+    (none)
+  
+  cs-changed=false
+  csproj-changed=false
+  sln-changed=false
+  props-changed=false
+  rs-changed=false
+  toml-changed=false
+  mjs-changed=false
+  docs-changed=false
+  workflow-changed=false
+  
+  Files considered as code changes:
+    (none)
+  
+  any-code-changed=false
+  csharp-code-changed=false
+  rust-code-changed=false
+  
+  Change detection completed.
+  comparison failed
+  Error executing command: git diff --name-only 1111111111111111111111111111111111111111 2222222222222222222222222222222222222222
+  Command failed: git diff --name-only 1111111111111111111111111111111111111111 2222222222222222222222222222222222222222
+  comparison failed
+  
+  
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793920673713/csharp/scripts/change-detection.test.mjs:28:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at csharp/scripts/change-detection.test.mjs:36:1
+✖ a first commit checks all files instead of treating Git failure as no changes (180.710222ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /cs-changed=true/. Input:
+  
+  'Detecting file changes for CI/CD...\n' +
+    '\n' +
+    'Comparing HEAD^ to HEAD\n' +
+    'Changed files:\n' +
+    '  (none)\n' +
+    '\n' +
+    'cs-changed=false\n' +
+    'csproj-changed=false\n' +
+    'sln-changed=false\n' +
+    'props-changed=false\n' +
+    'rs-changed=false\n' +
+    'toml-changed=false\n' +
+    'mjs-changed=false\n' +
+    'docs-changed=false\n' +
+    'workflow-changed=false\n' +
+    '\n' +
+    'Files considered as code changes:\n' +
+    '  (none)\n' +
+    '\n' +
+    'any-code-changed=false\n' +
+    'csharp-code-changed=false\n' +
+    'rust-code-changed=false\n' +
+    '\n' +
+    'Change detection completed.\n'
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793920673713/csharp/scripts/change-detection.test.mjs:52:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Detecting file changes for CI/CD...\n\nComparing HEAD^ to HEAD\nChanged files:\n  (none)\n\ncs-changed=false\ncsproj-changed=false\nsln-changed=false\nprops-changed=false\nrs-changed=false\ntoml-changed=false\nmjs-changed=false\ndocs-changed=false\nworkflow-changed=false\n\nFiles considered as code changes:\n  (none)\n\nany-code-changed=false\ncsharp-code-changed=false\nrust-code-changed=false\n\nChange detection completed.\n',
+    expected: /cs-changed=true/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at csharp/scripts/change-detection.test.mjs:59:1
+✖ PR change detection requires both comparison SHAs (107.644993ms)
+  AssertionError [ERR_ASSERTION]: Detecting file changes for CI/CD...
+  
+  Comparing HEAD^ to HEAD
+  Changed files:
+    csharp/.changeset/issue-165-ci-audit.md
+  
+  cs-changed=false
+  csproj-changed=false
+  sln-changed=false
+  props-changed=false
+  rs-changed=false
+  toml-changed=false
+  mjs-changed=false
+  docs-changed=true
+  workflow-changed=false
+  
+  Files considered as code changes:
+    (none)
+  
+  any-code-changed=false
+  csharp-code-changed=false
+  rust-code-changed=false
+  
+  Change detection completed.
+  
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///tmp/gh-issue-solver-1793920673713/csharp/scripts/change-detection.test.mjs:70:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,1331 @@
+{
+  "sha": "88bb71832e04a1a52ddb584f1db0f57b6e966646",
+  "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/88bb71832e04a1a52ddb584f1db0f57b6e966646",
+  "tree": [
+    {
+      "path": ".changeset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5b80e88e5f6dc8d03c695b30cb15872a3b5503ea",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/5b80e88e5f6dc8d03c695b30cb15872a3b5503ea"
+    },
+    {
+      "path": ".changeset/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eeb0abf2bbbd555e5b5dd0f20cf1f8ca61c51fcf",
+      "size": 1684,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/eeb0abf2bbbd555e5b5dd0f20cf1f8ca61c51fcf"
+    },
+    {
+      "path": ".changeset/complete-ci-hardening.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "515c8b94bd319be618c7bbe1a4f269c9b56ce27d",
+      "size": 293,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/515c8b94bd319be618c7bbe1a4f269c9b56ce27d"
+    },
+    {
+      "path": ".changeset/config.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f3c3b4554affbfe359ec682c0438384276ef06b",
+      "size": 249,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/1f3c3b4554affbfe359ec682c0438384276ef06b"
+    },
+    {
+      "path": ".changeset/fix-changeset-script-injection.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d703df6f15dfb7beaf2a3d3ce53f4476e48358c3",
+      "size": 643,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d703df6f15dfb7beaf2a3d3ce53f4476e48358c3"
+    },
+    {
+      "path": ".changeset/harden-pipeline-gates.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "62bddf52d84345058d40ac40b6085a049ee0d935",
+      "size": 862,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/62bddf52d84345058d40ac40b6085a049ee0d935"
+    },
+    {
+      "path": ".changeset/pin-ubuntu-runners.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57b1bbedc1f710b14f881af6e8917fdcad791a2d",
+      "size": 156,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/57b1bbedc1f710b14f881af6e8917fdcad791a2d"
+    },
+    {
+      "path": ".changeset/reliable-release-and-security.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2582ec15920c69bd8451bfc766c506d5a58bdead",
+      "size": 236,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2582ec15920c69bd8451bfc766c506d5a58bdead"
+    },
+    {
+      "path": ".changeset/repair-publication-acceptance-audit.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9196211db63ad4ece47eab4b007bec5ac48e487e",
+      "size": 340,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/9196211db63ad4ece47eab4b007bec5ac48e487e"
+    },
+    {
+      "path": ".changeset/rerun-unacquired-runners.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "33a5bbc0616fec3b33f63c83db0fcd41526f4c65",
+      "size": 551,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/33a5bbc0616fec3b33f63c83db0fcd41526f4c65"
+    },
+    {
+      "path": ".changeset/update-all-dependencies.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07e284dd0df39db7afdfe351f332f0d8af2ae961",
+      "size": 309,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/07e284dd0df39db7afdfe351f332f0d8af2ae961"
+    },
+    {
+      "path": ".editorconfig",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "003e409ef2bc5c502b0977cc98ce80793341d5d0",
+      "size": 9714,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/003e409ef2bc5c502b0977cc98ce80793341d5d0"
+    },
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "97758a82a169fc7dee9b01582c8fc1b523331448",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/97758a82a169fc7dee9b01582c8fc1b523331448"
+    },
+    {
+      "path": ".github/actions",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "045ed5d3bbcfce62eb79b1d28a25c7ca480123cd",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/045ed5d3bbcfce62eb79b1d28a25c7ca480123cd"
+    },
+    {
+      "path": ".github/actions/csharp-layout",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9904071b3bd9c26090f52693791716fd454e99a1",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/9904071b3bd9c26090f52693791716fd454e99a1"
+    },
+    {
+      "path": ".github/actions/csharp-layout/action.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed68d44e08ac9d63e835b13035c4b26f42c0c141",
+      "size": 1150,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/ed68d44e08ac9d63e835b13035c4b26f42c0c141"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d486b5aa6ce3950c836f9e201444ee8deaa5cbc3",
+      "size": 751,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d486b5aa6ce3950c836f9e201444ee8deaa5cbc3"
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "41a8efc5102c47541c5111e8b04a3d0a08cafbe4",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/41a8efc5102c47541c5111e8b04a3d0a08cafbe4"
+    },
+    {
+      "path": ".github/workflows/docs.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5eaa15cb8f0ff0d9a60961d21fb1a54d19de4464",
+      "size": 4034,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5eaa15cb8f0ff0d9a60961d21fb1a54d19de4464"
+    },
+    {
+      "path": ".github/workflows/links.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ff1796b44954d33bab54b345c374d707cb6d882a",
+      "size": 5320,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/ff1796b44954d33bab54b345c374d707cb6d882a"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "103aecdacb80e9fd7818a60564aba105cf10a2ca",
+      "size": 38906,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/103aecdacb80e9fd7818a60564aba105cf10a2ca"
+    },
+    {
+      "path": ".github/workflows/rerun-infrastructure-failures.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "db5f19246f3eeb8c9d3039c09f84d54fbb94511b",
+      "size": 2373,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/db5f19246f3eeb8c9d3039c09f84d54fbb94511b"
+    },
+    {
+      "path": ".github/workflows/security.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4704e9826d2d0a4d84f5d862aae8a87eebe044d",
+      "size": 7451,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/c4704e9826d2d0a4d84f5d862aae8a87eebe044d"
+    },
+    {
+      "path": ".github/workflows/workflows.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "def8ab6c2d04592b47c08e32c14dd1103bf4fb75",
+      "size": 4680,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/def8ab6c2d04592b47c08e32c14dd1103bf4fb75"
+    },
+    {
+      "path": ".github/zizmor.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fcbb540127902de45792333d04e81621c91865c",
+      "size": 74,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2fcbb540127902de45792333d04e81621c91865c"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8574c3e6602bc0a477cebd33d456a7548d9a05df",
+      "size": 1224,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/8574c3e6602bc0a477cebd33d456a7548d9a05df"
+    },
+    {
+      "path": ".lycheeignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "60ea9289307607e01a5cbc3bf187a429546aaff6",
+      "size": 173,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/60ea9289307607e01a5cbc3bf187a429546aaff6"
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2048b4adba54da66840b8815029742c93d747b06",
+      "size": 890,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2048b4adba54da66840b8815029742c93d747b06"
+    },
+    {
+      "path": ".prettierrc.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2bfa238eb5c4b08412ffa03d98cf9d4a7c9c51fe",
+      "size": 63,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2bfa238eb5c4b08412ffa03d98cf9d4a7c9c51fe"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4faf782cf7cbec8c4004504901b403dc80bf1617",
+      "size": 6791,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/4faf782cf7cbec8c4004504901b403dc80bf1617"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25999b657fe636ec6d684092c511f4df3ee7c9be",
+      "size": 10551,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/25999b657fe636ec6d684092c511f4df3ee7c9be"
+    },
+    {
+      "path": "Directory.Build.props",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c75e83912d63e5bebf3d3edc87c4d5f4aa6ad1d0",
+      "size": 661,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/c75e83912d63e5bebf3d3edc87c4d5f4aa6ad1d0"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fdddb29aa445bf3d6a5d843d6dd77e10a9f99657",
+      "size": 1211,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/fdddb29aa445bf3d6a5d843d6dd77e10a9f99657"
+    },
+    {
+      "path": "MyPackage.sln",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7456c455902db282a24638869307d2dda049b449",
+      "size": 4327,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7456c455902db282a24638869307d2dda049b449"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9a15d42371ddeed3709d71338b822dcea279d1ce",
+      "size": 18848,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/9a15d42371ddeed3709d71338b822dcea279d1ce"
+    },
+    {
+      "path": "bun.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e78f20712ee714174c13a14c683b9877630ce61f",
+      "size": 23455,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e78f20712ee714174c13a14c683b9877630ce61f"
+    },
+    {
+      "path": "ci-logs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "90939f6ff5b01abbbf4b6a406b494248e86bfdb5",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/90939f6ff5b01abbbf4b6a406b494248e86bfdb5"
+    },
+    {
+      "path": "ci-logs/artifact-download-40986681017.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb34f7d66d9f610189b6bbe4180d657b12ad1a34",
+      "size": 18575,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/bb34f7d66d9f610189b6bbe4180d657b12ad1a34"
+    },
+    {
+      "path": "ci-logs/artifact-upload-40986681017.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a83f8083b6f6b3288ba32007821ab6d7b68dda3e",
+      "size": 18969,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/a83f8083b6f6b3288ba32007821ab6d7b68dda3e"
+    },
+    {
+      "path": "ci-logs/helper-checks-40986681017.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5edb9cdf5fc9f9ca1e593a128b6ff9c6cb1af6f7",
+      "size": 80882,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5edb9cdf5fc9f9ca1e593a128b6ff9c6cb1af6f7"
+    },
+    {
+      "path": "ci-logs/issue-91-javascript-audit-before.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da9285f0e261907d5e48e297520e3383a0328d60",
+      "size": 280,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/da9285f0e261907d5e48e297520e3383a0328d60"
+    },
+    {
+      "path": "ci-logs/issue-91-main-codecov-40989121123.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "00962c101ee8c98ee50567ff07c54f79f37d291d",
+      "size": 4552,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/00962c101ee8c98ee50567ff07c54f79f37d291d"
+    },
+    {
+      "path": "ci-logs/issue-91-main-preflight-40989121123.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "960ec8250143ab12d5e1cebe46b3b7cdb5500ec0",
+      "size": 31945,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/960ec8250143ab12d5e1cebe46b3b7cdb5500ec0"
+    },
+    {
+      "path": "ci-logs/links-32335007232.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b999f419984b6b08575d6c58d62507f780eed96",
+      "size": 47966,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2b999f419984b6b08575d6c58d62507f780eed96"
+    },
+    {
+      "path": "ci-logs/lint-40986680962.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c9c94b2c11d15527725ae659667c1c45fc471fd",
+      "size": 86334,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/9c9c94b2c11d15527725ae659667c1c45fc471fd"
+    },
+    {
+      "path": "ci-logs/main-41299536470.log",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f513c23f875d6efc198df15bd94770da71ec787",
+      "size": 14189,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2f513c23f875d6efc198df15bd94770da71ec787"
+    },
+    {
+      "path": "docfx.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80033ac1e2c3e3c1a2bc486ed865d25724ad863f",
+      "size": 939,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/80033ac1e2c3e3c1a2bc486ed865d25724ad863f"
+    },
+    {
+      "path": "docs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "24994a16769f851251a7a6b81bda77c07334b11f",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/24994a16769f851251a7a6b81bda77c07334b11f"
+    },
+    {
+      "path": "docs/index.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2d3272b482a01c4e1fd406b1c349c7adcd18ab6b",
+      "size": 1017,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2d3272b482a01c4e1fd406b1c349c7adcd18ab6b"
+    },
+    {
+      "path": "docs/issue-69-analysis.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd9088ceecd9586dfe313311a4188b5043df4363",
+      "size": 15270,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/bd9088ceecd9586dfe313311a4188b5043df4363"
+    },
+    {
+      "path": "docs/issue-82-plan.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8e1e7562902ceb4d60fab98c6bf66fb2c2824a4a",
+      "size": 17020,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/8e1e7562902ceb4d60fab98c6bf66fb2c2824a4a"
+    },
+    {
+      "path": "docs/issue-91-acceptance.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3d7c88269449b93bb1e36f11a0a4ea3c57dfeab4",
+      "size": 11829,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/3d7c88269449b93bb1e36f11a0a4ea3c57dfeab4"
+    },
+    {
+      "path": "docs/roadmap",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d43a9c410e04e4a28a8bad8387472f7e5e56c53e",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/d43a9c410e04e4a28a8bad8387472f7e5e56c53e"
+    },
+    {
+      "path": "docs/roadmap/preview-regeneration.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "21ed8654b0ceb3f3d588361a73ca6f34fb71cb8f",
+      "size": 3456,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/21ed8654b0ceb3f3d588361a73ca6f34fb71cb8f"
+    },
+    {
+      "path": "docs/roadmap/toc.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8711b5620f9b3d83960e5ec574a25f5377adcab",
+      "size": 68,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e8711b5620f9b3d83960e5ec574a25f5377adcab"
+    },
+    {
+      "path": "docs/toc.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "851da202a6497c53aec6e7109891857ce2eefef2",
+      "size": 88,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/851da202a6497c53aec6e7109891857ce2eefef2"
+    },
+    {
+      "path": "eslint.config.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a1d338163804ad2dd9db26721c782524d112853",
+      "size": 694,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/1a1d338163804ad2dd9db26721c782524d112853"
+    },
+    {
+      "path": "examples",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5fba4034f33f3537f71282396505ebde5212f5b0",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/5fba4034f33f3537f71282396505ebde5212f5b0"
+    },
+    {
+      "path": "examples/BasicUsage.cs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3f92ab4c44deadf133d36fe854bd154abb3fd17d",
+      "size": 1328,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/3f92ab4c44deadf133d36fe854bd154abb3fd17d"
+    },
+    {
+      "path": "examples/BasicUsage.csproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ca824626a3275535b83fa4dca8533cfe0b359a2",
+      "size": 449,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/9ca824626a3275535b83fa4dca8533cfe0b359a2"
+    },
+    {
+      "path": "examples/packages.lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "921d5c4f2e333acceb7713d9cd9819349dcf9a78",
+      "size": 121,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/921d5c4f2e333acceb7713d9cd9819349dcf9a78"
+    },
+    {
+      "path": "experiments",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c29156be2a0b288899c0bae302f6b6deb7b6c7cf",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/c29156be2a0b288899c0bae302f6b6deb7b6c7cf"
+    },
+    {
+      "path": "experiments/issue-69",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "fb4007c39c52536ebe9b4ce1824cdc47cbbf56c5",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/fb4007c39c52536ebe9b4ce1824cdc47cbbf56c5"
+    },
+    {
+      "path": "experiments/issue-69/reproduce-transient-links.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8036665259925d97991c1087cd29bfbc76b8c528",
+      "size": 3495,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/8036665259925d97991c1087cd29bfbc76b8c528"
+    },
+    {
+      "path": "experiments/issue-82",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "774252cea2da1553f06a104328edafa2d1df7c35",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/774252cea2da1553f06a104328edafa2d1df7c35"
+    },
+    {
+      "path": "experiments/issue-82/reproduce-artifact-buffer.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "240cac0d7392021eb67134ac18bc7060f760e860",
+      "size": 883,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/240cac0d7392021eb67134ac18bc7060f760e860"
+    },
+    {
+      "path": "experiments/issue-82/reproduce-bun-timeout.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "851d5d2624f57ba0dc53f6ca955e3ebb22893228",
+      "size": 1259,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/851d5d2624f57ba0dc53f6ca955e3ebb22893228"
+    },
+    {
+      "path": "experiments/issue-82/verify-lint-integrations.sh",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f47148a575859aeda47891c0cd1f7a99b2c3a3a5",
+      "size": 1034,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/f47148a575859aeda47891c0cd1f7a99b2c3a3a5"
+    },
+    {
+      "path": "experiments/issue-82/verify-local-package.sh",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b68258321d6d202893d17663ec4fdf28843b8911",
+      "size": 1332,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/b68258321d6d202893d17663ec4fdf28843b8911"
+    },
+    {
+      "path": "experiments/issue-82/zip-fixture.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "78e5038183aa5bb7c15555f2fb32d8d615f73b94",
+      "size": 1865,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/78e5038183aa5bb7c15555f2fb32d8d615f73b94"
+    },
+    {
+      "path": "experiments/issue-96",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "17f378d7380ed822c9e2dc38fc31ec11be5e46c3",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/17f378d7380ed822c9e2dc38fc31ec11be5e46c3"
+    },
+    {
+      "path": "experiments/issue-96/dry-run-rerun.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8877736fda735ebc5f2b72d1376cfc0e457adb19",
+      "size": 1074,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/8877736fda735ebc5f2b72d1376cfc0e457adb19"
+    },
+    {
+      "path": "experiments/latest-actions.sh",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "214e040b5f7252c8d9dc53e42f3406cb54573a29",
+      "size": 280,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/214e040b5f7252c8d9dc53e42f3406cb54573a29"
+    },
+    {
+      "path": "experiments/reproduce-bug.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "30bb301dc5d34565407552785488c49225a5e7eb",
+      "size": 1953,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/30bb301dc5d34565407552785488c49225a5e7eb"
+    },
+    {
+      "path": "global.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d9997a017ad2514f486ba94f0ef5b95ed00712f0",
+      "size": 81,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d9997a017ad2514f486ba94f0ef5b95ed00712f0"
+    },
+    {
+      "path": "jsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d59c90b84f76cd4afba7813031ee5f5d0a8aa08a",
+      "size": 330,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d59c90b84f76cd4afba7813031ee5f5d0a8aa08a"
+    },
+    {
+      "path": "lychee.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e56b8c9e7927dae01ffd9422d91f7cf2156b1cf8",
+      "size": 220,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e56b8c9e7927dae01ffd9422d91f7cf2156b1cf8"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bbbfb824cda7595387a2106e8885dba49296a9a4",
+      "size": 805,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/bbbfb824cda7595387a2106e8885dba49296a9a4"
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0f2216ce0b3d4f2dfec0c324874ae691085bb60f",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/0f2216ce0b3d4f2dfec0c324874ae691085bb60f"
+    },
+    {
+      "path": "scripts/action-pins.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ceb8f4c1398b6b30011f31abfae254f97ad49fb6",
+      "size": 1304,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/ceb8f4c1398b6b30011f31abfae254f97ad49fb6"
+    },
+    {
+      "path": "scripts/action-pins.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d9abebac235e4c7ae8cdad20153955196b4594a",
+      "size": 1564,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/0d9abebac235e4c7ae8cdad20153955196b4594a"
+    },
+    {
+      "path": "scripts/anonymous-package.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba7d0f41de9934b676e5568e02e7555752f28a56",
+      "size": 2297,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/ba7d0f41de9934b676e5568e02e7555752f28a56"
+    },
+    {
+      "path": "scripts/anonymous-package.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e978ae129ad4ac36ac92e5dec699dd61655c2433",
+      "size": 2145,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e978ae129ad4ac36ac92e5dec699dd61655c2433"
+    },
+    {
+      "path": "scripts/audit-dependencies.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ac5761019699c47b66dd1165909aecb206c8be67",
+      "size": 2324,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/ac5761019699c47b66dd1165909aecb206c8be67"
+    },
+    {
+      "path": "scripts/audit-javascript.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2417ba809ddbbb8343b6daea81ddc94e77c908f1",
+      "size": 1189,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2417ba809ddbbb8343b6daea81ddc94e77c908f1"
+    },
+    {
+      "path": "scripts/bump-version.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ca7c6e3b9f9ccb80290d9ada631b6a0544a823b",
+      "size": 2620,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5ca7c6e3b9f9ccb80290d9ada631b6a0544a823b"
+    },
+    {
+      "path": "scripts/check-file-size.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e89fd67ff8c9b66081d5ade683868a0a52ca84e2",
+      "size": 6832,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e89fd67ff8c9b66081d5ade683868a0a52ca84e2"
+    },
+    {
+      "path": "scripts/check-file-size.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ff0678d073acb085b440643e45d8c46204d6426",
+      "size": 3617,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7ff0678d073acb085b440643e45d8c46204d6426"
+    },
+    {
+      "path": "scripts/check-pipeline-status.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "96e0e73c72504c6236044d84d82ac8b1ea37fc9e",
+      "size": 213,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/96e0e73c72504c6236044d84d82ac8b1ea37fc9e"
+    },
+    {
+      "path": "scripts/check-release-needed.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d4b6b103c4f961815b1d8a9169eb613b07d5d0c",
+      "size": 12402,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/9d4b6b103c4f961815b1d8a9169eb613b07d5d0c"
+    },
+    {
+      "path": "scripts/check-release-needed.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e1827b97ff2f424f3eb389aaf141083dda0c7ef",
+      "size": 12000,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/6e1827b97ff2f424f3eb389aaf141083dda0c7ef"
+    },
+    {
+      "path": "scripts/check-web-archive.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ba9e7c196cdf01ccba0bb231ae6f31fcc19612d",
+      "size": 14285,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/8ba9e7c196cdf01ccba0bb231ae6f31fcc19612d"
+    },
+    {
+      "path": "scripts/check-web-archive.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88f7db505a94c262eb8bc7655663a328c361e366",
+      "size": 3394,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/88f7db505a94c262eb8bc7655663a328c361e366"
+    },
+    {
+      "path": "scripts/create-github-release.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5199d8b04548a106ee0bf00e6c171ff3a9702f70",
+      "size": 14783,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5199d8b04548a106ee0bf00e6c171ff3a9702f70"
+    },
+    {
+      "path": "scripts/create-github-release.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09bbc695a55e0e0736fc252aaba4a6ee6973de44",
+      "size": 10018,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/09bbc695a55e0e0736fc252aaba4a6ee6973de44"
+    },
+    {
+      "path": "scripts/detect-code-changes.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88bb87a35475370749e75503b90c2e0674fc72e7",
+      "size": 5276,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/88bb87a35475370749e75503b90c2e0674fc72e7"
+    },
+    {
+      "path": "scripts/detect-code-changes.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0dbc8687c6b724d8e19d35ae3fe2b094d1a83586",
+      "size": 1261,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/0dbc8687c6b724d8e19d35ae3fe2b094d1a83586"
+    },
+    {
+      "path": "scripts/docs-workflow-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a57a8a8068f51e69d4a945587806a6c446bf0182",
+      "size": 3905,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/a57a8a8068f51e69d4a945587806a6c446bf0182"
+    },
+    {
+      "path": "scripts/fetch-with-retries.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "451b238027f926d4679f0705c89209973a2b2e04",
+      "size": 1347,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/451b238027f926d4679f0705c89209973a2b2e04"
+    },
+    {
+      "path": "scripts/fixtures",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d9aeced555e05ace9355b57755ebf427a8819c79",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/d9aeced555e05ace9355b57755ebf427a8819c79"
+    },
+    {
+      "path": "scripts/fixtures/lychee-report.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "19f524034d4a70b78c7803f98a11c0b54aa01754",
+      "size": 1630,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/19f524034d4a70b78c7803f98a11c0b54aa01754"
+    },
+    {
+      "path": "scripts/fixtures/runner-acquisition",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a7259dc2c4a726d41dea85b879f31e93f2b8e702",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/a7259dc2c4a726d41dea85b879f31e93f2b8e702"
+    },
+    {
+      "path": "scripts/fixtures/runner-acquisition/links-notation-41477660740-kotlin-ios.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83ec7dbf1f287b4f9a5616b21849e198244fd90d",
+      "size": 1253,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/83ec7dbf1f287b4f9a5616b21849e198244fd90d"
+    },
+    {
+      "path": "scripts/fixtures/runner-acquisition/template-41299533544-detect-changes.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2feca8366c769ea3858f626e13ec40cc8402e0e4",
+      "size": 856,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2feca8366c769ea3858f626e13ec40cc8402e0e4"
+    },
+    {
+      "path": "scripts/git-inputs.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "214b83c69ed042b9efb1524f78cb9724f81b8a88",
+      "size": 1111,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/214b83c69ed042b9efb1524f78cb9724f81b8a88"
+    },
+    {
+      "path": "scripts/git-push.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af790b64876a005085f73aaff731ebf501a66af4",
+      "size": 2281,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/af790b64876a005085f73aaff731ebf501a66af4"
+    },
+    {
+      "path": "scripts/git-push.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0813b556802f49cd7ebadd4646d70fcc92c3329d",
+      "size": 3676,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/0813b556802f49cd7ebadd4646d70fcc92c3329d"
+    },
+    {
+      "path": "scripts/helper-globs.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "58805e4b0e1272e78a1dcb4c3b4ad6056606d66e",
+      "size": 1831,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/58805e4b0e1272e78a1dcb4c3b4ad6056606d66e"
+    },
+    {
+      "path": "scripts/issue-82-regressions.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ef4bf34a9973820d3b225072a54da55f6b1ee19",
+      "size": 6500,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/2ef4bf34a9973820d3b225072a54da55f6b1ee19"
+    },
+    {
+      "path": "scripts/links-workflow-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b4f30aa30d564f7e977526aefbfc7597cd487fdb",
+      "size": 4806,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/b4f30aa30d564f7e977526aefbfc7597cd487fdb"
+    },
+    {
+      "path": "scripts/lint-integrations.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bef582871870717421b3102284621fa211fe6eb9",
+      "size": 996,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/bef582871870717421b3102284621fa211fe6eb9"
+    },
+    {
+      "path": "scripts/lint-workflows.sh",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7aee41cef15d8703adde47f97f2deae12dc021fe",
+      "size": 834,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7aee41cef15d8703adde47f97f2deae12dc021fe"
+    },
+    {
+      "path": "scripts/merge-changesets.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a57d1f941a39dd9aa23ef770a26f02d04fe9fc94",
+      "size": 5789,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/a57d1f941a39dd9aa23ef770a26f02d04fe9fc94"
+    },
+    {
+      "path": "scripts/nuget-auth.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "246444b1398dfcac7779ad97cd510110678bbefb",
+      "size": 3522,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/246444b1398dfcac7779ad97cd510110678bbefb"
+    },
+    {
+      "path": "scripts/nuget-auth.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "526eec090d5d480e9dc369e453173dc7b262bed9",
+      "size": 2780,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/526eec090d5d480e9dc369e453173dc7b262bed9"
+    },
+    {
+      "path": "scripts/parse-changeset.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e3f8a1081e5b62182ed6558f02fc6c764b77cdd",
+      "size": 833,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7e3f8a1081e5b62182ed6558f02fc6c764b77cdd"
+    },
+    {
+      "path": "scripts/pipeline-gate.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "854ba7b127e19d15eee17299eef8d5efd0539ecd",
+      "size": 4507,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/854ba7b127e19d15eee17299eef8d5efd0539ecd"
+    },
+    {
+      "path": "scripts/pipeline-gate.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "52c778237e87ac066b60edfb1545e73e429078d1",
+      "size": 2521,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/52c778237e87ac066b60edfb1545e73e429078d1"
+    },
+    {
+      "path": "scripts/preflight-credentials.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be0f7c5317d119d90a1007dcdbd119bde6065f49",
+      "size": 12022,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/be0f7c5317d119d90a1007dcdbd119bde6065f49"
+    },
+    {
+      "path": "scripts/preflight-credentials.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af140830e9855c0922936a41c18bb28758d5bcbe",
+      "size": 10463,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/af140830e9855c0922936a41c18bb28758d5bcbe"
+    },
+    {
+      "path": "scripts/print-untrusted.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4c217f912cbe25ca9cc90b1d24b145a5977a49ad",
+      "size": 1914,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/4c217f912cbe25ca9cc90b1d24b145a5977a49ad"
+    },
+    {
+      "path": "scripts/print-untrusted.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "45cc52313c9b562e04b8cfb23092adc308a893f3",
+      "size": 6587,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/45cc52313c9b562e04b8cfb23092adc308a893f3"
+    },
+    {
+      "path": "scripts/process-types.d.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc8ef5d61eff90222fccbe7c88f5030bf2f5e7d9",
+      "size": 725,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/cc8ef5d61eff90222fccbe7c88f5030bf2f5e7d9"
+    },
+    {
+      "path": "scripts/publish-fallback.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8139c272a09b098680b8deb01ec1b3c18d65b698",
+      "size": 4824,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/8139c272a09b098680b8deb01ec1b3c18d65b698"
+    },
+    {
+      "path": "scripts/publishing-configuration.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e4c8ac12e63beaa05878268e156d5b62bc7caf48",
+      "size": 1190,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e4c8ac12e63beaa05878268e156d5b62bc7caf48"
+    },
+    {
+      "path": "scripts/push-nuget-package.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abf02499fe27116caf9365c1bf6c9743801ffca5",
+      "size": 5569,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/abf02499fe27116caf9365c1bf6c9743801ffca5"
+    },
+    {
+      "path": "scripts/push-nuget-package.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "905dd9bac75779c3f366e79cd559ef1c2015a6c5",
+      "size": 2037,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/905dd9bac75779c3f366e79cd559ef1c2015a6c5"
+    },
+    {
+      "path": "scripts/recheck-broken-links.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0e41b983fe66599209dac5a32663b8c101ffbbf7",
+      "size": 18943,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/0e41b983fe66599209dac5a32663b8c101ffbbf7"
+    },
+    {
+      "path": "scripts/recheck-broken-links.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc1a3c63e3c7c6bfa7eb0e568e0812356a1e37ab",
+      "size": 16181,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/bc1a3c63e3c7c6bfa7eb0e568e0812356a1e37ab"
+    },
+    {
+      "path": "scripts/release-assets.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec3f4fe562756bad5c723318120ddfa5ba28a7c1",
+      "size": 4076,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/ec3f4fe562756bad5c723318120ddfa5ba28a7c1"
+    },
+    {
+      "path": "scripts/release-assets.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bd2597659e892594a4214953f3ebf76cc326018",
+      "size": 4183,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7bd2597659e892594a4214953f3ebf76cc326018"
+    },
+    {
+      "path": "scripts/release-naming.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70cd531aac2eb72cc18de948e5013f8f67b13928",
+      "size": 8808,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/70cd531aac2eb72cc18de948e5013f8f67b13928"
+    },
+    {
+      "path": "scripts/release-naming.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df7c32d38db058b87c96829989f9c29e98bb1d46",
+      "size": 3375,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/df7c32d38db058b87c96829989f9c29e98bb1d46"
+    },
+    {
+      "path": "scripts/release-workflow-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5fc251d80225ffff42d11626598e09334ca8889a",
+      "size": 18236,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5fc251d80225ffff42d11626598e09334ca8889a"
+    },
+    {
+      "path": "scripts/rerun-workflow-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1b070dd77e9ca0c768867810d739b617ce478697",
+      "size": 2432,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/1b070dd77e9ca0c768867810d739b617ce478697"
+    },
+    {
+      "path": "scripts/run-with-budget-warning.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "a563c262f176b3c8abfb25952cc248cf6af6fa26",
+      "size": 5113,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/a563c262f176b3c8abfb25952cc248cf6af6fa26"
+    },
+    {
+      "path": "scripts/runner-acquisition.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "681c9667e0d67c305e8cfdeaa1604382b5bff6d1",
+      "size": 7484,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/681c9667e0d67c305e8cfdeaa1604382b5bff6d1"
+    },
+    {
+      "path": "scripts/runner-acquisition.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0fecaacb6d4de732b1a7649a615cf59d46cca08",
+      "size": 10342,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/b0fecaacb6d4de732b1a7649a615cf59d46cca08"
+    },
+    {
+      "path": "scripts/security-gates.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25069a592150d85b0ef95fed17014b72ac407195",
+      "size": 5505,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/25069a592150d85b0ef95fed17014b72ac407195"
+    },
+    {
+      "path": "scripts/security-gates.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d8e93688b2a98a7cb86a52124d5a024b4784902b",
+      "size": 3806,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d8e93688b2a98a7cb86a52124d5a024b4784902b"
+    },
+    {
+      "path": "scripts/security-workflow-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c7343ffec54123d710e08ba18c48463a4c1905a",
+      "size": 2832,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7c7343ffec54123d710e08ba18c48463a4c1905a"
+    },
+    {
+      "path": "scripts/smoke-test-nuget-package.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6693ca3629a09ebd718e57414ffd548bce762d6",
+      "size": 11413,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d6693ca3629a09ebd718e57414ffd548bce762d6"
+    },
+    {
+      "path": "scripts/smoke-test-nuget-package.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40fb3c69bd393ca23566ef54ea8d2e00f03c89ab",
+      "size": 5773,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/40fb3c69bd393ca23566ef54ea8d2e00f03c89ab"
+    },
+    {
+      "path": "scripts/validate-changeset.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "29e5789d3e5ff2da525045fa55f3e113166bc0d6",
+      "size": 8245,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/29e5789d3e5ff2da525045fa55f3e113166bc0d6"
+    },
+    {
+      "path": "scripts/validate-nuget-package.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "753817780f6ecd76dda919b70abb93f01ed042c9",
+      "size": 2013,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/753817780f6ecd76dda919b70abb93f01ed042c9"
+    },
+    {
+      "path": "scripts/validate-nuget-package.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd1bafdb8f4c02a304a05184a69d8e892f05a6b0",
+      "size": 2516,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/fd1bafdb8f4c02a304a05184a69d8e892f05a6b0"
+    },
+    {
+      "path": "scripts/validate-nuspec.proj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44c0d134904c7af905ad887e7e6bdb3272c4a463",
+      "size": 2196,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/44c0d134904c7af905ad887e7e6bdb3272c4a463"
+    },
+    {
+      "path": "scripts/version-and-commit.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "642dfd3ccfc2bf264449c58cc9d6825e360132a3",
+      "size": 12119,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/642dfd3ccfc2bf264449c58cc9d6825e360132a3"
+    },
+    {
+      "path": "scripts/version-and-commit.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3bd65a43ca8de992d0b9c96a313bc4481f7ffc0",
+      "size": 9128,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/b3bd65a43ca8de992d0b9c96a313bc4481f7ffc0"
+    },
+    {
+      "path": "scripts/wait-for-nuget.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0f7997f5ffc683c329c774bf967fb07072f59dc",
+      "size": 7352,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/e0f7997f5ffc683c329c774bf967fb07072f59dc"
+    },
+    {
+      "path": "scripts/wait-for-nuget.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d0784970397713d891e19e1b368fd7e4097382be",
+      "size": 10836,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/d0784970397713d891e19e1b368fd7e4097382be"
+    },
+    {
+      "path": "scripts/workflow-git-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "690be3a23e2333b3a00a045de06f7ffd0db0256f",
+      "size": 1642,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/690be3a23e2333b3a00a045de06f7ffd0db0256f"
+    },
+    {
+      "path": "scripts/workflow-injection-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1985847c1f2bfb0967c7dc0ad8b9db6d731e8bfe",
+      "size": 8727,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/1985847c1f2bfb0967c7dc0ad8b9db6d731e8bfe"
+    },
+    {
+      "path": "scripts/workflow-runner-policy.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "adecea9b583df1813ed6b5f7a88365e5a08733e9",
+      "size": 2461,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/adecea9b583df1813ed6b5f7a88365e5a08733e9"
+    },
+    {
+      "path": "scripts/zip-archive.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a5a56196c37de8d7d40ef9ffe8ea87cef4b067c",
+      "size": 5972,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5a5a56196c37de8d7d40ef9ffe8ea87cef4b067c"
+    },
+    {
+      "path": "scripts/zip-archive.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "219cb8166cef46dbe5b7d5531c93a8f90be36dfd",
+      "size": 2730,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/219cb8166cef46dbe5b7d5531c93a8f90be36dfd"
+    },
+    {
+      "path": "src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8a4a3d74399ff279846b4b9ef1fd95513066d7c6",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/8a4a3d74399ff279846b4b9ef1fd95513066d7c6"
+    },
+    {
+      "path": "src/MyPackage",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d800e519e56a18d21c553e480fce01a63eb648bb",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/d800e519e56a18d21c553e480fce01a63eb648bb"
+    },
+    {
+      "path": "src/MyPackage/Calculator.cs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a8a00ba9f09221f40b766c06f2e8ac0084a58b4",
+      "size": 1811,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/1a8a00ba9f09221f40b766c06f2e8ac0084a58b4"
+    },
+    {
+      "path": "src/MyPackage/MyPackage.csproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f21e667123c805141cc1c13a7d750a90cc1582a",
+      "size": 918,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/5f21e667123c805141cc1c13a7d750a90cc1582a"
+    },
+    {
+      "path": "src/MyPackage/PackageInfo.cs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1382fc2e788cdb10c4f7df2f867a359110e41385",
+      "size": 455,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/1382fc2e788cdb10c4f7df2f867a359110e41385"
+    },
+    {
+      "path": "src/MyPackage/packages.lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4a91a8cd78fbfd79345585bb9bdbb8099ec40383",
+      "size": 61,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/4a91a8cd78fbfd79345585bb9bdbb8099ec40383"
+    },
+    {
+      "path": "tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d6a2c0063650991f37bc6a153c4f07218db5558c",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/d6a2c0063650991f37bc6a153c4f07218db5558c"
+    },
+    {
+      "path": "tests/MyPackage.Tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "24c3381b9af5aa9fc33d8dbfd6830683cf0f0546",
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/trees/24c3381b9af5aa9fc33d8dbfd6830683cf0f0546"
+    },
+    {
+      "path": "tests/MyPackage.Tests/CalculatorTests.cs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "195a8a545bf432e86c45a69ead6f30ace4f09018",
+      "size": 3890,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/195a8a545bf432e86c45a69ead6f30ace4f09018"
+    },
+    {
+      "path": "tests/MyPackage.Tests/MyPackage.Tests.csproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7aa3255aeecb86a1f22cd2950cf7a9cbb779f22c",
+      "size": 1564,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/7aa3255aeecb86a1f22cd2950cf7a9cbb779f22c"
+    },
+    {
+      "path": "tests/MyPackage.Tests/PackageInfoTests.cs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38a7f1c9a1bb58b86c68aa6e26ab8b079d531c6b",
+      "size": 507,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/38a7f1c9a1bb58b86c68aa6e26ab8b079d531c6b"
+    },
+    {
+      "path": "tests/MyPackage.Tests/packages.lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3a593fde459e0384c8a2f6a6fcf98a1d90bcab1a",
+      "size": 4961,
+      "url": "https://api.github.com/repos/link-foundation/csharp-ai-driven-development-pipeline-template/git/blobs/3a593fde459e0384c8a2f6a6fcf98a1d90bcab1a"
+    }
+  ],
+  "truncated": false
+}

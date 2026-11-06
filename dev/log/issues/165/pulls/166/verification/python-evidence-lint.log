@@ -1,0 +1,39 @@
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> experiments/issue-165/collect-runs.py:32:18
+   |
+30 |         continue
+31 |     with (root / f"ci-logs/run-{run_id}.log").open("w") as output:
+32 |         result = subprocess.run(
+   |                  ^^^^^^^^^^^^^^
+33 |             [
+34 |                 "gh",
+   |
+help: Add explicit `check=False`
+   |
+41 |             ],
+   -             stdout=output,
+42 +             check=False, stdout=output,
+43 |             stderr=subprocess.PIPE,
+   |
+note: This suggestion may be incorrect or produce invalid syntax. It requires manual review and cannot be applied automatically
+
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> experiments/issue-165/collect-template-tooling.py:26:14
+   |
+24 | def collect(task):
+25 |     meta, p, file = task
+26 |     result = subprocess.run(
+   |              ^^^^^^^^^^^^^^
+27 |         [
+28 |             "gh",
+   |
+help: Add explicit `check=False`
+   |
+33 |         ],
+   -         capture_output=True,
+34 +         check=False, capture_output=True,
+35 |     )
+   |
+note: This suggestion may be incorrect or produce invalid syntax. It requires manual review and cannot be applied automatically
+
+Found 2 errors.

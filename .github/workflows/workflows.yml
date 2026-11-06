@@ -11,10 +11,20 @@ on:
       - main
     paths:
       - '.github/**'
+      - 'js/**'
+      - 'csharp/scripts/**'
+      - 'examples/**'
+      - 'experiments/**'
+      - '.pre-commit-config.yaml'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - '.github/**'
+      - 'js/**'
+      - 'csharp/scripts/**'
+      - 'examples/**'
+      - 'experiments/**'
+      - '.pre-commit-config.yaml'
   workflow_dispatch:
 
 # Least-privilege default; these jobs only read the checked-out tree.
@@ -36,7 +46,7 @@ jobs:
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-actionlint
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -63,7 +73,7 @@ jobs:
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-zizmor
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -107,7 +117,7 @@ jobs:
     timeout-minutes: 10
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}-policy
-      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v7
         with:
@@ -120,3 +130,57 @@ jobs:
 
       - name: Run workflow policy tests
         run: node --test .github/scripts/*.test.mjs
+
+  languages:
+    name: JavaScript and Python lint and formatting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-languages
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+          cache: npm
+          cache-dependency-path: js/package-lock.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: Install locked JavaScript tools
+        run: npm ci --prefix js --ignore-scripts
+      - name: Check all maintained JavaScript including JSX and examples
+        run: npm --prefix js run lint
+      - name: Install Python tools
+        run: python -m pip install -r .github/scripts/requirements-quality.txt
+      - name: Check all maintained Python and type-check runtime CI helpers
+        run: python .github/scripts/check-python-quality.py
+
+  pipeline-status:
+    name: Pipeline Status (workflows)
+    needs:
+      - actionlint
+      - zizmor
+      - policy
+      - languages
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check every prerequisite
+        working-directory: .
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node .github/scripts/pipeline-status.mjs

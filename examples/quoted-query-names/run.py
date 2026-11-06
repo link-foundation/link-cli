@@ -2,9 +2,9 @@
 """Check numeric query names and export replay against either clink executable."""
 
 import argparse
-from pathlib import Path
 import subprocess
 import tempfile
+from pathlib import Path
 
 
 def main():
@@ -20,22 +20,31 @@ def main():
         def run(database, *arguments):
             result = subprocess.run(
                 [*command, "--db", str(database), *arguments],
-                capture_output=True, text=True, timeout=60, check=False,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
             )
             if result.returncode:
                 raise RuntimeError(f"clink failed: {result.stdout}\n{result.stderr}")
 
         run(source, "() ((a: a a) (b: b b))")
         run(
-            source, "--auto-create-missing-references",
-            "() ((p: x \"1\") (p2: x '2') (p3: x \"99\") "
-            "(exitCode: x \"0\") (pid: x \"12345\") (address: x 1))",
-            "--out", str(exported),
+            source,
+            "--auto-create-missing-references",
+            '() ((p: x "1") (p2: x \'2\') (p3: x "99") '
+            '(exitCode: x "0") (pid: x "12345") (address: x 1))',
+            "--out",
+            str(exported),
         )
         text = exported.read_text(encoding="utf-8")
         for expected in (
-            "(p: x '1')", "(p2: x '2')", "(p3: x '99')",
-            "(exitCode: x '0')", "(pid: x '12345')", "(address: x a)",
+            "(p: x '1')",
+            "(p2: x '2')",
+            "(p3: x '99')",
+            "(exitCode: x '0')",
+            "(pid: x '12345')",
+            "(address: x a)",
         ):
             assert expected in text, f"Missing {expected}:\n{text}"
         run(root / "destination.links", f"() ({text})", "--out", str(replayed))

@@ -1,0 +1,12 @@
+✔ missing or incomplete link evidence never turns a failed checker green (86.758037ms)
+✔ transient recovery preserves permanent errors and cannot claim partial recovery as complete (7.934194ms)
+✔ a permanent response terminates retries immediately (0.984427ms)
+✔ runner recovery verifies annotations, pagination and retry limits offline (555.075942ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 747.680794

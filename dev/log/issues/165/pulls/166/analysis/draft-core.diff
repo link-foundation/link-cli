@@ -1,0 +1,340 @@
+diff --git a/.github/scripts/check-latest-dependencies.mjs b/.github/scripts/check-latest-dependencies.mjs
+index 006fa6c..5013ac7 100644
+--- a/.github/scripts/check-latest-dependencies.mjs
++++ b/.github/scripts/check-latest-dependencies.mjs
+@@ -33,6 +33,8 @@
+  *
+  * Usage:
+  *   node .github/scripts/check-latest-dependencies.mjs [--skip-lockfiles]
++ * CHECK_DEPENDENCIES_MODE=report reports new releases without failing main.
++ * Lookup failures still fail: an unavailable registry is not a clean audit.
+  *
+  * Registry lookups that fail on the network, or answer 429 or 5xx, are
+  * retried with backoff. Set CHECK_DEPENDENCIES_DEBUG=1 to log each retry.
+@@ -284,7 +286,7 @@ export async function fetchJson(url, headers = {}, { fetchImpl = fetch, ...retry
+   return withRetries(async () => {
+     let response;
+     try {
+-      response = await fetchImpl(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers } });
++      response = await fetchImpl(url, { headers: { 'User-Agent': userAgent, Accept: 'application/json', ...headers }, signal: AbortSignal.timeout(30_000) });
+     } catch (error) {
+       const cause = error.cause ? `: ${error.cause.code ?? error.cause.message ?? error.cause}` : '';
+       throw new Error(`${url}: ${error.message}${cause}`);
+@@ -338,7 +340,12 @@ function read(path) {
+ 
+ /** Files git tracks, relative to the repository root. */
+ function trackedFiles() {
+-  return execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0').filter(Boolean);
++  return dependencyFiles(execFileSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' }).split('\0').filter(Boolean));
++}
++
++/** Evidence snapshots are immutable inputs, not dependencies of this project. */
++export function dependencyFiles(files) {
++  return files.filter((file) => !file.startsWith('dev/log/'));
+ }
+ 
+ /** Everything to check, as `{ registry, name, version, source[, blocker] }`. */
+@@ -372,14 +379,24 @@ function collectDependencies(files) {
+   });
+ }
+ 
+-function checkLockfiles(files) {
++export function checkLockfiles(files, { run = spawnSync, root = repoRoot } = {}) {
+   const outdated = [];
++  const failures = [];
+   for (const directory of files.filter((file) => /(^|\/)Cargo\.lock$/.test(file)).map(dirname)) {
+     // cargo reports the updates on stderr.
+-    const { stderr } = spawnSync('cargo', ['update', '--dry-run'], { cwd: join(repoRoot, directory), encoding: 'utf8' });
++    const { status, error, stdout, stderr } = run('cargo', ['update', '--dry-run'], { cwd: join(root, directory), encoding: 'utf8' });
++    if (error || status !== 0) {
++      failures.push(`${directory}/Cargo.lock: cargo update failed (${error?.message ?? `exit ${status}`}): ${stderr || stdout || 'no diagnostic'}`);
++      continue;
++    }
+     for (const update of parseCargoUpdates(stderr ?? '')) outdated.push({ source: `${directory}/Cargo.lock`, ...update });
+   }
+-  return outdated;
++  return { outdated, failures };
++}
++
++export function checkExitCode({ outdated, failures, mode = 'enforce' }) {
++  if (!['enforce', 'report'].includes(mode)) throw Error(`Unknown dependency check mode: ${mode}`);
++  return failures.length || (outdated.length && mode === 'enforce') ? 1 : 0;
+ }
+ 
+ /** A Markdown table of dependencies, the `blocker` column only when asked for. */
+@@ -430,7 +447,11 @@ async function main() {
+       }
+     }),
+   );
+-  if (!process.argv.includes('--skip-lockfiles')) outdated.push(...checkLockfiles(files));
++  if (!process.argv.includes('--skip-lockfiles')) {
++    const locked = checkLockfiles(files);
++    outdated.push(...locked.outdated);
++    failures.push(...locked.failures);
++  }
+ 
+   console.log(`Checked ${entries.length} declared versions${process.argv.includes('--skip-lockfiles') ? '' : ' and the Cargo.lock files'}.`);
+   if (held.length > 0) report(`${held.length} dependencies are held back by open issues`, table(held, true));
+@@ -438,7 +459,10 @@ async function main() {
+   if (closed.length > 0) report(`${closed.length} dependencies were held back by issues that are closed now, so they must be updated`, table(closed, true));
+   if (outdated.length > 0) report(`${outdated.length} dependencies are behind their latest release`, table(outdated, false));
+   for (const failure of failures) console.error(`Could not check ${failure}`);
+-  process.exitCode = outdated.length > 0 || failures.length > 0 ? 1 : 0;
++  if (outdated.length && process.env.CHECK_DEPENDENCIES_MODE === 'report') {
++    console.log('::warning::New dependency releases are available; update them in a pull request.');
++  }
++  process.exitCode = checkExitCode({ outdated, failures, mode: process.env.CHECK_DEPENDENCIES_MODE || 'enforce' });
+ }
+ 
+ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+diff --git a/.github/workflows/rust.yml b/.github/workflows/rust.yml
+index 960701d..fb7e528 100644
+--- a/.github/workflows/rust.yml
++++ b/.github/workflows/rust.yml
+@@ -10,6 +10,7 @@ on:
+       - 'rust/**'
+       - 'rust/scripts/**'
+       - '.github/workflows/rust.yml'
++      - '.github/scripts/**'
+   workflow_dispatch:
+     inputs:
+       release_mode:
+@@ -55,6 +56,35 @@ env:
+   GIT_CONFIG_VALUE_0: main
+ 
+ jobs:
++  release-preflight:
++    name: Release authentication preflight
++    if: inputs.release_mode != 'verify-trusted-publishing'
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    permissions:
++      contents: read
++      id-token: write
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-release-preflight
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Authenticate preflight with crates.io
++        if: vars.CRATES_IO_TRUSTED_PUBLISHING == 'true' && github.event_name != 'pull_request' && inputs.release_mode != 'changelog-pr' && inputs.release_mode != 'changeset-pr'
++        id: preflight_auth
++        uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
++      - name: Prove authentication before builds or version writes
++        working-directory: .
++        env:
++          RELEASE_MODE: ${{ inputs.release_mode }}
++          CARGO_REGISTRY_TOKEN: ${{ github.event_name != 'pull_request' && (steps.preflight_auth.outputs.token || secrets.CARGO_TOKEN) || '' }}
++        run: node .github/scripts/release-preflight.mjs crates
++
+   # Authenticate without a version commit, tag, or package upload. This lets
+   # maintainers verify the registry policy before retiring the token fallback.
+   verify-trusted-publishing:
+@@ -158,9 +188,9 @@ jobs:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-lint
+       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-    needs: [detect-changes]
++    needs: [detect-changes, release-preflight]
+     if: |
+-      !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (
++      !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (
+         github.event_name == 'push' ||
+         github.event_name == 'workflow_dispatch' ||
+         needs.detect-changes.outputs.rs-changed == 'true' ||
+@@ -247,8 +277,8 @@ jobs:
+     concurrency:
+       group: check-${{ github.workflow }}-${{ github.ref }}-test-${{ matrix.os }}
+       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+-    needs: [detect-changes, changelog]
+-    if: ${{ !cancelled() && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
++    needs: [detect-changes, changelog, release-preflight]
++    if: ${{ !cancelled() && needs.release-preflight.result == 'success' && inputs.release_mode != 'verify-trusted-publishing' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped') }}
+     strategy:
+       fail-fast: false
+       matrix:
+@@ -377,7 +407,7 @@ jobs:
+     # Writer group: never cancel a release that may already have published a
+     # crate or pushed a version commit.
+     concurrency:
+-      group: rust-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       id-token: write
+@@ -493,7 +523,7 @@ jobs:
+     # Writer group: never cancel a release that may already have published a
+     # crate or pushed a version commit.
+     concurrency:
+-      group: rust-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       id-token: write
+@@ -583,7 +613,7 @@ jobs:
+     timeout-minutes: 15
+     # Writer group: never cancel a run that may already have pushed a branch.
+     concurrency:
+-      group: rust-writer-${{ github.repository }}
++      group: main-writer-${{ github.repository }}
+       cancel-in-progress: false
+     permissions:
+       contents: write
+@@ -635,3 +665,36 @@ jobs:
+             1. Review the changelog fragment in this PR
+             2. Merge this PR to main
+             3. The automated release workflow will publish to crates.io and create a GitHub release
++
++  pipeline-status:
++    name: Pipeline Status (rust)
++    needs:
++      - release-preflight
++      - verify-trusted-publishing
++      - detect-changes
++      - changelog
++      - lint
++      - test
++      - fresh-merge
++      - build
++      - auto-release
++      - manual-release
++      - changelog-pr
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs
+diff --git a/.github/workflows/security.yml b/.github/workflows/security.yml
+index d02f6f4..7a19b47 100644
+--- a/.github/workflows/security.yml
++++ b/.github/workflows/security.yml
+@@ -81,6 +81,23 @@ jobs:
+ 
+       - name: Analyze
+         uses: github/codeql-action/analyze@v4
++        with:
++          output: codeql-results
++
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++
++      - name: Require complete analysis without unresolved findings
++        run: node .github/scripts/check-codeql-results.mjs codeql-results
++
++      - name: Preserve SARIF for investigation
++        if: ${{ !cancelled() }}
++        uses: actions/upload-artifact@v7
++        with:
++          name: codeql-${{ matrix.language }}
++          path: codeql-results/**/*.sarif
++          if-no-files-found: error
+ 
+   dependency-review:
+     name: Dependency Review
+@@ -135,11 +152,15 @@ jobs:
+         run: cargo audit --file "$MANIFEST/Cargo.lock" --deny warnings
+ 
+   npm-audit:
+-    name: Audit npm lock
++    strategy:
++      fail-fast: false
++      matrix:
++        directory: [js, js/client]
++    name: Audit npm lock (${{ matrix.directory }})
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+     concurrency:
+-      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit
++      group: check-${{ github.workflow }}-${{ github.ref }}-npm-audit-${{ matrix.directory }}
+       cancel-in-progress: true
+     steps:
+       - uses: actions/checkout@v7
+@@ -151,9 +172,36 @@ jobs:
+           node-version: '26.x'
+ 
+       - name: Audit current lock
+-        working-directory: js
++        working-directory: ${{ matrix.directory }}
+         run: npm audit --package-lock-only --audit-level=high
+ 
++  nuget-audit:
++    name: Audit every NuGet dependency graph
++    runs-on: ubuntu-24.04
++    timeout-minutes: 15
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-nuget-audit
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-dotnet@v6
++        with:
++          dotnet-version: '10.0.x'
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Audit direct and transitive packages and validate the complete result
++        run: node .github/scripts/audit-nuget-dependencies.mjs
++      - name: Preserve dependency graphs and diagnostics
++        if: ${{ !cancelled() }}
++        uses: actions/upload-artifact@v7
++        with:
++          name: nuget-audit
++          path: artifacts/security
++          if-no-files-found: error
++
+   # === COMMITTED SECRETS ===
+   # CodeQL and the audit jobs look at code and dependencies; nothing looked at
+   # the literal contents of the tree. This repository commits CI evidence under
+@@ -179,3 +227,31 @@ jobs:
+ 
+       - name: Run secretlint
+         run: npx --yes -p secretlint -p @secretlint/secretlint-rule-preset-recommend secretlint --secretlintignore .gitignore "**/*"
++
++  pipeline-status:
++    name: Pipeline Status (security)
++    needs:
++      - codeql
++      - dependency-review
++      - cargo-audit
++      - npm-audit
++      - nuget-audit
++      - secrets-scan
++    if: ${{ !cancelled() }}
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    concurrency:
++      group: check-${{ github.workflow }}-${{ github.ref }}-pipeline-status
++      cancel-in-progress: true
++    steps:
++      - uses: actions/checkout@v7
++        with:
++          persist-credentials: false
++      - uses: actions/setup-node@v7
++        with:
++          node-version: '26.x'
++      - name: Check every prerequisite
++        working-directory: .
++        env:
++          NEEDS_JSON: ${{ toJSON(needs) }}
++        run: node .github/scripts/pipeline-status.mjs

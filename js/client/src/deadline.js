@@ -14,9 +14,11 @@ export function scopeOf({ signal, deadline, timeout } = {}) {
     throw new TypeError('deadline must be a Date or a finite number of epoch milliseconds');
   }
   if (timeout !== undefined && timeout !== null) {
-    if (!Number.isFinite(timeout) || timeout < 0) throw new TypeError('timeout must be a non-negative number of milliseconds');
+    if (!Number.isFinite(timeout) || timeout < 0)
+      throw new TypeError('timeout must be a non-negative number of milliseconds');
     const fromTimeout = Date.now() + timeout;
-    absolute = absolute === undefined || absolute === null ? fromTimeout : Math.min(absolute, fromTimeout);
+    absolute =
+      absolute === undefined || absolute === null ? fromTimeout : Math.min(absolute, fromTimeout);
   }
   return { signal: signal ?? undefined, deadline: absolute ?? undefined };
 }
@@ -27,14 +29,17 @@ export function scopeError({ signal, deadline }, outcome) {
     return new AbortError(abortMessage(signal), { outcome, cause: signal.reason });
   }
   if (deadline !== undefined && Date.now() >= deadline) {
-    return new DeadlineExceededError(`the deadline ${new Date(deadline).toISOString()} passed`, { outcome });
+    return new DeadlineExceededError(`the deadline ${new Date(deadline).toISOString()} passed`, {
+      outcome,
+    });
   }
   return null;
 }
 
 function abortMessage(signal) {
   const reason = signal.reason;
-  if (reason instanceof Error && reason.message) return `the request was aborted: ${reason.message}`;
+  if (reason instanceof Error && reason.message)
+    return `the request was aborted: ${reason.message}`;
   return 'the request was aborted';
 }
 
@@ -64,7 +69,12 @@ export function watchScope({ signal, deadline }, onEnd) {
     const arm = () => {
       const left = deadline - Date.now();
       if (left <= 0) {
-        end((outcome) => new DeadlineExceededError(`the deadline ${new Date(deadline).toISOString()} passed`, { outcome }));
+        end(
+          (outcome) =>
+            new DeadlineExceededError(`the deadline ${new Date(deadline).toISOString()} passed`, {
+              outcome,
+            }),
+        );
         return;
       }
       timer = setTimeout(arm, Math.min(left, 2 ** 31 - 1));
