@@ -434,3 +434,5 @@ the null link gets that answer too, instead of skipping the permission checks.
 
 `LinksEngine.CompactJournalAfter` compacts once a selected number of commits have landed, and the
 optional `BackgroundCompaction<T>` calls it periodically on its own thread and reports the first failure.
+
+Fixed: stopping the GraphQL server can no longer crash the process. A stop arriving between the accept loop's check and its accept raised an unhandled error on a background thread.
