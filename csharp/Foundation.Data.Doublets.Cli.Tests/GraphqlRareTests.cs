@@ -106,6 +106,9 @@ public sealed class GraphqlRareTests
         Assert.Equal(
             "{\"data\":{\"links\":[{\"id\":7},{\"id\":8}]}}",
             Ask(store, "{links(order_by:[{from:{}},{id:asc}]){id}}"));
+        Assert.Equal(
+            "{\"data\":{\"links\":[{\"id\":7},{\"id\":8}]}}",
+            Ask(store, "{links(order_by:{from:asc}){id}}"));
     }
 
     [Fact]

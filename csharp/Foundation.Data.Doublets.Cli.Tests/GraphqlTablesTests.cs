@@ -7,6 +7,8 @@ using Foundation.Data.Doublets.Cli.Graphql;
 namespace Foundation.Data.Doublets.Cli.Tests;
 
 /// <summary>The relations and comparisons of the Deep schema, and the command that starts its server.</summary>
+// Serves in-process, so a test interrupting the host must not run beside it.
+[Collection("Diagnostic console")]
 public sealed class GraphqlTablesTests
 {
     public static TheoryData<string, string> Relations()

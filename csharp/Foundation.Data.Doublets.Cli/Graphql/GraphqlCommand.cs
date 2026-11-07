@@ -61,15 +61,23 @@ public sealed class GraphqlCommand
         var (host, port) = LinksServer.ParseEndPoint(address);
         var bound = IPAddress.TryParse(host, out var parsedHost) ? parsedHost : Dns.GetHostAddresses(host).First();
         using var server = new GraphqlServer(new IPEndPoint(bound, port));
-        Console.CancelKeyPress += (_, eventArgs) =>
+        void StopOnInterrupt(object? _, ConsoleCancelEventArgs eventArgs)
         {
             eventArgs.Cancel = true;
             server.Stop();
-        };
-        Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");
-        Console.Out.Flush();
-        started?.Invoke(server);
-        server.Serve(store, settings);
+        }
+        Console.CancelKeyPress += StopOnInterrupt;
+        try
+        {
+            Console.WriteLine($"clink GraphQL server listening on {server.LocalEndpoint}");
+            Console.Out.Flush();
+            started?.Invoke(server);
+            server.Serve(store, settings);
+        }
+        finally
+        {
+            Console.CancelKeyPress -= StopOnInterrupt;
+        }
         return 0;
     }
 }

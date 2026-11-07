@@ -42,11 +42,12 @@ public class AsyncRetentionFailureTests
                 // The worker survived: a later commit is still checkpointed.
                 Volatile.Write(ref failing, 0);
                 var third = tx.CreateAndUpdate(31u, 32u);
+                while (tx.Log.Count > 1)
+                    await Task.Delay(10, deadline.Token);
                 tx.Shutdown();
                 Assert.True(tx.Exists(first));
                 Assert.True(tx.Exists(second));
                 Assert.True(tx.Exists(third));
-                Assert.True(tx.Log.Count <= 1);
             }
 
             using var reopenedData = new NamedTypesDecorator<uint>(dataPath);

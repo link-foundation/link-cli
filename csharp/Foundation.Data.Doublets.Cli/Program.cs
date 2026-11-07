@@ -647,12 +647,8 @@ rootCommand.SetAction(
 
           if (showLog)
           {
-              if (transactionsLinks is null)
-              {
-                  Console.Error.WriteLine("--log requires the transactions layer.");
-                  return 1;
-              }
-              foreach (var transition in transactionsLinks.Log)
+              // --log itself requests the transactions layer.
+              foreach (var transition in transactionsLinks!.Log)
               {
                   Console.WriteLine($"{transition.Sequence}\t{transition.Timestamp:O}\t{transition.Kind}\t{transition.TransactionId:N}\t({transition.Before.Index},{transition.Before.Source},{transition.Before.Target}) -> ({transition.After.Index},{transition.After.Source},{transition.After.Target})");
               }
@@ -705,14 +701,22 @@ rootCommand.SetAction(
               Authenticate = tokenTable is null ? null : tokenTable.Authenticate,
               Triplets = parseResult.GetValue(tripletsOption),
           });
-          Console.CancelKeyPress += (_, eventArgs) =>
+          void StopOnInterrupt(object? _, ConsoleCancelEventArgs eventArgs)
           {
               eventArgs.Cancel = true;
               server.Shutdown();
-          };
-          Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
-          Console.Out.Flush();
-          server.Serve(decoratedLinks);
+          }
+          Console.CancelKeyPress += StopOnInterrupt;
+          try
+          {
+              Console.WriteLine($"clink server listening on {server.LocalEndPoint}");
+              Console.Out.Flush();
+              server.Serve(decoratedLinks);
+          }
+          finally
+          {
+              Console.CancelKeyPress -= StopOnInterrupt;
+          }
           return 0;
       }
 
