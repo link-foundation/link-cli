@@ -33,6 +33,44 @@ namespace Foundation.Data.Doublets.Cli.Tests.Tests
         }
 
         [Fact]
+        public void NamesAreForwardedToTheStoreBelow()
+        {
+            RunWithVc((vc, tx, _) =>
+            {
+                var created = vc.CreateAndUpdate(11u, 12u);
+                vc.SetName(created, "forwarded");
+
+                Assert.Equal(tx.ReassignsNames, vc.ReassignsNames);
+                Assert.Equal("forwarded", vc.CaptureNames()[created]);
+            });
+        }
+
+        [Fact]
+        public void CommitAfterTheInnerTransactionRolledBackPublishesNothing()
+        {
+            RunWithVc((vc, tx, _) =>
+            {
+                var head = vc.CurrentSequence;
+                var pending = vc.BeginTransaction();
+                var created = vc.CreateAndUpdate(11u, 12u);
+                var inner = (ITransaction<uint>)pending.GetType()
+                    .GetProperty("Inner", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                    .GetValue(pending)!;
+                inner.Rollback();
+
+                pending.Commit();
+
+                Assert.True(pending.IsRolledBack);
+                Assert.Equal(head, vc.CurrentSequence);
+                Assert.False(tx.Exists(created));
+                // The publication has ended: the next transaction is admitted and published.
+                var next = vc.CreateAndUpdate(13u, 14u);
+                Assert.True(tx.Exists(next));
+                Assert.True(vc.CurrentSequence > head);
+            });
+        }
+
+        [Fact]
         public void DefaultBranchExistsOnFirstOpen()
         {
             RunWithVc((vc, _, _) =>
