@@ -38,7 +38,7 @@ function causalProjectionTypes(values: readonly CausalValue[]) {
   void invalid;
   return [rows, retained, projection.selected()];
 }
-import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links, UnionLinks, RemapLinks, OffsetAddressMap, AddressTable, ExternalIdMap, LinksExternalIds, NotFoundError } from '../types/index.js';
+import { LinksClient, LinksDecorator, createWasmClient, ANY, type Links, UnionLinks, RemapLinks, CacheLinks, OffsetAddressMap, AddressTable, ExternalIdMap, LinksExternalIds, NotFoundError } from '../types/index.js';
 import { connectTcp } from '../types/tcp.js';
 import { connectProcess } from '../types/process.js';
 import { CausalVersion, type CausalValue } from '../types/engine-causal-version.js';
@@ -135,6 +135,13 @@ async function main(links: Links) {
   if (tripletNote) for (const { after } of tripletNote.changes) void after?.type;
   c.onTripletNotification(({ changes }) => void changes[0]?.after?.from)();
   await c.batch([{ op: 'createTriplet', type: 1, from: 0, to: 0 }, { op: 'eachTriplets', restriction: [ANY, 1, 0, 0] }]);
+  const cache: Links = new CacheLinks(w, { maxLinks: 8, timeToLive: 1000, clock: () => 0 });
+  const expiring = new CacheLinks(cache);
+  const expired: boolean = await expiring.expire(1n, 5);
+  const persisted: boolean = await expiring.persist(1n);
+  const left: number | null = await expiring.timeToLive(1n);
+  const purged: number = await expiring.purgeExpired();
+  void [expired, persisted, left, purged];
   const union: Links = new UnionLinks([w, new RemapLinks(c, new OffsetAddressMap(1n << 24n))]);
   const owner: number | null = await (union as UnionLinks).ownerOf(1n);
   const table = new AddressTable<string>({ newId: () => crypto.randomUUID() });

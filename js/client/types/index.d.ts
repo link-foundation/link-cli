@@ -471,6 +471,32 @@ export class RemapLinks<Outer = bigint> extends LinksDecorator {
   toInner(outer: Outer | AddressInput): Promise<bigint | null>;
 }
 
+/** What a `CacheLinks` enforces. Each is optional, and the default is neither. */
+export interface CacheOptions {
+  /** How many links the store may hold, reached by evicting. */
+  maxLinks?: number | null;
+  /** The milliseconds a link created here has before it comes due. */
+  timeToLive?: number | null;
+  /** Milliseconds, `Date.now` by default. A step back delays what comes due. */
+  clock?: () => number;
+}
+/**
+ * `links` kept as a cache: what comes due goes, and capacity evicts the links used
+ * least recently that nothing else uses. Every write has to go through it.
+ */
+export interface CacheLinks extends Links {}
+export class CacheLinks extends LinksDecorator {
+  constructor(links: Links, options?: CacheOptions);
+  /** Deletes what is due now; resolves to how many links that deleted, cascades included. */
+  purgeExpired(options?: RequestOptions): Promise<number>;
+  /** Gives `link` a deadline in place of any it had; false when there is no such link. */
+  expire(link: AddressInput, milliseconds: number, options?: RequestOptions): Promise<boolean>;
+  /** Takes the deadline of `link` away; false when it had none. */
+  persist(link: AddressInput, options?: RequestOptions): Promise<boolean>;
+  /** The milliseconds `link` has left; null when it has no deadline or is gone. */
+  timeToLive(link: AddressInput, options?: RequestOptions): Promise<number | null>;
+}
+
 /** The name of the point every scheme of external ids starts from. */
 export const EXTERNAL_ID_NAME: 'ExternalId';
 /** The ids of one scheme (such as `uuid`) bound to links, stored as links; every method takes the store of the table. */

@@ -6,6 +6,7 @@
 export { LinksClient, LinksDecorator } from './client.js';
 export { UnionLinks } from './union.js';
 export { AddressTable, OffsetAddressMap, RemapLinks } from './remap.js';
+export { CacheLinks } from './cache.js';
 export { EXTERNAL_ID_NAME, ExternalIdMap, LinksExternalIds } from './external-ids.js';
 export { createWasmClient, WasmTransport } from './wasm.js';
 export { EngineClient, WasmEngine, WasmBranch } from './engine.js';

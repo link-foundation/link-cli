@@ -272,6 +272,7 @@ or each other. The C# and Rust ports have the same layers;
 | `OffsetAddressMap(offset)` | Moves a network by `offset`, so a union of remapped networks shadows nothing. |
 | `AddressTable({ first, newId })` | Gives addresses (from `first`) or ids (from `newId()`) in the order they are seen. It lives in memory. |
 | `LinksExternalIds(scheme)` | The ids of another system bound to links, stored as links: `find`, `idOf`, `bind`, `ensure`, `unbind`, each taking the store of the table. |
+| `CacheLinks(links, { maxLinks, timeToLive, clock })` | A store as a cache: `expire`, `persist`, `timeToLive`, `purgeExpired`, and eviction of what is used least. See [semantics and limits](../../docs/ENGINE-CACHE.md). |
 | `ExternalIdMap(table, scheme, { newId })` | A `RemapLinks` map that reads a network under those ids (random UUIDs by default) and keeps them in `table`. |
 
 ```js
