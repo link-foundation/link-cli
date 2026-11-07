@@ -29,7 +29,10 @@ fn a_query_needs_both_of_its_parts() {
 
 #[test]
 fn a_sidecar_that_cannot_open_is_an_error() {
-    assert!(TriggerStore::sidecar("/dev/null/triggers.links", false).is_err());
+    // No platform opens a path below a regular file.
+    let file = tempfile::NamedTempFile::new().unwrap();
+    let path = file.path().join("triggers.links");
+    assert!(TriggerStore::sidecar(path.to_str().unwrap(), false).is_err());
 }
 
 #[test]
