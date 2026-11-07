@@ -287,15 +287,16 @@ namespace Foundation.Data.Doublets.Cli
             }
         }
 
-        /// <summary>The stored link at <paramref name="index"/>, null when there is none; a hidden one is not found.</summary>
+        /// <summary>The stored link at <paramref name="index"/>, null for the null link; an absent or hidden one is not found.</summary>
         private Link<TLinkAddress>? Visible(TLinkAddress index)
         {
-            if (index == _constants.Null || !_links.Exists(index))
+            if (index == _constants.Null)
             {
                 return null;
             }
-            var link = new Link<TLinkAddress>(_links.GetLink(index));
-            if (!CanRead(link))
+            // An absent link answers as a hidden one does: the two must not be told apart, and
+            // the memory store below reads a write's address without checking it.
+            if (!_links.Exists(index) || new Link<TLinkAddress>(_links.GetLink(index)) is var link && !CanRead(link))
             {
                 throw new ArgumentException($"Link not found: {index}");
             }

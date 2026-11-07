@@ -427,3 +427,6 @@ not a copy of this engine, and leaves it unchanged.
 `LinksEngine.RestoreBackup` copies an archived journal to an empty log up to a chosen revision, so
 an incremental chain reopens at any revision it holds and a copy can end just before damage. A
 refused restore leaves the destination unchanged.
+
+A permissions view now answers a write to an absent link with `Link not found`, the same answer a
+hidden link gets, instead of passing it to the memory store, whose unchecked read could end the process.
