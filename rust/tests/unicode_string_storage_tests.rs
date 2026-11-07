@@ -193,3 +193,29 @@ fn named_links_facade_matches_csharp_named_links_role() -> Result<()> {
     assert_eq!(Some("FacadeName".to_string()), named_links.get_name(link)?);
     Ok(())
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn a_name_pair_pointing_at_nothing_or_at_no_name_is_not_a_name() -> Result<()> {
+    with_storage(|storage| {
+        let named = storage.create_string("owner")?;
+        let plain = storage.create_string("not a name")?;
+        // One pair points at a link that is gone, the other at a link that is no name.
+        let links = storage.links_mut();
+        let gone = links.create(plain, plain);
+        links.delete(gone)?;
+        links.create(named, gone);
+        links.create(named, plain);
+        links.create(external_reference(7), gone);
+        links.create(external_reference(7), plain);
+        assert_eq!(storage.get_name(named)?, None);
+        assert_eq!(storage.external_names()?.len(), 0);
+
+        // Removing a name steps over both of them and still finds the real one.
+        storage.set_name(named, "real")?;
+        assert_eq!(storage.get_name(named)?.as_deref(), Some("real"));
+        storage.remove_name(named)?;
+        assert_eq!(storage.get_name(named)?, None);
+        Ok(())
+    })
+}

@@ -93,3 +93,90 @@ fn a_guest_of_a_database_with_users_joins_them() {
         r#"{"data":{"links":[{"type_id":3,"to_id":9}]}}"#
     );
 }
+
+#[test]
+fn rows_without_a_value_order_as_postgres_orders_nulls() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut links = NamedTypesDecorator::new(dir.path().join("db.links"), false)
+        .unwrap()
+        .with_indexed_lookups();
+    let mut store = DeepStore::open(&mut links, None).unwrap();
+    let package = r#"[{"id":1,"type_id":1,"from_id":0,"to_id":0},
+      {"id":2,"type_id":1,"from_id":0,"to_id":0,"string":"b"},
+      {"id":3,"type_id":1,"from_id":0,"to_id":0},
+      {"id":4,"type_id":1,"from_id":0,"to_id":0,"string":"a"}]"#;
+    store.load_package(&Json::parse(package).unwrap()).unwrap();
+    let settings = Settings::new(b"secret".to_vec(), None);
+    let admin = Auth {
+        user: None,
+        admin: true,
+    };
+    let mut ids = |order: &str| {
+        let query = format!("query {{ links(order_by: {order}) {{ id }} }}");
+        let reply = execute(
+            &mut store,
+            &settings,
+            &query,
+            None,
+            &Json::Null,
+            admin.clone(),
+        );
+        reply.0.write()
+    };
+    for (direction, expected) in [
+        ("asc", [4, 2, 1, 3]),
+        ("asc_nulls_first", [1, 3, 4, 2]),
+        ("desc", [1, 3, 2, 4]),
+        ("desc_nulls_last", [2, 4, 1, 3]),
+    ] {
+        let rows: Vec<_> = expected.map(|id| format!(r#"{{"id":{id}}}"#)).into();
+        assert_eq!(
+            ids(&format!("{{ string: {{ value: {direction} }} }}")),
+            format!(r#"{{"data":{{"links":[{}]}}}}"#, rows.join(",")),
+            "{direction}"
+        );
+    }
+    // An order that names a relation and nothing in it keeps the rows in place.
+    assert_eq!(
+        ids("{ string: { } }"),
+        r#"{"data":{"links":[{"id":1},{"id":2},{"id":3},{"id":4}]}}"#
+    );
+}
+
+#[test]
+fn a_mutation_whose_where_cannot_match_changes_nothing() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut links = NamedTypesDecorator::new(dir.path().join("db.links"), false)
+        .unwrap()
+        .with_indexed_lookups();
+    let mut store = DeepStore::open(&mut links, None).unwrap();
+    let package = r#"[{"id":1,"type_id":1,"from_id":0,"to_id":0}]"#;
+    store.load_package(&Json::parse(package).unwrap()).unwrap();
+    let settings = Settings::new(b"secret".to_vec(), None);
+    let admin = Auth {
+        user: None,
+        admin: true,
+    };
+    let mutation = "mutation { delete_links(where: { id: { _in: [] } }) { affected_rows } }";
+    let reply = execute(
+        &mut store,
+        &settings,
+        mutation,
+        None,
+        &Json::Null,
+        admin.clone(),
+    );
+    assert_eq!(
+        reply.0.write(),
+        r#"{"data":{"delete_links":{"affected_rows":0}}}"#
+    );
+    let reply = execute(
+        &mut store,
+        &settings,
+        "query { links { id } }",
+        None,
+        &Json::Null,
+        admin,
+    );
+    assert_eq!(reply.0.write(), r#"{"data":{"links":[{"id":1}]}}"#);
+}
