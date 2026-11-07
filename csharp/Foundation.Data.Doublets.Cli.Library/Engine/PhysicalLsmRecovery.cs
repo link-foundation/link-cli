@@ -2,7 +2,7 @@ namespace Foundation.Data.Doublets.Cli.Engine;
 
 public sealed partial class PhysicalLsmJournalStore
 {
-    private sealed class DeferredRepair(IPageDevice device) : IPageDevice
+    internal sealed class DeferredRepair(IPageDevice device) : IPageDevice
     {
         public uint MetadataFlags => device.MetadataFlags;
         public bool SupportsDurableFlush => device.SupportsDurableFlush;

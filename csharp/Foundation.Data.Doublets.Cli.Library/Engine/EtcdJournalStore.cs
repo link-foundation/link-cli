@@ -28,13 +28,9 @@ public sealed partial class EtcdJournalStore : IJournalMaintenanceStore, IDispos
         _client = client ?? CreateClient();
     }
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope",
-        Justification = "The returned HttpClient owns the handler via disposeHandler:true; failure disposes it locally.")]
-    private static HttpClient CreateClient()
-    {
-        var handler = new HttpClientHandler { AllowAutoRedirect = false };
-        try { return new HttpClient(handler, disposeHandler: true) { Timeout = TimeSpan.FromSeconds(10) }; }
-        catch { handler.Dispose(); throw; }
-    }
+        Justification = "The returned HttpClient owns the handler via disposeHandler:true.")]
+    private static HttpClient CreateClient() =>
+        new(new HttpClientHandler { AllowAutoRedirect = false }, disposeHandler: true) { Timeout = TimeSpan.FromSeconds(10) };
     private static bool TryGeneration(string? value, out ulong generation)
     {
         generation = 0;

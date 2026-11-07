@@ -108,17 +108,18 @@ public sealed class FilePageDevice : IRepairPageDevice, IDisposable
         }
         if (failures.Count > 0) throw new AggregateException("Native page cleanup failed; ownership remains fenced.", failures);
     }
-    internal static void SyncDirectory(string path)
+    internal static void SyncDirectory(string path) => SyncDirectory(path, OpenDirectory, Fsync, Close);
+    internal static void SyncDirectory(string path, Func<string, int, int> open, Func<int, int> fsync, Func<int, int> close)
     {
-        int descriptor = OpenDirectory(path, 0);
+        int descriptor = open(path, 0);
         if (descriptor < 0) throw new IOException("Cannot open native page parent directory.", new Win32Exception(Marshal.GetLastPInvokeError()));
         Exception? failure = null;
-        if (Fsync(descriptor) != 0) failure = new IOException("Cannot synchronize native page parent directory.", new Win32Exception(Marshal.GetLastPInvokeError()));
+        if (fsync(descriptor) != 0) failure = new IOException("Cannot synchronize native page parent directory.", new Win32Exception(Marshal.GetLastPInvokeError()));
         // One close only: an error can still have released this descriptor.
-        if (Close(descriptor) != 0)
+        if (close(descriptor) != 0)
         {
-            var close = new IOException("Cannot close native page parent directory.", new Win32Exception(Marshal.GetLastPInvokeError()));
-            failure = failure is null ? close : new AggregateException(failure, close);
+            var closing = new IOException("Cannot close native page parent directory.", new Win32Exception(Marshal.GetLastPInvokeError()));
+            failure = failure is null ? closing : new AggregateException(failure, closing);
         }
         if (failure is not null) throw failure;
     }
